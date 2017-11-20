@@ -35,18 +35,24 @@ type Handler func(ctx context.Context, w http.ResponseWriter, r *http.Request, p
 // data/logic on this App struct
 type App struct {
 	*httptreemux.TreeMux
+	mw []Middleware
 }
 
 // New creates an App value that handle a set of routes for the application.
-func New() *App {
+func New(mw ...Middleware) *App {
 	return &App{
 		TreeMux: httptreemux.New(),
+		mw:      mw,
 	}
 }
 
 // Handle is our mechanism for mounting Handlers for a given HTTP verb and path
 // pair, this makes for really easy, convenient routing.
 func (a *App) Handle(verb, path string, handler Handler) {
+
+	// Wrap up the application-wide first, this will call the first function
+	// of each middleware which will return a function of type Handler.
+	handler = wrapMiddleware(handler, a.mw)
 
 	// The function to execute for each request.
 	h := func(w http.ResponseWriter, r *http.Request, params map[string]string) {
