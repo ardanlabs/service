@@ -21,8 +21,9 @@ const KeyValues ctxKey = 1
 
 // Values represent state for each request.
 type Values struct {
-	TraceID string
-	Now     time.Time
+	TraceID    string
+	Now        time.Time
+	StatusCode int
 }
 
 // A Handler is a type that handles an http request within our own little mini
