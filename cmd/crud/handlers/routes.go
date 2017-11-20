@@ -3,6 +3,8 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/ardanlabs/service/internal/mid"
+
 	"github.com/ardanlabs/service/internal/platform/web"
 )
 
@@ -10,7 +12,7 @@ import (
 func API() http.Handler {
 
 	// Create the application.
-	app := web.New()
+	app := web.New(mid.RequestLogger, mid.ErrorHandler)
 
 	// Bind all the user handlers.
 	var u User
