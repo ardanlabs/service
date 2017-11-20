@@ -10,11 +10,13 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/cmd/crud/handlers"
+	"github.com/ardanlabs/service/internal/platform/db"
 )
 
 /*
 Need to figure out timeouts for http service.
 Use env for all configuration values.
+Mongo Timeout, review and rename timeout variable
 */
 
 func init() {
@@ -29,17 +31,32 @@ func main() {
 	readTimeout := 5 * time.Second
 	writeTimeout := 10 * time.Second
 	shutdownTimeout := 5 * time.Second
+	dbTimeout := 25 * time.Second
 	host := os.Getenv("HOST")
 	if host == "" {
 		host = ":3000"
 	}
+	dbHost := os.Getenv("DB_HOST")
+	if dbHost == "" {
+		dbHost = "got:got2015@ds039441.mongolab.com:39441/gotraining"
+	}
+
+	// ============================================================
+	// Start Mongo
+
+	log.Println("main : Started : Initialize Mongo")
+	masterDB, err := db.New(dbHost, dbTimeout)
+	if err != nil {
+		log.Fatalf("startup : Register DB : %v", err)
+	}
+	defer masterDB.Close()
 
 	// ============================================================
 	// Start Service
 
 	server := http.Server{
 		Addr:           host,
-		Handler:        handlers.API(),
+		Handler:        handlers.API(masterDB),
 		ReadTimeout:    readTimeout,
 		WriteTimeout:   writeTimeout,
 		MaxHeaderBytes: 1 << 20,
