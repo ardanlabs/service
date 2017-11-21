@@ -57,6 +57,9 @@ func (a *App) Handle(verb, path string, handler Handler) {
 	// The function to execute for each request.
 	h := func(w http.ResponseWriter, r *http.Request, params map[string]string) {
 
+		// TODO: Check the request for an existing TraceID.
+		// If exists, don't call uuid.New()
+
 		// Set the context with the required values to
 		// process the request.
 		v := Values{

@@ -17,6 +17,8 @@ import (
 Need to figure out timeouts for http service.
 Use env for all configuration values.
 Mongo Timeout, review and rename timeout variable
+Check request header for existing traceID
+You might want to reset your DB_HOST env var during test tear down
 */
 
 func init() {

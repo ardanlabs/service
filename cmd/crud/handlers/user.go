@@ -2,13 +2,12 @@ package handlers
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"github.com/ardanlabs/service/internal/platform/db"
 	"github.com/ardanlabs/service/internal/platform/web"
+	"github.com/ardanlabs/service/internal/user"
 	"github.com/pkg/errors"
-	mgo "gopkg.in/mgo.v2"
 )
 
 // User represents the User API method handler set.
@@ -27,21 +26,19 @@ func (u *User) List(ctx context.Context, w http.ResponseWriter, r *http.Request,
 	}
 	defer dbConn.Close()
 
-	data := struct {
-		Name  string
-		Email string
-	}{
-		Name:  "Bill",
-		Email: "bill@ardanlabs.com",
+	cu := user.CreateUser{
+		UserType:  1,
+		FirstName: "bill",
+		LastName:  "kennedy",
+		Email:     "bill@ardanlabs.com",
+		Company:   "ardan",
 	}
 
-	f := func(collection *mgo.Collection) error {
-		return collection.Insert(data)
-	}
-	if err := dbConn.Execute(ctx, "users", f); err != nil {
-		return errors.Wrap(err, fmt.Sprintf("db.users.insert(%s)", db.Query(u)))
+	usr, err := user.Create(ctx, dbConn, &cu)
+	if err != nil {
+		return err
 	}
 
-	web.Respond(ctx, w, data, http.StatusCreated)
+	web.Respond(ctx, w, usr, http.StatusCreated)
 	return nil
 }
