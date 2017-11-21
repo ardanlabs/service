@@ -12,15 +12,14 @@ import (
 	"github.com/ardanlabs/service/internal/platform/docker"
 	"github.com/ardanlabs/service/internal/user"
 	"github.com/pborman/uuid"
-	mgo "gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
 )
 
-func TestCreate(t *testing.T) {
-
-	t.Log("Given the need to validate creating new user.")
+// TestCreate validates we can create a user and it exists
+// in the DB.
+func TestUser(t *testing.T) {
+	t.Log("Given the need to validate CRUDing a user.")
 	{
-		t.Log("\tWhen using this user.")
+		t.Log("\tWhen handling a single user.")
 		{
 			dbConn, err := masterDB.Copy()
 			if err != nil {
@@ -37,25 +36,59 @@ func TestCreate(t *testing.T) {
 				Company:   "ardan",
 			}
 
-			usr, err := user.Create(ctx, dbConn, &cu)
+			newUsr, err := user.Create(ctx, dbConn, &cu)
 			if err != nil {
 				t.Fatalf("\t%s\tShould be able to create user : %s.", Failed, err)
 			}
 			t.Logf("\t%s\tShould be able to create user.", Success)
 
-			// WE WILL REPLACE THIS!
-			const usersCollection = "users"
-			q := bson.M{"user_id": usr.UserID}
-			var u *user.User
-			f := func(collection *mgo.Collection) error {
-				return collection.Find(q).One(&u)
+			if _, err = user.Retrieve(ctx, dbConn, newUsr.UserID); err != nil {
+				t.Fatalf("\t%s\tShould be able to retrieve user : %s.", Failed, err)
 			}
-			if err := dbConn.Execute(ctx, usersCollection, f); err != nil {
-				if err == mgo.ErrNotFound {
-					t.Fatalf("\t%s\tShould be able to see user in DB : %s.", Failed, err)
-				}
-				t.Logf("\t%s\tShould be able to see user in DB.", Success)
+			t.Logf("\t%s\tShould be able to retrieve user.", Success)
+
+			cu = user.CreateUser{
+				UserType:  1,
+				FirstName: "bill",
+				LastName:  "smith",
+				Email:     "bill@ardanlabs.com",
+				Company:   "ardan",
 			}
+
+			if err := user.Update(ctx, dbConn, newUsr.UserID, &cu); err != nil {
+				t.Fatalf("\t%s\tShould be able to update user : %s.", Failed, err)
+			}
+			t.Logf("\t%s\tShould be able to update user.", Success)
+
+			rtv, err := user.Retrieve(ctx, dbConn, newUsr.UserID)
+			if err != nil {
+				t.Fatalf("\t%s\tShould be able to retrieve user : %s.", Failed, err)
+			}
+			t.Logf("\t%s\tShould be able to retrieve user.", Success)
+
+			if rtv.LastName != cu.LastName {
+				t.Errorf("\t%s\tShould be able to see updates to LastName.", Failed)
+				t.Log("\t\tGot :", rtv.LastName)
+				t.Log("\t\tWant:", cu.LastName)
+			} else {
+				t.Logf("\t%s\tShould be able to see updates to LastName.", Success)
+			}
+
+			if err := user.Delete(ctx, dbConn, newUsr.UserID); err != nil {
+				t.Fatalf("\t%s\tShould be able to delete user : %s.", Failed, err)
+			}
+			t.Logf("\t%s\tShould be able to delete user.", Success)
+
+			if _, err := user.Retrieve(ctx, dbConn, newUsr.UserID); err == nil {
+				t.Fatalf("\t%s\tShould NOT be able to retrieve user : %s.", Failed, err)
+			}
+			t.Logf("\t%s\tShould NOT be able to retrieve user.", Success)
+
+			// TODO: Figure this compare out.
+			// if !reflect.DeepEqual(newUsr, rtvUsr) {
+			// 	t.Fatalf("\t%s\tShould get back the same user.", Failed)
+			// }
+			// t.Logf("\t%s\tShould get back the same user.", Success)
 		}
 	}
 }
