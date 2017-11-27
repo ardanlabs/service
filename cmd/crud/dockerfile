@@ -1,0 +1,7 @@
+# docker build -t crud-amd64:1 .
+# docker run -d --name crud-amd64 -p 3000:3000 crud-amd64:1
+# docker start crud-amd64
+FROM alpine
+MAINTAINER William Kennedy <bill@ardanlabs.com>
+COPY ./crud /crud
+ENTRYPOINT ["/crud"]

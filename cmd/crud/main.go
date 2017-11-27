@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/ardanlabs/service/cmd/crud/handlers"
@@ -78,7 +79,7 @@ func main() {
 
 	// Blocking main and waiting for shutdown.
 	osSignals := make(chan os.Signal, 1)
-	signal.Notify(osSignals, os.Interrupt)
+	signal.Notify(osSignals, os.Interrupt, syscall.SIGTERM)
 	<-osSignals
 
 	// Create context for Shutdown call.
