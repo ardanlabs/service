@@ -91,7 +91,7 @@ func Update(ctx context.Context, dbConn *db.DB, userID string, cu *CreateUser) e
 		if err == mgo.ErrNotFound {
 			return web.ErrNotFound
 		}
-		return errors.Wrap(err, fmt.Sprintf("db.users.update(%s, %s)", db.Query(q), db.Query(m)))
+		return errors.Wrap(err, fmt.Sprintf("db.customers.update(%s, %s)", db.Query(q), db.Query(m)))
 	}
 
 	return nil
