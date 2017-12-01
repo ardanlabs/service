@@ -16,9 +16,6 @@ import (
 
 /*
 Need to figure out timeouts for http service.
-Use env for all configuration values.
-Mongo Timeout, review and rename timeout variable
-Check request header for existing traceID
 You might want to reset your DB_HOST env var during test tear down
 */
 
@@ -34,7 +31,7 @@ func main() {
 	readTimeout := 5 * time.Second
 	writeTimeout := 10 * time.Second
 	shutdownTimeout := 5 * time.Second
-	dbTimeout := 25 * time.Second
+	dbDialTimeout := 5 * time.Second
 	host := os.Getenv("HOST")
 	if host == "" {
 		host = ":3000"
@@ -48,7 +45,7 @@ func main() {
 	// Start Mongo
 
 	log.Println("main : Started : Initialize Mongo")
-	masterDB, err := db.New(dbHost, dbTimeout)
+	masterDB, err := db.New(dbHost, dbDialTimeout)
 	if err != nil {
 		log.Fatalf("startup : Register DB : %v", err)
 	}

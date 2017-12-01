@@ -81,6 +81,10 @@ func Update(ctx context.Context, dbConn *db.DB, userID string, cu *CreateUser) e
 		return errors.Wrap(web.ErrInvalidID, "check objectid")
 	}
 
+	// Update the Date Modified for now.
+	now := time.Now()
+	cu.DateModified = &now
+
 	q := bson.M{"user_id": userID}
 	m := bson.M{"$set": cu}
 
