@@ -57,13 +57,17 @@ func (a *App) Handle(verb, path string, handler Handler, mw ...Middleware) {
 	// The function to execute for each request.
 	h := func(w http.ResponseWriter, r *http.Request, params map[string]string) {
 
-		// TODO: Check the request for an existing TraceID.
-		// If exists, don't call uuid.New()
+		// Check the request for an existing TraceID. If it doesn't
+		// exist, generate a new one.
+		traceID := r.Header.Get(TraceIDHeader)
+		if traceID == "" {
+			traceID = uuid.New()
+		}
 
 		// Set the context with the required values to
 		// process the request.
 		v := Values{
-			TraceID: uuid.New(),
+			TraceID: traceID,
 			Now:     time.Now(),
 		}
 		ctx := context.WithValue(r.Context(), KeyValues, &v)

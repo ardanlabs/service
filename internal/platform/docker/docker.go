@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"os"
 	"os/exec"
 )
 
@@ -13,12 +12,6 @@ import (
 type Container struct {
 	ID   string
 	Port string
-}
-
-// SetTestEnv sets the environment to run tests against
-// the mongo docker container.
-func SetTestEnv(c *Container) error {
-	return os.Setenv("DB_HOST", fmt.Sprintf("mongodb://localhost:%s/gotraining", c.Port))
 }
 
 // StartMongo runs a mongo container to execute commands.
