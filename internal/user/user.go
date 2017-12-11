@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ardanlabs/kit/web"
 	"github.com/ardanlabs/service/internal/platform/db"
+	"github.com/ardanlabs/service/internal/platform/web"
 	"github.com/pkg/errors"
 	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
@@ -52,7 +52,7 @@ func Retrieve(ctx context.Context, dbConn *db.DB, userID string) (*User, error) 
 
 // Create inserts a new user into the database.
 func Create(ctx context.Context, dbConn *db.DB, cu *CreateUser) (*User, error) {
-	now := time.Now()
+	now := time.Now().UTC()
 
 	u := User{
 		UserID:       bson.NewObjectId().Hex(),
@@ -63,13 +63,28 @@ func Create(ctx context.Context, dbConn *db.DB, cu *CreateUser) (*User, error) {
 		Company:      cu.Company,
 		DateCreated:  &now,
 		DateModified: &now,
+		Addresses:    make([]Address, len(cu.Addresses)),
+	}
+
+	for i, cua := range cu.Addresses {
+		u.Addresses[i] = Address{
+			Type:         cua.Type,
+			LineOne:      cua.LineOne,
+			LineTwo:      cua.LineTwo,
+			City:         cua.City,
+			State:        cua.State,
+			Zipcode:      cua.State,
+			Phone:        cua.Phone,
+			DateCreated:  &now,
+			DateModified: &now,
+		}
 	}
 
 	f := func(collection *mgo.Collection) error {
-		return collection.Insert(u)
+		return collection.Insert(&u)
 	}
 	if err := dbConn.Execute(ctx, usersCollection, f); err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf("db.users.insert(%s)", db.Query(u)))
+		return nil, errors.Wrap(err, fmt.Sprintf("db.users.insert(%s)", db.Query(&u)))
 	}
 
 	return &u, nil
@@ -81,9 +96,11 @@ func Update(ctx context.Context, dbConn *db.DB, userID string, cu *CreateUser) e
 		return errors.Wrap(web.ErrInvalidID, "check objectid")
 	}
 
-	// Update the Date Modified for now.
-	now := time.Now()
+	now := time.Now().UTC()
 	cu.DateModified = &now
+	for _, cua := range cu.Addresses {
+		cua.DateModified = &now
+	}
 
 	q := bson.M{"user_id": userID}
 	m := bson.M{"$set": cu}

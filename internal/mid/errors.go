@@ -35,14 +35,17 @@ func ErrorHandler(next web.Handler) web.Handler {
 
 		if err := next(ctx, w, r, params); err != nil {
 
-			if errors.Cause(err) != web.ErrNotFound {
+			// What is the root error.
+			err = errors.Cause(err)
+
+			if err != web.ErrNotFound {
 
 				// Log the error.
 				log.Printf("%s : ERROR : %v\n", v.TraceID, err)
 			}
 
 			// Respond with the error.
-			web.Error(ctx, w, errors.Cause(err))
+			web.Error(ctx, w, err)
 
 			// The error has been handled so we can stop propigating it.
 			return nil

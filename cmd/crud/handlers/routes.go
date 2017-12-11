@@ -10,11 +10,8 @@ import (
 
 // API returns a handler for a set of routes.
 func API(masterDB *db.DB) http.Handler {
-
-	// Create the application.
 	app := web.New(mid.RequestLogger, mid.ErrorHandler)
 
-	// Bind all the user handlers.
 	u := User{
 		MasterDB: masterDB,
 	}
@@ -23,6 +20,11 @@ func API(masterDB *db.DB) http.Handler {
 	app.Handle("GET", "/v1/users/:id", u.Retrieve)
 	app.Handle("PUT", "/v1/users/:id", u.Update)
 	app.Handle("DELETE", "/v1/users/:id", u.Delete)
+
+	h := Health{
+		MasterDB: masterDB,
+	}
+	app.Handle("GET", "/v1/health", h.Check)
 
 	return app
 }

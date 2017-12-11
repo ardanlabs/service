@@ -11,6 +11,9 @@ import (
 )
 
 var (
+	// ErrNotHealthy occurs when the service is having problems.
+	ErrNotHealthy = errors.New("Not healthy")
+
 	// ErrNotFound is abstracting the mgo not found error.
 	ErrNotFound = errors.New("Entity not found")
 
@@ -33,15 +36,14 @@ type JSONError struct {
 // Error handles all error responses for the API.
 func Error(cxt context.Context, w http.ResponseWriter, err error) {
 	switch errors.Cause(err) {
+	case ErrNotHealthy:
+		RespondError(cxt, w, err, http.StatusInternalServerError)
+
 	case ErrNotFound:
 		RespondError(cxt, w, err, http.StatusNotFound)
 		return
 
-	case ErrValidation:
-		RespondError(cxt, w, err, http.StatusBadRequest)
-		return
-
-	case ErrInvalidID:
+	case ErrValidation, ErrInvalidID:
 		RespondError(cxt, w, err, http.StatusBadRequest)
 		return
 	}
