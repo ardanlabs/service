@@ -10,6 +10,21 @@ import (
 	"github.com/pkg/errors"
 )
 
+// check looks for certain error types and transforms them
+// into web errors. We are losing the trace when this error
+// is converted. But we don't log traces for these.
+func check(err error) error {
+	switch errors.Cause(err) {
+	case user.ErrNotFound:
+		return web.ErrNotFound
+	case user.ErrInvalidID:
+		return web.ErrInvalidID
+	}
+	return err
+}
+
+// =============================================================================
+
 // User represents the User API method handler set.
 type User struct {
 	MasterDB *db.DB
@@ -26,7 +41,7 @@ func (u *User) List(ctx context.Context, w http.ResponseWriter, r *http.Request,
 	defer dbConn.Close()
 
 	usrs, err := user.List(ctx, dbConn)
-	if err != nil {
+	if err = check(err); err != nil {
 		return errors.Wrap(err, "")
 	}
 
@@ -43,7 +58,7 @@ func (u *User) Retrieve(ctx context.Context, w http.ResponseWriter, r *http.Requ
 	defer dbConn.Close()
 
 	usr, err := user.Retrieve(ctx, dbConn, params["id"])
-	if err != nil {
+	if err = check(err); err != nil {
 		return errors.Wrapf(err, "Id: %s", params["id"])
 	}
 
@@ -65,7 +80,7 @@ func (u *User) Create(ctx context.Context, w http.ResponseWriter, r *http.Reques
 	}
 
 	nUsr, err := user.Create(ctx, dbConn, &usr)
-	if err != nil {
+	if err = check(err); err != nil {
 		return errors.Wrapf(err, "User: %+v", &usr)
 	}
 
@@ -86,7 +101,8 @@ func (u *User) Update(ctx context.Context, w http.ResponseWriter, r *http.Reques
 		return errors.Wrap(err, "")
 	}
 
-	if err := user.Update(ctx, dbConn, params["id"], &usr); err != nil {
+	err = user.Update(ctx, dbConn, params["id"], &usr)
+	if err = check(err); err != nil {
 		return errors.Wrapf(err, "Id: %s  User: %+v", params["id"], &usr)
 	}
 
@@ -102,7 +118,8 @@ func (u *User) Delete(ctx context.Context, w http.ResponseWriter, r *http.Reques
 	}
 	defer dbConn.Close()
 
-	if err := user.Delete(ctx, dbConn, params["id"]); err != nil {
+	err = user.Delete(ctx, dbConn, params["id"])
+	if err = check(err); err != nil {
 		return errors.Wrapf(err, "Id: %s", params["id"])
 	}
 

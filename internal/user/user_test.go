@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/ardanlabs/service/internal/platform/tests"
-	"github.com/ardanlabs/service/internal/platform/web"
 	"github.com/ardanlabs/service/internal/user"
 )
 
@@ -111,10 +110,10 @@ func TestUser(t *testing.T) {
 			t.Logf("\t%s\tShould be able to delete user.", tests.Success)
 
 			usr, err = user.Retrieve(ctx, dbConn, usr.UserID)
-			if err != web.ErrNotFound {
+			if err != user.ErrNotFound {
 				t.Fatalf("\t%s\tShould NOT be able to retrieve user : %s.", tests.Failed, err)
 			}
-			t.Logf("\t%s\tShould NOT be able to retrieve user. : %s", tests.Success)
+			t.Logf("\t%s\tShould NOT be able to retrieve user.", tests.Success)
 		}
 	}
 }

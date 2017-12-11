@@ -59,7 +59,7 @@ func StopMongo(c *Container) error {
 	}
 	log.Println("Stopped:", c.ID)
 
-	if err := exec.Command("docker", "rm", c.ID).Run(); err != nil {
+	if err := exec.Command("docker", "rm", c.ID, "-v").Run(); err != nil {
 		return err
 	}
 	log.Println("Removed:", c.ID)
