@@ -2,14 +2,40 @@ package user
 
 import "time"
 
+// CreateAddress contains information needed to create or update a user's address.
+type CreateAddress struct {
+	Type         int        `bson:"type" json:"type" validate:"required"`
+	LineOne      string     `bson:"line_one" json:"line_one" validate:"required"`
+	LineTwo      string     `bson:"line_two" json:"line_two,omitempty"`
+	City         string     `bson:"city" json:"city" validate:"required"`
+	State        string     `bson:"state" json:"state" validate:"required"`
+	Zipcode      string     `bson:"zipcode" json:"zipcode" validate:"required"`
+	Phone        string     `bson:"phone" json:"phone" validate:"required"`
+	DateModified *time.Time `bson:"date_modified" json:"-"`
+}
+
+// Address contains information about a user's address.
+type Address struct {
+	Type         int        `bson:"type" json:"type" validate:"required"`
+	LineOne      string     `bson:"line_one" json:"line_one" validate:"required"`
+	LineTwo      string     `bson:"line_two" json:"line_two,omitempty"`
+	City         string     `bson:"city" json:"city" validate:"required"`
+	State        string     `bson:"state" json:"state" validate:"required"`
+	Zipcode      string     `bson:"zipcode" json:"zipcode" validate:"required"`
+	Phone        string     `bson:"phone" json:"phone" validate:"required"`
+	DateModified *time.Time `bson:"date_modified" json:"date_modified"`
+	DateCreated  *time.Time `bson:"date_created,omitempty" json:"date_created"`
+}
+
 // CreateUser contains information needed to create or update a user.
 type CreateUser struct {
-	UserType     int        `bson:"type" json:"type" validate:"required"`
-	FirstName    string     `bson:"first_name" json:"first_name" validate:"required"`
-	LastName     string     `bson:"last_name" json:"last_name" validate:"required"`
-	Email        string     `bson:"email" json:"email" validate:"required"`
-	Company      string     `bson:"company" json:"company" validate:"required"`
-	DateModified *time.Time `bson:"date_modified" json:"date_modified"`
+	UserType     int             `bson:"type" json:"type" validate:"required"`
+	FirstName    string          `bson:"first_name" json:"first_name" validate:"required"`
+	LastName     string          `bson:"last_name" json:"last_name" validate:"required"`
+	Email        string          `bson:"email" json:"email" validate:"required"`
+	Company      string          `bson:"company" json:"company" validate:"required"`
+	Addresses    []CreateAddress `bson:"addresses" json:"addresses" validate:"required"`
+	DateModified *time.Time      `bson:"date_modified" json:"-"`
 }
 
 // User contains information about a user.
@@ -20,6 +46,7 @@ type User struct {
 	LastName     string     `bson:"last_name" json:"last_name"`
 	Email        string     `bson:"email" json:"email"`
 	Company      string     `bson:"company" json:"company"`
+	Addresses    []Address  `bson:"addresses" json:"addresses"`
 	DateModified *time.Time `bson:"date_modified" json:"date_modified"`
 	DateCreated  *time.Time `bson:"date_created,omitempty" json:"date_created"`
 }
