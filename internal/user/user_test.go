@@ -4,8 +4,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/ardanlabs/kit/web"
 	"github.com/ardanlabs/service/internal/platform/tests"
+	"github.com/ardanlabs/service/internal/platform/web"
 	"github.com/ardanlabs/service/internal/user"
 )
 
