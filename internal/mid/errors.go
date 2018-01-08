@@ -47,7 +47,7 @@ func ErrorHandler(next web.Handler) web.Handler {
 			// Respond with the error.
 			web.Error(ctx, w, err)
 
-			// The error has been handled so we can stop propigating it.
+			// The error has been handled so we can stop propagating it.
 			return nil
 		}
 
