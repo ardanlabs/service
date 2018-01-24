@@ -19,7 +19,7 @@ RUN go build -ldflags "-s -w -X main.build=$(git rev-parse HEAD)" -a -tags netgo
 #
 # Run the Go Binary in Alpine.
 #
-FROM alpine
+FROM alpine:3.6
 MAINTAINER William Kennedy <bill@ardanlabs.com>
 EXPOSE 3000
 COPY --from=0 /go/src/github.com/ardanlabs/service/crud /bin/
