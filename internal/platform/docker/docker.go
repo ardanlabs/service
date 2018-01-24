@@ -23,28 +23,32 @@ func StartMongo() (*Container, error) {
 		return nil, fmt.Errorf("starting container: %v", err)
 	}
 
-	id := out.String()[:3]
+	id := out.String()[:12]
 	log.Println("DB ContainerID:", id)
 
-	cmd.Wait()
-
-	cmd = exec.Command("docker", "inspect", string(id))
+	cmd = exec.Command("docker", "inspect", id)
 	out.Reset()
 	cmd.Stdout = &out
 	if err := cmd.Run(); err != nil {
 		return nil, fmt.Errorf("inspect container: %v", err)
 	}
 
-	cmd.Wait()
-
-	var doc []map[string]interface{}
+	var doc []struct {
+		NetworkSettings struct {
+			Ports struct {
+				TCP27017 []struct {
+					HostPort string `json:"HostPort"`
+				} `json:"27017/tcp"`
+			} `json:"Ports"`
+		} `json:"NetworkSettings"`
+	}
 	if err := json.Unmarshal(out.Bytes(), &doc); err != nil {
 		return nil, fmt.Errorf("decoding json: %v", err)
 	}
 
 	c := Container{
 		ID:   id,
-		Port: doc[0]["NetworkSettings"].(map[string]interface{})["Ports"].(map[string]interface{})["27017/tcp"].([]interface{})[0].(map[string]interface{})["HostPort"].(string),
+		Port: doc[0].NetworkSettings.Ports.TCP27017[0].HostPort,
 	}
 
 	log.Println("DB Port:", c.Port)
