@@ -3,7 +3,6 @@ package web
 import (
 	"context"
 	"encoding/json"
-	"io"
 	"log"
 	"net/http"
 
@@ -70,30 +69,32 @@ func RespondError(ctx context.Context, w http.ResponseWriter, err error, code in
 // Respond sends JSON to the client.
 // If code is StatusNoContent, v is expected to be nil.
 func Respond(ctx context.Context, w http.ResponseWriter, data interface{}, code int) {
-
 	// Set the status code for the request logger middleware.
 	v := ctx.Value(KeyValues).(*Values)
 	v.StatusCode = code
 
-	// Just set the status code and we are done.
-	if code == http.StatusNoContent {
+	// Just set the status code and we are done. If there is nothing to marshal
+	// set status code and return.
+	if code == http.StatusNoContent || data == nil {
 		w.WriteHeader(code)
 		return
 	}
-
-	// Set the content type.
-	w.Header().Set("Content-Type", "application/json")
-
-	// Write the status code to the response and context.
-	w.WriteHeader(code)
 
 	// Marshal the data into a JSON string.
 	jsonData, err := json.MarshalIndent(data, "", "  ")
 	if err != nil {
 		log.Printf("%s : Respond %v Marshalling JSON response\n", v.TraceID, err)
-		jsonData = []byte("{}")
+		// Should respond with internal server error.
+		RespondError(ctx, w, err, http.StatusInternalServerError)
+		return
 	}
 
+	// Set the content type and headers once we know marshaling has succeeded.
+	w.Header().Set("Content-Type", "application/json")
+
+	// Write the status code to the response and context.
+	w.WriteHeader(code)
+
 	// Send the result back to the client.
-	io.WriteString(w, string(jsonData))
+	w.Write(jsonData)
 }
