@@ -1,5 +1,6 @@
 # service
-Sample code written for a Pearson presentation
+
+This is a work in process and will attempt to cover best practices around Go based services used in POD architectures and design.
 
 ## Docker
 
