@@ -64,7 +64,7 @@ func (db *DB) Close() {
 }
 
 // Copy returns a new DB value for use with MongoDB based the master session.
-func (db *DB) Copy() (*DB, error) {
+func (db *DB) Copy() *DB {
 	ses := db.session.Copy()
 
 	// As per the mgo documentation, https://godoc.org/gopkg.in/mgo.v2#Session.DB
@@ -75,11 +75,12 @@ func (db *DB) Copy() (*DB, error) {
 		session:  ses,
 	}
 
-	return &newDB, nil
+	return &newDB
 }
 
 // Execute is used to execute MongoDB commands.
 func (db *DB) Execute(ctx context.Context, collName string, f func(*mgo.Collection) error) error {
+	// TODO remove ctx
 	if db == nil || db.session == nil {
 		return errors.Wrap(ErrInvalidDBProvided, "db == nil || db.session == nil")
 	}
@@ -89,6 +90,8 @@ func (db *DB) Execute(ctx context.Context, collName string, f func(*mgo.Collecti
 
 // ExecuteTimeout is used to execute MongoDB commands with a timeout.
 func (db *DB) ExecuteTimeout(ctx context.Context, collName string, f func(*mgo.Collection) error, timeout time.Duration) error {
+	// TODO remove ctx
+	// TODO move timeout to first parameter
 	if db == nil || db.session == nil {
 		return errors.Wrap(ErrInvalidDBProvided, "db == nil || db.session == nil")
 	}

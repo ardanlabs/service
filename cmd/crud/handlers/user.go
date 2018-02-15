@@ -34,10 +34,7 @@ type User struct {
 
 // List returns all the existing users in the system.
 func (u *User) List(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-	dbConn, err := u.MasterDB.Copy()
-	if err != nil {
-		return errors.Wrapf(web.ErrDBNotConfigured, "")
-	}
+	dbConn := u.MasterDB.Copy()
 	defer dbConn.Close()
 
 	usrs, err := user.List(ctx, dbConn)
@@ -51,10 +48,7 @@ func (u *User) List(ctx context.Context, w http.ResponseWriter, r *http.Request,
 
 // Retrieve returns the specified user from the system.
 func (u *User) Retrieve(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-	dbConn, err := u.MasterDB.Copy()
-	if err != nil {
-		return errors.Wrapf(web.ErrDBNotConfigured, "")
-	}
+	dbConn := u.MasterDB.Copy()
 	defer dbConn.Close()
 
 	usr, err := user.Retrieve(ctx, dbConn, params["id"])
@@ -68,10 +62,7 @@ func (u *User) Retrieve(ctx context.Context, w http.ResponseWriter, r *http.Requ
 
 // Create inserts a new user into the system.
 func (u *User) Create(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-	dbConn, err := u.MasterDB.Copy()
-	if err != nil {
-		return errors.Wrapf(web.ErrDBNotConfigured, "")
-	}
+	dbConn := u.MasterDB.Copy()
 	defer dbConn.Close()
 
 	var usr user.CreateUser
@@ -90,10 +81,7 @@ func (u *User) Create(ctx context.Context, w http.ResponseWriter, r *http.Reques
 
 // Update updates the specified user in the system.
 func (u *User) Update(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-	dbConn, err := u.MasterDB.Copy()
-	if err != nil {
-		return errors.Wrapf(web.ErrDBNotConfigured, "")
-	}
+	dbConn := u.MasterDB.Copy()
 	defer dbConn.Close()
 
 	var usr user.CreateUser
@@ -101,7 +89,7 @@ func (u *User) Update(ctx context.Context, w http.ResponseWriter, r *http.Reques
 		return errors.Wrap(err, "")
 	}
 
-	err = user.Update(ctx, dbConn, params["id"], &usr)
+	err := user.Update(ctx, dbConn, params["id"], &usr)
 	if err = check(err); err != nil {
 		return errors.Wrapf(err, "Id: %s  User: %+v", params["id"], &usr)
 	}
@@ -112,13 +100,10 @@ func (u *User) Update(ctx context.Context, w http.ResponseWriter, r *http.Reques
 
 // Delete removed the specified user from the system.
 func (u *User) Delete(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-	dbConn, err := u.MasterDB.Copy()
-	if err != nil {
-		return errors.Wrapf(web.ErrDBNotConfigured, "")
-	}
+	dbConn := u.MasterDB.Copy()
 	defer dbConn.Close()
 
-	err = user.Delete(ctx, dbConn, params["id"])
+	err := user.Delete(ctx, dbConn, params["id"])
 	if err = check(err); err != nil {
 		return errors.Wrapf(err, "Id: %s", params["id"])
 	}
