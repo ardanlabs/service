@@ -31,11 +31,7 @@ func TestUser(t *testing.T) {
 		{
 			ctx := tests.Context()
 
-			dbConn, err := test.MasterDB.Copy()
-			if err != nil {
-				t.Fatalf("\t%s\tShould be able to connect to mongo : %s.", tests.Failed, err)
-			}
-			t.Logf("\t%s\tShould be able to connect to mongo.", tests.Success)
+			dbConn := test.MasterDB.Copy()
 			defer dbConn.Close()
 
 			cu := user.CreateUser{
