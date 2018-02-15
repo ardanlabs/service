@@ -28,7 +28,7 @@ func List(ctx context.Context, dbConn *db.DB) ([]User, error) {
 	f := func(collection *mgo.Collection) error {
 		return collection.Find(nil).All(&u)
 	}
-	if err := dbConn.Execute(ctx, usersCollection, f); err != nil {
+	if err := dbConn.Execute(usersCollection, f); err != nil {
 		return nil, errors.Wrap(err, "db.users.find()")
 	}
 
@@ -47,7 +47,7 @@ func Retrieve(ctx context.Context, dbConn *db.DB, userID string) (*User, error) 
 	f := func(collection *mgo.Collection) error {
 		return collection.Find(q).One(&u)
 	}
-	if err := dbConn.Execute(ctx, usersCollection, f); err != nil {
+	if err := dbConn.Execute(usersCollection, f); err != nil {
 		if err == mgo.ErrNotFound {
 			return nil, ErrNotFound
 		}
@@ -90,7 +90,7 @@ func Create(ctx context.Context, dbConn *db.DB, cu *CreateUser) (*User, error) {
 	f := func(collection *mgo.Collection) error {
 		return collection.Insert(&u)
 	}
-	if err := dbConn.Execute(ctx, usersCollection, f); err != nil {
+	if err := dbConn.Execute(usersCollection, f); err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf("db.users.insert(%s)", db.Query(&u)))
 	}
 
@@ -115,7 +115,7 @@ func Update(ctx context.Context, dbConn *db.DB, userID string, cu *CreateUser) e
 	f := func(collection *mgo.Collection) error {
 		return collection.Update(q, m)
 	}
-	if err := dbConn.Execute(ctx, usersCollection, f); err != nil {
+	if err := dbConn.Execute(usersCollection, f); err != nil {
 		if err == mgo.ErrNotFound {
 			return ErrNotFound
 		}
@@ -136,7 +136,7 @@ func Delete(ctx context.Context, dbConn *db.DB, userID string) error {
 	f := func(collection *mgo.Collection) error {
 		return collection.Remove(q)
 	}
-	if err := dbConn.Execute(ctx, usersCollection, f); err != nil {
+	if err := dbConn.Execute(usersCollection, f); err != nil {
 		if err == mgo.ErrNotFound {
 			return ErrNotFound
 		}
