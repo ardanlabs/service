@@ -10,7 +10,7 @@ import (
 
 // API returns a handler for a set of routes.
 func API(masterDB *db.DB) http.Handler {
-	app := web.New(mid.RequestLogger, mid.ErrorHandler)
+	app := web.New(mid.RequestLogger, mid.Metrics, mid.ErrorHandler)
 
 	u := User{
 		MasterDB: masterDB,

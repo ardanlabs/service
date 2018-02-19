@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net/http"
+	_ "net/http/pprof"
 	"os"
 	"os/signal"
 	"sync"
@@ -12,7 +13,13 @@ import (
 
 	"github.com/ardanlabs/service/cmd/crud/handlers"
 	"github.com/ardanlabs/service/internal/platform/db"
+	"github.com/braintree/manners"
 )
+
+/*
+hey -m GET -c 10 -n 10000 "http://localhost:3000/v1/users"
+expvarmon -ports=":4000" -vars="requests,goroutines,errors,mem:memstats.Alloc"
+*/
 
 /*
 Need to figure out timeouts for http service.
@@ -32,9 +39,13 @@ func main() {
 	writeTimeout := 10 * time.Second
 	shutdownTimeout := 5 * time.Second
 	dbDialTimeout := 5 * time.Second
-	host := os.Getenv("HOST")
-	if host == "" {
-		host = ":3000"
+	apiHost := os.Getenv("API_HOST")
+	if apiHost == "" {
+		apiHost = ":3000"
+	}
+	debugHost := os.Getenv("DEBUG_HOST")
+	if debugHost == "" {
+		debugHost = ":4000"
 	}
 	dbHost := os.Getenv("DB_HOST")
 	if dbHost == "" {
@@ -52,10 +63,28 @@ func main() {
 	defer masterDB.Close()
 
 	// ============================================================
-	// Start Service
+	// Start Debug Service
 
-	server := http.Server{
-		Addr:           host,
+	debug := manners.NewWithServer(&http.Server{
+		Addr:           debugHost,
+		Handler:        http.DefaultServeMux,
+		ReadTimeout:    readTimeout,
+		WriteTimeout:   writeTimeout,
+		MaxHeaderBytes: 1 << 20,
+	})
+
+	// Not concerned with shutting this down when the
+	// application is being shutdown.
+	go func() {
+		log.Printf("startup : Debug Listening %s", debugHost)
+		log.Printf("shutdown : Debug Listener closed : %v", debug.ListenAndServe())
+	}()
+
+	// ============================================================
+	// Start API Service
+
+	api := http.Server{
+		Addr:           apiHost,
 		Handler:        handlers.API(masterDB),
 		ReadTimeout:    readTimeout,
 		WriteTimeout:   writeTimeout,
@@ -66,8 +95,8 @@ func main() {
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
-		log.Printf("startup : Listening %s", host)
-		log.Printf("shutdown : Listener closed : %v", server.ListenAndServe())
+		log.Printf("startup : API Listening %s", apiHost)
+		log.Printf("shutdown : API Listener closed : %v", api.ListenAndServe())
 		wg.Done()
 	}()
 
@@ -84,10 +113,10 @@ func main() {
 	defer cancel()
 
 	// Asking listener to shutdown and load shed.
-	if err := server.Shutdown(ctx); err != nil {
+	if err := api.Shutdown(ctx); err != nil {
 		log.Printf("shutdown : Graceful shutdown did not complete in %v : %v", shutdownTimeout, err)
 
-		if err := server.Close(); err != nil {
+		if err := api.Close(); err != nil {
 			log.Printf("shutdown : Error killing server : %v", err)
 		}
 	}
