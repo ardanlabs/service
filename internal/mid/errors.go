@@ -22,6 +22,9 @@ func ErrorHandler(next web.Handler) web.Handler {
 		defer func() {
 			if r := recover(); r != nil {
 
+				// Indicate this request had an error.
+				v.Error = true
+
 				// Log the panic.
 				log.Printf("%s : ERROR : Panic Caught : %s\n", v.TraceID, r)
 
@@ -34,6 +37,9 @@ func ErrorHandler(next web.Handler) web.Handler {
 		}()
 
 		if err := next(ctx, w, r, params); err != nil {
+
+			// Indicate this request had an error.
+			v.Error = true
 
 			// What is the root error.
 			err = errors.Cause(err)
