@@ -13,7 +13,6 @@ import (
 
 	"github.com/ardanlabs/service/cmd/crud/handlers"
 	"github.com/ardanlabs/service/internal/platform/db"
-	"github.com/braintree/manners"
 )
 
 /*
@@ -68,13 +67,13 @@ func main() {
 	// /debug/vars - Added to the default mux by the expvars package.
 	// /debug/pprof - Added to the default mux by the net/http/pprof package.
 
-	debug := manners.NewWithServer(&http.Server{
+	debug := http.Server{
 		Addr:           debugHost,
 		Handler:        http.DefaultServeMux,
 		ReadTimeout:    readTimeout,
 		WriteTimeout:   writeTimeout,
 		MaxHeaderBytes: 1 << 20,
-	})
+	}
 
 	// Not concerned with shutting this down when the
 	// application is being shutdown.
