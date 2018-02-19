@@ -145,7 +145,7 @@ func getUser400(t *testing.T) {
 
 			recv := w.Body.String()
 			resp := `{
-  "error": "ID is not in it's proper form"
+  "error": "ID is not in its proper form"
 }`
 			if resp != recv {
 				t.Log("Got :", recv)

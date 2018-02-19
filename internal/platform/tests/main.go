@@ -61,7 +61,8 @@ func New() *Test {
 	return &test
 }
 
-// Down is shutting down tests.
+// TearDown is used for shutting down tests. Calling this should be
+// done in a defer immediately after calling New.
 func (t *Test) TearDown() {
 	t.MasterDB.Close()
 	if err := docker.StopMongo(t.container); err != nil {
