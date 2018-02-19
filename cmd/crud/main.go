@@ -65,6 +65,9 @@ func main() {
 	// ============================================================
 	// Start Debug Service
 
+	// /debug/vars - Added to the default mux by the expvars package.
+	// /debug/pprof - Added to the default mux by the net/http/pprof package.
+
 	debug := manners.NewWithServer(&http.Server{
 		Addr:           debugHost,
 		Handler:        http.DefaultServeMux,
