@@ -7,7 +7,6 @@ import (
 	_ "net/http/pprof"
 	"os"
 	"os/signal"
-	"sync"
 	"syscall"
 	"time"
 
@@ -93,37 +92,43 @@ func main() {
 		MaxHeaderBytes: 1 << 20,
 	}
 
-	// Starting the service, listening for requests.
-	var wg sync.WaitGroup
-	wg.Add(1)
+	// Make a channel to listen for errors coming from the listener. Use a
+	// buffered channel so the goroutine can exit if we don't collect this error.
+	serverErrors := make(chan error, 1)
+
+	// Start the service listening for requests.
 	go func() {
 		log.Printf("startup : API Listening %s", apiHost)
-		log.Printf("shutdown : API Listener closed : %v", api.ListenAndServe())
-		wg.Done()
+		serverErrors <- api.ListenAndServe()
 	}()
 
 	// ============================================================
 	// Shutdown
 
-	// Blocking main and waiting for shutdown.
+	// Make a channel to listen for an interrupt or terminate signal from the OS.
+	// Use a buffered channel because the signal package requires it.
 	osSignals := make(chan os.Signal, 1)
 	signal.Notify(osSignals, os.Interrupt, syscall.SIGTERM)
-	<-osSignals
 
-	// Create context for Shutdown call.
-	ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
-	defer cancel()
+	// Blocking main and waiting for shutdown.
+	select {
+	case err := <-serverErrors:
+		log.Fatalf("Error starting server: %v", err)
 
-	// Asking listener to shutdown and load shed.
-	if err := api.Shutdown(ctx); err != nil {
-		log.Printf("shutdown : Graceful shutdown did not complete in %v : %v", shutdownTimeout, err)
+	case <-osSignals:
 
-		if err := api.Close(); err != nil {
-			log.Printf("shutdown : Error killing server : %v", err)
+		// Create context for Shutdown call.
+		ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
+		defer cancel()
+
+		// Asking listener to shutdown and load shed.
+		if err := api.Shutdown(ctx); err != nil {
+			log.Printf("Graceful shutdown did not complete in %v : %v", shutdownTimeout, err)
+			if err := api.Close(); err != nil {
+				log.Fatalf("Could not stop http server: %v", err)
+			}
 		}
 	}
 
-	// Waiting for service to complete that load shedding.
-	wg.Wait()
 	log.Println("main : Completed")
 }
