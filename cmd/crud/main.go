@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/cmd/crud/handlers"
+	"github.com/ardanlabs/service/internal/platform/cfg"
 	"github.com/ardanlabs/service/internal/platform/db"
 )
 
@@ -33,22 +34,39 @@ func main() {
 	// ============================================================
 	// Configuration
 
-	readTimeout := 5 * time.Second
-	writeTimeout := 10 * time.Second
-	shutdownTimeout := 5 * time.Second
-	dbDialTimeout := 5 * time.Second
-	apiHost := os.Getenv("API_HOST")
-	if apiHost == "" {
+	c, err := cfg.New(cfg.EnvProvider{Namespace: "CRUD"})
+	if err != nil {
+		log.Printf("%s. All config defaults in use.", err)
+	}
+	readTimeout, err := c.Duration("READ_TIMEOUT")
+	if err != nil {
+		readTimeout = 5 * time.Second
+	}
+	writeTimeout, err := c.Duration("WRITE_TIMEOUT")
+	if err != nil {
+		writeTimeout = 5 * time.Second
+	}
+	shutdownTimeout, err := c.Duration("SHUTDOWN_TIMEOUT")
+	if err != nil {
+		shutdownTimeout = 5 * time.Second
+	}
+	dbDialTimeout, err := c.Duration("DB_DIAL_TIMEOUT")
+	if err != nil {
+		dbDialTimeout = 5 * time.Second
+	}
+	apiHost, err := c.String("API_HOST")
+	if err != nil {
 		apiHost = ":3000"
 	}
-	debugHost := os.Getenv("DEBUG_HOST")
-	if debugHost == "" {
+	debugHost, err := c.String("DEBUG_HOST")
+	if err != nil {
 		debugHost = ":4000"
 	}
-	dbHost := os.Getenv("DB_HOST")
-	if dbHost == "" {
+	dbHost, err := c.String("DB_HOST")
+	if err != nil {
 		dbHost = "got:got2015@ds039441.mongolab.com:39441/gotraining"
 	}
+	log.Println(c.Log())
 
 	// ============================================================
 	// Start Mongo
