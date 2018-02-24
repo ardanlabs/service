@@ -66,7 +66,14 @@ func main() {
 	if err != nil {
 		dbHost = "got:got2015@ds039441.mongolab.com:39441/gotraining"
 	}
-	log.Println(c.Log())
+
+	log.Printf("%s=%v", "READ_TIMEOUT", readTimeout)
+	log.Printf("%s=%v", "WRITE_TIMEOUT", writeTimeout)
+	log.Printf("%s=%v", "SHUTDOWN_TIMEOUT", shutdownTimeout)
+	log.Printf("%s=%v", "DB_DIAL_TIMEOUT", dbDialTimeout)
+	log.Printf("%s=%v", "API_HOST", apiHost)
+	log.Printf("%s=%v", "DEBUG_HOST", debugHost)
+	log.Printf("%s=%v", "DB_HOST", dbHost)
 
 	// ============================================================
 	// Start Mongo
@@ -127,6 +134,11 @@ func main() {
 	// Use a buffered channel because the signal package requires it.
 	osSignals := make(chan os.Signal, 1)
 	signal.Notify(osSignals, os.Interrupt, syscall.SIGTERM)
+
+	log.Println("main : Start shutdown...")
+
+	// ============================================================
+	// Stop API Service
 
 	// Blocking main and waiting for shutdown.
 	select {
