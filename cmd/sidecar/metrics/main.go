@@ -60,11 +60,10 @@ func main() {
 	<-osSignals
 
 	log.Println("main : Start shutdown...")
+	defer log.Println("main : Completed")
 
 	// ============================================================
 	// Stop publishers
 
 	console.Stop()
-
-	log.Println("main : Completed")
 }

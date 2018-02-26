@@ -137,7 +137,8 @@ func main() {
 	osSignals := make(chan os.Signal, 1)
 	signal.Notify(osSignals, os.Interrupt, syscall.SIGTERM)
 
-	log.Println("main : Start shutdown...")
+	log.Println("main : Started")
+	defer log.Println("main : Completed")
 
 	// ============================================================
 	// Stop API Service
@@ -148,6 +149,7 @@ func main() {
 		log.Fatalf("Error starting server: %v", err)
 
 	case <-osSignals:
+		log.Println("main : Start shutdown...")
 
 		// Create context for Shutdown call.
 		ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
@@ -161,6 +163,4 @@ func main() {
 			}
 		}
 	}
-
-	log.Println("main : Completed")
 }
