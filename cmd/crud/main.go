@@ -38,7 +38,7 @@ func main() {
 
 	c, err := cfg.New(cfg.EnvProvider{Namespace: "CRUD"})
 	if err != nil {
-		log.Printf("%s. All config defaults in use.", err)
+		log.Printf("config : %s. All config defaults in use.", err)
 	}
 	readTimeout, err := c.Duration("READ_TIMEOUT")
 	if err != nil {
@@ -69,13 +69,13 @@ func main() {
 		dbHost = "got:got2015@ds039441.mongolab.com:39441/gotraining"
 	}
 
-	log.Printf("%s=%v", "READ_TIMEOUT", readTimeout)
-	log.Printf("%s=%v", "WRITE_TIMEOUT", writeTimeout)
-	log.Printf("%s=%v", "SHUTDOWN_TIMEOUT", shutdownTimeout)
-	log.Printf("%s=%v", "DB_DIAL_TIMEOUT", dbDialTimeout)
-	log.Printf("%s=%v", "API_HOST", apiHost)
-	log.Printf("%s=%v", "DEBUG_HOST", debugHost)
-	log.Printf("%s=%v", "DB_HOST", dbHost)
+	log.Printf("config : %s=%v", "READ_TIMEOUT", readTimeout)
+	log.Printf("config : %s=%v", "WRITE_TIMEOUT", writeTimeout)
+	log.Printf("config : %s=%v", "SHUTDOWN_TIMEOUT", shutdownTimeout)
+	log.Printf("config : %s=%v", "DB_DIAL_TIMEOUT", dbDialTimeout)
+	log.Printf("config : %s=%v", "API_HOST", apiHost)
+	log.Printf("config : %s=%v", "DEBUG_HOST", debugHost)
+	log.Printf("config : %s=%v", "DB_HOST", dbHost)
 
 	// =========================================================================
 	// Start Mongo
@@ -83,7 +83,7 @@ func main() {
 	log.Println("main : Started : Initialize Mongo")
 	masterDB, err := db.New(dbHost, dbDialTimeout)
 	if err != nil {
-		log.Fatalf("startup : Register DB : %v", err)
+		log.Fatalf("main : Register DB : %v", err)
 	}
 	defer masterDB.Close()
 
@@ -104,8 +104,8 @@ func main() {
 	// Not concerned with shutting this down when the
 	// application is being shutdown.
 	go func() {
-		log.Printf("startup : Debug Listening %s", debugHost)
-		log.Printf("shutdown : Debug Listener closed : %v", debug.ListenAndServe())
+		log.Printf("main : Debug Listening %s", debugHost)
+		log.Printf("main : Debug Listener closed : %v", debug.ListenAndServe())
 	}()
 
 	// =========================================================================
@@ -125,7 +125,7 @@ func main() {
 
 	// Start the service listening for requests.
 	go func() {
-		log.Printf("startup : API Listening %s", apiHost)
+		log.Printf("main : API Listening %s", apiHost)
 		serverErrors <- api.ListenAndServe()
 	}()
 
@@ -146,7 +146,7 @@ func main() {
 	// Blocking main and waiting for shutdown.
 	select {
 	case err := <-serverErrors:
-		log.Fatalf("Error starting server: %v", err)
+		log.Fatalf("main : Error starting server: %v", err)
 
 	case <-osSignals:
 		log.Println("main : Start shutdown...")
@@ -157,9 +157,9 @@ func main() {
 
 		// Asking listener to shutdown and load shed.
 		if err := api.Shutdown(ctx); err != nil {
-			log.Printf("Graceful shutdown did not complete in %v : %v", shutdownTimeout, err)
+			log.Printf("main : Graceful shutdown did not complete in %v : %v", shutdownTimeout, err)
 			if err := api.Close(); err != nil {
-				log.Fatalf("Could not stop http server: %v", err)
+				log.Fatalf("main : Could not stop http server: %v", err)
 			}
 		}
 	}
