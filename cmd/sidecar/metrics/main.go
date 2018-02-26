@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/cmd/sidecar/metrics/collectors/expvar"
-	"github.com/ardanlabs/service/cmd/sidecar/metrics/publishers/console"
+	"github.com/ardanlabs/service/cmd/sidecar/metrics/publishers/datadog"
 	"github.com/ardanlabs/service/internal/platform/cfg"
 )
 
@@ -45,9 +45,9 @@ func main() {
 		log.Fatalf("startup : Starting expvar collector : %v", err)
 	}
 
-	console, err := console.New(expvar, interval)
+	datadog, err := datadog.New(expvar, interval)
 	if err != nil {
-		log.Fatalf("startup : Starting console publisher : %v", err)
+		log.Fatalf("startup : Starting datadog publisher : %v", err)
 	}
 
 	// ============================================================
@@ -65,5 +65,5 @@ func main() {
 	// ============================================================
 	// Stop publishers
 
-	console.Stop()
+	datadog.Stop()
 }
