@@ -89,4 +89,6 @@ func Datadog(data map[string]interface{}) {
 		return
 	}
 	log.Println(string(out))
+
+	// TODO : Send to Datadog!
 }

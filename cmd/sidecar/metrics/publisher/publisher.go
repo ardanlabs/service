@@ -12,6 +12,8 @@ type Collector interface {
 	Collect() (map[string]interface{}, error)
 }
 
+// =============================================================================
+
 // Publisher defines a handler function that will be called
 // on each interval.
 type Publisher func(map[string]interface{})

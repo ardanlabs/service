@@ -33,7 +33,7 @@ func init() {
 
 func main() {
 
-	// ============================================================
+	// =========================================================================
 	// Configuration
 
 	c, err := cfg.New(cfg.EnvProvider{Namespace: "CRUD"})
@@ -77,7 +77,7 @@ func main() {
 	log.Printf("%s=%v", "DEBUG_HOST", debugHost)
 	log.Printf("%s=%v", "DB_HOST", dbHost)
 
-	// ============================================================
+	// =========================================================================
 	// Start Mongo
 
 	log.Println("main : Started : Initialize Mongo")
@@ -87,7 +87,7 @@ func main() {
 	}
 	defer masterDB.Close()
 
-	// ============================================================
+	// =========================================================================
 	// Start Debug Service
 
 	// /debug/vars - Added to the default mux by the expvars package.
@@ -108,7 +108,7 @@ func main() {
 		log.Printf("shutdown : Debug Listener closed : %v", debug.ListenAndServe())
 	}()
 
-	// ============================================================
+	// =========================================================================
 	// Start API Service
 
 	api := http.Server{
@@ -129,7 +129,7 @@ func main() {
 		serverErrors <- api.ListenAndServe()
 	}()
 
-	// ============================================================
+	// =========================================================================
 	// Shutdown
 
 	// Make a channel to listen for an interrupt or terminate signal from the OS.
@@ -140,7 +140,7 @@ func main() {
 	log.Println("main : Started")
 	defer log.Println("main : Completed")
 
-	// ============================================================
+	// =========================================================================
 	// Stop API Service
 
 	// Blocking main and waiting for shutdown.
