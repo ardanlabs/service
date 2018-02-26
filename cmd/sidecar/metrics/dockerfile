@@ -1,0 +1,26 @@
+# Running the application with port 4000 mapped to the host:
+# $ docker run -d --name metrics-amd64 -p 4000:4000 metrics-amd64:1
+
+# Stage 0
+#
+# Build the Go Binary.
+#
+FROM golang
+
+ENV CGO_ENABLED 0
+
+RUN mkdir -p /go/src/github.com/ardanlabs/service
+WORKDIR /go/src/github.com/ardanlabs/service
+ADD . /go/src/github.com/ardanlabs/service
+
+RUN go build -ldflags "-s -w -X main.build=$(git rev-parse HEAD)" -a -tags netgo github.com/ardanlabs/service/cmd/sidecar/metrics
+
+# Stage 1
+#
+# Run the Go Binary in Alpine.
+#
+FROM alpine:3.6
+MAINTAINER William Kennedy <bill@ardanlabs.com>
+EXPOSE 4000
+COPY --from=0 /go/src/github.com/ardanlabs/service/sidecars/metrics /bin/
+ENTRYPOINT ["/bin/metrics"]

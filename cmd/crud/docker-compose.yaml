@@ -13,5 +13,10 @@ services:
     image: crud-amd64:1
     ports:
         - 3000:3000
+        - 4000:4000
+  metrics:
+    networks:
+      - shared-network
+    image: metrics-amd64:1
 volumes:
     console-data:

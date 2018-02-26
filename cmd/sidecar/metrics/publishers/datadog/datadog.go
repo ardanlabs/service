@@ -1,7 +1,6 @@
-package console
+package datadog
 
 import (
-	"encoding/json"
 	"log"
 	"sync"
 	"time"
@@ -55,21 +54,49 @@ func (con *Console) Stop() {
 
 // publish pulls the metrics and publishes them to the console.
 func (con *Console) publish() {
+	/*
+		curl  -X POST -H "Content-type: application/json" \
+		-d [JSON_DOC] \
+		'https://app.datadoghq.com/api/v1/series?api_key=[KEY]'
+	*/
+
 	data, err := con.collector.Collect()
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
-	log.Println(marshal(data))
+	// out := marshal(data)
+
+	// MAKE CALL HERE
+
+	// JUST A STOP GAP FOR NOW.
+	log.Println(data)
 }
 
-// marshal handles the marshaling of the map to a JSON string.
+// marshal handles the marshaling of the map to a datadog json document.
 func marshal(data map[string]interface{}) string {
-	out, err := json.MarshalIndent(data, "", "    ")
-	if err != nil {
-		log.Println(err)
-		return ""
+	/*
+		{ \"series\" :
+				[{\"metric\":\"test.metric\",
+				\"points\":[[$currenttime, 20]],
+				\"type\":\"gauge\",
+				\"host\":\"test.example.com\",
+				\"tags\":[\"environment:test\"]}
+			]
+		}
+	*/
+
+	type series struct {
+		Metric string   `json:"metric"`
+		Points []string `json:"points"`
+		Type   string   `json:"type"`
+		Host   string   `json:"host"`
+		Tags   []string `json:"tags"`
 	}
-	return string(out)
+	type dog struct {
+		series []series
+	}
+
+	return ""
 }

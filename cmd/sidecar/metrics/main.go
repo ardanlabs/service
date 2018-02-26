@@ -27,7 +27,7 @@ func main() {
 	}
 	apiHost, err := c.String("API_HOST")
 	if err != nil {
-		apiHost = ":3000"
+		apiHost = "http://localhost:4000/debug/vars"
 	}
 	interval, err := c.Duration("INTERVAL")
 	if err != nil {
