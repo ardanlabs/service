@@ -7,8 +7,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/ardanlabs/service/cmd/sidecar/metrics/collectors/expvar"
-	"github.com/ardanlabs/service/cmd/sidecar/metrics/publishers/datadog"
+	"github.com/ardanlabs/service/cmd/sidecar/metrics/collector"
+	"github.com/ardanlabs/service/cmd/sidecar/metrics/publisher"
 	"github.com/ardanlabs/service/internal/platform/cfg"
 )
 
@@ -33,21 +33,35 @@ func main() {
 	if err != nil {
 		interval = 5 * time.Second
 	}
+	publishTo, err := c.String("PUBLISHER")
+	if err != nil {
+		publishTo = "console"
+	}
 
 	log.Printf("%s=%v", "API_HOST", apiHost)
 	log.Printf("%s=%v", "INTERVAL", interval)
+	log.Printf("%s=%v", "PUBLISHER", publishTo)
 
 	// ============================================================
 	// Start collectors and publishers
 
+	// Initalize to allow for the collection of metrics.
 	expvar, err := expvar.New(apiHost)
 	if err != nil {
-		log.Fatalf("startup : Starting expvar collector : %v", err)
+		log.Fatalf("startup : Starting collector : %v", err)
 	}
 
-	datadog, err := datadog.New(expvar, interval)
+	// Determine which publisher to use.
+	f := publisher.Console
+	switch publishTo {
+	case publisher.TypeDatadog:
+		f = publisher.Datadog
+	}
+
+	// Start the publisher to collect/publish metrics.
+	publish, err := publisher.New(expvar, f, interval)
 	if err != nil {
-		log.Fatalf("startup : Starting datadog publisher : %v", err)
+		log.Fatalf("startup : Starting publisher : %v", err)
 	}
 
 	// ============================================================
@@ -65,5 +79,5 @@ func main() {
 	// ============================================================
 	// Stop publishers
 
-	datadog.Stop()
+	publish.Stop()
 }
