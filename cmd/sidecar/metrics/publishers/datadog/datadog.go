@@ -68,9 +68,6 @@ func (con *Console) publish() {
 
 	// out := marshal(data)
 
-	// MAKE CALL HERE
-
-	// JUST A STOP GAP FOR NOW.
 	log.Println(data)
 }
 
