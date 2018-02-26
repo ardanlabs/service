@@ -1,6 +1,7 @@
 package console
 
 import (
+	"encoding/json"
 	"log"
 	"sync"
 	"time"
@@ -9,7 +10,7 @@ import (
 // Collector defines a contract a collector must support
 // so a consumer can retrieve metrics.
 type Collector interface {
-	Collect() string
+	Collect() (map[string]interface{}, error)
 }
 
 // Console provides the ability to receive metrics
@@ -54,5 +55,21 @@ func (con *Console) Stop() {
 
 // publish pulls the metrics and publishes them to the console.
 func (con *Console) publish() {
-	log.Println(con.collector.Collect())
+	data, err := con.collector.Collect()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	log.Println(marshal(data))
+}
+
+// marshal handles the marshaling of the map to a JSON string.
+func marshal(data map[string]interface{}) string {
+	out, err := json.MarshalIndent(data, "", "    ")
+	if err != nil {
+		log.Println(err)
+		return ""
+	}
+	return string(out)
 }
