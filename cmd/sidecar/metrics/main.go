@@ -18,7 +18,7 @@ func init() {
 
 func main() {
 
-	// ============================================================
+	// =========================================================================
 	// Configuration
 
 	c, err := cfg.New(cfg.EnvProvider{Namespace: "METRICS"})
@@ -42,7 +42,7 @@ func main() {
 	log.Printf("%s=%v", "INTERVAL", interval)
 	log.Printf("%s=%v", "PUBLISHER", publishTo)
 
-	// ============================================================
+	// =========================================================================
 	// Start collectors and publishers
 
 	// Initalize to allow for the collection of metrics.
@@ -64,7 +64,7 @@ func main() {
 		log.Fatalf("startup : Starting publisher : %v", err)
 	}
 
-	// ============================================================
+	// =========================================================================
 	// Shutdown
 
 	// Make a channel to listen for an interrupt or terminate signal from the OS.
@@ -76,7 +76,7 @@ func main() {
 	log.Println("main : Start shutdown...")
 	defer log.Println("main : Completed")
 
-	// ============================================================
+	// =========================================================================
 	// Stop publishers
 
 	publish.Stop()
