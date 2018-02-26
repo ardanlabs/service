@@ -25,6 +25,7 @@ type Console struct {
 func New(collector Collector, interval time.Duration) (*Console, error) {
 	con := Console{
 		collector: collector,
+		host: host,
 		timer:     time.NewTimer(interval),
 		shutdown:  make(chan struct{}),
 	}
@@ -85,14 +86,22 @@ func marshal(data map[string]interface{}) string {
 	*/
 
 	type series struct {
-		Metric string   `json:"metric"`
-		Points []string `json:"points"`
-		Type   string   `json:"type"`
-		Host   string   `json:"host"`
-		Tags   []string `json:"tags"`
+		Metric string     `json:"metric"`
+		Points [][]string `json:"points"`
+		Type   string     `json:"type"`
+		Host   string     `json:"host"`
+		Tags   []string   `json:"tags"`
 	}
 	type dog struct {
 		series []series
+	}
+
+	var d dog
+	for key, value := range data {
+		s := series{
+			Type: "guage",
+			Host: 
+		}
 	}
 
 	return ""

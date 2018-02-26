@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
+	"net/url"
 	"time"
 )
 
@@ -77,9 +78,16 @@ func (exp *Expvar) Collect() (map[string]interface{}, error) {
 		data["heap"] = memStats["Alloc"]
 	}
 
+	// Add the host to the metrics.
+	u, err := url.Parse(exp.host)
+	if err != nil {
+		return nil, err
+	}
+	data["host"] = u.Host
+
 	// Remove uncessary keys.
-	delete(data, "cmdline")
 	delete(data, "memstats")
+	delete(data, "cmdline")
 
 	return data, nil
 }
