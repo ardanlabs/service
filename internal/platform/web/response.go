@@ -67,6 +67,7 @@ func RespondError(ctx context.Context, w http.ResponseWriter, err error, code in
 // Respond sends JSON to the client.
 // If code is StatusNoContent, v is expected to be nil.
 func Respond(ctx context.Context, w http.ResponseWriter, data interface{}, code int) {
+
 	// Set the status code for the request logger middleware.
 	v := ctx.Value(KeyValues).(*Values)
 	v.StatusCode = code
@@ -82,6 +83,7 @@ func Respond(ctx context.Context, w http.ResponseWriter, data interface{}, code 
 	jsonData, err := json.MarshalIndent(data, "", "  ")
 	if err != nil {
 		log.Printf("%s : Respond %v Marshalling JSON response\n", v.TraceID, err)
+
 		// Should respond with internal server error.
 		RespondError(ctx, w, err, http.StatusInternalServerError)
 		return

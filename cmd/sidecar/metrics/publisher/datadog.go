@@ -150,12 +150,12 @@ func sendDatadog(d *Datadog, data []byte) error {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode != http.StatusAccepted {
 		out, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			return err
+			return fmt.Errorf("status[%d] : %s", resp.StatusCode, out)
 		}
-		log.Printf("datadog.publish : error : status[%d] : %s", resp.StatusCode, out)
+		return fmt.Errorf("status[%d]", resp.StatusCode)
 	}
 
 	return nil
