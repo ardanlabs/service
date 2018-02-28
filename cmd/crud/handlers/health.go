@@ -22,6 +22,12 @@ func (h *Health) Check(ctx context.Context, w http.ResponseWriter, r *http.Reque
 		return err
 	}
 
-	web.Respond(ctx, w, []byte("ok"), http.StatusOK)
+	status := struct {
+		Status string `json:"status"`
+	}{
+		Status: "ok",
+	}
+
+	web.Respond(ctx, w, status, http.StatusOK)
 	return nil
 }
