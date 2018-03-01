@@ -10,13 +10,13 @@ services:
   crud:
     networks:
       - shared-network
-    image: crud-amd64:1
+    image: crud-amd64
     ports:
         - 3000:3000
         - 4000:4000
+    # environment:
+      # - CRUD_DB_HOST=docker.for.mac.localhost:27017
   metrics:
     networks:
       - shared-network
-    image: metrics-amd64:1
-volumes:
-    console-data:
+    image: metrics-amd64
