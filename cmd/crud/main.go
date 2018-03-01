@@ -58,11 +58,11 @@ func main() {
 	}
 	apiHost, err := c.String("API_HOST")
 	if err != nil {
-		apiHost = ":3000"
+		apiHost = "0.0.0.0:3000"
 	}
 	debugHost, err := c.String("DEBUG_HOST")
 	if err != nil {
-		debugHost = ":4000"
+		debugHost = "0.0.0.0:4000"
 	}
 	dbHost, err := c.String("DB_HOST")
 	if err != nil {

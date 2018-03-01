@@ -1,0 +1,22 @@
+# $ cd $GOPATH/src/github.com/ardanlabs/service
+# $ docker build -t metrics-amd64 -f dockerfile.metrics .
+
+# Stage 0
+#
+# Build the Go Binary.
+#
+FROM golang
+ENV CGO_ENABLED 0
+RUN mkdir -p /go/src/github.com/ardanlabs/service
+ADD . /go/src/github.com/ardanlabs/service
+WORKDIR /go/src/github.com/ardanlabs/service/cmd/sidecar/metrics
+RUN go build -ldflags "-s -w -X main.build=$(git rev-parse HEAD)" -a -tags netgo
+
+# Stage 1
+#
+# Run the Go Binary in Alpine.
+#
+FROM alpine:3.7
+MAINTAINER William Kennedy <bill@ardanlabs.com>
+COPY --from=0 /go/src/github.com/ardanlabs/service/cmd/sidecar/metrics/metrics /bin/
+ENTRYPOINT ["/bin/metrics"]
