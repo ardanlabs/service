@@ -4,7 +4,4 @@ This is a work in process and will attempt to cover best practices around Go bas
 
 ## Docker
 
-```bash
-# Build the crud app as a docker image (No local Go installation needed).
-docker build -f cmd/crud/dockerfile -t crud-amd64:1 .
-```
+There are two dockerfiles for both services at the root of the repo. Instructions for building the images are located in each respective dockerfile. Use docker-compose to run the services. The default configuration setting are for running with docker-compose.
