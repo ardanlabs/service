@@ -14,6 +14,8 @@ import (
 	"github.com/ardanlabs/service/cmd/crud/handlers"
 	"github.com/ardanlabs/service/internal/platform/cfg"
 	"github.com/ardanlabs/service/internal/platform/db"
+	"github.com/ardanlabs/service/internal/platform/traexp"
+	"go.opencensus.io/trace"
 )
 
 /*
@@ -69,6 +71,10 @@ func main() {
 	if err != nil {
 		dbHost = "got:got2015@ds039441.mongolab.com:39441/gotraining"
 	}
+	traceHost, err := c.String("TRACE_HOST")
+	if err != nil {
+		traceHost = "0.0.0.0:5000"
+	}
 
 	log.Printf("config : %s=%v", "READ_TIMEOUT", readTimeout)
 	log.Printf("config : %s=%v", "WRITE_TIMEOUT", writeTimeout)
@@ -77,6 +83,7 @@ func main() {
 	log.Printf("config : %s=%v", "API_HOST", apiHost)
 	log.Printf("config : %s=%v", "DEBUG_HOST", debugHost)
 	log.Printf("config : %s=%v", "DB_HOST", dbHost)
+	log.Printf("config : %s=%v", "TRACE_HOST", traceHost)
 
 	// =========================================================================
 	// Start Mongo
@@ -108,6 +115,14 @@ func main() {
 		log.Printf("main : Debug Listening %s", debugHost)
 		log.Printf("main : Debug Listener closed : %v", debug.ListenAndServe())
 	}()
+
+	// =========================================================================
+	// Start Tracing Service
+
+	log.Printf("main : Tracing Started %s", traceHost)
+	traceExporter := traexp.New(traceHost)
+	trace.RegisterExporter(traceExporter)
+	trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
 
 	// =========================================================================
 	// Start API Service
@@ -151,6 +166,9 @@ func main() {
 
 	case <-osSignals:
 		log.Println("main : Start shutdown...")
+
+		// Unregister the trace exporter.
+		trace.UnregisterExporter(traceExporter)
 
 		// Create context for Shutdown call.
 		ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)

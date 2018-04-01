@@ -3,10 +3,23 @@
 # docker-compose stop
 # docker-compose down
 version: '3'
+
 networks:
   shared-network:
     driver: bridge
+
 services:
+  
+  # This starts a local mongo DB.
+  mongo:
+    networks:
+      - shared-network
+    image: mongo
+    ports:
+      - 27017:27017
+    command: --bind_ip 0.0.0.0
+
+  # This is the core CRUD based service.
   crud:
     networks:
       - shared-network
@@ -14,9 +27,19 @@ services:
     ports:
         - 3000:3000
         - 4000:4000
-    # environment:
+        - 5000:5000
+    environment:
       # - CRUD_DB_HOST=docker.for.mac.localhost:27017
+      - CRUD_DB_HOST=mongo:27017/gotraining
+
+  # This sidecar publishes metrics to the console by default.
   metrics:
     networks:
       - shared-network
     image: metrics-amd64
+  
+  # This sidecar allows for the viewing of traces.
+  tracing:
+    networks:
+      - shared-network
+    image: openzipkin/zipkin
