@@ -20,6 +20,15 @@
   version = "v0.8.0"
 
 [[projects]]
+  name = "go.opencensus.io"
+  packages = [
+    "internal",
+    "trace"
+  ]
+  revision = "6e3f034057826b530038d93267906ec3c012183f"
+  version = "v0.6.0"
+
+[[projects]]
   name = "gopkg.in/go-playground/validator.v8"
   packages = ["."]
   revision = "5f1438d3fca68893a817e4a66806cea46a9e4ebf"
@@ -28,12 +37,18 @@
 [[projects]]
   branch = "v2"
   name = "gopkg.in/mgo.v2"
-  packages = [".","bson","internal/json","internal/sasl","internal/scram"]
+  packages = [
+    ".",
+    "bson",
+    "internal/json",
+    "internal/sasl",
+    "internal/scram"
+  ]
   revision = "3f83fa5005286a7fe593b055f0d7771a7dce4655"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "b7c83315b2b0380eda2aab690fad55cbd4c24f2cdf245b4556c09026833d4267"
+  inputs-digest = "4aeb1fec38c14b7b648e68516c43a9ee136f6be3d17914d62a8956729746d2fc"
   solver-name = "gps-cdcl"
   solver-version = 1
