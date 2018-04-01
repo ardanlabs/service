@@ -48,6 +48,8 @@ func New(host string) *Exporter {
 
 // ExportSpan posts the traces to the configured host.
 func (e *Exporter) ExportSpan(vd *trace.SpanData) {
+	log.Println("trace : Export Spans : Started")
+
 	d, err := json.MarshalIndent(vd, "", "  ")
 	if err != nil {
 		log.Println("trace : ERROR :", err)
@@ -84,4 +86,6 @@ func (e *Exporter) ExportSpan(vd *trace.SpanData) {
 			log.Println("trace : ERROR :", err)
 		}
 	}
+
+	log.Println("trace : Export Spans : Completed")
 }
