@@ -20,22 +20,14 @@ import (
 
 const defaultSamplingProbability = 1e-4
 
-func init() {
-	defaultSampler = ProbabilitySampler(defaultSamplingProbability)
-}
-
 func newDefaultSampler() Sampler {
 	return ProbabilitySampler(defaultSamplingProbability)
 }
 
 // SetDefaultSampler sets the default sampler used when creating new spans.
+//
+// Deprecated: Use ApplyConfig.
 func SetDefaultSampler(sampler Sampler) {
-	if sampler == nil {
-		sampler = newDefaultSampler()
-	}
-	mu.Lock()
-	defaultSampler = sampler
-	mu.Unlock()
 }
 
 // Sampler decides whether a trace should be sampled and exported.

@@ -114,7 +114,7 @@ type StartOptions struct {
 	// If not provided, then the behavior differs based on whether
 	// the parent of this Span is remote, local, or there is no parent.
 	// In the case of a remote parent or no parent, the
-	// default sampler (see SetDefaultSampler) will be consulted. Otherwise,
+	// default sampler (see Config) will be consulted. Otherwise,
 	// when there is a non-remote parent, no new sampling decision will be made:
 	// we will preserve the sampling of the parent.
 	Sampler Sampler
@@ -158,11 +158,12 @@ func startSpanInternal(name string, hasParent bool, parent SpanContext, remotePa
 	span := &Span{}
 	span.spanContext = parent
 	mu.Lock()
+	// TODO(jbd): Reduce the contention.
 	if !hasParent {
 		span.spanContext.TraceID = newTraceIDLocked()
 	}
 	span.spanContext.SpanID = newSpanIDLocked()
-	sampler := defaultSampler
+	sampler := config.DefaultSampler
 	mu.Unlock()
 
 	if !hasParent || remoteParent || o.Sampler != nil {
@@ -405,12 +406,12 @@ func (s *Span) String() string {
 }
 
 var (
-	mu             sync.Mutex // protects the variables below
-	traceIDRand    *rand.Rand
-	traceIDAdd     [2]uint64
-	nextSpanID     uint64
-	spanIDInc      uint64
-	defaultSampler Sampler
+	mu          sync.Mutex // protects the variables below
+	traceIDRand *rand.Rand
+	traceIDAdd  [2]uint64
+	nextSpanID  uint64
+	spanIDInc   uint64
+	config      Config
 )
 
 func init() {
