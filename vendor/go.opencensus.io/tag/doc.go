@@ -11,22 +11,16 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
-package internal
-
-import "time"
-
-// UserAgent is the user agent to be added to the outgoing
-// requests from the exporters.
-const UserAgent = "opencensus-go [0.8.0]"
-
-// MonotonicEndTime returns the end time at present
-// but offset from start, monotonically.
 //
-// The monotonic clock is used in subtractions hence
-// the duration since start added back to start gives
-// end as a monotonic time.
-// See https://golang.org/pkg/time/#hdr-Monotonic_Clocks
-func MonotonicEndTime(start time.Time) time.Time {
-	return start.Add(time.Now().Sub(start))
-}
+
+/*
+Package tag contains OpenCensus tags.
+
+Tags are key-value pairs. Tags provide additional cardinality to
+the OpenCensus instrumentation data.
+
+Tags can be propagated on the wire and in the same
+process via context.Context. Encode and Decode should be
+used to represent tags into their binary propagation form.
+*/
+package tag // import "go.opencensus.io/tag"

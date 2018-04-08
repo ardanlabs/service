@@ -1,4 +1,4 @@
-// Copyright 2017, OpenCensus Authors
+// Copyright 2018, OpenCensus Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,21 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package internal provides trace internals.
 package internal
 
-import "time"
-
-// UserAgent is the user agent to be added to the outgoing
-// requests from the exporters.
-const UserAgent = "opencensus-go [0.8.0]"
-
-// MonotonicEndTime returns the end time at present
-// but offset from start, monotonically.
-//
-// The monotonic clock is used in subtractions hence
-// the duration since start added back to start gives
-// end as a monotonic time.
-// See https://golang.org/pkg/time/#hdr-Monotonic_Clocks
-func MonotonicEndTime(start time.Time) time.Time {
-	return start.Add(time.Now().Sub(start))
+type IDGenerator interface {
+	NewTraceID() [16]byte
+	NewSpanID() [8]byte
 }

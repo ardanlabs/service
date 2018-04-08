@@ -24,12 +24,6 @@ func newDefaultSampler() Sampler {
 	return ProbabilitySampler(defaultSamplingProbability)
 }
 
-// SetDefaultSampler sets the default sampler used when creating new spans.
-//
-// Deprecated: Use ApplyConfig.
-func SetDefaultSampler(sampler Sampler) {
-}
-
 // Sampler decides whether a trace should be sampled and exported.
 type Sampler func(SamplingParameters) SamplingDecision
 

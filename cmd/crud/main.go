@@ -14,7 +14,9 @@ import (
 	"github.com/ardanlabs/service/cmd/crud/handlers"
 	"github.com/ardanlabs/service/internal/platform/cfg"
 	"github.com/ardanlabs/service/internal/platform/db"
-	"github.com/ardanlabs/service/internal/platform/traexp"
+	openzipkin "github.com/openzipkin/zipkin-go"
+	ziphttp "github.com/openzipkin/zipkin-go/reporter/http"
+	"go.opencensus.io/exporter/zipkin"
 	"go.opencensus.io/trace"
 )
 
@@ -71,9 +73,9 @@ func main() {
 	if err != nil {
 		dbHost = "got:got2015@ds039441.mongolab.com:39441/gotraining"
 	}
-	traceHost, err := c.String("TRACE_HOST")
+	zipkinHost, err := c.String("ZIPKIN_HOST")
 	if err != nil {
-		traceHost = "0.0.0.0:5000"
+		zipkinHost = "http://0.0.0.0:9411/api/v2/spans"
 	}
 
 	log.Printf("config : %s=%v", "READ_TIMEOUT", readTimeout)
@@ -83,7 +85,7 @@ func main() {
 	log.Printf("config : %s=%v", "API_HOST", apiHost)
 	log.Printf("config : %s=%v", "DEBUG_HOST", debugHost)
 	log.Printf("config : %s=%v", "DB_HOST", dbHost)
-	log.Printf("config : %s=%v", "TRACE_HOST", traceHost)
+	log.Printf("config : %s=%v", "ZIPKIN_HOST", zipkinHost)
 
 	// =========================================================================
 	// Start Mongo
@@ -119,9 +121,19 @@ func main() {
 	// =========================================================================
 	// Start Tracing Service
 
-	log.Printf("main : Tracing Started %s", traceHost)
-	traceExporter := traexp.New(traceHost)
-	trace.RegisterExporter(traceExporter)
+	log.Printf("main : Tracing Started : %s", zipkinHost)
+
+	localEndpoint, err := openzipkin.NewEndpoint("crud", apiHost)
+	if err != nil {
+		log.Fatalf("main : OpenZipkin Endpoint : %v", err)
+	}
+
+	reporter := ziphttp.NewReporter(zipkinHost)
+	defer reporter.Close()
+
+	exporter := zipkin.NewExporter(reporter, localEndpoint)
+	trace.RegisterExporter(exporter)
+
 	trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
 
 	// =========================================================================
@@ -166,9 +178,6 @@ func main() {
 
 	case <-osSignals:
 		log.Println("main : Start shutdown...")
-
-		// Unregister the trace exporter.
-		trace.UnregisterExporter(traceExporter)
 
 		// Create context for Shutdown call.
 		ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)

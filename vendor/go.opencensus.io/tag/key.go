@@ -11,22 +11,25 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
-package internal
-
-import "time"
-
-// UserAgent is the user agent to be added to the outgoing
-// requests from the exporters.
-const UserAgent = "opencensus-go [0.8.0]"
-
-// MonotonicEndTime returns the end time at present
-// but offset from start, monotonically.
 //
-// The monotonic clock is used in subtractions hence
-// the duration since start added back to start gives
-// end as a monotonic time.
-// See https://golang.org/pkg/time/#hdr-Monotonic_Clocks
-func MonotonicEndTime(start time.Time) time.Time {
-	return start.Add(time.Now().Sub(start))
+
+package tag
+
+// Key represents a tag key.
+type Key struct {
+	name string
+}
+
+// NewKey creates or retrieves a string key identified by name.
+// Calling NewKey consequently with the same name returns the same key.
+func NewKey(name string) (Key, error) {
+	if !checkKeyName(name) {
+		return Key{}, errInvalidKeyName
+	}
+	return Key{name: name}, nil
+}
+
+// Name returns the name of the key.
+func (k Key) Name() string {
+	return k.name
 }
