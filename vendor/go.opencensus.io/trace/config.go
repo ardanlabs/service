@@ -14,25 +14,27 @@
 
 package trace
 
-func init() {
-	config.DefaultSampler = ProbabilitySampler(defaultSamplingProbability)
-}
+import "go.opencensus.io/trace/internal"
 
 // Config represents the global tracing configuration.
 type Config struct {
 	// DefaultSampler is the default sampler used when creating new spans.
 	DefaultSampler Sampler
+
+	// IDGenerator is for internal use only.
+	IDGenerator internal.IDGenerator
 }
 
 // ApplyConfig applies changes to the global tracing configuration.
 //
 // Fields not provided in the given config are going to be preserved.
 func ApplyConfig(cfg Config) {
-	mu.Lock()
-	if cfg.DefaultSampler == nil {
-		cfg.DefaultSampler = config.DefaultSampler
+	c := config.Load().(*Config)
+	if cfg.DefaultSampler != nil {
+		c.DefaultSampler = cfg.DefaultSampler
 	}
-	// TODO(jbd): Reduce the global contention on config.
-	config = cfg
-	mu.Unlock()
+	if cfg.IDGenerator != nil {
+		c.IDGenerator = cfg.IDGenerator
+	}
+	config.Store(c)
 }

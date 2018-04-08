@@ -8,6 +8,19 @@
   version = "v5.0.0"
 
 [[projects]]
+  name = "github.com/openzipkin/zipkin-go"
+  packages = [
+    ".",
+    "idgenerator",
+    "model",
+    "propagation",
+    "reporter",
+    "reporter/http"
+  ]
+  revision = "f197ec29e729f226d23370ea60f0e49b8f44ccf4"
+  version = "v0.1.0"
+
+[[projects]]
   name = "github.com/pborman/uuid"
   packages = ["."]
   revision = "e790cca94e6cc75c7064b1332e63811d4aae1a53"
@@ -22,11 +35,14 @@
 [[projects]]
   name = "go.opencensus.io"
   packages = [
+    "exporter/zipkin",
     "internal",
-    "trace"
+    "tag",
+    "trace",
+    "trace/internal"
   ]
-  revision = "6e3f034057826b530038d93267906ec3c012183f"
-  version = "v0.6.0"
+  revision = "0095aec66ae14801c6711210f6f0716411cefdd3"
+  version = "v0.8.0"
 
 [[projects]]
   name = "gopkg.in/go-playground/validator.v8"
@@ -49,6 +65,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "4aeb1fec38c14b7b648e68516c43a9ee136f6be3d17914d62a8956729746d2fc"
+  inputs-digest = "f46d6f044d9086c8817dcf2303514ce22130e1c7f9cf4b742f85a56c957928d6"
   solver-name = "gps-cdcl"
   solver-version = 1
