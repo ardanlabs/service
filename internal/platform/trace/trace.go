@@ -98,10 +98,16 @@ func (e *Exporter) Close() (int, error) {
 // ExportSpan is called by goroutines when saving spans via
 // the opentracing API.
 func (e *Exporter) ExportSpan(span *trace.SpanData) {
+	e.log("trace : Exporter : ExportSpan : Adding Span : ID[%s %s %s]", span.TraceID.String(), span.SpanID.String(), span.Name)
+
 	sendBatch := e.save(span)
 	if sendBatch != nil {
 		go func() {
 			e.log("trace : Exporter : ExportSpan : Sending Batch[%d]", len(sendBatch))
+			for _, span := range sendBatch {
+				e.log("trace : Exporter : ExportSpan : Sending Span : ID[%s %s %s]", span.TraceID.String(), span.SpanID.String(), span.Name)
+			}
+
 			if err := e.send(sendBatch); err != nil {
 				e.log("trace : Exporter : ExportSpan : ERROR : %v", err)
 			}
