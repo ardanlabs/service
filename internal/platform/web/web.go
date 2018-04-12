@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ardanlabs/service/internal/platform/trace"
 	"github.com/dimfeld/httptreemux"
-	"github.com/pborman/uuid"
 )
 
 // TraceIDHeader is the header added to outgoing requests which adds the
@@ -58,25 +58,27 @@ func (a *App) Handle(verb, path string, handler Handler, mw ...Middleware) {
 	// The function to execute for each request.
 	h := func(w http.ResponseWriter, r *http.Request, params map[string]string) {
 
-		// Check the request for an existing TraceID. If it doesn't
-		// exist, generate a new one.
-		traceID := r.Header.Get(TraceIDHeader)
-		if traceID == "" {
-			traceID = uuid.New()
-		}
+		// Check the request for an existing Trace. The WithSpanContext
+		// function can unmarshal any existing context or create a new one.
+		spanContext := r.Header.Get(TraceIDHeader)
+		ctx, span := trace.WithSpanContext(r.Context(), "crud request", spanContext)
+		defer span.End()
 
 		// Set the context with the required values to
 		// process the request.
 		v := Values{
-			TraceID: traceID,
+			TraceID: span.SpanContext().TraceID.String(),
 			Now:     time.Now(),
 		}
-		ctx := context.WithValue(r.Context(), KeyValues, &v)
+		ctx = context.WithValue(ctx, KeyValues, &v)
 
-		// Set the trace id on the outgoing requests before any other header to
-		// ensure that the trace id is ALWAYS added to the request regardless of
+		// Set the parent span on the outgoing requests before any other header to
+		// ensure that the trace is ALWAYS added to the request regardless of
 		// any error occuring or not.
-		w.Header().Set(TraceIDHeader, v.TraceID)
+		data, err := trace.MarshalSpanContext(span.SpanContext)
+		if err == nil {
+			w.Header().Set(TraceIDHeader, string(data))
+		}
 
 		// Call the wrapped handler functions.
 		handler(ctx, w, r, params)
