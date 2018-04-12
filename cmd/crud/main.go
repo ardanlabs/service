@@ -79,9 +79,13 @@ func main() {
 	if err != nil {
 		traceBatchSize = 1000
 	}
-	traceInterval, err := c.Duration("TRACE_INTERVAL")
+	traceSendInterval, err := c.Duration("TRACE_SEND_INTERVAL")
 	if err != nil {
-		traceInterval = 30 * time.Second
+		traceSendInterval = 30 * time.Second
+	}
+	traceSendTimeout, err := c.Duration("TRACE_SEND_TIMEOUT")
+	if err != nil {
+		traceSendTimeout = 500 * time.Millisecond
 	}
 
 	log.Printf("config : %s=%v", "READ_TIMEOUT", readTimeout)
@@ -93,7 +97,8 @@ func main() {
 	log.Printf("config : %s=%v", "DB_HOST", dbHost)
 	log.Printf("config : %s=%v", "TRACE_HOST", traceHost)
 	log.Printf("config : %s=%v", "TRACE_BATCH_SIZE", traceBatchSize)
-	log.Printf("config : %s=%v", "TRACE_INTERVAL", traceInterval)
+	log.Printf("config : %s=%v", "TRACE_SEND_INTERVAL", traceSendInterval)
+	log.Printf("config : %s=%v", "TRACE_SEND_TIMEOUT", traceSendTimeout)
 
 	// =========================================================================
 	// Start Mongo
@@ -113,7 +118,7 @@ func main() {
 	}
 
 	log.Printf("main : Tracing Started : %s", traceHost)
-	exporter, err := itrace.NewExporter(logger, traceHost, traceBatchSize, traceInterval)
+	exporter, err := itrace.NewExporter(logger, traceHost, traceBatchSize, traceSendInterval, traceSendTimeout)
 	if err != nil {
 		log.Fatalf("main : RegiTracingster : ERROR : %v", err)
 	}

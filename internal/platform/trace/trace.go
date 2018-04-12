@@ -29,19 +29,19 @@ type Log func(format string, v ...interface{})
 // Exporter provides support to batch spans and send them
 // to the sidecar for processing.
 type Exporter struct {
-	log       Log
-	host      string
-	batchSize int
-	interval  time.Duration
-	tr        *http.Transport
-	client    http.Client
-	batch     []*trace.SpanData
-	mu        sync.Mutex
-	timer     *time.Timer
+	log          Log               // Handler function for logging.
+	host         string            // IP:port of the sidecare consuming the trace data.
+	batchSize    int               // Size of the batch of spans before sending.
+	sendInterval time.Duration     // Time to send a batch if batch size is not met.
+	sendTimeout  time.Duration     // Time to wait for the sidecar to respond on send.
+	client       http.Client       // Provides APIs for performing the http send.
+	batch        []*trace.SpanData // Maintains the batch of span data to be sent.
+	mu           sync.Mutex        // Provide synchronization to access the batch safely.
+	timer        *time.Timer       // Signals when the sendInterval is met.
 }
 
 // NewExporter creates an exporter for use.
-func NewExporter(log Log, host string, batchSize int, interval time.Duration) (*Exporter, error) {
+func NewExporter(log Log, host string, batchSize int, sendInterval, sendTimeout time.Duration) (*Exporter, error) {
 	if log == nil {
 		return nil, ErrLoggerNotProvided
 	}
@@ -63,16 +63,16 @@ func NewExporter(log Log, host string, batchSize int, interval time.Duration) (*
 	}
 
 	e := Exporter{
-		log:       log,
-		host:      host,
-		batchSize: batchSize,
-		interval:  interval,
-		tr:        &tr,
+		log:          log,
+		host:         host,
+		batchSize:    batchSize,
+		sendInterval: sendInterval,
+		sendTimeout:  sendTimeout,
 		client: http.Client{
 			Transport: &tr,
 		},
 		batch: make([]*trace.SpanData, 0, batchSize),
-		timer: time.NewTimer(interval),
+		timer: time.NewTimer(sendInterval),
 	}
 
 	return &e, nil
@@ -127,7 +127,7 @@ func (e *Exporter) save(span *trace.SpanData) []*trace.SpanData {
 			// batch for sending and start a new batch.
 			sendBatch = e.batch
 			e.batch = make([]*trace.SpanData, 0, e.batchSize)
-			e.timer.Reset(e.interval)
+			e.timer.Reset(e.sendInterval)
 
 		default:
 
@@ -140,7 +140,7 @@ func (e *Exporter) save(span *trace.SpanData) []*trace.SpanData {
 				// batch for sending and start a new batch.
 				sendBatch = e.batch
 				e.batch = make([]*trace.SpanData, 0, e.batchSize)
-				e.timer.Reset(e.interval)
+				e.timer.Reset(e.sendInterval)
 
 			// It's not time yet, just move on.
 			default:
@@ -164,10 +164,11 @@ func (e *Exporter) send(sendBatch []*trace.SpanData) error {
 		return err
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
+	ctx, cancel := context.WithTimeout(context.Background(), e.sendTimeout)
 	defer cancel()
+	req = req.WithContext(ctx)
 
-	ch := make(chan error, 1)
+	ch := make(chan error)
 	go func() {
 		resp, err := e.client.Do(req)
 		if err != nil {
@@ -189,13 +190,5 @@ func (e *Exporter) send(sendBatch []*trace.SpanData) error {
 		ch <- nil
 	}()
 
-	select {
-	case <-ctx.Done():
-		e.tr.CancelRequest(req)
-		err := <-ch
-		return err
-
-	case err := <-ch:
-		return err
-	}
+	return <-ch
 }
