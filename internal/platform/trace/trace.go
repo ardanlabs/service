@@ -1,8 +1,12 @@
 package trace
 
 import (
+	"bytes"
+	"context"
 	"encoding/json"
-	"log"
+	"errors"
+	"fmt"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"sync"
@@ -11,9 +15,21 @@ import (
 	"go.opencensus.io/trace"
 )
 
+// Error variables for factory validation.
+var (
+	ErrLoggerNotProvided = errors.New("logger not provided")
+	ErrHostNotProvided   = errors.New("host not provided")
+)
+
+// Log provides support for logging inside this package.
+// Unfortunately, the opentrace API calls into the ExportSpan
+// function directly with no means to pass user defined arguments.
+type Log func(format string, v ...interface{})
+
 // Exporter provides support to batch spans and send them
 // to the sidecar for processing.
 type Exporter struct {
+	log       Log
 	host      string
 	batchSize int
 	interval  time.Duration
@@ -25,7 +41,14 @@ type Exporter struct {
 }
 
 // NewExporter creates an exporter for use.
-func NewExporter(host string, batchSize int, interval time.Duration) *Exporter {
+func NewExporter(log Log, host string, batchSize int, interval time.Duration) (*Exporter, error) {
+	if log == nil {
+		return nil, ErrLoggerNotProvided
+	}
+	if host == "" {
+		return nil, ErrHostNotProvided
+	}
+
 	tr := http.Transport{
 		Proxy: http.ProxyFromEnvironment,
 		DialContext: (&net.Dialer{
@@ -40,6 +63,7 @@ func NewExporter(host string, batchSize int, interval time.Duration) *Exporter {
 	}
 
 	e := Exporter{
+		log:       log,
 		host:      host,
 		batchSize: batchSize,
 		interval:  interval,
@@ -51,7 +75,24 @@ func NewExporter(host string, batchSize int, interval time.Duration) *Exporter {
 		timer: time.NewTimer(interval),
 	}
 
-	return &e
+	return &e, nil
+}
+
+// Close sends the remaining spans that have not been sent yet.
+func (e *Exporter) Close() (int, error) {
+	var sendBatch []*trace.SpanData
+	e.mu.Lock()
+	{
+		sendBatch = e.batch
+	}
+	e.mu.Unlock()
+
+	err := e.send(sendBatch)
+	if err != nil {
+		return len(sendBatch), err
+	}
+
+	return len(sendBatch), nil
 }
 
 // ExportSpan is called by goroutines when saving spans via
@@ -59,7 +100,12 @@ func NewExporter(host string, batchSize int, interval time.Duration) *Exporter {
 func (e *Exporter) ExportSpan(span *trace.SpanData) {
 	sendBatch := e.save(span)
 	if sendBatch != nil {
-		go e.send(sendBatch)
+		go func() {
+			e.log("trace : Exporter : ExportSpan : Sending Batch[%d]", len(sendBatch))
+			if err := e.send(sendBatch); err != nil {
+				e.log("trace : Exporter : ExportSpan : ERROR : %v", err)
+			}
+		}()
 	}
 }
 
@@ -94,6 +140,7 @@ func (e *Exporter) save(span *trace.SpanData) []*trace.SpanData {
 				// batch for sending and start a new batch.
 				sendBatch = e.batch
 				e.batch = make([]*trace.SpanData, 0, e.batchSize)
+				e.timer.Reset(e.interval)
 
 			// It's not time yet, just move on.
 			default:
@@ -106,13 +153,49 @@ func (e *Exporter) save(span *trace.SpanData) []*trace.SpanData {
 }
 
 // send uses HTTP to send the data to the tracing sidecare for processing.
-func (e *Exporter) send(sendBatch []*trace.SpanData) {
-	log.Println("******************** SENDING **********************")
-	data, err := json.MarshalIndent(sendBatch, "", "  ")
+func (e *Exporter) send(sendBatch []*trace.SpanData) error {
+	data, err := json.Marshal(sendBatch)
 	if err != nil {
-		log.Println(err)
-	} else {
-		log.Println(string(data))
+		return err
 	}
-	log.Println("******************** SENDING **********************")
+
+	req, err := http.NewRequest("POST", e.host, bytes.NewBuffer(data))
+	if err != nil {
+		return err
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
+	defer cancel()
+
+	ch := make(chan error, 1)
+	go func() {
+		resp, err := e.client.Do(req)
+		if err != nil {
+			ch <- err
+			return
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusNoContent {
+			data, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				ch <- fmt.Errorf("error on call : status[%s]", resp.Status)
+				return
+			}
+			ch <- fmt.Errorf("error on call : status[%s] : %s", resp.Status, string(data))
+			return
+		}
+
+		ch <- nil
+	}()
+
+	select {
+	case <-ctx.Done():
+		e.tr.CancelRequest(req)
+		err := <-ch
+		return err
+
+	case err := <-ch:
+		return err
+	}
 }

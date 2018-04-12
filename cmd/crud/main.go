@@ -81,7 +81,7 @@ func main() {
 	}
 	traceInterval, err := c.Duration("TRACE_INTERVAL")
 	if err != nil {
-		traceInterval = time.Minute
+		traceInterval = 30 * time.Second
 	}
 
 	log.Printf("config : %s=%v", "READ_TIMEOUT", readTimeout)
@@ -108,8 +108,25 @@ func main() {
 	// =========================================================================
 	// Start Tracing Support
 
+	logger := func(format string, v ...interface{}) {
+		log.Printf(format, v)
+	}
+
 	log.Printf("main : Tracing Started : %s", traceHost)
-	exporter := itrace.NewExporter(traceHost, traceBatchSize, traceInterval)
+	exporter, err := itrace.NewExporter(logger, traceHost, traceBatchSize, traceInterval)
+	if err != nil {
+		log.Fatalf("main : RegiTracingster : ERROR : %v", err)
+	}
+	defer func() {
+		log.Printf("main : Tracing Stopping : %s", traceHost)
+		batch, err := exporter.Close()
+		if err != nil {
+			log.Printf("main : Tracing Stopped : ERROR : Batch[%d] : %v", batch, err)
+		} else {
+			log.Printf("main : Tracing Stopped : Flushed Batch[%d]", batch)
+		}
+	}()
+
 	trace.RegisterExporter(exporter)
 	trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
 
