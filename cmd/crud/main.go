@@ -81,7 +81,7 @@ func main() {
 	}
 	traceSendInterval, err := c.Duration("TRACE_SEND_INTERVAL")
 	if err != nil {
-		traceSendInterval = 30 * time.Second
+		traceSendInterval = 15 * time.Second
 	}
 	traceSendTimeout, err := c.Duration("TRACE_SEND_TIMEOUT")
 	if err != nil {
@@ -114,7 +114,7 @@ func main() {
 	// Start Tracing Support
 
 	logger := func(format string, v ...interface{}) {
-		log.Printf(format, v)
+		log.Printf(format, v...)
 	}
 
 	log.Printf("main : Tracing Started : %s", traceHost)
