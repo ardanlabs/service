@@ -164,7 +164,7 @@ func (e *Exporter) send(sendBatch []*trace.SpanData) error {
 		return err
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), e.sendTimeout)
+	ctx, cancel := context.WithTimeout(req.Context(), e.sendTimeout)
 	defer cancel()
 	req = req.WithContext(ctx)
 
