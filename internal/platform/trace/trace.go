@@ -15,6 +15,46 @@ import (
 	"go.opencensus.io/trace"
 )
 
+// WithSpanContext takes a JSON string representation of a span
+// which came off the wire and decodes it back to a span.
+func WithSpanContext(ctx context.Context, name string, spanContext string) (context.Context, *trace.Span) {
+	if spanContext != "" {
+		sc, err := UnmarshalSpanContext(spanContext)
+		if err != nil {
+			ctx, span := trace.StartSpan(ctx, name)
+			return ctx, span
+		} else {
+			span := trace.NewSpanWithRemoteParent(name, sc, trace.StartOptions{})
+			ctx := trace.WithSpan(ctx, span)
+			return ctx, span
+		}
+	}
+
+	return trace.StartSpan(ctx, name)
+}
+
+// UnmarshalSpanContext takes a string representing a span context
+// and unmarshals that into a SpanContext value.
+func UnmarshalSpanContext(spanContext string) (trace.SpanContext, error) {
+	var sp trace.SpanContext
+	if err := json.Unmarshal([]byte(spanContext), &sp); err != nil {
+		return trace.SpanContext{}, err
+	}
+	return sp, nil
+}
+
+// MarshalSpanContext takes a span context and marshals it into
+// a string for delivery across processes.
+func MarshalSpanContext(sc trace.SpanContext) (string, error) {
+	data, err := json.Marshal(sc)
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
+}
+
+// =============================================================================
+
 // Error variables for factory validation.
 var (
 	ErrLoggerNotProvided = errors.New("logger not provided")
