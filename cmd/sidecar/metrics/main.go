@@ -12,6 +12,12 @@ import (
 	"github.com/ardanlabs/service/internal/platform/cfg"
 )
 
+/*
+	Need to add the debug route with default mux.
+	Add the health checks.
+	Let's have expvarparmon hit this service instead.
+*/
+
 func init() {
 	log.SetFlags(log.LstdFlags | log.Lmicroseconds | log.Lshortfile)
 }

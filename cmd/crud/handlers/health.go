@@ -9,7 +9,7 @@ import (
 	"go.opencensus.io/trace"
 )
 
-// Health represents the User API method handler set.
+// Health provides support for orchestration health checks.
 type Health struct {
 	MasterDB *db.DB
 }

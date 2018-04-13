@@ -69,11 +69,11 @@ func main() {
 	}
 	dbHost, err := c.String("DB_HOST")
 	if err != nil {
-		dbHost = "got:got2015@ds039441.mongolab.com:39441/gotraining"
+		dbHost = "mongo:27017/gotraining"
 	}
 	traceHost, err := c.String("TRACE_HOST")
 	if err != nil {
-		traceHost = "http://0.0.0.0:5000"
+		traceHost = "http://0.0.0.0:5000/v1/publish"
 	}
 	traceBatchSize, err := c.Int("TRACE_BATCH_SIZE")
 	if err != nil {
