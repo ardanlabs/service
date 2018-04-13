@@ -23,11 +23,11 @@ func WithSpanContext(ctx context.Context, name string, spanContext string) (cont
 		if err != nil {
 			ctx, span := trace.StartSpan(ctx, name)
 			return ctx, span
-		} else {
-			span := trace.NewSpanWithRemoteParent(name, sc, trace.StartOptions{})
-			ctx := trace.WithSpan(ctx, span)
-			return ctx, span
 		}
+
+		span := trace.NewSpanWithRemoteParent(name, sc, trace.StartOptions{})
+		ctx := trace.WithSpan(ctx, span)
+		return ctx, span
 	}
 
 	return trace.StartSpan(ctx, name)
