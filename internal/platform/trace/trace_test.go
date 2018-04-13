@@ -1,6 +1,7 @@
 package trace
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -273,6 +274,51 @@ func TestExporterFailure(t *testing.T) {
 			} else {
 				t.Logf("\t%s\tShould not be able to create an Exporter.", success)
 			}
+		}
+	}
+}
+
+// =============================================================================
+
+// TestUnmarshalMarshal validates a trace can be transported across process
+// boundaries as a JSON document.
+func TestUnmarshalMarshal(t *testing.T) {
+	t.Log("Given the need to validate the Unmarshal/Marshal of a span context.")
+	{
+		t.Logf("\tTest: %d\tWhen using a standard span context.", 0)
+		{
+			// Create a new Span and therefore a new trace
+			_, span := trace.StartSpan(context.Background(), "test")
+
+			// Marshal the span context for delivery.
+			begin, err := MarshalSpanContext(span.SpanContext())
+			if err != nil {
+				t.Fatalf("\t%s\tShould be able to marshal the span context.", failed)
+			}
+			t.Logf("\t%s\tShould be able to marshal the span context.", success)
+
+			// Unmarshal the data as if it came in over the wire.
+			jsonBegin := string(begin)
+			sc, err := UnmarshalSpanContext(jsonBegin)
+			if err != nil {
+				t.Fatalf("\t%s\tShould be able to unmarshal the span context.", failed)
+			}
+			t.Logf("\t%s\tShould be able to unmarshal the span context.", success)
+
+			end, err := MarshalSpanContext(sc)
+			if err != nil {
+				t.Fatalf("\t%s\tShould be able to marshal the unmarshaled span context.", failed)
+			}
+			t.Logf("\t%s\tShould be able to marshal the unmarshaled span context.", success)
+
+			jsonEnd := string(end)
+
+			if jsonBegin != jsonEnd {
+				t.Log("\t\tGot :", jsonEnd)
+				t.Log("\t\tWant:", jsonBegin)
+				t.Fatalf("\t%s\tShould have matched begin and end documents.", failed)
+			}
+			t.Logf("\t%s\tShould have matched begin and end documents.", success)
 		}
 	}
 }
