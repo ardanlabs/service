@@ -12,6 +12,10 @@ import (
 
 	"github.com/ardanlabs/service/cmd/sidecar/tracer/handlers"
 	"github.com/ardanlabs/service/internal/platform/cfg"
+	openzipkin "github.com/openzipkin/zipkin-go"
+	ziphttp "github.com/openzipkin/zipkin-go/reporter/http"
+	"go.opencensus.io/exporter/zipkin"
+	"go.opencensus.io/trace"
 )
 
 func init() {
@@ -47,12 +51,17 @@ func main() {
 	if err != nil {
 		debugHost = "0.0.0.0:4002"
 	}
+	zipkinHost, err := c.String("ZIPKIN_HOST")
+	if err != nil {
+		zipkinHost = "http://0.0.0.0:9411/api/v2/spans"
+	}
 
 	log.Printf("config : %s=%v", "READ_TIMEOUT", readTimeout)
 	log.Printf("config : %s=%v", "WRITE_TIMEOUT", writeTimeout)
 	log.Printf("config : %s=%v", "SHUTDOWN_TIMEOUT", shutdownTimeout)
 	log.Printf("config : %s=%v", "API_HOST", apiHost)
 	log.Printf("config : %s=%v", "DEBUG_HOST", debugHost)
+	log.Printf("config : %s=%v", "ZIPKIN_HOST", zipkinHost)
 
 	// =========================================================================
 	// Start Debug Service
@@ -73,6 +82,24 @@ func main() {
 		log.Printf("main : Debug Listening %s", debugHost)
 		log.Printf("main : Debug Listener closed : %v", debug.ListenAndServe())
 	}()
+
+	// =========================================================================
+	// Start Tracing Service
+
+	log.Printf("main : Tracing Started : %s", zipkinHost)
+
+	localEndpoint, err := openzipkin.NewEndpoint("crud", apiHost)
+	if err != nil {
+		log.Fatalf("main : OpenZipkin Endpoint : %v", err)
+	}
+
+	reporter := ziphttp.NewReporter(zipkinHost)
+	defer reporter.Close()
+
+	exporter := zipkin.NewExporter(reporter, localEndpoint)
+	trace.RegisterExporter(exporter)
+
+	trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
 
 	// =========================================================================
 	// Start API Service
