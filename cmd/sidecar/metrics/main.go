@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -31,6 +32,14 @@ func main() {
 	if err != nil {
 		log.Printf("config : %s. All config defaults in use.", err)
 	}
+	readTimeout, err := c.Duration("READ_TIMEOUT")
+	if err != nil {
+		readTimeout = 5 * time.Second
+	}
+	writeTimeout, err := c.Duration("WRITE_TIMEOUT")
+	if err != nil {
+		writeTimeout = 5 * time.Second
+	}
 	apiHost, err := c.String("API_HOST")
 	if err != nil {
 		apiHost = "http://crud:4000/debug/vars"
@@ -51,12 +60,39 @@ func main() {
 	if err != nil {
 		dataDogHost = "https://app.datadoghq.com/api/v1/series"
 	}
+	debugHost, err := c.String("DEBUG_HOST")
+	if err != nil {
+		debugHost = "0.0.0.0:4001"
+	}
 
+	log.Printf("config : %s=%v", "READ_TIMEOUT", readTimeout)
+	log.Printf("config : %s=%v", "WRITE_TIMEOUT", writeTimeout)
 	log.Printf("config : %s=%v", "API_HOST", apiHost)
 	log.Printf("config : %s=%v", "INTERVAL", interval)
 	log.Printf("config : %s=%v", "PUBLISHER", publishTo)
 	log.Printf("config : %s=%v", "DATADOG_APIKEY", dataDogAPIKey)
 	log.Printf("config : %s=%v", "DATADOG_HOST", dataDogHost)
+	log.Printf("config : %s=%v", "DEBUG_HOST", debugHost)
+
+	// =========================================================================
+	// Start Debug Service
+
+	// /debug/pprof - Added to the default mux by the net/http/pprof package.
+
+	debug := http.Server{
+		Addr:           debugHost,
+		Handler:        http.DefaultServeMux,
+		ReadTimeout:    readTimeout,
+		WriteTimeout:   writeTimeout,
+		MaxHeaderBytes: 1 << 20,
+	}
+
+	// Not concerned with shutting this down when the
+	// application is being shutdown.
+	go func() {
+		log.Printf("main : Debug Listening %s", debugHost)
+		log.Printf("main : Debug Listener closed : %v", debug.ListenAndServe())
+	}()
 
 	// =========================================================================
 	// Start collectors and publishers

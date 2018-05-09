@@ -73,7 +73,7 @@ func main() {
 	}
 	traceHost, err := c.String("TRACE_HOST")
 	if err != nil {
-		traceHost = "http://0.0.0.0:5000/v1/publish"
+		traceHost = "http://tracer:5000/v1/publish"
 	}
 	traceBatchSize, err := c.Int("TRACE_BATCH_SIZE")
 	if err != nil {
@@ -185,9 +185,6 @@ func main() {
 	osSignals := make(chan os.Signal, 1)
 	signal.Notify(osSignals, os.Interrupt, syscall.SIGTERM)
 
-	log.Println("main : Started")
-	defer log.Println("main : Completed")
-
 	// =========================================================================
 	// Stop API Service
 
@@ -198,6 +195,7 @@ func main() {
 
 	case <-osSignals:
 		log.Println("main : Start shutdown...")
+		defer log.Println("main : Completed")
 
 		// Create context for Shutdown call.
 		ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
