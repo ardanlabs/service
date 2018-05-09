@@ -9,7 +9,7 @@ import (
 )
 
 // Success and failure markers.
-var (
+const (
 	success = "\u2713"
 	failed  = "\u2717"
 )
