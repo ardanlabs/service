@@ -2,9 +2,12 @@ package handlers
 
 import (
 	"context"
-	"io/ioutil"
+	"encoding/json"
 	"log"
 	"net/http"
+
+	"github.com/ardanlabs/service/internal/platform/web"
+	"go.opencensus.io/trace"
 )
 
 // Span represents the API to collect span data.
@@ -14,24 +17,15 @@ type Span struct {
 
 // Publish takes a batch and publishes that to a host system.
 func (s *Span) Publish(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-	// var usr user.CreateUser
-	// if err := web.Unmarshal(r.Body, &usr); err != nil {
-	// 	return errors.Wrap(err, "")
-	// }
-
-	// nUsr, err := user.Create(ctx, dbConn, &usr)
-	// if err = check(err); err != nil {
-	// 	return errors.Wrapf(err, "User: %+v", &usr)
-	// }
-
-	// web.Respond(ctx, w, nUsr, http.StatusCreated)
-
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
+	var sd []trace.SpanData
+	if err := json.NewDecoder(r.Body).Decode(&sd); err != nil {
 		log.Println("*********>", err)
-		return err
 	}
-	log.Println("*********>", string(data))
+	log.Printf("*********> %+v\n", sd)
+
+	// SEND THIS TO ZIPKIN
+
+	web.Respond(ctx, w, nil, http.StatusNoContent)
 
 	return nil
 }
