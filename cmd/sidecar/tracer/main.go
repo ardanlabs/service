@@ -45,7 +45,7 @@ func main() {
 	}
 	debugHost, err := c.String("DEBUG_HOST")
 	if err != nil {
-		debugHost = "0.0.0.0:4000"
+		debugHost = "0.0.0.0:4002"
 	}
 
 	log.Printf("config : %s=%v", "READ_TIMEOUT", readTimeout)
@@ -102,10 +102,6 @@ func main() {
 	// Use a buffered channel because the signal package requires it.
 	osSignals := make(chan os.Signal, 1)
 	signal.Notify(osSignals, os.Interrupt, syscall.SIGTERM)
-	<-osSignals
-
-	log.Println("main : Start shutdown...")
-	defer log.Println("main : Completed")
 
 	// =========================================================================
 	// Stop API Service
@@ -117,6 +113,7 @@ func main() {
 
 	case <-osSignals:
 		log.Println("main : Start shutdown...")
+		defer log.Println("main : Completed")
 
 		// Create context for Shutdown call.
 		ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
