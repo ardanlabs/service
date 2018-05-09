@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	_ "expvar"
 	"log"
 	"net/http"
 	_ "net/http/pprof"
@@ -11,24 +10,13 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/ardanlabs/service/cmd/crud/handlers"
+	"github.com/ardanlabs/service/cmd/sidecar/tracer/handlers"
 	"github.com/ardanlabs/service/internal/platform/cfg"
-	"github.com/ardanlabs/service/internal/platform/db"
-	itrace "github.com/ardanlabs/service/internal/platform/trace"
+	openzipkin "github.com/openzipkin/zipkin-go"
+	ziphttp "github.com/openzipkin/zipkin-go/reporter/http"
+	"go.opencensus.io/exporter/zipkin"
 	"go.opencensus.io/trace"
 )
-
-/*
-hey -m GET -c 10 -n 10000 "http://localhost:3000/v1/users"
-expvarmon -ports=":4000" -vars="requests,goroutines,errors,mem:memstats.Alloc"
-*/
-
-/*
-Need to figure out timeouts for http service.
-You might want to reset your DB_HOST env var during test tear down.
-Add pulling git version from build command line.
-Service should start even without a DB running yet.
-*/
 
 func init() {
 	log.SetFlags(log.LstdFlags | log.Lmicroseconds | log.Lshortfile)
@@ -39,7 +27,7 @@ func main() {
 	// =========================================================================
 	// Configuration
 
-	c, err := cfg.New(cfg.EnvProvider{Namespace: "CRUD"})
+	c, err := cfg.New(cfg.EnvProvider{Namespace: "TRACER"})
 	if err != nil {
 		log.Printf("config : %s. All config defaults in use.", err)
 	}
@@ -55,90 +43,29 @@ func main() {
 	if err != nil {
 		shutdownTimeout = 5 * time.Second
 	}
-	dbDialTimeout, err := c.Duration("DB_DIAL_TIMEOUT")
-	if err != nil {
-		dbDialTimeout = 5 * time.Second
-	}
 	apiHost, err := c.String("API_HOST")
 	if err != nil {
-		apiHost = "0.0.0.0:3000"
+		apiHost = "0.0.0.0:5000"
 	}
 	debugHost, err := c.String("DEBUG_HOST")
 	if err != nil {
-		debugHost = "0.0.0.0:4000"
+		debugHost = "0.0.0.0:4002"
 	}
-	dbHost, err := c.String("DB_HOST")
+	zipkinHost, err := c.String("ZIPKIN_HOST")
 	if err != nil {
-		dbHost = "mongo:27017/gotraining"
-	}
-	traceHost, err := c.String("TRACE_HOST")
-	if err != nil {
-		traceHost = "http://tracer:5000/v1/publish"
-	}
-	traceBatchSize, err := c.Int("TRACE_BATCH_SIZE")
-	if err != nil {
-		traceBatchSize = 1000
-	}
-	traceSendInterval, err := c.Duration("TRACE_SEND_INTERVAL")
-	if err != nil {
-		traceSendInterval = 15 * time.Second
-	}
-	traceSendTimeout, err := c.Duration("TRACE_SEND_TIMEOUT")
-	if err != nil {
-		traceSendTimeout = 500 * time.Millisecond
+		zipkinHost = "http://0.0.0.0:9411/api/v2/spans"
 	}
 
 	log.Printf("config : %s=%v", "READ_TIMEOUT", readTimeout)
 	log.Printf("config : %s=%v", "WRITE_TIMEOUT", writeTimeout)
 	log.Printf("config : %s=%v", "SHUTDOWN_TIMEOUT", shutdownTimeout)
-	log.Printf("config : %s=%v", "DB_DIAL_TIMEOUT", dbDialTimeout)
 	log.Printf("config : %s=%v", "API_HOST", apiHost)
 	log.Printf("config : %s=%v", "DEBUG_HOST", debugHost)
-	log.Printf("config : %s=%v", "DB_HOST", dbHost)
-	log.Printf("config : %s=%v", "TRACE_HOST", traceHost)
-	log.Printf("config : %s=%v", "TRACE_BATCH_SIZE", traceBatchSize)
-	log.Printf("config : %s=%v", "TRACE_SEND_INTERVAL", traceSendInterval)
-	log.Printf("config : %s=%v", "TRACE_SEND_TIMEOUT", traceSendTimeout)
-
-	// =========================================================================
-	// Start Mongo
-
-	log.Println("main : Started : Initialize Mongo")
-	masterDB, err := db.New(dbHost, dbDialTimeout)
-	if err != nil {
-		log.Fatalf("main : Register DB : %v", err)
-	}
-	defer masterDB.Close()
-
-	// =========================================================================
-	// Start Tracing Support
-
-	logger := func(format string, v ...interface{}) {
-		log.Printf(format, v...)
-	}
-
-	log.Printf("main : Tracing Started : %s", traceHost)
-	exporter, err := itrace.NewExporter(logger, traceHost, traceBatchSize, traceSendInterval, traceSendTimeout)
-	if err != nil {
-		log.Fatalf("main : RegiTracingster : ERROR : %v", err)
-	}
-	defer func() {
-		log.Printf("main : Tracing Stopping : %s", traceHost)
-		batch, err := exporter.Close()
-		if err != nil {
-			log.Printf("main : Tracing Stopped : ERROR : Batch[%d] : %v", batch, err)
-		} else {
-			log.Printf("main : Tracing Stopped : Flushed Batch[%d]", batch)
-		}
-	}()
-
-	trace.RegisterExporter(exporter)
-	trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
+	log.Printf("config : %s=%v", "ZIPKIN_HOST", zipkinHost)
 
 	// =========================================================================
 	// Start Debug Service
 
-	// /debug/vars - Added to the default mux by the expvars package.
 	// /debug/pprof - Added to the default mux by the net/http/pprof package.
 
 	debug := http.Server{
@@ -157,11 +84,29 @@ func main() {
 	}()
 
 	// =========================================================================
+	// Start Tracing Service
+
+	log.Printf("main : Tracing Started : %s", zipkinHost)
+
+	localEndpoint, err := openzipkin.NewEndpoint("crud", apiHost)
+	if err != nil {
+		log.Fatalf("main : OpenZipkin Endpoint : %v", err)
+	}
+
+	reporter := ziphttp.NewReporter(zipkinHost)
+	defer reporter.Close()
+
+	exporter := zipkin.NewExporter(reporter, localEndpoint)
+	trace.RegisterExporter(exporter)
+
+	trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
+
+	// =========================================================================
 	// Start API Service
 
 	api := http.Server{
 		Addr:           apiHost,
-		Handler:        handlers.API(masterDB),
+		Handler:        handlers.API(),
 		ReadTimeout:    readTimeout,
 		WriteTimeout:   writeTimeout,
 		MaxHeaderBytes: 1 << 20,

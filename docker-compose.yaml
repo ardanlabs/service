@@ -25,24 +25,36 @@ services:
       - shared-network
     image: crud-amd64
     ports:
-        - 3000:3000 # CRUD API
-        - 4000:4000 # DEBUG API
-    environment:
+      - 3000:3000 # CRUD API
+      - 4000:4000 # DEBUG API
+    # environment:
       # - CRUD_DB_HOST=docker.for.mac.localhost:27017
-      - CRUD_DB_HOST=mongo:27017/gotraining
-      - CRUD_ZIPKIN_HOST=http://zipkin:9411/api/v2/spans
+      # - CRUD_DB_HOST=got:got2015@ds039441.mongolab.com:39441/gotraining
 
   # This sidecar publishes metrics to the console by default.
   metrics:
     networks:
       - shared-network
     image: metrics-amd64
+    ports:
+      - 4001:4001 # DEBUG API
+
+  # This sidecar publishes tracing to the console by default.
+  tracer:
+    networks:
+      - shared-network
+    image: tracer-amd64
+    ports:
+      - 5000:5000 # TRACER API
+      - 4002:4002 # DEBUG API
+    # environment:
+      # - CRUD_ZIPKIN_HOST=http://zipkin:9411/api/v2/spans
   
   # This sidecar allows for the viewing of traces.
   zipkin:
+    container_name: zipkin
     networks:
       - shared-network
     image: openzipkin/zipkin
-    container_name: zipkin
     ports:
       - 9411:9411
