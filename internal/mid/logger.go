@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/internal/platform/web"
+	"go.opencensus.io/trace"
 )
 
 // RequestLogger writes some information about the request to the logs in
@@ -15,9 +16,12 @@ func RequestLogger(next web.Handler) web.Handler {
 
 	// Wrap this handler around the next one provided.
 	h := func(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-		v := ctx.Value(web.KeyValues).(*web.Values)
+		ctx, span := trace.StartSpan(ctx, "internal.mid.RequestLogger")
+		defer span.End()
 
 		err := next(ctx, w, r, params)
+
+		v := ctx.Value(web.KeyValues).(*web.Values)
 
 		log.Printf("%s : (%d) : %s %s -> %s (%s)",
 			v.TraceID,
