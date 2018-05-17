@@ -61,7 +61,7 @@ func (a *App) Handle(verb, path string, handler Handler, mw ...Middleware) {
 		// Check the request for an existing Trace. The WithSpanContext
 		// function can unmarshal any existing context or create a new one.
 		spanContext := r.Header.Get(TraceIDHeader)
-		ctx, span := trace.WithSpanContext(r.Context(), "crud request", spanContext)
+		ctx, span := trace.WithSpanContext(r.Context(), "internal.platform.web", spanContext)
 		defer span.End()
 
 		// Set the context with the required values to
