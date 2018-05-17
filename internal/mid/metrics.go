@@ -7,6 +7,7 @@ import (
 	"runtime"
 
 	"github.com/ardanlabs/service/internal/platform/web"
+	"go.opencensus.io/trace"
 )
 
 // m contains the global program counters for the application.
@@ -25,7 +26,8 @@ func Metrics(next web.Handler) web.Handler {
 
 	// Wrap this handler around the next one provided.
 	h := func(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-		v := ctx.Value(web.KeyValues).(*web.Values)
+		ctx, span := trace.StartSpan(ctx, "internal.mid.Metrics")
+		defer span.End()
 
 		next(ctx, w, r, params)
 
@@ -39,6 +41,7 @@ func Metrics(next web.Handler) web.Handler {
 
 		// Add one to the errors counter if an error occured
 		// on this reuqest.
+		v := ctx.Value(web.KeyValues).(*web.Values)
 		if v.Error {
 			m.err.Add(1)
 		}

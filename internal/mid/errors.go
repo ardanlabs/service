@@ -8,6 +8,7 @@ import (
 
 	"github.com/ardanlabs/service/internal/platform/web"
 	"github.com/pkg/errors"
+	"go.opencensus.io/trace"
 )
 
 // ErrorHandler for catching and responding errors.
@@ -15,6 +16,9 @@ func ErrorHandler(next web.Handler) web.Handler {
 
 	// Create the handler that will be attached in the middleware chain.
 	h := func(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
+		ctx, span := trace.StartSpan(ctx, "internal.mid.ErrorHandler")
+		defer span.End()
+
 		v := ctx.Value(web.KeyValues).(*web.Values)
 
 		// In the event of a panic, we want to capture it here so we can send an
