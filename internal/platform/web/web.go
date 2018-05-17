@@ -81,7 +81,9 @@ func (a *App) Handle(verb, path string, handler Handler, mw ...Middleware) {
 		}
 
 		// Call the wrapped handler functions.
-		handler(ctx, w, r, params)
+		if err := handler(ctx, w, r, params); err != nil {
+			Error(ctx, w, err)
+		}
 	}
 
 	// Add this handler for the specified verb and route.

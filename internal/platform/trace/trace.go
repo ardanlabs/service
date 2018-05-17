@@ -19,7 +19,7 @@ import (
 // which came off the wire and decodes it back to a span.
 func WithSpanContext(ctx context.Context, name string, spanContext string) (context.Context, *trace.Span) {
 	if spanContext != "" {
-		sc, err := UnmarshalSpanContext(spanContext)
+		sc, err := unmarshalSpanContext(spanContext)
 		if err != nil {
 			ctx, span := trace.StartSpan(ctx, name)
 			return ctx, span
@@ -33,16 +33,6 @@ func WithSpanContext(ctx context.Context, name string, spanContext string) (cont
 	return trace.StartSpan(ctx, name)
 }
 
-// UnmarshalSpanContext takes a string representing a span context
-// and unmarshals that into a SpanContext value.
-func UnmarshalSpanContext(spanContext string) (trace.SpanContext, error) {
-	var sp trace.SpanContext
-	if err := json.Unmarshal([]byte(spanContext), &sp); err != nil {
-		return trace.SpanContext{}, err
-	}
-	return sp, nil
-}
-
 // MarshalSpanContext takes a span context and marshals it into
 // a string for delivery across processes.
 func MarshalSpanContext(sc trace.SpanContext) (string, error) {
@@ -51,6 +41,16 @@ func MarshalSpanContext(sc trace.SpanContext) (string, error) {
 		return "", err
 	}
 	return string(data), nil
+}
+
+// unmarshalSpanContext takes a string representing a span context
+// and unmarshals that into a SpanContext value.
+func unmarshalSpanContext(spanContext string) (trace.SpanContext, error) {
+	var sp trace.SpanContext
+	if err := json.Unmarshal([]byte(spanContext), &sp); err != nil {
+		return trace.SpanContext{}, err
+	}
+	return sp, nil
 }
 
 // =============================================================================
@@ -135,12 +135,12 @@ func (e *Exporter) Close() (int, error) {
 	return len(sendBatch), nil
 }
 
-// ExportSpan is called by goroutines when saving spans via
-// the opentracing API.
+// ExportSpan is called by opentracing when spans are created. It implements
+// the Exporter interface.
 func (e *Exporter) ExportSpan(span *trace.SpanData) {
 	e.log("trace : Exporter : ExportSpan : Adding Span : ID[%s %s %s]", span.TraceID.String(), span.SpanID.String(), span.Name)
 
-	sendBatch := e.save(span)
+	sendBatch := e.saveBatch(span)
 	if sendBatch != nil {
 		go func() {
 			e.log("trace : Exporter : ExportSpan : Sending Batch[%d]", len(sendBatch))
@@ -157,7 +157,7 @@ func (e *Exporter) ExportSpan(span *trace.SpanData) {
 
 // Saves the span data to the batch. If the batch should be sent,
 // returns a batch to send.
-func (e *Exporter) save(span *trace.SpanData) []*trace.SpanData {
+func (e *Exporter) saveBatch(span *trace.SpanData) []*trace.SpanData {
 	var sendBatch []*trace.SpanData
 
 	e.mu.Lock()
