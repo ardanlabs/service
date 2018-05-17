@@ -79,7 +79,7 @@ func TestSave(t *testing.T) {
 					if l == i {
 						time.Sleep(tt.lastSaveDelay)
 					}
-					batch = tt.e.save(span)
+					batch = tt.e.saveBatch(span)
 				}
 
 				// Compare the internal collection with what we saved.
@@ -207,7 +207,7 @@ func TestClose(t *testing.T) {
 
 			// Save the input of span data.
 			for _, span := range inputSpans {
-				e.save(span)
+				e.saveBatch(span)
 			}
 
 			// Close the Exporter and we should get those spans sent.
@@ -238,7 +238,7 @@ func TestClose(t *testing.T) {
 
 			// Save the input of span data.
 			for _, span := range inputSpans[:2] {
-				e.save(span)
+				e.saveBatch(span)
 			}
 
 			// Close the Exporter and we should get those spans sent.
@@ -299,7 +299,7 @@ func TestUnmarshalMarshal(t *testing.T) {
 
 			// Unmarshal the data as if it came in over the wire.
 			jsonBegin := string(begin)
-			sc, err := UnmarshalSpanContext(jsonBegin)
+			sc, err := unmarshalSpanContext(jsonBegin)
 			if err != nil {
 				t.Fatalf("\t%s\tShould be able to unmarshal the span context.", failed)
 			}
