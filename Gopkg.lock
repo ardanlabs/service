@@ -9,14 +9,7 @@
 
 [[projects]]
   name = "github.com/openzipkin/zipkin-go"
-  packages = [
-    ".",
-    "idgenerator",
-    "model",
-    "propagation",
-    "reporter",
-    "reporter/http"
-  ]
+  packages = ["model"]
   revision = "f197ec29e729f226d23370ea60f0e49b8f44ccf4"
   version = "v0.1.0"
 
@@ -35,9 +28,7 @@
 [[projects]]
   name = "go.opencensus.io"
   packages = [
-    "exporter/zipkin",
     "internal",
-    "tag",
     "trace",
     "trace/internal"
   ]
@@ -65,6 +56,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "f46d6f044d9086c8817dcf2303514ce22130e1c7f9cf4b742f85a56c957928d6"
+  inputs-digest = "ca4d2a71dad975bb54a35cab20b10377cbc0d1b455d135088e7d0385e5b8425e"
   solver-name = "gps-cdcl"
   solver-version = 1
