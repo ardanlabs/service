@@ -29,6 +29,7 @@ Need to figure out timeouts for http service.
 You might want to reset your DB_HOST env var during test tear down.
 Add pulling git version from build command line.
 Service should start even without a DB running yet.
+symbols in profiles: https://github.com/golang/go/issues/23376
 */
 
 func init() {
