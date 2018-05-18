@@ -1,0 +1,95 @@
+package expvar
+
+import (
+	"context"
+	"encoding/json"
+	"log"
+	"net/http"
+	"sync"
+	"time"
+
+	"github.com/dimfeld/httptreemux"
+)
+
+// Expvar provide our basic publishing.
+type Expvar struct {
+	server http.Server
+	data   map[string]interface{}
+	mu     sync.Mutex
+}
+
+// New starts a service for consuming the raw expvar stats.
+func New(host string, route string, readTimeout, writeTimeout time.Duration) *Expvar {
+	mux := httptreemux.New()
+	exp := Expvar{
+		server: http.Server{
+			Addr:           host,
+			Handler:        mux,
+			ReadTimeout:    readTimeout,
+			WriteTimeout:   writeTimeout,
+			MaxHeaderBytes: 1 << 20,
+		},
+	}
+
+	mux.Handle("GET", route, exp.handler)
+
+	go func() {
+		log.Println("expvar : API Listening", host)
+		if err := exp.server.ListenAndServe(); err != nil {
+			log.Println("expvar : ERROR :", err)
+		}
+	}()
+
+	return &exp
+}
+
+// Stop shutsdown the service.
+func (exp *Expvar) Stop(shutdownTimeout time.Duration) {
+	log.Println("expvar : Start shutdown...")
+	defer log.Println("expvar : Completed")
+
+	// Create context for Shutdown call.
+	ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
+	defer cancel()
+
+	// Asking listener to shutdown and load shed.
+	if err := exp.server.Shutdown(ctx); err != nil {
+		log.Printf("expvar : Graceful shutdown did not complete in %v : %v", shutdownTimeout, err)
+		if err := exp.server.Close(); err != nil {
+			log.Fatalf("expvar : Could not stop http server: %v", err)
+		}
+	}
+}
+
+// Publish is called by the publisher goroutine and saves the raw stats.
+func (exp *Expvar) Publish(data map[string]interface{}) {
+	exp.mu.Lock()
+	{
+		exp.data = data
+	}
+	exp.mu.Unlock()
+}
+
+// handler is what consumers call to get the raw stats.
+func (exp *Expvar) handler(w http.ResponseWriter, r *http.Request, params map[string]string) {
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	var data map[string]interface{}
+	exp.mu.Lock()
+	{
+		data = exp.data
+	}
+	exp.mu.Unlock()
+
+	if err := json.NewEncoder(w).Encode(data); err != nil {
+		log.Println("expvar : ERROR :", err)
+	}
+
+	log.Printf("expvar : (%d) : %s %s -> %s",
+		http.StatusOK,
+		r.Method, r.URL.Path,
+		r.RemoteAddr,
+	)
+}

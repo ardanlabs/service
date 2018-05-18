@@ -1,10 +1,45 @@
 package publisher
 
 import (
+	"encoding/json"
 	"log"
 	"sync"
 	"time"
 )
+
+// Stdout publishers for writing to stdout
+func Stdout(raw map[string]interface{}) {
+
+	rawJSON, err := json.Marshal(raw)
+	if err != nil {
+		log.Println("Stdout : Marshal ERROR :", err)
+		return
+	}
+
+	var data map[string]interface{}
+	if err := json.Unmarshal(rawJSON, &data); err != nil {
+		log.Println("Stdout : Unmarshal ERROR :", err)
+		return
+	}
+
+	// Add heap value into the data set.
+	memStats, ok := (data["memstats"]).(map[string]interface{})
+	if ok {
+		data["heap"] = memStats["Alloc"]
+	}
+
+	// Remove uncessary keys.
+	delete(data, "memstats")
+	delete(data, "cmdline")
+
+	out, err := json.MarshalIndent(data, "", "    ")
+	if err != nil {
+		return
+	}
+	log.Println("Stdout :\n", string(out))
+}
+
+// =============================================================================
 
 // Set of possible publisher types.
 const (
@@ -30,14 +65,14 @@ type Publisher func(map[string]interface{})
 // on an interval.
 type Publish struct {
 	collector Collector
-	publisher Publisher
+	publisher []Publisher
 	wg        sync.WaitGroup
 	timer     *time.Timer
 	shutdown  chan struct{}
 }
 
 // New creates a Publish for consuming and publishing metrics.
-func New(collector Collector, publisher Publisher, interval time.Duration) (*Publish, error) {
+func New(collector Collector, interval time.Duration, publisher ...Publisher) (*Publish, error) {
 	p := Publish{
 		collector: collector,
 		publisher: publisher,
@@ -76,5 +111,7 @@ func (p *Publish) update() {
 		return
 	}
 
-	p.publisher(data)
+	for _, pub := range p.publisher {
+		pub(data)
+	}
 }

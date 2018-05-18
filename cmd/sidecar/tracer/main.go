@@ -19,6 +19,7 @@ func init() {
 }
 
 func main() {
+	defer log.Println("main : Completed")
 
 	// =========================================================================
 	// Configuration
@@ -41,7 +42,7 @@ func main() {
 	}
 	apiHost, err := c.String("API_HOST")
 	if err != nil {
-		apiHost = "0.0.0.0:5000"
+		apiHost = "0.0.0.0:3002"
 	}
 	debugHost, err := c.String("DEBUG_HOST")
 	if err != nil {
@@ -118,7 +119,6 @@ func main() {
 
 	case <-osSignals:
 		log.Println("main : Start shutdown...")
-		defer log.Println("main : Completed")
 
 		// Create context for Shutdown call.
 		ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)

@@ -19,8 +19,9 @@ import (
 )
 
 /*
-hey -m GET -c 10 -n 10000 "http://localhost:3000/v1/users"
-expvarmon -ports=":4000" -vars="requests,goroutines,errors,mem:memstats.Alloc"
+ZipKin: http://localhost:9411
+AddLoad: hey -m GET -c 10 -n 10000 "http://localhost:3000/v1/users"
+expvarmon -ports=":3001" -endpoint="/metrics" -vars="requests,goroutines,errors,mem:memstats.Alloc"
 */
 
 /*
@@ -35,6 +36,7 @@ func init() {
 }
 
 func main() {
+	defer log.Println("main : Completed")
 
 	// =========================================================================
 	// Configuration
@@ -73,7 +75,7 @@ func main() {
 	}
 	traceHost, err := c.String("TRACE_HOST")
 	if err != nil {
-		traceHost = "http://tracer:5000/v1/publish"
+		traceHost = "http://tracer:3002/v1/publish"
 	}
 	traceBatchSize, err := c.Int("TRACE_BATCH_SIZE")
 	if err != nil {
@@ -195,7 +197,6 @@ func main() {
 
 	case <-osSignals:
 		log.Println("main : Start shutdown...")
-		defer log.Println("main : Completed")
 
 		// Create context for Shutdown call.
 		ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
