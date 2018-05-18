@@ -12,6 +12,7 @@ services:
   
   # This starts a local mongo DB.
   mongo:
+    container_name: mongo
     networks:
       - shared-network
     image: mongo
@@ -21,6 +22,7 @@ services:
 
   # This is the core CRUD based service.
   crud:
+    container_name: crud
     networks:
       - shared-network
     image: crud-amd64
@@ -30,22 +32,26 @@ services:
     # environment:
       # - CRUD_DB_HOST=docker.for.mac.localhost:27017
       # - CRUD_DB_HOST=got:got2015@ds039441.mongolab.com:39441/gotraining
+      # - GODEBUG=gctrace=1
 
   # This sidecar publishes metrics to the console by default.
   metrics:
+    container_name: metrics
     networks:
       - shared-network
     image: metrics-amd64
     ports:
+      - 3001:3001 # EXPVAR API
       - 4001:4001 # DEBUG API
 
   # This sidecar publishes tracing to the console by default.
   tracer:
+    container_name: tracer
     networks:
       - shared-network
     image: tracer-amd64
     ports:
-      - 5000:5000 # TRACER API
+      - 3002:3002 # TRACER API
       - 4002:4002 # DEBUG API
     # environment:
       # - CRUD_ZIPKIN_HOST=http://zipkin:9411/api/v2/spans

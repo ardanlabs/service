@@ -1,4 +1,4 @@
-package publisher
+package datadog
 
 import (
 	"bytes"
@@ -19,8 +19,8 @@ type Datadog struct {
 	client http.Client
 }
 
-// NewDatadog initializes Datadog access for publishing metrics.
-func NewDatadog(apiKey string, host string) *Datadog {
+// New initializes Datadog access for publishing metrics.
+func New(apiKey string, host string) *Datadog {
 	tr := http.Transport{
 		Proxy: http.ProxyFromEnvironment,
 		DialContext: (&net.Dialer{

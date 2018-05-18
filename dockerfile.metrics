@@ -18,5 +18,7 @@ RUN go build -ldflags "-s -w -X main.build=$(git rev-parse HEAD)" -a -tags netgo
 #
 FROM alpine:3.7
 MAINTAINER William Kennedy <bill@ardanlabs.com>
+EXPOSE 3001
+EXPOSE 4001
 COPY --from=0 /go/src/github.com/ardanlabs/service/cmd/sidecar/metrics/metrics /bin/
 ENTRYPOINT ["/bin/metrics"]

@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	_ "net/http/pprof"
 	"os"
 	"os/signal"
 	"syscall"
@@ -10,23 +11,16 @@ import (
 
 	"github.com/ardanlabs/service/cmd/sidecar/metrics/collector"
 	"github.com/ardanlabs/service/cmd/sidecar/metrics/publisher"
+	"github.com/ardanlabs/service/cmd/sidecar/metrics/publisher/expvar"
 	"github.com/ardanlabs/service/internal/platform/cfg"
 )
-
-/*
-	Need to add the debug route with default mux.
-	Add the health checks.
-	Let's have expvarparmon hit this service instead.
-*/
 
 func init() {
 	log.SetFlags(log.LstdFlags | log.Lmicroseconds | log.Lshortfile)
 }
 
 func main() {
-
-	// =========================================================================
-	// Configuration
+	defer log.Println("main : Completed")
 
 	c, err := cfg.New(cfg.EnvProvider{Namespace: "METRICS"})
 	if err != nil {
@@ -40,39 +34,44 @@ func main() {
 	if err != nil {
 		writeTimeout = 5 * time.Second
 	}
-	apiHost, err := c.String("API_HOST")
+	expHost, err := c.String("EXPVAR_HOST")
 	if err != nil {
-		apiHost = "http://crud:4000/debug/vars"
+		expHost = "0.0.0.0:3001"
 	}
-	interval, err := c.Duration("INTERVAL")
+	expRoute, err := c.String("EXPVAR_ROUTE")
 	if err != nil {
-		interval = 5 * time.Second
-	}
-	publishTo, err := c.String("PUBLISHER")
-	if err != nil {
-		publishTo = "console"
-	}
-	dataDogAPIKey, err := c.String("DATADOG_APIKEY")
-	if err != nil {
-		dataDogAPIKey = "03f53bb094715f2eb8ac843c90c00232"
-	}
-	dataDogHost, err := c.String("DATADOG_HOST")
-	if err != nil {
-		dataDogHost = "https://app.datadoghq.com/api/v1/series"
+		expRoute = "/metrics"
 	}
 	debugHost, err := c.String("DEBUG_HOST")
 	if err != nil {
 		debugHost = "0.0.0.0:4001"
 	}
+	crudHost, err := c.String("CRUD_HOST")
+	if err != nil {
+		crudHost = "http://crud:4000/debug/vars"
+	}
+	publishTo, err := c.String("PUBLISHER")
+	if err != nil {
+		publishTo = "console"
+	}
+	interval, err := c.Duration("INTERVAL")
+	if err != nil {
+		interval = 5 * time.Second
+	}
+	shutdownTimeout, err := c.Duration("SHUTDOWN_TIMEOUT")
+	if err != nil {
+		shutdownTimeout = 5 * time.Second
+	}
 
 	log.Printf("config : %s=%v", "READ_TIMEOUT", readTimeout)
 	log.Printf("config : %s=%v", "WRITE_TIMEOUT", writeTimeout)
-	log.Printf("config : %s=%v", "API_HOST", apiHost)
-	log.Printf("config : %s=%v", "INTERVAL", interval)
-	log.Printf("config : %s=%v", "PUBLISHER", publishTo)
-	log.Printf("config : %s=%v", "DATADOG_APIKEY", dataDogAPIKey)
-	log.Printf("config : %s=%v", "DATADOG_HOST", dataDogHost)
 	log.Printf("config : %s=%v", "DEBUG_HOST", debugHost)
+	log.Printf("config : %s=%v", "EXPVAR_HOST", expHost)
+	log.Printf("config : %s=%v", "EXPVAR_ROUTE", expRoute)
+	log.Printf("config : %s=%v", "CRUD_HOST", crudHost)
+	log.Printf("config : %s=%v", "PUBLISHER", publishTo)
+	log.Printf("config : %s=%v", "INTERVAL", interval)
+	log.Printf("config : %s=%v", "SHUTDOWN_TIMEOUT", shutdownTimeout)
 
 	// =========================================================================
 	// Start Debug Service
@@ -95,34 +94,26 @@ func main() {
 	}()
 
 	// =========================================================================
+	// Start expvar Service
+
+	exp := expvar.New(expHost, expRoute, readTimeout, writeTimeout)
+	defer exp.Stop(shutdownTimeout)
+
+	// =========================================================================
 	// Start collectors and publishers
 
 	// Initalize to allow for the collection of metrics.
-	expvar, err := expvar.New(apiHost)
+	collector, err := collector.New(crudHost)
 	if err != nil {
 		log.Fatalf("main : Starting collector : %v", err)
 	}
 
-	// Determine which publisher to use.
-	f := publisher.Console
-	switch publishTo {
-	case publisher.TypeConsole:
-		log.Println("config : PUB_TYPE=Console")
-
-	case publisher.TypeDatadog:
-		log.Println("config : PUB_TYPE=Datadog")
-		d := publisher.NewDatadog(dataDogAPIKey, dataDogHost)
-		f = d.Publish
-
-	default:
-		log.Fatalln("main : No publisher provided, using Console.")
-	}
-
 	// Start the publisher to collect/publish metrics.
-	publish, err := publisher.New(expvar, f, interval)
+	publish, err := publisher.New(collector, interval, exp.Publish, publisher.Stdout)
 	if err != nil {
 		log.Fatalf("main : Starting publisher : %v", err)
 	}
+	defer publish.Stop()
 
 	// =========================================================================
 	// Shutdown
@@ -134,10 +125,4 @@ func main() {
 	<-osSignals
 
 	log.Println("main : Start shutdown...")
-	defer log.Println("main : Completed")
-
-	// =========================================================================
-	// Stop publishers
-
-	publish.Stop()
 }

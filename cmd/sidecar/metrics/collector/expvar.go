@@ -1,4 +1,4 @@
-package expvar
+package collector
 
 import (
 	"encoding/json"
@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
-	"net/url"
 	"time"
 )
 
@@ -45,8 +44,6 @@ func New(host string) (*Expvar, error) {
 	return &exp, nil
 }
 
-// Collect pulls the metrics from the configured host and returns JSON. This
-// implements the Collector interface defined by publishers.
 func (exp *Expvar) Collect() (map[string]interface{}, error) {
 	req, err := http.NewRequest("GET", exp.host, nil)
 	if err != nil {
@@ -71,23 +68,6 @@ func (exp *Expvar) Collect() (map[string]interface{}, error) {
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, err
 	}
-
-	// Add heap value into the data set.
-	memStats, ok := (data["memstats"]).(map[string]interface{})
-	if ok {
-		data["heap"] = memStats["Alloc"]
-	}
-
-	// Add the host to the metrics.
-	u, err := url.Parse(exp.host)
-	if err != nil {
-		return nil, err
-	}
-	data["host"] = u.Hostname()
-
-	// Remove uncessary keys.
-	delete(data, "memstats")
-	delete(data, "cmdline")
 
 	return data, nil
 }
