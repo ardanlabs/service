@@ -24,5 +24,5 @@ down:
 	docker-compose down
 
 test:  
-	source "$$GOPATH/src/github.com/ardanlabs/service"
+	cd "$$GOPATH/src/github.com/ardanlabs/service"
 	go test ./...
