@@ -1,7 +1,7 @@
 # Service
 
-William Kennedy
-Ardan Labs
+William Kennedy  
+Ardan Labs  
 bill@ardanlabs.com
 
 Service is a project that provides a starter-kit for a REST based web service. It provides best practices around Go   web services using POD architecture and design. It contains the following features:
