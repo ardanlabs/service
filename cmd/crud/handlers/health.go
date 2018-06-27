@@ -12,7 +12,6 @@ import (
 
 // Health provides support for orchestration health checks.
 type Health struct {
-	Log      *log.Logger
 	MasterDB *db.DB
 }
 

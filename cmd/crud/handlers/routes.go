@@ -14,7 +14,6 @@ func API(log *log.Logger, masterDB *db.DB) http.Handler {
 	app := web.New(log, mid.RequestLogger, mid.Metrics, mid.ErrorHandler)
 
 	u := User{
-		Log:      log,
 		MasterDB: masterDB,
 	}
 	app.Handle("GET", "/v1/users", u.List)
@@ -24,7 +23,6 @@ func API(log *log.Logger, masterDB *db.DB) http.Handler {
 	app.Handle("DELETE", "/v1/users/:id", u.Delete)
 
 	h := Health{
-		Log:      log,
 		MasterDB: masterDB,
 	}
 	app.Handle("GET", "/v1/health", h.Check)

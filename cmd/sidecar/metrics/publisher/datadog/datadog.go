@@ -13,6 +13,7 @@ import (
 
 // Datadog provides the ability to publish metrics to Datadog.
 type Datadog struct {
+	log    *log.Logger
 	apiKey string
 	host   string
 	tr     *http.Transport
@@ -20,7 +21,7 @@ type Datadog struct {
 }
 
 // New initializes Datadog access for publishing metrics.
-func New(apiKey string, host string) *Datadog {
+func New(log *log.Logger, apiKey string, host string) *Datadog {
 	tr := http.Transport{
 		Proxy: http.ProxyFromEnvironment,
 		DialContext: (&net.Dialer{
@@ -35,6 +36,7 @@ func New(apiKey string, host string) *Datadog {
 	}
 
 	d := Datadog{
+		log:    log,
 		apiKey: apiKey,
 		host:   host,
 		tr:     &tr,
@@ -50,14 +52,14 @@ func New(apiKey string, host string) *Datadog {
 // Publish handles the processing of metrics for deliver
 // to the DataDog.
 func (d *Datadog) Publish(data map[string]interface{}) {
-	doc, err := marshalDatadog(data)
+	doc, err := marshalDatadog(d.log, data)
 	if err != nil {
-		log.Println("datadog.publish :", err)
+		d.log.Println("datadog.publish :", err)
 		return
 	}
 
 	if err := sendDatadog(d, doc); err != nil {
-		log.Println("datadog.publish :", err)
+		d.log.Println("datadog.publish :", err)
 		return
 	}
 
@@ -65,7 +67,7 @@ func (d *Datadog) Publish(data map[string]interface{}) {
 }
 
 // marshalDatadog converts the data map to datadog JSON document.
-func marshalDatadog(data map[string]interface{}) ([]byte, error) {
+func marshalDatadog(log *log.Logger, data map[string]interface{}) ([]byte, error) {
 	/*
 		{ "series" : [
 				{

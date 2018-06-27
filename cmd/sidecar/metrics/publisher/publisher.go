@@ -7,43 +7,9 @@ import (
 	"time"
 )
 
-// Stdout publishers for writing to stdout
-func Stdout(raw map[string]interface{}) {
-
-	rawJSON, err := json.Marshal(raw)
-	if err != nil {
-		log.Println("Stdout : Marshal ERROR :", err)
-		return
-	}
-
-	var data map[string]interface{}
-	if err := json.Unmarshal(rawJSON, &data); err != nil {
-		log.Println("Stdout : Unmarshal ERROR :", err)
-		return
-	}
-
-	// Add heap value into the data set.
-	memStats, ok := (data["memstats"]).(map[string]interface{})
-	if ok {
-		data["heap"] = memStats["Alloc"]
-	}
-
-	// Remove uncessary keys.
-	delete(data, "memstats")
-	delete(data, "cmdline")
-
-	out, err := json.MarshalIndent(data, "", "    ")
-	if err != nil {
-		return
-	}
-	log.Println("Stdout :\n", string(out))
-}
-
-// =============================================================================
-
 // Set of possible publisher types.
 const (
-	TypeConsole = "console"
+	TypeStdout  = "stdout"
 	TypeDatadog = "datadog"
 )
 
@@ -64,6 +30,7 @@ type Publisher func(map[string]interface{})
 // Publish provides the ability to receive metrics
 // on an interval.
 type Publish struct {
+	log       *log.Logger
 	collector Collector
 	publisher []Publisher
 	wg        sync.WaitGroup
@@ -72,8 +39,9 @@ type Publish struct {
 }
 
 // New creates a Publish for consuming and publishing metrics.
-func New(collector Collector, interval time.Duration, publisher ...Publisher) (*Publish, error) {
+func New(log *log.Logger, collector Collector, interval time.Duration, publisher ...Publisher) (*Publish, error) {
 	p := Publish{
+		log:       log,
 		collector: collector,
 		publisher: publisher,
 		timer:     time.NewTimer(interval),
@@ -107,11 +75,54 @@ func (p *Publish) Stop() {
 func (p *Publish) update() {
 	data, err := p.collector.Collect()
 	if err != nil {
-		log.Println(err)
+		p.log.Println(err)
 		return
 	}
 
 	for _, pub := range p.publisher {
 		pub(data)
 	}
+}
+
+// =============================================================================
+
+// Stdout provide our basic publishing.
+type Stdout struct {
+	log *log.Logger
+}
+
+// NewStdout initializes stdout for publishing metrics.
+func NewStdout(log *log.Logger) *Stdout {
+	return &Stdout{log}
+}
+
+// Publish publishers for writing to stdout.
+func (s *Stdout) Publish(data map[string]interface{}) {
+	rawJSON, err := json.Marshal(data)
+	if err != nil {
+		s.log.Println("Stdout : Marshal ERROR :", err)
+		return
+	}
+
+	var d map[string]interface{}
+	if err := json.Unmarshal(rawJSON, &d); err != nil {
+		s.log.Println("Stdout : Unmarshal ERROR :", err)
+		return
+	}
+
+	// Add heap value into the data set.
+	memStats, ok := (d["memstats"]).(map[string]interface{})
+	if ok {
+		d["heap"] = memStats["Alloc"]
+	}
+
+	// Remove uncessary keys.
+	delete(d, "memstats")
+	delete(d, "cmdline")
+
+	out, err := json.MarshalIndent(d, "", "    ")
+	if err != nil {
+		return
+	}
+	s.log.Println("Stdout :\n", string(out))
 }
