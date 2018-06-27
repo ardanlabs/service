@@ -32,11 +32,12 @@ Service should start even without a DB running yet.
 symbols in profiles: https://github.com/golang/go/issues/23376 / https://github.com/google/pprof/pull/366
 */
 
-func init() {
-	log.SetFlags(log.LstdFlags | log.Lmicroseconds | log.Lshortfile)
-}
-
 func main() {
+
+	// =========================================================================
+	// Logging
+
+	log := log.New(os.Stdout, "CRUD : ", log.LstdFlags|log.Lmicroseconds|log.Lshortfile)
 	defer log.Println("main : Completed")
 
 	// =========================================================================
@@ -164,7 +165,7 @@ func main() {
 
 	api := http.Server{
 		Addr:           apiHost,
-		Handler:        handlers.API(masterDB),
+		Handler:        handlers.API(log, masterDB),
 		ReadTimeout:    readTimeout,
 		WriteTimeout:   writeTimeout,
 		MaxHeaderBytes: 1 << 20,

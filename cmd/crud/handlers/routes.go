@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/ardanlabs/service/internal/mid"
@@ -9,8 +10,8 @@ import (
 )
 
 // API returns a handler for a set of routes.
-func API(masterDB *db.DB) http.Handler {
-	app := web.New(mid.RequestLogger, mid.Metrics, mid.ErrorHandler)
+func API(log *log.Logger, masterDB *db.DB) http.Handler {
+	app := web.New(log, mid.RequestLogger, mid.Metrics, mid.ErrorHandler)
 
 	u := User{
 		MasterDB: masterDB,

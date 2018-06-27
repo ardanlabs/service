@@ -15,12 +15,16 @@ import (
 	"github.com/ardanlabs/service/internal/platform/cfg"
 )
 
-func init() {
-	log.SetFlags(log.LstdFlags | log.Lmicroseconds | log.Lshortfile)
-}
-
 func main() {
+
+	// =========================================================================
+	// Logging
+
+	log := log.New(os.Stdout, "TRACER : ", log.LstdFlags|log.Lmicroseconds|log.Lshortfile)
 	defer log.Println("main : Completed")
+
+	// =========================================================================
+	// Configuration
 
 	c, err := cfg.New(cfg.EnvProvider{Namespace: "METRICS"})
 	if err != nil {
@@ -96,7 +100,7 @@ func main() {
 	// =========================================================================
 	// Start expvar Service
 
-	exp := expvar.New(expHost, expRoute, readTimeout, writeTimeout)
+	exp := expvar.New(log, expHost, expRoute, readTimeout, writeTimeout)
 	defer exp.Stop(shutdownTimeout)
 
 	// =========================================================================
@@ -108,8 +112,11 @@ func main() {
 		log.Fatalf("main : Starting collector : %v", err)
 	}
 
+	// Create a stdout publisher.
+	stdout := publisher.NewStdout(log)
+
 	// Start the publisher to collect/publish metrics.
-	publish, err := publisher.New(collector, interval, exp.Publish, publisher.Stdout)
+	publish, err := publisher.New(log, collector, interval, exp.Publish, stdout.Publish)
 	if err != nil {
 		log.Fatalf("main : Starting publisher : %v", err)
 	}

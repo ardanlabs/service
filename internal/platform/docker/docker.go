@@ -15,7 +15,7 @@ type Container struct {
 }
 
 // StartMongo runs a mongo container to execute commands.
-func StartMongo() (*Container, error) {
+func StartMongo(log *log.Logger) (*Container, error) {
 	cmd := exec.Command("docker", "run", "-P", "-d", "mongo")
 	var out bytes.Buffer
 	cmd.Stdout = &out
@@ -57,7 +57,7 @@ func StartMongo() (*Container, error) {
 }
 
 // StopMongo stops and removes the specified container.
-func StopMongo(c *Container) error {
+func StopMongo(log *log.Logger, c *Container) error {
 	if err := exec.Command("docker", "stop", c.ID).Run(); err != nil {
 		return err
 	}

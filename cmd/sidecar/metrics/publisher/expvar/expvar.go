@@ -13,15 +13,17 @@ import (
 
 // Expvar provide our basic publishing.
 type Expvar struct {
+	log    *log.Logger
 	server http.Server
 	data   map[string]interface{}
 	mu     sync.Mutex
 }
 
 // New starts a service for consuming the raw expvar stats.
-func New(host string, route string, readTimeout, writeTimeout time.Duration) *Expvar {
+func New(log *log.Logger, host string, route string, readTimeout, writeTimeout time.Duration) *Expvar {
 	mux := httptreemux.New()
 	exp := Expvar{
+		log: log,
 		server: http.Server{
 			Addr:           host,
 			Handler:        mux,
@@ -45,8 +47,8 @@ func New(host string, route string, readTimeout, writeTimeout time.Duration) *Ex
 
 // Stop shutsdown the service.
 func (exp *Expvar) Stop(shutdownTimeout time.Duration) {
-	log.Println("expvar : Start shutdown...")
-	defer log.Println("expvar : Completed")
+	exp.log.Println("expvar : Start shutdown...")
+	defer exp.log.Println("expvar : Completed")
 
 	// Create context for Shutdown call.
 	ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
@@ -54,9 +56,9 @@ func (exp *Expvar) Stop(shutdownTimeout time.Duration) {
 
 	// Asking listener to shutdown and load shed.
 	if err := exp.server.Shutdown(ctx); err != nil {
-		log.Printf("expvar : Graceful shutdown did not complete in %v : %v", shutdownTimeout, err)
+		exp.log.Printf("expvar : Graceful shutdown did not complete in %v : %v", shutdownTimeout, err)
 		if err := exp.server.Close(); err != nil {
-			log.Fatalf("expvar : Could not stop http server: %v", err)
+			exp.log.Fatalf("expvar : Could not stop http server: %v", err)
 		}
 	}
 }
@@ -72,7 +74,6 @@ func (exp *Expvar) Publish(data map[string]interface{}) {
 
 // handler is what consumers call to get the raw stats.
 func (exp *Expvar) handler(w http.ResponseWriter, r *http.Request, params map[string]string) {
-
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
@@ -84,7 +85,7 @@ func (exp *Expvar) handler(w http.ResponseWriter, r *http.Request, params map[st
 	exp.mu.Unlock()
 
 	if err := json.NewEncoder(w).Encode(data); err != nil {
-		log.Println("expvar : ERROR :", err)
+		exp.log.Println("expvar : ERROR :", err)
 	}
 
 	log.Printf("expvar : (%d) : %s %s -> %s",
