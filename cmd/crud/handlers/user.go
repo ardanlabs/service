@@ -29,7 +29,6 @@ func check(err error) error {
 
 // User represents the User API method handler set.
 type User struct {
-	Log      *log.Logger
 	MasterDB *db.DB
 
 	// ADD OTHER STATE LIKE THE LOGGER AND CONFIG HERE.
