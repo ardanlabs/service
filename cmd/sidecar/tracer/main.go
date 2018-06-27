@@ -14,11 +14,12 @@ import (
 	"github.com/ardanlabs/service/internal/platform/cfg"
 )
 
-func init() {
-	log.SetFlags(log.LstdFlags | log.Lmicroseconds | log.Lshortfile)
-}
-
 func main() {
+
+	// =========================================================================
+	// Logging
+
+	log := log.New(os.Stdout, "TRACER : ", log.LstdFlags|log.Lmicroseconds|log.Lshortfile)
 	defer log.Println("main : Completed")
 
 	// =========================================================================
@@ -85,7 +86,7 @@ func main() {
 
 	api := http.Server{
 		Addr:           apiHost,
-		Handler:        handlers.API(zipkinHost, apiHost),
+		Handler:        handlers.API(log, zipkinHost, apiHost),
 		ReadTimeout:    readTimeout,
 		WriteTimeout:   writeTimeout,
 		MaxHeaderBytes: 1 << 20,

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"log"
 	"net/http"
 
 	"github.com/ardanlabs/service/internal/platform/db"
@@ -34,7 +35,7 @@ type User struct {
 }
 
 // List returns all the existing users in the system.
-func (u *User) List(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
+func (u *User) List(ctx context.Context, log *log.Logger, w http.ResponseWriter, r *http.Request, params map[string]string) error {
 	ctx, span := trace.StartSpan(ctx, "handlers.User.List")
 	defer span.End()
 
@@ -46,12 +47,12 @@ func (u *User) List(ctx context.Context, w http.ResponseWriter, r *http.Request,
 		return errors.Wrap(err, "")
 	}
 
-	web.Respond(ctx, w, usrs, http.StatusOK)
+	web.Respond(ctx, log, w, usrs, http.StatusOK)
 	return nil
 }
 
 // Retrieve returns the specified user from the system.
-func (u *User) Retrieve(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
+func (u *User) Retrieve(ctx context.Context, log *log.Logger, w http.ResponseWriter, r *http.Request, params map[string]string) error {
 	ctx, span := trace.StartSpan(ctx, "handlers.User.Retrieve")
 	defer span.End()
 
@@ -63,12 +64,12 @@ func (u *User) Retrieve(ctx context.Context, w http.ResponseWriter, r *http.Requ
 		return errors.Wrapf(err, "Id: %s", params["id"])
 	}
 
-	web.Respond(ctx, w, usr, http.StatusOK)
+	web.Respond(ctx, log, w, usr, http.StatusOK)
 	return nil
 }
 
 // Create inserts a new user into the system.
-func (u *User) Create(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
+func (u *User) Create(ctx context.Context, log *log.Logger, w http.ResponseWriter, r *http.Request, params map[string]string) error {
 	ctx, span := trace.StartSpan(ctx, "handlers.User.Create")
 	defer span.End()
 
@@ -85,12 +86,12 @@ func (u *User) Create(ctx context.Context, w http.ResponseWriter, r *http.Reques
 		return errors.Wrapf(err, "User: %+v", &usr)
 	}
 
-	web.Respond(ctx, w, nUsr, http.StatusCreated)
+	web.Respond(ctx, log, w, nUsr, http.StatusCreated)
 	return nil
 }
 
 // Update updates the specified user in the system.
-func (u *User) Update(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
+func (u *User) Update(ctx context.Context, log *log.Logger, w http.ResponseWriter, r *http.Request, params map[string]string) error {
 	ctx, span := trace.StartSpan(ctx, "handlers.User.Update")
 	defer span.End()
 
@@ -107,12 +108,12 @@ func (u *User) Update(ctx context.Context, w http.ResponseWriter, r *http.Reques
 		return errors.Wrapf(err, "Id: %s  User: %+v", params["id"], &usr)
 	}
 
-	web.Respond(ctx, w, nil, http.StatusNoContent)
+	web.Respond(ctx, log, w, nil, http.StatusNoContent)
 	return nil
 }
 
 // Delete removed the specified user from the system.
-func (u *User) Delete(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
+func (u *User) Delete(ctx context.Context, log *log.Logger, w http.ResponseWriter, r *http.Request, params map[string]string) error {
 	ctx, span := trace.StartSpan(ctx, "handlers.User.Delete")
 	defer span.End()
 
@@ -124,6 +125,6 @@ func (u *User) Delete(ctx context.Context, w http.ResponseWriter, r *http.Reques
 		return errors.Wrapf(err, "Id: %s", params["id"])
 	}
 
-	web.Respond(ctx, w, nil, http.StatusNoContent)
+	web.Respond(ctx, log, w, nil, http.StatusNoContent)
 	return nil
 }

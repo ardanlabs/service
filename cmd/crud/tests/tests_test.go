@@ -20,6 +20,6 @@ func TestMain(m *testing.M) {
 func testMain(m *testing.M) int {
 	test = tests.New()
 	defer test.TearDown()
-	a = handlers.API(test.MasterDB).(*web.App)
+	a = handlers.API(test.Log, test.MasterDB).(*web.App)
 	return m.Run()
 }

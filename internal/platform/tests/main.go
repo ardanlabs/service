@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"runtime/debug"
 	"testing"
 	"time"
@@ -20,25 +21,25 @@ const (
 	Failed  = "\u2717"
 )
 
-func init() {
-	log.SetFlags(log.LstdFlags | log.Lmicroseconds | log.Lshortfile)
-}
-
 // Test owns state for running/shutting down tests.
 type Test struct {
+	Log       *log.Logger
 	MasterDB  *db.DB
 	container *docker.Container
 }
 
 // New is the entry point for tests.
 func New() *Test {
-	var test Test
+
+	// =========================================================================
+	// Logging
+
+	log := log.New(os.Stdout, "CRUD-TEST : ", log.LstdFlags|log.Lmicroseconds|log.Lshortfile)
 
 	// ============================================================
 	// Startup Mongo container
 
-	var err error
-	test.container, err = docker.StartMongo()
+	container, err := docker.StartMongo(log)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -47,26 +48,26 @@ func New() *Test {
 	// Configuration
 
 	dbDialTimeout := 25 * time.Second
-	dbHost := fmt.Sprintf("mongodb://localhost:%s/gotraining", test.container.Port)
+	dbHost := fmt.Sprintf("mongodb://localhost:%s/gotraining", container.Port)
 
 	// ============================================================
 	// Start Mongo
 
 	log.Println("main : Started : Initialize Mongo")
-	test.MasterDB, err = db.New(dbHost, dbDialTimeout)
+	masterDB, err := db.New(dbHost, dbDialTimeout)
 	if err != nil {
 		log.Fatalf("startup : Register DB : %v", err)
 	}
 
-	return &test
+	return &Test{log, masterDB, container}
 }
 
 // TearDown is used for shutting down tests. Calling this should be
 // done in a defer immediately after calling New.
 func (t *Test) TearDown() {
 	t.MasterDB.Close()
-	if err := docker.StopMongo(t.container); err != nil {
-		log.Println(err)
+	if err := docker.StopMongo(t.Log, t.container); err != nil {
+		t.Log.Println(err)
 	}
 }
 
