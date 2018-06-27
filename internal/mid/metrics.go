@@ -3,6 +3,7 @@ package mid
 import (
 	"context"
 	"expvar"
+	"log"
 	"net/http"
 	"runtime"
 
@@ -25,11 +26,11 @@ var m = struct {
 func Metrics(next web.Handler) web.Handler {
 
 	// Wrap this handler around the next one provided.
-	h := func(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
+	h := func(ctx context.Context, log *log.Logger, w http.ResponseWriter, r *http.Request, params map[string]string) error {
 		ctx, span := trace.StartSpan(ctx, "internal.mid.Metrics")
 		defer span.End()
 
-		next(ctx, w, r, params)
+		next(ctx, log, w, r, params)
 
 		// Add one to the request counter.
 		m.req.Add(1)
