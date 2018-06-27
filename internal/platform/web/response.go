@@ -30,18 +30,18 @@ type JSONError struct {
 }
 
 // Error handles all error responses for the API.
-func Error(cxt context.Context, w http.ResponseWriter, err error) {
+func Error(cxt context.Context, log *log.Logger, w http.ResponseWriter, err error) {
 	switch errors.Cause(err) {
 	case ErrNotHealthy:
-		RespondError(cxt, w, err, http.StatusInternalServerError)
+		RespondError(cxt, log, w, err, http.StatusInternalServerError)
 		return
 
 	case ErrNotFound:
-		RespondError(cxt, w, err, http.StatusNotFound)
+		RespondError(cxt, log, w, err, http.StatusNotFound)
 		return
 
 	case ErrValidation, ErrInvalidID:
-		RespondError(cxt, w, err, http.StatusBadRequest)
+		RespondError(cxt, log, w, err, http.StatusBadRequest)
 		return
 	}
 
@@ -52,21 +52,21 @@ func Error(cxt context.Context, w http.ResponseWriter, err error) {
 			Fields: e,
 		}
 
-		Respond(cxt, w, v, http.StatusBadRequest)
+		Respond(cxt, log, w, v, http.StatusBadRequest)
 		return
 	}
 
-	RespondError(cxt, w, err, http.StatusInternalServerError)
+	RespondError(cxt, log, w, err, http.StatusInternalServerError)
 }
 
 // RespondError sends JSON describing the error
-func RespondError(ctx context.Context, w http.ResponseWriter, err error, code int) {
-	Respond(ctx, w, JSONError{Error: err.Error()}, code)
+func RespondError(ctx context.Context, log *log.Logger, w http.ResponseWriter, err error, code int) {
+	Respond(ctx, log, w, JSONError{Error: err.Error()}, code)
 }
 
 // Respond sends JSON to the client.
 // If code is StatusNoContent, v is expected to be nil.
-func Respond(ctx context.Context, w http.ResponseWriter, data interface{}, code int) {
+func Respond(ctx context.Context, log *log.Logger, w http.ResponseWriter, data interface{}, code int) {
 
 	// Set the status code for the request logger middleware.
 	v := ctx.Value(KeyValues).(*Values)
@@ -85,7 +85,7 @@ func Respond(ctx context.Context, w http.ResponseWriter, data interface{}, code 
 		log.Printf("%s : Respond %v Marshalling JSON response\n", v.TraceID, err)
 
 		// Should respond with internal server error.
-		RespondError(ctx, w, err, http.StatusInternalServerError)
+		RespondError(ctx, log, w, err, http.StatusInternalServerError)
 		return
 	}
 

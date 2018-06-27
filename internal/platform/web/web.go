@@ -2,6 +2,7 @@ package web
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"time"
 
@@ -29,20 +30,22 @@ type Values struct {
 
 // A Handler is a type that handles an http request within our own little mini
 // framework.
-type Handler func(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error
+type Handler func(ctx context.Context, log *log.Logger, w http.ResponseWriter, r *http.Request, params map[string]string) error
 
 // App is the entrypoint into our application and what configures our context
 // object for each of our http handlers. Feel free to add any configuration
 // data/logic on this App struct
 type App struct {
 	*httptreemux.TreeMux
-	mw []Middleware
+	log *log.Logger
+	mw  []Middleware
 }
 
 // New creates an App value that handle a set of routes for the application.
-func New(mw ...Middleware) *App {
+func New(log *log.Logger, mw ...Middleware) *App {
 	return &App{
 		TreeMux: httptreemux.New(),
+		log:     log,
 		mw:      mw,
 	}
 }
@@ -81,8 +84,8 @@ func (a *App) Handle(verb, path string, handler Handler, mw ...Middleware) {
 		}
 
 		// Call the wrapped handler functions.
-		if err := handler(ctx, w, r, params); err != nil {
-			Error(ctx, w, err)
+		if err := handler(ctx, a.log, w, r, params); err != nil {
+			Error(ctx, a.log, w, err)
 		}
 	}
 
