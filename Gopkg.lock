@@ -8,6 +8,12 @@
   version = "v5.0.0"
 
 [[projects]]
+  name = "github.com/kelseyhightower/envconfig"
+  packages = ["."]
+  revision = "f611eb38b3875cc3bd991ca91c51d06446afa14c"
+  version = "v1.3.0"
+
+[[projects]]
   name = "github.com/openzipkin/zipkin-go"
   packages = ["model"]
   revision = "f197ec29e729f226d23370ea60f0e49b8f44ccf4"
@@ -56,6 +62,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "ca4d2a71dad975bb54a35cab20b10377cbc0d1b455d135088e7d0385e5b8425e"
+  inputs-digest = "5c1709809bf6f388a2148c377237fbca90e6089947d2d57d2b6f7065558bb2ac"
   solver-name = "gps-cdcl"
   solver-version = 1
