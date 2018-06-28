@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 	_ "net/http/pprof"
@@ -12,7 +13,7 @@ import (
 	"github.com/ardanlabs/service/cmd/sidecar/metrics/collector"
 	"github.com/ardanlabs/service/cmd/sidecar/metrics/publisher"
 	"github.com/ardanlabs/service/cmd/sidecar/metrics/publisher/expvar"
-	"github.com/ardanlabs/service/internal/platform/cfg"
+	"github.com/kelseyhightower/envconfig"
 )
 
 func main() {
@@ -26,56 +27,38 @@ func main() {
 	// =========================================================================
 	// Configuration
 
-	c, err := cfg.New(cfg.EnvProvider{Namespace: "METRICS"})
-	if err != nil {
-		log.Printf("config : %s. All config defaults in use.", err)
-	}
-	readTimeout, err := c.Duration("READ_TIMEOUT")
-	if err != nil {
-		readTimeout = 5 * time.Second
-	}
-	writeTimeout, err := c.Duration("WRITE_TIMEOUT")
-	if err != nil {
-		writeTimeout = 5 * time.Second
-	}
-	expHost, err := c.String("EXPVAR_HOST")
-	if err != nil {
-		expHost = "0.0.0.0:3001"
-	}
-	expRoute, err := c.String("EXPVAR_ROUTE")
-	if err != nil {
-		expRoute = "/metrics"
-	}
-	debugHost, err := c.String("DEBUG_HOST")
-	if err != nil {
-		debugHost = "0.0.0.0:4001"
-	}
-	crudHost, err := c.String("CRUD_HOST")
-	if err != nil {
-		crudHost = "http://crud:4000/debug/vars"
-	}
-	publishTo, err := c.String("PUBLISHER")
-	if err != nil {
-		publishTo = "console"
-	}
-	interval, err := c.Duration("INTERVAL")
-	if err != nil {
-		interval = 5 * time.Second
-	}
-	shutdownTimeout, err := c.Duration("SHUTDOWN_TIMEOUT")
-	if err != nil {
-		shutdownTimeout = 5 * time.Second
+	var cfg struct {
+		Web struct {
+			DebugHost       string        `default:"0.0.0.0:4001" envconfig:"DEBUG_HOST"`
+			ReadTimeout     time.Duration `default:"5s" envconfig:"READ_TIMEOUT"`
+			WriteTimeout    time.Duration `default:"5s" envconfig:"WRITE_TIMEOUT"`
+			ShutdownTimeout time.Duration `default:"5s" envconfig:"SHUTDOWN_TIMEOUT"`
+		}
+		Expvar struct {
+			Host            string        `default:"0.0.0.0:3001" envconfig:"HOST"`
+			Route           string        `default:"/metrics" envconfig:"ROUTE"`
+			ReadTimeout     time.Duration `default:"5s" envconfig:"READ_TIMEOUT"`
+			WriteTimeout    time.Duration `default:"5s" envconfig:"WRITE_TIMEOUT"`
+			ShutdownTimeout time.Duration `default:"5s" envconfig:"SHUTDOWN_TIMEOUT"`
+		}
+		Collect struct {
+			From string `default:"http://crud:4000/debug/vars" envconfig:"FROM"`
+		}
+		Publish struct {
+			To       string        `default:"console" envconfig:"TO"`
+			Interval time.Duration `default:"5s" envconfig:"INTERVAL"`
+		}
 	}
 
-	log.Printf("config : %s=%v", "READ_TIMEOUT", readTimeout)
-	log.Printf("config : %s=%v", "WRITE_TIMEOUT", writeTimeout)
-	log.Printf("config : %s=%v", "DEBUG_HOST", debugHost)
-	log.Printf("config : %s=%v", "EXPVAR_HOST", expHost)
-	log.Printf("config : %s=%v", "EXPVAR_ROUTE", expRoute)
-	log.Printf("config : %s=%v", "CRUD_HOST", crudHost)
-	log.Printf("config : %s=%v", "PUBLISHER", publishTo)
-	log.Printf("config : %s=%v", "INTERVAL", interval)
-	log.Printf("config : %s=%v", "SHUTDOWN_TIMEOUT", shutdownTimeout)
+	if err := envconfig.Process("METRICS", &cfg); err != nil {
+		log.Fatalf("main : Parsing Config : %v", err)
+	}
+
+	cfgJSON, err := json.MarshalIndent(cfg, "", "    ")
+	if err != nil {
+		log.Fatalf("main : Marshalling Config to JSON : %v", err)
+	}
+	log.Printf("config : %v\n", string(cfgJSON))
 
 	// =========================================================================
 	// Start Debug Service
@@ -83,40 +66,41 @@ func main() {
 	// /debug/pprof - Added to the default mux by the net/http/pprof package.
 
 	debug := http.Server{
-		Addr:           debugHost,
+		Addr:           cfg.Web.DebugHost,
 		Handler:        http.DefaultServeMux,
-		ReadTimeout:    readTimeout,
-		WriteTimeout:   writeTimeout,
+		ReadTimeout:    cfg.Web.ReadTimeout,
+		WriteTimeout:   cfg.Web.WriteTimeout,
 		MaxHeaderBytes: 1 << 20,
 	}
 
 	// Not concerned with shutting this down when the
 	// application is being shutdown.
 	go func() {
-		log.Printf("main : Debug Listening %s", debugHost)
+		log.Printf("main : Debug Listening %s", cfg.Web.DebugHost)
 		log.Printf("main : Debug Listener closed : %v", debug.ListenAndServe())
 	}()
 
 	// =========================================================================
 	// Start expvar Service
 
-	exp := expvar.New(log, expHost, expRoute, readTimeout, writeTimeout)
-	defer exp.Stop(shutdownTimeout)
+	exp := expvar.New(log, cfg.Expvar.Host, cfg.Expvar.Route, cfg.Expvar.ReadTimeout, cfg.Expvar.WriteTimeout)
+	defer exp.Stop(cfg.Expvar.ShutdownTimeout)
 
 	// =========================================================================
 	// Start collectors and publishers
 
 	// Initalize to allow for the collection of metrics.
-	collector, err := collector.New(crudHost)
+	collector, err := collector.New(cfg.Collect.From)
 	if err != nil {
 		log.Fatalf("main : Starting collector : %v", err)
 	}
 
 	// Create a stdout publisher.
+	// TODO: Respect the cfg.publish.to config option.
 	stdout := publisher.NewStdout(log)
 
 	// Start the publisher to collect/publish metrics.
-	publish, err := publisher.New(log, collector, interval, exp.Publish, stdout.Publish)
+	publish, err := publisher.New(log, collector, cfg.Publish.Interval, exp.Publish, stdout.Publish)
 	if err != nil {
 		log.Fatalf("main : Starting publisher : %v", err)
 	}

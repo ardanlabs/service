@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	_ "expvar"
 	"log"
 	"net/http"
@@ -12,9 +13,9 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/cmd/crud/handlers"
-	"github.com/ardanlabs/service/internal/platform/cfg"
 	"github.com/ardanlabs/service/internal/platform/db"
 	itrace "github.com/ardanlabs/service/internal/platform/trace"
+	"github.com/kelseyhightower/envconfig"
 	"go.opencensus.io/trace"
 )
 
@@ -43,72 +44,41 @@ func main() {
 	// =========================================================================
 	// Configuration
 
-	c, err := cfg.New(cfg.EnvProvider{Namespace: "CRUD"})
-	if err != nil {
-		log.Printf("config : %s. All config defaults in use.", err)
-	}
-	readTimeout, err := c.Duration("READ_TIMEOUT")
-	if err != nil {
-		readTimeout = 5 * time.Second
-	}
-	writeTimeout, err := c.Duration("WRITE_TIMEOUT")
-	if err != nil {
-		writeTimeout = 5 * time.Second
-	}
-	shutdownTimeout, err := c.Duration("SHUTDOWN_TIMEOUT")
-	if err != nil {
-		shutdownTimeout = 5 * time.Second
-	}
-	dbDialTimeout, err := c.Duration("DB_DIAL_TIMEOUT")
-	if err != nil {
-		dbDialTimeout = 5 * time.Second
-	}
-	apiHost, err := c.String("API_HOST")
-	if err != nil {
-		apiHost = "0.0.0.0:3000"
-	}
-	debugHost, err := c.String("DEBUG_HOST")
-	if err != nil {
-		debugHost = "0.0.0.0:4000"
-	}
-	dbHost, err := c.String("DB_HOST")
-	if err != nil {
-		dbHost = "mongo:27017/gotraining"
-	}
-	traceHost, err := c.String("TRACE_HOST")
-	if err != nil {
-		traceHost = "http://tracer:3002/v1/publish"
-	}
-	traceBatchSize, err := c.Int("TRACE_BATCH_SIZE")
-	if err != nil {
-		traceBatchSize = 1000
-	}
-	traceSendInterval, err := c.Duration("TRACE_SEND_INTERVAL")
-	if err != nil {
-		traceSendInterval = 15 * time.Second
-	}
-	traceSendTimeout, err := c.Duration("TRACE_SEND_TIMEOUT")
-	if err != nil {
-		traceSendTimeout = 500 * time.Millisecond
+	var cfg struct {
+		Web struct {
+			APIHost         string        `default:"0.0.0.0:3000" envconfig:"API_HOST"`
+			DebugHost       string        `default:"0.0.0.0:4000" envconfig:"DEBUG_HOST"`
+			ReadTimeout     time.Duration `default:"5s" envconfig:"READ_TIMEOUT"`
+			WriteTimeout    time.Duration `default:"5s" envconfig:"WRITE_TIMEOUT"`
+			ShutdownTimeout time.Duration `default:"5s" envconfig:"SHUTDOWN_TIMEOUT"`
+		}
+		DB struct {
+			DialTimeout time.Duration `default:"5s" envconfig:"DIAL_TIMEOUT"`
+			Host        string        `default:"mongo:27017/gotraining" envconfig:"HOST"`
+		}
+		Trace struct {
+			Host         string        `default:"http://tracer:3002/v1/publish" envconfig:"HOST"`
+			BatchSize    int           `default:"1000" envconfig:"batch_size" envconfig:"BATCH_SIZE"`
+			SendInterval time.Duration `default:"15s" envconfig:"send_interval" envconfig:"SEND_INTERVAL"`
+			SendTimeout  time.Duration `default:"500ms" envconfig:"send_timeout" envconfig:"SEND_TIMEOUT"`
+		}
 	}
 
-	log.Printf("config : %s=%v", "READ_TIMEOUT", readTimeout)
-	log.Printf("config : %s=%v", "WRITE_TIMEOUT", writeTimeout)
-	log.Printf("config : %s=%v", "SHUTDOWN_TIMEOUT", shutdownTimeout)
-	log.Printf("config : %s=%v", "DB_DIAL_TIMEOUT", dbDialTimeout)
-	log.Printf("config : %s=%v", "API_HOST", apiHost)
-	log.Printf("config : %s=%v", "DEBUG_HOST", debugHost)
-	log.Printf("config : %s=%v", "DB_HOST", dbHost)
-	log.Printf("config : %s=%v", "TRACE_HOST", traceHost)
-	log.Printf("config : %s=%v", "TRACE_BATCH_SIZE", traceBatchSize)
-	log.Printf("config : %s=%v", "TRACE_SEND_INTERVAL", traceSendInterval)
-	log.Printf("config : %s=%v", "TRACE_SEND_TIMEOUT", traceSendTimeout)
+	if err := envconfig.Process("CRUD", &cfg); err != nil {
+		log.Fatalf("main : Parsing Config : %v", err)
+	}
+
+	cfgJSON, err := json.MarshalIndent(cfg, "", "    ")
+	if err != nil {
+		log.Fatalf("main : Marshalling Config to JSON : %v", err)
+	}
+	log.Printf("config : %v\n", string(cfgJSON))
 
 	// =========================================================================
 	// Start Mongo
 
 	log.Println("main : Started : Initialize Mongo")
-	masterDB, err := db.New(dbHost, dbDialTimeout)
+	masterDB, err := db.New(cfg.DB.Host, cfg.DB.DialTimeout)
 	if err != nil {
 		log.Fatalf("main : Register DB : %v", err)
 	}
@@ -121,13 +91,13 @@ func main() {
 		log.Printf(format, v...)
 	}
 
-	log.Printf("main : Tracing Started : %s", traceHost)
-	exporter, err := itrace.NewExporter(logger, traceHost, traceBatchSize, traceSendInterval, traceSendTimeout)
+	log.Printf("main : Tracing Started : %s", cfg.Trace.Host)
+	exporter, err := itrace.NewExporter(logger, cfg.Trace.Host, cfg.Trace.BatchSize, cfg.Trace.SendInterval, cfg.Trace.SendTimeout)
 	if err != nil {
 		log.Fatalf("main : RegiTracingster : ERROR : %v", err)
 	}
 	defer func() {
-		log.Printf("main : Tracing Stopping : %s", traceHost)
+		log.Printf("main : Tracing Stopping : %s", cfg.Trace.Host)
 		batch, err := exporter.Close()
 		if err != nil {
 			log.Printf("main : Tracing Stopped : ERROR : Batch[%d] : %v", batch, err)
@@ -146,17 +116,17 @@ func main() {
 	// /debug/pprof - Added to the default mux by the net/http/pprof package.
 
 	debug := http.Server{
-		Addr:           debugHost,
+		Addr:           cfg.Web.DebugHost,
 		Handler:        http.DefaultServeMux,
-		ReadTimeout:    readTimeout,
-		WriteTimeout:   writeTimeout,
+		ReadTimeout:    cfg.Web.ReadTimeout,
+		WriteTimeout:   cfg.Web.WriteTimeout,
 		MaxHeaderBytes: 1 << 20,
 	}
 
 	// Not concerned with shutting this down when the
 	// application is being shutdown.
 	go func() {
-		log.Printf("main : Debug Listening %s", debugHost)
+		log.Printf("main : Debug Listening %s", cfg.Web.DebugHost)
 		log.Printf("main : Debug Listener closed : %v", debug.ListenAndServe())
 	}()
 
@@ -164,10 +134,10 @@ func main() {
 	// Start API Service
 
 	api := http.Server{
-		Addr:           apiHost,
+		Addr:           cfg.Web.APIHost,
 		Handler:        handlers.API(log, masterDB),
-		ReadTimeout:    readTimeout,
-		WriteTimeout:   writeTimeout,
+		ReadTimeout:    cfg.Web.ReadTimeout,
+		WriteTimeout:   cfg.Web.WriteTimeout,
 		MaxHeaderBytes: 1 << 20,
 	}
 
@@ -177,7 +147,7 @@ func main() {
 
 	// Start the service listening for requests.
 	go func() {
-		log.Printf("main : API Listening %s", apiHost)
+		log.Printf("main : API Listening %s", cfg.Web.APIHost)
 		serverErrors <- api.ListenAndServe()
 	}()
 
@@ -201,12 +171,12 @@ func main() {
 		log.Println("main : Start shutdown...")
 
 		// Create context for Shutdown call.
-		ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
+		ctx, cancel := context.WithTimeout(context.Background(), cfg.Web.ShutdownTimeout)
 		defer cancel()
 
 		// Asking listener to shutdown and load shed.
 		if err := api.Shutdown(ctx); err != nil {
-			log.Printf("main : Graceful shutdown did not complete in %v : %v", shutdownTimeout, err)
+			log.Printf("main : Graceful shutdown did not complete in %v : %v", cfg.Web.ShutdownTimeout, err)
 			if err := api.Close(); err != nil {
 				log.Fatalf("main : Could not stop http server: %v", err)
 			}
