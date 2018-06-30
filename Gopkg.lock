@@ -32,6 +32,12 @@
   version = "v0.8.0"
 
 [[projects]]
+  name = "github.com/spf13/pflag"
+  packages = ["."]
+  revision = "583c0c0531f06d5278b7d917446061adc344b5cd"
+  version = "v1.0.1"
+
+[[projects]]
   name = "go.opencensus.io"
   packages = [
     "internal",
@@ -62,6 +68,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "5c1709809bf6f388a2148c377237fbca90e6089947d2d57d2b6f7065558bb2ac"
+  inputs-digest = "d8e26d4d28d20be0698b1c8bf4d84fc3e49117ae5b2eeb9b221c84e42c436cbc"
   solver-name = "gps-cdcl"
   solver-version = 1
