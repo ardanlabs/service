@@ -12,9 +12,9 @@ import (
 // ErrHelp is provided to identify when help is being displayed.
 var ErrHelp = errors.New("providing help")
 
-// Update compares the specified command line arguments against the provided
+// Process compares the specified command line arguments against the provided
 // struct value and updates the fields that are identified.
-func Update(osArgs []string, v interface{}) error {
+func Process(osArgs []string, v interface{}) error {
 	if osArgs[1] == "-h" || osArgs[1] == "--help" {
 		fmt.Print(display(v))
 		return ErrHelp
@@ -36,9 +36,8 @@ func Update(osArgs []string, v interface{}) error {
 func display(v interface{}) string {
 	/*
 		Current display format for a field.
-		-short --long type		-a --web_apihost string
-		Default: value			Default: 0.0.0.0:3000
-		description				The ip:port for the api endpoint.
+		-short --long type	<default> : description
+		-a --web_apihost string  <0.0.0.0:3000> : The ip:port for the api endpoint.
 	*/
 
 	args, err := parse("", v)

@@ -43,5 +43,20 @@ type of dash used.
 	Shorthand versions
 	-f=x
 	-f x
+
+The API is a single call to `Process`
+
+	if err := envconfig.Process("CRUD", &cfg); err != nil {
+		log.Fatalf("main : Parsing Config : %v", err)
+	}
+
+	if err := flag.Process(os.Args, &cfg); err != nil {
+		if err != flag.ErrHelp {
+			log.Fatalf("main : Parsing Command Line : %v", err)
+		}
+		return
+	}
+
+This call should be done after the call to process the environmental variables.
 */
 package flag
