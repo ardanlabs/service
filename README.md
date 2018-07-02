@@ -26,7 +26,7 @@ This project contains three services and uses 3rd party services such as MongoDB
 You can use the traditional `go get` command to download this project into your configured GOPATH.
 
 ```
-$ go get -u github.com/ardanlabs/gotraining
+$ go get -u github.com/ardanlabs/service
 ```
 
 ### Installing Docker
