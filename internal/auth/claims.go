@@ -3,7 +3,6 @@ package auth
 import (
 	"crypto/rsa"
 
-	"github.com/ardanlabs/service/internal/platform/web"
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/pkg/errors"
 )
@@ -70,11 +69,11 @@ func (p *Parser) ParseClaims(tknStr string) (Claims, error) {
 		return p.kf(kidStr)
 	})
 	if err != nil {
-		return claims, err
+		return Claims{}, err
 	}
 
 	if !tkn.Valid {
-		return claims, errors.Wrap(web.ErrUnauthorized, "Invalid token")
+		return Claims{}, errors.New("Invalid token")
 	}
 
 	return claims, nil
