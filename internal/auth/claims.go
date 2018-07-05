@@ -7,6 +7,11 @@ import (
 	"github.com/pkg/errors"
 )
 
+const (
+	RoleAdmin = "ADMIN"
+	RoleTODO  = "TODO:MORE_ROLES"
+)
+
 // signingAlg is the agreed-upon algorithm that this application uses to sign
 // and validate tokens.
 //
@@ -14,14 +19,6 @@ import (
 // vulnerability:
 // https://auth0.com/blog/critical-vulnerabilities-in-json-web-token-libraries/
 var signingAlg = jwt.SigningMethodRS256
-
-const (
-	RoleAdmin = "ADMIN"
-	RoleTODO  = "TODO:MORE_ROLES"
-)
-
-// KeyFunc is used to map a JWT key id (kid) to the corresponding public key.
-type KeyFunc func(kid string) (*rsa.PublicKey, error)
 
 // Claims represents the authorization claims transmitted via a JWT.
 type Claims struct {
@@ -35,6 +32,16 @@ func GenerateToken(key *rsa.PrivateKey, kid string, claims Claims) (string, erro
 	tkn.Header["kid"] = kid
 	return tkn.SignedString(key)
 }
+
+// KeyFunc is used to map a JWT key id (kid) to the corresponding public key.
+// USE CASE:
+// Private keys should be rotated. During the transition
+// period, tokens signed with the old and new keys can coexist by looking up
+// the correct public key by key id (kid).
+//
+// Key-id-to-public-key resolution is usually accomplished via a public JWKS
+// endpoint. See https://auth0.com/docs/jwks for more details.
+type KeyFunc func(kid string) (*rsa.PublicKey, error)
 
 // NewParser is the factory function for a Parser.
 func NewParser(kf KeyFunc) *Parser {

@@ -91,7 +91,7 @@ E8Imrlt3vuxnUE1UMkhDXrlhrxslRXU9enynVghAcSrg6ijs8KuN/9RB/I7H03cT
 -----END PRIVATE KEY-----`
 
 // Output of:
-//   openssl rsa -pubout -in private.pem -out public.pem
+// openssl rsa -pubout -in private.pem -out public.pem
 const publicRSAKey = `-----BEGIN PUBLIC KEY-----
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA3YgQ1OI6kWLh5cgZqOXV
 gdY/Wng6181EyW0SpYKPg1g0MyMyUL2nJL0bvP3+weXLHqKpniXJgbuqXOA5kPqb
