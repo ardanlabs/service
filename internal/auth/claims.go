@@ -41,7 +41,7 @@ func GenerateToken(key *rsa.PrivateKey, kid string, claims Claims) (string, erro
 func NewParser(kf KeyFunc) *Parser {
 	return &Parser{
 		kf: kf,
-		p: jwt.Parser{
+		p: &jwt.Parser{
 			ValidMethods: []string{signingAlg.Name},
 		},
 	}
@@ -50,7 +50,7 @@ func NewParser(kf KeyFunc) *Parser {
 // Parser wraps jwt.Parser with the ability to fetch keys based on kid.
 type Parser struct {
 	kf KeyFunc
-	p  jwt.Parser
+	p  *jwt.Parser
 }
 
 // ParseClaims from a token string.
