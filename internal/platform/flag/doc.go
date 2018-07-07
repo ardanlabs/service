@@ -28,6 +28,7 @@ As an example, this config struct:
 
 Would produce the following flag output:
 
+	Useage of <app name>
 	-a --web_apihost string  <0.0.0.0:3000> : The ip:port for the api endpoint.
 	--web_batchsize int  <1000> : Represents number of items to move.
 	--web_readtimeout Duration  <5s>
@@ -50,7 +51,7 @@ The API is a single call to `Process`
 		log.Fatalf("main : Parsing Config : %v", err)
 	}
 
-	if err := flag.Process(os.Args, &cfg); err != nil {
+	if err := flag.Process(&cfg); err != nil {
 		if err != flag.ErrHelp {
 			log.Fatalf("main : Parsing Command Line : %v", err)
 		}
