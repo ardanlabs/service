@@ -68,7 +68,7 @@ func main() {
 		log.Fatalf("main : Parsing Config : %v", err)
 	}
 
-	if err := flag.Process(os.Args, &cfg); err != nil {
+	if err := flag.Process(&cfg); err != nil {
 		if err != flag.ErrHelp {
 			log.Fatalf("main : Parsing Command Line : %v", err)
 		}

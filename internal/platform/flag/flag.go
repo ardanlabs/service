@@ -3,6 +3,7 @@ package flag
 import (
 	"errors"
 	"fmt"
+	"os"
 	"reflect"
 	"strconv"
 	"strings"
@@ -14,9 +15,13 @@ var ErrHelp = errors.New("providing help")
 
 // Process compares the specified command line arguments against the provided
 // struct value and updates the fields that are identified.
-func Process(osArgs []string, v interface{}) error {
-	if osArgs[1] == "-h" || osArgs[1] == "--help" {
-		fmt.Print(display(v))
+func Process(v interface{}) error {
+	if len(os.Args) == 1 {
+		return nil
+	}
+
+	if os.Args[1] == "-h" || os.Args[1] == "--help" {
+		fmt.Print(display(os.Args[0], v))
 		return ErrHelp
 	}
 
@@ -25,7 +30,7 @@ func Process(osArgs []string, v interface{}) error {
 		return err
 	}
 
-	if err := apply(osArgs, args); err != nil {
+	if err := apply(os.Args, args); err != nil {
 		return err
 	}
 
@@ -33,9 +38,10 @@ func Process(osArgs []string, v interface{}) error {
 }
 
 // display provides a pretty print display of the command line arguments.
-func display(v interface{}) string {
+func display(appName string, v interface{}) string {
 	/*
 		Current display format for a field.
+		Useage of <app name>
 		-short --long type	<default> : description
 		-a --web_apihost string  <0.0.0.0:3000> : The ip:port for the api endpoint.
 	*/
@@ -46,7 +52,7 @@ func display(v interface{}) string {
 	}
 
 	var b strings.Builder
-	b.WriteString("\n")
+	b.WriteString(fmt.Sprintf("\nUseage of %s\n", appName))
 	for _, arg := range args {
 		if arg.Short != "" {
 			b.WriteString(fmt.Sprintf("-%s ", arg.Short))
@@ -171,7 +177,8 @@ func apply(osArgs []string, args []argument) (err error) {
 			for _, arg := range args {
 
 				// Update the struct value on a match.
-				if arg.Short == field || arg.Long == field {
+				switch {
+				case arg.Short == field || arg.Long == field:
 					switch arg.Type {
 					case "string":
 						arg.field.SetString(value)
@@ -187,7 +194,11 @@ func apply(osArgs []string, args []argument) (err error) {
 							return fmt.Errorf("unable to convert value %q to duration", value)
 						}
 						arg.field.SetInt(int64(d))
+					default:
+						return fmt.Errorf("type not supported %q", arg.Type)
 					}
+				default:
+					return fmt.Errorf("unknown argument %q", field)
 				}
 			}
 
@@ -196,5 +207,10 @@ func apply(osArgs []string, args []argument) (err error) {
 			value = ""
 		}
 	}
+
+	if field != "" && value == "" {
+		return fmt.Errorf("unknown argument %q", field)
+	}
+
 	return nil
 }
