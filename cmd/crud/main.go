@@ -85,6 +85,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("main : Marshalling Config to JSON : %v", err)
 	}
+
+	// TODO: Validate what is being written to the logs. We don't
+	// want to leak credentials or anything that can be a security risk.
 	log.Printf("main : Config : %v\n", string(cfgJSON))
 
 	// =========================================================================
