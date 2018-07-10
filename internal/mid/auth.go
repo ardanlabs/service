@@ -19,7 +19,7 @@ type Auth struct {
 // Authenticate validates a JWT from the `Authorization` header.
 func (a *Auth) Authenticate(next web.Handler) web.Handler {
 	h := func(ctx context.Context, log *log.Logger, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-		tknStr, err := getBearerToken(r)
+		tknStr, err := getBearerToken(r.Header.Get("Authorization"))
 		if err != nil {
 			return errors.Wrap(web.ErrUnauthorized, err.Error())
 		}
@@ -43,8 +43,7 @@ func (a *Auth) Authenticate(next web.Handler) web.Handler {
 
 // getBearerToken grabs a token from the request header. Expected header is of
 // the format `Authorization: Bearer <token>`.
-func getBearerToken(r *http.Request) (string, error) {
-	hdr := r.Header.Get("Authorization")
+func getBearerToken(hdr string) (string, error) {
 	if hdr == "" {
 		return "", errors.New("Missing Authorization header")
 	}

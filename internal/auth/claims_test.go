@@ -10,6 +10,7 @@ import (
 )
 
 func TestParseClaims(t *testing.T) {
+
 	// Parse the private key used to generate the token.
 	prvKey, err := jwt.ParseRSAPrivateKeyFromPEM([]byte(privateRSAKey))
 	if err != nil {
@@ -20,7 +21,7 @@ func TestParseClaims(t *testing.T) {
 	signedClaims := auth.Claims{
 		Roles: []string{auth.RoleAdmin},
 	}
-	tknStr, err := auth.GenerateToken(prvKey, privateRSAKeyID, signedClaims)
+	tknStr, err := auth.GenerateToken(prvKey, jwt.SigningMethodRS256, privateRSAKeyID, signedClaims)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -31,7 +32,16 @@ func TestParseClaims(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	parser := auth.NewParser(singleKeyFunc(privateRSAKeyID, pubKey))
+	// Usually this would implement a cache that is populated from a network call.
+	singleKeyFunc := func(id string, key *rsa.PublicKey) auth.KeyFunc {
+		return func(kid string) (*rsa.PublicKey, error) {
+			if id != kid {
+				return nil, fmt.Errorf("Unrecognized kid %q", kid)
+			}
+			return key, nil
+		}
+	}
+	parser := auth.NewParser(singleKeyFunc(privateRSAKeyID, pubKey), []string{jwt.SigningMethodRS256.Name})
 
 	parsedClaims, err := parser.ParseClaims(tknStr)
 	if err != nil {
@@ -44,15 +54,6 @@ func TestParseClaims(t *testing.T) {
 	}
 	if exp, got := signedClaims.Roles[0], parsedClaims.Roles[0]; exp != got {
 		t.Fatalf("expected roles[0] == %v, got %v", exp, got)
-	}
-}
-
-func singleKeyFunc(id string, key *rsa.PublicKey) auth.KeyFunc {
-	return func(kid string) (*rsa.PublicKey, error) {
-		if id != kid {
-			return nil, fmt.Errorf("Unrecognized kid %q", kid)
-		}
-		return key, nil
 	}
 }
 
