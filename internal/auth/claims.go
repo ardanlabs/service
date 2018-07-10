@@ -43,6 +43,7 @@ func NewParser(kf KeyFunc, validAlgNames []string) *Parser {
 	return &Parser{
 		kf: kf,
 		p: &jwt.Parser{
+
 			// The algorithm used to sign the JWT must be validated to avoid a critical
 			// vulnerability:
 			// https://auth0.com/blog/critical-vulnerabilities-in-json-web-token-libraries/
@@ -68,6 +69,7 @@ func (p *Parser) ParseClaims(tknStr string) (Claims, error) {
 
 		return p.kf(kidStr)
 	}
+
 	var claims Claims
 	tkn, err := jwt.ParseWithClaims(tknStr, &claims, f)
 	if err != nil {
