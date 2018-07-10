@@ -21,7 +21,11 @@ type Claims struct {
 func GenerateToken(key *rsa.PrivateKey, alg jwt.SigningMethod, kid string, claims Claims) (string, error) {
 	tkn := jwt.NewWithClaims(alg, claims)
 	tkn.Header["kid"] = kid
-	return tkn.SignedString(key)
+	str, err := tkn.SignedString(key)
+	if err != nil {
+		return "", errors.Wrap(err, "signing token")
+	}
+	return str, nil
 }
 
 // KeyFunc is used to map a JWT key id (kid) to the corresponding public key.
@@ -73,7 +77,7 @@ func (p *Parser) ParseClaims(tknStr string) (Claims, error) {
 	var claims Claims
 	tkn, err := jwt.ParseWithClaims(tknStr, &claims, f)
 	if err != nil {
-		return Claims{}, err
+		return Claims{}, errors.Wrap(err, "parsing token")
 	}
 
 	if !tkn.Valid {
