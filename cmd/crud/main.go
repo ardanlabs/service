@@ -14,6 +14,7 @@ import (
 
 	"github.com/ardanlabs/service/cmd/crud/handlers"
 	"github.com/ardanlabs/service/internal/platform/db"
+	"github.com/ardanlabs/service/internal/platform/flag"
 	itrace "github.com/ardanlabs/service/internal/platform/trace"
 	"github.com/kelseyhightower/envconfig"
 	"go.opencensus.io/trace"
@@ -39,7 +40,6 @@ func main() {
 	// Logging
 
 	log := log.New(os.Stdout, "CRUD : ", log.LstdFlags|log.Lmicroseconds|log.Lshortfile)
-	defer log.Println("main : Completed")
 
 	// =========================================================================
 	// Configuration
@@ -58,9 +58,9 @@ func main() {
 		}
 		Trace struct {
 			Host         string        `default:"http://tracer:3002/v1/publish" envconfig:"HOST"`
-			BatchSize    int           `default:"1000" envconfig:"batch_size" envconfig:"BATCH_SIZE"`
-			SendInterval time.Duration `default:"15s" envconfig:"send_interval" envconfig:"SEND_INTERVAL"`
-			SendTimeout  time.Duration `default:"500ms" envconfig:"send_timeout" envconfig:"SEND_TIMEOUT"`
+			BatchSize    int           `default:"1000" envconfig:"BATCH_SIZE"`
+			SendInterval time.Duration `default:"15s" envconfig:"SEND_INTERVAL"`
+			SendTimeout  time.Duration `default:"500ms" envconfig:"SEND_TIMEOUT"`
 		}
 	}
 
@@ -68,11 +68,27 @@ func main() {
 		log.Fatalf("main : Parsing Config : %v", err)
 	}
 
+	if err := flag.Process(&cfg); err != nil {
+		if err != flag.ErrHelp {
+			log.Fatalf("main : Parsing Command Line : %v", err)
+		}
+		return // We displayed help.
+	}
+
+	// =========================================================================
+	// App Starting
+
+	log.Println("main : Started : Application Initializing")
+	defer log.Println("main : Completed")
+
 	cfgJSON, err := json.MarshalIndent(cfg, "", "    ")
 	if err != nil {
 		log.Fatalf("main : Marshalling Config to JSON : %v", err)
 	}
-	log.Printf("config : %v\n", string(cfgJSON))
+
+	// TODO: Validate what is being written to the logs. We don't
+	// want to leak credentials or anything that can be a security risk.
+	log.Printf("main : Config : %v\n", string(cfgJSON))
 
 	// =========================================================================
 	// Start Mongo
