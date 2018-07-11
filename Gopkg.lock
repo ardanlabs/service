@@ -2,6 +2,12 @@
 
 
 [[projects]]
+  name = "github.com/dgrijalva/jwt-go"
+  packages = ["."]
+  revision = "06ea1031745cb8b3dab3f6a236daf2b0aa468b7e"
+  version = "v3.2.0"
+
+[[projects]]
   name = "github.com/dimfeld/httptreemux"
   packages = ["."]
   revision = "8cc36ee10f84b82d0742ffcab770815c7d3f9ad7"
@@ -62,6 +68,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "fcad2643ec4701991832b25b56ce786658f7de71c4109c2d2c3251fcab23ac71"
+  inputs-digest = "588ca079f498fa90530209dbb3302193a4d932022d04659e8d62aab919128a96"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -21,6 +21,10 @@ var (
 
 	// ErrValidation occurs when there are validation errors.
 	ErrValidation = errors.New("Validation errors occurred")
+
+	// ErrUnauthorized occurs when there was an issue validing the client's
+	// credentials.
+	ErrUnauthorized = errors.New("Unauthorized")
 )
 
 // JSONError is the response for errors that occur within the API.
@@ -42,6 +46,10 @@ func Error(cxt context.Context, log *log.Logger, w http.ResponseWriter, err erro
 
 	case ErrValidation, ErrInvalidID:
 		RespondError(cxt, log, w, err, http.StatusBadRequest)
+		return
+
+	case ErrUnauthorized:
+		RespondError(cxt, log, w, err, http.StatusUnauthorized)
 		return
 	}
 
