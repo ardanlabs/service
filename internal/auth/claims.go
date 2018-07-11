@@ -18,9 +18,9 @@ type Claims struct {
 }
 
 // GenerateToken generates a JWT token string.
-func GenerateToken(key *rsa.PrivateKey, alg jwt.SigningMethod, kid string, claims Claims) (string, error) {
+func GenerateToken(keyID string, key *rsa.PrivateKey, alg jwt.SigningMethod, claims Claims) (string, error) {
 	tkn := jwt.NewWithClaims(alg, claims)
-	tkn.Header["kid"] = kid
+	tkn.Header["kid"] = keyID
 	str, err := tkn.SignedString(key)
 	if err != nil {
 		return "", errors.Wrap(err, "signing token")
@@ -34,7 +34,7 @@ func GenerateToken(key *rsa.PrivateKey, alg jwt.SigningMethod, kid string, claim
 // the correct public key by key id (kid).
 // * Key-id-to-public-key resolution is usually accomplished via a public JWKS
 // endpoint. See https://auth0.com/docs/jwks for more details.
-type KeyFunc func(kid string) (*rsa.PublicKey, error)
+type KeyFunc func(keyID string) (*rsa.PublicKey, error)
 
 // Parser wraps jwt.Parser with the ability to fetch keys based on kid.
 type Parser struct {

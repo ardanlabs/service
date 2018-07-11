@@ -21,7 +21,7 @@ func TestParseClaims(t *testing.T) {
 	signedClaims := auth.Claims{
 		Roles: []string{auth.RoleAdmin},
 	}
-	tknStr, err := auth.GenerateToken(prvKey, jwt.SigningMethodRS256, privateRSAKeyID, signedClaims)
+	tknStr, err := auth.GenerateToken(privateRSAKeyID, prvKey, jwt.SigningMethodRS256, signedClaims)
 	if err != nil {
 		t.Fatal(err)
 	}
