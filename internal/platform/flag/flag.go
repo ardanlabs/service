@@ -164,6 +164,8 @@ func apply(osArgs []string, args []argument) (err error) {
 
 		// Need to find a field and value combination.
 		switch {
+		case strings.HasPrefix(osArg, "-test"):
+			return nil
 		case strings.HasPrefix(osArg, "--"):
 			field = osArg[2:]
 		case strings.HasPrefix(osArg, "-"):
@@ -174,32 +176,20 @@ func apply(osArgs []string, args []argument) (err error) {
 
 		// Process the combination.
 		if field != "" && value != "" {
+			var updated bool
 			for _, arg := range args {
-
-				// Update the struct value on a match.
-				switch {
-				case arg.Short == field || arg.Long == field:
-					switch arg.Type {
-					case "string":
-						arg.field.SetString(value)
-					case "int":
-						i, err := strconv.Atoi(value)
-						if err != nil {
-							return fmt.Errorf("unable to convert value %q to int", value)
-						}
-						arg.field.SetInt(int64(i))
-					case "Duration":
-						d, err := time.ParseDuration(value)
-						if err != nil {
-							return fmt.Errorf("unable to convert value %q to duration", value)
-						}
-						arg.field.SetInt(int64(d))
-					default:
-						return fmt.Errorf("type not supported %q", arg.Type)
+				if arg.Short == field || arg.Long == field {
+					if err := update(arg, value); err != nil {
+						return err
 					}
-				default:
-					return fmt.Errorf("unknown argument %q", field)
+					updated = true
+					break
 				}
+			}
+
+			// We found a field/value but it didn't match the arguments.
+			if !updated {
+				return fmt.Errorf("unknown argument %q", field)
 			}
 
 			// Reset to find the next one.
@@ -208,8 +198,33 @@ func apply(osArgs []string, args []argument) (err error) {
 		}
 	}
 
-	if field != "" && value == "" {
+	// We only have a field with no value, things are incomplete.
+	if field != "" {
 		return fmt.Errorf("unknown argument %q", field)
+	}
+
+	return nil
+}
+
+// update applies the value provided on the command line to the struct.
+func update(arg argument, value string) error {
+	switch arg.Type {
+	case "string":
+		arg.field.SetString(value)
+	case "int":
+		i, err := strconv.Atoi(value)
+		if err != nil {
+			return fmt.Errorf("unable to convert value %q to int", value)
+		}
+		arg.field.SetInt(int64(i))
+	case "Duration":
+		d, err := time.ParseDuration(value)
+		if err != nil {
+			return fmt.Errorf("unable to convert value %q to duration", value)
+		}
+		arg.field.SetInt(int64(d))
+	default:
+		return fmt.Errorf("type not supported %q", arg.Type)
 	}
 
 	return nil
