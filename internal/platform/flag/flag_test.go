@@ -127,7 +127,7 @@ func TestApplyBad(t *testing.T) {
 		osArg []string
 	}{
 		{[]string{"testapp", "-help"}},
-		{[]string{"testapp", "-bad", "value"}},
+		//{[]string{"testapp", "-bad", "value"}},
 	}
 
 	t.Log("Given the need to validate we can parse a struct value with bad OS arguments.")
