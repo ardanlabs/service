@@ -46,8 +46,9 @@ func TestParse(t *testing.T) {
 		}
 		DialTimeout time.Duration `default:"5s"`
 		Host        string        `default:"mongo:27017/gotraining" flag:"h"`
+		Insecure    bool          `flag:"i"`
 	}
-	parseOutput := `[{"Short":"a","Long":"web_apihost","Default":"0.0.0.0:3000","Type":"string","Desc":"The ip:port for the api endpoint."},{"Short":"","Long":"web_batchsize","Default":"1000","Type":"int","Desc":"Represets number of items to move."},{"Short":"","Long":"web_readtimeout","Default":"5s","Type":"Duration","Desc":""},{"Short":"","Long":"dialtimeout","Default":"5s","Type":"Duration","Desc":""},{"Short":"h","Long":"host","Default":"mongo:27017/gotraining","Type":"string","Desc":""}]`
+	parseOutput := `[{"Short":"a","Long":"web_apihost","Default":"0.0.0.0:3000","Type":"string","Desc":"The ip:port for the api endpoint."},{"Short":"","Long":"web_batchsize","Default":"1000","Type":"int","Desc":"Represets number of items to move."},{"Short":"","Long":"web_readtimeout","Default":"5s","Type":"Duration","Desc":""},{"Short":"","Long":"dialtimeout","Default":"5s","Type":"Duration","Desc":""},{"Short":"h","Long":"host","Default":"mongo:27017/gotraining","Type":"string","Desc":""},{"Short":"i","Long":"insecure","Default":"","Type":"bool","Desc":""}]`
 
 	t.Log("Given the need to validate we can parse a struct value.")
 	{
@@ -81,9 +82,10 @@ func TestApply(t *testing.T) {
 		}
 		DialTimeout time.Duration `default:"5s"`
 		Host        string        `default:"mongo:27017/gotraining" flag:"h"`
+		Insecure    bool          `flag:"i"`
 	}
-	osArgs := []string{"./crud", "-a", "0.0.1.1:5000", "--web_batchsize", "300", "--dialtimeout", "10s"}
-	expected := `{"Web":{"APIHost":"0.0.1.1:5000","BatchSize":300,"ReadTimeout":0},"DialTimeout":10000000000,"Host":""}`
+	osArgs := []string{"./crud", "-i", "-a", "0.0.1.1:5000", "--web_batchsize", "300", "--dialtimeout", "10s"}
+	expected := `{"Web":{"APIHost":"0.0.1.1:5000","BatchSize":300,"ReadTimeout":0},"DialTimeout":10000000000,"Host":"","Insecure":true}`
 
 	t.Log("Given the need to validate we can apply overrides a struct value.")
 	{
@@ -121,13 +123,15 @@ func TestApplyBad(t *testing.T) {
 		}
 		DialTimeout time.Duration `default:"5s"`
 		Host        string        `default:"mongo:27017/gotraining" flag:"h"`
+		Insecure    bool
 	}
 
 	tests := []struct {
 		osArg []string
 	}{
 		{[]string{"testapp", "-help"}},
-		//{[]string{"testapp", "-bad", "value"}},
+		{[]string{"testapp", "-bad", "value"}},
+		{[]string{"testapp", "-insecure", "value"}},
 	}
 
 	t.Log("Given the need to validate we can parse a struct value with bad OS arguments.")
@@ -161,6 +165,7 @@ func TestDisplay(t *testing.T) {
 		}
 		DialTimeout time.Duration `default:"5s"`
 		Host        string        `default:"mongo:27017/gotraining" flag:"h"`
+		Insecure    bool          `flag:"i"`
 	}
 
 	want := `
@@ -170,6 +175,7 @@ Useage of TestApp
 --web_readtimeout Duration  <5s>
 --dialtimeout Duration  <5s>
 -h --host string  <mongo:27017/gotraining>
+-i --insecure bool
 `
 
 	got := display("TestApp", &cfg)
