@@ -65,11 +65,9 @@ func Retrieve(ctx context.Context, dbConn *db.DB, userID string) (*User, error) 
 }
 
 // Create inserts a new user into the database.
-func Create(ctx context.Context, dbConn *db.DB, cu *CreateUser) (*User, error) {
+func Create(ctx context.Context, dbConn *db.DB, cu *CreateUser, now time.Time) (*User, error) {
 	ctx, span := trace.StartSpan(ctx, "internal.user.Create")
 	defer span.End()
-
-	now := time.Now().UTC()
 
 	u := User{
 		UserID:       bson.NewObjectId().Hex(),
@@ -108,7 +106,7 @@ func Create(ctx context.Context, dbConn *db.DB, cu *CreateUser) (*User, error) {
 }
 
 // Update replaces a user document in the database.
-func Update(ctx context.Context, dbConn *db.DB, userID string, cu *CreateUser) error {
+func Update(ctx context.Context, dbConn *db.DB, userID string, cu *CreateUser, now time.Time) error {
 	ctx, span := trace.StartSpan(ctx, "internal.user.Update")
 	defer span.End()
 
@@ -116,7 +114,6 @@ func Update(ctx context.Context, dbConn *db.DB, userID string, cu *CreateUser) e
 		return errors.Wrap(ErrInvalidID, "check objectid")
 	}
 
-	now := time.Now().UTC()
 	cu.DateModified = &now
 	for _, cua := range cu.Addresses {
 		cua.DateModified = &now
