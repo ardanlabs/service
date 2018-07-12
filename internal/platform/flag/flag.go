@@ -189,8 +189,10 @@ func apply(osArgs []string, cfgArgs []configArg) (err error) {
 			return fmt.Errorf("unknown flag %q", flag)
 		}
 
-		if cfgArg.Type == "boolean" {
-			// PROCESS the boolean stuff
+		if cfgArg.Type == "bool" {
+			if err := update(cfgArg, ""); err != nil {
+				return err
+			}
 			continue
 		}
 
@@ -224,6 +226,8 @@ func update(cfgArg configArg, value string) error {
 			return fmt.Errorf("unable to convert value %q to duration", value)
 		}
 		cfgArg.field.SetInt(int64(d))
+	case "bool":
+		cfgArg.field.SetBool(true)
 	default:
 		return fmt.Errorf("type not supported %q", cfgArg.Type)
 	}

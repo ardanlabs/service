@@ -24,6 +24,7 @@ As an example, this config struct:
 		}
 		DialTimeout time.Duration `default:"5s"`
 		Host        string        `default:"mongo:27017/gotraining" flag:"h"`
+		Insecure    bool          `flag:"i"`
 	}
 
 Would produce the following flag output:
@@ -34,6 +35,7 @@ Would produce the following flag output:
 	--web_readtimeout Duration  <5s>
 	--dialtimeout Duration  <5s>
 	-h --host string  <mongo:27017/gotraining>
+	-i --insecure bool
 
 The command line flag syntax assumes a regular or shorthand version based on the
 type of dash used.
