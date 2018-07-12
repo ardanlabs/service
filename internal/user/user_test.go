@@ -3,6 +3,7 @@ package user_test
 import (
 	"os"
 	"testing"
+	"time"
 
 	"github.com/ardanlabs/service/internal/platform/tests"
 	"github.com/ardanlabs/service/internal/user"
@@ -53,7 +54,7 @@ func TestUser(t *testing.T) {
 				},
 			}
 
-			newUsr, err := user.Create(ctx, dbConn, &cu)
+			newUsr, err := user.Create(ctx, dbConn, &cu, time.Now().UTC())
 			if err != nil {
 				t.Fatalf("\t%s\tShould be able to create user : %s.", tests.Failed, err)
 			}
@@ -81,7 +82,7 @@ func TestUser(t *testing.T) {
 				Company:   "ardan",
 			}
 
-			if err := user.Update(ctx, dbConn, newUsr.UserID, &cu); err != nil {
+			if err := user.Update(ctx, dbConn, newUsr.UserID, &cu, time.Now().UTC()); err != nil {
 				t.Fatalf("\t%s\tShould be able to update user : %s.", tests.Failed, err)
 			}
 			t.Logf("\t%s\tShould be able to update user.", tests.Success)

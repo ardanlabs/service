@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/ardanlabs/service/internal/platform/db"
 	"github.com/ardanlabs/service/internal/platform/web"
@@ -81,7 +82,7 @@ func (u *User) Create(ctx context.Context, log *log.Logger, w http.ResponseWrite
 		return errors.Wrap(err, "")
 	}
 
-	nUsr, err := user.Create(ctx, dbConn, &usr)
+	nUsr, err := user.Create(ctx, dbConn, &usr, time.Now().UTC())
 	if err = check(err); err != nil {
 		return errors.Wrapf(err, "User: %+v", &usr)
 	}
@@ -103,7 +104,7 @@ func (u *User) Update(ctx context.Context, log *log.Logger, w http.ResponseWrite
 		return errors.Wrap(err, "")
 	}
 
-	err := user.Update(ctx, dbConn, params["id"], &usr)
+	err := user.Update(ctx, dbConn, params["id"], &usr, time.Now().UTC())
 	if err = check(err); err != nil {
 		return errors.Wrapf(err, "Id: %s  User: %+v", params["id"], &usr)
 	}
