@@ -70,8 +70,9 @@ func display(appName string, v interface{}) string {
 	return b.String()
 }
 
-// argument represents a single argument for a given flag.
-type argument struct {
+// configArg represents a single argument for a given field
+// in the config structure.
+type configArg struct {
 	Short   string
 	Long    string
 	Default string
@@ -82,8 +83,8 @@ type argument struct {
 }
 
 // parse will reflect over the provided struct value and build a
-// collection of argument metadata for the command line.
-func parse(parentField string, v interface{}) ([]argument, error) {
+// collection of all possible config arguments.
+func parse(parentField string, v interface{}) ([]configArg, error) {
 
 	// Reflect on the value to get started.
 	rawValue := reflect.ValueOf(v)
@@ -115,7 +116,7 @@ func parse(parentField string, v interface{}) ([]argument, error) {
 		return nil, fmt.Errorf("incompatible type `%v`", rawValue.Kind())
 	}
 
-	var args []argument
+	var cfgArgs []configArg
 
 	// We need to iterate over the fields of the struct value we are processing.
 	// If the field is a struct then recurse to process its fields. If we have
@@ -124,15 +125,15 @@ func parse(parentField string, v interface{}) ([]argument, error) {
 	for i := 0; i < val.NumField(); i++ {
 		field := val.Type().Field(i)
 		if field.Type.Kind() == reflect.Struct {
-			newArgs, err := parse(parentField+field.Name, val.Field(i))
+			args, err := parse(parentField+field.Name, val.Field(i))
 			if err != nil {
 				return nil, err
 			}
-			args = append(args, newArgs...)
+			cfgArgs = append(cfgArgs, args...)
 			continue
 		}
 
-		arg := argument{
+		cfgArg := configArg{
 			Short:   field.Tag.Get("flag"),
 			Long:    parentField + strings.ToLower(field.Name),
 			Type:    field.Type.Name(),
@@ -140,15 +141,15 @@ func parse(parentField string, v interface{}) ([]argument, error) {
 			Desc:    field.Tag.Get("flagdesc"),
 			field:   val.Field(i),
 		}
-		args = append(args, arg)
+		cfgArgs = append(cfgArgs, cfgArg)
 	}
 
-	return args, nil
+	return cfgArgs, nil
 }
 
 // apply reads the command line arguments and applies any overrides to
 // the provided struct value.
-func apply(osArgs []string, args []argument) (err error) {
+func apply(osArgs []string, cfgArgs []configArg) (err error) {
 
 	// There is so much room for panics here it hurts.
 	defer func() {
@@ -157,74 +158,78 @@ func apply(osArgs []string, args []argument) (err error) {
 		}
 	}()
 
-	var field string
-	var value string
+	lArgs := len(osArgs[1:])
+	for i := 1; i <= lArgs; i++ {
+		osArg := osArgs[i]
 
-	for _, osArg := range osArgs[1:] {
-
-		// Need to find a field and value combination.
+		// Capture the next flag.
+		var flag string
 		switch {
 		case strings.HasPrefix(osArg, "-test"):
 			return nil
 		case strings.HasPrefix(osArg, "--"):
-			field = osArg[2:]
+			flag = osArg[2:]
 		case strings.HasPrefix(osArg, "-"):
-			field = osArg[1:]
+			flag = osArg[1:]
 		default:
-			value = osArg
+			return fmt.Errorf("invalid command line %q", osArg)
 		}
 
-		// Process the combination.
-		if field != "" && value != "" {
-			var updated bool
-			for _, arg := range args {
-				if arg.Short == field || arg.Long == field {
-					if err := update(arg, value); err != nil {
-						return err
-					}
-					updated = true
-					break
-				}
+		// Is this flag represented in the config struct.
+		var cfgArg configArg
+		for _, arg := range cfgArgs {
+			if arg.Short == flag || arg.Long == flag {
+				cfgArg = arg
+				break
 			}
-
-			// We found a field/value but it didn't match the arguments.
-			if !updated {
-				return fmt.Errorf("unknown argument %q", field)
-			}
-
-			// Reset to find the next one.
-			field = ""
-			value = ""
 		}
-	}
 
-	// We only have a field with no value, things are incomplete.
-	if field != "" {
-		return fmt.Errorf("unknown argument %q", field)
+		// Did we find this flag represented in the struct?
+		if !cfgArg.field.IsValid() {
+			return fmt.Errorf("unknown flag %q", flag)
+		}
+
+		if cfgArg.Type == "bool" {
+			if err := update(cfgArg, ""); err != nil {
+				return err
+			}
+			continue
+		}
+
+		// Capture the value for this flag.
+		i++
+		value := osArgs[i]
+
+		// Process the struct value.
+		if err := update(cfgArg, value); err != nil {
+			return err
+		}
 	}
 
 	return nil
 }
 
 // update applies the value provided on the command line to the struct.
-func update(arg argument, value string) error {
-	switch arg.Type {
+func update(cfgArg configArg, value string) error {
+	switch cfgArg.Type {
 	case "string":
-		arg.field.SetString(value)
+		cfgArg.field.SetString(value)
 	case "int":
 		i, err := strconv.Atoi(value)
 		if err != nil {
 			return fmt.Errorf("unable to convert value %q to int", value)
 		}
-		arg.field.SetInt(int64(i))
+		cfgArg.field.SetInt(int64(i))
 	case "Duration":
 		d, err := time.ParseDuration(value)
 		if err != nil {
 			return fmt.Errorf("unable to convert value %q to duration", value)
 		}
-		arg.field.SetInt(int64(d))
+		cfgArg.field.SetInt(int64(d))
+	case "bool":
+		cfgArg.field.SetBool(true)
 	default:
-		return fmt.Errorf("type not supported %q", arg.Type)
+		return fmt.Errorf("type not supported %q", cfgArg.Type)
 	}
 
 	return nil
