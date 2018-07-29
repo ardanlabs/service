@@ -21,6 +21,20 @@ Service is a project that provides a starter-kit for a REST based web service. I
 
 This project contains three services and uses 3rd party services such as MongoDB and Zipkin. Docker is required to run this software on your local machine.
 
+### Go Modules
+
+This project is using Go Module support starting with go1.11beta2. This means the following environmental variable must be set.
+
+```
+export GO111MODULE=on
+```
+
+We are using the `sync` and `vendor` commands to maintain the dependencies and make sure the project can create reproducible builds.
+
+```
+go mod -sync -vendor
+```
+
 ### Getting the project
 
 You can use the traditional `go get` command to download this project into your configured GOPATH.
