@@ -5,7 +5,7 @@ all: crud metrics tracer
 crud:
 	cd "$$GOPATH/src/github.com/ardanlabs/service"
 	docker build \
-		-t crud-amd64 \
+		-t crud-amd64:1.0 \
 		-f dockerfile.crud \
 		--build-arg VCS_REF=`git rev-parse HEAD` \
 		--build-arg BUILD_DATE=`date -u +”%Y-%m-%dT%H:%M:%SZ”` \
@@ -14,7 +14,7 @@ crud:
 metrics:
 	cd "$$GOPATH/src/github.com/ardanlabs/service"
 	docker build \
-		-t metrics-amd64 \
+		-t metrics-amd64:1.0 \
 		-f dockerfile.metrics \
 		--build-arg VCS_REF=`git rev-parse HEAD` \
 		--build-arg BUILD_DATE=`date -u +”%Y-%m-%dT%H:%M:%SZ”` \
@@ -23,7 +23,7 @@ metrics:
 tracer:
 	cd "$$GOPATH/src/github.com/ardanlabs/service"
 	docker build \
-		-t tracer-amd64 \
+		-t tracer-amd64:1.0 \
 		-f dockerfile.tracer \
 		--build-arg VCS_REF=`git rev-parse HEAD` \
 		--build-arg BUILD_DATE=`date -u +”%Y-%m-%dT%H:%M:%SZ”` \
