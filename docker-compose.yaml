@@ -15,7 +15,7 @@ services:
     container_name: mongo
     networks:
       - shared-network
-    image: mongo
+    image: mongo:3-jessie
     ports:
       - 27017:27017
     command: --bind_ip 0.0.0.0
@@ -25,7 +25,7 @@ services:
     container_name: crud
     networks:
       - shared-network
-    image: crud-amd64
+    image: crud-amd64:1.0
     ports:
       - 3000:3000 # CRUD API
       - 4000:4000 # DEBUG API
@@ -39,7 +39,7 @@ services:
     container_name: metrics
     networks:
       - shared-network
-    image: metrics-amd64
+    image: metrics-amd64:1.0
     ports:
       - 3001:3001 # EXPVAR API
       - 4001:4001 # DEBUG API
@@ -49,7 +49,7 @@ services:
     container_name: tracer
     networks:
       - shared-network
-    image: tracer-amd64
+    image: tracer-amd64:1.0
     ports:
       - 3002:3002 # TRACER API
       - 4002:4002 # DEBUG API
@@ -61,6 +61,6 @@ services:
     container_name: zipkin
     networks:
       - shared-network
-    image: openzipkin/zipkin
+    image: openzipkin/zipkin:2.11
     ports:
       - 9411:9411
