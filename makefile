@@ -10,6 +10,7 @@ crud:
 		--build-arg VCS_REF=`git rev-parse HEAD` \
 		--build-arg BUILD_DATE=`date -u +”%Y-%m-%dT%H:%M:%SZ”` \
 		.
+	docker system prune -f
 
 metrics:
 	cd "$$GOPATH/src/github.com/ardanlabs/service"
@@ -19,6 +20,7 @@ metrics:
 		--build-arg VCS_REF=`git rev-parse HEAD` \
 		--build-arg BUILD_DATE=`date -u +”%Y-%m-%dT%H:%M:%SZ”` \
 		.
+	docker system prune -f
 
 tracer:
 	cd "$$GOPATH/src/github.com/ardanlabs/service"
@@ -28,6 +30,7 @@ tracer:
 		--build-arg VCS_REF=`git rev-parse HEAD` \
 		--build-arg BUILD_DATE=`date -u +”%Y-%m-%dT%H:%M:%SZ”` \
 		.
+	docker system prune -f
 
 up:
 	docker-compose up
