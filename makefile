@@ -39,7 +39,6 @@ down:
 	docker-compose down
 
 test:
-	export GO111MODULE=on
 	cd "$$GOPATH/src/github.com/ardanlabs/service"
 	go test ./...
 
