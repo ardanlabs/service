@@ -25,8 +25,7 @@ func WithSpanContext(ctx context.Context, name string, spanContext string) (cont
 			return ctx, span
 		}
 
-		span := trace.NewSpanWithRemoteParent(name, sc, trace.StartOptions{})
-		ctx := trace.WithSpan(ctx, span)
+		ctx, span := trace.StartSpanWithRemoteParent(ctx, name, sc)
 		return ctx, span
 	}
 
