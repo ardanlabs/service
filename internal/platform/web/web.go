@@ -78,7 +78,10 @@ func (a *App) Handle(verb, path string, handler Handler, mw ...Middleware) {
 		// Set the parent span on the outgoing requests before any other header to
 		// ensure that the trace is ALWAYS added to the request regardless of
 		// any error occuring or not.
-		w.Header().Set(TraceIDHeader, v.TraceID)
+		data, err := trace.MarshalSpanContext(span.SpanContext())
+		if err == nil {
+			w.Header().Set(TraceIDHeader, string(data))
+		}
 
 		// Call the wrapped handler functions.
 		if err := handler(ctx, a.log, w, r, params); err != nil {
