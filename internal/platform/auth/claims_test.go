@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/ardanlabs/service/internal/auth"
+	"github.com/ardanlabs/service/internal/platform/auth"
 	jwt "github.com/dgrijalva/jwt-go"
 )
 
