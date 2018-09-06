@@ -2,6 +2,7 @@ package auth
 
 import (
 	"crypto/rsa"
+	"fmt"
 
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/pkg/errors"
@@ -15,6 +16,23 @@ const (
 type Claims struct {
 	Roles []string `json:"roles"`
 	jwt.StandardClaims
+}
+
+// Valid is called during the parsing of a token.
+func (c Claims) Valid() error {
+	for _, r := range c.Roles {
+		switch r {
+		case RoleAdmin: // Role is valid.
+		default:
+			return fmt.Errorf("invalid role %q", r)
+		}
+	}
+
+	if err := c.StandardClaims.Valid(); err != nil {
+		return errors.Wrap(err, "validating standard claims")
+	}
+
+	return nil
 }
 
 // GenerateToken generates a JWT token string.
