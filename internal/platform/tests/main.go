@@ -34,7 +34,7 @@ func New() *Test {
 	// =========================================================================
 	// Logging
 
-	log := log.New(os.Stdout, "CRUD-TEST : ", log.LstdFlags|log.Lmicroseconds|log.Lshortfile)
+	log := log.New(os.Stdout, "TEST : ", log.LstdFlags|log.Lmicroseconds|log.Lshortfile)
 
 	// ============================================================
 	// Startup Mongo container

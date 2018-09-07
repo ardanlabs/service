@@ -12,7 +12,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/ardanlabs/service/cmd/crud/handlers"
+	"github.com/ardanlabs/service/cmd/sales-api/handlers"
 	"github.com/ardanlabs/service/internal/platform/db"
 	"github.com/ardanlabs/service/internal/platform/flag"
 	itrace "github.com/ardanlabs/service/internal/platform/trace"
@@ -39,7 +39,7 @@ func main() {
 	// =========================================================================
 	// Logging
 
-	log := log.New(os.Stdout, "CRUD : ", log.LstdFlags|log.Lmicroseconds|log.Lshortfile)
+	log := log.New(os.Stdout, "SALES : ", log.LstdFlags|log.Lmicroseconds|log.Lshortfile)
 
 	// =========================================================================
 	// Configuration
@@ -64,7 +64,7 @@ func main() {
 		}
 	}
 
-	if err := envconfig.Process("CRUD", &cfg); err != nil {
+	if err := envconfig.Process("SALES", &cfg); err != nil {
 		log.Fatalf("main : Parsing Config : %v", err)
 	}
 
