@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/ardanlabs/service/cmd/crud/handlers"
+	"github.com/ardanlabs/service/cmd/sales-api/handlers"
 	"github.com/ardanlabs/service/internal/platform/tests"
 	"github.com/ardanlabs/service/internal/platform/web"
 )

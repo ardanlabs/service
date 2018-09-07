@@ -15,7 +15,7 @@ type Health struct {
 	MasterDB *db.DB
 }
 
-// Check validates the service is ready and healthy to accept requests.
+// Check validates the service is healthy and ready to accept requests.
 func (h *Health) Check(ctx context.Context, log *log.Logger, w http.ResponseWriter, r *http.Request, params map[string]string) error {
 	ctx, span := trace.StartSpan(ctx, "handlers.Health.Check")
 	defer span.End()
