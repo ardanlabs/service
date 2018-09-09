@@ -15,8 +15,11 @@ import (
 const productsCollection = "products"
 
 var (
-	// ErrNotFound is abstracting the mgo not found error.
+	// ErrNotFound abstracts the mgo not found error.
 	ErrNotFound = errors.New("Entity not found")
+
+	// ErrInvalidID occurs when an ID is not in a valid form.
+	ErrInvalidID = errors.New("ID is not in its proper form")
 )
 
 // List retrieves a list of existing products from the database.
@@ -37,11 +40,15 @@ func List(ctx context.Context, dbConn *db.DB) ([]Product, error) {
 }
 
 // Retrieve gets the specified product from the database.
-func Retrieve(ctx context.Context, dbConn *db.DB, id bson.ObjectId) (*Product, error) {
+func Retrieve(ctx context.Context, dbConn *db.DB, id string) (*Product, error) {
 	ctx, span := trace.StartSpan(ctx, "internal.product.Retrieve")
 	defer span.End()
 
-	q := bson.M{"_id": id}
+	if !bson.IsObjectIdHex(id) {
+		return nil, ErrInvalidID
+	}
+
+	q := bson.M{"_id": bson.ObjectIdHex(id)}
 
 	var p *Product
 	f := func(collection *mgo.Collection) error {
@@ -88,9 +95,13 @@ func Create(ctx context.Context, dbConn *db.DB, cp *NewProduct, now time.Time) (
 }
 
 // Update replaces a product document in the database.
-func Update(ctx context.Context, dbConn *db.DB, id bson.ObjectId, upd UpdateProduct, now time.Time) error {
+func Update(ctx context.Context, dbConn *db.DB, id string, upd UpdateProduct, now time.Time) error {
 	ctx, span := trace.StartSpan(ctx, "internal.product.Update")
 	defer span.End()
+
+	if !bson.IsObjectIdHex(id) {
+		return ErrInvalidID
+	}
 
 	fields := make(bson.M)
 
@@ -118,7 +129,7 @@ func Update(ctx context.Context, dbConn *db.DB, id bson.ObjectId, upd UpdateProd
 	fields["date_modified"] = now
 
 	m := bson.M{"$set": fields}
-	q := bson.M{"_id": id}
+	q := bson.M{"_id": bson.ObjectIdHex(id)}
 
 	f := func(collection *mgo.Collection) error {
 		return collection.Update(q, m)
@@ -134,18 +145,24 @@ func Update(ctx context.Context, dbConn *db.DB, id bson.ObjectId, upd UpdateProd
 }
 
 // Delete removes a product from the database.
-func Delete(ctx context.Context, dbConn *db.DB, id bson.ObjectId) error {
+func Delete(ctx context.Context, dbConn *db.DB, id string) error {
 	ctx, span := trace.StartSpan(ctx, "internal.product.Delete")
 	defer span.End()
 
+	if !bson.IsObjectIdHex(id) {
+		return ErrInvalidID
+	}
+
+	q := bson.M{"_id": bson.ObjectIdHex(id)}
+
 	f := func(collection *mgo.Collection) error {
-		return collection.RemoveId(id)
+		return collection.Remove(q)
 	}
 	if err := dbConn.Execute(ctx, productsCollection, f); err != nil {
 		if err == mgo.ErrNotFound {
 			err = ErrNotFound
 		}
-		return errors.Wrap(err, fmt.Sprintf("db.products.removeID(%s)", id))
+		return errors.Wrap(err, fmt.Sprintf("db.products.remove(%v)", q))
 	}
 
 	return nil

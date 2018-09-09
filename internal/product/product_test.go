@@ -8,6 +8,7 @@ import (
 	"github.com/ardanlabs/service/internal/platform/tests"
 	"github.com/ardanlabs/service/internal/product"
 	"github.com/google/go-cmp/cmp"
+	"github.com/pkg/errors"
 )
 
 var test *tests.Test
@@ -36,47 +37,45 @@ func TestProduct(t *testing.T) {
 			dbConn := test.MasterDB.Copy()
 			defer dbConn.Close()
 
-			cu := product.NewProduct{
+			np := product.NewProduct{
 				Name:      "Comic Books",
 				Notes:     "Various conditions.",
+				Family:    "Kennedy",
 				UnitPrice: 25,
 				Quantity:  60,
-				Family:    "Kennedy",
 			}
 
-			p, err := product.Create(ctx, dbConn, &cu, time.Now().UTC())
+			p, err := product.Create(ctx, dbConn, &np, time.Now().UTC())
 			if err != nil {
 				t.Fatalf("\t%s\tShould be able to create a product : %s.", tests.Failed, err)
 			}
 			t.Logf("\t%s\tShould be able to create a product.", tests.Success)
 
-			savedP, err := product.Retrieve(ctx, dbConn, p.ID)
+			savedP, err := product.Retrieve(ctx, dbConn, p.ID.Hex())
 			if err != nil {
 				t.Fatalf("\t%s\tShould be able to retrieve product by ID: %s.", tests.Failed, err)
 			}
 			t.Logf("\t%s\tShould be able to retrieve product by ID.", tests.Success)
 
 			if diff := cmp.Diff(p, savedP); diff != "" {
-				t.Errorf("\t%s\tShould get back the same product. Diff:", tests.Failed)
-				t.Error(diff)
-				t.FailNow()
+				t.Fatalf("\t%s\tShould get back the same product. Diff:\n%s", tests.Failed, diff)
 			}
 			t.Logf("\t%s\tShould get back the same product.", tests.Success)
 
 			upd := product.UpdateProduct{
 				Name:      tests.StringPointer("Comics"),
 				Notes:     tests.StringPointer(""),
+				Family:    tests.StringPointer("walker"),
 				UnitPrice: tests.IntPointer(50),
 				Quantity:  tests.IntPointer(40),
-				Family:    tests.StringPointer("walker"),
 			}
 
-			if err := product.Update(ctx, dbConn, p.ID, upd, time.Now().UTC()); err != nil {
+			if err := product.Update(ctx, dbConn, p.ID.Hex(), upd, time.Now().UTC()); err != nil {
 				t.Fatalf("\t%s\tShould be able to update product : %s.", tests.Failed, err)
 			}
 			t.Logf("\t%s\tShould be able to update product.", tests.Success)
 
-			savedP, err = product.Retrieve(ctx, dbConn, p.ID)
+			savedP, err = product.Retrieve(ctx, dbConn, p.ID.Hex())
 			if err != nil {
 				t.Fatalf("\t%s\tShould be able to retrieve updated product : %s.", tests.Failed, err)
 			}
@@ -88,16 +87,15 @@ func TestProduct(t *testing.T) {
 				ID:           p.ID,
 				Name:         *upd.Name,
 				Notes:        *upd.Notes,
+				Family:       *upd.Family,
 				UnitPrice:    *upd.UnitPrice,
 				Quantity:     *upd.Quantity,
-				Family:       *upd.Family,
 				DateCreated:  p.DateCreated,
 				DateModified: savedP.DateModified,
 			}
 
 			if diff := cmp.Diff(want, savedP); diff != "" {
-				t.Errorf("\t%s\tShould get back the same product. Diff:", tests.Failed)
-				t.Error(diff)
+				t.Fatalf("\t%s\tShould get back the same product. Diff:\n%s", tests.Failed, diff)
 			}
 			t.Logf("\t%s\tShould get back the same product.", tests.Success)
 
@@ -105,12 +103,12 @@ func TestProduct(t *testing.T) {
 				Name: tests.StringPointer("Graphic Novels"),
 			}
 
-			if err := product.Update(ctx, dbConn, p.ID, upd, time.Now().UTC()); err != nil {
+			if err := product.Update(ctx, dbConn, p.ID.Hex(), upd, time.Now().UTC()); err != nil {
 				t.Fatalf("\t%s\tShould be able to update just some fields of product : %s.", tests.Failed, err)
 			}
 			t.Logf("\t%s\tShould be able to update just some fields of product.", tests.Success)
 
-			savedP, err = product.Retrieve(ctx, dbConn, p.ID)
+			savedP, err = product.Retrieve(ctx, dbConn, p.ID.Hex())
 			if err != nil {
 				t.Fatalf("\t%s\tShould be able to retrieve updated product : %s.", tests.Failed, err)
 			}
@@ -128,13 +126,13 @@ func TestProduct(t *testing.T) {
 				t.Logf("\t%s\tShould not see updates in other fields.", tests.Success)
 			}
 
-			if err := product.Delete(ctx, dbConn, p.ID); err != nil {
+			if err := product.Delete(ctx, dbConn, p.ID.Hex()); err != nil {
 				t.Fatalf("\t%s\tShould be able to delete product : %s.", tests.Failed, err)
 			}
 			t.Logf("\t%s\tShould be able to delete product.", tests.Success)
 
-			savedP, err = product.Retrieve(ctx, dbConn, p.ID)
-			if err != product.ErrNotFound {
+			savedP, err = product.Retrieve(ctx, dbConn, p.ID.Hex())
+			if errors.Cause(err) != product.ErrNotFound {
 				t.Fatalf("\t%s\tShould NOT be able to retrieve deleted product : %s.", tests.Failed, err)
 			}
 			t.Logf("\t%s\tShould NOT be able to retrieve deleted product.", tests.Success)
