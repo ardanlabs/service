@@ -2,6 +2,12 @@
 github.com/dgrijalva/jwt-go
 # github.com/dimfeld/httptreemux v5.0.1+incompatible
 github.com/dimfeld/httptreemux
+# github.com/google/go-cmp v0.2.0
+github.com/google/go-cmp/cmp
+github.com/google/go-cmp/cmp/cmpopts
+github.com/google/go-cmp/cmp/internal/diff
+github.com/google/go-cmp/cmp/internal/function
+github.com/google/go-cmp/cmp/internal/value
 # github.com/kelseyhightower/envconfig v1.3.0
 github.com/kelseyhightower/envconfig
 # github.com/openzipkin/zipkin-go v0.1.1

@@ -3,6 +3,7 @@ module github.com/ardanlabs/service
 require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/dimfeld/httptreemux v5.0.1+incompatible
+	github.com/google/go-cmp v0.2.0
 	github.com/kelseyhightower/envconfig v1.3.0
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/openzipkin/zipkin-go v0.1.1
