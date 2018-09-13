@@ -13,21 +13,6 @@ import (
 	"go.opencensus.io/trace"
 )
 
-// check looks for certain error types and transforms them
-// into web errors. We are losing the trace when this error
-// is converted. But we don't log traces for these.
-func check(err error) error {
-	switch errors.Cause(err) {
-	case user.ErrNotFound:
-		return web.ErrNotFound
-	case user.ErrInvalidID:
-		return web.ErrInvalidID
-	}
-	return err
-}
-
-// =============================================================================
-
 // User represents the User API method handler set.
 type User struct {
 	MasterDB *db.DB

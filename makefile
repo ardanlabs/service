@@ -1,12 +1,12 @@
 SHELL := /bin/bash
 
-all: crud metrics tracer
+all: sales-api metrics tracer
 
-crud:
+sales-api:
 	cd "$$GOPATH/src/github.com/ardanlabs/service"
 	docker build \
-		-t crud-amd64:1.0 \
-		-f dockerfile.crud \
+		-t sales-api-amd64:1.0 \
+		-f dockerfile.sales-api \
 		--build-arg VCS_REF=`git rev-parse HEAD` \
 		--build-arg BUILD_DATE=`date -u +”%Y-%m-%dT%H:%M:%SZ”` \
 		.

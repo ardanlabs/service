@@ -9,7 +9,7 @@ networks:
     driver: bridge
 
 services:
-  
+
   # This starts a local mongo DB.
   mongo:
     container_name: mongo
@@ -21,17 +21,17 @@ services:
     command: --bind_ip 0.0.0.0
 
   # This is the core CRUD based service.
-  crud:
-    container_name: crud
+  sales-api:
+    container_name: sales-api
     networks:
       - shared-network
-    image: crud-amd64:1.0
+    image: sales-api-amd64:1.0
     ports:
       - 3000:3000 # CRUD API
       - 4000:4000 # DEBUG API
     # environment:
-      # - CRUD_DB_HOST=docker.for.mac.localhost:27017
-      # - CRUD_DB_HOST=got:got2015@ds039441.mongolab.com:39441/gotraining
+      # - SALES_DB_HOST=docker.for.mac.localhost:27017
+      # - SALES_DB_HOST=got:got2015@ds039441.mongolab.com:39441/gotraining
       # - GODEBUG=gctrace=1
 
   # This sidecar publishes metrics to the console by default.
@@ -54,8 +54,8 @@ services:
       - 3002:3002 # TRACER API
       - 4002:4002 # DEBUG API
     # environment:
-      # - CRUD_ZIPKIN_HOST=http://zipkin:9411/api/v2/spans
-  
+      # - SALES_ZIPKIN_HOST=http://zipkin:9411/api/v2/spans
+
   # This sidecar allows for the viewing of traces.
   zipkin:
     container_name: zipkin
