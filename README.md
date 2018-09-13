@@ -1,8 +1,25 @@
-# Service
+# Ultimate Service
 
-William Kennedy  
-Ardan Labs  
-bill@ardanlabs.com
+Copyright 2018, Ardan Labs  
+info@ardanlabs.com
+
+## Licensing
+
+```
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+```
+
+## Description
 
 Service is a project that provides a starter-kit for a REST based web service. It provides best practices around Go web services using POD architecture and design. It contains the following features:
 
@@ -15,8 +32,8 @@ Service is a project that provides a starter-kit for a REST based web service. I
 * User authentication.
 * POD architecture with sidecars for metrics and tracing.
 * Use of Docker, Docker Compose, and Makefiles.
-* Vendoring dependencies with [modules](https://github.com/golang/vgo).
-* Deployment to Kubernetes.
+* Vendoring dependencies with Modules, requires Go 1.11.
+* Deployment to Azure using ACI.
 
 ## Local Installation
 
@@ -24,16 +41,17 @@ This project contains three services and uses 3rd party services such as MongoDB
 
 ### Go Modules
 
-This project is using Go Module support starting with go1.11beta2. This means the following environmental variable must be set.
+This project is using Go Module support starting with go1.11. By default modules are set to `auto`. If you have changed this, please make sure it is reset back to `auto` for this project.
 
 ```
-export GO111MODULE=on
+export GO111MODULE=auto
 ```
 
-We are using the `sync` and `vendor` commands to maintain the dependencies and make sure the project can create reproducible builds.
+We are using the `tidy` and `vendor` commands to maintain the dependencies and make sure the project can create reproducible builds.
 
 ```
-go mod -sync -vendor
+go mod tidy
+go mod vendor
 ```
 
 ### Getting the project

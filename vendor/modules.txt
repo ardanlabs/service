@@ -18,8 +18,10 @@ github.com/pborman/uuid
 github.com/pkg/errors
 # go.opencensus.io v0.14.0
 go.opencensus.io/trace
+go.opencensus.io/plugin/ochttp/propagation/tracecontext
 go.opencensus.io/internal
 go.opencensus.io/trace/internal
+go.opencensus.io/trace/propagation
 go.opencensus.io
 # gopkg.in/go-playground/validator.v8 v8.18.2
 gopkg.in/go-playground/validator.v8
