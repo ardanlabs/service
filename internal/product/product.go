@@ -56,7 +56,7 @@ func Retrieve(ctx context.Context, dbConn *db.DB, id string) (*Product, error) {
 	}
 	if err := dbConn.Execute(ctx, productsCollection, f); err != nil {
 		if err == mgo.ErrNotFound {
-			err = ErrNotFound
+			return nil, ErrNotFound
 		}
 		return nil, errors.Wrap(err, fmt.Sprintf("db.products.find(%s)", db.Query(q)))
 	}
@@ -136,7 +136,7 @@ func Update(ctx context.Context, dbConn *db.DB, id string, upd UpdateProduct, no
 	}
 	if err := dbConn.Execute(ctx, productsCollection, f); err != nil {
 		if err == mgo.ErrNotFound {
-			err = ErrNotFound
+			return ErrNotFound
 		}
 		return errors.Wrap(err, fmt.Sprintf("db.customers.update(%s, %s)", db.Query(q), db.Query(m)))
 	}
