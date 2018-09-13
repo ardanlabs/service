@@ -4,18 +4,19 @@ William Kennedy
 Ardan Labs  
 bill@ardanlabs.com
 
-Service is a project that provides a starter-kit for a REST based web service. It provides best practices around Go   web services using POD architecture and design. It contains the following features:
+Service is a project that provides a starter-kit for a REST based web service. It provides best practices around Go web services using POD architecture and design. It contains the following features:
 
-* Minimal application web framework
-* Middleware integration
-* Database support using MongoDB
-* CRUD based pattern
-* Distributed logging and tracing
-* Testing patterns
-* POD architecture with sidecars for metrics and tracing
-* Use of Docker, Docker Compose, Makefile
-* Vendoring with [dep](https://github.com/golang/dep) and [vgo](https://github.com/golang/vgo)
-* Deployment to Kubernetes
+* Minimal application web framework.
+* Middleware integration.
+* Database support using MongoDB.
+* CRUD based pattern.
+* Distributed logging and tracing.
+* Testing patterns.
+* User authentication.
+* POD architecture with sidecars for metrics and tracing.
+* Use of Docker, Docker Compose, and Makefiles.
+* Vendoring dependencies with [modules](https://github.com/golang/vgo).
+* Deployment to Kubernetes.
 
 ## Local Installation
 
@@ -53,7 +54,7 @@ If you are having problems installing docker reach out or jump on [Gopher Slack]
 
 ## Running The Project
 
-All the source code, including any dependencies, have been vendored into the project. We have been experimenting with `vgo` but `dep` is the offical vendoring tool being used. There is a single `dockerfile` for each service and a `docker-compose` file that knows how to run all the services.
+All the source code, including any dependencies, have been vendored into the project. There is a single `dockerfile` for each service and a `docker-compose` file that knows how to run all the services.
 
 A `makefile` has also been provide to make building, running and testing the software easier.
 
@@ -89,6 +90,16 @@ $ make down
 ```
 
 Running `make down` will properly stop and terminate the Docker Compose session.
+
+## About The Project
+
+The service provides record keeping for someone running a multi-family garage sale. Authenticated users can maintain a list of products for sale, record transactions as items are sold, and generate payout amounts for each family.
+
+The service uses the following models:
+
+<img src="https://raw.githubusercontent.com/ardanlabs/service/master/models.jpg" alt="Garage Sale Service Models" title="Garage Sale Service Models" />
+
+(Diagram generated with draw.io using `models.xml` file)
 
 ## What's Next
 

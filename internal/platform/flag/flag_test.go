@@ -84,7 +84,7 @@ func TestApply(t *testing.T) {
 		Host        string        `default:"mongo:27017/gotraining" flag:"h"`
 		Insecure    bool          `flag:"i"`
 	}
-	osArgs := []string{"./crud", "-i", "-a", "0.0.1.1:5000", "--web_batchsize", "300", "--dialtimeout", "10s"}
+	osArgs := []string{"./sales-api", "-i", "-a", "0.0.1.1:5000", "--web_batchsize", "300", "--dialtimeout", "10s"}
 	expected := `{"Web":{"APIHost":"0.0.1.1:5000","BatchSize":300,"ReadTimeout":0},"DialTimeout":10000000000,"Host":"","Insecure":true}`
 
 	t.Log("Given the need to validate we can apply overrides a struct value.")
