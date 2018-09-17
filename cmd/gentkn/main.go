@@ -40,11 +40,12 @@ func main() {
 	}
 	*/
 
-	// Source the private key.
-	var keyRdr io.Reader
 	if len(os.Args) < 2 {
 		log.Fatal("main : Missing Required Param <key-file>")
 	}
+
+	// Source the private key.
+	var keyRdr io.Reader
 	switch file := os.Args[1]; file {
 	case "-":
 		keyRdr = os.Stdin
@@ -66,7 +67,6 @@ func main() {
 		log.Fatalf("main : Parsing RSA Private Key : %v", err)
 	}
 
-	// Build the claims.
 	now := time.Now()
 	claims := auth.Claims{
 		StandardClaims: jwt.StandardClaims{
@@ -82,7 +82,6 @@ func main() {
 		log.Fatalf("main : Invalid Claims : %v", err)
 	}
 
-	// Generate and sign the token.
 	tkn, err := auth.GenerateToken(cfg.KeyID, key, jwt.SigningMethodRS256, claims)
 	if err != nil {
 		log.Fatalf("main : Generating Token : %v", err)
