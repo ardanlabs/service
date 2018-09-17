@@ -69,8 +69,8 @@ func Create(ctx context.Context, dbConn *db.DB, cp *NewProduct, now time.Time) (
 	ctx, span := trace.StartSpan(ctx, "internal.product.Create")
 	defer span.End()
 
-	// Mongo truncates times to milliseconds when storing. We go ahead and do the
-	// same here so the value we return is consistent with what we store.
+	// Mongo truncates times to milliseconds when storing. We and do the same
+	// here so the value we return is consistent with what we store.
 	now = now.Truncate(time.Millisecond)
 
 	p := Product{
