@@ -268,7 +268,7 @@ func postProduct201(t *testing.T) product.Product {
 	w := httptest.NewRecorder()
 	a.ServeHTTP(w, r)
 
-	// p is the value we will return
+	// p is the value we will return.
 	var p product.Product
 
 	t.Log("Given the need to create a new product with the products endpoint.")
@@ -393,6 +393,11 @@ func putProduct204(t *testing.T, id string) {
 				t.Fatalf("\t%s\tShould see an updated Name : got %q want %q", tests.Failed, ru.Name, "Graphic Novels")
 			}
 			t.Logf("\t%s\tShould see an updated Name.", tests.Success)
+
+			if ru.Family != "Kennedy" {
+				t.Fatalf("\t%s\tShould not affect other fields like Family : got %q want %q", tests.Failed, ru.Family, "Kennedy")
+			}
+			t.Logf("\t%s\tShould not affect other fields like Family.", tests.Success)
 		}
 	}
 }

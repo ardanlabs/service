@@ -5,8 +5,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ardanlabs/service/internal/platform/auth"
 	"github.com/ardanlabs/service/internal/platform/tests"
 	"github.com/ardanlabs/service/internal/user"
+	"github.com/google/go-cmp/cmp"
+	"github.com/pkg/errors"
 )
 
 var test *tests.Test
@@ -22,92 +25,75 @@ func testMain(m *testing.M) int {
 	return m.Run()
 }
 
-// TestCreate validates we can create a user and it exists in the DB.
+// TestUser validates the full set of CRUD operations on User values.
 func TestUser(t *testing.T) {
 	defer tests.Recover(t)
 
-	t.Log("Given the need to validate CRUDing a user.")
+	t.Log("Given the need to work with Product records.")
 	{
-		t.Log("\tWhen handling a single user.")
+		t.Log("\tWhen handling a single User.")
 		{
 			ctx := tests.Context()
 
 			dbConn := test.MasterDB.Copy()
 			defer dbConn.Close()
 
-			cu := user.CreateUser{
-				UserType:  1,
-				FirstName: "bill",
-				LastName:  "kennedy",
-				Email:     "bill@ardanlabs.com",
-				Company:   "ardan",
-				Addresses: []user.CreateAddress{
-					{
-						Type:    1,
-						LineOne: "12973 SW 112th ST",
-						LineTwo: "Suite 153",
-						City:    "Miami",
-						State:   "FL",
-						Zipcode: "33172",
-						Phone:   "305-527-3353",
-					},
-				},
+			nu := user.NewUser{
+				Name:            "Bill Kennedy",
+				Email:           "bill@ardanlabs.com",
+				Roles:           []string{auth.RoleAdmin},
+				Password:        "gophers",
+				PasswordConfirm: "gophers",
 			}
 
-			newUsr, err := user.Create(ctx, dbConn, &cu, time.Now().UTC())
+			u, err := user.Create(ctx, dbConn, &nu, time.Now().UTC())
 			if err != nil {
 				t.Fatalf("\t%s\tShould be able to create user : %s.", tests.Failed, err)
 			}
 			t.Logf("\t%s\tShould be able to create user.", tests.Success)
 
-			usr, err := user.Retrieve(ctx, dbConn, newUsr.UserID)
+			savedU, err := user.Retrieve(ctx, dbConn, u.ID.Hex())
 			if err != nil {
-				t.Fatalf("\t%s\tShould be able to retrieve user : %s.", tests.Failed, err)
+				t.Fatalf("\t%s\tShould be able to retrieve user by ID: %s.", tests.Failed, err)
 			}
-			t.Logf("\t%s\tShould be able to retrieve user.", tests.Success)
+			t.Logf("\t%s\tShould be able to retrieve user by ID.", tests.Success)
 
-			// TODO: Figure this compare out.
-			// if !reflect.DeepEqual(newUsr, usr) {
-			// 	t.Logf("\t\tGot : %+v", usr)
-			// 	t.Logf("\t\tWant: %+v", newUsr)
-			// 	t.Fatalf("\t%s\tShould get back the same user.", tests.Failed)
-			// }
-			// t.Logf("\t%s\tShould get back the same user.", tests.Success)
+			if diff := cmp.Diff(u, savedU); diff != "" {
+				t.Fatalf("\t%s\tShould get back the same user. Diff:\n%s", tests.Failed, diff)
+			}
+			t.Logf("\t%s\tShould get back the same user.", tests.Success)
 
-			cu = user.CreateUser{
-				UserType:  1,
-				FirstName: "bill",
-				LastName:  "smith",
-				Email:     "bill@ardanlabs.com",
-				Company:   "ardan",
+			upd := user.UpdateUser{
+				Name:  tests.StringPointer("Jacob Walker"),
+				Email: tests.StringPointer("jacob@ardanlabs.com"),
 			}
 
-			if err := user.Update(ctx, dbConn, newUsr.UserID, &cu, time.Now().UTC()); err != nil {
+			if err := user.Update(ctx, dbConn, u.ID.Hex(), &upd, time.Now().UTC()); err != nil {
 				t.Fatalf("\t%s\tShould be able to update user : %s.", tests.Failed, err)
 			}
 			t.Logf("\t%s\tShould be able to update user.", tests.Success)
 
-			usr, err = user.Retrieve(ctx, dbConn, newUsr.UserID)
+			savedU, err = user.Retrieve(ctx, dbConn, u.ID.Hex())
 			if err != nil {
 				t.Fatalf("\t%s\tShould be able to retrieve user : %s.", tests.Failed, err)
 			}
 			t.Logf("\t%s\tShould be able to retrieve user.", tests.Success)
 
-			if usr.LastName != cu.LastName {
-				t.Log("\t\tGot :", usr.LastName)
-				t.Log("\t\tWant:", cu.LastName)
+			if savedU.Name != *upd.Name {
+				t.Log("\t\tGot :", savedU.Name)
+				t.Log("\t\tWant:", *upd.Name)
 				t.Errorf("\t%s\tShould be able to see updates to LastName.", tests.Failed)
 			} else {
 				t.Logf("\t%s\tShould be able to see updates to LastName.", tests.Success)
 			}
 
-			if err := user.Delete(ctx, dbConn, usr.UserID); err != nil {
+			if err := user.Delete(ctx, dbConn, u.ID.Hex()); err != nil {
 				t.Fatalf("\t%s\tShould be able to delete user : %s.", tests.Failed, err)
 			}
 			t.Logf("\t%s\tShould be able to delete user.", tests.Success)
 
-			usr, err = user.Retrieve(ctx, dbConn, usr.UserID)
-			if err != user.ErrNotFound {
+			savedU, err = user.Retrieve(ctx, dbConn, u.ID.Hex())
+			if errors.Cause(err) != user.ErrNotFound {
 				t.Fatalf("\t%s\tShould NOT be able to retrieve user : %s.", tests.Failed, err)
 			}
 			t.Logf("\t%s\tShould NOT be able to retrieve user.", tests.Success)

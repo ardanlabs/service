@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	_ "expvar"
+	"io/ioutil"
 	"log"
 	"net/http"
 	_ "net/http/pprof"
@@ -16,6 +17,7 @@ import (
 	"github.com/ardanlabs/service/internal/platform/db"
 	"github.com/ardanlabs/service/internal/platform/flag"
 	itrace "github.com/ardanlabs/service/internal/platform/trace"
+	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/kelseyhightower/envconfig"
 	"go.opencensus.io/trace"
 )
@@ -62,6 +64,11 @@ func main() {
 			SendInterval time.Duration `default:"15s" envconfig:"SEND_INTERVAL"`
 			SendTimeout  time.Duration `default:"500ms" envconfig:"SEND_TIMEOUT"`
 		}
+		Auth struct {
+			KeyID      string `envconfig:"KEY_ID"`
+			PrivateKey string `envconfig:"PRIVATE_KEY"`
+			Algorithm  string `default:"RS256" envconfig:"ALGORITHM"`
+		}
 	}
 
 	if err := envconfig.Process("SALES", &cfg); err != nil {
@@ -89,6 +96,30 @@ func main() {
 	// TODO: Validate what is being written to the logs. We don't
 	// want to leak credentials or anything that can be a security risk.
 	log.Printf("main : Config : %v\n", string(cfgJSON))
+
+	// =========================================================================
+	// Find auth keys
+
+	keyFile, err := os.Open(cfg.Auth.PrivateKey)
+	if err != nil {
+		log.Fatalf("main : Opening auth private key : %v", err)
+	}
+
+	keyContents, err := ioutil.ReadAll(keyFile)
+	if err != nil {
+		log.Fatalf("main : Reading auth private key : %v", err)
+	}
+
+	key, err := jwt.ParseRSAPrivateKeyFromPEM(keyContents)
+	if err != nil {
+		log.Fatalf("main : Parsing auth private key : %v", err)
+	}
+
+	userAuth := handlers.UserAuth{
+		KeyID: cfg.Auth.KeyID,
+		Alg:   cfg.Auth.Algorithm,
+		Key:   key,
+	}
 
 	// =========================================================================
 	// Start Mongo
@@ -151,7 +182,7 @@ func main() {
 
 	api := http.Server{
 		Addr:           cfg.Web.APIHost,
-		Handler:        handlers.API(log, masterDB),
+		Handler:        handlers.API(log, masterDB, userAuth),
 		ReadTimeout:    cfg.Web.ReadTimeout,
 		WriteTimeout:   cfg.Web.WriteTimeout,
 		MaxHeaderBytes: 1 << 20,
