@@ -6,13 +6,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ardanlabs/service/internal/platform/trace"
 	"github.com/dimfeld/httptreemux"
+	"go.opencensus.io/plugin/ochttp/propagation/tracecontext"
+	"go.opencensus.io/trace"
 )
-
-// TraceIDHeader is the header added to outgoing requests which adds the
-// traceID to it.
-const TraceIDHeader = "X-Trace-ID"
 
 // Key represents the type of value for the context key.
 type ctxKey int
@@ -61,11 +58,20 @@ func (a *App) Handle(verb, path string, handler Handler, mw ...Middleware) {
 	// The function to execute for each request.
 	h := func(w http.ResponseWriter, r *http.Request, params map[string]string) {
 
+		// This API is using pointer semantic methods on this empty
+		// struct type :( This is causing the need to declare this
+		// variable here at the top.
+		var hf tracecontext.HTTPFormat
+
 		// Check the request for an existing Trace. The WithSpanContext
 		// function can unmarshal any existing context or create a new one.
-		spanContext := r.Header.Get(TraceIDHeader)
-		ctx, span := trace.WithSpanContext(r.Context(), "internal.platform.web", spanContext)
-		defer span.End()
+		var ctx context.Context
+		var span *trace.Span
+		if sc, ok := hf.SpanContextFromRequest(r); ok {
+			ctx, span = trace.StartSpanWithRemoteParent(r.Context(), "internal.platform.web", sc)
+		} else {
+			ctx, span = trace.StartSpan(r.Context(), "internal.platform.web")
+		}
 
 		// Set the context with the required values to
 		// process the request.
@@ -78,10 +84,7 @@ func (a *App) Handle(verb, path string, handler Handler, mw ...Middleware) {
 		// Set the parent span on the outgoing requests before any other header to
 		// ensure that the trace is ALWAYS added to the request regardless of
 		// any error occuring or not.
-		data, err := trace.MarshalSpanContext(span.SpanContext())
-		if err == nil {
-			w.Header().Set(TraceIDHeader, string(data))
-		}
+		hf.SpanContextToRequest(span.SpanContext(), r)
 
 		// Call the wrapped handler functions.
 		if err := handler(ctx, a.log, w, r, params); err != nil {
