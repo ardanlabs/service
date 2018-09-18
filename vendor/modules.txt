@@ -23,6 +23,9 @@ go.opencensus.io/internal
 go.opencensus.io/trace/internal
 go.opencensus.io/trace/propagation
 go.opencensus.io
+# golang.org/x/crypto v0.0.0-20180910181607-0e37d006457b
+golang.org/x/crypto/bcrypt
+golang.org/x/crypto/blowfish
 # gopkg.in/go-playground/validator.v8 v8.18.2
 gopkg.in/go-playground/validator.v8
 # gopkg.in/mgo.v2 v2.0.0-20180705113604-9856a29383ce
