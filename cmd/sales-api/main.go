@@ -65,9 +65,9 @@ func main() {
 			SendTimeout  time.Duration `default:"500ms" envconfig:"SEND_TIMEOUT"`
 		}
 		Auth struct {
-			KeyID      string `envconfig:"KEY_ID"`
-			PrivateKey string `envconfig:"PRIVATE_KEY"`
-			Algorithm  string `default:"RS256" envconfig:"ALGORITHM"`
+			KeyID          string `envconfig:"KEY_ID"`
+			PrivateKeyFile string `envconfig:"PRIVATE_KEY_FILE"`
+			Algorithm      string `default:"RS256" envconfig:"ALGORITHM"`
 		}
 	}
 
@@ -100,7 +100,7 @@ func main() {
 	// =========================================================================
 	// Find auth keys
 
-	keyFile, err := os.Open(cfg.Auth.PrivateKey)
+	keyFile, err := os.Open(cfg.Auth.PrivateKeyFile)
 	if err != nil {
 		log.Fatalf("main : Opening auth private key : %v", err)
 	}
