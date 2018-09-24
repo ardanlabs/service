@@ -169,7 +169,7 @@ func TestDisplay(t *testing.T) {
 	}
 
 	want := `
-Useage of TestApp
+Usage of TestApp
 -a --web_apihost string  <0.0.0.0:3000> : The ip:port for the api endpoint.
 --web_batchsize int  <1000> : Represets number of items to move.
 --web_readtimeout Duration  <5s>
