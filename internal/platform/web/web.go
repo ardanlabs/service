@@ -11,7 +11,7 @@ import (
 	"go.opencensus.io/trace"
 )
 
-// Key represents the type of value for the context key.
+// ctxKey represents the type of value for the context key.
 type ctxKey int
 
 // KeyValues is how request values or stored/retrieved.

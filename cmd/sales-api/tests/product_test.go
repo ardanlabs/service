@@ -22,6 +22,7 @@ func TestProducts(t *testing.T) {
 
 	t.Run("getProducts200Empty", getProducts200Empty)
 	t.Run("postProduct400", postProduct400)
+	t.Run("postProduct401", postProduct401)
 	t.Run("getProduct404", getProduct404)
 	t.Run("getProduct400", getProduct400)
 	t.Run("deleteProduct404", deleteProduct404)
@@ -33,6 +34,9 @@ func TestProducts(t *testing.T) {
 func getProducts200Empty(t *testing.T) {
 	r := httptest.NewRequest("GET", "/v1/products", nil)
 	w := httptest.NewRecorder()
+
+	r.Header.Set("Authorization", userAuthorization)
+
 	a.ServeHTTP(w, r)
 
 	t.Log("Given the need to fetch an empty list of products with the products endpoint.")
@@ -70,6 +74,9 @@ func postProduct400(t *testing.T) {
 
 	r := httptest.NewRequest("POST", "/v1/products", bytes.NewBuffer(body))
 	w := httptest.NewRecorder()
+
+	r.Header.Set("Authorization", userAuthorization)
+
 	a.ServeHTTP(w, r)
 
 	t.Log("Given the need to validate a new product can't be created with an invalid document.")
@@ -113,12 +120,50 @@ func postProduct400(t *testing.T) {
 	}
 }
 
+// postProduct401 validates a product can't be created with the endpoint
+// unless the user is authenticated
+func postProduct401(t *testing.T) {
+	np := product.NewProduct{
+		Name:      "Comic Books",
+		Notes:     "Various conditions.",
+		Family:    "Kennedy",
+		UnitPrice: 25,
+		Quantity:  60,
+	}
+
+	body, err := json.Marshal(&np)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	r := httptest.NewRequest("POST", "/v1/products", bytes.NewBuffer(body))
+	w := httptest.NewRecorder()
+
+	// Not setting an authorization header
+
+	a.ServeHTTP(w, r)
+
+	t.Log("Given the need to validate a new product can't be created with an invalid document.")
+	{
+		t.Log("\tTest 0:\tWhen using an incomplete product value.")
+		{
+			if w.Code != http.StatusUnauthorized {
+				t.Fatalf("\t%s\tShould receive a status code of 401 for the response : %v", tests.Failed, w.Code)
+			}
+			t.Logf("\t%s\tShould receive a status code of 401 for the response.", tests.Success)
+		}
+	}
+}
+
 // getProduct400 validates a product request for a malformed id.
 func getProduct400(t *testing.T) {
 	id := "12345"
 
 	r := httptest.NewRequest("GET", "/v1/products/"+id, nil)
 	w := httptest.NewRecorder()
+
+	r.Header.Set("Authorization", userAuthorization)
+
 	a.ServeHTTP(w, r)
 
 	t.Log("Given the need to validate getting a product with a malformed id.")
@@ -150,6 +195,9 @@ func getProduct404(t *testing.T) {
 
 	r := httptest.NewRequest("GET", "/v1/products/"+id, nil)
 	w := httptest.NewRecorder()
+
+	r.Header.Set("Authorization", userAuthorization)
+
 	a.ServeHTTP(w, r)
 
 	t.Log("Given the need to validate getting a product with an unknown id.")
@@ -179,6 +227,9 @@ func deleteProduct404(t *testing.T) {
 
 	r := httptest.NewRequest("DELETE", "/v1/products/"+id, nil)
 	w := httptest.NewRecorder()
+
+	r.Header.Set("Authorization", userAuthorization)
+
 	a.ServeHTTP(w, r)
 
 	t.Log("Given the need to validate deleting a product that does not exist.")
@@ -217,6 +268,9 @@ func putProduct404(t *testing.T) {
 
 	r := httptest.NewRequest("PUT", "/v1/products/"+id, bytes.NewBuffer(body))
 	w := httptest.NewRecorder()
+
+	r.Header.Set("Authorization", userAuthorization)
+
 	a.ServeHTTP(w, r)
 
 	t.Log("Given the need to validate updating a product that does not exist.")
@@ -266,6 +320,9 @@ func postProduct201(t *testing.T) product.Product {
 
 	r := httptest.NewRequest("POST", "/v1/products", bytes.NewBuffer(body))
 	w := httptest.NewRecorder()
+
+	r.Header.Set("Authorization", userAuthorization)
+
 	a.ServeHTTP(w, r)
 
 	// p is the value we will return.
@@ -307,6 +364,9 @@ func postProduct201(t *testing.T) product.Product {
 func deleteProduct204(t *testing.T, id string) {
 	r := httptest.NewRequest("DELETE", "/v1/products/"+id, nil)
 	w := httptest.NewRecorder()
+
+	r.Header.Set("Authorization", userAuthorization)
+
 	a.ServeHTTP(w, r)
 
 	t.Log("Given the need to validate deleting a product that does exist.")
@@ -325,6 +385,9 @@ func deleteProduct204(t *testing.T, id string) {
 func getProduct200(t *testing.T, id string) {
 	r := httptest.NewRequest("GET", "/v1/products/"+id, nil)
 	w := httptest.NewRecorder()
+
+	r.Header.Set("Authorization", userAuthorization)
+
 	a.ServeHTTP(w, r)
 
 	t.Log("Given the need to validate getting a product that exists.")
@@ -364,6 +427,9 @@ func putProduct204(t *testing.T, id string) {
 	body := `{"name": "Graphic Novels", "unit_price": 100}`
 	r := httptest.NewRequest("PUT", "/v1/products/"+id, strings.NewReader(body))
 	w := httptest.NewRecorder()
+
+	r.Header.Set("Authorization", userAuthorization)
+
 	a.ServeHTTP(w, r)
 
 	t.Log("Given the need to update a product with the products endpoint.")
@@ -377,6 +443,9 @@ func putProduct204(t *testing.T, id string) {
 
 			r = httptest.NewRequest("GET", "/v1/products/"+id, nil)
 			w = httptest.NewRecorder()
+
+			r.Header.Set("Authorization", userAuthorization)
+
 			a.ServeHTTP(w, r)
 
 			if w.Code != http.StatusOK {

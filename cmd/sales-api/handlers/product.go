@@ -67,6 +67,7 @@ func (p *Product) Create(ctx context.Context, log *log.Logger, w http.ResponseWr
 		return errors.Wrap(err, "")
 	}
 
+	// TODO(jlw) use time from request context
 	nUsr, err := product.Create(ctx, dbConn, &np, time.Now().UTC())
 	if err = translate(err); err != nil {
 		return errors.Wrapf(err, "Product: %+v", &np)
@@ -89,6 +90,7 @@ func (p *Product) Update(ctx context.Context, log *log.Logger, w http.ResponseWr
 		return errors.Wrap(err, "")
 	}
 
+	// TODO(jlw) use time from request context
 	err := product.Update(ctx, dbConn, params["id"], up, time.Now().UTC())
 	if err = translate(err); err != nil {
 		return errors.Wrapf(err, "ID: %s Update: %+v", params["id"], up)

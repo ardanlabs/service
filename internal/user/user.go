@@ -212,6 +212,7 @@ func Authenticate(ctx context.Context, dbConn *db.DB, key *rsa.PrivateKey, keyID
 
 	// If we are this far the request is valid. Create some claims for the user
 	// and generate their token.
+	// TODO(jlw) Pass time into this function?
 	claims := auth.NewClaims(email, u.Roles, time.Now(), time.Hour)
 
 	tkn, err := auth.GenerateToken(key, keyID, alg, claims)
