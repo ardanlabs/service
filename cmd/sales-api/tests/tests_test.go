@@ -56,7 +56,7 @@ func testMain(m *testing.M) int {
 		panic(err)
 	}
 
-	tkn, err := user.Authenticate(tests.Context(), test.MasterDB, userAuth.Key, userAuth.KeyID, userAuth.Alg, admin.Email, admin.Password)
+	tkn, err := user.Authenticate(tests.Context(), test.MasterDB, time.Now(), userAuth.Key, userAuth.KeyID, userAuth.Alg, admin.Email, admin.Password)
 	if err != nil {
 		panic(err)
 	}
@@ -76,7 +76,7 @@ func testMain(m *testing.M) int {
 		panic(err)
 	}
 
-	tkn, err = user.Authenticate(tests.Context(), test.MasterDB, userAuth.Key, userAuth.KeyID, userAuth.Alg, u.Email, u.Password)
+	tkn, err = user.Authenticate(tests.Context(), test.MasterDB, time.Now(), userAuth.Key, userAuth.KeyID, userAuth.Alg, u.Email, u.Password)
 	if err != nil {
 		panic(err)
 	}

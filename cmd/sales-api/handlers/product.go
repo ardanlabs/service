@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/ardanlabs/service/internal/platform/db"
 	"github.com/ardanlabs/service/internal/platform/web"
@@ -62,13 +61,14 @@ func (p *Product) Create(ctx context.Context, log *log.Logger, w http.ResponseWr
 	dbConn := p.MasterDB.Copy()
 	defer dbConn.Close()
 
+	v := ctx.Value(web.KeyValues).(*web.Values)
+
 	var np product.NewProduct
 	if err := web.Unmarshal(r.Body, &np); err != nil {
 		return errors.Wrap(err, "")
 	}
 
-	// TODO(jlw) use time from request context
-	nUsr, err := product.Create(ctx, dbConn, &np, time.Now().UTC())
+	nUsr, err := product.Create(ctx, dbConn, &np, v.Now)
 	if err = translate(err); err != nil {
 		return errors.Wrapf(err, "Product: %+v", &np)
 	}
@@ -85,13 +85,14 @@ func (p *Product) Update(ctx context.Context, log *log.Logger, w http.ResponseWr
 	dbConn := p.MasterDB.Copy()
 	defer dbConn.Close()
 
+	v := ctx.Value(web.KeyValues).(*web.Values)
+
 	var up product.UpdateProduct
 	if err := web.Unmarshal(r.Body, &up); err != nil {
 		return errors.Wrap(err, "")
 	}
 
-	// TODO(jlw) use time from request context
-	err := product.Update(ctx, dbConn, params["id"], up, time.Now().UTC())
+	err := product.Update(ctx, dbConn, params["id"], up, v.Now)
 	if err = translate(err); err != nil {
 		return errors.Wrapf(err, "ID: %s Update: %+v", params["id"], up)
 	}
@@ -100,7 +101,7 @@ func (p *Product) Update(ctx context.Context, log *log.Logger, w http.ResponseWr
 	return nil
 }
 
-// Delete removed the specified product from the system.
+// Delete removes the specified product from the system.
 func (p *Product) Delete(ctx context.Context, log *log.Logger, w http.ResponseWriter, r *http.Request, params map[string]string) error {
 	ctx, span := trace.StartSpan(ctx, "handlers.Product.Delete")
 	defer span.End()

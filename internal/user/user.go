@@ -184,7 +184,7 @@ func Delete(ctx context.Context, dbConn *db.DB, id string) error {
 // success it returns a Token that can be used to authenticate in the future.
 //
 // The key, keyID, and alg are required for generating the token.
-func Authenticate(ctx context.Context, dbConn *db.DB, key *rsa.PrivateKey, keyID, alg, email, password string) (Token, error) {
+func Authenticate(ctx context.Context, dbConn *db.DB, now time.Time, key *rsa.PrivateKey, keyID, alg, email, password string) (Token, error) {
 	ctx, span := trace.StartSpan(ctx, "internal.user.Authenticate")
 	defer span.End()
 
@@ -212,8 +212,7 @@ func Authenticate(ctx context.Context, dbConn *db.DB, key *rsa.PrivateKey, keyID
 
 	// If we are this far the request is valid. Create some claims for the user
 	// and generate their token.
-	// TODO(jlw) Pass time into this function?
-	claims := auth.NewClaims(email, u.Roles, time.Now(), time.Hour)
+	claims := auth.NewClaims(email, u.Roles, now, time.Hour)
 
 	tkn, err := auth.GenerateToken(key, keyID, alg, claims)
 	if err != nil {

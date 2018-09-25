@@ -5,7 +5,6 @@ import (
 	"crypto/rsa"
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/ardanlabs/service/internal/platform/db"
 	"github.com/ardanlabs/service/internal/platform/web"
@@ -71,13 +70,14 @@ func (u *User) Create(ctx context.Context, log *log.Logger, w http.ResponseWrite
 	dbConn := u.MasterDB.Copy()
 	defer dbConn.Close()
 
+	v := ctx.Value(web.KeyValues).(*web.Values)
+
 	var newU user.NewUser
 	if err := web.Unmarshal(r.Body, &newU); err != nil {
 		return errors.Wrap(err, "")
 	}
 
-	// TODO(jlw) use time from request context
-	usr, err := user.Create(ctx, dbConn, &newU, time.Now().UTC())
+	usr, err := user.Create(ctx, dbConn, &newU, v.Now)
 	if err = translate(err); err != nil {
 		return errors.Wrapf(err, "User: %+v", &usr)
 	}
@@ -94,13 +94,14 @@ func (u *User) Update(ctx context.Context, log *log.Logger, w http.ResponseWrite
 	dbConn := u.MasterDB.Copy()
 	defer dbConn.Close()
 
+	v := ctx.Value(web.KeyValues).(*web.Values)
+
 	var upd user.UpdateUser
 	if err := web.Unmarshal(r.Body, &upd); err != nil {
 		return errors.Wrap(err, "")
 	}
 
-	// TODO(jlw) use time from request context
-	err := user.Update(ctx, dbConn, params["id"], &upd, time.Now().UTC())
+	err := user.Update(ctx, dbConn, params["id"], &upd, v.Now)
 	if err = translate(err); err != nil {
 		return errors.Wrapf(err, "Id: %s  User: %+v", params["id"], &upd)
 	}
@@ -109,7 +110,7 @@ func (u *User) Update(ctx context.Context, log *log.Logger, w http.ResponseWrite
 	return nil
 }
 
-// Delete removed the specified user from the system.
+// Delete removes the specified user from the system.
 func (u *User) Delete(ctx context.Context, log *log.Logger, w http.ResponseWriter, r *http.Request, params map[string]string) error {
 	ctx, span := trace.StartSpan(ctx, "handlers.User.Delete")
 	defer span.End()
@@ -135,12 +136,14 @@ func (u *User) Token(ctx context.Context, log *log.Logger, w http.ResponseWriter
 	dbConn := u.MasterDB.Copy()
 	defer dbConn.Close()
 
+	v := ctx.Value(web.KeyValues).(*web.Values)
+
 	email, pass, ok := r.BasicAuth()
 	if !ok {
 		return web.ErrUnauthorized
 	}
 
-	tkn, err := user.Authenticate(ctx, dbConn, u.Auth.Key, u.Auth.KeyID, u.Auth.Alg, email, pass)
+	tkn, err := user.Authenticate(ctx, dbConn, v.Now, u.Auth.Key, u.Auth.KeyID, u.Auth.Alg, email, pass)
 	if err = translate(err); err != nil {
 		return errors.Wrap(err, "authenticating")
 	}
