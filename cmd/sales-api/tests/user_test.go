@@ -26,8 +26,9 @@ func TestUsers(t *testing.T) {
 	t.Run("postUser400", postUser400)
 	t.Run("postUser401", postUser401)
 	t.Run("postUser403", postUser403)
-	t.Run("getUser404", getUser404)
 	t.Run("getUser400", getUser400)
+	t.Run("getUser403", getUser403)
+	t.Run("getUser404", getUser404)
 	t.Run("deleteUser404", deleteUser404)
 	t.Run("putUser404", putUser404)
 	t.Run("crudUsers", crudUser)
@@ -224,6 +225,51 @@ func getUser400(t *testing.T) {
 				t.Fatalf("\t%s\tShould get the expected result.", tests.Failed)
 			}
 			t.Logf("\t%s\tShould get the expected result.", tests.Success)
+		}
+	}
+}
+
+// getUser403 validates a regular user can't fetch anyone but themselves
+func getUser403(t *testing.T) {
+	t.Log("Given the need to validate regular users can't fetch other users.")
+	{
+		t.Logf("\tTest 0:\tWhen fetching the admin user as a regular user.")
+		{
+			r := httptest.NewRequest("GET", "/v1/users/"+adminID, nil)
+			w := httptest.NewRecorder()
+
+			r.Header.Set("Authorization", userAuthorization)
+
+			a.ServeHTTP(w, r)
+
+			if w.Code != http.StatusForbidden {
+				t.Fatalf("\t%s\tShould receive a status code of 403 for the response : %v", tests.Failed, w.Code)
+			}
+			t.Logf("\t%s\tShould receive a status code of 403 for the response.", tests.Success)
+
+			recv := w.Body.String()
+			resp := "Forbidden"
+			if !strings.Contains(recv, resp) {
+				t.Log("Got :", recv)
+				t.Log("Want:", resp)
+				t.Fatalf("\t%s\tShould get the expected result.", tests.Failed)
+			}
+			t.Logf("\t%s\tShould get the expected result.", tests.Success)
+		}
+
+		t.Logf("\tTest 1:\tWhen fetching the user as a themselves.")
+		{
+
+			r := httptest.NewRequest("GET", "/v1/users/"+userID, nil)
+			w := httptest.NewRecorder()
+
+			r.Header.Set("Authorization", userAuthorization)
+
+			a.ServeHTTP(w, r)
+			if w.Code != http.StatusOK {
+				t.Fatalf("\t%s\tShould receive a status code of 200 for the response : %v", tests.Failed, w.Code)
+			}
+			t.Logf("\t%s\tShould receive a status code of 200 for the response.", tests.Success)
 		}
 	}
 }

@@ -58,6 +58,18 @@ func (c Claims) Valid() error {
 	return nil
 }
 
+// HasRole returns true if the claims has at least one of the provided roles.
+func (c Claims) HasRole(roles ...string) bool {
+	for _, has := range c.Roles {
+		for _, want := range roles {
+			if has == want {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 // GenerateToken generates a signed JWT token string.
 func GenerateToken(key *rsa.PrivateKey, keyID string, alg string, claims Claims) (string, error) {
 	method := jwt.GetSigningMethod(alg)

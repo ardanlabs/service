@@ -16,8 +16,12 @@ import (
 
 var a *web.App
 var test *tests.Test
+
+// Information about the users we have created for testing.
 var adminAuthorization string
+var adminID string
 var userAuthorization string
+var userID string
 
 // TestMain is the entry point for testing.
 func TestMain(m *testing.M) {
@@ -44,7 +48,7 @@ func testMain(m *testing.M) int {
 
 	// Create an admin user directly with our business logic. This creates an
 	// initial user that we will use for admin validated endpoints.
-	admin := user.NewUser{
+	nu := user.NewUser{
 		Email:           "admin@ardanlabs.com",
 		Name:            "Admin User",
 		Roles:           []string{auth.RoleAdmin, auth.RoleUser},
@@ -52,11 +56,13 @@ func testMain(m *testing.M) int {
 		PasswordConfirm: "gophers",
 	}
 
-	if _, err := user.Create(tests.Context(), test.MasterDB, &admin, time.Now()); err != nil {
+	admin, err := user.Create(tests.Context(), test.MasterDB, &nu, time.Now())
+	if err != nil {
 		panic(err)
 	}
+	adminID = admin.ID.Hex()
 
-	tkn, err := user.Authenticate(tests.Context(), test.MasterDB, time.Now(), userAuth.Key, userAuth.KeyID, userAuth.Alg, admin.Email, admin.Password)
+	tkn, err := user.Authenticate(tests.Context(), test.MasterDB, time.Now(), userAuth.Key, userAuth.KeyID, userAuth.Alg, nu.Email, nu.Password)
 	if err != nil {
 		panic(err)
 	}
@@ -64,7 +70,7 @@ func testMain(m *testing.M) int {
 	adminAuthorization = "Bearer " + tkn.Token
 
 	// Create a regular user to use when calling regular validated endpoints.
-	u := user.NewUser{
+	nu = user.NewUser{
 		Email:           "user@ardanlabs.com",
 		Name:            "Regular User",
 		Roles:           []string{auth.RoleUser},
@@ -72,11 +78,13 @@ func testMain(m *testing.M) int {
 		PasswordConfirm: "concurrency",
 	}
 
-	if _, err := user.Create(tests.Context(), test.MasterDB, &u, time.Now()); err != nil {
+	usr, err := user.Create(tests.Context(), test.MasterDB, &nu, time.Now())
+	if err != nil {
 		panic(err)
 	}
+	userID = usr.ID.Hex()
 
-	tkn, err = user.Authenticate(tests.Context(), test.MasterDB, time.Now(), userAuth.Key, userAuth.KeyID, userAuth.Alg, u.Email, u.Password)
+	tkn, err = user.Authenticate(tests.Context(), test.MasterDB, time.Now(), userAuth.Key, userAuth.KeyID, userAuth.Alg, nu.Email, nu.Password)
 	if err != nil {
 		panic(err)
 	}

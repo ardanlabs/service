@@ -23,7 +23,7 @@ type User struct {
 type NewUser struct {
 	Name            string   `json:"name" validate:"required"`
 	Email           string   `json:"email" validate:"required"` // TODO(jlw) enforce uniqueness.
-	Roles           []string `json:"roles" validate:"required"` // TODO(jlw) ensure only admins can change other users' roles. Ensure only includes valid roles.
+	Roles           []string `json:"roles" validate:"required"` // TODO(jlw) Ensure only includes valid roles.
 	Password        string   `json:"password" validate:"required"`
 	PasswordConfirm string   `json:"password_confirm" validate:"eqfield=Password"`
 }
@@ -37,7 +37,7 @@ type NewUser struct {
 type UpdateUser struct {
 	Name            *string  `json:"name"`
 	Email           *string  `json:"email"` // TODO(jlw) enforce uniqueness.
-	Roles           []string `json:"roles"` // TODO(jlw) ensure only admins can change other users' roles. Ensure only includes valid roles.
+	Roles           []string `json:"roles"` // TODO(jlw) Ensure only includes valid roles.
 	Password        *string  `json:"password"`
 	PasswordConfirm *string  `json:"password_confirm" validate:"omitempty,eqfield=Password"`
 }
