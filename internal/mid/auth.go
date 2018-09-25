@@ -65,18 +65,7 @@ func (a *Auth) HasRole(roles ...string) func(next web.Handler) web.Handler {
 				return web.ErrUnauthorized
 			}
 
-			var found bool
-		loop:
-			for _, has := range claims.Roles {
-				for _, want := range roles {
-					if has == want {
-						found = true
-						break loop
-					}
-				}
-			}
-
-			if !found {
+			if !claims.HasRole(roles...) {
 				return web.ErrForbidden
 			}
 

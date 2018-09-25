@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/ardanlabs/service/internal/platform/auth"
 	"github.com/ardanlabs/service/internal/platform/db"
 	"github.com/ardanlabs/service/internal/platform/web"
 	"github.com/ardanlabs/service/internal/user"
@@ -52,6 +53,18 @@ func (u *User) Retrieve(ctx context.Context, log *log.Logger, w http.ResponseWri
 
 	dbConn := u.MasterDB.Copy()
 	defer dbConn.Close()
+
+	claims, ok := ctx.Value(auth.Key).(auth.Claims)
+	if !ok {
+		return web.ErrUnauthorized
+	}
+
+	// Regular users are only able to see their own record. Admins can see
+	// anyone's record. So therefore if the caller is asking for someone else and
+	// they don't have the admin role then they're forbidden.
+	if claims.Subject != params["id"] && !claims.HasRole(auth.RoleAdmin) {
+		return web.ErrForbidden
+	}
 
 	usr, err := user.Retrieve(ctx, dbConn, params["id"])
 	if err = translate(err); err != nil {
