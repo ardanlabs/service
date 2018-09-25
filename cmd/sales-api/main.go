@@ -100,12 +100,7 @@ func main() {
 	// =========================================================================
 	// Find auth keys
 
-	keyFile, err := os.Open(cfg.Auth.PrivateKeyFile)
-	if err != nil {
-		log.Fatalf("main : Opening auth private key : %v", err)
-	}
-
-	keyContents, err := ioutil.ReadAll(keyFile)
+	keyContents, err := ioutil.ReadFile(cfg.Auth.PrivateKeyFile)
 	if err != nil {
 		log.Fatalf("main : Reading auth private key : %v", err)
 	}
