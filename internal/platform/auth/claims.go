@@ -2,15 +2,24 @@ package auth
 
 import (
 	"crypto/rsa"
+	"fmt"
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/pkg/errors"
 )
 
+// These are the expected values for Claims.Roles.
 const (
 	RoleAdmin = "ADMIN"
+	RoleUser  = "USER"
 )
+
+// ctxKey represents the type of value for the context key.
+type ctxKey int
+
+// Key is used to store/retrieve a Claims value from a context.Context.
+const Key ctxKey = 1
 
 // Claims represents the authorization claims transmitted via a JWT.
 type Claims struct {
@@ -32,6 +41,21 @@ func NewClaims(subject string, roles []string, now time.Time, expires time.Durat
 	}
 
 	return c
+}
+
+// Valid is called during the parsing of a token.
+func (c Claims) Valid() error {
+	for _, r := range c.Roles {
+		switch r {
+		case RoleAdmin, RoleUser: // Role is valid.
+		default:
+			return fmt.Errorf("invalid role %q", r)
+		}
+	}
+	if err := c.StandardClaims.Valid(); err != nil {
+		return errors.Wrap(err, "validating standard claims")
+	}
+	return nil
 }
 
 // GenerateToken generates a signed JWT token string.

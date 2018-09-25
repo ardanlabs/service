@@ -76,6 +76,7 @@ func (u *User) Create(ctx context.Context, log *log.Logger, w http.ResponseWrite
 		return errors.Wrap(err, "")
 	}
 
+	// TODO(jlw) use time from request context
 	usr, err := user.Create(ctx, dbConn, &newU, time.Now().UTC())
 	if err = translate(err); err != nil {
 		return errors.Wrapf(err, "User: %+v", &usr)
@@ -98,6 +99,7 @@ func (u *User) Update(ctx context.Context, log *log.Logger, w http.ResponseWrite
 		return errors.Wrap(err, "")
 	}
 
+	// TODO(jlw) use time from request context
 	err := user.Update(ctx, dbConn, params["id"], &upd, time.Now().UTC())
 	if err = translate(err); err != nil {
 		return errors.Wrapf(err, "Id: %s  User: %+v", params["id"], &upd)
