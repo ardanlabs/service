@@ -24,7 +24,7 @@ func testMain(m *testing.M) int {
 	return m.Run()
 }
 
-// TestCreate validates we can create a product and it exists in the DB.
+// TestProduct validates the full set of CRUD operations on Product values.
 func TestProduct(t *testing.T) {
 	defer tests.Recover(t)
 

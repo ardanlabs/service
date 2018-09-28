@@ -10,7 +10,7 @@ import (
 )
 
 // API returns a handler for a set of routes.
-func API(log *log.Logger, masterDB *db.DB) http.Handler {
+func API(log *log.Logger, masterDB *db.DB, userAuth UserAuth) http.Handler {
 	app := web.New(log, mid.RequestLogger, mid.Metrics, mid.ErrorHandler)
 
 	// Register health check endpoint.
@@ -19,14 +19,19 @@ func API(log *log.Logger, masterDB *db.DB) http.Handler {
 	}
 	app.Handle("GET", "/v1/health", h.Check)
 
+	// Register user management and authentication endpoints.
 	u := User{
 		MasterDB: masterDB,
+		Auth:     userAuth,
 	}
+
 	app.Handle("GET", "/v1/users", u.List)
 	app.Handle("POST", "/v1/users", u.Create)
 	app.Handle("GET", "/v1/users/:id", u.Retrieve)
 	app.Handle("PUT", "/v1/users/:id", u.Update)
 	app.Handle("DELETE", "/v1/users/:id", u.Delete)
+
+	app.Handle("GET", "/v1/users/token", u.Token)
 
 	// Register product and sale endpoints.
 	p := Product{

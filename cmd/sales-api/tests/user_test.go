@@ -8,16 +8,21 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/ardanlabs/service/internal/platform/auth"
 	"github.com/ardanlabs/service/internal/platform/tests"
+	"github.com/ardanlabs/service/internal/platform/web"
 	"github.com/ardanlabs/service/internal/user"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"gopkg.in/mgo.v2/bson"
 )
 
-// TestUsers is the entry point for the users
+// TestUsers is the entry point for testing user management functions.
 func TestUsers(t *testing.T) {
 	defer tests.Recover(t)
 
-	t.Run("getUsers200Empty", getUsers200Empty)
+	t.Run("getToken403", getToken403)
+	t.Run("getToken200", getToken200)
 	t.Run("postUser400", postUser400)
 	t.Run("getUser404", getUser404)
 	t.Run("getUser400", getUser400)
@@ -26,29 +31,53 @@ func TestUsers(t *testing.T) {
 	t.Run("crudUsers", crudUser)
 }
 
-// getUsers200Empty validates an empty users list can be retrieved with the endpoint.
-func getUsers200Empty(t *testing.T) {
-	r := httptest.NewRequest("GET", "/v1/users", nil)
+// getToken403 ensures an unknown user can't generate a token.
+func getToken403(t *testing.T) {
+	r := httptest.NewRequest("GET", "/v1/users/token", nil)
 	w := httptest.NewRecorder()
+
+	r.SetBasicAuth("unknown@example.com", "some-password")
+
 	a.ServeHTTP(w, r)
 
-	t.Log("Given the need to fetch an empty list of users with the users endpoint.")
+	t.Log("Given the need to deny tokens to unknown users.")
 	{
-		t.Log("\tTest 0:\tWhen fetching an empty user list.")
+		t.Log("\tTest 0:\tWhen fetching a token with an unrecognized email.")
+		{
+			if w.Code != http.StatusUnauthorized {
+				t.Fatalf("\t%s\tShould receive a status code of 401 for the response : %v", tests.Failed, w.Code)
+			}
+			t.Logf("\t%s\tShould receive a status code of 401 for the response.", tests.Success)
+		}
+	}
+}
+
+// getToken200
+func getToken200(t *testing.T) {
+
+	r := httptest.NewRequest("GET", "/v1/users/token", nil)
+	w := httptest.NewRecorder()
+
+	r.SetBasicAuth("admin@ardanlabs.com", "gophers")
+
+	a.ServeHTTP(w, r)
+
+	t.Log("Given the need to issues tokens to known users.")
+	{
+		t.Log("\tTest 0:\tWhen fetching a token with valid credentials.")
 		{
 			if w.Code != http.StatusOK {
 				t.Fatalf("\t%s\tShould receive a status code of 200 for the response : %v", tests.Failed, w.Code)
 			}
 			t.Logf("\t%s\tShould receive a status code of 200 for the response.", tests.Success)
 
-			recv := w.Body.String()
-			resp := `[]`
-			if resp != recv {
-				t.Log("Got :", recv)
-				t.Log("Want:", resp)
-				t.Fatalf("\t%s\tShould get the expected result.", tests.Failed)
+			var got user.Token
+			if err := json.NewDecoder(w.Body).Decode(&got); err != nil {
+				t.Fatalf("\t%s\tShould be able to unmarshal the response : %v", tests.Failed, err)
 			}
-			t.Logf("\t%s\tShould get the expected result.", tests.Success)
+			t.Logf("\t%s\tShould be able to unmarshal the response.", tests.Success)
+
+			// TODO(jlw) Should we ensure the token is valid?
 		}
 	}
 }
@@ -56,14 +85,11 @@ func getUsers200Empty(t *testing.T) {
 // postUser400 validates a user can't be created with the endpoint
 // unless a valid user document is submitted.
 func postUser400(t *testing.T) {
-	u := user.User{
-		UserType: 1,
-		LastName: "Kennedy",
-		Email:    "bill@ardanstudios.com",
-		Company:  "Ardan Labs",
+	body, err := json.Marshal(&user.User{})
+	if err != nil {
+		t.Fatal(err)
 	}
 
-	body, _ := json.Marshal(&u)
 	r := httptest.NewRequest("POST", "/v1/users", bytes.NewBuffer(body))
 	w := httptest.NewRecorder()
 	a.ServeHTTP(w, r)
@@ -77,49 +103,32 @@ func postUser400(t *testing.T) {
 			}
 			t.Logf("\t%s\tShould receive a status code of 400 for the response.", tests.Success)
 
-			recv := w.Body.String()
-			resps := []string{
-				`{
-  "error": "field validation failure",
-  "fields": [
-    {
-      "field_name": "Addresses",
-      "error": "required"
-    },
-    {
-      "field_name": "FirstName",
-      "error": "required"
-    }
-  ]
-}`,
-				`{
-  "error": "field validation failure",
-  "fields": [
-    {
-      "field_name": "FirstName",
-      "error": "required"
-    },
-    {
-      "field_name": "Addresses",
-      "error": "required"
-    }
-  ]
-}`,
+			// Inspect the response.
+			var got web.JSONError
+			if err := json.NewDecoder(w.Body).Decode(&got); err != nil {
+				t.Fatalf("\t%s\tShould be able to unmarshal the response to an error type : %v", tests.Failed, err)
+			}
+			t.Logf("\t%s\tShould be able to unmarshal the response to an error type.", tests.Success)
+
+			// Define what we want to see.
+			want := web.JSONError{
+				Error: "field validation failure",
+				Fields: web.InvalidError{
+					{Fld: "Name", Err: "required"},
+					{Fld: "Email", Err: "required"},
+					{Fld: "Roles", Err: "required"},
+					{Fld: "Password", Err: "required"},
+				},
 			}
 
-			var found bool
-			for _, resp := range resps {
-				if resp == recv {
-					found = true
-					break
-				}
-			}
+			// We can't rely on the order of the field errors so they have to be
+			// sorted. Tell the cmp package how to sort them.
+			sorter := cmpopts.SortSlices(func(a, b web.Invalid) bool {
+				return a.Fld < b.Fld
+			})
 
-			if !found {
-				t.Log("Got :", recv)
-				t.Log("Want:", resps[0])
-				t.Log("Want:", resps[1])
-				t.Fatalf("\t%s\tShould get the expected result.", tests.Failed)
+			if diff := cmp.Diff(want, got, sorter); diff != "" {
+				t.Fatalf("\t%s\tShould get the expected result. Diff:\n%s", tests.Failed, diff)
 			}
 			t.Logf("\t%s\tShould get the expected result.", tests.Success)
 		}
@@ -128,15 +137,15 @@ func postUser400(t *testing.T) {
 
 // getUser400 validates a user request for a malformed userid.
 func getUser400(t *testing.T) {
-	userID := "12345"
+	id := "12345"
 
-	r := httptest.NewRequest("GET", "/v1/users/"+userID, nil)
+	r := httptest.NewRequest("GET", "/v1/users/"+id, nil)
 	w := httptest.NewRecorder()
 	a.ServeHTTP(w, r)
 
 	t.Log("Given the need to validate getting a user with a malformed userid.")
 	{
-		t.Logf("\tTest 0:\tWhen using the new user %s.", userID)
+		t.Logf("\tTest 0:\tWhen using the new user %s.", id)
 		{
 			if w.Code != http.StatusBadRequest {
 				t.Fatalf("\t%s\tShould receive a status code of 400 for the response : %v", tests.Failed, w.Code)
@@ -159,15 +168,15 @@ func getUser400(t *testing.T) {
 
 // getUser404 validates a user request for a user that does not exist with the endpoint.
 func getUser404(t *testing.T) {
-	userID := bson.NewObjectId().Hex()
+	id := bson.NewObjectId().Hex()
 
-	r := httptest.NewRequest("GET", "/v1/users/"+userID, nil)
+	r := httptest.NewRequest("GET", "/v1/users/"+id, nil)
 	w := httptest.NewRecorder()
 	a.ServeHTTP(w, r)
 
 	t.Log("Given the need to validate getting a user with an unknown id.")
 	{
-		t.Logf("\tTest 0:\tWhen using the new user %s.", userID)
+		t.Logf("\tTest 0:\tWhen using the new user %s.", id)
 		{
 			if w.Code != http.StatusNotFound {
 				t.Fatalf("\t%s\tShould receive a status code of 404 for the response : %v", tests.Failed, w.Code)
@@ -188,15 +197,15 @@ func getUser404(t *testing.T) {
 
 // deleteUser404 validates deleting a user that does not exist.
 func deleteUser404(t *testing.T) {
-	userID := bson.NewObjectId().Hex()
+	id := bson.NewObjectId().Hex()
 
-	r := httptest.NewRequest("DELETE", "/v1/users/"+userID, nil)
+	r := httptest.NewRequest("DELETE", "/v1/users/"+id, nil)
 	w := httptest.NewRecorder()
 	a.ServeHTTP(w, r)
 
 	t.Log("Given the need to validate deleting a user that does not exist.")
 	{
-		t.Logf("\tTest 0:\tWhen using the new user %s.", userID)
+		t.Logf("\tTest 0:\tWhen using the new user %s.", id)
 		{
 			if w.Code != http.StatusNotFound {
 				t.Fatalf("\t%s\tShould receive a status code of 404 for the response : %v", tests.Failed, w.Code)
@@ -217,27 +226,24 @@ func deleteUser404(t *testing.T) {
 
 // putUser404 validates updating a user that does not exist.
 func putUser404(t *testing.T) {
-	u := user.User{
-		UserType:  1,
-		FirstName: "Bill",
-		LastName:  "Kennedy",
-		Email:     "bill@ardanstudios.com",
-		Company:   "Ardan Labs",
-		Addresses: []user.Address{
-			{},
-		},
+	u := user.UpdateUser{
+		Name: tests.StringPointer("Doesn't Exist"),
 	}
 
-	userID := bson.NewObjectId().Hex()
+	id := bson.NewObjectId().Hex()
 
-	body, _ := json.Marshal(&u)
-	r := httptest.NewRequest("PUT", "/v1/users/"+userID, bytes.NewBuffer(body))
+	body, err := json.Marshal(&u)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	r := httptest.NewRequest("PUT", "/v1/users/"+id, bytes.NewBuffer(body))
 	w := httptest.NewRecorder()
 	a.ServeHTTP(w, r)
 
 	t.Log("Given the need to validate updating a user that does not exist.")
 	{
-		t.Logf("\tTest 0:\tWhen using the new user %s.", userID)
+		t.Logf("\tTest 0:\tWhen using the new user %s.", id)
 		{
 			if w.Code != http.StatusNotFound {
 				t.Fatalf("\t%s\tShould receive a status code of 404 for the response : %v", tests.Failed, w.Code)
@@ -259,39 +265,33 @@ func putUser404(t *testing.T) {
 // crudUser performs a complete test of CRUD against the api.
 func crudUser(t *testing.T) {
 	nu := postUser201(t)
-	defer deleteUser204(t, nu.UserID)
+	defer deleteUser204(t, nu.ID.Hex())
 
-	getUser200(t, nu.UserID)
-	putUser204(t, nu)
+	getUser200(t, nu.ID.Hex())
+	putUser204(t, nu.ID.Hex())
 }
 
 // postUser201 validates a user can be created with the endpoint.
 func postUser201(t *testing.T) user.User {
-	var u = user.User{
-		UserType:  1,
-		FirstName: "Bill",
-		LastName:  "Kennedy",
-		Email:     "bill@ardanlabs.com",
-		Company:   "Ardan Labs",
-		Addresses: []user.Address{
-			{
-				Type:    1,
-				LineOne: "12973 SW 112th ST",
-				LineTwo: "Suite 153",
-				City:    "Miami",
-				State:   "FL",
-				Zipcode: "33172",
-				Phone:   "305-527-3353",
-			},
-		},
+	nu := user.NewUser{
+		Name:            "Bill Kennedy",
+		Email:           "bill@ardanlabs.com",
+		Roles:           []string{auth.RoleAdmin},
+		Password:        "gophers",
+		PasswordConfirm: "gophers",
 	}
 
-	var newUser user.User
+	body, err := json.Marshal(&nu)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	body, _ := json.Marshal(&u)
 	r := httptest.NewRequest("POST", "/v1/users", bytes.NewBuffer(body))
 	w := httptest.NewRecorder()
 	a.ServeHTTP(w, r)
+
+	// u is the value we will return.
+	var u user.User
 
 	t.Log("Given the need to create a new user with the users endpoint.")
 	{
@@ -302,48 +302,36 @@ func postUser201(t *testing.T) user.User {
 			}
 			t.Logf("\t%s\tShould receive a status code of 201 for the response.", tests.Success)
 
-			var u user.User
 			if err := json.NewDecoder(w.Body).Decode(&u); err != nil {
 				t.Fatalf("\t%s\tShould be able to unmarshal the response : %v", tests.Failed, err)
 			}
 
-			newUser = u
+			// Define what we wanted to receive. We will just trust the generated
+			// fields like ID and Dates so we copy u.
+			want := u
+			want.Name = "Bill Kennedy"
+			want.Email = "bill@ardanlabs.com"
+			want.Roles = []string{auth.RoleAdmin}
 
-			u.UserID = "1234"
-			u.DateCreated = nil
-			u.DateModified = nil
-			u.Addresses[0].DateCreated = nil
-			u.Addresses[0].DateModified = nil
-
-			doc, err := json.Marshal(&u)
-			if err != nil {
-				t.Fatalf("\t%s\tShould be able to marshal the response : %v", tests.Failed, err)
-			}
-
-			recv := string(doc)
-			resp := `{"user_id":"1234","type":1,"first_name":"Bill","last_name":"Kennedy","email":"bill@ardanlabs.com","company":"Ardan Labs","addresses":[{"type":1,"line_one":"12973 SW 112th ST","line_two":"Suite 153","city":"Miami","state":"FL","zipcode":"FL","phone":"305-527-3353","date_modified":null,"date_created":null}],"date_modified":null,"date_created":null}`
-
-			if resp != recv {
-				t.Log("Got :", recv)
-				t.Log("Want:", resp)
-				t.Fatalf("\t%s\tShould get the expected result.", tests.Failed)
+			if diff := cmp.Diff(want, u); diff != "" {
+				t.Fatalf("\t%s\tShould get the expected result. Diff:\n%s", tests.Failed, diff)
 			}
 			t.Logf("\t%s\tShould get the expected result.", tests.Success)
 		}
 	}
 
-	return newUser
+	return u
 }
 
 // deleteUser200 validates deleting a user that does exist.
-func deleteUser204(t *testing.T, userID string) {
-	r := httptest.NewRequest("DELETE", "/v1/users/"+userID, nil)
+func deleteUser204(t *testing.T, id string) {
+	r := httptest.NewRequest("DELETE", "/v1/users/"+id, nil)
 	w := httptest.NewRecorder()
 	a.ServeHTTP(w, r)
 
 	t.Log("Given the need to validate deleting a user that does exist.")
 	{
-		t.Logf("\tTest 0:\tWhen using the new user %s.", userID)
+		t.Logf("\tTest 0:\tWhen using the new user %s.", id)
 		{
 			if w.Code != http.StatusNoContent {
 				t.Fatalf("\t%s\tShould receive a status code of 204 for the response : %v", tests.Failed, w.Code)
@@ -354,14 +342,14 @@ func deleteUser204(t *testing.T, userID string) {
 }
 
 // getUser200 validates a user request for an existing userid.
-func getUser200(t *testing.T, userID string) {
-	r := httptest.NewRequest("GET", "/v1/users/"+userID, nil)
+func getUser200(t *testing.T, id string) {
+	r := httptest.NewRequest("GET", "/v1/users/"+id, nil)
 	w := httptest.NewRecorder()
 	a.ServeHTTP(w, r)
 
 	t.Log("Given the need to validate getting a user that exsits.")
 	{
-		t.Logf("\tTest 0:\tWhen using the new user %s.", userID)
+		t.Logf("\tTest 0:\tWhen using the new user %s.", id)
 		{
 			if w.Code != http.StatusOK {
 				t.Fatalf("\t%s\tShould receive a status code of 200 for the response : %v", tests.Failed, w.Code)
@@ -373,24 +361,16 @@ func getUser200(t *testing.T, userID string) {
 				t.Fatalf("\t%s\tShould be able to unmarshal the response : %v", tests.Failed, err)
 			}
 
-			u.UserID = "1234"
-			u.DateCreated = nil
-			u.DateModified = nil
-			u.Addresses[0].DateCreated = nil
-			u.Addresses[0].DateModified = nil
+			// Define what we wanted to receive. We will just trust the generated
+			// fields like Dates so we copy p.
+			want := u
+			want.ID = bson.ObjectIdHex(id)
+			want.Name = "Bill Kennedy"
+			want.Email = "bill@ardanlabs.com"
+			want.Roles = []string{auth.RoleAdmin}
 
-			doc, err := json.Marshal(&u)
-			if err != nil {
-				t.Fatalf("\t%s\tShould be able to marshal the response : %v", tests.Failed, err)
-			}
-
-			recv := string(doc)
-			resp := `{"user_id":"1234","type":1,"first_name":"Bill","last_name":"Kennedy","email":"bill@ardanlabs.com","company":"Ardan Labs","addresses":[{"type":1,"line_one":"12973 SW 112th ST","line_two":"Suite 153","city":"Miami","state":"FL","zipcode":"FL","phone":"305-527-3353","date_modified":null,"date_created":null}],"date_modified":null,"date_created":null}`
-
-			if resp != recv {
-				t.Log("Got :", recv)
-				t.Log("Want:", resp)
-				t.Fatalf("\t%s\tShould get the expected result.", tests.Failed)
+			if diff := cmp.Diff(want, u); diff != "" {
+				t.Fatalf("\t%s\tShould get the expected result. Diff:\n%s", tests.Failed, diff)
 			}
 			t.Logf("\t%s\tShould get the expected result.", tests.Success)
 		}
@@ -398,13 +378,10 @@ func getUser200(t *testing.T, userID string) {
 }
 
 // putUser204 validates updating a user that does exist.
-func putUser204(t *testing.T, u user.User) {
-	u.FirstName = "Lisa"
-	u.Email = "lisa@email.com"
-	u.Addresses[0].State = "NY"
+func putUser204(t *testing.T, id string) {
+	body := `{"name": "Jacob Walker"}`
 
-	body, _ := json.Marshal(&u)
-	r := httptest.NewRequest("PUT", "/v1/users/"+u.UserID, bytes.NewBuffer(body))
+	r := httptest.NewRequest("PUT", "/v1/users/"+id, strings.NewReader(body))
 	w := httptest.NewRecorder()
 	a.ServeHTTP(w, r)
 
@@ -417,7 +394,7 @@ func putUser204(t *testing.T, u user.User) {
 			}
 			t.Logf("\t%s\tShould receive a status code of 204 for the response.", tests.Success)
 
-			r = httptest.NewRequest("GET", "/v1/users/"+u.UserID, nil)
+			r = httptest.NewRequest("GET", "/v1/users/"+id, nil)
 			w = httptest.NewRecorder()
 			a.ServeHTTP(w, r)
 
@@ -431,26 +408,15 @@ func putUser204(t *testing.T, u user.User) {
 				t.Fatalf("\t%s\tShould be able to unmarshal the response : %v", tests.Failed, err)
 			}
 
-			ru.UserID = "1234"
-			ru.DateCreated = nil
-			ru.DateModified = nil
-			ru.Addresses[0].DateCreated = nil
-			ru.Addresses[0].DateModified = nil
-
-			doc, err := json.Marshal(&ru)
-			if err != nil {
-				t.Fatalf("\t%s\tShould be able to marshal the response : %v", tests.Failed, err)
+			if ru.Name != "Jacob Walker" {
+				t.Fatalf("\t%s\tShould see an updated Name : got %q want %q", tests.Failed, ru.Name, "Jacob Walker")
 			}
+			t.Logf("\t%s\tShould see an updated Name.", tests.Success)
 
-			recv := string(doc)
-			resp := `{"user_id":"1234","type":1,"first_name":"Lisa","last_name":"Kennedy","email":"lisa@email.com","company":"Ardan Labs","addresses":[{"type":1,"line_one":"12973 SW 112th ST","line_two":"Suite 153","city":"Miami","state":"NY","zipcode":"FL","phone":"305-527-3353","date_modified":null,"date_created":null}],"date_modified":null,"date_created":null}`
-
-			if resp != recv {
-				t.Log("Got :", recv)
-				t.Log("Want:", resp)
-				t.Fatalf("\t%s\tShould get the expected result.", tests.Failed)
+			if ru.Email != "bill@ardanlabs.com" {
+				t.Fatalf("\t%s\tShould not affect other fields like Email : got %q want %q", tests.Failed, ru.Email, "bill@ardanlabs.com")
 			}
-			t.Logf("\t%s\tShould get the expected result.", tests.Success)
+			t.Logf("\t%s\tShould not affect other fields like Email.", tests.Success)
 		}
 	}
 }
