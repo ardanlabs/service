@@ -2,6 +2,7 @@ package auth
 
 import (
 	"crypto/rsa"
+	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/pkg/errors"
@@ -17,14 +18,36 @@ type Claims struct {
 	jwt.StandardClaims
 }
 
-// GenerateToken generates a JWT token string.
-func GenerateToken(keyID string, key *rsa.PrivateKey, alg jwt.SigningMethod, claims Claims) (string, error) {
-	tkn := jwt.NewWithClaims(alg, claims)
+// NewClaims constructs a Claims value for the identified user. The Claims
+// expire within a specified duration of the provided time. Additional fields
+// of the Claims can be set after calling NewClaims is desired.
+func NewClaims(subject string, roles []string, now time.Time, expires time.Duration) Claims {
+	c := Claims{
+		Roles: roles,
+		StandardClaims: jwt.StandardClaims{
+			Subject:   subject,
+			IssuedAt:  now.Unix(),
+			ExpiresAt: now.Add(expires).Unix(),
+		},
+	}
+
+	return c
+}
+
+// GenerateToken generates a signed JWT token string.
+func GenerateToken(key *rsa.PrivateKey, keyID string, alg string, claims Claims) (string, error) {
+	method := jwt.GetSigningMethod(alg)
+	if method == nil {
+		return "", errors.Errorf("unknown algorithm %v", alg)
+	}
+
+	tkn := jwt.NewWithClaims(method, claims)
 	tkn.Header["kid"] = keyID
 	str, err := tkn.SignedString(key)
 	if err != nil {
 		return "", errors.Wrap(err, "signing token")
 	}
+
 	return str, nil
 }
 

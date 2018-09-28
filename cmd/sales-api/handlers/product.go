@@ -29,7 +29,7 @@ func (p *Product) List(ctx context.Context, log *log.Logger, w http.ResponseWrit
 	defer dbConn.Close()
 
 	products, err := product.List(ctx, dbConn)
-	if err = check(err); err != nil {
+	if err = translate(err); err != nil {
 		return errors.Wrap(err, "")
 	}
 
@@ -46,7 +46,7 @@ func (p *Product) Retrieve(ctx context.Context, log *log.Logger, w http.Response
 	defer dbConn.Close()
 
 	prod, err := product.Retrieve(ctx, dbConn, params["id"])
-	if err = check(err); err != nil {
+	if err = translate(err); err != nil {
 		return errors.Wrapf(err, "ID: %s", params["id"])
 	}
 
@@ -68,7 +68,7 @@ func (p *Product) Create(ctx context.Context, log *log.Logger, w http.ResponseWr
 	}
 
 	nUsr, err := product.Create(ctx, dbConn, &np, time.Now().UTC())
-	if err = check(err); err != nil {
+	if err = translate(err); err != nil {
 		return errors.Wrapf(err, "Product: %+v", &np)
 	}
 
@@ -90,7 +90,7 @@ func (p *Product) Update(ctx context.Context, log *log.Logger, w http.ResponseWr
 	}
 
 	err := product.Update(ctx, dbConn, params["id"], up, time.Now().UTC())
-	if err = check(err); err != nil {
+	if err = translate(err); err != nil {
 		return errors.Wrapf(err, "ID: %s Update: %+v", params["id"], up)
 	}
 
@@ -107,7 +107,7 @@ func (p *Product) Delete(ctx context.Context, log *log.Logger, w http.ResponseWr
 	defer dbConn.Close()
 
 	err := product.Delete(ctx, dbConn, params["id"])
-	if err = check(err); err != nil {
+	if err = translate(err); err != nil {
 		return errors.Wrapf(err, "Id: %s", params["id"])
 	}
 
