@@ -11,6 +11,7 @@ import (
 	"github.com/ardanlabs/service/internal/user"
 	"github.com/google/go-cmp/cmp"
 	"github.com/pkg/errors"
+	"gopkg.in/mgo.v2/bson"
 )
 
 var test *tests.Test
@@ -39,6 +40,11 @@ func TestUser(t *testing.T) {
 			dbConn := test.MasterDB.Copy()
 			defer dbConn.Close()
 
+			now := time.Date(2018, time.October, 1, 0, 0, 0, 0, time.UTC)
+
+			// claims is information about the person making the request.
+			claims := auth.NewClaims(bson.NewObjectId().Hex(), []string{auth.RoleAdmin}, now, time.Hour)
+
 			nu := user.NewUser{
 				Name:            "Bill Kennedy",
 				Email:           "bill@ardanlabs.com",
@@ -47,13 +53,13 @@ func TestUser(t *testing.T) {
 				PasswordConfirm: "gophers",
 			}
 
-			u, err := user.Create(ctx, dbConn, &nu, time.Now().UTC())
+			u, err := user.Create(ctx, dbConn, &nu, now)
 			if err != nil {
 				t.Fatalf("\t%s\tShould be able to create user : %s.", tests.Failed, err)
 			}
 			t.Logf("\t%s\tShould be able to create user.", tests.Success)
 
-			savedU, err := user.Retrieve(ctx, dbConn, u.ID.Hex())
+			savedU, err := user.Retrieve(ctx, claims, dbConn, u.ID.Hex())
 			if err != nil {
 				t.Fatalf("\t%s\tShould be able to retrieve user by ID: %s.", tests.Failed, err)
 			}
@@ -69,12 +75,12 @@ func TestUser(t *testing.T) {
 				Email: tests.StringPointer("jacob@ardanlabs.com"),
 			}
 
-			if err := user.Update(ctx, dbConn, u.ID.Hex(), &upd, time.Now().UTC()); err != nil {
+			if err := user.Update(ctx, dbConn, u.ID.Hex(), &upd, now); err != nil {
 				t.Fatalf("\t%s\tShould be able to update user : %s.", tests.Failed, err)
 			}
 			t.Logf("\t%s\tShould be able to update user.", tests.Success)
 
-			savedU, err = user.Retrieve(ctx, dbConn, u.ID.Hex())
+			savedU, err = user.Retrieve(ctx, claims, dbConn, u.ID.Hex())
 			if err != nil {
 				t.Fatalf("\t%s\tShould be able to retrieve user : %s.", tests.Failed, err)
 			}
@@ -93,7 +99,7 @@ func TestUser(t *testing.T) {
 			}
 			t.Logf("\t%s\tShould be able to delete user.", tests.Success)
 
-			savedU, err = user.Retrieve(ctx, dbConn, u.ID.Hex())
+			savedU, err = user.Retrieve(ctx, claims, dbConn, u.ID.Hex())
 			if errors.Cause(err) != user.ErrNotFound {
 				t.Fatalf("\t%s\tShould NOT be able to retrieve user : %s.", tests.Failed, err)
 			}

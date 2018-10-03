@@ -18,6 +18,8 @@ func translate(err error) error {
 		return web.ErrInvalidID
 	case user.ErrAuthenticationFailure:
 		return web.ErrUnauthorized
+	case user.ErrForbidden:
+		return web.ErrForbidden
 	}
 	return err
 }

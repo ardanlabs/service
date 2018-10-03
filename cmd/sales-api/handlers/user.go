@@ -51,13 +51,7 @@ func (u *User) Retrieve(ctx context.Context, log *log.Logger, w http.ResponseWri
 		return web.ErrUnauthorized
 	}
 
-	// TODO(jlw) Move to business layer. Pass auth.Claims directly
-	// If you are not an admin and looking to retrieve someone else then you are rejected.
-	if !claims.HasRole(auth.RoleAdmin) && claims.Subject != params["id"] {
-		return web.ErrForbidden
-	}
-
-	usr, err := user.Retrieve(ctx, dbConn, params["id"])
+	usr, err := user.Retrieve(ctx, claims, dbConn, params["id"])
 	if err = translate(err); err != nil {
 		return errors.Wrapf(err, "Id: %s", params["id"])
 	}

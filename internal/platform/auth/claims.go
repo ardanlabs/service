@@ -9,6 +9,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+// TODO(jlw) Split this file up into multiple files.
+
 // These are the expected values for Claims.Roles.
 const (
 	RoleAdmin = "ADMIN"
