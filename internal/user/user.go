@@ -26,6 +26,9 @@ var (
 	// ErrAuthenticationFailure occurs when a user attempts to authenticate but
 	// anything goes wrong.
 	ErrAuthenticationFailure = errors.New("Authentication failed")
+
+	// ErrForbidden occurs when a user tries to do something that is forbidden to them according to our access control policies.
+	ErrForbidden = errors.New("Attempted action is not allowed")
 )
 
 // List retrieves a list of existing users from the database.
@@ -46,12 +49,17 @@ func List(ctx context.Context, dbConn *db.DB) ([]User, error) {
 }
 
 // Retrieve gets the specified user from the database.
-func Retrieve(ctx context.Context, dbConn *db.DB, id string) (*User, error) {
+func Retrieve(ctx context.Context, claims auth.Claims, dbConn *db.DB, id string) (*User, error) {
 	ctx, span := trace.StartSpan(ctx, "internal.user.Retrieve")
 	defer span.End()
 
 	if !bson.IsObjectIdHex(id) {
 		return nil, ErrInvalidID
+	}
+
+	// If you are not an admin and looking to retrieve someone else then you are rejected.
+	if !claims.HasRole(auth.RoleAdmin) && claims.Subject != id {
+		return nil, ErrForbidden
 	}
 
 	q := bson.M{"_id": bson.ObjectIdHex(id)}
