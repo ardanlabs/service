@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"crypto/rsa"
 	"log"
 	"net/http"
 
@@ -12,24 +11,15 @@ import (
 )
 
 // API returns a handler for a set of routes.
-func API(log *log.Logger, masterDB *db.DB, userAuth UserAuth) http.Handler {
+func API(log *log.Logger, masterDB *db.DB, authenticator *auth.Authenticator) http.Handler {
 
-	authKeyFunc := func(keyID string) (*rsa.PublicKey, error) {
-		if keyID != userAuth.KeyID {
-			// TODO(jlw) What do we do about this? Do we want to support rolling keys etc?
-		}
-
-		// TODO(jlw) Do we need to explicitly pass a public key in from the config? Since we already have the private key it seems we can just compute the public key when needed.
-		key := userAuth.Key.Public().(*rsa.PublicKey)
-		return key, nil
-	}
+	// authmw is used for authentication/authorization middleware.
 	authmw := mid.Auth{
-		Parser: auth.NewParser(authKeyFunc, []string{userAuth.Alg}),
+		Authenticator: authenticator,
 	}
 
+	// TODO(jlw) Figure out why the order of these was reversed and maybe reverse it back.
 	app := web.New(log, mid.RequestLogger, mid.Metrics, mid.ErrorHandler)
-
-	// TODO(jlw) all of our endpoitns require the authmw.Authenticate middleware except for 2. Can we "clone" app and make a second authenticated app or should we do what we're doing below and add Authenticate to almost every route. If we somehow cloned them how would we put them together into one app at the end to return?
 
 	// Register health check endpoint. This route is not authenticated.
 	h := Health{
@@ -39,8 +29,8 @@ func API(log *log.Logger, masterDB *db.DB, userAuth UserAuth) http.Handler {
 
 	// Register user management and authentication endpoints.
 	u := User{
-		MasterDB: masterDB,
-		Auth:     userAuth,
+		MasterDB:      masterDB,
+		Authenticator: authenticator,
 	}
 
 	app.Handle("GET", "/v1/users", u.List, authmw.Authenticate, authmw.HasRole(auth.RoleAdmin))
