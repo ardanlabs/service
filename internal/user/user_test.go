@@ -1,6 +1,7 @@
 package user_test
 
 import (
+	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -29,7 +30,7 @@ func testMain(m *testing.M) int {
 func TestUser(t *testing.T) {
 	defer tests.Recover(t)
 
-	t.Log("Given the need to work with Product records.")
+	t.Log("Given the need to work with User records.")
 	{
 		t.Log("\tWhen handling a single User.")
 		{
@@ -97,6 +98,68 @@ func TestUser(t *testing.T) {
 				t.Fatalf("\t%s\tShould NOT be able to retrieve user : %s.", tests.Failed, err)
 			}
 			t.Logf("\t%s\tShould NOT be able to retrieve user.", tests.Success)
+		}
+	}
+}
+
+// mockTokenGenerator is used for testing that Authenticate calls its provided
+// token generator in a specific way.
+type mockTokenGenerator struct{}
+
+// GenerateToken implements the TokenGenerator interface. It returns a "token"
+// that includes some information about the claims it was passed.
+func (mockTokenGenerator) GenerateToken(claims auth.Claims) (string, error) {
+	return fmt.Sprintf("sub:%q iss:%d", claims.Subject, claims.IssuedAt), nil
+}
+
+// TestAuthenticate validates the behavior around authenticating users.
+func TestAuthenticate(t *testing.T) {
+	defer tests.Recover(t)
+
+	t.Log("Given the need to authenticate users")
+	{
+		t.Log("\tWhen handling a single User.")
+		{
+			ctx := tests.Context()
+
+			dbConn := test.MasterDB.Copy()
+			defer dbConn.Close()
+
+			nu := user.NewUser{
+				Name:            "Anna Walker",
+				Email:           "anna@ardanlabs.com",
+				Roles:           []string{auth.RoleAdmin},
+				Password:        "goroutines",
+				PasswordConfirm: "goroutines",
+			}
+
+			now := time.Date(2018, time.October, 1, 0, 0, 0, 0, time.UTC)
+
+			u, err := user.Create(ctx, dbConn, &nu, now)
+			if err != nil {
+				t.Fatalf("\t%s\tShould be able to create user : %s.", tests.Failed, err)
+			}
+			t.Logf("\t%s\tShould be able to create user.", tests.Success)
+
+			var tknGen mockTokenGenerator
+			tkn, err := user.Authenticate(ctx, dbConn, tknGen, now, "anna@ardanlabs.com", "goroutines")
+			if err != nil {
+				t.Fatalf("\t%s\tShould be able to generate a token : %s.", tests.Failed, err)
+			}
+			t.Logf("\t%s\tShould be able to generate a token.", tests.Success)
+
+			want := fmt.Sprintf("sub:%q iss:1538352000", u.ID.Hex())
+			if tkn.Token != want {
+				t.Log("\t\tGot :", tkn.Token)
+				t.Log("\t\tWant:", want)
+				t.Fatalf("\t%s\tToken should indicate the specified user and time were used.", tests.Failed)
+			}
+			t.Logf("\t%s\tToken should indicate the specified user and time were used.", tests.Success)
+
+			if err := user.Delete(ctx, dbConn, u.ID.Hex()); err != nil {
+				t.Fatalf("\t%s\tShould be able to delete user : %s.", tests.Failed, err)
+			}
+			t.Logf("\t%s\tShould be able to delete user.", tests.Success)
 		}
 	}
 }

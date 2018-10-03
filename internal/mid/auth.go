@@ -13,7 +13,7 @@ import (
 
 // Auth is used to authenticate and authorize HTTP requests.
 type Auth struct {
-	Parser *auth.Parser
+	Authenticator *auth.Authenticator
 }
 
 // Authenticate validates a JWT from the `Authorization` header.
@@ -29,7 +29,7 @@ func (a *Auth) Authenticate(next web.Handler) web.Handler {
 			return errors.Wrap(web.ErrUnauthorized, err.Error())
 		}
 
-		claims, err := a.Parser.ParseClaims(tknStr)
+		claims, err := a.Authenticator.ParseClaims(tknStr)
 		if err != nil {
 			return errors.Wrap(web.ErrUnauthorized, err.Error())
 		}

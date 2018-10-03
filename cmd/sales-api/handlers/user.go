@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"crypto/rsa"
 	"log"
 	"net/http"
 
@@ -14,17 +13,10 @@ import (
 	"go.opencensus.io/trace"
 )
 
-// UserAuth knows everything needed to authenticate Users.
-type UserAuth struct {
-	Key   *rsa.PrivateKey
-	KeyID string
-	Alg   string
-}
-
 // User represents the User API method handler set.
 type User struct {
-	MasterDB *db.DB
-	Auth     UserAuth
+	MasterDB      *db.DB
+	Authenticator *auth.Authenticator
 
 	// ADD OTHER STATE LIKE THE LOGGER AND CONFIG HERE.
 }
@@ -59,10 +51,9 @@ func (u *User) Retrieve(ctx context.Context, log *log.Logger, w http.ResponseWri
 		return web.ErrUnauthorized
 	}
 
-	// Regular users are only able to see their own record. Admins can see
-	// anyone's record. So therefore if the caller is asking for someone else and
-	// they don't have the admin role then they're forbidden.
-	if claims.Subject != params["id"] && !claims.HasRole(auth.RoleAdmin) {
+	// TODO(jlw) Move to business layer. Pass auth.Claims directly
+	// If you are not an admin and looking to retrieve someone else then you are rejected.
+	if !claims.HasRole(auth.RoleAdmin) && claims.Subject != params["id"] {
 		return web.ErrForbidden
 	}
 
@@ -156,7 +147,7 @@ func (u *User) Token(ctx context.Context, log *log.Logger, w http.ResponseWriter
 		return web.ErrUnauthorized
 	}
 
-	tkn, err := user.Authenticate(ctx, dbConn, v.Now, u.Auth.Key, u.Auth.KeyID, u.Auth.Alg, email, pass)
+	tkn, err := user.Authenticate(ctx, dbConn, u.Authenticator, v.Now, email, pass)
 	if err = translate(err); err != nil {
 		return errors.Wrap(err, "authenticating")
 	}

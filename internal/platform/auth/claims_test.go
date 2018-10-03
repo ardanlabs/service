@@ -1,8 +1,6 @@
 package auth_test
 
 import (
-	"crypto/rsa"
-	"fmt"
 	"testing"
 
 	"github.com/ardanlabs/service/internal/platform/auth"
@@ -17,33 +15,28 @@ func TestParseClaims(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Generate the token.
-	signedClaims := auth.Claims{
-		Roles: []string{auth.RoleAdmin},
-	}
-	tknStr, err := auth.GenerateToken(prvKey, privateRSAKeyID, "RS256", signedClaims)
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	// Parse the public key used to validate the token.
 	pubKey, err := jwt.ParseRSAPublicKeyFromPEM([]byte(publicRSAKey))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	// Usually this would implement a cache that is populated from a network call.
-	singleKeyFunc := func(id string, key *rsa.PublicKey) auth.KeyFunc {
-		return func(kid string) (*rsa.PublicKey, error) {
-			if id != kid {
-				return nil, fmt.Errorf("Unrecognized kid %q", kid)
-			}
-			return key, nil
-		}
+	a, err := auth.NewAuthenticator(prvKey, privateRSAKeyID, "RS256", auth.NewSingleKeyFunc(privateRSAKeyID, pubKey))
+	if err != nil {
+		t.Fatal(err)
 	}
-	parser := auth.NewParser(singleKeyFunc(privateRSAKeyID, pubKey), []string{jwt.SigningMethodRS256.Name})
 
-	parsedClaims, err := parser.ParseClaims(tknStr)
+	// Generate the token.
+	signedClaims := auth.Claims{
+		Roles: []string{auth.RoleAdmin},
+	}
+
+	tknStr, err := a.GenerateToken(signedClaims)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	parsedClaims, err := a.ParseClaims(tknStr)
 	if err != nil {
 		t.Fatal(err)
 	}

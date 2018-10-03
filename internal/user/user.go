@@ -2,7 +2,6 @@ package user
 
 import (
 	"context"
-	"crypto/rsa"
 	"fmt"
 	"time"
 
@@ -180,11 +179,17 @@ func Delete(ctx context.Context, dbConn *db.DB, id string) error {
 	return nil
 }
 
+// TokenGenerator is the behavior we need in our Authenticate to generate
+// tokens for authenticated users.
+type TokenGenerator interface {
+	GenerateToken(auth.Claims) (string, error)
+}
+
 // Authenticate finds a user by their email and verifies their password. On
 // success it returns a Token that can be used to authenticate in the future.
 //
 // The key, keyID, and alg are required for generating the token.
-func Authenticate(ctx context.Context, dbConn *db.DB, now time.Time, key *rsa.PrivateKey, keyID, alg, email, password string) (Token, error) {
+func Authenticate(ctx context.Context, dbConn *db.DB, tknGen TokenGenerator, now time.Time, email, password string) (Token, error) {
 	ctx, span := trace.StartSpan(ctx, "internal.user.Authenticate")
 	defer span.End()
 
@@ -214,7 +219,7 @@ func Authenticate(ctx context.Context, dbConn *db.DB, now time.Time, key *rsa.Pr
 	// and generate their token.
 	claims := auth.NewClaims(u.ID.Hex(), u.Roles, now, time.Hour)
 
-	tkn, err := auth.GenerateToken(key, keyID, alg, claims)
+	tkn, err := tknGen.GenerateToken(claims)
 	if err != nil {
 		return Token{}, errors.Wrap(err, "generating token")
 	}

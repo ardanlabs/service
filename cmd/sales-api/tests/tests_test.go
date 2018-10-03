@@ -38,13 +38,14 @@ func testMain(m *testing.M) int {
 		panic(err)
 	}
 
-	userAuth := handlers.UserAuth{
-		Key:   key,
-		KeyID: "4754d86b-7a6d-4df5-9c65-224741361492",
-		Alg:   "RS256",
+	kid := "4754d86b-7a6d-4df5-9c65-224741361492"
+	kf := auth.NewSingleKeyFunc(kid, key.Public().(*rsa.PublicKey))
+	authenticator, err := auth.NewAuthenticator(key, kid, "RS256", kf)
+	if err != nil {
+		panic(err)
 	}
 
-	a = handlers.API(test.Log, test.MasterDB, userAuth).(*web.App)
+	a = handlers.API(test.Log, test.MasterDB, authenticator).(*web.App)
 
 	// Create an admin user directly with our business logic. This creates an
 	// initial user that we will use for admin validated endpoints.
@@ -62,7 +63,7 @@ func testMain(m *testing.M) int {
 	}
 	adminID = admin.ID.Hex()
 
-	tkn, err := user.Authenticate(tests.Context(), test.MasterDB, time.Now(), userAuth.Key, userAuth.KeyID, userAuth.Alg, nu.Email, nu.Password)
+	tkn, err := user.Authenticate(tests.Context(), test.MasterDB, authenticator, time.Now(), nu.Email, nu.Password)
 	if err != nil {
 		panic(err)
 	}
@@ -84,7 +85,7 @@ func testMain(m *testing.M) int {
 	}
 	userID = usr.ID.Hex()
 
-	tkn, err = user.Authenticate(tests.Context(), test.MasterDB, time.Now(), userAuth.Key, userAuth.KeyID, userAuth.Alg, nu.Email, nu.Password)
+	tkn, err = user.Authenticate(tests.Context(), test.MasterDB, authenticator, time.Now(), nu.Email, nu.Password)
 	if err != nil {
 		panic(err)
 	}
