@@ -41,7 +41,7 @@ func Process(v interface{}) error {
 func display(appName string, v interface{}) string {
 	/*
 		Current display format for a field.
-		Useage of <app name>
+		Usage of <app name>
 		-short --long type	<default> : description
 		-a --web_apihost string  <0.0.0.0:3000> : The ip:port for the api endpoint.
 	*/
@@ -52,7 +52,7 @@ func display(appName string, v interface{}) string {
 	}
 
 	var b strings.Builder
-	b.WriteString(fmt.Sprintf("\nUseage of %s\n", appName))
+	b.WriteString(fmt.Sprintf("\nUsage of %s\n", appName))
 	for _, arg := range args {
 		if arg.Short != "" {
 			b.WriteString(fmt.Sprintf("-%s ", arg.Short))
@@ -120,8 +120,8 @@ func parse(parentField string, v interface{}) ([]configArg, error) {
 
 	// We need to iterate over the fields of the struct value we are processing.
 	// If the field is a struct then recurse to process its fields. If we have
-	// a field that is not a struct, get pull the metadata. The `field` field
-	// is important because it is how we update things later.
+	// a field that is not a struct, pull the metadata. The `field` field is
+	// important because it is how we update things later.
 	for i := 0; i < val.NumField(); i++ {
 		field := val.Type().Field(i)
 		if field.Type.Kind() == reflect.Struct {

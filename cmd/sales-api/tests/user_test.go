@@ -21,18 +21,21 @@ import (
 func TestUsers(t *testing.T) {
 	defer tests.Recover(t)
 
-	t.Run("getToken403", getToken403)
+	t.Run("getToken401", getToken401)
 	t.Run("getToken200", getToken200)
 	t.Run("postUser400", postUser400)
-	t.Run("getUser404", getUser404)
+	t.Run("postUser401", postUser401)
+	t.Run("postUser403", postUser403)
 	t.Run("getUser400", getUser400)
+	t.Run("getUser403", getUser403)
+	t.Run("getUser404", getUser404)
 	t.Run("deleteUser404", deleteUser404)
 	t.Run("putUser404", putUser404)
 	t.Run("crudUsers", crudUser)
 }
 
-// getToken403 ensures an unknown user can't generate a token.
-func getToken403(t *testing.T) {
+// getToken401 ensures an unknown user can't generate a token.
+func getToken401(t *testing.T) {
 	r := httptest.NewRequest("GET", "/v1/users/token", nil)
 	w := httptest.NewRecorder()
 
@@ -92,6 +95,9 @@ func postUser400(t *testing.T) {
 
 	r := httptest.NewRequest("POST", "/v1/users", bytes.NewBuffer(body))
 	w := httptest.NewRecorder()
+
+	r.Header.Set("Authorization", adminAuthorization)
+
 	a.ServeHTTP(w, r)
 
 	t.Log("Given the need to validate a new user can't be created with an invalid document.")
@@ -135,12 +141,69 @@ func postUser400(t *testing.T) {
 	}
 }
 
+// postUser401 validates a user can't be created unless the calling user is
+// authenticated.
+func postUser401(t *testing.T) {
+	body, err := json.Marshal(&user.User{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	r := httptest.NewRequest("POST", "/v1/users", bytes.NewBuffer(body))
+	w := httptest.NewRecorder()
+
+	r.Header.Set("Authorization", userAuthorization)
+
+	a.ServeHTTP(w, r)
+
+	t.Log("Given the need to validate a new user can't be created with an invalid document.")
+	{
+		t.Log("\tTest 0:\tWhen using an incomplete user value.")
+		{
+			if w.Code != http.StatusForbidden {
+				t.Fatalf("\t%s\tShould receive a status code of 403 for the response : %v", tests.Failed, w.Code)
+			}
+			t.Logf("\t%s\tShould receive a status code of 403 for the response.", tests.Success)
+		}
+	}
+}
+
+// postUser403 validates a user can't be created unless the calling user is
+// an admin user. Regular users can't do this.
+func postUser403(t *testing.T) {
+	body, err := json.Marshal(&user.User{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	r := httptest.NewRequest("POST", "/v1/users", bytes.NewBuffer(body))
+	w := httptest.NewRecorder()
+
+	// Not setting the Authorization header
+
+	a.ServeHTTP(w, r)
+
+	t.Log("Given the need to validate a new user can't be created with an invalid document.")
+	{
+		t.Log("\tTest 0:\tWhen using an incomplete user value.")
+		{
+			if w.Code != http.StatusUnauthorized {
+				t.Fatalf("\t%s\tShould receive a status code of 401 for the response : %v", tests.Failed, w.Code)
+			}
+			t.Logf("\t%s\tShould receive a status code of 401 for the response.", tests.Success)
+		}
+	}
+}
+
 // getUser400 validates a user request for a malformed userid.
 func getUser400(t *testing.T) {
 	id := "12345"
 
 	r := httptest.NewRequest("GET", "/v1/users/"+id, nil)
 	w := httptest.NewRecorder()
+
+	r.Header.Set("Authorization", adminAuthorization)
+
 	a.ServeHTTP(w, r)
 
 	t.Log("Given the need to validate getting a user with a malformed userid.")
@@ -166,12 +229,60 @@ func getUser400(t *testing.T) {
 	}
 }
 
+// getUser403 validates a regular user can't fetch anyone but themselves
+func getUser403(t *testing.T) {
+	t.Log("Given the need to validate regular users can't fetch other users.")
+	{
+		t.Logf("\tTest 0:\tWhen fetching the admin user as a regular user.")
+		{
+			r := httptest.NewRequest("GET", "/v1/users/"+adminID, nil)
+			w := httptest.NewRecorder()
+
+			r.Header.Set("Authorization", userAuthorization)
+
+			a.ServeHTTP(w, r)
+
+			if w.Code != http.StatusForbidden {
+				t.Fatalf("\t%s\tShould receive a status code of 403 for the response : %v", tests.Failed, w.Code)
+			}
+			t.Logf("\t%s\tShould receive a status code of 403 for the response.", tests.Success)
+
+			recv := w.Body.String()
+			resp := "Forbidden"
+			if !strings.Contains(recv, resp) {
+				t.Log("Got :", recv)
+				t.Log("Want:", resp)
+				t.Fatalf("\t%s\tShould get the expected result.", tests.Failed)
+			}
+			t.Logf("\t%s\tShould get the expected result.", tests.Success)
+		}
+
+		t.Logf("\tTest 1:\tWhen fetching the user as a themselves.")
+		{
+
+			r := httptest.NewRequest("GET", "/v1/users/"+userID, nil)
+			w := httptest.NewRecorder()
+
+			r.Header.Set("Authorization", userAuthorization)
+
+			a.ServeHTTP(w, r)
+			if w.Code != http.StatusOK {
+				t.Fatalf("\t%s\tShould receive a status code of 200 for the response : %v", tests.Failed, w.Code)
+			}
+			t.Logf("\t%s\tShould receive a status code of 200 for the response.", tests.Success)
+		}
+	}
+}
+
 // getUser404 validates a user request for a user that does not exist with the endpoint.
 func getUser404(t *testing.T) {
 	id := bson.NewObjectId().Hex()
 
 	r := httptest.NewRequest("GET", "/v1/users/"+id, nil)
 	w := httptest.NewRecorder()
+
+	r.Header.Set("Authorization", adminAuthorization)
+
 	a.ServeHTTP(w, r)
 
 	t.Log("Given the need to validate getting a user with an unknown id.")
@@ -201,6 +312,9 @@ func deleteUser404(t *testing.T) {
 
 	r := httptest.NewRequest("DELETE", "/v1/users/"+id, nil)
 	w := httptest.NewRecorder()
+
+	r.Header.Set("Authorization", adminAuthorization)
+
 	a.ServeHTTP(w, r)
 
 	t.Log("Given the need to validate deleting a user that does not exist.")
@@ -239,6 +353,9 @@ func putUser404(t *testing.T) {
 
 	r := httptest.NewRequest("PUT", "/v1/users/"+id, bytes.NewBuffer(body))
 	w := httptest.NewRecorder()
+
+	r.Header.Set("Authorization", adminAuthorization)
+
 	a.ServeHTTP(w, r)
 
 	t.Log("Given the need to validate updating a user that does not exist.")
@@ -269,6 +386,7 @@ func crudUser(t *testing.T) {
 
 	getUser200(t, nu.ID.Hex())
 	putUser204(t, nu.ID.Hex())
+	putUser403(t, nu.ID.Hex())
 }
 
 // postUser201 validates a user can be created with the endpoint.
@@ -288,6 +406,9 @@ func postUser201(t *testing.T) user.User {
 
 	r := httptest.NewRequest("POST", "/v1/users", bytes.NewBuffer(body))
 	w := httptest.NewRecorder()
+
+	r.Header.Set("Authorization", adminAuthorization)
+
 	a.ServeHTTP(w, r)
 
 	// u is the value we will return.
@@ -327,6 +448,9 @@ func postUser201(t *testing.T) user.User {
 func deleteUser204(t *testing.T, id string) {
 	r := httptest.NewRequest("DELETE", "/v1/users/"+id, nil)
 	w := httptest.NewRecorder()
+
+	r.Header.Set("Authorization", adminAuthorization)
+
 	a.ServeHTTP(w, r)
 
 	t.Log("Given the need to validate deleting a user that does exist.")
@@ -345,6 +469,9 @@ func deleteUser204(t *testing.T, id string) {
 func getUser200(t *testing.T, id string) {
 	r := httptest.NewRequest("GET", "/v1/users/"+id, nil)
 	w := httptest.NewRecorder()
+
+	r.Header.Set("Authorization", adminAuthorization)
+
 	a.ServeHTTP(w, r)
 
 	t.Log("Given the need to validate getting a user that exsits.")
@@ -383,6 +510,9 @@ func putUser204(t *testing.T, id string) {
 
 	r := httptest.NewRequest("PUT", "/v1/users/"+id, strings.NewReader(body))
 	w := httptest.NewRecorder()
+
+	r.Header.Set("Authorization", adminAuthorization)
+
 	a.ServeHTTP(w, r)
 
 	t.Log("Given the need to update a user with the users endpoint.")
@@ -396,6 +526,9 @@ func putUser204(t *testing.T, id string) {
 
 			r = httptest.NewRequest("GET", "/v1/users/"+id, nil)
 			w = httptest.NewRecorder()
+
+			r.Header.Set("Authorization", adminAuthorization)
+
 			a.ServeHTTP(w, r)
 
 			if w.Code != http.StatusOK {
@@ -417,6 +550,29 @@ func putUser204(t *testing.T, id string) {
 				t.Fatalf("\t%s\tShould not affect other fields like Email : got %q want %q", tests.Failed, ru.Email, "bill@ardanlabs.com")
 			}
 			t.Logf("\t%s\tShould not affect other fields like Email.", tests.Success)
+		}
+	}
+}
+
+// putUser403 validates that a user can't modify users unless they are an admin.
+func putUser403(t *testing.T, id string) {
+	body := `{"name": "Anna Walker"}`
+
+	r := httptest.NewRequest("PUT", "/v1/users/"+id, strings.NewReader(body))
+	w := httptest.NewRecorder()
+
+	r.Header.Set("Authorization", userAuthorization)
+
+	a.ServeHTTP(w, r)
+
+	t.Log("Given the need to update a user with the users endpoint.")
+	{
+		t.Log("\tTest 0:\tWhen a non-admin user makes a request")
+		{
+			if w.Code != http.StatusForbidden {
+				t.Fatalf("\t%s\tShould receive a status code of 403 for the response : %v", tests.Failed, w.Code)
+			}
+			t.Logf("\t%s\tShould receive a status code of 403 for the response.", tests.Success)
 		}
 	}
 }
