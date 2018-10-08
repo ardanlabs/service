@@ -29,8 +29,8 @@ func API(log *log.Logger, masterDB *db.DB, authenticator *auth.Authenticator) ht
 
 	// Register user management and authentication endpoints.
 	u := User{
-		MasterDB:      masterDB,
-		Authenticator: authenticator,
+		MasterDB:       masterDB,
+		TokenGenerator: authenticator,
 	}
 
 	app.Handle("GET", "/v1/users", u.List, authmw.Authenticate, authmw.HasRole(auth.RoleAdmin))

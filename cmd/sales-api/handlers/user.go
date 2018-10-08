@@ -15,8 +15,8 @@ import (
 
 // User represents the User API method handler set.
 type User struct {
-	MasterDB      *db.DB
-	Authenticator *auth.Authenticator
+	MasterDB       *db.DB
+	TokenGenerator user.TokenGenerator
 
 	// ADD OTHER STATE LIKE THE LOGGER AND CONFIG HERE.
 }
@@ -141,7 +141,7 @@ func (u *User) Token(ctx context.Context, log *log.Logger, w http.ResponseWriter
 		return web.ErrUnauthorized
 	}
 
-	tkn, err := user.Authenticate(ctx, dbConn, u.Authenticator, v.Now, email, pass)
+	tkn, err := user.Authenticate(ctx, dbConn, u.TokenGenerator, v.Now, email, pass)
 	if err = translate(err); err != nil {
 		return errors.Wrap(err, "authenticating")
 	}
