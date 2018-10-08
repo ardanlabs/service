@@ -2,11 +2,10 @@ package handlers
 
 import (
 	"context"
-	"crypto/rsa"
 	"log"
 	"net/http"
-	"time"
 
+	"github.com/ardanlabs/service/internal/platform/auth"
 	"github.com/ardanlabs/service/internal/platform/db"
 	"github.com/ardanlabs/service/internal/platform/web"
 	"github.com/ardanlabs/service/internal/user"
@@ -14,17 +13,10 @@ import (
 	"go.opencensus.io/trace"
 )
 
-// UserAuth knows everything needed to authenticate Users.
-type UserAuth struct {
-	Key   *rsa.PrivateKey
-	KeyID string
-	Alg   string
-}
-
 // User represents the User API method handler set.
 type User struct {
-	MasterDB *db.DB
-	Auth     UserAuth
+	MasterDB       *db.DB
+	TokenGenerator user.TokenGenerator
 
 	// ADD OTHER STATE LIKE THE LOGGER AND CONFIG HERE.
 }
@@ -54,7 +46,12 @@ func (u *User) Retrieve(ctx context.Context, log *log.Logger, w http.ResponseWri
 	dbConn := u.MasterDB.Copy()
 	defer dbConn.Close()
 
-	usr, err := user.Retrieve(ctx, dbConn, params["id"])
+	claims, ok := ctx.Value(auth.Key).(auth.Claims)
+	if !ok {
+		return web.ErrUnauthorized
+	}
+
+	usr, err := user.Retrieve(ctx, claims, dbConn, params["id"])
 	if err = translate(err); err != nil {
 		return errors.Wrapf(err, "Id: %s", params["id"])
 	}
@@ -71,12 +68,14 @@ func (u *User) Create(ctx context.Context, log *log.Logger, w http.ResponseWrite
 	dbConn := u.MasterDB.Copy()
 	defer dbConn.Close()
 
+	v := ctx.Value(web.KeyValues).(*web.Values)
+
 	var newU user.NewUser
 	if err := web.Unmarshal(r.Body, &newU); err != nil {
 		return errors.Wrap(err, "")
 	}
 
-	usr, err := user.Create(ctx, dbConn, &newU, time.Now().UTC())
+	usr, err := user.Create(ctx, dbConn, &newU, v.Now)
 	if err = translate(err); err != nil {
 		return errors.Wrapf(err, "User: %+v", &usr)
 	}
@@ -93,12 +92,14 @@ func (u *User) Update(ctx context.Context, log *log.Logger, w http.ResponseWrite
 	dbConn := u.MasterDB.Copy()
 	defer dbConn.Close()
 
+	v := ctx.Value(web.KeyValues).(*web.Values)
+
 	var upd user.UpdateUser
 	if err := web.Unmarshal(r.Body, &upd); err != nil {
 		return errors.Wrap(err, "")
 	}
 
-	err := user.Update(ctx, dbConn, params["id"], &upd, time.Now().UTC())
+	err := user.Update(ctx, dbConn, params["id"], &upd, v.Now)
 	if err = translate(err); err != nil {
 		return errors.Wrapf(err, "Id: %s  User: %+v", params["id"], &upd)
 	}
@@ -107,7 +108,7 @@ func (u *User) Update(ctx context.Context, log *log.Logger, w http.ResponseWrite
 	return nil
 }
 
-// Delete removed the specified user from the system.
+// Delete removes the specified user from the system.
 func (u *User) Delete(ctx context.Context, log *log.Logger, w http.ResponseWriter, r *http.Request, params map[string]string) error {
 	ctx, span := trace.StartSpan(ctx, "handlers.User.Delete")
 	defer span.End()
@@ -133,12 +134,14 @@ func (u *User) Token(ctx context.Context, log *log.Logger, w http.ResponseWriter
 	dbConn := u.MasterDB.Copy()
 	defer dbConn.Close()
 
+	v := ctx.Value(web.KeyValues).(*web.Values)
+
 	email, pass, ok := r.BasicAuth()
 	if !ok {
 		return web.ErrUnauthorized
 	}
 
-	tkn, err := user.Authenticate(ctx, dbConn, u.Auth.Key, u.Auth.KeyID, u.Auth.Alg, email, pass)
+	tkn, err := user.Authenticate(ctx, dbConn, u.TokenGenerator, v.Now, email, pass)
 	if err = translate(err); err != nil {
 		return errors.Wrap(err, "authenticating")
 	}

@@ -11,7 +11,7 @@ import (
 	"go.opencensus.io/trace"
 )
 
-// ErrorHandler for catching and responding errors.
+// ErrorHandler for catching and responding to errors.
 func ErrorHandler(next web.Handler) web.Handler {
 
 	// Create the handler that will be attached in the middleware chain.

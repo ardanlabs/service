@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/rsa"
 	"encoding/json"
 	_ "expvar"
 	"io/ioutil"
@@ -14,6 +15,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/cmd/sales-api/handlers"
+	"github.com/ardanlabs/service/internal/platform/auth"
 	"github.com/ardanlabs/service/internal/platform/db"
 	"github.com/ardanlabs/service/internal/platform/flag"
 	itrace "github.com/ardanlabs/service/internal/platform/trace"
@@ -110,10 +112,13 @@ func main() {
 		log.Fatalf("main : Parsing auth private key : %v", err)
 	}
 
-	userAuth := handlers.UserAuth{
-		KeyID: cfg.Auth.KeyID,
-		Alg:   cfg.Auth.Algorithm,
-		Key:   key,
+	// TODO(jlw) Do we really want to support rolling keys etc? We can use the naive NewSingleKeyFunc to keep things easy but leave in a note that says this is where you would need to add rotating key support.
+	// TODO(jlw) Do we need to explicitly pass a public key in from the config? Since we already have the private key we can just compute the public key when needed.
+	publicKeyLookup := auth.NewSingleKeyFunc(cfg.Auth.KeyID, key.Public().(*rsa.PublicKey))
+
+	authenticator, err := auth.NewAuthenticator(key, cfg.Auth.KeyID, cfg.Auth.Algorithm, publicKeyLookup)
+	if err != nil {
+		log.Fatalf("main : Constructing authenticator : %v", err)
 	}
 
 	// =========================================================================
@@ -177,7 +182,7 @@ func main() {
 
 	api := http.Server{
 		Addr:           cfg.Web.APIHost,
-		Handler:        handlers.API(log, masterDB, userAuth),
+		Handler:        handlers.API(log, masterDB, authenticator),
 		ReadTimeout:    cfg.Web.ReadTimeout,
 		WriteTimeout:   cfg.Web.WriteTimeout,
 		MaxHeaderBytes: 1 << 20,

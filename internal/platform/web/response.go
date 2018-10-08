@@ -25,6 +25,10 @@ var (
 	// ErrUnauthorized occurs when there was an issue validing the client's
 	// credentials.
 	ErrUnauthorized = errors.New("Unauthorized")
+
+	// ErrForbidden occurs when we know who the user is but they attempt a
+	// forbidden action.
+	ErrForbidden = errors.New("Forbidden")
 )
 
 // JSONError is the response for errors that occur within the API.
@@ -50,6 +54,10 @@ func Error(cxt context.Context, log *log.Logger, w http.ResponseWriter, err erro
 
 	case ErrUnauthorized:
 		RespondError(cxt, log, w, err, http.StatusUnauthorized)
+		return
+
+	case ErrForbidden:
+		RespondError(cxt, log, w, err, http.StatusForbidden)
 		return
 	}
 

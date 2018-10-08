@@ -2,7 +2,6 @@ package user
 
 import (
 	"context"
-	"crypto/rsa"
 	"fmt"
 	"time"
 
@@ -27,6 +26,9 @@ var (
 	// ErrAuthenticationFailure occurs when a user attempts to authenticate but
 	// anything goes wrong.
 	ErrAuthenticationFailure = errors.New("Authentication failed")
+
+	// ErrForbidden occurs when a user tries to do something that is forbidden to them according to our access control policies.
+	ErrForbidden = errors.New("Attempted action is not allowed")
 )
 
 // List retrieves a list of existing users from the database.
@@ -47,12 +49,17 @@ func List(ctx context.Context, dbConn *db.DB) ([]User, error) {
 }
 
 // Retrieve gets the specified user from the database.
-func Retrieve(ctx context.Context, dbConn *db.DB, id string) (*User, error) {
+func Retrieve(ctx context.Context, claims auth.Claims, dbConn *db.DB, id string) (*User, error) {
 	ctx, span := trace.StartSpan(ctx, "internal.user.Retrieve")
 	defer span.End()
 
 	if !bson.IsObjectIdHex(id) {
 		return nil, ErrInvalidID
+	}
+
+	// If you are not an admin and looking to retrieve someone else then you are rejected.
+	if !claims.HasRole(auth.RoleAdmin) && claims.Subject != id {
+		return nil, ErrForbidden
 	}
 
 	q := bson.M{"_id": bson.ObjectIdHex(id)}
@@ -180,11 +187,17 @@ func Delete(ctx context.Context, dbConn *db.DB, id string) error {
 	return nil
 }
 
+// TokenGenerator is the behavior we need in our Authenticate to generate
+// tokens for authenticated users.
+type TokenGenerator interface {
+	GenerateToken(auth.Claims) (string, error)
+}
+
 // Authenticate finds a user by their email and verifies their password. On
 // success it returns a Token that can be used to authenticate in the future.
 //
 // The key, keyID, and alg are required for generating the token.
-func Authenticate(ctx context.Context, dbConn *db.DB, key *rsa.PrivateKey, keyID, alg, email, password string) (Token, error) {
+func Authenticate(ctx context.Context, dbConn *db.DB, tknGen TokenGenerator, now time.Time, email, password string) (Token, error) {
 	ctx, span := trace.StartSpan(ctx, "internal.user.Authenticate")
 	defer span.End()
 
@@ -212,9 +225,9 @@ func Authenticate(ctx context.Context, dbConn *db.DB, key *rsa.PrivateKey, keyID
 
 	// If we are this far the request is valid. Create some claims for the user
 	// and generate their token.
-	claims := auth.NewClaims(email, u.Roles, time.Now(), time.Hour)
+	claims := auth.NewClaims(u.ID.Hex(), u.Roles, now, time.Hour)
 
-	tkn, err := auth.GenerateToken(key, keyID, alg, claims)
+	tkn, err := tknGen.GenerateToken(claims)
 	if err != nil {
 		return Token{}, errors.Wrap(err, "generating token")
 	}

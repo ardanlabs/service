@@ -11,9 +11,9 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Auth is used to authenticate HTTP requests.
+// Auth is used to authenticate and authorize HTTP requests.
 type Auth struct {
-	Parser *auth.Parser
+	Authenticator *auth.Authenticator
 }
 
 // Authenticate validates a JWT from the `Authorization` header.
@@ -29,16 +29,13 @@ func (a *Auth) Authenticate(next web.Handler) web.Handler {
 			return errors.Wrap(web.ErrUnauthorized, err.Error())
 		}
 
-		claims, err := a.Parser.ParseClaims(tknStr)
+		claims, err := a.Authenticator.ParseClaims(tknStr)
 		if err != nil {
 			return errors.Wrap(web.ErrUnauthorized, err.Error())
 		}
 
-		// TODO: Pass claims down.
-		// Options:
-		// A. Pass via context
-		// B. Pass via additional param
-		_ = claims
+		// Add claims to the context so they can be retrieved later.
+		ctx = context.WithValue(ctx, auth.Key, claims)
 
 		return next(ctx, log, w, r, params)
 	}
@@ -55,4 +52,27 @@ func parseAuthHeader(bearerStr string) (string, error) {
 	}
 
 	return split[1], nil
+}
+
+// HasRole validates that an authenticated user has at least one role from a
+// specified list. This method constructs the actual function that is used.
+func (a *Auth) HasRole(roles ...string) func(next web.Handler) web.Handler {
+	mw := func(next web.Handler) web.Handler {
+		h := func(ctx context.Context, log *log.Logger, w http.ResponseWriter, r *http.Request, params map[string]string) error {
+
+			claims, ok := ctx.Value(auth.Key).(auth.Claims)
+			if !ok {
+				return web.ErrUnauthorized
+			}
+
+			if !claims.HasRole(roles...) {
+				return web.ErrForbidden
+			}
+
+			return next(ctx, log, w, r, params)
+		}
+
+		return h
+	}
+	return mw
 }
