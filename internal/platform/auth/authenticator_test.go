@@ -7,7 +7,7 @@ import (
 	jwt "github.com/dgrijalva/jwt-go"
 )
 
-func TestParseClaims(t *testing.T) {
+func TestAuthenticator(t *testing.T) {
 
 	// Parse the private key used to generate the token.
 	prvKey, err := jwt.ParseRSAPrivateKeyFromPEM([]byte(privateRSAKey))
