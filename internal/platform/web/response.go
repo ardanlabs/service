@@ -39,40 +39,7 @@ type JSONError struct {
 
 // Error handles all error responses for the API.
 func Error(cxt context.Context, log *log.Logger, w http.ResponseWriter, err error) {
-	switch errors.Cause(err) {
-	case ErrNotHealthy:
-		RespondError(cxt, log, w, err, http.StatusInternalServerError)
-		return
-
-	case ErrNotFound:
-		RespondError(cxt, log, w, err, http.StatusNotFound)
-		return
-
-	case ErrValidation, ErrInvalidID:
-		RespondError(cxt, log, w, err, http.StatusBadRequest)
-		return
-
-	case ErrUnauthorized:
-		RespondError(cxt, log, w, err, http.StatusUnauthorized)
-		return
-
-	case ErrForbidden:
-		RespondError(cxt, log, w, err, http.StatusForbidden)
-		return
-	}
-
-	switch e := errors.Cause(err).(type) {
-	case InvalidError:
-		v := JSONError{
-			Error:  "field validation failure",
-			Fields: e,
-		}
-
-		Respond(cxt, log, w, v, http.StatusBadRequest)
-		return
-	}
-
-	RespondError(cxt, log, w, err, http.StatusInternalServerError)
+	RespondError(cxt, log, w, err, StatusFromError(err))
 }
 
 // RespondError sends JSON describing the error

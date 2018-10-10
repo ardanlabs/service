@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net/http"
 
 	validator "gopkg.in/go-playground/validator.v8"
 )
@@ -36,7 +37,9 @@ func (err InvalidError) Error() string {
 // fields to verify the value is in a proper state.
 func Unmarshal(r io.Reader, v interface{}) error {
 	if err := json.NewDecoder(r).Decode(v); err != nil {
-		return err
+		// TODO: Remove this comment:
+		// Here is an example of how the status-wrapper might be used.
+		return ErrorWithStatus(err, http.StatusUnprocessableEntity)
 	}
 
 	var inv InvalidError
