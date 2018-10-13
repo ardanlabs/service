@@ -1,18 +1,12 @@
 package web
 
-import "net/http"
-
-type HTTPStatuser interface {
-	HTTPStatus() int
-}
+import (
+	"net/http"
+)
 
 type statusError struct {
 	error
-	status int
-}
-
-func (e statusError) HTTPStatus() int {
-	return e.status
+	Status int
 }
 
 func ErrorWithStatus(err error, status int) error {
@@ -20,9 +14,9 @@ func ErrorWithStatus(err error, status int) error {
 }
 
 func StatusFromError(err error) int {
-	inf, ok := err.(HTTPStatuser)
+	serr, ok := err.(statusError)
 	if !ok {
 		return http.StatusInternalServerError
 	}
-	return inf.HTTPStatus()
+	return serr.Status
 }

@@ -8,7 +8,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-func TestHTTPStatuser(t *testing.T) {
+func TestStatusError(t *testing.T) {
 	cases := []struct {
 		Err            error
 		ExpectedStatus int
