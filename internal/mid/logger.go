@@ -26,8 +26,10 @@ func RequestLogger(next web.Handler) web.Handler {
 		log.Printf("%s : (%d) : %s %s -> %s (%s)",
 			v.TraceID,
 			v.StatusCode,
-			r.Method, r.URL.Path,
-			r.RemoteAddr, time.Since(v.Now),
+			r.Method,
+			r.URL.Path,
+			v.ClientIP,
+			time.Since(v.Now),
 		)
 
 		// For consistency return the error we received.
