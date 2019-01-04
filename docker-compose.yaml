@@ -22,6 +22,10 @@ services:
 
   # This is the core CRUD based service.
   sales-api:
+    build:
+      context: .
+      args:
+        packagename: sales-api
     container_name: sales-api
     networks:
       - shared-network
@@ -36,6 +40,11 @@ services:
 
   # This sidecar publishes metrics to the console by default.
   metrics:
+    build:
+      context: .
+      args:
+        packagename: metrics
+        packageprefix: sidecar/
     container_name: metrics
     networks:
       - shared-network
@@ -46,6 +55,11 @@ services:
 
   # This sidecar publishes tracing to the console by default.
   tracer:
+    build:
+      context: .
+      args:
+        packagename: tracer
+        packageprefix: sidecar/
     container_name: tracer
     networks:
       - shared-network
