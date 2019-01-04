@@ -19,8 +19,8 @@ ARG packagename
 ARG packageprefix
 EXPOSE 3001
 EXPOSE 4001
-COPY --from=build /go/src/github.com/ardanlabs/service/cmd/${packageprefix}${packagename}/${packagename} /bin/
-ENTRYPOINT /bin/${packagename}
+COPY --from=build /go/src/github.com/ardanlabs/service/cmd/${packageprefix}${packagename}/${packagename} /bin/package
+ENTRYPOINT /bin/package
 
 LABEL org.opencontainers.image.created=$BUILD_DATE \
       org.opencontainers.image.title=${packagename} \
