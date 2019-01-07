@@ -111,13 +111,13 @@ Running `make down` will properly stop and terminate the Docker Compose session.
 
 ## About The Project
 
-The service provides record keeping for someone running a multi-family garage sale. Authenticated users can maintain a list of products for sale, record transactions as items are sold, and generate payout amounts for each family.
+The service provides record keeping for someone running a multi-family garage sale. Authenticated users can maintain a list of products for sale.
 
-The service uses the following models:
+<!--The service uses the following models:-->
 
-<img src="https://raw.githubusercontent.com/ardanlabs/service/master/models.jpg" alt="Garage Sale Service Models" title="Garage Sale Service Models" />
+<!--<img src="https://raw.githubusercontent.com/ardanlabs/service/master/models.jpg" alt="Garage Sale Service Models" title="Garage Sale Service Models" />-->
 
-(Diagram generated with draw.io using `models.xml` file)
+<!--(Diagram generated with draw.io using `models.xml` file)-->
 
 ## What's Next
 
