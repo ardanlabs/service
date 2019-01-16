@@ -22,10 +22,6 @@ services:
 
   # This is the core CRUD based service.
   sales-api:
-    build:
-      context: .
-      args:
-        packagename: sales-api
     container_name: sales-api
     networks:
       - shared-network
@@ -33,18 +29,15 @@ services:
     ports:
       - 3000:3000 # CRUD API
       - 4000:4000 # DEBUG API
-    # environment:
-      # - SALES_DB_HOST=docker.for.mac.localhost:27017
+    volumes:
+      - ${PWD}/private.pem:/app/private.pem
+    environment:
+      - SALES_AUTH_KEY_ID=1
       # - SALES_DB_HOST=got:got2015@ds039441.mongolab.com:39441/gotraining
       # - GODEBUG=gctrace=1
 
   # This sidecar publishes metrics to the console by default.
   metrics:
-    build:
-      context: .
-      args:
-        packagename: metrics
-        packageprefix: sidecar/
     container_name: metrics
     networks:
       - shared-network
@@ -55,11 +48,6 @@ services:
 
   # This sidecar publishes tracing to the console by default.
   tracer:
-    build:
-      context: .
-      args:
-        packagename: tracer
-        packageprefix: sidecar/
     container_name: tracer
     networks:
       - shared-network
