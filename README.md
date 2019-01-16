@@ -119,6 +119,36 @@ The service provides record keeping for someone running a multi-family garage sa
 
 <!--(Diagram generated with draw.io using `models.xml` file)-->
 
+### Making Requests
+
+#### Initial User
+
+To make a request to the service you must have an authenticated user. Users can be created with the API but an initial admin user must first be created. While the service is running you can create the initial user with the command `make admin`
+
+```
+$ make admin
+```
+
+This will create a user with email `admin@example.com` and password `gophers`.
+
+#### Authenticating
+
+Before any authenticated requests can be sent you must acquire an auth token. Make a request using HTTP Basic auth with your email and password to get the token.
+
+```
+$ curl --user "admin@example.com:gophers" http://localhost:3000/v1/users/token
+```
+
+I suggest putting the resulting token in an environment variable like `$TOKEN`.
+
+#### Authenticated Requests
+
+To make authenticated requests put the token in the `Authorization` header with the `Bearer ` prefix.
+
+```
+$ curl -H "Authorization: Bearer ${TOKEN}" http://localhost:3000/v1/users
+```
+
 ## What's Next
 
 We are in the process of writing more documentation about this code. Classes are being finalized as part of the Ultimate series.

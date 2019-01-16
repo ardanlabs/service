@@ -1,22 +1,27 @@
 SHELL := /bin/bash
 
-all: sales-api metrics tracer
+all: keys sales-api metrics tracer
+
+keys:
+	go run ./cmd/sales-admin/main.go --cmd keygen
+
+admin:
+	go run ./cmd/sales-admin/main.go --cmd useradd --user_email admin@example.com --user_password gophers
 
 sales-api:
-	cd "$$GOPATH/src/github.com/ardanlabs/service"
 	docker build \
 		-t sales-api-amd64:1.0 \
-		-f dockerfile.sales-api \
+		--build-arg PACKAGE_NAME=sales-api \
 		--build-arg VCS_REF=`git rev-parse HEAD` \
 		--build-arg BUILD_DATE=`date -u +”%Y-%m-%dT%H:%M:%SZ”` \
 		.
 	docker system prune -f
 
 metrics:
-	cd "$$GOPATH/src/github.com/ardanlabs/service"
 	docker build \
 		-t metrics-amd64:1.0 \
-		-f dockerfile.metrics \
+		--build-arg PACKAGE_NAME=metrics \
+		--build-arg PACKAGE_PREFIX=sidecar/ \
 		--build-arg VCS_REF=`git rev-parse HEAD` \
 		--build-arg BUILD_DATE=`date -u +”%Y-%m-%dT%H:%M:%SZ”` \
 		.
@@ -26,7 +31,8 @@ tracer:
 	cd "$$GOPATH/src/github.com/ardanlabs/service"
 	docker build \
 		-t tracer-amd64:1.0 \
-		-f dockerfile.tracer \
+		--build-arg PACKAGE_NAME=tracer \
+		--build-arg PACKAGE_PREFIX=sidecar/ \
 		--build-arg VCS_REF=`git rev-parse HEAD` \
 		--build-arg BUILD_DATE=`date -u +”%Y-%m-%dT%H:%M:%SZ”` \
 		.

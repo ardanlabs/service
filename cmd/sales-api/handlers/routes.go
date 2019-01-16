@@ -18,7 +18,6 @@ func API(log *log.Logger, masterDB *db.DB, authenticator *auth.Authenticator) ht
 		Authenticator: authenticator,
 	}
 
-	// TODO(jlw) Figure out why the order of these was reversed and maybe reverse it back.
 	app := web.New(log, mid.RequestLogger, mid.Metrics, mid.ErrorHandler)
 
 	// Register health check endpoint. This route is not authenticated.
