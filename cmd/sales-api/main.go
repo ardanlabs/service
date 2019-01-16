@@ -33,10 +33,12 @@ expvarmon -ports=":3001" -endpoint="/metrics" -vars="requests,goroutines,errors,
 /*
 Need to figure out timeouts for http service.
 You might want to reset your DB_HOST env var during test tear down.
-Add pulling git version from build command line.
 Service should start even without a DB running yet.
 symbols in profiles: https://github.com/golang/go/issues/23376 / https://github.com/google/pprof/pull/366
 */
+
+// build is the git version of this program. It is set using build flags in the makefile.
+var build = "develop"
 
 func main() {
 
@@ -68,7 +70,7 @@ func main() {
 		}
 		Auth struct {
 			KeyID          string `envconfig:"KEY_ID"`
-			PrivateKeyFile string `envconfig:"PRIVATE_KEY_FILE"`
+			PrivateKeyFile string `default:"private.pem" envconfig:"PRIVATE_KEY_FILE"`
 			Algorithm      string `default:"RS256" envconfig:"ALGORITHM"`
 		}
 	}
@@ -87,7 +89,7 @@ func main() {
 	// =========================================================================
 	// App Starting
 
-	log.Println("main : Started : Application Initializing")
+	log.Printf("main : Started : Application Initializing version %q", build)
 	defer log.Println("main : Completed")
 
 	cfgJSON, err := json.MarshalIndent(cfg, "", "    ")
@@ -112,8 +114,6 @@ func main() {
 		log.Fatalf("main : Parsing auth private key : %v", err)
 	}
 
-	// TODO(jlw) Do we really want to support rolling keys etc? We can use the naive NewSingleKeyFunc to keep things easy but leave in a note that says this is where you would need to add rotating key support.
-	// TODO(jlw) Do we need to explicitly pass a public key in from the config? Since we already have the private key we can just compute the public key when needed.
 	publicKeyLookup := auth.NewSingleKeyFunc(cfg.Auth.KeyID, key.Public().(*rsa.PublicKey))
 
 	authenticator, err := auth.NewAuthenticator(key, cfg.Auth.KeyID, cfg.Auth.Algorithm, publicKeyLookup)
