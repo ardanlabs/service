@@ -21,10 +21,10 @@ func API(log *log.Logger, masterDB *db.DB, authenticator *auth.Authenticator) ht
 	app := web.New(log, mid.RequestLogger, mid.Metrics, mid.ErrorHandler)
 
 	// Register health check endpoint. This route is not authenticated.
-	h := Health{
+	c := Check{
 		MasterDB: masterDB,
 	}
-	app.Handle("GET", "/v1/health", h.Check)
+	app.Handle("GET", "/v1/health", c.Health)
 
 	// Register user management and authentication endpoints.
 	u := User{
