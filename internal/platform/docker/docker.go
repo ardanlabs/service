@@ -16,7 +16,7 @@ type Container struct {
 
 // StartMongo runs a mongo container to execute commands.
 func StartMongo(log *log.Logger) (*Container, error) {
-	cmd := exec.Command("docker", "run", "-P", "-d", "mongo")
+	cmd := exec.Command("docker", "run", "-P", "-d", "mongo:3-jessie")
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	if err := cmd.Run(); err != nil {
