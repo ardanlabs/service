@@ -1,6 +1,6 @@
 # Build the Go Binary.
 
-FROM golang:1.10.3 as build
+FROM golang:1.11.4 as build
 ENV CGO_ENABLED 0
 ARG VCS_REF
 ARG PACKAGE_NAME
