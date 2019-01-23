@@ -12,7 +12,7 @@ import (
 )
 
 // ErrorHandler for catching and responding to errors.
-func ErrorHandler(next web.Handler) web.Handler {
+func ErrorHandler(before web.Handler) web.Handler {
 
 	// Create the handler that will be attached in the middleware chain.
 	h := func(ctx context.Context, log *log.Logger, w http.ResponseWriter, r *http.Request, params map[string]string) error {
@@ -40,7 +40,7 @@ func ErrorHandler(next web.Handler) web.Handler {
 			}
 		}()
 
-		if err := next(ctx, log, w, r, params); err != nil {
+		if err := before(ctx, log, w, r, params); err != nil {
 
 			// Indicate this request had an error.
 			v.Error = true
