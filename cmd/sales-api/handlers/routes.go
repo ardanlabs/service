@@ -12,7 +12,7 @@ import (
 
 // API returns a handler for a set of routes.
 func API(log *log.Logger, masterDB *db.DB, authenticator *auth.Authenticator) http.Handler {
-	app := web.New(log, mid.RequestLogger, mid.Metrics, mid.ErrorHandler)
+	app := web.New(log, mid.ErrorHandler, mid.Metrics, mid.RequestLogger)
 
 	// authmw is used for authentication/authorization middleware.
 	authmw := mid.Auth{
@@ -30,11 +30,11 @@ func API(log *log.Logger, masterDB *db.DB, authenticator *auth.Authenticator) ht
 		MasterDB:       masterDB,
 		TokenGenerator: authenticator,
 	}
-	app.Handle("GET", "/v1/users", u.List, authmw.Authenticate, authmw.HasRole(auth.RoleAdmin))
-	app.Handle("POST", "/v1/users", u.Create, authmw.Authenticate, authmw.HasRole(auth.RoleAdmin))
+	app.Handle("GET", "/v1/users", u.List, authmw.HasRole(auth.RoleAdmin), authmw.Authenticate)
+	app.Handle("POST", "/v1/users", u.Create, authmw.HasRole(auth.RoleAdmin), authmw.Authenticate)
 	app.Handle("GET", "/v1/users/:id", u.Retrieve, authmw.Authenticate)
-	app.Handle("PUT", "/v1/users/:id", u.Update, authmw.Authenticate, authmw.HasRole(auth.RoleAdmin))
-	app.Handle("DELETE", "/v1/users/:id", u.Delete, authmw.Authenticate, authmw.HasRole(auth.RoleAdmin))
+	app.Handle("PUT", "/v1/users/:id", u.Update, authmw.HasRole(auth.RoleAdmin), authmw.Authenticate)
+	app.Handle("DELETE", "/v1/users/:id", u.Delete, authmw.HasRole(auth.RoleAdmin), authmw.Authenticate)
 
 	// This route is not authenticated
 	app.Handle("GET", "/v1/users/token", u.Token)
