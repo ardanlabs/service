@@ -17,7 +17,7 @@ type Auth struct {
 }
 
 // Authenticate validates a JWT from the `Authorization` header.
-func (a *Auth) Authenticate(next web.Handler) web.Handler {
+func (a *Auth) Authenticate(after web.Handler) web.Handler {
 	h := func(ctx context.Context, log *log.Logger, w http.ResponseWriter, r *http.Request, params map[string]string) error {
 		authHdr := r.Header.Get("Authorization")
 		if authHdr == "" {
@@ -37,7 +37,7 @@ func (a *Auth) Authenticate(next web.Handler) web.Handler {
 		// Add claims to the context so they can be retrieved later.
 		ctx = context.WithValue(ctx, auth.Key, claims)
 
-		return next(ctx, log, w, r, params)
+		return after(ctx, log, w, r, params)
 	}
 
 	return h

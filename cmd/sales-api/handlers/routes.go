@@ -12,26 +12,24 @@ import (
 
 // API returns a handler for a set of routes.
 func API(log *log.Logger, masterDB *db.DB, authenticator *auth.Authenticator) http.Handler {
+	app := web.New(log, mid.RequestLogger, mid.Metrics, mid.ErrorHandler)
 
 	// authmw is used for authentication/authorization middleware.
 	authmw := mid.Auth{
 		Authenticator: authenticator,
 	}
 
-	app := web.New(log, mid.RequestLogger, mid.Metrics, mid.ErrorHandler)
-
 	// Register health check endpoint. This route is not authenticated.
-	c := Check{
+	check := Check{
 		MasterDB: masterDB,
 	}
-	app.Handle("GET", "/v1/health", c.Health)
+	app.Handle("GET", "/v1/health", check.Health)
 
 	// Register user management and authentication endpoints.
 	u := User{
 		MasterDB:       masterDB,
 		TokenGenerator: authenticator,
 	}
-
 	app.Handle("GET", "/v1/users", u.List, authmw.Authenticate, authmw.HasRole(auth.RoleAdmin))
 	app.Handle("POST", "/v1/users", u.Create, authmw.Authenticate, authmw.HasRole(auth.RoleAdmin))
 	app.Handle("GET", "/v1/users/:id", u.Retrieve, authmw.Authenticate)

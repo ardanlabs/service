@@ -23,14 +23,14 @@ var m = struct {
 }
 
 // Metrics updates program counters.
-func Metrics(next web.Handler) web.Handler {
+func Metrics(before web.Handler) web.Handler {
 
 	// Wrap this handler around the next one provided.
 	h := func(ctx context.Context, log *log.Logger, w http.ResponseWriter, r *http.Request, params map[string]string) error {
 		ctx, span := trace.StartSpan(ctx, "internal.mid.Metrics")
 		defer span.End()
 
-		next(ctx, log, w, r, params)
+		err := before(ctx, log, w, r, params)
 
 		// Add one to the request counter.
 		m.req.Add(1)
@@ -47,7 +47,7 @@ func Metrics(next web.Handler) web.Handler {
 			m.err.Add(1)
 		}
 
-		return nil
+		return err
 	}
 
 	return h
