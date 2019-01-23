@@ -50,3 +50,9 @@ test:
 
 clean:
 	docker system prune -f
+
+stop-all:
+	docker stop $(docker ps -aq)
+
+remove-all:
+	docker rm $(docker ps -aq)
