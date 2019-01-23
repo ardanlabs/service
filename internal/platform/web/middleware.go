@@ -8,7 +8,7 @@ type Middleware func(Handler) Handler
 func wrapMiddleware(handler Handler, mw []Middleware) Handler {
 
 	// Wrap with our group specific middleware.
-	for i := len(mw) - 1; i >= 0; i-- {
+	for i := 0; i < len(mw); i++ {
 		if mw[i] != nil {
 			handler = mw[i](handler)
 		}
