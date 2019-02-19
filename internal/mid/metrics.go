@@ -40,9 +40,14 @@ func Metrics(before web.Handler) web.Handler {
 			m.gr.Set(int64(runtime.NumGoroutine()))
 		}
 
+		// This will cause the service to be shutdown.
+		v, ok := ctx.Value(web.KeyValues).(*web.Values)
+		if !ok {
+			return web.Shutdown("web value missing from context")
+		}
+
 		// Add one to the errors counter if an error occured
 		// on this reuqest.
-		v := ctx.Value(web.KeyValues).(*web.Values)
 		if v.Error {
 			m.err.Add(1)
 		}

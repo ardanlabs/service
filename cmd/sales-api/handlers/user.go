@@ -68,7 +68,10 @@ func (u *User) Create(ctx context.Context, log *log.Logger, w http.ResponseWrite
 	dbConn := u.MasterDB.Copy()
 	defer dbConn.Close()
 
-	v := ctx.Value(web.KeyValues).(*web.Values)
+	v, ok := ctx.Value(web.KeyValues).(*web.Values)
+	if !ok {
+		return web.Shutdown("web value missing from context")
+	}
 
 	var newU user.NewUser
 	if err := web.Unmarshal(r.Body, &newU); err != nil {
@@ -92,7 +95,10 @@ func (u *User) Update(ctx context.Context, log *log.Logger, w http.ResponseWrite
 	dbConn := u.MasterDB.Copy()
 	defer dbConn.Close()
 
-	v := ctx.Value(web.KeyValues).(*web.Values)
+	v, ok := ctx.Value(web.KeyValues).(*web.Values)
+	if !ok {
+		return web.Shutdown("web value missing from context")
+	}
 
 	var upd user.UpdateUser
 	if err := web.Unmarshal(r.Body, &upd); err != nil {
@@ -134,7 +140,10 @@ func (u *User) Token(ctx context.Context, log *log.Logger, w http.ResponseWriter
 	dbConn := u.MasterDB.Copy()
 	defer dbConn.Close()
 
-	v := ctx.Value(web.KeyValues).(*web.Values)
+	v, ok := ctx.Value(web.KeyValues).(*web.Values)
+	if !ok {
+		return web.Shutdown("web value missing from context")
+	}
 
 	email, pass, ok := r.BasicAuth()
 	if !ok {

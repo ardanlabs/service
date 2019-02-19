@@ -19,7 +19,11 @@ func ErrorHandler(before web.Handler) web.Handler {
 		ctx, span := trace.StartSpan(ctx, "internal.mid.ErrorHandler")
 		defer span.End()
 
-		v := ctx.Value(web.KeyValues).(*web.Values)
+		// This will cause the service to be shutdown.
+		v, ok := ctx.Value(web.KeyValues).(*web.Values)
+		if !ok {
+			return web.Shutdown("web value missing from context")
+		}
 
 		// In the event of a panic, we want to capture it here so we can send an
 		// error down the stack.
@@ -47,7 +51,6 @@ func ErrorHandler(before web.Handler) web.Handler {
 
 			// What is the root error.
 			err = errors.Cause(err)
-
 			if err != web.ErrNotFound {
 
 				// Log the error.
@@ -56,6 +59,12 @@ func ErrorHandler(before web.Handler) web.Handler {
 
 			// Respond with the error.
 			web.Error(ctx, log, w, err)
+
+			// If we receive the shutdown err we need to return it
+			// back to the base handler to shutdown the service.
+			if ok := web.IsShutdown(err); ok {
+				return err
+			}
 
 			// The error has been handled so we can stop propagating it.
 			return nil

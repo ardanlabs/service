@@ -31,12 +31,6 @@ var (
 	ErrForbidden = errors.New("Forbidden")
 )
 
-// JSONError is the response for errors that occur within the API.
-type JSONError struct {
-	Error  string       `json:"error"`
-	Fields InvalidError `json:"fields,omitempty"`
-}
-
 // Error handles all error responses for the API.
 func Error(cxt context.Context, log *log.Logger, w http.ResponseWriter, err error) {
 	switch errors.Cause(err) {

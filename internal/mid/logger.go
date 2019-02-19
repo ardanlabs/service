@@ -21,7 +21,12 @@ func RequestLogger(before web.Handler) web.Handler {
 
 		err := before(ctx, log, w, r, params)
 
-		v := ctx.Value(web.KeyValues).(*web.Values)
+		// This will cause the service to be shutdown.
+		v, ok := ctx.Value(web.KeyValues).(*web.Values)
+		if !ok {
+			return web.Shutdown("web value missing from context")
+		}
+
 		log.Printf("%s : (%d) : %s %s -> %s (%s)",
 			v.TraceID,
 			v.StatusCode,
