@@ -61,7 +61,10 @@ func (p *Product) Create(ctx context.Context, log *log.Logger, w http.ResponseWr
 	dbConn := p.MasterDB.Copy()
 	defer dbConn.Close()
 
-	v := ctx.Value(web.KeyValues).(*web.Values)
+	v, ok := ctx.Value(web.KeyValues).(*web.Values)
+	if !ok {
+		return web.Shutdown("web value missing from context")
+	}
 
 	var np product.NewProduct
 	if err := web.Unmarshal(r.Body, &np); err != nil {
@@ -85,7 +88,10 @@ func (p *Product) Update(ctx context.Context, log *log.Logger, w http.ResponseWr
 	dbConn := p.MasterDB.Copy()
 	defer dbConn.Close()
 
-	v := ctx.Value(web.KeyValues).(*web.Values)
+	v, ok := ctx.Value(web.KeyValues).(*web.Values)
+	if !ok {
+		return web.Shutdown("web value missing from context")
+	}
 
 	var up product.UpdateProduct
 	if err := web.Unmarshal(r.Body, &up); err != nil {
