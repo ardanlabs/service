@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"syscall"
 	"time"
 
 	"github.com/dimfeld/httptreemux"
@@ -54,7 +55,7 @@ func New(shutdown chan os.Signal, log *log.Logger, mw ...Middleware) *App {
 // issue is identified.
 func (a *App) SignalShutdown() {
 	a.log.Println("error returned from handler indicated integrity issue, shutting down service")
-	a.shutdown <- os.Interrupt
+	a.shutdown <- syscall.SIGSTOP
 }
 
 // Handle is our mechanism for mounting Handlers for a given HTTP verb and path

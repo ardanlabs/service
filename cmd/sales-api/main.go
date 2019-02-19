@@ -211,19 +211,26 @@ func main() {
 	case err := <-serverErrors:
 		log.Fatalf("main : Error starting server: %v", err)
 
-	case <-shutdown:
-		log.Println("main : Start shutdown...")
+	case sig := <-shutdown:
+		log.Printf("main : %v : Start shutdown..", sig)
 
 		// Create context for Shutdown call.
 		ctx, cancel := context.WithTimeout(context.Background(), cfg.Web.ShutdownTimeout)
 		defer cancel()
 
 		// Asking listener to shutdown and load shed.
-		if err := api.Shutdown(ctx); err != nil {
+		err := api.Shutdown(ctx)
+		if err != nil {
 			log.Printf("main : Graceful shutdown did not complete in %v : %v", cfg.Web.ShutdownTimeout, err)
-			if err := api.Close(); err != nil {
-				log.Fatalf("main : Could not stop http server: %v", err)
-			}
+			err = api.Close()
+		}
+
+		// Log the status of this shutdown.
+		switch {
+		case sig == syscall.SIGSTOP:
+			log.Fatal("main : Integrity issue caused shutdown")
+		case err != nil:
+			log.Fatalf("main : Could not stop server gracefully : %v", err)
 		}
 	}
 }
