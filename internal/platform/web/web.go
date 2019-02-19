@@ -50,6 +50,13 @@ func New(shutdown chan os.Signal, log *log.Logger, mw ...Middleware) *App {
 	}
 }
 
+// SignalShutdown is used to gracefully shutdown the app when an integrity
+// issue is identified.
+func (a *App) SignalShutdown() {
+	a.log.Println("error returned from handler indicated integrity issue, shutting down service")
+	a.shutdown <- os.Interrupt
+}
+
 // Handle is our mechanism for mounting Handlers for a given HTTP verb and path
 // pair, this makes for really easy, convenient routing.
 func (a *App) Handle(verb, path string, handler Handler, mw ...Middleware) {
@@ -91,8 +98,8 @@ func (a *App) Handle(verb, path string, handler Handler, mw ...Middleware) {
 
 		// Call the wrapped handler functions.
 		if err := handler(ctx, a.log, w, r, params); err != nil {
-			a.log.Println("error returned from handler indicated integrity issue, shutting down service")
-			a.shutdown <- os.Interrupt
+			a.SignalShutdown()
+			return
 		}
 	}
 
