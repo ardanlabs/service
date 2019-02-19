@@ -180,9 +180,14 @@ func main() {
 	// =========================================================================
 	// Start API Service
 
+	// Make a channel to listen for an interrupt or terminate signal from the OS.
+	// Use a buffered channel because the signal package requires it.
+	shutdown := make(chan os.Signal, 1)
+	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM)
+
 	api := http.Server{
 		Addr:           cfg.Web.APIHost,
-		Handler:        handlers.API(log, masterDB, authenticator),
+		Handler:        handlers.API(shutdown, log, masterDB, authenticator),
 		ReadTimeout:    cfg.Web.ReadTimeout,
 		WriteTimeout:   cfg.Web.WriteTimeout,
 		MaxHeaderBytes: 1 << 20,
@@ -201,20 +206,12 @@ func main() {
 	// =========================================================================
 	// Shutdown
 
-	// Make a channel to listen for an interrupt or terminate signal from the OS.
-	// Use a buffered channel because the signal package requires it.
-	osSignals := make(chan os.Signal, 1)
-	signal.Notify(osSignals, os.Interrupt, syscall.SIGTERM)
-
-	// =========================================================================
-	// Stop API Service
-
 	// Blocking main and waiting for shutdown.
 	select {
 	case err := <-serverErrors:
 		log.Fatalf("main : Error starting server: %v", err)
 
-	case <-osSignals:
+	case <-shutdown:
 		log.Println("main : Start shutdown...")
 
 		// Create context for Shutdown call.

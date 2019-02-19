@@ -3,6 +3,7 @@ package handlers
 import (
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/ardanlabs/service/internal/mid"
 	"github.com/ardanlabs/service/internal/platform/auth"
@@ -11,8 +12,8 @@ import (
 )
 
 // API returns a handler for a set of routes.
-func API(log *log.Logger, masterDB *db.DB, authenticator *auth.Authenticator) http.Handler {
-	app := web.New(log, mid.ErrorHandler, mid.Metrics, mid.RequestLogger)
+func API(shutdown chan os.Signal, log *log.Logger, masterDB *db.DB, authenticator *auth.Authenticator) http.Handler {
+	app := web.New(shutdown, log, mid.ErrorHandler, mid.Metrics, mid.RequestLogger)
 
 	// authmw is used for authentication/authorization middleware.
 	authmw := mid.Auth{
