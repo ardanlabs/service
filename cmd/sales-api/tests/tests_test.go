@@ -45,7 +45,8 @@ func testMain(m *testing.M) int {
 		panic(err)
 	}
 
-	a = handlers.API(test.Log, test.MasterDB, authenticator).(*web.App)
+	shutdown := make(chan os.Signal, 1)
+	a = handlers.API(shutdown, test.Log, test.MasterDB, authenticator).(*web.App)
 
 	// Create an admin user directly with our business logic. This creates an
 	// initial user that we will use for admin validated endpoints.

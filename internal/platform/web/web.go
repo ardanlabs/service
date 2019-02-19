@@ -4,6 +4,8 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"os"
+	"syscall"
 	"time"
 
 	"github.com/dimfeld/httptreemux"
@@ -34,17 +36,26 @@ type Handler func(ctx context.Context, log *log.Logger, w http.ResponseWriter, r
 // data/logic on this App struct
 type App struct {
 	*httptreemux.TreeMux
-	log *log.Logger
-	mw  []Middleware
+	shutdown chan os.Signal
+	log      *log.Logger
+	mw       []Middleware
 }
 
 // New creates an App value that handle a set of routes for the application.
-func New(log *log.Logger, mw ...Middleware) *App {
+func New(shutdown chan os.Signal, log *log.Logger, mw ...Middleware) *App {
 	return &App{
-		TreeMux: httptreemux.New(),
-		log:     log,
-		mw:      mw,
+		TreeMux:  httptreemux.New(),
+		shutdown: shutdown,
+		log:      log,
+		mw:       mw,
 	}
+}
+
+// SignalShutdown is used to gracefully shutdown the app when an integrity
+// issue is identified.
+func (a *App) SignalShutdown() {
+	a.log.Println("error returned from handler indicated integrity issue, shutting down service")
+	a.shutdown <- syscall.SIGSTOP
 }
 
 // Handle is our mechanism for mounting Handlers for a given HTTP verb and path
@@ -88,7 +99,8 @@ func (a *App) Handle(verb, path string, handler Handler, mw ...Middleware) {
 
 		// Call the wrapped handler functions.
 		if err := handler(ctx, a.log, w, r, params); err != nil {
-			Error(ctx, a.log, w, err)
+			a.SignalShutdown()
+			return
 		}
 	}
 

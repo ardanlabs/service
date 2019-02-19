@@ -180,9 +180,14 @@ func main() {
 	// =========================================================================
 	// Start API Service
 
+	// Make a channel to listen for an interrupt or terminate signal from the OS.
+	// Use a buffered channel because the signal package requires it.
+	shutdown := make(chan os.Signal, 1)
+	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM)
+
 	api := http.Server{
 		Addr:           cfg.Web.APIHost,
-		Handler:        handlers.API(log, masterDB, authenticator),
+		Handler:        handlers.API(shutdown, log, masterDB, authenticator),
 		ReadTimeout:    cfg.Web.ReadTimeout,
 		WriteTimeout:   cfg.Web.WriteTimeout,
 		MaxHeaderBytes: 1 << 20,
@@ -201,32 +206,31 @@ func main() {
 	// =========================================================================
 	// Shutdown
 
-	// Make a channel to listen for an interrupt or terminate signal from the OS.
-	// Use a buffered channel because the signal package requires it.
-	osSignals := make(chan os.Signal, 1)
-	signal.Notify(osSignals, os.Interrupt, syscall.SIGTERM)
-
-	// =========================================================================
-	// Stop API Service
-
 	// Blocking main and waiting for shutdown.
 	select {
 	case err := <-serverErrors:
 		log.Fatalf("main : Error starting server: %v", err)
 
-	case <-osSignals:
-		log.Println("main : Start shutdown...")
+	case sig := <-shutdown:
+		log.Printf("main : %v : Start shutdown..", sig)
 
 		// Create context for Shutdown call.
 		ctx, cancel := context.WithTimeout(context.Background(), cfg.Web.ShutdownTimeout)
 		defer cancel()
 
 		// Asking listener to shutdown and load shed.
-		if err := api.Shutdown(ctx); err != nil {
+		err := api.Shutdown(ctx)
+		if err != nil {
 			log.Printf("main : Graceful shutdown did not complete in %v : %v", cfg.Web.ShutdownTimeout, err)
-			if err := api.Close(); err != nil {
-				log.Fatalf("main : Could not stop http server: %v", err)
-			}
+			err = api.Close()
+		}
+
+		// Log the status of this shutdown.
+		switch {
+		case sig == syscall.SIGSTOP:
+			log.Fatal("main : Integrity issue caused shutdown")
+		case err != nil:
+			log.Fatalf("main : Could not stop server gracefully : %v", err)
 		}
 	}
 }
