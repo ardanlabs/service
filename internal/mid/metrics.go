@@ -30,6 +30,13 @@ func Metrics(before web.Handler) web.Handler {
 		ctx, span := trace.StartSpan(ctx, "internal.mid.Metrics")
 		defer span.End()
 
+		// If the context is missing this value, request the service
+		// to be shutdown gracefully.
+		v, ok := ctx.Value(web.KeyValues).(*web.Values)
+		if !ok {
+			return web.Shutdown("web value missing from context")
+		}
+
 		err := before(ctx, log, w, r, params)
 
 		// Add one to the request counter.
@@ -38,12 +45,6 @@ func Metrics(before web.Handler) web.Handler {
 		// Include the current count for the number of goroutines.
 		if m.req.Value()%100 == 0 {
 			m.gr.Set(int64(runtime.NumGoroutine()))
-		}
-
-		// This will cause the service to be shutdown.
-		v, ok := ctx.Value(web.KeyValues).(*web.Values)
-		if !ok {
-			return web.Shutdown("web value missing from context")
 		}
 
 		// Add one to the errors counter if an error occured

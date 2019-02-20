@@ -9,6 +9,7 @@ import (
 	"github.com/ardanlabs/service/internal/platform/auth"
 	"github.com/ardanlabs/service/internal/platform/web"
 	"github.com/pkg/errors"
+	"go.opencensus.io/trace"
 )
 
 // Auth is used to authenticate and authorize HTTP requests.
@@ -18,7 +19,12 @@ type Auth struct {
 
 // Authenticate validates a JWT from the `Authorization` header.
 func (a *Auth) Authenticate(after web.Handler) web.Handler {
+
+	// Wrap this handler around the next one provided.
 	h := func(ctx context.Context, log *log.Logger, w http.ResponseWriter, r *http.Request, params map[string]string) error {
+		ctx, span := trace.StartSpan(ctx, "internal.mid.RequestLogger")
+		defer span.End()
+
 		authHdr := r.Header.Get("Authorization")
 		if authHdr == "" {
 			return errors.Wrap(web.ErrUnauthorized, "Missing Authorization header")
@@ -74,5 +80,6 @@ func (a *Auth) HasRole(roles ...string) func(next web.Handler) web.Handler {
 
 		return h
 	}
+
 	return mw
 }
