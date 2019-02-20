@@ -72,6 +72,7 @@ func (a *App) Handle(verb, path string, handler Handler, mw ...Middleware) {
 		} else {
 			ctx, span = trace.StartSpan(r.Context(), "internal.platform.web")
 		}
+		defer span.End()
 
 		// Set the context with the required values to
 		// process the request.
