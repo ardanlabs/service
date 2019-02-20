@@ -32,12 +32,6 @@ func (err InvalidError) Error() string {
 	return str
 }
 
-// JSONError is the response for errors that occur within the API.
-type JSONError struct {
-	Error  string       `json:"error"`
-	Fields InvalidError `json:"fields,omitempty"`
-}
-
 // Unmarshal decodes the input to the struct type and checks the
 // fields to verify the value is in a proper state.
 func Unmarshal(r io.Reader, v interface{}) error {
