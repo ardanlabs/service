@@ -109,7 +109,7 @@ func (a *App) Handle(verb, path string, handler Handler, mw ...Middleware) {
 	a.TreeMux.Handle(verb, path, h)
 }
 
-// Shutdown is a type used to help with the graceful termination of the service.
+// shutdown is a type used to help with the graceful termination of the service.
 type shutdown struct {
 	Message string
 }
