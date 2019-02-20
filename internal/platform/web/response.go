@@ -38,46 +38,40 @@ type JSONError struct {
 }
 
 // Error handles all error responses for the API.
-func Error(cxt context.Context, log *log.Logger, w http.ResponseWriter, err error) {
+func Error(ctx context.Context, log *log.Logger, w http.ResponseWriter, err error) {
 	switch errors.Cause(err) {
 	case ErrNotHealthy:
-		RespondError(cxt, log, w, err, http.StatusInternalServerError)
+		Respond(ctx, log, w, JSONError{Error: err.Error()}, http.StatusInternalServerError)
 		return
 
 	case ErrNotFound:
-		RespondError(cxt, log, w, err, http.StatusNotFound)
+		Respond(ctx, log, w, JSONError{Error: err.Error()}, http.StatusNotFound)
 		return
 
 	case ErrValidation, ErrInvalidID:
-		RespondError(cxt, log, w, err, http.StatusBadRequest)
+		Respond(ctx, log, w, JSONError{Error: err.Error()}, http.StatusBadRequest)
 		return
 
 	case ErrUnauthorized:
-		RespondError(cxt, log, w, err, http.StatusUnauthorized)
+		Respond(ctx, log, w, JSONError{Error: err.Error()}, http.StatusUnauthorized)
 		return
 
 	case ErrForbidden:
-		RespondError(cxt, log, w, err, http.StatusForbidden)
+		Respond(ctx, log, w, JSONError{Error: err.Error()}, http.StatusForbidden)
 		return
 	}
 
 	switch e := errors.Cause(err).(type) {
 	case InvalidError:
-		v := JSONError{
+		je := JSONError{
 			Error:  "field validation failure",
 			Fields: e,
 		}
-
-		Respond(cxt, log, w, v, http.StatusBadRequest)
+		Respond(ctx, log, w, je, http.StatusBadRequest)
 		return
 	}
 
-	RespondError(cxt, log, w, err, http.StatusInternalServerError)
-}
-
-// RespondError sends JSON describing the error
-func RespondError(ctx context.Context, log *log.Logger, w http.ResponseWriter, err error, code int) {
-	Respond(ctx, log, w, JSONError{Error: err.Error()}, code)
+	Respond(ctx, log, w, JSONError{Error: err.Error()}, http.StatusInternalServerError)
 }
 
 // Respond sends JSON to the client.
@@ -101,7 +95,7 @@ func Respond(ctx context.Context, log *log.Logger, w http.ResponseWriter, data i
 		log.Printf("%s : Respond %v Marshalling JSON response\n", v.TraceID, err)
 
 		// Should respond with internal server error.
-		RespondError(ctx, log, w, err, http.StatusInternalServerError)
+		Error(ctx, log, w, err)
 		return
 	}
 

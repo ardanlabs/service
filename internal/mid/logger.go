@@ -19,9 +19,15 @@ func RequestLogger(before web.Handler) web.Handler {
 		ctx, span := trace.StartSpan(ctx, "internal.mid.RequestLogger")
 		defer span.End()
 
+		// If the context is missing this value, request the service
+		// to be shutdown gracefully.
+		v, ok := ctx.Value(web.KeyValues).(*web.Values)
+		if !ok {
+			return web.Shutdown("web value missing from context")
+		}
+
 		err := before(ctx, log, w, r, params)
 
-		v := ctx.Value(web.KeyValues).(*web.Values)
 		log.Printf("%s : (%d) : %s %s -> %s (%s)",
 			v.TraceID,
 			v.StatusCode,

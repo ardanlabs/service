@@ -100,6 +100,7 @@ func (a *App) Handle(verb, path string, handler Handler, mw ...Middleware) {
 
 		// Call the wrapped handler functions.
 		if err := handler(ctx, a.log, w, r, params); err != nil {
+			a.log.Printf("*****> critical shutdown error: %v", err)
 			a.SignalShutdown()
 			return
 		}
@@ -107,4 +108,29 @@ func (a *App) Handle(verb, path string, handler Handler, mw ...Middleware) {
 
 	// Add this handler for the specified verb and route.
 	a.TreeMux.Handle(verb, path, h)
+}
+
+// shutdown is a type used to help with the graceful termination of the service.
+type shutdown struct {
+	Message string
+}
+
+// Error is the implementation of the error interface.
+func (s *shutdown) Error() string {
+	return s.Message
+}
+
+// Shutdown returns an error that causes the framework to signal
+// a graceful shutdown.
+func Shutdown(message string) error {
+	return &shutdown{message}
+}
+
+// IsShutdown checks to see if the shutdown error is contained
+// in the specified error value.
+func IsShutdown(err error) bool {
+	if _, ok := err.(*shutdown); ok {
+		return true
+	}
+	return false
 }
