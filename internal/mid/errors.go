@@ -19,7 +19,12 @@ func ErrorHandler(before web.Handler) web.Handler {
 		ctx, span := trace.StartSpan(ctx, "internal.mid.ErrorHandler")
 		defer span.End()
 
-		v := ctx.Value(web.KeyValues).(*web.Values)
+		// If the context is missing this value, request the service
+		// to be shutdown gracefully.
+		v, ok := ctx.Value(web.KeyValues).(*web.Values)
+		if !ok {
+			return web.Shutdown("web value missing from context")
+		}
 
 		// In the event of a panic, we want to capture it here so we can send an
 		// error down the stack.
@@ -33,7 +38,7 @@ func ErrorHandler(before web.Handler) web.Handler {
 				log.Printf("%s : ERROR : Panic Caught : %s\n", v.TraceID, r)
 
 				// Respond with the error.
-				web.RespondError(ctx, log, w, errors.New("unhandled"), http.StatusInternalServerError)
+				web.Error(ctx, log, w, errors.New("unhandled"))
 
 				// Print out the stack.
 				log.Printf("%s : ERROR : Stacktrace\n%s\n", v.TraceID, debug.Stack())
@@ -48,9 +53,16 @@ func ErrorHandler(before web.Handler) web.Handler {
 			// What is the root error.
 			err = errors.Cause(err)
 
-			if err != web.ErrNotFound {
+			// If we receive the shutdown err we need to return it
+			// back to the base handler to shutdown the service.
+			if ok := web.IsShutdown(err); ok {
+				web.Error(ctx, log, w, errors.New("unhandled"))
+				return err
+			}
 
-				// Log the error.
+			// Don't log errors based on not found issues. This has
+			// the potential to create noise in the logs.
+			if err != web.ErrNotFound {
 				log.Printf("%s : ERROR : %v\n", v.TraceID, err)
 			}
 
