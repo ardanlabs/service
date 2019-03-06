@@ -35,7 +35,9 @@ func (err InvalidError) Error() string {
 // Unmarshal decodes the input to the struct type and checks the
 // fields to verify the value is in a proper state.
 func Unmarshal(r io.Reader, v interface{}) error {
-	if err := json.NewDecoder(r).Decode(v); err != nil {
+	decode := json.NewDecoder(r)
+	decode.DisallowUnknownFields()
+	if err := decode.Decode(v); err != nil {
 		return err
 	}
 
