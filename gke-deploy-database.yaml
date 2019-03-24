@@ -1,0 +1,26 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: mongo
+  labels:
+    database: mongo
+spec:
+  replicas: 1
+  strategy: {}
+  template:
+    metadata:
+      name: mongo
+      labels:
+        database: mongo
+    spec:
+      containers:
+      - name: mongo
+        image: mongo:3-jessie
+        args:
+        - --bind_ip
+        - 0.0.0.0
+        ports:
+        - name: mongo
+          containerPort: 27017
+        resources: {}
+status: {}
