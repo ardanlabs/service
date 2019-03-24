@@ -2,8 +2,6 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: mongo
-  labels:
-    database: mongo
 spec:
   replicas: 1
   strategy: {}

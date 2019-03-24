@@ -2,8 +2,6 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: sales-api
-  labels:
-    ardan.service: sales-api
 spec:
   replicas: 1
   strategy: {}
@@ -11,7 +9,7 @@ spec:
     metadata:
       name: sales-api
       labels:
-        ardan.service: sales-api
+        service: sales-api
     spec:
       containers:
       - name: zipkin
@@ -21,7 +19,7 @@ spec:
           containerPort: 9411
         resources: {}
       - name: sales-api
-        image: gcr.io/sales-api/sales-api-amd64:1.0
+        image: gcr.io/got-sales-api/sales-api-amd64:1.0
         env:
         - name: SALES_TRACE_HOST
           value: "http://localhost:3002/v1/publish"
@@ -34,7 +32,7 @@ spec:
           containerPort: 4000
         resources: {}
       - name: metrics
-        image: gcr.io/sales-api/metrics-amd64:1.0
+        image: gcr.io/got-sales-api/metrics-amd64:1.0
         env:
         - name: METRICS_COLLECT_FROM
           value: "http://localhost:4000/debug/vars"
@@ -45,7 +43,7 @@ spec:
           containerPort: 4001
         resources: {}
       - name: tracer
-        image: gcr.io/sales-api/tracer-amd64:1.0
+        image: gcr.io/got-sales-api/tracer-amd64:1.0
         env:
         - name: TRACER_ZIPKIN_HOST
           value: "http://localhost:9411/api/v2/spans"
