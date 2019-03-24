@@ -70,7 +70,7 @@ func main() {
 		}
 		Auth struct {
 			KeyID          string `envconfig:"KEY_ID"`
-			PrivateKeyFile string `default:"private.pem" envconfig:"PRIVATE_KEY_FILE"`
+			PrivateKeyFile string `default:"/app/private.pem" envconfig:"PRIVATE_KEY_FILE"`
 			Algorithm      string `default:"RS256" envconfig:"ALGORITHM"`
 		}
 	}

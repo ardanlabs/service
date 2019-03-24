@@ -10,7 +10,7 @@ admin:
 
 sales-api:
 	docker build \
-		-t sales-api-amd64:1.0 \
+		-t gcr.io/sales-api/sales-api-amd64:1.0 \
 		--build-arg PACKAGE_NAME=sales-api \
 		--build-arg VCS_REF=`git rev-parse HEAD` \
 		--build-arg BUILD_DATE=`date -u +”%Y-%m-%dT%H:%M:%SZ”` \
@@ -19,7 +19,7 @@ sales-api:
 
 metrics:
 	docker build \
-		-t metrics-amd64:1.0 \
+		-t gcr.io/sales-api/metrics-amd64:1.0 \
 		--build-arg PACKAGE_NAME=metrics \
 		--build-arg PACKAGE_PREFIX=sidecar/ \
 		--build-arg VCS_REF=`git rev-parse HEAD` \
@@ -30,7 +30,7 @@ metrics:
 tracer:
 	cd "$$GOPATH/src/github.com/ardanlabs/service"
 	docker build \
-		-t tracer-amd64:1.0 \
+		-t gcr.io/sales-api/tracer-amd64:1.0 \
 		--build-arg PACKAGE_NAME=tracer \
 		--build-arg PACKAGE_PREFIX=sidecar/ \
 		--build-arg VCS_REF=`git rev-parse HEAD` \
@@ -56,3 +56,60 @@ stop-all:
 
 remove-all:
 	docker rm $(docker ps -aq)
+
+#===============================================================================
+# GKE
+
+.EXPORT_ALL_VARIABLES:
+ACCOUNT_ID=00C91F-627BC4-D427FD
+
+config:
+	@echo Setting environment for sales-api
+	gcloud config set project sales-api
+	gcloud config set compute/zone us-central1-b
+	gcloud auth configure-docker
+	@echo ======================================================================
+
+project:
+	gcloud projects create sales-api
+	gcloud beta billing projects link sales-api --billing-account=$(ACCOUNT_ID)
+	gcloud services enable container.googleapis.com
+	@echo ======================================================================
+
+cluster:
+	gcloud container clusters create sales-api-cluster --num-nodes=2 --machine-type=n1-standard-2
+	gcloud compute instances list
+	@echo ======================================================================
+
+upload:
+	docker push gcr.io/sales-api/sales-api-amd64:1.0
+	docker push gcr.io/sales-api/metrics-amd64:1.0
+	docker push gcr.io/sales-api/tracer-amd64:1.0
+	@echo ======================================================================
+
+database:
+	kubectl create -f gke-deploy-database.yaml
+	kubectl expose -f gke-expose-database.yaml
+	@echo ======================================================================
+
+services:
+	kubectl create -f gke-deploy-service.yaml
+	kubectl expose -f gke-expose-service.yaml --type=LoadBalancer
+	@echo ======================================================================
+
+status:
+	gcloud container clusters list
+	kubectl get nodes
+	kubectl get pods
+	kubectl get services sales-api
+	@echo ======================================================================
+
+delete:
+	kubectl delete services sales-api
+	kubectl delete deployment sales-api	
+	gcloud container clusters delete sales-api-cluster
+	gcloud projects delete sales-api
+	docker image remove gcr.io/sales-api/sales-api-amd64:1.0
+	docker image remove gcr.io/sales-api/metrics-amd64:1.0
+	docker image remove gcr.io/sales-api/tracer-amd64:1.0
+	@echo ======================================================================
