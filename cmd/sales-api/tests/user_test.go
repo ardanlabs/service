@@ -88,7 +88,7 @@ func getToken200(t *testing.T) {
 // postUser400 validates a user can't be created with the endpoint
 // unless a valid user document is submitted.
 func postUser400(t *testing.T) {
-	body, err := json.Marshal(&user.User{})
+	body, err := json.Marshal(&user.NewUser{})
 	if err != nil {
 		t.Fatal(err)
 	}
