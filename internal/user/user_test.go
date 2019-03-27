@@ -87,11 +87,19 @@ func TestUser(t *testing.T) {
 			t.Logf("\t%s\tShould be able to retrieve user.", tests.Success)
 
 			if savedU.Name != *upd.Name {
-				t.Log("\t\tGot :", savedU.Name)
-				t.Log("\t\tWant:", *upd.Name)
-				t.Errorf("\t%s\tShould be able to see updates to LastName.", tests.Failed)
+				t.Log("\t\tGot:", savedU.Name)
+				t.Log("\t\tExp:", *upd.Name)
+				t.Errorf("\t%s\tShould be able to see updates to Name.", tests.Failed)
 			} else {
-				t.Logf("\t%s\tShould be able to see updates to LastName.", tests.Success)
+				t.Logf("\t%s\tShould be able to see updates to Name.", tests.Success)
+			}
+
+			if savedU.Email != *upd.Email {
+				t.Log("\t\tGot:", savedU.Email)
+				t.Log("\t\tExp:", *upd.Email)
+				t.Errorf("\t%s\tShould be able to see updates to Email.", tests.Failed)
+			} else {
+				t.Logf("\t%s\tShould be able to see updates to Email.", tests.Success)
 			}
 
 			if err := user.Delete(ctx, dbConn, u.ID.Hex()); err != nil {
