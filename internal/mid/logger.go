@@ -28,7 +28,7 @@ func RequestLogger(before web.Handler) web.Handler {
 
 		err := before(ctx, log, w, r, params)
 
-		log.Printf("%s : (%d) : %s %s -> %s (%s)",
+		log.Printf("%s : (%d) : %s %s -> %s (%s)\n",
 			v.TraceID,
 			v.StatusCode,
 			r.Method, r.URL.Path,

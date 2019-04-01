@@ -25,12 +25,10 @@ services:
     container_name: sales-api
     networks:
       - shared-network
-    image: sales-api-amd64:1.0
+    image: gcr.io/sales-api/sales-api-amd64:1.0
     ports:
       - 3000:3000 # CRUD API
       - 4000:4000 # DEBUG API
-    volumes:
-      - ${PWD}/private.pem:/app/private.pem
     environment:
       - SALES_AUTH_KEY_ID=1
       # - SALES_DB_HOST=got:got2015@ds039441.mongolab.com:39441/gotraining
@@ -41,7 +39,7 @@ services:
     container_name: metrics
     networks:
       - shared-network
-    image: metrics-amd64:1.0
+    image: gcr.io/sales-api/metrics-amd64:1.0
     ports:
       - 3001:3001 # EXPVAR API
       - 4001:4001 # DEBUG API
@@ -51,7 +49,7 @@ services:
     container_name: tracer
     networks:
       - shared-network
-    image: tracer-amd64:1.0
+    image: gcr.io/sales-api/tracer-amd64:1.0
     ports:
       - 3002:3002 # TRACER API
       - 4002:4002 # DEBUG API

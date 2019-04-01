@@ -3,6 +3,7 @@ package tests
 import (
 	"crypto/rand"
 	"crypto/rsa"
+	"net/http"
 	"os"
 	"testing"
 	"time"
@@ -10,11 +11,10 @@ import (
 	"github.com/ardanlabs/service/cmd/sales-api/handlers"
 	"github.com/ardanlabs/service/internal/platform/auth"
 	"github.com/ardanlabs/service/internal/platform/tests"
-	"github.com/ardanlabs/service/internal/platform/web"
 	"github.com/ardanlabs/service/internal/user"
 )
 
-var a *web.App
+var a http.Handler
 var test *tests.Test
 
 // Information about the users we have created for testing.
@@ -46,7 +46,7 @@ func testMain(m *testing.M) int {
 	}
 
 	shutdown := make(chan os.Signal, 1)
-	a = handlers.API(shutdown, test.Log, test.MasterDB, authenticator).(*web.App)
+	a = handlers.API(shutdown, test.Log, test.MasterDB, authenticator)
 
 	// Create an admin user directly with our business logic. This creates an
 	// initial user that we will use for admin validated endpoints.
