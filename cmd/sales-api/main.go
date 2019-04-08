@@ -157,24 +157,14 @@ func main() {
 	trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
 
 	// =========================================================================
-	// Start Debug Service
-
+	// Start Debug Service. Not concerned with shutting this down when the
+	// application is being shutdown.
+	//
 	// /debug/vars - Added to the default mux by the expvars package.
 	// /debug/pprof - Added to the default mux by the net/http/pprof package.
-
-	debug := http.Server{
-		Addr:           cfg.Web.DebugHost,
-		Handler:        http.DefaultServeMux,
-		ReadTimeout:    cfg.Web.ReadTimeout,
-		WriteTimeout:   cfg.Web.WriteTimeout,
-		MaxHeaderBytes: 1 << 20,
-	}
-
-	// Not concerned with shutting this down when the
-	// application is being shutdown.
 	go func() {
 		log.Printf("main : Debug Listening %s", cfg.Web.DebugHost)
-		log.Printf("main : Debug Listener closed : %v", debug.ListenAndServe())
+		log.Printf("main : Debug Listener closed : %v", http.ListenAndServe(cfg.Web.DebugHost, http.DefaultServeMux))
 	}()
 
 	// =========================================================================

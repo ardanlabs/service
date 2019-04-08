@@ -61,23 +61,13 @@ func main() {
 	log.Printf("config : %v\n", string(cfgJSON))
 
 	// =========================================================================
-	// Start Debug Service
-
-	// /debug/pprof - Added to the default mux by the net/http/pprof package.
-
-	debug := http.Server{
-		Addr:           cfg.Web.DebugHost,
-		Handler:        http.DefaultServeMux,
-		ReadTimeout:    cfg.Web.ReadTimeout,
-		WriteTimeout:   cfg.Web.WriteTimeout,
-		MaxHeaderBytes: 1 << 20,
-	}
-
-	// Not concerned with shutting this down when the
+	// Start Debug Service. Not concerned with shutting this down when the
 	// application is being shutdown.
+	//
+	// /debug/pprof - Added to the default mux by the net/http/pprof package.
 	go func() {
 		log.Printf("main : Debug Listening %s", cfg.Web.DebugHost)
-		log.Printf("main : Debug Listener closed : %v", debug.ListenAndServe())
+		log.Printf("main : Debug Listener closed : %v", http.ListenAndServe(cfg.Web.DebugHost, http.DefaultServeMux))
 	}()
 
 	// =========================================================================
