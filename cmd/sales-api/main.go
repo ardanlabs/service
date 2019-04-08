@@ -4,7 +4,7 @@ import (
 	"context"
 	"crypto/rsa"
 	"encoding/json"
-	_ "expvar"
+	"expvar"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -89,6 +89,8 @@ func main() {
 	// =========================================================================
 	// App Starting
 
+	// Print the build version for our logs. Also expose it under /debug/vars.
+	expvar.NewString("build").Set(build)
 	log.Printf("main : Started : Application Initializing version %q", build)
 	defer log.Println("main : Completed")
 
