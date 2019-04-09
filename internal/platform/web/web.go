@@ -62,9 +62,11 @@ func (a *App) SignalShutdown() {
 // pair, this makes for really easy, convenient routing.
 func (a *App) Handle(verb, path string, handler Handler, mw ...Middleware) {
 
-	// Wrap up the application-wide first, this will call the first function
-	// of each middleware which will return a function of type Handler.
-	handler = wrapMiddleware(wrapMiddleware(handler, mw), a.mw)
+	// First wrap handler specific middleware around this handler.
+	handler = wrapMiddleware(mw, handler)
+
+	// Add the application's general middleware to the handler chain.
+	handler = wrapMiddleware(a.mw, handler)
 
 	// The function to execute for each request.
 	h := func(w http.ResponseWriter, r *http.Request, params map[string]string) {
