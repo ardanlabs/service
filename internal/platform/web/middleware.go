@@ -1,14 +1,20 @@
 package web
 
-// A Middleware is a type that wraps a handler to remove boilerplate or other
-// concerns not direct to any given Handler.
+// Middleware is a function designed to run some code before and/or after
+// another Handler. It is designed to remove boilerplate or other concerns not
+// direct to any given Handler.
 type Middleware func(Handler) Handler
 
-// wrapMiddleware wraps a handler with some middleware.
-func wrapMiddleware(handler Handler, mw []Middleware) Handler {
+// wrapMiddleware creates a new handler by wrapping middleware around a final
+// handler. The middlewares' Handlers will be executed by requests in the order
+// they are provided.
+func wrapMiddleware(mw []Middleware, handler Handler) Handler {
 
-	// Wrap with our group specific middleware.
-	for _, h := range mw {
+	// Loop backwards through the middleware invoking each one. Replace the
+	// handler with the new wrapped handler. Looping backwards ensures that the
+	// first middleware of the slice is the first to be executed by requests.
+	for i := len(mw) - 1; i >= 0; i-- {
+		h := mw[i]
 		if h != nil {
 			handler = h(handler)
 		}
