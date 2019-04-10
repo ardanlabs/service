@@ -30,12 +30,11 @@ func (u *User) List(ctx context.Context, log *log.Logger, w http.ResponseWriter,
 	defer dbConn.Close()
 
 	usrs, err := user.List(ctx, dbConn)
-	if err = translate(err); err != nil {
-		return errors.Wrap(err, "")
+	if err != nil {
+		return err
 	}
 
-	web.Respond(ctx, log, w, usrs, http.StatusOK)
-	return nil
+	return web.Respond(ctx, log, w, usrs, http.StatusOK)
 }
 
 // Retrieve returns the specified user from the system.
@@ -48,16 +47,24 @@ func (u *User) Retrieve(ctx context.Context, log *log.Logger, w http.ResponseWri
 
 	claims, ok := ctx.Value(auth.Key).(auth.Claims)
 	if !ok {
-		return web.ErrUnauthorized
+		return errors.New("claims missing from context")
 	}
 
 	usr, err := user.Retrieve(ctx, claims, dbConn, params["id"])
-	if err = translate(err); err != nil {
-		return errors.Wrapf(err, "Id: %s", params["id"])
+	if err != nil {
+		switch err {
+		case user.ErrInvalidID:
+			return web.ErrorWithStatus(err, http.StatusBadRequest)
+		case user.ErrNotFound:
+			return web.ErrorWithStatus(err, http.StatusNotFound)
+		case user.ErrForbidden:
+			return web.ErrorWithStatus(err, http.StatusForbidden)
+		default:
+			return errors.Wrapf(err, "Id: %s", params["id"])
+		}
 	}
 
-	web.Respond(ctx, log, w, usr, http.StatusOK)
-	return nil
+	return web.Respond(ctx, log, w, usr, http.StatusOK)
 }
 
 // Create inserts a new user into the system.
@@ -79,12 +86,11 @@ func (u *User) Create(ctx context.Context, log *log.Logger, w http.ResponseWrite
 	}
 
 	usr, err := user.Create(ctx, dbConn, &newU, v.Now)
-	if err = translate(err); err != nil {
+	if err != nil {
 		return errors.Wrapf(err, "User: %+v", &usr)
 	}
 
-	web.Respond(ctx, log, w, usr, http.StatusCreated)
-	return nil
+	return web.Respond(ctx, log, w, usr, http.StatusCreated)
 }
 
 // Update updates the specified user in the system.
@@ -106,12 +112,20 @@ func (u *User) Update(ctx context.Context, log *log.Logger, w http.ResponseWrite
 	}
 
 	err := user.Update(ctx, dbConn, params["id"], &upd, v.Now)
-	if err = translate(err); err != nil {
-		return errors.Wrapf(err, "Id: %s  User: %+v", params["id"], &upd)
+	if err != nil {
+		switch err {
+		case user.ErrInvalidID:
+			return web.ErrorWithStatus(err, http.StatusBadRequest)
+		case user.ErrNotFound:
+			return web.ErrorWithStatus(err, http.StatusNotFound)
+		case user.ErrForbidden:
+			return web.ErrorWithStatus(err, http.StatusForbidden)
+		default:
+			return errors.Wrapf(err, "Id: %s  User: %+v", params["id"], &upd)
+		}
 	}
 
-	web.Respond(ctx, log, w, nil, http.StatusNoContent)
-	return nil
+	return web.Respond(ctx, log, w, nil, http.StatusNoContent)
 }
 
 // Delete removes the specified user from the system.
@@ -123,12 +137,20 @@ func (u *User) Delete(ctx context.Context, log *log.Logger, w http.ResponseWrite
 	defer dbConn.Close()
 
 	err := user.Delete(ctx, dbConn, params["id"])
-	if err = translate(err); err != nil {
-		return errors.Wrapf(err, "Id: %s", params["id"])
+	if err != nil {
+		switch err {
+		case user.ErrInvalidID:
+			return web.ErrorWithStatus(err, http.StatusBadRequest)
+		case user.ErrNotFound:
+			return web.ErrorWithStatus(err, http.StatusNotFound)
+		case user.ErrForbidden:
+			return web.ErrorWithStatus(err, http.StatusForbidden)
+		default:
+			return errors.Wrapf(err, "Id: %s", params["id"])
+		}
 	}
 
-	web.Respond(ctx, log, w, nil, http.StatusNoContent)
-	return nil
+	return web.Respond(ctx, log, w, nil, http.StatusNoContent)
 }
 
 // Token handles a request to authenticate a user. It expects a request using
@@ -147,14 +169,19 @@ func (u *User) Token(ctx context.Context, log *log.Logger, w http.ResponseWriter
 
 	email, pass, ok := r.BasicAuth()
 	if !ok {
-		return web.ErrUnauthorized
+		err := errors.New("must provide email and password in Basic auth")
+		return web.ErrorWithStatus(err, http.StatusUnauthorized)
 	}
 
 	tkn, err := user.Authenticate(ctx, dbConn, u.TokenGenerator, v.Now, email, pass)
-	if err = translate(err); err != nil {
-		return errors.Wrap(err, "authenticating")
+	if err != nil {
+		switch err {
+		case user.ErrAuthenticationFailure:
+			return web.ErrorWithStatus(err, http.StatusUnauthorized)
+		default:
+			return errors.Wrap(err, "authenticating")
+		}
 	}
 
-	web.Respond(ctx, log, w, tkn, http.StatusOK)
-	return nil
+	return web.Respond(ctx, log, w, tkn, http.StatusOK)
 }
