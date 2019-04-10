@@ -28,12 +28,11 @@ func (p *Product) List(ctx context.Context, log *log.Logger, w http.ResponseWrit
 	defer dbConn.Close()
 
 	products, err := product.List(ctx, dbConn)
-	if err = translate(err); err != nil {
-		return errors.Wrap(err, "")
+	if err != nil {
+		return err
 	}
 
-	web.Respond(ctx, log, w, products, http.StatusOK)
-	return nil
+	return web.Respond(ctx, log, w, products, http.StatusOK)
 }
 
 // Retrieve returns the specified product from the system.
@@ -45,12 +44,18 @@ func (p *Product) Retrieve(ctx context.Context, log *log.Logger, w http.Response
 	defer dbConn.Close()
 
 	prod, err := product.Retrieve(ctx, dbConn, params["id"])
-	if err = translate(err); err != nil {
-		return errors.Wrapf(err, "ID: %s", params["id"])
+	if err != nil {
+		switch err {
+		case product.ErrInvalidID:
+			return web.ErrorWithStatus(err, http.StatusBadRequest)
+		case product.ErrNotFound:
+			return web.ErrorWithStatus(err, http.StatusNotFound)
+		default:
+			return errors.Wrapf(err, "ID: %s", params["id"])
+		}
 	}
 
-	web.Respond(ctx, log, w, prod, http.StatusOK)
-	return nil
+	return web.Respond(ctx, log, w, prod, http.StatusOK)
 }
 
 // Create inserts a new product into the system.
@@ -72,12 +77,11 @@ func (p *Product) Create(ctx context.Context, log *log.Logger, w http.ResponseWr
 	}
 
 	nUsr, err := product.Create(ctx, dbConn, &np, v.Now)
-	if err = translate(err); err != nil {
+	if err != nil {
 		return errors.Wrapf(err, "Product: %+v", &np)
 	}
 
-	web.Respond(ctx, log, w, nUsr, http.StatusCreated)
-	return nil
+	return web.Respond(ctx, log, w, nUsr, http.StatusCreated)
 }
 
 // Update updates the specified product in the system.
@@ -99,12 +103,18 @@ func (p *Product) Update(ctx context.Context, log *log.Logger, w http.ResponseWr
 	}
 
 	err := product.Update(ctx, dbConn, params["id"], up, v.Now)
-	if err = translate(err); err != nil {
-		return errors.Wrapf(err, "ID: %s Update: %+v", params["id"], up)
+	if err != nil {
+		switch err {
+		case product.ErrInvalidID:
+			return web.ErrorWithStatus(err, http.StatusBadRequest)
+		case product.ErrNotFound:
+			return web.ErrorWithStatus(err, http.StatusNotFound)
+		default:
+			return errors.Wrapf(err, "ID: %s Update: %+v", params["id"], up)
+		}
 	}
 
-	web.Respond(ctx, log, w, nil, http.StatusNoContent)
-	return nil
+	return web.Respond(ctx, log, w, nil, http.StatusNoContent)
 }
 
 // Delete removes the specified product from the system.
@@ -116,10 +126,16 @@ func (p *Product) Delete(ctx context.Context, log *log.Logger, w http.ResponseWr
 	defer dbConn.Close()
 
 	err := product.Delete(ctx, dbConn, params["id"])
-	if err = translate(err); err != nil {
-		return errors.Wrapf(err, "Id: %s", params["id"])
+	if err != nil {
+		switch err {
+		case product.ErrInvalidID:
+			return web.ErrorWithStatus(err, http.StatusBadRequest)
+		case product.ErrNotFound:
+			return web.ErrorWithStatus(err, http.StatusNotFound)
+		default:
+			return errors.Wrapf(err, "Id: %s", params["id"])
+		}
 	}
 
-	web.Respond(ctx, log, w, nil, http.StatusNoContent)
-	return nil
+	return web.Respond(ctx, log, w, nil, http.StatusNoContent)
 }

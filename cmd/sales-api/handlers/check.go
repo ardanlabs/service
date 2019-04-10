@@ -33,6 +33,5 @@ func (c *Check) Health(ctx context.Context, log *log.Logger, w http.ResponseWrit
 		Status: "ok",
 	}
 
-	web.Respond(ctx, log, w, status, http.StatusOK)
-	return nil
+	return web.Respond(ctx, log, w, status, http.StatusOK)
 }
