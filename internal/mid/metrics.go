@@ -23,7 +23,7 @@ var m = struct {
 }
 
 // Metrics updates program counters.
-func Metrics(before web.Handler) web.Handler {
+func (mw *Middleware) Metrics(before web.Handler) web.Handler {
 
 	// Wrap this handler around the next one provided.
 	h := func(ctx context.Context, log *log.Logger, w http.ResponseWriter, r *http.Request, params map[string]string) error {

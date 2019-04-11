@@ -11,8 +11,9 @@ import (
 	"go.opencensus.io/trace"
 )
 
-// ErrorHandler for catching and responding to errors.
-func ErrorHandler(before web.Handler) web.Handler {
+// Errors handles errors coming out of the call chain. It detects normal
+// application errors which are used to respond to the client in a uniform way.
+func (mw *Middleware) Errors(before web.Handler) web.Handler {
 
 	// Create the handler that will be attached in the middleware chain.
 	h := func(ctx context.Context, log *log.Logger, w http.ResponseWriter, r *http.Request, params map[string]string) error {
