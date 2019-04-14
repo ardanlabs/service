@@ -10,11 +10,9 @@ import (
 	"go.opencensus.io/trace"
 )
 
-// RequestLogger writes some information about the request to the logs in
-// the format: TraceID : (200) GET /foo -> IP ADDR (latency)
-func RequestLogger(before web.Handler) web.Handler {
-
-	// Wrap this handler around the next one provided.
+// Logger writes some information about the request to the logs in the
+// format: TraceID : (200) GET /foo -> IP ADDR (latency)
+func (mw *Middleware) Logger(before web.Handler) web.Handler {
 	h := func(ctx context.Context, log *log.Logger, w http.ResponseWriter, r *http.Request, params map[string]string) error {
 		ctx, span := trace.StartSpan(ctx, "internal.mid.RequestLogger")
 		defer span.End()
