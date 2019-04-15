@@ -18,11 +18,18 @@ github.com/pborman/uuid
 github.com/pkg/errors
 # go.opencensus.io v0.14.0
 go.opencensus.io/trace
+go.opencensus.io/plugin/ochttp
 go.opencensus.io/plugin/ochttp/propagation/tracecontext
 go.opencensus.io/internal
 go.opencensus.io/trace/internal
+go.opencensus.io/plugin/ochttp/propagation/b3
+go.opencensus.io/stats
+go.opencensus.io/stats/view
+go.opencensus.io/tag
 go.opencensus.io/trace/propagation
 go.opencensus.io
+go.opencensus.io/stats/internal
+go.opencensus.io/internal/tagencoding
 # golang.org/x/crypto v0.0.0-20180910181607-0e37d006457b
 golang.org/x/crypto/bcrypt
 golang.org/x/crypto/blowfish
