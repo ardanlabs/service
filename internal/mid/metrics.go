@@ -30,13 +30,6 @@ func (mw *Middleware) Metrics(before web.Handler) web.Handler {
 		ctx, span := trace.StartSpan(ctx, "internal.mid.Metrics")
 		defer span.End()
 
-		// If the context is missing this value, request the service
-		// to be shutdown gracefully.
-		v, ok := ctx.Value(web.KeyValues).(*web.Values)
-		if !ok {
-			return web.Shutdown("web value missing from context")
-		}
-
 		err := before(ctx, log, w, r, params)
 
 		// Add one to the request counter.
@@ -49,10 +42,11 @@ func (mw *Middleware) Metrics(before web.Handler) web.Handler {
 
 		// Add one to the errors counter if an error occured
 		// on this reuqest.
-		if v.Error {
+		if err != nil {
 			m.err.Add(1)
 		}
 
+		// Return the error so it can be handled further up the chain.
 		return err
 	}
 
