@@ -17,7 +17,8 @@ func API(shutdown chan os.Signal, log *log.Logger, masterDB *db.DB, authenticato
 	// Create the variable that contains all Middleware functions.
 	mw := mid.Middleware{Authenticator: authenticator}
 
-	app := web.New(shutdown, log, mw.Logger, mw.Metrics, mw.Errors)
+	// Construct the web.App which holds all routes as well as common Middleware.
+	app := web.New(shutdown, log, mw.Logger, mw.Errors, mw.Metrics, mw.Panics)
 
 	// Register health check endpoint. This route is not authenticated.
 	check := Check{
