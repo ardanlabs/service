@@ -39,7 +39,7 @@ func Unmarshal(r io.Reader, v interface{}) error {
 	decode := json.NewDecoder(r)
 	decode.DisallowUnknownFields()
 	if err := decode.Decode(v); err != nil {
-		return ErrorWithStatus(err, http.StatusBadRequest)
+		return WrapErrorWithStatus(err, http.StatusBadRequest)
 	}
 
 	var inv InvalidError
@@ -47,7 +47,7 @@ func Unmarshal(r io.Reader, v interface{}) error {
 		for _, fe := range fve.(validator.ValidationErrors) {
 			inv = append(inv, Invalid{Fld: fe.Field, Err: fe.Tag})
 		}
-		return ErrorWithStatus(inv, http.StatusBadRequest)
+		return WrapErrorWithStatus(inv, http.StatusBadRequest)
 	}
 
 	return nil

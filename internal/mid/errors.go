@@ -55,25 +55,23 @@ func (mw *Middleware) Errors(before web.Handler) web.Handler {
 			// Indicate this request had an error.
 			v.Error = true
 
-			serr := web.ToStatusError(err)
+			// Convert the error interface variable to the concrete type
+			// *web.StatusError to find the appropriate HTTP status.
+			statusError := web.NewStatusError(err)
 
-			// Don't log errors based on not found issues. This has
-			// the potential to create noise in the logs.
-			// TODO(jlw) instead of just ignoring NotFound what about other 400 level things? Bad Request, Forbidden, Unauthorized? We are logging the status codes so we know a "bad request" occurred. Do we need to log the messages too?
-
-			// If the error is an internal issue then log it.
-			// Do not log errors that come from client requests.
-			if serr.Status >= http.StatusInternalServerError {
+			// If the error is an internal issue then log the error message.
+			// Do not log error messages that come from client requests.
+			if statusError.Status >= http.StatusInternalServerError {
 				log.Printf("%s : %+v", v.TraceID, err)
 			}
 
-			// Respond with the error.
+			// Respond with the error type we send to clients.
 			res := web.ErrorResponse{
-				Error:  serr.ExternalError(),
-				Fields: serr.Fields,
+				Error:  statusError.String(),
+				Fields: statusError.Fields,
 			}
 
-			if err := web.Respond(ctx, log, w, res, serr.Status); err != nil {
+			if err := web.Respond(ctx, log, w, res, statusError.Status); err != nil {
 				return err
 			}
 
