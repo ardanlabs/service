@@ -47,9 +47,9 @@ func (p *Product) Retrieve(ctx context.Context, log *log.Logger, w http.Response
 	if err != nil {
 		switch err {
 		case product.ErrInvalidID:
-			return web.ErrorWithStatus(err, http.StatusBadRequest)
+			return web.WrapErrorWithStatus(err, http.StatusBadRequest)
 		case product.ErrNotFound:
-			return web.ErrorWithStatus(err, http.StatusNotFound)
+			return web.WrapErrorWithStatus(err, http.StatusNotFound)
 		default:
 			return errors.Wrapf(err, "ID: %s", params["id"])
 		}
@@ -106,9 +106,9 @@ func (p *Product) Update(ctx context.Context, log *log.Logger, w http.ResponseWr
 	if err != nil {
 		switch err {
 		case product.ErrInvalidID:
-			return web.ErrorWithStatus(err, http.StatusBadRequest)
+			return web.WrapErrorWithStatus(err, http.StatusBadRequest)
 		case product.ErrNotFound:
-			return web.ErrorWithStatus(err, http.StatusNotFound)
+			return web.WrapErrorWithStatus(err, http.StatusNotFound)
 		default:
 			return errors.Wrapf(err, "ID: %s Update: %+v", params["id"], up)
 		}
@@ -129,9 +129,9 @@ func (p *Product) Delete(ctx context.Context, log *log.Logger, w http.ResponseWr
 	if err != nil {
 		switch err {
 		case product.ErrInvalidID:
-			return web.ErrorWithStatus(err, http.StatusBadRequest)
+			return web.WrapErrorWithStatus(err, http.StatusBadRequest)
 		case product.ErrNotFound:
-			return web.ErrorWithStatus(err, http.StatusNotFound)
+			return web.WrapErrorWithStatus(err, http.StatusNotFound)
 		default:
 			return errors.Wrapf(err, "Id: %s", params["id"])
 		}

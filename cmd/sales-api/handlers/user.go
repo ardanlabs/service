@@ -54,11 +54,11 @@ func (u *User) Retrieve(ctx context.Context, log *log.Logger, w http.ResponseWri
 	if err != nil {
 		switch err {
 		case user.ErrInvalidID:
-			return web.ErrorWithStatus(err, http.StatusBadRequest)
+			return web.WrapErrorWithStatus(err, http.StatusBadRequest)
 		case user.ErrNotFound:
-			return web.ErrorWithStatus(err, http.StatusNotFound)
+			return web.WrapErrorWithStatus(err, http.StatusNotFound)
 		case user.ErrForbidden:
-			return web.ErrorWithStatus(err, http.StatusForbidden)
+			return web.WrapErrorWithStatus(err, http.StatusForbidden)
 		default:
 			return errors.Wrapf(err, "Id: %s", params["id"])
 		}
@@ -115,11 +115,11 @@ func (u *User) Update(ctx context.Context, log *log.Logger, w http.ResponseWrite
 	if err != nil {
 		switch err {
 		case user.ErrInvalidID:
-			return web.ErrorWithStatus(err, http.StatusBadRequest)
+			return web.WrapErrorWithStatus(err, http.StatusBadRequest)
 		case user.ErrNotFound:
-			return web.ErrorWithStatus(err, http.StatusNotFound)
+			return web.WrapErrorWithStatus(err, http.StatusNotFound)
 		case user.ErrForbidden:
-			return web.ErrorWithStatus(err, http.StatusForbidden)
+			return web.WrapErrorWithStatus(err, http.StatusForbidden)
 		default:
 			return errors.Wrapf(err, "Id: %s  User: %+v", params["id"], &upd)
 		}
@@ -140,11 +140,11 @@ func (u *User) Delete(ctx context.Context, log *log.Logger, w http.ResponseWrite
 	if err != nil {
 		switch err {
 		case user.ErrInvalidID:
-			return web.ErrorWithStatus(err, http.StatusBadRequest)
+			return web.WrapErrorWithStatus(err, http.StatusBadRequest)
 		case user.ErrNotFound:
-			return web.ErrorWithStatus(err, http.StatusNotFound)
+			return web.WrapErrorWithStatus(err, http.StatusNotFound)
 		case user.ErrForbidden:
-			return web.ErrorWithStatus(err, http.StatusForbidden)
+			return web.WrapErrorWithStatus(err, http.StatusForbidden)
 		default:
 			return errors.Wrapf(err, "Id: %s", params["id"])
 		}
@@ -170,14 +170,14 @@ func (u *User) Token(ctx context.Context, log *log.Logger, w http.ResponseWriter
 	email, pass, ok := r.BasicAuth()
 	if !ok {
 		err := errors.New("must provide email and password in Basic auth")
-		return web.ErrorWithStatus(err, http.StatusUnauthorized)
+		return web.WrapErrorWithStatus(err, http.StatusUnauthorized)
 	}
 
 	tkn, err := user.Authenticate(ctx, dbConn, u.TokenGenerator, v.Now, email, pass)
 	if err != nil {
 		switch err {
 		case user.ErrAuthenticationFailure:
-			return web.ErrorWithStatus(err, http.StatusUnauthorized)
+			return web.WrapErrorWithStatus(err, http.StatusUnauthorized)
 		default:
 			return errors.Wrap(err, "authenticating")
 		}

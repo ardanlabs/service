@@ -23,17 +23,17 @@ func (mw *Middleware) Authenticate(after web.Handler) web.Handler {
 		authHdr := r.Header.Get("Authorization")
 		if authHdr == "" {
 			err := errors.New("missing Authorization header")
-			return web.ErrorWithStatus(err, http.StatusUnauthorized)
+			return web.WrapErrorWithStatus(err, http.StatusUnauthorized)
 		}
 
 		tknStr, err := parseAuthHeader(authHdr)
 		if err != nil {
-			return web.ErrorWithStatus(err, http.StatusUnauthorized)
+			return web.WrapErrorWithStatus(err, http.StatusUnauthorized)
 		}
 
 		claims, err := mw.Authenticator.ParseClaims(tknStr)
 		if err != nil {
-			return web.ErrorWithStatus(err, http.StatusUnauthorized)
+			return web.WrapErrorWithStatus(err, http.StatusUnauthorized)
 		}
 
 		// Add claims to the context so they can be retrieved later.
@@ -58,7 +58,7 @@ func parseAuthHeader(bearerStr string) (string, error) {
 
 // ErrForbidden is returned when an authenticated user does not have a
 // sufficient role for an action.
-var ErrForbidden = web.ErrorWithStatus(
+var ErrForbidden = web.WrapErrorWithStatus(
 	errors.New("you are not authorized for that action"),
 	http.StatusUnauthorized,
 )
@@ -71,7 +71,7 @@ func (mw *Middleware) HasRole(roles ...string) func(next web.Handler) web.Handle
 
 			claims, ok := ctx.Value(auth.Key).(auth.Claims)
 			if !ok {
-				// TODO should this be a web.Shutdown?
+				// TODO(jlw) should this be a web.Shutdown?
 				return errors.New("claims missing from context: HasRole called without/before Authenticate")
 			}
 
