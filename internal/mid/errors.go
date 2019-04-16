@@ -7,12 +7,12 @@ import (
 	"runtime/debug"
 
 	"github.com/ardanlabs/service/internal/platform/web"
-	"github.com/pkg/errors"
 	"go.opencensus.io/trace"
 )
 
 // Errors handles errors coming out of the call chain. It detects normal
 // application errors which are used to respond to the client in a uniform way.
+// Unexpected errors (status >= 500) are logged.
 func (mw *Middleware) Errors(before web.Handler) web.Handler {
 
 	// Create the handler that will be attached in the middleware chain.
@@ -37,12 +37,16 @@ func (mw *Middleware) Errors(before web.Handler) web.Handler {
 
 				// Log the panic.
 				log.Printf("%s : ERROR : Panic Caught : %s\n", v.TraceID, r)
+				log.Printf("%s : ERROR : Stacktrace\n%s\n", v.TraceID, debug.Stack())
 
 				// Respond with the error.
-				web.Error(ctx, log, w, errors.New("unhandled"))
+				res := web.ErrorResponse{
+					Error: "unhandled error",
+				}
 
-				// Print out the stack.
-				log.Printf("%s : ERROR : Stacktrace\n%s\n", v.TraceID, debug.Stack())
+				if err := web.Respond(ctx, log, w, res, http.StatusInternalServerError); err != nil {
+					// TODO what if this fails?
+				}
 			}
 		}()
 
@@ -51,24 +55,31 @@ func (mw *Middleware) Errors(before web.Handler) web.Handler {
 			// Indicate this request had an error.
 			v.Error = true
 
-			// What is the root error.
-			err = errors.Cause(err)
+			// Convert the error interface variable to the concrete type
+			// *web.StatusError to find the appropriate HTTP status.
+			statusError := web.NewStatusError(err)
+
+			// If the error is an internal issue then log the error message.
+			// Do not log error messages that come from client requests.
+			if statusError.Status >= http.StatusInternalServerError {
+				log.Printf("%s : %+v", v.TraceID, err)
+			}
+
+			// Respond with the error type we send to clients.
+			res := web.ErrorResponse{
+				Error:  statusError.String(),
+				Fields: statusError.Fields,
+			}
+
+			if err := web.Respond(ctx, log, w, res, statusError.Status); err != nil {
+				return err
+			}
 
 			// If we receive the shutdown err we need to return it
 			// back to the base handler to shutdown the service.
 			if ok := web.IsShutdown(err); ok {
-				web.Error(ctx, log, w, errors.New("unhandled"))
 				return err
 			}
-
-			// Don't log errors based on not found issues. This has
-			// the potential to create noise in the logs.
-			if err != web.ErrNotFound {
-				log.Printf("%s : ERROR : %v\n", v.TraceID, err)
-			}
-
-			// Respond with the error.
-			web.Error(ctx, log, w, err)
 
 			// The error has been handled so we can stop propagating it.
 			return nil

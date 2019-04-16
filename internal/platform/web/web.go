@@ -114,28 +114,3 @@ func (a *App) Handle(verb, path string, handler Handler, mw ...Middleware) {
 func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	a.och.ServeHTTP(w, r)
 }
-
-// shutdown is a type used to help with the graceful termination of the service.
-type shutdown struct {
-	Message string
-}
-
-// Error is the implementation of the error interface.
-func (s *shutdown) Error() string {
-	return s.Message
-}
-
-// Shutdown returns an error that causes the framework to signal
-// a graceful shutdown.
-func Shutdown(message string) error {
-	return &shutdown{message}
-}
-
-// IsShutdown checks to see if the shutdown error is contained
-// in the specified error value.
-func IsShutdown(err error) bool {
-	if _, ok := err.(*shutdown); ok {
-		return true
-	}
-	return false
-}

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net/http"
 
 	validator "gopkg.in/go-playground/validator.v8"
 )
@@ -38,7 +39,7 @@ func Unmarshal(r io.Reader, v interface{}) error {
 	decode := json.NewDecoder(r)
 	decode.DisallowUnknownFields()
 	if err := decode.Decode(v); err != nil {
-		return err
+		return WrapErrorWithStatus(err, http.StatusBadRequest)
 	}
 
 	var inv InvalidError
@@ -46,7 +47,7 @@ func Unmarshal(r io.Reader, v interface{}) error {
 		for _, fe := range fve.(validator.ValidationErrors) {
 			inv = append(inv, Invalid{Fld: fe.Field, Err: fe.Tag})
 		}
-		return inv
+		return WrapErrorWithStatus(inv, http.StatusBadRequest)
 	}
 
 	return nil
