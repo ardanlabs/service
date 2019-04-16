@@ -55,8 +55,8 @@ func (se *StatusError) String() string {
 	return http.StatusText(se.Status)
 }
 
-// NewStatusError takes a regular error and converts it to a StatusError. If the
-// original error is already a *StatusError it is returned directly. If not
+// NewStatusError takes a regular error and converts it to a StatusError. If
+// the original error is already a *StatusError it is returned directly. If not
 // then it is defaulted to an error with a 500 status.
 func NewStatusError(err error) *StatusError {
 
