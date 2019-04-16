@@ -25,7 +25,6 @@ type Values struct {
 	TraceID    string
 	Now        time.Time
 	StatusCode int
-	Error      bool
 }
 
 // A Handler is a type that handles an http request within our own little mini

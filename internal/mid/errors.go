@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 	"net/http"
-	"runtime/debug"
 
 	"github.com/ardanlabs/service/internal/platform/web"
 	"go.opencensus.io/trace"
@@ -27,33 +26,7 @@ func (mw *Middleware) Errors(before web.Handler) web.Handler {
 			return web.Shutdown("web value missing from context")
 		}
 
-		// In the event of a panic, we want to capture it here so we can send an
-		// error down the stack.
-		defer func() {
-			if r := recover(); r != nil {
-
-				// Indicate this request had an error.
-				v.Error = true
-
-				// Log the panic.
-				log.Printf("%s : ERROR : Panic Caught : %s\n", v.TraceID, r)
-				log.Printf("%s : ERROR : Stacktrace\n%s\n", v.TraceID, debug.Stack())
-
-				// Respond with the error.
-				res := web.ErrorResponse{
-					Error: "unhandled error",
-				}
-
-				if err := web.Respond(ctx, log, w, res, http.StatusInternalServerError); err != nil {
-					// TODO what if this fails?
-				}
-			}
-		}()
-
 		if err := before(ctx, log, w, r, params); err != nil {
-
-			// Indicate this request had an error.
-			v.Error = true
 
 			// Convert the error interface variable to the concrete type
 			// *web.StatusError to find the appropriate HTTP status.
