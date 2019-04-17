@@ -165,7 +165,7 @@ func Update(ctx context.Context, dbConn *db.DB, id string, upd *UpdateUser, now 
 
 // Delete removes a user from the database.
 func Delete(ctx context.Context, dbConn *db.DB, id string) error {
-	ctx, span := trace.StartSpan(ctx, "internal.user.Update")
+	ctx, span := trace.StartSpan(ctx, "internal.user.Delete")
 	defer span.End()
 
 	if !bson.IsObjectIdHex(id) {

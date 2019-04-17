@@ -16,7 +16,7 @@ func (mw *Middleware) Errors(before web.Handler) web.Handler {
 
 	// Create the handler that will be attached in the middleware chain.
 	h := func(ctx context.Context, log *log.Logger, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-		ctx, span := trace.StartSpan(ctx, "internal.mid.ErrorHandler")
+		ctx, span := trace.StartSpan(ctx, "internal.mid.Errors")
 		defer span.End()
 
 		// If the context is missing this value, request the service
