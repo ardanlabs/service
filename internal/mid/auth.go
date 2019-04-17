@@ -17,7 +17,7 @@ func (mw *Middleware) Authenticate(after web.Handler) web.Handler {
 
 	// Wrap this handler around the next one provided.
 	h := func(ctx context.Context, log *log.Logger, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-		ctx, span := trace.StartSpan(ctx, "internal.mid.RequestLogger")
+		ctx, span := trace.StartSpan(ctx, "internal.mid.Authenticate")
 		defer span.End()
 
 		authHdr := r.Header.Get("Authorization")
@@ -68,6 +68,8 @@ var ErrForbidden = web.WrapErrorWithStatus(
 func (mw *Middleware) HasRole(roles ...string) func(next web.Handler) web.Handler {
 	fn := func(next web.Handler) web.Handler {
 		h := func(ctx context.Context, log *log.Logger, w http.ResponseWriter, r *http.Request, params map[string]string) error {
+			ctx, span := trace.StartSpan(ctx, "internal.mid.HasRole")
+			defer span.End()
 
 			claims, ok := ctx.Value(auth.Key).(auth.Claims)
 			if !ok {

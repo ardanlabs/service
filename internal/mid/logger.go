@@ -14,7 +14,7 @@ import (
 // format: TraceID : (200) GET /foo -> IP ADDR (latency)
 func (mw *Middleware) Logger(before web.Handler) web.Handler {
 	h := func(ctx context.Context, log *log.Logger, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-		ctx, span := trace.StartSpan(ctx, "internal.mid.RequestLogger")
+		ctx, span := trace.StartSpan(ctx, "internal.mid.Logger")
 		defer span.End()
 
 		// If the context is missing this value, request the service
