@@ -110,27 +110,27 @@ func postUser400(t *testing.T) {
 			t.Logf("\t%s\tShould receive a status code of 400 for the response.", tests.Success)
 
 			// Inspect the response.
-			var got web.JSONError
+			var got web.ErrorResponse
 			if err := json.NewDecoder(w.Body).Decode(&got); err != nil {
 				t.Fatalf("\t%s\tShould be able to unmarshal the response to an error type : %v", tests.Failed, err)
 			}
 			t.Logf("\t%s\tShould be able to unmarshal the response to an error type.", tests.Success)
 
 			// Define what we want to see.
-			want := web.JSONError{
-				Error: "field validation failure",
-				Fields: web.InvalidError{
-					{Fld: "Name", Err: "required"},
-					{Fld: "Email", Err: "required"},
-					{Fld: "Roles", Err: "required"},
-					{Fld: "Password", Err: "required"},
+			want := web.ErrorResponse{
+				Error: "field validation error",
+				Fields: []web.FieldError{
+					{Field: "name", Error: "name is a required field"},
+					{Field: "email", Error: "email is a required field"},
+					{Field: "roles", Error: "roles is a required field"},
+					{Field: "password", Error: "password is a required field"},
 				},
 			}
 
 			// We can't rely on the order of the field errors so they have to be
 			// sorted. Tell the cmp package how to sort them.
-			sorter := cmpopts.SortSlices(func(a, b web.Invalid) bool {
-				return a.Fld < b.Fld
+			sorter := cmpopts.SortSlices(func(a, b web.FieldError) bool {
+				return a.Field < b.Field
 			})
 
 			if diff := cmp.Diff(want, got, sorter); diff != "" {
@@ -216,9 +216,7 @@ func getUser400(t *testing.T) {
 			t.Logf("\t%s\tShould receive a status code of 400 for the response.", tests.Success)
 
 			recv := w.Body.String()
-			resp := `{
-  "error": "ID is not in its proper form"
-}`
+			resp := `{"error":"ID is not in its proper form"}`
 			if resp != recv {
 				t.Log("Got :", recv)
 				t.Log("Want:", resp)
@@ -248,8 +246,8 @@ func getUser403(t *testing.T) {
 			t.Logf("\t%s\tShould receive a status code of 403 for the response.", tests.Success)
 
 			recv := w.Body.String()
-			resp := "Forbidden"
-			if !strings.Contains(recv, resp) {
+			resp := `{"error":"Attempted action is not allowed"}`
+			if resp != recv {
 				t.Log("Got :", recv)
 				t.Log("Want:", resp)
 				t.Fatalf("\t%s\tShould get the expected result.", tests.Failed)
