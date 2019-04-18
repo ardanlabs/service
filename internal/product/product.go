@@ -76,10 +76,8 @@ func Create(ctx context.Context, dbConn *db.DB, cp *NewProduct, now time.Time) (
 	p := Product{
 		ID:           bson.NewObjectId(),
 		Name:         cp.Name,
-		Notes:        cp.Notes,
-		UnitPrice:    cp.UnitPrice,
+		Cost:         cp.Cost,
 		Quantity:     cp.Quantity,
-		Family:       cp.Family,
 		DateCreated:  now,
 		DateModified: now,
 	}
@@ -108,17 +106,11 @@ func Update(ctx context.Context, dbConn *db.DB, id string, upd UpdateProduct, no
 	if upd.Name != nil {
 		fields["name"] = *upd.Name
 	}
-	if upd.Notes != nil {
-		fields["notes"] = *upd.Notes
-	}
-	if upd.UnitPrice != nil {
-		fields["unit_price"] = *upd.UnitPrice
+	if upd.Cost != nil {
+		fields["cost"] = *upd.Cost
 	}
 	if upd.Quantity != nil {
 		fields["quantity"] = *upd.Quantity
-	}
-	if upd.Family != nil {
-		fields["family"] = *upd.Family
 	}
 
 	// If there's nothing to update we can quit early.

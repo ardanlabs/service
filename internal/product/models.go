@@ -6,26 +6,21 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-// Product is something we have for sale.
+// Product is an item we sell.
 type Product struct {
 	ID           bson.ObjectId `bson:"_id" json:"id"`                      // Unique identifier.
 	Name         string        `bson:"name" json:"name"`                   // Display name of the product.
-	Notes        string        `bson:"notes" json:"notes"`                 // Optional descriptive field.
-	Family       string        `bson:"family" json:"family"`               // Which family provided the product.
-	UnitPrice    int           `bson:"unit_price" json:"unit_price"`       // Price for one item in cents.
+	Cost         int           `bson:"cost" json:"cost"`                   // Price for one item in cents.
 	Quantity     int           `bson:"quantity" json:"quantity"`           // Original number of items available.
 	DateCreated  time.Time     `bson:"date_created" json:"date_created"`   // When the product was added.
 	DateModified time.Time     `bson:"date_modified" json:"date_modified"` // When the product record was lost modified.
 }
 
-// NewProduct defines the information we need when adding a Product to
-// our offerings.
+// NewProduct is what we require from clients when adding a Product.
 type NewProduct struct {
-	Name      string `json:"name" validate:"required"`
-	Notes     string `json:"notes"`
-	Family    string `json:"family" validate:"required"`
-	UnitPrice int    `json:"unit_price" validate:"required,gte=0"`
-	Quantity  int    `json:"quantity" validate:"required,gte=1"`
+	Name     string `json:"name" validate:"required"`
+	Cost     int    `json:"cost" validate:"required,gte=0"`
+	Quantity int    `json:"quantity" validate:"required,gte=1"`
 }
 
 // UpdateProduct defines what information may be provided to modify an
@@ -35,11 +30,9 @@ type NewProduct struct {
 // explicitly blank. Normally we do not want to use pointers to basic types but
 // we make exceptions around marshalling/unmarshalling.
 type UpdateProduct struct {
-	Name      *string `json:"name"`
-	Notes     *string `json:"notes"`
-	Family    *string `json:"family"`
-	UnitPrice *int    `json:"unit_price" validate:"omitempty,gte=0"`
-	Quantity  *int    `json:"quantity" validate:"omitempty,gte=1"`
+	Name     *string `json:"name"`
+	Cost     *int    `json:"cost" validate:"omitempty,gte=0"`
+	Quantity *int    `json:"quantity" validate:"omitempty,gte=1"`
 }
 
 // Sale represents a transaction where we sold some quantity of a

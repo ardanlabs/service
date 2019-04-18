@@ -38,11 +38,9 @@ func TestProduct(t *testing.T) {
 			defer dbConn.Close()
 
 			np := product.NewProduct{
-				Name:      "Comic Books",
-				Notes:     "Various conditions.",
-				Family:    "Kennedy",
-				UnitPrice: 25,
-				Quantity:  60,
+				Name:     "Comic Books",
+				Cost:     25,
+				Quantity: 60,
 			}
 
 			p, err := product.Create(ctx, dbConn, &np, time.Now().UTC())
@@ -63,11 +61,9 @@ func TestProduct(t *testing.T) {
 			t.Logf("\t%s\tShould get back the same product.", tests.Success)
 
 			upd := product.UpdateProduct{
-				Name:      tests.StringPointer("Comics"),
-				Notes:     tests.StringPointer(""),
-				Family:    tests.StringPointer("walker"),
-				UnitPrice: tests.IntPointer(50),
-				Quantity:  tests.IntPointer(40),
+				Name:     tests.StringPointer("Comics"),
+				Cost:     tests.IntPointer(50),
+				Quantity: tests.IntPointer(40),
 			}
 
 			if err := product.Update(ctx, dbConn, p.ID.Hex(), upd, time.Now().UTC()); err != nil {
@@ -86,9 +82,7 @@ func TestProduct(t *testing.T) {
 			want := &product.Product{
 				ID:           p.ID,
 				Name:         *upd.Name,
-				Notes:        *upd.Notes,
-				Family:       *upd.Family,
-				UnitPrice:    *upd.UnitPrice,
+				Cost:         *upd.Cost,
 				Quantity:     *upd.Quantity,
 				DateCreated:  p.DateCreated,
 				DateModified: savedP.DateModified,
@@ -118,12 +112,6 @@ func TestProduct(t *testing.T) {
 				t.Fatalf("\t%s\tShould be able to see updated Name field : got %q want %q.", tests.Failed, savedP.Name, *upd.Name)
 			} else {
 				t.Logf("\t%s\tShould be able to see updated Name field.", tests.Success)
-			}
-
-			if savedP.Family != "walker" {
-				t.Fatalf("\t%s\tShould not see updates in other fields : Family was %q want %q.", tests.Failed, savedP.Family, "walker")
-			} else {
-				t.Logf("\t%s\tShould not see updates in other fields.", tests.Success)
 			}
 
 			if err := product.Delete(ctx, dbConn, p.ID.Hex()); err != nil {
