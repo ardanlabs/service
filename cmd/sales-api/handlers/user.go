@@ -81,7 +81,7 @@ func (u *User) Create(ctx context.Context, log *log.Logger, w http.ResponseWrite
 	}
 
 	var newU user.NewUser
-	if err := web.Unmarshal(r.Body, &newU); err != nil {
+	if err := web.Decode(r, &newU); err != nil {
 		return errors.Wrap(err, "")
 	}
 
@@ -107,7 +107,7 @@ func (u *User) Update(ctx context.Context, log *log.Logger, w http.ResponseWrite
 	}
 
 	var upd user.UpdateUser
-	if err := web.Unmarshal(r.Body, &upd); err != nil {
+	if err := web.Decode(r, &upd); err != nil {
 		return errors.Wrap(err, "")
 	}
 

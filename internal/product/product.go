@@ -152,7 +152,7 @@ func Delete(ctx context.Context, dbConn *db.DB, id string) error {
 	}
 	if err := dbConn.Execute(ctx, productsCollection, f); err != nil {
 		if err == mgo.ErrNotFound {
-			err = ErrNotFound
+			return ErrNotFound
 		}
 		return errors.Wrap(err, fmt.Sprintf("db.products.remove(%v)", q))
 	}
