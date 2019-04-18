@@ -60,7 +60,7 @@ func parseAuthHeader(bearerStr string) (string, error) {
 // sufficient role for an action.
 var ErrForbidden = web.WrapErrorWithStatus(
 	errors.New("you are not authorized for that action"),
-	http.StatusUnauthorized,
+	http.StatusForbidden,
 )
 
 // HasRole validates that an authenticated user has at least one role from a
