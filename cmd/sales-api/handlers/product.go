@@ -72,7 +72,7 @@ func (p *Product) Create(ctx context.Context, log *log.Logger, w http.ResponseWr
 	}
 
 	var np product.NewProduct
-	if err := web.Unmarshal(r.Body, &np); err != nil {
+	if err := web.Decode(r, &np); err != nil {
 		return errors.Wrap(err, "")
 	}
 
@@ -98,7 +98,7 @@ func (p *Product) Update(ctx context.Context, log *log.Logger, w http.ResponseWr
 	}
 
 	var up product.UpdateProduct
-	if err := web.Unmarshal(r.Body, &up); err != nil {
+	if err := web.Decode(r, &up); err != nil {
 		return errors.Wrap(err, "")
 	}
 
