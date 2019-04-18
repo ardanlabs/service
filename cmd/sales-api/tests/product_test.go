@@ -100,8 +100,7 @@ func postProduct400(t *testing.T) {
 				Error: "field validation failure",
 				Fields: web.InvalidError{
 					{Fld: "Name", Err: "required"},
-					{Fld: "Family", Err: "required"},
-					{Fld: "UnitPrice", Err: "required"},
+					{Fld: "Cost", Err: "required"},
 					{Fld: "Quantity", Err: "required"},
 				},
 			}
@@ -124,11 +123,9 @@ func postProduct400(t *testing.T) {
 // unless the user is authenticated
 func postProduct401(t *testing.T) {
 	np := product.NewProduct{
-		Name:      "Comic Books",
-		Notes:     "Various conditions.",
-		Family:    "Kennedy",
-		UnitPrice: 25,
-		Quantity:  60,
+		Name:     "Comic Books",
+		Cost:     25,
+		Quantity: 60,
 	}
 
 	body, err := json.Marshal(&np)
@@ -306,11 +303,9 @@ func crudProduct(t *testing.T) {
 // postProduct201 validates a product can be created with the endpoint.
 func postProduct201(t *testing.T) product.Product {
 	np := product.NewProduct{
-		Name:      "Comic Books",
-		Notes:     "Various conditions.",
-		Family:    "Kennedy",
-		UnitPrice: 25,
-		Quantity:  60,
+		Name:     "Comic Books",
+		Cost:     25,
+		Quantity: 60,
 	}
 
 	body, err := json.Marshal(&np)
@@ -345,9 +340,7 @@ func postProduct201(t *testing.T) product.Product {
 			// fields like ID and Dates so we copy p.
 			want := p
 			want.Name = "Comic Books"
-			want.Notes = "Various conditions."
-			want.Family = "Kennedy"
-			want.UnitPrice = 25
+			want.Cost = 25
 			want.Quantity = 60
 
 			if diff := cmp.Diff(want, p); diff != "" {
@@ -409,9 +402,7 @@ func getProduct200(t *testing.T, id string) {
 			want := p
 			want.ID = bson.ObjectIdHex(id)
 			want.Name = "Comic Books"
-			want.Notes = "Various conditions."
-			want.Family = "Kennedy"
-			want.UnitPrice = 25
+			want.Cost = 25
 			want.Quantity = 60
 
 			if diff := cmp.Diff(want, p); diff != "" {
@@ -424,7 +415,7 @@ func getProduct200(t *testing.T, id string) {
 
 // putProduct204 validates updating a product that does exist.
 func putProduct204(t *testing.T, id string) {
-	body := `{"name": "Graphic Novels", "unit_price": 100}`
+	body := `{"name": "Graphic Novels", "cost": 100}`
 	r := httptest.NewRequest("PUT", "/v1/products/"+id, strings.NewReader(body))
 	w := httptest.NewRecorder()
 
@@ -462,11 +453,6 @@ func putProduct204(t *testing.T, id string) {
 				t.Fatalf("\t%s\tShould see an updated Name : got %q want %q", tests.Failed, ru.Name, "Graphic Novels")
 			}
 			t.Logf("\t%s\tShould see an updated Name.", tests.Success)
-
-			if ru.Family != "Kennedy" {
-				t.Fatalf("\t%s\tShould not affect other fields like Family : got %q want %q", tests.Failed, ru.Family, "Kennedy")
-			}
-			t.Logf("\t%s\tShould not affect other fields like Family.", tests.Success)
 		}
 	}
 }
