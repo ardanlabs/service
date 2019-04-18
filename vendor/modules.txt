@@ -2,6 +2,12 @@
 github.com/dgrijalva/jwt-go
 # github.com/dimfeld/httptreemux v5.0.1+incompatible
 github.com/dimfeld/httptreemux
+# github.com/go-playground/locales v0.12.1
+github.com/go-playground/locales/en
+github.com/go-playground/locales
+github.com/go-playground/locales/currency
+# github.com/go-playground/universal-translator v0.16.0
+github.com/go-playground/universal-translator
 # github.com/google/go-cmp v0.2.0
 github.com/google/go-cmp/cmp
 github.com/google/go-cmp/cmp/cmpopts
@@ -10,6 +16,8 @@ github.com/google/go-cmp/cmp/internal/function
 github.com/google/go-cmp/cmp/internal/value
 # github.com/kelseyhightower/envconfig v1.3.0
 github.com/kelseyhightower/envconfig
+# github.com/leodido/go-urn v1.1.0
+github.com/leodido/go-urn
 # github.com/openzipkin/zipkin-go v0.1.1
 github.com/openzipkin/zipkin-go/model
 # github.com/pborman/uuid v0.0.0-20180122190007-c65b2f87fee3
@@ -33,8 +41,9 @@ go.opencensus.io/internal/tagencoding
 # golang.org/x/crypto v0.0.0-20180910181607-0e37d006457b
 golang.org/x/crypto/bcrypt
 golang.org/x/crypto/blowfish
-# gopkg.in/go-playground/validator.v8 v8.18.2
-gopkg.in/go-playground/validator.v8
+# gopkg.in/go-playground/validator.v9 v9.28.0
+gopkg.in/go-playground/validator.v9
+gopkg.in/go-playground/validator.v9/translations/en
 # gopkg.in/mgo.v2 v2.0.0-20180705113604-9856a29383ce
 gopkg.in/mgo.v2
 gopkg.in/mgo.v2/bson
