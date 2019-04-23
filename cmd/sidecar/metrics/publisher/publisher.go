@@ -116,7 +116,7 @@ func (s *Stdout) Publish(data map[string]interface{}) {
 		d["heap"] = memStats["Alloc"]
 	}
 
-	// Remove uncessary keys.
+	// Remove unnecessary keys.
 	delete(d, "memstats")
 	delete(d, "cmdline")
 

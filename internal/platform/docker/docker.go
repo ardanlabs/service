@@ -8,7 +8,7 @@ import (
 	"os/exec"
 )
 
-// Container contains the information about the conainer.
+// Container contains the information about the container.
 type Container struct {
 	ID   string
 	Port string

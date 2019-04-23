@@ -10,7 +10,7 @@ import (
 
 	"github.com/pkg/errors"
 	"go.opencensus.io/trace"
-	mgo "gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2"
 )
 
 // ErrInvalidDBProvided is returned in the event that an uninitialized db is

@@ -10,7 +10,7 @@ import (
 	"github.com/pkg/errors"
 	"go.opencensus.io/trace"
 	"golang.org/x/crypto/bcrypt"
-	mgo "gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
