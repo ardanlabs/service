@@ -39,7 +39,7 @@ func Respond(ctx context.Context, log *log.Logger, w http.ResponseWriter, data i
 	w.WriteHeader(code)
 
 	// Send the result back to the client.
-	if _, err := w.Write([]byte(jsonData)); err != nil {
+	if _, err := w.Write(jsonData); err != nil {
 		return err
 	}
 

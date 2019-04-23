@@ -29,7 +29,7 @@ As an example, this config struct:
 
 Would produce the following flag output:
 
-	Useage of <app name>
+	Usage of <app name>
 	-a --web_apihost string  <0.0.0.0:3000> : The ip:port for the api endpoint.
 	--web_batchsize int  <1000> : Represents number of items to move.
 	--web_readtimeout Duration  <5s>

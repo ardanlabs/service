@@ -45,7 +45,7 @@ func New(log *log.Logger, host string, route string, readTimeout, writeTimeout t
 	return &exp
 }
 
-// Stop shutsdown the service.
+// Stop shutdown the service.
 func (exp *Expvar) Stop(shutdownTimeout time.Duration) {
 	exp.log.Println("expvar : Start shutdown...")
 	defer exp.log.Println("expvar : Completed")

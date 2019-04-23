@@ -19,7 +19,7 @@ import (
 	"github.com/ardanlabs/service/internal/platform/db"
 	"github.com/ardanlabs/service/internal/platform/flag"
 	itrace "github.com/ardanlabs/service/internal/platform/trace"
-	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/kelseyhightower/envconfig"
 	"go.opencensus.io/trace"
 )

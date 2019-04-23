@@ -79,7 +79,7 @@ func main() {
 	// =========================================================================
 	// Start collectors and publishers
 
-	// Initalize to allow for the collection of metrics.
+	// Initialize to allow for the collection of metrics.
 	collector, err := collector.New(cfg.Collect.From)
 	if err != nil {
 		log.Fatalf("main : Starting collector : %v", err)
