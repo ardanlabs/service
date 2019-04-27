@@ -8,7 +8,7 @@ import (
 	"github.com/ardanlabs/service/internal/platform/db"
 	"github.com/pkg/errors"
 	"go.opencensus.io/trace"
-	"gopkg.in/mgo.v2"
+	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
