@@ -21,9 +21,9 @@ const (
 
 // inputSpans represents spans of data for the tests.
 var inputSpans = []*trace.SpanData{
-	&trace.SpanData{Name: "span1"},
-	&trace.SpanData{Name: "span2"},
-	&trace.SpanData{Name: "span3"},
+	{Name: "span1"},
+	{Name: "span2"},
+	{Name: "span3"},
 }
 
 // inputSpansJSON represents a JSON representation of the span data.

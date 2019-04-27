@@ -118,7 +118,7 @@ func marshalDatadog(log *log.Logger, data map[string]interface{}) ([]byte, error
 		case int, float64:
 			doc.Series = append(doc.Series, series{
 				Metric: env + "." + key,
-				Points: [][]interface{}{[]interface{}{"$currenttime", value}},
+				Points: [][]interface{}{{"$currenttime", value}},
 				Type:   mType,
 				Host:   host,
 				Tags:   []string{envTag},
