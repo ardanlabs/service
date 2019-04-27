@@ -4,7 +4,7 @@ import (
 	"crypto/rsa"
 	"fmt"
 
-	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/pkg/errors"
 )
 
@@ -25,7 +25,7 @@ type KeyFunc func(keyID string) (*rsa.PublicKey, error)
 func NewSingleKeyFunc(id string, key *rsa.PublicKey) KeyFunc {
 	return func(kid string) (*rsa.PublicKey, error) {
 		if id != kid {
-			return nil, fmt.Errorf("Unrecognized kid %q", kid)
+			return nil, fmt.Errorf("unrecognized kid %q", kid)
 		}
 		return key, nil
 	}

@@ -40,8 +40,8 @@ func (mw *Middleware) Metrics(before web.Handler) web.Handler {
 			m.gr.Set(int64(runtime.NumGoroutine()))
 		}
 
-		// Add one to the errors counter if an error occured
-		// on this reuqest.
+		// Add one to the errors counter if an error occurred
+		// on this request.
 		if err != nil {
 			m.err.Add(1)
 		}
