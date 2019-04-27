@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/ardanlabs/service/internal/platform/auth"
-	"github.com/dgrijalva/jwt-go"
+	jwt "github.com/dgrijalva/jwt-go"
 )
 
 func TestAuthenticator(t *testing.T) {
