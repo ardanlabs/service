@@ -29,7 +29,7 @@ type Values struct {
 
 // A Handler is a type that handles an http request within our own little mini
 // framework.
-type Handler func(ctx context.Context, log *log.Logger, w http.ResponseWriter, r *http.Request, params map[string]string) error
+type Handler func(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error
 
 // App is the entrypoint into our application and what configures our context
 // object for each of our http handlers. Feel free to add any configuration
@@ -42,8 +42,8 @@ type App struct {
 	mw       []Middleware
 }
 
-// New creates an App value that handle a set of routes for the application.
-func New(shutdown chan os.Signal, log *log.Logger, mw ...Middleware) *App {
+// NewApp creates an App value that handle a set of routes for the application.
+func NewApp(shutdown chan os.Signal, log *log.Logger, mw ...Middleware) *App {
 	app := App{
 		TreeMux:  httptreemux.New(),
 		shutdown: shutdown,
@@ -96,7 +96,7 @@ func (a *App) Handle(verb, path string, handler Handler, mw ...Middleware) {
 		ctx = context.WithValue(ctx, KeyValues, &v)
 
 		// Call the wrapped handler functions.
-		if err := handler(ctx, a.log, w, r, params); err != nil {
+		if err := handler(ctx, w, r, params); err != nil {
 			a.log.Printf("*****> critical shutdown error: %v", err)
 			a.SignalShutdown()
 			return

@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net"
 	"net/http"
 	"strconv"
@@ -55,7 +54,7 @@ func NewZipkin(zipkinHost string, localHost string, sendTimeout time.Duration) *
 }
 
 // Publish takes a batch and publishes that to a host system.
-func (z *Zipkin) Publish(ctx context.Context, log *log.Logger, w http.ResponseWriter, r *http.Request, params map[string]string) error {
+func (z *Zipkin) Publish(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
 	var sd []trace.SpanData
 	if err := json.NewDecoder(r.Body).Decode(&sd); err != nil {
 		return err
@@ -65,7 +64,7 @@ func (z *Zipkin) Publish(ctx context.Context, log *log.Logger, w http.ResponseWr
 		return err
 	}
 
-	web.Respond(ctx, log, w, nil, http.StatusNoContent)
+	web.Respond(ctx, w, nil, http.StatusNoContent)
 
 	return nil
 }

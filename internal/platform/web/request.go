@@ -50,7 +50,7 @@ func Decode(r *http.Request, val interface{}) error {
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
 	if err := decoder.Decode(val); err != nil {
-		return WrapErrorWithStatus(err, http.StatusBadRequest)
+		return RespondError(err, http.StatusBadRequest)
 	}
 
 	if err := validate.Struct(val); err != nil {
@@ -74,8 +74,8 @@ func Decode(r *http.Request, val interface{}) error {
 			fields = append(fields, field)
 		}
 
-		return &StatusError{
-			err:    errors.New("field validation error"),
+		return &Error{
+			Err:    errors.New("field validation error"),
 			Status: http.StatusBadRequest,
 			Fields: fields,
 		}

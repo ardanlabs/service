@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"log"
 	"net/http"
 
 	"github.com/ardanlabs/service/internal/platform/db"
@@ -13,10 +12,12 @@ import (
 // Check provides support for orchestration health checks.
 type Check struct {
 	MasterDB *db.DB
+
+	// ADD OTHER STATE LIKE THE LOGGER IF NEEDED.
 }
 
 // Health validates the service is healthy and ready to accept requests.
-func (c *Check) Health(ctx context.Context, log *log.Logger, w http.ResponseWriter, r *http.Request, params map[string]string) error {
+func (c *Check) Health(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
 	ctx, span := trace.StartSpan(ctx, "handlers.Check.Health")
 	defer span.End()
 
@@ -33,5 +34,5 @@ func (c *Check) Health(ctx context.Context, log *log.Logger, w http.ResponseWrit
 		Status: "ok",
 	}
 
-	return web.Respond(ctx, log, w, status, http.StatusOK)
+	return web.Respond(ctx, w, status, http.StatusOK)
 }
