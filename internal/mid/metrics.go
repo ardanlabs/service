@@ -3,7 +3,6 @@ package mid
 import (
 	"context"
 	"expvar"
-	"log"
 	"net/http"
 	"runtime"
 
@@ -22,33 +21,39 @@ var m = struct {
 	err: expvar.NewInt("errors"),
 }
 
-// Metrics updates program counters.
-func (mw *Middleware) Metrics(before web.Handler) web.Handler {
+// Metrics writes some information about the request to the logs in the
+func Metrics() web.Middleware {
 
-	// Wrap this handler around the next one provided.
-	h := func(ctx context.Context, log *log.Logger, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-		ctx, span := trace.StartSpan(ctx, "internal.mid.Metrics")
-		defer span.End()
+	// This is the actual middleware function to be execute.
+	f := func(before web.Handler) web.Handler {
 
-		err := before(ctx, log, w, r, params)
+		// Wrap this handler around the next one provided.
+		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
+			ctx, span := trace.StartSpan(ctx, "internal.mid.Metrics")
+			defer span.End()
 
-		// Add one to the request counter.
-		m.req.Add(1)
+			err := before(ctx, w, r, params)
 
-		// Include the current count for the number of goroutines.
-		if m.req.Value()%100 == 0 {
-			m.gr.Set(int64(runtime.NumGoroutine()))
+			// Add one to the request counter.
+			m.req.Add(1)
+
+			// Include the current count for the number of goroutines.
+			if m.req.Value()%100 == 0 {
+				m.gr.Set(int64(runtime.NumGoroutine()))
+			}
+
+			// Add one to the errors counter if an error occurred
+			// on this request.
+			if err != nil {
+				m.err.Add(1)
+			}
+
+			// Return the error so it can be handled further up the chain.
+			return err
 		}
 
-		// Add one to the errors counter if an error occurred
-		// on this request.
-		if err != nil {
-			m.err.Add(1)
-		}
-
-		// Return the error so it can be handled further up the chain.
-		return err
+		return h
 	}
 
-	return h
+	return f
 }
