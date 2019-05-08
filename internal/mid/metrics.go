@@ -21,10 +21,10 @@ var m = struct {
 	err: expvar.NewInt("errors"),
 }
 
-// Metrics writes some information about the request to the logs in the
+// Metrics updates program counters.
 func Metrics() web.Middleware {
 
-	// This is the actual middleware function to be execute.
+	// This is the actual middleware function to be executed.
 	f := func(before web.Handler) web.Handler {
 
 		// Wrap this handler around the next one provided.
@@ -34,16 +34,15 @@ func Metrics() web.Middleware {
 
 			err := before(ctx, w, r, params)
 
-			// Add one to the request counter.
+			// Increment the request counter.
 			m.req.Add(1)
 
-			// Include the current count for the number of goroutines.
+			// Update the count for the number of active goroutines every 100 requests.
 			if m.req.Value()%100 == 0 {
 				m.gr.Set(int64(runtime.NumGoroutine()))
 			}
 
-			// Add one to the errors counter if an error occurred
-			// on this request.
+			// Increment the errors counter if an error occurred on this request.
 			if err != nil {
 				m.err.Add(1)
 			}

@@ -14,7 +14,7 @@ import (
 // format: TraceID : (200) GET /foo -> IP ADDR (latency)
 func Logger(log *log.Logger) web.Middleware {
 
-	// This is the actual middleware function to be execute.
+	// This is the actual middleware function to be executed.
 	f := func(before web.Handler) web.Handler {
 
 		// Create the handler that will be attached in the middleware chain.
@@ -38,7 +38,7 @@ func Logger(log *log.Logger) web.Middleware {
 				r.RemoteAddr, time.Since(v.Now),
 			)
 
-			// For consistency return the error we received.
+			// Return the error so it can be handled further up the chain.
 			return err
 		}
 

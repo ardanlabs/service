@@ -15,7 +15,7 @@ import (
 // Unexpected errors (status >= 500) are logged.
 func Errors(log *log.Logger) web.Middleware {
 
-	// This is the actual middleware function to be execute.
+	// This is the actual middleware function to be executed.
 	f := func(before web.Handler) web.Handler {
 
 		// Create the handler that will be attached in the middleware chain.
