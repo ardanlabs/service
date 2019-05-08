@@ -87,17 +87,17 @@ func TestUser(t *testing.T) {
 			t.Logf("\t%s\tShould be able to retrieve user.", tests.Success)
 
 			if savedU.Name != *upd.Name {
+				t.Errorf("\t%s\tShould be able to see updates to Name.", tests.Failed)
 				t.Log("\t\tGot:", savedU.Name)
 				t.Log("\t\tExp:", *upd.Name)
-				t.Errorf("\t%s\tShould be able to see updates to Name.", tests.Failed)
 			} else {
 				t.Logf("\t%s\tShould be able to see updates to Name.", tests.Success)
 			}
 
 			if savedU.Email != *upd.Email {
+				t.Errorf("\t%s\tShould be able to see updates to Email.", tests.Failed)
 				t.Log("\t\tGot:", savedU.Email)
 				t.Log("\t\tExp:", *upd.Email)
-				t.Errorf("\t%s\tShould be able to see updates to Email.", tests.Failed)
 			} else {
 				t.Logf("\t%s\tShould be able to see updates to Email.", tests.Success)
 			}

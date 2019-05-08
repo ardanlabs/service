@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"log"
 	"net/http"
 
 	"github.com/ardanlabs/service/internal/platform/db"
@@ -16,11 +15,11 @@ import (
 type Product struct {
 	MasterDB *db.DB
 
-	// ADD OTHER STATE LIKE THE LOGGER AND CONFIG HERE.
+	// ADD OTHER STATE LIKE THE LOGGER IF NEEDED.
 }
 
 // List returns all the existing products in the system.
-func (p *Product) List(ctx context.Context, log *log.Logger, w http.ResponseWriter, r *http.Request, params map[string]string) error {
+func (p *Product) List(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
 	ctx, span := trace.StartSpan(ctx, "handlers.Product.List")
 	defer span.End()
 
@@ -32,11 +31,11 @@ func (p *Product) List(ctx context.Context, log *log.Logger, w http.ResponseWrit
 		return err
 	}
 
-	return web.Respond(ctx, log, w, products, http.StatusOK)
+	return web.Respond(ctx, w, products, http.StatusOK)
 }
 
 // Retrieve returns the specified product from the system.
-func (p *Product) Retrieve(ctx context.Context, log *log.Logger, w http.ResponseWriter, r *http.Request, params map[string]string) error {
+func (p *Product) Retrieve(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
 	ctx, span := trace.StartSpan(ctx, "handlers.Product.Retrieve")
 	defer span.End()
 
@@ -47,19 +46,19 @@ func (p *Product) Retrieve(ctx context.Context, log *log.Logger, w http.Response
 	if err != nil {
 		switch err {
 		case product.ErrInvalidID:
-			return web.WrapErrorWithStatus(err, http.StatusBadRequest)
+			return web.RespondError(err, http.StatusBadRequest)
 		case product.ErrNotFound:
-			return web.WrapErrorWithStatus(err, http.StatusNotFound)
+			return web.RespondError(err, http.StatusNotFound)
 		default:
 			return errors.Wrapf(err, "ID: %s", params["id"])
 		}
 	}
 
-	return web.Respond(ctx, log, w, prod, http.StatusOK)
+	return web.Respond(ctx, w, prod, http.StatusOK)
 }
 
 // Create inserts a new product into the system.
-func (p *Product) Create(ctx context.Context, log *log.Logger, w http.ResponseWriter, r *http.Request, params map[string]string) error {
+func (p *Product) Create(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
 	ctx, span := trace.StartSpan(ctx, "handlers.Product.Create")
 	defer span.End()
 
@@ -81,11 +80,11 @@ func (p *Product) Create(ctx context.Context, log *log.Logger, w http.ResponseWr
 		return errors.Wrapf(err, "Product: %+v", &np)
 	}
 
-	return web.Respond(ctx, log, w, nUsr, http.StatusCreated)
+	return web.Respond(ctx, w, nUsr, http.StatusCreated)
 }
 
 // Update updates the specified product in the system.
-func (p *Product) Update(ctx context.Context, log *log.Logger, w http.ResponseWriter, r *http.Request, params map[string]string) error {
+func (p *Product) Update(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
 	ctx, span := trace.StartSpan(ctx, "handlers.Product.Update")
 	defer span.End()
 
@@ -106,19 +105,19 @@ func (p *Product) Update(ctx context.Context, log *log.Logger, w http.ResponseWr
 	if err != nil {
 		switch err {
 		case product.ErrInvalidID:
-			return web.WrapErrorWithStatus(err, http.StatusBadRequest)
+			return web.RespondError(err, http.StatusBadRequest)
 		case product.ErrNotFound:
-			return web.WrapErrorWithStatus(err, http.StatusNotFound)
+			return web.RespondError(err, http.StatusNotFound)
 		default:
 			return errors.Wrapf(err, "ID: %s Update: %+v", params["id"], up)
 		}
 	}
 
-	return web.Respond(ctx, log, w, nil, http.StatusNoContent)
+	return web.Respond(ctx, w, nil, http.StatusNoContent)
 }
 
 // Delete removes the specified product from the system.
-func (p *Product) Delete(ctx context.Context, log *log.Logger, w http.ResponseWriter, r *http.Request, params map[string]string) error {
+func (p *Product) Delete(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
 	ctx, span := trace.StartSpan(ctx, "handlers.Product.Delete")
 	defer span.End()
 
@@ -129,13 +128,13 @@ func (p *Product) Delete(ctx context.Context, log *log.Logger, w http.ResponseWr
 	if err != nil {
 		switch err {
 		case product.ErrInvalidID:
-			return web.WrapErrorWithStatus(err, http.StatusBadRequest)
+			return web.RespondError(err, http.StatusBadRequest)
 		case product.ErrNotFound:
-			return web.WrapErrorWithStatus(err, http.StatusNotFound)
+			return web.RespondError(err, http.StatusNotFound)
 		default:
 			return errors.Wrapf(err, "Id: %s", params["id"])
 		}
 	}
 
-	return web.Respond(ctx, log, w, nil, http.StatusNoContent)
+	return web.Respond(ctx, w, nil, http.StatusNoContent)
 }

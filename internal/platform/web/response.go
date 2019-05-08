@@ -3,13 +3,25 @@ package web
 import (
 	"context"
 	"encoding/json"
-	"log"
+	"errors"
 	"net/http"
 )
 
+// RespondErrorMsg wraps a provided error with an HTTP status code. This
+// function should be used when handlers encounter expected errors.
+func RespondErrorMsg(msg string, status int) error {
+	return &Error{errors.New(msg), status, nil}
+}
+
+// RespondError wraps a provided error with an HTTP status code. This
+// function should be used when handlers encounter expected errors.
+func RespondError(err error, status int) error {
+	return &Error{err, status, nil}
+}
+
 // Respond converts a Go value to JSON and sends it to the client.
 // If code is StatusNoContent, v is expected to be nil.
-func Respond(ctx context.Context, log *log.Logger, w http.ResponseWriter, data interface{}, code int) error {
+func Respond(ctx context.Context, w http.ResponseWriter, data interface{}, code int) error {
 
 	// Set the status code for the request logger middleware.
 	// If the context is missing this value, request the service
