@@ -13,7 +13,7 @@ import (
 // reported in Metrics and handled in Errors.
 func Panics() web.Middleware {
 
-	// This is the actual middleware function to be execute.
+	// This is the actual middleware function to be executed.
 	f := func(after web.Handler) web.Handler {
 
 		// Wrap this handler around the next one provided.
