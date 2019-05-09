@@ -32,9 +32,9 @@ func Errors(log *log.Logger) web.Middleware {
 
 			if err := before(ctx, w, r, params); err != nil {
 
-				// If the error was of the type *StatusError, the handler has
+				// If the error was of the type *web.Error, the handler has
 				// a specific status code and error to return. If not, the
-				// handler send any arbitrary error value so use 500.
+				// handler sent any arbitrary error value so use 500.
 				webErr, ok := errors.Cause(err).(*web.Error)
 				if !ok {
 					webErr = &web.Error{
@@ -47,9 +47,10 @@ func Errors(log *log.Logger) web.Middleware {
 				// Log the error.
 				log.Printf("%s : ERROR : %+v", v.TraceID, err)
 
-				// String provides "human readable" error messages that are
-				// intended for service users to see. If the status code is
-				// 500 or higher (the default) then use a generic error message.
+				// Determine the error message service users will see. If the status
+				// code is under 500 then it is a "human readable" error that was
+				// intended for users to see. If the status code is 500 or higher (the
+				// default) then use a generic error message.
 				var errStr string
 				if webErr.Status < http.StatusInternalServerError {
 					errStr = webErr.Err.Error()
