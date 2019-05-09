@@ -195,8 +195,6 @@ type TokenGenerator interface {
 
 // Authenticate finds a user by their email and verifies their password. On
 // success it returns a Token that can be used to authenticate in the future.
-//
-// The key, keyID, and alg are required for generating the token.
 func Authenticate(ctx context.Context, dbConn *db.DB, tknGen TokenGenerator, now time.Time, email, password string) (Token, error) {
 	ctx, span := trace.StartSpan(ctx, "internal.user.Authenticate")
 	defer span.End()
