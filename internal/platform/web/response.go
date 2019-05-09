@@ -3,15 +3,8 @@ package web
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"net/http"
 )
-
-// RespondErrorMsg wraps a provided error with an HTTP status code. This
-// function should be used when handlers encounter expected errors.
-func RespondErrorMsg(msg string, status int) error {
-	return &Error{errors.New(msg), status, nil}
-}
 
 // RespondError wraps a provided error with an HTTP status code. This
 // function should be used when handlers encounter expected errors.
