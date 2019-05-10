@@ -46,9 +46,9 @@ func (p *Product) Retrieve(ctx context.Context, w http.ResponseWriter, r *http.R
 	if err != nil {
 		switch err {
 		case product.ErrInvalidID:
-			return web.RespondError(err, http.StatusBadRequest)
+			return web.NewRequestError(err, http.StatusBadRequest)
 		case product.ErrNotFound:
-			return web.RespondError(err, http.StatusNotFound)
+			return web.NewRequestError(err, http.StatusNotFound)
 		default:
 			return errors.Wrapf(err, "ID: %s", params["id"])
 		}
@@ -67,7 +67,7 @@ func (p *Product) Create(ctx context.Context, w http.ResponseWriter, r *http.Req
 
 	v, ok := ctx.Value(web.KeyValues).(*web.Values)
 	if !ok {
-		return web.Shutdown("web value missing from context")
+		return web.NewShutdownError("web value missing from context")
 	}
 
 	var np product.NewProduct
@@ -93,7 +93,7 @@ func (p *Product) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 
 	v, ok := ctx.Value(web.KeyValues).(*web.Values)
 	if !ok {
-		return web.Shutdown("web value missing from context")
+		return web.NewShutdownError("web value missing from context")
 	}
 
 	var up product.UpdateProduct
@@ -105,9 +105,9 @@ func (p *Product) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 	if err != nil {
 		switch err {
 		case product.ErrInvalidID:
-			return web.RespondError(err, http.StatusBadRequest)
+			return web.NewRequestError(err, http.StatusBadRequest)
 		case product.ErrNotFound:
-			return web.RespondError(err, http.StatusNotFound)
+			return web.NewRequestError(err, http.StatusNotFound)
 		default:
 			return errors.Wrapf(err, "ID: %s Update: %+v", params["id"], up)
 		}
@@ -128,9 +128,9 @@ func (p *Product) Delete(ctx context.Context, w http.ResponseWriter, r *http.Req
 	if err != nil {
 		switch err {
 		case product.ErrInvalidID:
-			return web.RespondError(err, http.StatusBadRequest)
+			return web.NewRequestError(err, http.StatusBadRequest)
 		case product.ErrNotFound:
-			return web.RespondError(err, http.StatusNotFound)
+			return web.NewRequestError(err, http.StatusNotFound)
 		default:
 			return errors.Wrapf(err, "Id: %s", params["id"])
 		}
