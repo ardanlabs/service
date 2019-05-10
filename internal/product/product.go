@@ -2,159 +2,172 @@ package product
 
 import (
 	"context"
-	"fmt"
+	"database/sql"
 	"time"
 
-	"github.com/ardanlabs/service/internal/platform/db"
+	"github.com/ardanlabs/service/internal/platform/auth"
+	"github.com/google/uuid"
+	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"go.opencensus.io/trace"
-	mgo "gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
 )
 
-const productsCollection = "products"
-
+// Predefined errors identify expected failure conditions.
 var (
-	// ErrNotFound abstracts the mgo not found error.
-	ErrNotFound = errors.New("Entity not found")
+	// ErrNotFound is used when a specific Product is requested but does not exist.
+	ErrNotFound = errors.New("product not found")
 
-	// ErrInvalidID occurs when an ID is not in a valid form.
+	// ErrInvalidID is used when an invalid UUID is provided.
 	ErrInvalidID = errors.New("ID is not in its proper form")
+
+	// ErrForbidden occurs when a user tries to do something that is forbidden to
+	// them according to our access control policies.
+	ErrForbidden = errors.New("Attempted action is not allowed")
 )
 
-// List retrieves a list of existing products from the database.
-func List(ctx context.Context, dbConn *db.DB) ([]Product, error) {
+// List gets all Products from the database.
+func List(ctx context.Context, db *sqlx.DB) ([]Product, error) {
 	ctx, span := trace.StartSpan(ctx, "internal.product.List")
 	defer span.End()
 
-	p := []Product{}
+	var products []Product
+	const q = `SELECT
+			p.*,
+			COALESCE(SUM(s.quantity) ,0) AS sold,
+			COALESCE(SUM(s.paid), 0) AS revenue
+		FROM products AS p
+		LEFT JOIN sales AS s ON p.product_id = s.product_id
+		GROUP BY p.product_id`
 
-	f := func(collection *mgo.Collection) error {
-		return collection.Find(nil).All(&p)
-	}
-	if err := dbConn.Execute(ctx, productsCollection, f); err != nil {
-		return nil, errors.Wrap(err, "db.products.find()")
+	if err := db.SelectContext(ctx, &products, q); err != nil {
+		return nil, errors.Wrap(err, "selecting products")
 	}
 
-	return p, nil
+	return products, nil
 }
 
-// Retrieve gets the specified product from the database.
-func Retrieve(ctx context.Context, dbConn *db.DB, id string) (*Product, error) {
-	ctx, span := trace.StartSpan(ctx, "internal.product.Retrieve")
-	defer span.End()
-
-	if !bson.IsObjectIdHex(id) {
-		return nil, ErrInvalidID
-	}
-
-	q := bson.M{"_id": bson.ObjectIdHex(id)}
-
-	var p *Product
-	f := func(collection *mgo.Collection) error {
-		return collection.Find(q).One(&p)
-	}
-	if err := dbConn.Execute(ctx, productsCollection, f); err != nil {
-		if err == mgo.ErrNotFound {
-			return nil, ErrNotFound
-		}
-		return nil, errors.Wrap(err, fmt.Sprintf("db.products.find(%s)", db.Query(q)))
-	}
-
-	return p, nil
-}
-
-// Create inserts a new product into the database.
-func Create(ctx context.Context, dbConn *db.DB, cp *NewProduct, now time.Time) (*Product, error) {
+// Create adds a Product to the database. It returns the created Product with
+// fields like ID and DateCreated populated..
+func Create(ctx context.Context, db *sqlx.DB, user auth.Claims, np NewProduct, now time.Time) (*Product, error) {
 	ctx, span := trace.StartSpan(ctx, "internal.product.Create")
 	defer span.End()
 
-	// Mongo truncates times to milliseconds when storing. We and do the same
-	// here so the value we return is consistent with what we store.
-	now = now.Truncate(time.Millisecond)
-
 	p := Product{
-		ID:           bson.NewObjectId(),
-		Name:         cp.Name,
-		Cost:         cp.Cost,
-		Quantity:     cp.Quantity,
-		DateCreated:  now,
-		DateModified: now,
+		ID:          uuid.New().String(),
+		Name:        np.Name,
+		Cost:        np.Cost,
+		Quantity:    np.Quantity,
+		UserID:      user.Subject,
+		DateCreated: now.UTC(),
+		DateUpdated: now.UTC(),
 	}
 
-	f := func(collection *mgo.Collection) error {
-		return collection.Insert(&p)
-	}
-	if err := dbConn.Execute(ctx, productsCollection, f); err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf("db.products.insert(%s)", db.Query(&p)))
+	const q = `
+		INSERT INTO products
+		(product_id, user_id, name, cost, quantity, date_created, date_updated)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)`
+
+	_, err := db.ExecContext(ctx, q,
+		p.ID, p.UserID,
+		p.Name, p.Cost, p.Quantity,
+		p.DateCreated, p.DateUpdated)
+	if err != nil {
+		return nil, errors.Wrap(err, "inserting product")
 	}
 
 	return &p, nil
 }
 
-// Update replaces a product document in the database.
-func Update(ctx context.Context, dbConn *db.DB, id string, upd UpdateProduct, now time.Time) error {
+// Retrieve finds the product identified by a given ID.
+func Retrieve(ctx context.Context, db *sqlx.DB, id string) (*Product, error) {
+	ctx, span := trace.StartSpan(ctx, "internal.product.Retrieve")
+	defer span.End()
+
+	if _, err := uuid.Parse(id); err != nil {
+		return nil, ErrInvalidID
+	}
+
+	var p Product
+
+	const q = `SELECT
+			p.*,
+			COALESCE(SUM(s.quantity), 0) AS sold,
+			COALESCE(SUM(s.paid), 0) AS revenue
+		FROM products AS p
+		LEFT JOIN sales AS s ON p.product_id = s.product_id
+		WHERE p.product_id = $1
+		GROUP BY p.product_id`
+
+	if err := db.GetContext(ctx, &p, q, id); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, ErrNotFound
+		}
+
+		return nil, errors.Wrap(err, "selecting single product")
+	}
+
+	return &p, nil
+}
+
+// Update modifies data about a Product. It will error if the specified ID is
+// invalid or does not reference an existing Product.
+func Update(ctx context.Context, db *sqlx.DB, user auth.Claims, id string, update UpdateProduct, now time.Time) error {
 	ctx, span := trace.StartSpan(ctx, "internal.product.Update")
 	defer span.End()
 
-	if !bson.IsObjectIdHex(id) {
-		return ErrInvalidID
+	p, err := Retrieve(ctx, db, id)
+	if err != nil {
+		return err
 	}
 
-	fields := make(bson.M)
-
-	if upd.Name != nil {
-		fields["name"] = *upd.Name
-	}
-	if upd.Cost != nil {
-		fields["cost"] = *upd.Cost
-	}
-	if upd.Quantity != nil {
-		fields["quantity"] = *upd.Quantity
+	// If you do not have the admin role ...
+	// and you are not the owner of this product ...
+	// then get outta here!
+	if !user.HasRole(auth.RoleAdmin) && p.UserID != user.Subject {
+		return ErrForbidden
 	}
 
-	// If there's nothing to update we can quit early.
-	if len(fields) == 0 {
-		return nil
+	if update.Name != nil {
+		p.Name = *update.Name
 	}
-
-	fields["date_modified"] = now
-
-	m := bson.M{"$set": fields}
-	q := bson.M{"_id": bson.ObjectIdHex(id)}
-
-	f := func(collection *mgo.Collection) error {
-		return collection.Update(q, m)
+	if update.Cost != nil {
+		p.Cost = *update.Cost
 	}
-	if err := dbConn.Execute(ctx, productsCollection, f); err != nil {
-		if err == mgo.ErrNotFound {
-			return ErrNotFound
-		}
-		return errors.Wrap(err, fmt.Sprintf("db.customers.update(%s, %s)", db.Query(q), db.Query(m)))
+	if update.Quantity != nil {
+		p.Quantity = *update.Quantity
+	}
+	p.DateUpdated = now
+
+	const q = `UPDATE products SET
+		"name" = $2,
+		"cost" = $3,
+		"quantity" = $4,
+		"date_updated" = $5
+		WHERE product_id = $1`
+	_, err = db.ExecContext(ctx, q, id,
+		p.Name, p.Cost,
+		p.Quantity, p.DateUpdated,
+	)
+	if err != nil {
+		return errors.Wrap(err, "updating product")
 	}
 
 	return nil
 }
 
-// Delete removes a product from the database.
-func Delete(ctx context.Context, dbConn *db.DB, id string) error {
+// Delete removes the product identified by a given ID.
+func Delete(ctx context.Context, db *sqlx.DB, id string) error {
 	ctx, span := trace.StartSpan(ctx, "internal.product.Delete")
 	defer span.End()
 
-	if !bson.IsObjectIdHex(id) {
+	if _, err := uuid.Parse(id); err != nil {
 		return ErrInvalidID
 	}
 
-	q := bson.M{"_id": bson.ObjectIdHex(id)}
+	const q = `DELETE FROM products WHERE product_id = $1`
 
-	f := func(collection *mgo.Collection) error {
-		return collection.Remove(q)
-	}
-	if err := dbConn.Execute(ctx, productsCollection, f); err != nil {
-		if err == mgo.ErrNotFound {
-			return ErrNotFound
-		}
-		return errors.Wrap(err, fmt.Sprintf("db.products.remove(%v)", q))
+	if _, err := db.ExecContext(ctx, q, id); err != nil {
+		return errors.Wrapf(err, "deleting product %s", id)
 	}
 
 	return nil

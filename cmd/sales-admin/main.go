@@ -16,6 +16,8 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/internal/platform/auth"
+	"github.com/ardanlabs/service/internal/platform/database"
+	"github.com/ardanlabs/service/internal/platform/database/schema"
 	"github.com/ardanlabs/service/internal/platform/db"
 	"github.com/ardanlabs/service/internal/platform/flag"
 	"github.com/ardanlabs/service/internal/user"
@@ -34,11 +36,8 @@ func main() {
 	// Configuration
 
 	var cfg struct {
-		CMD string `envconfig:"CMD"`
-		DB  struct {
-			DialTimeout time.Duration `default:"5s" envconfig:"DIAL_TIMEOUT"`
-			Host        string        `default:"localhost:27017/gotraining" envconfig:"HOST"`
-		}
+		CMD  string `envconfig:"CMD"`
+		DB   database.Config
 		Auth struct {
 			PrivateKeyFile string `default:"private.pem" envconfig:"PRIVATE_KEY_FILE"`
 		}
@@ -64,9 +63,13 @@ func main() {
 	case "keygen":
 		err = keygen(cfg.Auth.PrivateKeyFile)
 	case "useradd":
-		err = useradd(cfg.DB.Host, cfg.DB.DialTimeout, cfg.User.Email, cfg.User.Password)
+		err = useradd(cfg.DB, cfg.User.Email, cfg.User.Password)
+	case "migrate":
+		err = migrate(cfg.DB)
+	case "seed":
+		err = seed(cfg.DB)
 	default:
-		err = errors.New("Must provide --cmd keygen or --cmd useradd")
+		err = errors.New("Must provide --cmd")
 	}
 
 	if err != nil {
@@ -103,9 +106,10 @@ func keygen(path string) error {
 	return nil
 }
 
-func useradd(dbHost string, dbTimeout time.Duration, email, pass string) error {
+func useradd(cfg database.Config, email, pass string) error {
 
-	dbConn, err := db.New(dbHost, dbTimeout)
+	// NOTE this changes in the final PR
+	dbConn, err := db.New("localhost:27017/gotraining", 5*time.Second)
 	if err != nil {
 		return err
 	}
@@ -134,4 +138,24 @@ func useradd(dbHost string, dbTimeout time.Duration, email, pass string) error {
 
 	fmt.Printf("User created with id: %v\n", usr.ID.Hex())
 	return nil
+}
+
+func migrate(cfg database.Config) error {
+	db, err := database.Open(cfg)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	return schema.Migrate(db)
+}
+
+func seed(cfg database.Config) error {
+	db, err := database.Open(cfg)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	return schema.Seed(db)
 }

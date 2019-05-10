@@ -4,28 +4,36 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/ardanlabs/service/internal/mid"
 	"github.com/ardanlabs/service/internal/platform/auth"
-	"github.com/ardanlabs/service/internal/platform/db"
+	mongo "github.com/ardanlabs/service/internal/platform/db" // Import is removed in final PR
 	"github.com/ardanlabs/service/internal/platform/web"
+	"github.com/jmoiron/sqlx"
 )
 
-// API returns a handler for a set of routes.
-func API(shutdown chan os.Signal, log *log.Logger, masterDB *db.DB, authenticator *auth.Authenticator) http.Handler {
+// API constructs an http.Handler with all application routes defined.
+func API(shutdown chan os.Signal, log *log.Logger, db *sqlx.DB, authenticator *auth.Authenticator) http.Handler {
 
 	// Construct the web.App which holds all routes as well as common Middleware.
 	app := web.NewApp(shutdown, log, mid.Logger(log), mid.Errors(log), mid.Metrics(), mid.Panics())
 
+	// NOTE this is just for the WIP. Not going to be in final PR.
+	mdb, err := mongo.New("localhost:27017/gotraining", 5*time.Second)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	// Register health check endpoint. This route is not authenticated.
 	check := Check{
-		MasterDB: masterDB,
+		MasterDB: mdb,
 	}
 	app.Handle("GET", "/v1/health", check.Health)
 
 	// Register user management and authentication endpoints.
 	u := User{
-		MasterDB:       masterDB,
+		MasterDB:       mdb,
 		TokenGenerator: authenticator,
 	}
 	app.Handle("GET", "/v1/users", u.List, mid.Authenticate(authenticator), mid.HasRole(auth.RoleAdmin))
@@ -39,7 +47,7 @@ func API(shutdown chan os.Signal, log *log.Logger, masterDB *db.DB, authenticato
 
 	// Register product and sale endpoints.
 	p := Product{
-		MasterDB: masterDB,
+		db: db,
 	}
 	app.Handle("GET", "/v1/products", p.List, mid.Authenticate(authenticator))
 	app.Handle("POST", "/v1/products", p.Create, mid.Authenticate(authenticator))
