@@ -9,12 +9,11 @@ import (
 
 // Config is the required properties to use the database.
 type Config struct {
-	User     string `default:"postgres"`
-	Password string `default:"postgres" json:"-"` // Prevent the marshalling of secrets.
-	Host     string `default:"localhost"`
-	Name     string `default:"postgres"`
-
-	DisableTLS bool `default:"false" split_words:"true"`
+	User       string
+	Password   string
+	Host       string
+	Name       string
+	DisableTLS bool
 }
 
 // Open knows how to open a database connection based on the configuration.
@@ -27,7 +26,7 @@ func Open(cfg Config) (*sqlx.DB, error) {
 	}
 
 	// Query parameters.
-	q := url.Values{}
+	var q url.Values
 	q.Set("sslmode", sslMode)
 	q.Set("timezone", "utc")
 

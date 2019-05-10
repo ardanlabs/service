@@ -36,8 +36,14 @@ func main() {
 	// Configuration
 
 	var cfg struct {
-		CMD  string `envconfig:"CMD"`
-		DB   database.Config
+		CMD string `envconfig:"CMD"`
+		DB  struct {
+			User       string `default:"postgres"`
+			Password   string `default:"postgres" json:"-"` // Prevent the marshalling of secrets.
+			Host       string `default:"localhost"`
+			Name       string `default:"postgres"`
+			DisableTLS bool   `default:"false" split_words:"true"`
+		}
 		Auth struct {
 			PrivateKeyFile string `default:"private.pem" envconfig:"PRIVATE_KEY_FILE"`
 		}
@@ -58,16 +64,25 @@ func main() {
 		return // We displayed help.
 	}
 
+	// This is used for multiple commands below.
+	dbConfig := database.Config{
+		User:       cfg.DB.User,
+		Password:   cfg.DB.Password,
+		Host:       cfg.DB.Host,
+		Name:       cfg.DB.Name,
+		DisableTLS: cfg.DB.DisableTLS,
+	}
+
 	var err error
 	switch cfg.CMD {
 	case "keygen":
 		err = keygen(cfg.Auth.PrivateKeyFile)
 	case "useradd":
-		err = useradd(cfg.DB, cfg.User.Email, cfg.User.Password)
+		err = useradd(dbConfig, cfg.User.Email, cfg.User.Password)
 	case "migrate":
-		err = migrate(cfg.DB)
+		err = migrate(dbConfig)
 	case "seed":
-		err = seed(cfg.DB)
+		err = seed(dbConfig)
 	default:
 		err = errors.New("Must provide --cmd")
 	}
