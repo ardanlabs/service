@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ardanlabs/garagesale/internal/platform/database"
-	"github.com/ardanlabs/garagesale/internal/platform/database/schema"
+	"github.com/ardanlabs/service/internal/platform/database"
+	"github.com/ardanlabs/service/internal/platform/database/schema"
 	"github.com/jmoiron/sqlx"
 )
 

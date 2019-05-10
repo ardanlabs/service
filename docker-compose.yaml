@@ -20,6 +20,15 @@ services:
       - 27017:27017
     command: --bind_ip 0.0.0.0
 
+  # This starts a local PostgreSQL DB.
+  db:
+    container_name: sales_db
+    networks:
+      - shared-network
+    image: postgres:11.1-alpine
+    ports:
+      - 5432:5432
+
   # This is the core CRUD based service.
   sales-api:
     container_name: sales-api
