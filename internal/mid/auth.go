@@ -13,7 +13,7 @@ import (
 
 // ErrForbidden is returned when an authenticated user does not have a
 // sufficient role for an action.
-var ErrForbidden = web.ErrRequestFailed(
+var ErrForbidden = web.NewRequestError(
 	errors.New("you are not authorized for that action"),
 	http.StatusForbidden,
 )
@@ -32,17 +32,17 @@ func Authenticate(authenticator *auth.Authenticator) web.Middleware {
 			authHdr := r.Header.Get("Authorization")
 			if authHdr == "" {
 				err := errors.New("missing Authorization header")
-				return web.ErrRequestFailed(err, http.StatusUnauthorized)
+				return web.NewRequestError(err, http.StatusUnauthorized)
 			}
 
 			tknStr, err := parseAuthHeader(authHdr)
 			if err != nil {
-				return web.ErrRequestFailed(err, http.StatusUnauthorized)
+				return web.NewRequestError(err, http.StatusUnauthorized)
 			}
 
 			claims, err := authenticator.ParseClaims(tknStr)
 			if err != nil {
-				return web.ErrRequestFailed(err, http.StatusUnauthorized)
+				return web.NewRequestError(err, http.StatusUnauthorized)
 			}
 
 			// Add claims to the context so they can be retrieved later.
