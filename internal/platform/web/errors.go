@@ -24,9 +24,9 @@ type Error struct {
 	Fields []FieldError
 }
 
-// ErrRequestFailed wraps a provided error with an HTTP status code. This
+// NewRequestError wraps a provided error with an HTTP status code. This
 // function should be used when handlers encounter expected errors.
-func ErrRequestFailed(err error, status int) error {
+func NewRequestError(err error, status int) error {
 	return &Error{err, status, nil}
 }
 
@@ -46,9 +46,9 @@ func (s *shutdown) Error() string {
 	return s.Message
 }
 
-// ErrShutdown returns an error that causes the framework to signal
+// NewShutdownError returns an error that causes the framework to signal
 // a graceful shutdown.
-func ErrShutdown(message string) error {
+func NewShutdownError(message string) error {
 	return &shutdown{message}
 }
 

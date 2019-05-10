@@ -26,7 +26,7 @@ func Errors(log *log.Logger) web.Middleware {
 			// to be shutdown gracefully.
 			v, ok := ctx.Value(web.KeyValues).(*web.Values)
 			if !ok {
-				return web.ErrShutdown("web value missing from context")
+				return web.NewShutdownError("web value missing from context")
 			}
 
 			if err := before(ctx, w, r, params); err != nil {
