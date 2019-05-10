@@ -4,30 +4,52 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+
+	"github.com/pkg/errors"
 )
 
-// RespondError wraps a provided error with an HTTP status code. This
-// function should be used when handlers encounter expected errors.
-func RespondError(err error, status int) error {
-	return &Error{err, status, nil}
+// RespondError sends an error reponse back to the client.
+func RespondError(ctx context.Context, w http.ResponseWriter, err error) error {
+
+	// If the error was of the type *Error, the handler has
+	// a specific status code and error to return.
+	if webErr, ok := errors.Cause(err).(*Error); ok {
+		er := ErrorResponse{
+			Error:  webErr.Err.Error(),
+			Fields: webErr.Fields,
+		}
+		if err := Respond(ctx, w, er, webErr.Status); err != nil {
+			return err
+		}
+		return nil
+	}
+
+	// If not, the handler sent any arbitrary error value so use 500.
+	er := ErrorResponse{
+		Error: http.StatusText(http.StatusInternalServerError),
+	}
+	if err := Respond(ctx, w, er, http.StatusInternalServerError); err != nil {
+		return err
+	}
+	return nil
 }
 
 // Respond converts a Go value to JSON and sends it to the client.
 // If code is StatusNoContent, v is expected to be nil.
-func Respond(ctx context.Context, w http.ResponseWriter, data interface{}, code int) error {
+func Respond(ctx context.Context, w http.ResponseWriter, data interface{}, statusCode int) error {
 
 	// Set the status code for the request logger middleware.
 	// If the context is missing this value, request the service
 	// to be shutdown gracefully.
 	v, ok := ctx.Value(KeyValues).(*Values)
 	if !ok {
-		return Shutdown("web value missing from context")
+		return ErrShutdown("web value missing from context")
 	}
-	v.StatusCode = code
+	v.StatusCode = statusCode
 
 	// If there is nothing to marshal then set status code and return.
-	if code == http.StatusNoContent {
-		w.WriteHeader(code)
+	if statusCode == http.StatusNoContent {
+		w.WriteHeader(statusCode)
 		return nil
 	}
 
@@ -41,7 +63,7 @@ func Respond(ctx context.Context, w http.ResponseWriter, data interface{}, code 
 	w.Header().Set("Content-Type", "application/json")
 
 	// Write the status code to the response.
-	w.WriteHeader(code)
+	w.WriteHeader(statusCode)
 
 	// Send the result back to the client.
 	if _, err := w.Write(jsonData); err != nil {

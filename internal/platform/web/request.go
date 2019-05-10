@@ -50,7 +50,7 @@ func Decode(r *http.Request, val interface{}) error {
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
 	if err := decoder.Decode(val); err != nil {
-		return RespondError(err, http.StatusBadRequest)
+		return ErrRequestFailed(err, http.StatusBadRequest)
 	}
 
 	if err := validate.Struct(val); err != nil {

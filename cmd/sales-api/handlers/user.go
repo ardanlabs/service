@@ -53,11 +53,11 @@ func (u *User) Retrieve(ctx context.Context, w http.ResponseWriter, r *http.Requ
 	if err != nil {
 		switch err {
 		case user.ErrInvalidID:
-			return web.RespondError(err, http.StatusBadRequest)
+			return web.ErrRequestFailed(err, http.StatusBadRequest)
 		case user.ErrNotFound:
-			return web.RespondError(err, http.StatusNotFound)
+			return web.ErrRequestFailed(err, http.StatusNotFound)
 		case user.ErrForbidden:
-			return web.RespondError(err, http.StatusForbidden)
+			return web.ErrRequestFailed(err, http.StatusForbidden)
 		default:
 			return errors.Wrapf(err, "Id: %s", params["id"])
 		}
@@ -76,7 +76,7 @@ func (u *User) Create(ctx context.Context, w http.ResponseWriter, r *http.Reques
 
 	v, ok := ctx.Value(web.KeyValues).(*web.Values)
 	if !ok {
-		return web.Shutdown("web value missing from context")
+		return web.ErrShutdown("web value missing from context")
 	}
 
 	var newU user.NewUser
@@ -102,7 +102,7 @@ func (u *User) Update(ctx context.Context, w http.ResponseWriter, r *http.Reques
 
 	v, ok := ctx.Value(web.KeyValues).(*web.Values)
 	if !ok {
-		return web.Shutdown("web value missing from context")
+		return web.ErrShutdown("web value missing from context")
 	}
 
 	var upd user.UpdateUser
@@ -114,11 +114,11 @@ func (u *User) Update(ctx context.Context, w http.ResponseWriter, r *http.Reques
 	if err != nil {
 		switch err {
 		case user.ErrInvalidID:
-			return web.RespondError(err, http.StatusBadRequest)
+			return web.ErrRequestFailed(err, http.StatusBadRequest)
 		case user.ErrNotFound:
-			return web.RespondError(err, http.StatusNotFound)
+			return web.ErrRequestFailed(err, http.StatusNotFound)
 		case user.ErrForbidden:
-			return web.RespondError(err, http.StatusForbidden)
+			return web.ErrRequestFailed(err, http.StatusForbidden)
 		default:
 			return errors.Wrapf(err, "Id: %s  User: %+v", params["id"], &upd)
 		}
@@ -139,11 +139,11 @@ func (u *User) Delete(ctx context.Context, w http.ResponseWriter, r *http.Reques
 	if err != nil {
 		switch err {
 		case user.ErrInvalidID:
-			return web.RespondError(err, http.StatusBadRequest)
+			return web.ErrRequestFailed(err, http.StatusBadRequest)
 		case user.ErrNotFound:
-			return web.RespondError(err, http.StatusNotFound)
+			return web.ErrRequestFailed(err, http.StatusNotFound)
 		case user.ErrForbidden:
-			return web.RespondError(err, http.StatusForbidden)
+			return web.ErrRequestFailed(err, http.StatusForbidden)
 		default:
 			return errors.Wrapf(err, "Id: %s", params["id"])
 		}
@@ -163,20 +163,20 @@ func (u *User) Token(ctx context.Context, w http.ResponseWriter, r *http.Request
 
 	v, ok := ctx.Value(web.KeyValues).(*web.Values)
 	if !ok {
-		return web.Shutdown("web value missing from context")
+		return web.ErrShutdown("web value missing from context")
 	}
 
 	email, pass, ok := r.BasicAuth()
 	if !ok {
 		err := errors.New("must provide email and password in Basic auth")
-		return web.RespondError(err, http.StatusUnauthorized)
+		return web.ErrRequestFailed(err, http.StatusUnauthorized)
 	}
 
 	tkn, err := user.Authenticate(ctx, dbConn, u.TokenGenerator, v.Now, email, pass)
 	if err != nil {
 		switch err {
 		case user.ErrAuthenticationFailure:
-			return web.RespondError(err, http.StatusUnauthorized)
+			return web.ErrRequestFailed(err, http.StatusUnauthorized)
 		default:
 			return errors.Wrap(err, "authenticating")
 		}
