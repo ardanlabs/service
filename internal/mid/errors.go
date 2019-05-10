@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/ardanlabs/service/internal/platform/web"
-	"github.com/pkg/errors"
 	"go.opencensus.io/trace"
 )
 
@@ -27,43 +26,16 @@ func Errors(log *log.Logger) web.Middleware {
 			// to be shutdown gracefully.
 			v, ok := ctx.Value(web.KeyValues).(*web.Values)
 			if !ok {
-				return web.Shutdown("web value missing from context")
+				return web.NewShutdownError("web value missing from context")
 			}
 
 			if err := before(ctx, w, r, params); err != nil {
 
-				// If the error was of the type *web.Error, the handler has
-				// a specific status code and error to return. If not, the
-				// handler sent any arbitrary error value so use 500.
-				webErr, ok := errors.Cause(err).(*web.Error)
-				if !ok {
-					webErr = &web.Error{
-						Err:    err,
-						Status: http.StatusInternalServerError,
-						Fields: nil,
-					}
-				}
-
 				// Log the error.
 				log.Printf("%s : ERROR : %+v", v.TraceID, err)
 
-				// Determine the error message service users will see. If the status
-				// code is under 500 then it is a "human readable" error that was
-				// intended for users to see. If the status code is 500 or higher (the
-				// default) then use a generic error message.
-				var errStr string
-				if webErr.Status < http.StatusInternalServerError {
-					errStr = webErr.Err.Error()
-				} else {
-					errStr = http.StatusText(webErr.Status)
-				}
-
-				// Respond with the error type we send to clients.
-				res := web.ErrorResponse{
-					Error:  errStr,
-					Fields: webErr.Fields,
-				}
-				if err := web.Respond(ctx, w, res, webErr.Status); err != nil {
+				// Respond to the error.
+				if err := web.RespondError(ctx, w, err); err != nil {
 					return err
 				}
 
