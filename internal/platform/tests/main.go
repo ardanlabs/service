@@ -2,16 +2,19 @@ package tests
 
 import (
 	"context"
-	"fmt"
+	"crypto/rand"
+	"crypto/rsa"
 	"log"
 	"os"
-	"runtime/debug"
 	"testing"
 	"time"
 
-	"github.com/ardanlabs/service/internal/platform/db"
-	"github.com/ardanlabs/service/internal/platform/docker"
+	"github.com/ardanlabs/service/internal/platform/auth"
+	"github.com/ardanlabs/service/internal/platform/database/databasetest"
 	"github.com/ardanlabs/service/internal/platform/web"
+	"github.com/ardanlabs/service/internal/schema"
+	"github.com/ardanlabs/service/internal/user"
+	"github.com/jmoiron/sqlx"
 	"github.com/pborman/uuid"
 )
 
@@ -21,61 +24,78 @@ const (
 	Failed  = "\u2717"
 )
 
-// Test owns state for running/shutting down tests.
+// These are the IDs in the seed data for admin@example.com and
+// user@example.com.
+const (
+	AdminID = "5cf37266-3473-4006-984f-9325122678b7"
+	UserID  = "45b5fbd3-755f-4379-8f07-a58d4a30fa2f"
+)
+
+// Test owns state for running and shutting down tests.
 type Test struct {
-	Log       *log.Logger
-	MasterDB  *db.DB
-	container *docker.Container
+	DB            *sqlx.DB
+	Log           *log.Logger
+	Authenticator *auth.Authenticator
+
+	cleanup func()
 }
 
-// New is the entry point for tests.
-func New() *Test {
+// New creates a database, seeds it, constructs an authenticator.
+func New(t *testing.T) *Test {
+	t.Helper()
 
-	// =========================================================================
-	// Logging
+	var test Test
 
-	log := log.New(os.Stdout, "TEST : ", log.LstdFlags|log.Lmicroseconds|log.Lshortfile)
+	// Initialize and seed database. Store the cleanup function call later.
+	test.DB, test.cleanup = databasetest.Setup(t)
 
-	// ============================================================
-	// Startup Mongo container
+	if err := schema.Seed(test.DB); err != nil {
+		t.Fatal(err)
+	}
 
-	container, err := docker.StartMongo(log)
+	// Create the logger to use.
+	test.Log = log.New(os.Stdout, "TEST : ", log.LstdFlags|log.Lmicroseconds|log.Lshortfile)
+
+	// Create RSA keys to enable authentication in our service.
+	key, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatal(err)
 	}
 
-	// ============================================================
-	// Configuration
-
-	dbDialTimeout := 25 * time.Second
-	dbHost := fmt.Sprintf("mongodb://localhost:%s/gotraining", container.Port)
-
-	// ============================================================
-	// Start Mongo
-
-	log.Println("main : Started : Initialize Mongo")
-	masterDB, err := db.New(dbHost, dbDialTimeout)
+	// Build an authenticator using this static key.
+	kid := "4754d86b-7a6d-4df5-9c65-224741361492"
+	kf := auth.NewSimpleKeyLookupFunc(kid, key.Public().(*rsa.PublicKey))
+	test.Authenticator, err = auth.NewAuthenticator(key, kid, "RS256", kf)
 	if err != nil {
-		log.Fatalf("startup : Register DB : %v", err)
+		t.Fatal(err)
 	}
 
-	return &Test{log, masterDB, container}
+	return &test
 }
 
-// TearDown is used for shutting down tests. Calling this should be
-// done in a defer immediately after calling New.
-func (t *Test) TearDown() {
-	t.MasterDB.Close()
-	if err := docker.StopMongo(t.Log, t.container); err != nil {
-		t.Log.Println(err)
-	}
+// Teardown releases any resources used for the test.
+func (test *Test) Teardown() {
+	test.cleanup()
 }
 
-// Recover is used to prevent panics from allowing the test to cleanup.
-func Recover(t *testing.T) {
-	if r := recover(); r != nil {
-		t.Fatal("Unhandled Exception:", string(debug.Stack()))
+// Token generates an auhenticated token for a user.
+func (test *Test) Token(t *testing.T, email, pass string) string {
+	t.Helper()
+
+	claims, err := user.Authenticate(
+		context.Background(), test.DB, time.Now(),
+		email, pass,
+	)
+	if err != nil {
+		t.Fatal(err)
 	}
+
+	tkn, err := test.Authenticator.GenerateToken(claims)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return tkn
 }
 
 // Context returns an app level context for testing.

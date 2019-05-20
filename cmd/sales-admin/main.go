@@ -17,7 +17,6 @@ import (
 
 	"github.com/ardanlabs/service/internal/platform/auth"
 	"github.com/ardanlabs/service/internal/platform/database"
-	"github.com/ardanlabs/service/internal/platform/db"
 	"github.com/ardanlabs/service/internal/platform/flag"
 	"github.com/ardanlabs/service/internal/schema"
 	"github.com/ardanlabs/service/internal/user"
@@ -123,12 +122,11 @@ func keygen(path string) error {
 
 func useradd(cfg database.Config, email, pass string) error {
 
-	// NOTE this changes in the final PR
-	dbConn, err := db.New("localhost:27017/gotraining", 5*time.Second)
+	db, err := database.Open(cfg)
 	if err != nil {
 		return err
 	}
-	defer dbConn.Close()
+	defer db.Close()
 
 	if email == "" {
 		return errors.New("Must provide --user_email")
@@ -139,19 +137,19 @@ func useradd(cfg database.Config, email, pass string) error {
 
 	ctx := context.Background()
 
-	newU := user.NewUser{
+	nu := user.NewUser{
 		Email:           email,
 		Password:        pass,
 		PasswordConfirm: pass,
 		Roles:           []string{auth.RoleAdmin, auth.RoleUser},
 	}
 
-	usr, err := user.Create(ctx, dbConn, &newU, time.Now())
+	usr, err := user.Create(ctx, db, &nu, time.Now())
 	if err != nil {
 		return err
 	}
 
-	fmt.Printf("User created with id: %v\n", usr.ID.Hex())
+	fmt.Printf("User created with id: %v\n", usr.ID)
 	return nil
 }
 
