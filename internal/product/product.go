@@ -15,7 +15,7 @@ import (
 // Predefined errors identify expected failure conditions.
 var (
 	// ErrNotFound is used when a specific Product is requested but does not exist.
-	ErrNotFound = errors.New("product not found")
+	ErrNotFound = errors.New("Product not found")
 
 	// ErrInvalidID is used when an invalid UUID is provided.
 	ErrInvalidID = errors.New("ID is not in its proper form")
@@ -30,7 +30,7 @@ func List(ctx context.Context, db *sqlx.DB) ([]Product, error) {
 	ctx, span := trace.StartSpan(ctx, "internal.product.List")
 	defer span.End()
 
-	var products []Product
+	products := []Product{}
 	const q = `SELECT
 			p.*,
 			COALESCE(SUM(s.quantity) ,0) AS sold,

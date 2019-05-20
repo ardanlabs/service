@@ -4,11 +4,9 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"time"
 
 	"github.com/ardanlabs/service/internal/mid"
-	"github.com/ardanlabs/service/internal/platform/auth"
-	mongo "github.com/ardanlabs/service/internal/platform/db" // Import is removed in final PR
+	"github.com/ardanlabs/service/internal/platform/auth" // Import is removed in final PR
 	"github.com/ardanlabs/service/internal/platform/web"
 	"github.com/jmoiron/sqlx"
 )
@@ -19,22 +17,16 @@ func API(shutdown chan os.Signal, log *log.Logger, db *sqlx.DB, authenticator *a
 	// Construct the web.App which holds all routes as well as common Middleware.
 	app := web.NewApp(shutdown, log, mid.Logger(log), mid.Errors(log), mid.Metrics(), mid.Panics())
 
-	// NOTE this is just for the WIP. Not going to be in final PR.
-	mdb, err := mongo.New("localhost:27017/gotraining", 5*time.Second)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	// Register health check endpoint. This route is not authenticated.
 	check := Check{
-		MasterDB: mdb,
+		db: db,
 	}
 	app.Handle("GET", "/v1/health", check.Health)
 
 	// Register user management and authentication endpoints.
 	u := User{
-		MasterDB:       mdb,
-		TokenGenerator: authenticator,
+		db:            db,
+		authenticator: authenticator,
 	}
 	app.Handle("GET", "/v1/users", u.List, mid.Authenticate(authenticator), mid.HasRole(auth.RoleAdmin))
 	app.Handle("POST", "/v1/users", u.Create, mid.Authenticate(authenticator), mid.HasRole(auth.RoleAdmin))

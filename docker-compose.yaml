@@ -10,16 +10,6 @@ networks:
 
 services:
 
-  # This starts a local mongo DB.
-  mongo:
-    container_name: mongo
-    networks:
-      - shared-network
-    image: mongo:3-jessie
-    ports:
-      - 27017:27017
-    command: --bind_ip 0.0.0.0
-
   # This starts a local PostgreSQL DB.
   db:
     container_name: sales_db
@@ -40,7 +30,6 @@ services:
       - 4000:4000 # DEBUG API
     environment:
       - SALES_AUTH_KEY_ID=1
-      # - SALES_DB_HOST=got:got2015@ds039441.mongolab.com:39441/gotraining
       # - GODEBUG=gctrace=1
 
   # This sidecar publishes metrics to the console by default.

@@ -20,7 +20,7 @@ type Product struct {
 // NewProduct is what we require from clients when adding a Product.
 type NewProduct struct {
 	Name     string `json:"name" validate:"required"`
-	Cost     int    `json:"cost" validate:"gte=0"`
+	Cost     int    `json:"cost" validate:"required,gte=0"`
 	Quantity int    `json:"quantity" validate:"gte=1"`
 }
 
