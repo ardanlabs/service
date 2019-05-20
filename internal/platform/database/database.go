@@ -26,7 +26,7 @@ func Open(cfg Config) (*sqlx.DB, error) {
 	}
 
 	// Query parameters.
-	var q url.Values
+	q := make(url.Values)
 	q.Set("sslmode", sslMode)
 	q.Set("timezone", "utc")
 
