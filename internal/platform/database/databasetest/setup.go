@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/internal/platform/database"
-	"github.com/ardanlabs/service/internal/platform/database/schema"
+	"github.com/ardanlabs/service/internal/schema"
 	"github.com/jmoiron/sqlx"
 )
 

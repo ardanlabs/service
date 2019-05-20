@@ -17,9 +17,9 @@ import (
 
 	"github.com/ardanlabs/service/internal/platform/auth"
 	"github.com/ardanlabs/service/internal/platform/database"
-	"github.com/ardanlabs/service/internal/platform/database/schema"
 	"github.com/ardanlabs/service/internal/platform/db"
 	"github.com/ardanlabs/service/internal/platform/flag"
+	"github.com/ardanlabs/service/internal/schema"
 	"github.com/ardanlabs/service/internal/user"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/pkg/errors"
