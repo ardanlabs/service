@@ -43,7 +43,7 @@ This project contains three services and uses 3rd party services such as MongoDB
 You can use the traditional `go get` command to download this project into your configured GOPATH.
 
 ```
-$ go get -u github.com/ardanlabs/service
+$ GO111MODULE=off go get -u gitHub.com/ardanlabs/service
 ```
 
 ### Go Modules
@@ -51,9 +51,9 @@ $ go get -u github.com/ardanlabs/service
 This project is using Go Module support for vendoring dependencies. We are using the `tidy` and `vendor` commands to maintain the dependencies and make sure the project can create reproducible builds. This project assumes the source code will be inside your GOPATH within the traditional location.
 
 ```
-cd $GOPATH/src/github.com/ardanlabs/service
-GO111MODULE=on go mod tidy
-GO111MODULE=on go mod vendor
+$ cd $GOPATH/src/github.com/ardanlabs/service
+$ GO111MODULE=off go mod tidy
+$ GO111MODULE=off go mod vendor
 ```
 
 ### Installing Docker
