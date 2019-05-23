@@ -37,7 +37,7 @@ func TestProducts(t *testing.T) {
 	t.Run("postProduct401", tests.postProduct401)
 	t.Run("getProduct404", tests.getProduct404)
 	t.Run("getProduct400", tests.getProduct400)
-	t.Run("deleteProduct404", tests.deleteProduct404)
+	t.Run("deleteProductNotFound", tests.deleteProductNotFound)
 	t.Run("putProduct404", tests.putProduct404)
 	t.Run("crudProducts", tests.crudProduct)
 }
@@ -197,8 +197,8 @@ func (pt *ProductTests) getProduct404(t *testing.T) {
 	}
 }
 
-// deleteProduct404 validates deleting a product that does not exist.
-func (pt *ProductTests) deleteProduct404(t *testing.T) {
+// deleteProductNotFound validates deleting a product that does not exist is not a failure.
+func (pt *ProductTests) deleteProductNotFound(t *testing.T) {
 	id := "112262f1-1a77-4374-9f22-39e575aa6348"
 
 	r := httptest.NewRequest("DELETE", "/v1/products/"+id, nil)
@@ -212,19 +212,10 @@ func (pt *ProductTests) deleteProduct404(t *testing.T) {
 	{
 		t.Logf("\tTest 0:\tWhen using the new product %s.", id)
 		{
-			if w.Code != http.StatusNotFound {
-				t.Fatalf("\t%s\tShould receive a status code of 404 for the response : %v", tests.Failed, w.Code)
+			if w.Code != http.StatusNoContent {
+				t.Fatalf("\t%s\tShould receive a status code of 204 for the response : %v", tests.Failed, w.Code)
 			}
-			t.Logf("\t%s\tShould receive a status code of 404 for the response.", tests.Success)
-
-			recv := w.Body.String()
-			resp := "Product not found"
-			if !strings.Contains(recv, resp) {
-				t.Log("Got :", recv)
-				t.Log("Want:", resp)
-				t.Fatalf("\t%s\tShould get the expected result.", tests.Failed)
-			}
-			t.Logf("\t%s\tShould get the expected result.", tests.Success)
+			t.Logf("\t%s\tShould receive a status code of 204 for the response.", tests.Success)
 		}
 	}
 }

@@ -38,7 +38,7 @@ func TestUsers(t *testing.T) {
 	t.Run("getUser400", tests.getUser400)
 	t.Run("getUser403", tests.getUser403)
 	t.Run("getUser404", tests.getUser404)
-	t.Run("deleteUser404", tests.deleteUser404)
+	t.Run("deleteUserNotFound", tests.deleteUserNotFound)
 	t.Run("putUser404", tests.putUser404)
 	t.Run("crudUsers", tests.crudUser)
 }
@@ -324,8 +324,8 @@ func (ut *UserTests) getUser404(t *testing.T) {
 	}
 }
 
-// deleteUser404 validates deleting a user that does not exist.
-func (ut *UserTests) deleteUser404(t *testing.T) {
+// deleteUserNotFound validates deleting a user that does not exist is not a failure.
+func (ut *UserTests) deleteUserNotFound(t *testing.T) {
 	id := "a71f77b2-b1ae-4964-a847-f9eecba09d74"
 
 	r := httptest.NewRequest("DELETE", "/v1/users/"+id, nil)
@@ -339,19 +339,10 @@ func (ut *UserTests) deleteUser404(t *testing.T) {
 	{
 		t.Logf("\tTest 0:\tWhen using the new user %s.", id)
 		{
-			if w.Code != http.StatusNotFound {
-				t.Fatalf("\t%s\tShould receive a status code of 404 for the response : %v", tests.Failed, w.Code)
+			if w.Code != http.StatusNoContent {
+				t.Fatalf("\t%s\tShould receive a status code of 204 for the response : %v", tests.Failed, w.Code)
 			}
-			t.Logf("\t%s\tShould receive a status code of 404 for the response.", tests.Success)
-
-			recv := w.Body.String()
-			resp := "User not found"
-			if !strings.Contains(recv, resp) {
-				t.Log("Got :", recv)
-				t.Log("Want:", resp)
-				t.Fatalf("\t%s\tShould get the expected result.", tests.Failed)
-			}
-			t.Logf("\t%s\tShould get the expected result.", tests.Success)
+			t.Logf("\t%s\tShould receive a status code of 204 for the response.", tests.Success)
 		}
 	}
 }
