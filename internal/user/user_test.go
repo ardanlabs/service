@@ -36,10 +36,8 @@ func TestUser(t *testing.T) {
 		t.Log("\tWhen handling a single User.")
 		{
 			ctx := tests.Context()
-
 			dbConn := test.MasterDB.Copy()
 			defer dbConn.Close()
-
 			now := time.Date(2018, time.October, 1, 0, 0, 0, 0, time.UTC)
 
 			// claims is information about the person making the request.
