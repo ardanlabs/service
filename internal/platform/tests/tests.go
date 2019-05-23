@@ -14,8 +14,8 @@ import (
 	"github.com/ardanlabs/service/internal/platform/web"
 	"github.com/ardanlabs/service/internal/schema"
 	"github.com/ardanlabs/service/internal/user"
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
-	"github.com/pborman/uuid"
 )
 
 // Success and failure markers.
@@ -101,7 +101,7 @@ func (test *Test) Token(t *testing.T, email, pass string) string {
 // Context returns an app level context for testing.
 func Context() context.Context {
 	values := web.Values{
-		TraceID: uuid.New(),
+		TraceID: uuid.New().String(),
 		Now:     time.Now(),
 	}
 
