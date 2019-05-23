@@ -28,7 +28,6 @@ metrics:
 	docker system prune -f
 
 tracer:
-	cd "$$GOPATH/src/github.com/ardanlabs/service"
 	docker build \
 		-t gcr.io/sales-api/tracer-amd64:1.0 \
 		--build-arg PACKAGE_NAME=tracer \
