@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 	"crypto/rsa"
-	"encoding/json"
 	"expvar"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -16,11 +16,10 @@ import (
 
 	"github.com/ardanlabs/service/cmd/sales-api/handlers"
 	"github.com/ardanlabs/service/internal/platform/auth"
+	"github.com/ardanlabs/service/internal/platform/conf"
 	"github.com/ardanlabs/service/internal/platform/db"
-	"github.com/ardanlabs/service/internal/platform/flag"
 	itrace "github.com/ardanlabs/service/internal/platform/trace"
 	jwt "github.com/dgrijalva/jwt-go"
-	"github.com/kelseyhightower/envconfig"
 	"go.opencensus.io/trace"
 )
 
@@ -52,38 +51,39 @@ func main() {
 
 	var cfg struct {
 		Web struct {
-			APIHost         string        `default:"0.0.0.0:3000" envconfig:"API_HOST"`
-			DebugHost       string        `default:"0.0.0.0:4000" envconfig:"DEBUG_HOST"`
-			ReadTimeout     time.Duration `default:"5s" envconfig:"READ_TIMEOUT"`
-			WriteTimeout    time.Duration `default:"5s" envconfig:"WRITE_TIMEOUT"`
-			ShutdownTimeout time.Duration `default:"5s" envconfig:"SHUTDOWN_TIMEOUT"`
+			APIHost         string        `conf:"default:0.0.0.0:3000,env:API_HOST"`
+			DebugHost       string        `conf:"default:0.0.0.0:4000,env:DEBUG_HOST"`
+			ReadTimeout     time.Duration `conf:"default:5s,env:READ_TIMEOUT"`
+			WriteTimeout    time.Duration `conf:"default:5s,env:WRITE_TIMEOUT"`
+			ShutdownTimeout time.Duration `conf:"default:5s,env:SHUTDOWN_TIMEOUT"`
 		}
 		DB struct {
-			DialTimeout time.Duration `default:"5s" envconfig:"DIAL_TIMEOUT"`
-			Host        string        `default:"mongo:27017/gotraining" envconfig:"HOST"`
+			DialTimeout time.Duration `conf:"default:5s,env:DIAL_TIMEOUT"`
+			Host        string        `conf:"default:mongo:27017/gotraining,env:HOST"`
 		}
 		Trace struct {
-			Host         string        `default:"http://tracer:3002/v1/publish" envconfig:"HOST"`
-			BatchSize    int           `default:"1000" envconfig:"BATCH_SIZE"`
-			SendInterval time.Duration `default:"15s" envconfig:"SEND_INTERVAL"`
-			SendTimeout  time.Duration `default:"500ms" envconfig:"SEND_TIMEOUT"`
+			Host         string        `conf:"default:http://tracer:3002/v1/publish,env:HOST"`
+			BatchSize    int           `conf:"default:1000,env:BATCH_SIZE"`
+			SendInterval time.Duration `conf:"default:15s,env:SEND_INTERVAL"`
+			SendTimeout  time.Duration `conf:"default:500ms,env:SEND_TIMEOUT"`
 		}
 		Auth struct {
-			KeyID          string `envconfig:"KEY_ID"`
-			PrivateKeyFile string `default:"/app/private.pem" envconfig:"PRIVATE_KEY_FILE"`
-			Algorithm      string `default:"RS256" envconfig:"ALGORITHM"`
+			KeyID          string `conf:"default:1,env:KEY_ID"`
+			PrivateKeyFile string `conf:"default:/app/private.pem,env:PRIVATE_KEY_FILE"`
+			Algorithm      string `conf:"default:RS256,env:ALGORITHM"`
 		}
 	}
 
-	if err := envconfig.Process("SALES", &cfg); err != nil {
+	if err := conf.Parse(os.Args[1:], "SALES", &cfg); err != nil {
+		if err == conf.ErrHelpWanted {
+			usage, err := conf.Usage(&cfg)
+			if err != nil {
+				log.Fatalf("main : Parsing Config : %v", err)
+			}
+			fmt.Println(usage)
+			return
+		}
 		log.Fatalf("main : Parsing Config : %v", err)
-	}
-
-	if err := flag.Process(&cfg); err != nil {
-		if err != flag.ErrHelp {
-			log.Fatalf("main : Parsing Command Line : %v", err)
-		}
-		return // We displayed help.
 	}
 
 	// =========================================================================
@@ -94,14 +94,11 @@ func main() {
 	log.Printf("main : Started : Application Initializing version %q", build)
 	defer log.Println("main : Completed")
 
-	cfgJSON, err := json.MarshalIndent(cfg, "", "    ")
+	out, err := conf.String(&cfg)
 	if err != nil {
-		log.Fatalf("main : Marshalling Config to JSON : %v", err)
+		log.Fatalf("main : Marshalling Config for output : %v", err)
 	}
-
-	// TODO: Validate what is being written to the logs. We don't
-	// want to leak credentials or anything that can be a security risk.
-	log.Printf("main : Config : %v\n", string(cfgJSON))
+	log.Printf("main : Config :\n%v\n", out)
 
 	// =========================================================================
 	// Find auth keys
@@ -111,14 +108,13 @@ func main() {
 		log.Fatalf("main : Reading auth private key : %v", err)
 	}
 
-	key, err := jwt.ParseRSAPrivateKeyFromPEM(keyContents)
+	privateKey, err := jwt.ParseRSAPrivateKeyFromPEM(keyContents)
 	if err != nil {
 		log.Fatalf("main : Parsing auth private key : %v", err)
 	}
 
-	publicKeyLookup := auth.NewSingleKeyFunc(cfg.Auth.KeyID, key.Public().(*rsa.PublicKey))
-
-	authenticator, err := auth.NewAuthenticator(key, cfg.Auth.KeyID, cfg.Auth.Algorithm, publicKeyLookup)
+	f := auth.NewPublicKeyLookupFunc(cfg.Auth.KeyID, privateKey.Public().(*rsa.PublicKey))
+	authenticator, err := auth.NewAuthenticator(privateKey, cfg.Auth.KeyID, cfg.Auth.Algorithm, f)
 	if err != nil {
 		log.Fatalf("main : Constructing authenticator : %v", err)
 	}

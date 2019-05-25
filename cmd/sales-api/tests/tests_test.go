@@ -39,7 +39,7 @@ func testMain(m *testing.M) int {
 	}
 
 	kid := "4754d86b-7a6d-4df5-9c65-224741361492"
-	kf := auth.NewSingleKeyFunc(kid, key.Public().(*rsa.PublicKey))
+	kf := auth.NewPublicKeyLookupFunc(kid, key.Public().(*rsa.PublicKey))
 	authenticator, err := auth.NewAuthenticator(key, kid, "RS256", kf)
 	if err != nil {
 		panic(err)
