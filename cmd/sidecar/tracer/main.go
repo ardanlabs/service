@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	_ "net/http/pprof"
@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/cmd/sidecar/tracer/handlers"
-	"github.com/kelseyhightower/envconfig"
+	"github.com/ardanlabs/service/internal/platform/conf"
 )
 
 func main() {
@@ -28,26 +28,34 @@ func main() {
 
 	var cfg struct {
 		Web struct {
-			APIHost         string        `default:"0.0.0.0:3002" envconfig:"API_HOST"`
-			DebugHost       string        `default:"0.0.0.0:4002" envconfig:"DEBUG_HOST"`
-			ReadTimeout     time.Duration `default:"5s" envconfig:"READ_TIMEOUT"`
-			WriteTimeout    time.Duration `default:"5s" envconfig:"WRITE_TIMEOUT"`
-			ShutdownTimeout time.Duration `default:"5s" envconfig:"SHUTDOWN_TIMEOUT"`
+			APIHost         string        `conf:"default:0.0.0.0:3002,env:API_HOST"`
+			DebugHost       string        `conf:"default:0.0.0.0:4002,env:DEBUG_HOST"`
+			ReadTimeout     time.Duration `conf:"default:5s,env:READ_TIMEOUT"`
+			WriteTimeout    time.Duration `conf:"default:5s,env:WRITE_TIMEOUT"`
+			ShutdownTimeout time.Duration `conf:"default:5s,env:SHUTDOWN_TIMEOUT"`
 		}
 		Zipkin struct {
-			Host string `default:"http://zipkin:9411/api/v2/spans" envconfig:"HOST"`
+			Host string `conf:"default:http://zipkin:9411/api/v2/spans,env:HOST"`
 		}
 	}
 
-	if err := envconfig.Process("TRACER", &cfg); err != nil {
+	if err := conf.Parse(os.Args[1:], "TRACER", &cfg); err != nil {
+		if err == conf.ErrHelpWanted {
+			usage, err := conf.Usage(&cfg)
+			if err != nil {
+				log.Fatalf("main : Parsing Config : %v", err)
+			}
+			fmt.Println(usage)
+			return
+		}
 		log.Fatalf("main : Parsing Config : %v", err)
 	}
 
-	cfgJSON, err := json.MarshalIndent(cfg, "", "    ")
+	out, err := conf.String(&cfg)
 	if err != nil {
-		log.Fatalf("main : Marshalling Config to JSON : %v", err)
+		log.Fatalf("main : Marshalling Config for output : %v", err)
 	}
-	log.Printf("config : %v\n", string(cfgJSON))
+	log.Printf("main : Config :\n%v\n", out)
 
 	// =========================================================================
 	// Start Debug Service. Not concerned with shutting this down when the
