@@ -42,7 +42,7 @@ func main() {
 			ShutdownTimeout time.Duration `conf:"default:5s,env:SHUTDOWN_TIMEOUT"`
 		}
 		Collect struct {
-			From string `conf:"default:"http://sales-api:4000/debug/vars,env:FROM"`
+			From string `conf:"default:http://sales-api:4000/debug/vars,env:FROM"`
 		}
 		Publish struct {
 			To       string        `conf:"default:console,env:TO"`
