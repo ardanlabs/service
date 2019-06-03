@@ -8,7 +8,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// KeyFunc is used to map a JWT key id (kid) to the corresponding public key.
+// KeyLookupFunc is used to map a JWT key id (kid) to the corresponding public key.
 // It is a requirement for creating an Authenticator.
 //
 // * Private keys should be rotated. During the transition period, tokens
@@ -17,12 +17,12 @@ import (
 //
 // * Key-id-to-public-key resolution is usually accomplished via a public JWKS
 // endpoint. See https://auth0.com/docs/jwks for more details.
-type KeyFunc func(kid string) (*rsa.PublicKey, error)
+type KeyLookupFunc func(kid string) (*rsa.PublicKey, error)
 
-// NewPublicKeyLookupFunc is a simple implementation of KeyFunc that only ever
+// NewSimpleKeyLookupFunc is a simple implementation of KeyFunc that only ever
 // supports one key. This is easy for development but in production should be
 // replaced with a caching layer that calls a JWKS endpoint.
-func NewPublicKeyLookupFunc(activeKID string, publicKey *rsa.PublicKey) KeyFunc {
+func NewSimpleKeyLookupFunc(activeKID string, publicKey *rsa.PublicKey) KeyLookupFunc {
 	f := func(kid string) (*rsa.PublicKey, error) {
 		if activeKID != kid {
 			return nil, fmt.Errorf("unrecognized key id %q", kid)
@@ -39,7 +39,7 @@ type Authenticator struct {
 	privateKey       *rsa.PrivateKey
 	activeKID        string
 	algorithm        string
-	pubKeyLookupFunc KeyFunc
+	pubKeyLookupFunc KeyLookupFunc
 	parser           *jwt.Parser
 }
 
@@ -48,7 +48,7 @@ type Authenticator struct {
 // - The public key func is nil.
 // - The key ID is blank.
 // - The specified algorithm is unsupported.
-func NewAuthenticator(privateKey *rsa.PrivateKey, activeKID, algorithm string, publicKeyLookupFunc KeyFunc) (*Authenticator, error) {
+func NewAuthenticator(privateKey *rsa.PrivateKey, activeKID, algorithm string, publicKeyLookupFunc KeyLookupFunc) (*Authenticator, error) {
 	if privateKey == nil {
 		return nil, errors.New("private key cannot be nil")
 	}
