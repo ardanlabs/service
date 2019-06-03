@@ -1,3 +1,5 @@
+# github.com/GuiaBolso/darwin v0.0.0-20170210191649-86919dfcf808
+github.com/GuiaBolso/darwin
 # github.com/dgrijalva/jwt-go v3.2.0+incompatible
 github.com/dgrijalva/jwt-go
 # github.com/dimfeld/httptreemux v5.0.1+incompatible
@@ -14,14 +16,21 @@ github.com/google/go-cmp/cmp/cmpopts
 github.com/google/go-cmp/cmp/internal/diff
 github.com/google/go-cmp/cmp/internal/function
 github.com/google/go-cmp/cmp/internal/value
+# github.com/google/uuid v1.1.1
+github.com/google/uuid
+# github.com/jmoiron/sqlx v1.2.0
+github.com/jmoiron/sqlx
+github.com/jmoiron/sqlx/reflectx
 # github.com/kelseyhightower/envconfig v1.3.0
 github.com/kelseyhightower/envconfig
 # github.com/leodido/go-urn v1.1.0
 github.com/leodido/go-urn
+# github.com/lib/pq v1.1.1
+github.com/lib/pq
+github.com/lib/pq/oid
+github.com/lib/pq/scram
 # github.com/openzipkin/zipkin-go v0.1.1
 github.com/openzipkin/zipkin-go/model
-# github.com/pborman/uuid v0.0.0-20180122190007-c65b2f87fee3
-github.com/pborman/uuid
 # github.com/pkg/errors v0.8.0
 github.com/pkg/errors
 # go.opencensus.io v0.14.0
@@ -44,9 +53,3 @@ golang.org/x/crypto/blowfish
 # gopkg.in/go-playground/validator.v9 v9.28.0
 gopkg.in/go-playground/validator.v9
 gopkg.in/go-playground/validator.v9/translations/en
-# gopkg.in/mgo.v2 v2.0.0-20180705113604-9856a29383ce
-gopkg.in/mgo.v2
-gopkg.in/mgo.v2/bson
-gopkg.in/mgo.v2/internal/sasl
-gopkg.in/mgo.v2/internal/scram
-gopkg.in/mgo.v2/internal/json
