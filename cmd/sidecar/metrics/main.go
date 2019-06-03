@@ -1,7 +1,7 @@
 package main
 
 import (
-	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	_ "net/http/pprof"
@@ -13,7 +13,7 @@ import (
 	"github.com/ardanlabs/service/cmd/sidecar/metrics/collector"
 	"github.com/ardanlabs/service/cmd/sidecar/metrics/publisher"
 	"github.com/ardanlabs/service/cmd/sidecar/metrics/publisher/expvar"
-	"github.com/kelseyhightower/envconfig"
+	"github.com/ardanlabs/service/internal/platform/conf"
 )
 
 func main() {
@@ -29,36 +29,44 @@ func main() {
 
 	var cfg struct {
 		Web struct {
-			DebugHost       string        `default:"0.0.0.0:4001" envconfig:"DEBUG_HOST"`
-			ReadTimeout     time.Duration `default:"5s" envconfig:"READ_TIMEOUT"`
-			WriteTimeout    time.Duration `default:"5s" envconfig:"WRITE_TIMEOUT"`
-			ShutdownTimeout time.Duration `default:"5s" envconfig:"SHUTDOWN_TIMEOUT"`
+			DebugHost       string        `conf:"default:0.0.0.0:4001,env:DEBUG_HOST"`
+			ReadTimeout     time.Duration `conf:"default:5s,env:READ_TIMEOUT"`
+			WriteTimeout    time.Duration `conf:"default:5s,env:WRITE_TIMEOUT"`
+			ShutdownTimeout time.Duration `conf:"default:5s,env:SHUTDOWN_TIMEOUT"`
 		}
 		Expvar struct {
-			Host            string        `default:"0.0.0.0:3001" envconfig:"HOST"`
-			Route           string        `default:"/metrics" envconfig:"ROUTE"`
-			ReadTimeout     time.Duration `default:"5s" envconfig:"READ_TIMEOUT"`
-			WriteTimeout    time.Duration `default:"5s" envconfig:"WRITE_TIMEOUT"`
-			ShutdownTimeout time.Duration `default:"5s" envconfig:"SHUTDOWN_TIMEOUT"`
+			Host            string        `conf:"default:0.0.0.0:3001,env:HOST"`
+			Route           string        `conf:"default:/metrics,env:ROUTE"`
+			ReadTimeout     time.Duration `conf:"default:5s,env:READ_TIMEOUT"`
+			WriteTimeout    time.Duration `conf:"default:5s,env:WRITE_TIMEOUT"`
+			ShutdownTimeout time.Duration `conf:"default:5s,env:SHUTDOWN_TIMEOUT"`
 		}
 		Collect struct {
-			From string `default:"http://sales-api:4000/debug/vars" envconfig:"FROM"`
+			From string `conf:"default:http://sales-api:4000/debug/vars,env:FROM"`
 		}
 		Publish struct {
-			To       string        `default:"console" envconfig:"TO"`
-			Interval time.Duration `default:"5s" envconfig:"INTERVAL"`
+			To       string        `conf:"default:console,env:TO"`
+			Interval time.Duration `conf:"default:5s,env:INTERVAL"`
 		}
 	}
 
-	if err := envconfig.Process("METRICS", &cfg); err != nil {
+	if err := conf.Parse(os.Args[1:], "METRICS", &cfg); err != nil {
+		if err == conf.ErrHelpWanted {
+			usage, err := conf.Usage(&cfg)
+			if err != nil {
+				log.Fatalf("main : Parsing Config : %v", err)
+			}
+			fmt.Println(usage)
+			return
+		}
 		log.Fatalf("main : Parsing Config : %v", err)
 	}
 
-	cfgJSON, err := json.MarshalIndent(cfg, "", "    ")
+	out, err := conf.String(&cfg)
 	if err != nil {
-		log.Fatalf("main : Marshalling Config to JSON : %v", err)
+		log.Fatalf("main : Marshalling Config for output : %v", err)
 	}
-	log.Printf("config : %v\n", string(cfgJSON))
+	log.Printf("main : Config :\n%v\n", out)
 
 	// =========================================================================
 	// Start Debug Service. Not concerned with shutting this down when the
