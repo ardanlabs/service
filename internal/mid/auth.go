@@ -29,15 +29,9 @@ func Authenticate(authenticator *auth.Authenticator) web.Middleware {
 			ctx, span := trace.StartSpan(ctx, "internal.mid.Authenticate")
 			defer span.End()
 
-			bearer := r.Header.Get("Authorization")
-			if bearer == "" {
-				err := errors.New("missing Authorization header")
-				return web.NewRequestError(err, http.StatusUnauthorized)
-			}
-
-			// parseBearer parses an authorization header. Expected header is of
+			// Parse the authorization header. Expected header is of
 			// the format `Bearer <token>`.
-			parts := strings.Split(bearer, " ")
+			parts := strings.Split(r.Header.Get("Authorization"), " ")
 			if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
 				err := errors.New("expected authorization header format: Bearer <token>")
 				return web.NewRequestError(err, http.StatusUnauthorized)
@@ -73,8 +67,6 @@ func HasRole(roles ...string) web.Middleware {
 
 			claims, ok := ctx.Value(auth.Key).(auth.Claims)
 			if !ok {
-
-				// TODO(jlw) should this be a web.Shutdown?
 				return errors.New("claims missing from context: HasRole called without/before Authenticate")
 			}
 
@@ -89,15 +81,4 @@ func HasRole(roles ...string) web.Middleware {
 	}
 
 	return f
-}
-
-// parseBearer parses an authorization header. Expected header is of
-// the format `Bearer <token>`.
-func parseBearer(bearer string) (string, error) {
-	split := strings.Split(bearer, " ")
-	if len(split) != 2 || strings.ToLower(split[0]) != "bearer" {
-		return "", errors.New("expected authorization header format: Bearer <token>")
-	}
-
-	return split[1], nil
 }

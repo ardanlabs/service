@@ -113,7 +113,7 @@ func main() {
 		log.Fatalf("main : Parsing auth private key : %v", err)
 	}
 
-	f := auth.NewPublicKeyLookupFunc(cfg.Auth.KeyID, privateKey.Public().(*rsa.PublicKey))
+	f := auth.NewSimpleKeyLookupFunc(cfg.Auth.KeyID, privateKey.Public().(*rsa.PublicKey))
 	authenticator, err := auth.NewAuthenticator(privateKey, cfg.Auth.KeyID, cfg.Auth.Algorithm, f)
 	if err != nil {
 		log.Fatalf("main : Constructing authenticator : %v", err)
