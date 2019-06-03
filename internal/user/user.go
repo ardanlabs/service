@@ -16,7 +16,7 @@ import (
 const usersCollection = "users"
 
 var (
-	// ErrNotFound abstracts the mgo not found error.
+	// ErrNotFound is used when a specific User is requested but does not exist.
 	ErrNotFound = errors.New("User not found")
 
 	// ErrInvalidID occurs when an ID is not in a valid form.
