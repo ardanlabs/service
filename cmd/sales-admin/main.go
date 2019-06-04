@@ -16,11 +16,10 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/internal/platform/auth"
+	"github.com/ardanlabs/service/internal/platform/conf"
 	"github.com/ardanlabs/service/internal/platform/database"
-	"github.com/ardanlabs/service/internal/platform/flag"
 	"github.com/ardanlabs/service/internal/schema"
 	"github.com/ardanlabs/service/internal/user"
-	"github.com/kelseyhightower/envconfig"
 	"github.com/pkg/errors"
 )
 
@@ -35,16 +34,16 @@ func main() {
 	// Configuration
 
 	var cfg struct {
-		CMD string `envconfig:"CMD"`
+		CMD string `con:"env:CMD"`
 		DB  struct {
-			User       string `default:"postgres"`
-			Password   string `default:"postgres" json:"-"` // Prevent the marshalling of secrets.
-			Host       string `default:"localhost"`
-			Name       string `default:"postgres"`
-			DisableTLS bool   `default:"false" split_words:"true"`
+			User       string `conf:"default:postgres,env:USER"`
+			Password   string `conf:"default:postgres,env:PASSWORD,noprint"`
+			Host       string `conf:"default:localhost,env:HOST"`
+			Name       string `conf:"default:postgres,env:NAME"`
+			DisableTLS bool   `conf:"default:false,env:DISABLE_TLS"`
 		}
 		Auth struct {
-			PrivateKeyFile string `default:"private.pem" envconfig:"PRIVATE_KEY_FILE"`
+			PrivateKeyFile string `conf:"default:private.pem,env:PRIVATE_KEY_FILE"`
 		}
 		User struct {
 			Email    string
@@ -52,15 +51,16 @@ func main() {
 		}
 	}
 
-	if err := envconfig.Process("SALES", &cfg); err != nil {
-		log.Fatalf("main : Parsing Config : %v", err)
-	}
-
-	if err := flag.Process(&cfg); err != nil {
-		if err != flag.ErrHelp {
-			log.Fatalf("main : Parsing Command Line : %v", err)
+	if err := conf.Parse(os.Args[1:], "SALES", &cfg); err != nil {
+		if err == conf.ErrHelpWanted {
+			usage, err := conf.Usage(&cfg)
+			if err != nil {
+				log.Fatalf("main : Parsing Config : %v", err)
+			}
+			fmt.Println(usage)
+			return
 		}
-		return // We displayed help.
+		log.Fatalf("main : Parsing Config : %v", err)
 	}
 
 	// This is used for multiple commands below.
@@ -129,10 +129,10 @@ func useradd(cfg database.Config, email, password string) error {
 	defer db.Close()
 
 	if email == "" {
-		return errors.New("Must provide --user_email")
+		return errors.New("Must provide --user-email")
 	}
 	if password == "" {
-		return errors.New("Must provide --user_password or set the env var SALES_USER_PASSWORD")
+		return errors.New("Must provide --user-password or set the env var SALES_USER_PASSWORD")
 	}
 
 	fmt.Printf("Admin user will be created with email %q and password %q\n", email, password)
