@@ -17,7 +17,7 @@ import (
 	"github.com/ardanlabs/service/cmd/sales-api/handlers"
 	"github.com/ardanlabs/service/internal/platform/auth"
 	"github.com/ardanlabs/service/internal/platform/conf"
-	"github.com/ardanlabs/service/internal/platform/db"
+	"github.com/ardanlabs/service/internal/platform/database"
 	itrace "github.com/ardanlabs/service/internal/platform/trace"
 	jwt "github.com/dgrijalva/jwt-go"
 	"go.opencensus.io/trace"
@@ -58,8 +58,11 @@ func main() {
 			ShutdownTimeout time.Duration `conf:"default:5s,env:SHUTDOWN_TIMEOUT"`
 		}
 		DB struct {
-			DialTimeout time.Duration `conf:"default:5s,env:DIAL_TIMEOUT"`
-			Host        string        `conf:"default:mongo:27017/gotraining,env:HOST"`
+			User       string `conf:"default:postgres,env:DB_USER"`
+			Password   string `conf:"default:postgres,env:DB_PASSWORD,noprint"`
+			Host       string `conf:"default:localhost,env:DB_HOST"`
+			Name       string `conf:"default:postgres,env:DB_NAME"`
+			DisableTLS bool   `conf:"default:false,env:DB_DISABLE_TLS"`
 		}
 		Trace struct {
 			Host         string        `conf:"default:http://tracer:3002/v1/publish,env:HOST"`
@@ -120,14 +123,20 @@ func main() {
 	}
 
 	// =========================================================================
-	// Start Mongo
+	// Start Database
 
-	log.Println("main : Started : Initialize Mongo")
-	masterDB, err := db.New(cfg.DB.Host, cfg.DB.DialTimeout)
+	log.Println("main : Started : Initialize Database")
+	db, err := database.Open(database.Config{
+		User:       cfg.DB.User,
+		Password:   cfg.DB.Password,
+		Host:       cfg.DB.Host,
+		Name:       cfg.DB.Name,
+		DisableTLS: cfg.DB.DisableTLS,
+	})
 	if err != nil {
 		log.Fatalf("main : Register DB : %v", err)
 	}
-	defer masterDB.Close()
+	defer db.Close()
 
 	// =========================================================================
 	// Start Tracing Support
@@ -175,7 +184,7 @@ func main() {
 
 	api := http.Server{
 		Addr:           cfg.Web.APIHost,
-		Handler:        handlers.API(shutdown, log, masterDB, authenticator),
+		Handler:        handlers.API(shutdown, log, db, authenticator),
 		ReadTimeout:    cfg.Web.ReadTimeout,
 		WriteTimeout:   cfg.Web.WriteTimeout,
 		MaxHeaderBytes: 1 << 20,

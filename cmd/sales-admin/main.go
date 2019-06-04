@@ -16,10 +16,10 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/internal/platform/auth"
-	"github.com/ardanlabs/service/internal/platform/db"
-	"github.com/ardanlabs/service/internal/platform/flag"
+	"github.com/ardanlabs/service/internal/platform/conf"
+	"github.com/ardanlabs/service/internal/platform/database"
+	"github.com/ardanlabs/service/internal/schema"
 	"github.com/ardanlabs/service/internal/user"
-	"github.com/kelseyhightower/envconfig"
 	"github.com/pkg/errors"
 )
 
@@ -34,13 +34,16 @@ func main() {
 	// Configuration
 
 	var cfg struct {
-		CMD string `envconfig:"CMD"`
+		CMD string `con:"env:CMD"`
 		DB  struct {
-			DialTimeout time.Duration `default:"5s" envconfig:"DIAL_TIMEOUT"`
-			Host        string        `default:"localhost:27017/gotraining" envconfig:"HOST"`
+			User       string `conf:"default:postgres,env:USER"`
+			Password   string `conf:"default:postgres,env:PASSWORD,noprint"`
+			Host       string `conf:"default:localhost,env:HOST"`
+			Name       string `conf:"default:postgres,env:NAME"`
+			DisableTLS bool   `conf:"default:false,env:DISABLE_TLS"`
 		}
 		Auth struct {
-			PrivateKeyFile string `default:"private.pem" envconfig:"PRIVATE_KEY_FILE"`
+			PrivateKeyFile string `conf:"default:private.pem,env:PRIVATE_KEY_FILE"`
 		}
 		User struct {
 			Email    string
@@ -48,30 +51,119 @@ func main() {
 		}
 	}
 
-	if err := envconfig.Process("SALES", &cfg); err != nil {
+	if err := conf.Parse(os.Args[1:], "SALES", &cfg); err != nil {
+		if err == conf.ErrHelpWanted {
+			usage, err := conf.Usage(&cfg)
+			if err != nil {
+				log.Fatalf("main : Parsing Config : %v", err)
+			}
+			fmt.Println(usage)
+			return
+		}
 		log.Fatalf("main : Parsing Config : %v", err)
 	}
 
-	if err := flag.Process(&cfg); err != nil {
-		if err != flag.ErrHelp {
-			log.Fatalf("main : Parsing Command Line : %v", err)
-		}
-		return // We displayed help.
+	// This is used for multiple commands below.
+	dbConfig := database.Config{
+		User:       cfg.DB.User,
+		Password:   cfg.DB.Password,
+		Host:       cfg.DB.Host,
+		Name:       cfg.DB.Name,
+		DisableTLS: cfg.DB.DisableTLS,
 	}
 
 	var err error
 	switch cfg.CMD {
+	case "migrate":
+		err = migrate(dbConfig)
+	case "seed":
+		err = seed(dbConfig)
+	case "useradd":
+		err = useradd(dbConfig, cfg.User.Email, cfg.User.Password)
 	case "keygen":
 		err = keygen(cfg.Auth.PrivateKeyFile)
-	case "useradd":
-		err = useradd(cfg.DB.Host, cfg.DB.DialTimeout, cfg.User.Email, cfg.User.Password)
 	default:
-		err = errors.New("Must provide --cmd keygen or --cmd useradd")
+		err = errors.New("Must provide --cmd")
 	}
 
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func migrate(cfg database.Config) error {
+	db, err := database.Open(cfg)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	if err := schema.Migrate(db); err != nil {
+		return err
+	}
+
+	fmt.Println("Migrations complete")
+	return nil
+}
+
+func seed(cfg database.Config) error {
+	db, err := database.Open(cfg)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	if err := schema.Seed(db); err != nil {
+		return err
+	}
+
+	fmt.Println("Seed data complete")
+	return nil
+}
+
+func useradd(cfg database.Config, email, password string) error {
+	db, err := database.Open(cfg)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	if email == "" {
+		return errors.New("Must provide --user-email")
+	}
+	if password == "" {
+		return errors.New("Must provide --user-password or set the env var SALES_USER_PASSWORD")
+	}
+
+	fmt.Printf("Admin user will be created with email %q and password %q\n", email, password)
+	fmt.Print("Continue? (1/0) ")
+
+	var confirm bool
+	if _, err := fmt.Scanf("%t\n", &confirm); err != nil {
+		return errors.Wrap(err, "processing response")
+	}
+
+	if !confirm {
+		fmt.Println("Canceling")
+		return nil
+	}
+
+	ctx := context.Background()
+
+	nu := user.NewUser{
+		Email:           email,
+		Password:        password,
+		PasswordConfirm: password,
+		Roles:           []string{auth.RoleAdmin, auth.RoleUser},
+	}
+
+	u, err := user.Create(ctx, db, &nu, time.Now())
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("User created with id:", u.ID)
+	return nil
 }
 
 // keygen creates an x509 private key for signing auth tokens.
@@ -100,38 +192,5 @@ func keygen(path string) error {
 		return errors.Wrap(err, "closing private file")
 	}
 
-	return nil
-}
-
-func useradd(dbHost string, dbTimeout time.Duration, email, pass string) error {
-
-	dbConn, err := db.New(dbHost, dbTimeout)
-	if err != nil {
-		return err
-	}
-	defer dbConn.Close()
-
-	if email == "" {
-		return errors.New("Must provide --user_email")
-	}
-	if pass == "" {
-		return errors.New("Must provide --user_password or set the env var SALES_USER_PASSWORD")
-	}
-
-	ctx := context.Background()
-
-	newU := user.NewUser{
-		Email:           email,
-		Password:        pass,
-		PasswordConfirm: pass,
-		Roles:           []string{auth.RoleAdmin, auth.RoleUser},
-	}
-
-	usr, err := user.Create(ctx, dbConn, &newU, time.Now())
-	if err != nil {
-		return err
-	}
-
-	fmt.Printf("User created with id: %v\n", usr.ID.Hex())
 	return nil
 }

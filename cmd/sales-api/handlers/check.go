@@ -4,14 +4,15 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/ardanlabs/service/internal/platform/db"
+	"github.com/ardanlabs/service/internal/platform/database"
 	"github.com/ardanlabs/service/internal/platform/web"
+	"github.com/jmoiron/sqlx"
 	"go.opencensus.io/trace"
 )
 
 // Check provides support for orchestration health checks.
 type Check struct {
-	MasterDB *db.DB
+	db *sqlx.DB
 
 	// ADD OTHER STATE LIKE THE LOGGER IF NEEDED.
 }
@@ -21,18 +22,20 @@ func (c *Check) Health(ctx context.Context, w http.ResponseWriter, r *http.Reque
 	ctx, span := trace.StartSpan(ctx, "handlers.Check.Health")
 	defer span.End()
 
-	dbConn := c.MasterDB.Copy()
-	defer dbConn.Close()
-
-	if err := dbConn.StatusCheck(ctx); err != nil {
-		return err
-	}
-
-	status := struct {
+	var status struct {
 		Status string `json:"status"`
-	}{
-		Status: "ok",
 	}
 
+	// Check if the database is ready.
+	if err := database.StatusCheck(ctx, c.db); err != nil {
+
+		// If the database is not ready we will tell the client and use a 500
+		// status. Do not respond by just returning an error because further up in
+		// the call stack will interpret that as an unhandled error.
+		status.Status = "db not ready"
+		return web.Respond(ctx, w, status, http.StatusInternalServerError)
+	}
+
+	status.Status = "ok"
 	return web.Respond(ctx, w, status, http.StatusOK)
 }
