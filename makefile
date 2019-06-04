@@ -6,7 +6,13 @@ keys:
 	go run ./cmd/sales-admin/main.go --cmd keygen
 
 admin:
-	go run ./cmd/sales-admin/main.go --cmd useradd --user_email admin@example.com --user_password gophers
+	go run ./cmd/sales-admin/main.go --cmd useradd --db-disable-tls=1 --user-email admin@example.com --user-password gophers
+
+migrate:
+	go run ./cmd/sales-admin/main.go --cmd migrate --db-disable-tls=1
+
+seed: migrate
+	go run ./cmd/sales-admin/main.go --cmd seed --db-disable-tls=1
 
 sales-api:
 	docker build \
