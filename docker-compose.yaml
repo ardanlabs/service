@@ -29,7 +29,8 @@ services:
       - 3000:3000 # CRUD API
       - 4000:4000 # DEBUG API
     environment:
-      - SALES_AUTH_KEY_ID=1
+      - SALES_DB_HOST=db
+      - SALES_DB_DISABLE_TLS=1 # This is only disabled for our development enviroment.
       # - GODEBUG=gctrace=1
 
   # This sidecar publishes metrics to the console by default.
