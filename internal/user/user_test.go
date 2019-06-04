@@ -1,47 +1,35 @@
 package user_test
 
 import (
-	"fmt"
-	"os"
 	"testing"
 	"time"
 
 	"github.com/ardanlabs/service/internal/platform/auth"
+	"github.com/ardanlabs/service/internal/platform/database/databasetest"
 	"github.com/ardanlabs/service/internal/platform/tests"
 	"github.com/ardanlabs/service/internal/user"
 	"github.com/google/go-cmp/cmp"
 	"github.com/pkg/errors"
-	"gopkg.in/mgo.v2/bson"
 )
-
-var test *tests.Test
-
-// TestMain is the entry point for testing.
-func TestMain(m *testing.M) {
-	os.Exit(testMain(m))
-}
-
-func testMain(m *testing.M) int {
-	test = tests.New()
-	defer test.TearDown()
-	return m.Run()
-}
 
 // TestUser validates the full set of CRUD operations on User values.
 func TestUser(t *testing.T) {
-	defer tests.Recover(t)
+	db, teardown := databasetest.Setup(t)
+	defer teardown()
 
 	t.Log("Given the need to work with User records.")
 	{
 		t.Log("\tWhen handling a single User.")
 		{
 			ctx := tests.Context()
-			dbConn := test.MasterDB.Copy()
-			defer dbConn.Close()
 			now := time.Date(2018, time.October, 1, 0, 0, 0, 0, time.UTC)
 
 			// claims is information about the person making the request.
-			claims := auth.NewClaims(bson.NewObjectId().Hex(), []string{auth.RoleAdmin}, now, time.Hour)
+			claims := auth.NewClaims(
+				"718ffbea-f4a1-4667-8ae3-b349da52675e", // This is just some random UUID.
+				[]string{auth.RoleAdmin, auth.RoleUser},
+				now, time.Hour,
+			)
 
 			nu := user.NewUser{
 				Name:            "Bill Kennedy",
@@ -51,13 +39,13 @@ func TestUser(t *testing.T) {
 				PasswordConfirm: "gophers",
 			}
 
-			u, err := user.Create(ctx, dbConn, &nu, now)
+			u, err := user.Create(ctx, db, &nu, now)
 			if err != nil {
 				t.Fatalf("\t%s\tShould be able to create user : %s.", tests.Failed, err)
 			}
 			t.Logf("\t%s\tShould be able to create user.", tests.Success)
 
-			savedU, err := user.Retrieve(ctx, claims, dbConn, u.ID.Hex())
+			savedU, err := user.Retrieve(ctx, claims, db, u.ID)
 			if err != nil {
 				t.Fatalf("\t%s\tShould be able to retrieve user by ID: %s.", tests.Failed, err)
 			}
@@ -73,12 +61,12 @@ func TestUser(t *testing.T) {
 				Email: tests.StringPointer("jacob@ardanlabs.com"),
 			}
 
-			if err := user.Update(ctx, dbConn, u.ID.Hex(), &upd, now); err != nil {
+			if err := user.Update(ctx, claims, db, u.ID, &upd, now); err != nil {
 				t.Fatalf("\t%s\tShould be able to update user : %s.", tests.Failed, err)
 			}
 			t.Logf("\t%s\tShould be able to update user.", tests.Success)
 
-			savedU, err = user.Retrieve(ctx, claims, dbConn, u.ID.Hex())
+			savedU, err = user.Retrieve(ctx, claims, db, u.ID)
 			if err != nil {
 				t.Fatalf("\t%s\tShould be able to retrieve user : %s.", tests.Failed, err)
 			}
@@ -100,12 +88,12 @@ func TestUser(t *testing.T) {
 				t.Logf("\t%s\tShould be able to see updates to Email.", tests.Success)
 			}
 
-			if err := user.Delete(ctx, dbConn, u.ID.Hex()); err != nil {
+			if err := user.Delete(ctx, db, u.ID); err != nil {
 				t.Fatalf("\t%s\tShould be able to delete user : %s.", tests.Failed, err)
 			}
 			t.Logf("\t%s\tShould be able to delete user.", tests.Success)
 
-			savedU, err = user.Retrieve(ctx, claims, dbConn, u.ID.Hex())
+			savedU, err = user.Retrieve(ctx, claims, db, u.ID)
 			if errors.Cause(err) != user.ErrNotFound {
 				t.Fatalf("\t%s\tShould NOT be able to retrieve user : %s.", tests.Failed, err)
 			}
@@ -114,28 +102,16 @@ func TestUser(t *testing.T) {
 	}
 }
 
-// mockTokenGenerator is used for testing that Authenticate calls its provided
-// token generator in a specific way.
-type mockTokenGenerator struct{}
-
-// GenerateToken implements the TokenGenerator interface. It returns a "token"
-// that includes some information about the claims it was passed.
-func (mockTokenGenerator) GenerateToken(claims auth.Claims) (string, error) {
-	return fmt.Sprintf("sub:%q iss:%d", claims.Subject, claims.IssuedAt), nil
-}
-
 // TestAuthenticate validates the behavior around authenticating users.
 func TestAuthenticate(t *testing.T) {
-	defer tests.Recover(t)
+	db, teardown := databasetest.Setup(t)
+	defer teardown()
 
 	t.Log("Given the need to authenticate users")
 	{
 		t.Log("\tWhen handling a single User.")
 		{
 			ctx := tests.Context()
-
-			dbConn := test.MasterDB.Copy()
-			defer dbConn.Close()
 
 			nu := user.NewUser{
 				Name:            "Anna Walker",
@@ -147,31 +123,28 @@ func TestAuthenticate(t *testing.T) {
 
 			now := time.Date(2018, time.October, 1, 0, 0, 0, 0, time.UTC)
 
-			u, err := user.Create(ctx, dbConn, &nu, now)
+			u, err := user.Create(ctx, db, &nu, now)
 			if err != nil {
 				t.Fatalf("\t%s\tShould be able to create user : %s.", tests.Failed, err)
 			}
 			t.Logf("\t%s\tShould be able to create user.", tests.Success)
 
-			var tknGen mockTokenGenerator
-			tkn, err := user.Authenticate(ctx, dbConn, tknGen, now, "anna@ardanlabs.com", "goroutines")
+			claims, err := user.Authenticate(ctx, db, now, "anna@ardanlabs.com", "goroutines")
 			if err != nil {
-				t.Fatalf("\t%s\tShould be able to generate a token : %s.", tests.Failed, err)
+				t.Fatalf("\t%s\tShould be able to generate claims : %s.", tests.Failed, err)
 			}
-			t.Logf("\t%s\tShould be able to generate a token.", tests.Success)
+			t.Logf("\t%s\tShould be able to generate claims.", tests.Success)
 
-			want := fmt.Sprintf("sub:%q iss:1538352000", u.ID.Hex())
-			if tkn.Token != want {
-				t.Log("\t\tGot :", tkn.Token)
-				t.Log("\t\tWant:", want)
-				t.Fatalf("\t%s\tToken should indicate the specified user and time were used.", tests.Failed)
-			}
-			t.Logf("\t%s\tToken should indicate the specified user and time were used.", tests.Success)
+			want := auth.Claims{}
+			want.Subject = u.ID
+			want.Roles = u.Roles
+			want.ExpiresAt = now.Add(time.Hour).Unix()
+			want.IssuedAt = now.Unix()
 
-			if err := user.Delete(ctx, dbConn, u.ID.Hex()); err != nil {
-				t.Fatalf("\t%s\tShould be able to delete user : %s.", tests.Failed, err)
+			if diff := cmp.Diff(want, claims); diff != "" {
+				t.Fatalf("\t%s\tShould get back the expected claims. Diff:\n%s", tests.Failed, diff)
 			}
-			t.Logf("\t%s\tShould be able to delete user.", tests.Success)
+			t.Logf("\t%s\tShould get back the expected claims.", tests.Success)
 		}
 	}
 }
