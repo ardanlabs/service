@@ -58,11 +58,11 @@ func main() {
 			ShutdownTimeout time.Duration `conf:"default:5s,env:SHUTDOWN_TIMEOUT"`
 		}
 		DB struct {
-			User       string `conf:"default:postgres,env:USER"`
-			Password   string `conf:"default:postgres,env:PASSWORD,noprint"`
-			Host       string `conf:"default:localhost,env:HOST"`
-			Name       string `conf:"default:postgres,env:NAME"`
-			DisableTLS bool   `conf:"default:false,env:DISABLE_TLS"`
+			User       string `conf:"default:postgres,env:DB_USER"`
+			Password   string `conf:"default:postgres,env:DB_PASSWORD,noprint"`
+			Host       string `conf:"default:localhost,env:DB_HOST"`
+			Name       string `conf:"default:postgres,env:DB_NAME"`
+			DisableTLS bool   `conf:"default:false,env:DB_DISABLE_TLS"`
 		}
 		Trace struct {
 			Host         string        `conf:"default:http://tracer:3002/v1/publish,env:HOST"`
