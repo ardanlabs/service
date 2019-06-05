@@ -5,18 +5,12 @@ import (
 	"os"
 	"path"
 	"reflect"
-	"sort"
 	"strings"
 	"text/tabwriter"
 )
 
 func fmtUsage(namespace string, fields []field) string {
 	var sb strings.Builder
-
-	// Sort the fields by their name.
-	sort.SliceStable(fields, func(i, j int) bool {
-		return fields[i].name < fields[j].name
-	})
 
 	fields = append(fields, field{
 		name:      "help",

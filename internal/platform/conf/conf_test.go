@@ -228,13 +228,13 @@ func TestUsage(t *testing.T) {
 			want := `Usage: conf.test [options] [arguments]
 
 OPTIONS
-  --a-string/-s/$TEST_A_STRING  <string>    (default: B)
   --an-int/$TEST_AN_INT         <int>       (default: 9)
+  --a-string/-s/$TEST_A_STRING  <string>    (default: B)
   --bool/$TEST_BOOL             <bool>      
-  --e-dur/-d/$TEST_DURATION     <duration>  (default: 1s)
-  --ip-ip/$TEST_IP_IP           <string>    (default: 127.0.0.0)
   --ip-name/$TEST_IP_NAME_VAR   <string>    (default: localhost)
+  --ip-ip/$TEST_IP_IP           <string>    (default: 127.0.0.0)
   --name/$TEST_NAME             <string>    (default: bill)
+  --e-dur/-d/$TEST_DURATION     <duration>  (default: 1s)
   --help/-h                     
   display this help message`
 
