@@ -38,12 +38,21 @@ func fmtUsage(namespace string, fields []field) string {
 
 		fmt.Fprintf(w, "  %s", flagUsage(fld))
 
+		// Do not display env vars for help since they aren't respected.
 		if fld.name != "help" {
-			fmt.Fprintf(w, "/%s\t", envUsage(namespace, fld))
+			fmt.Fprintf(w, "/%s", envUsage(namespace, fld))
 		}
 
 		typeName, help := getTypeAndHelp(&fld)
-		fmt.Fprintf(w, "%s\t%s\n", typeName, getOptString(fld))
+
+		// Do not display type info for help because it would show <bool> but our
+		// parsing does not really treat --help as a boolean field. Its presence
+		// always indicates true even if they do --help=false.
+		if fld.name != "help" {
+			fmt.Fprintf(w, "\t%s", typeName)
+		}
+
+		fmt.Fprintf(w, "\t%s\n", getOptString(fld))
 		if help != "" {
 			fmt.Fprintf(w, "  %s\n", help)
 		}

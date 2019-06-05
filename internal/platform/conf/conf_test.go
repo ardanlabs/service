@@ -292,8 +292,8 @@ OPTIONS
 			want := `Usage: conf.test [options] [arguments]
 
 OPTIONS
-  --port/$TEST_PORT  <int>
-  --help/-h              
+  --port/$TEST_PORT  <int>  
+  --help/-h          
   display this help message`
 
 			gotS := strings.Split(got, "\n")
