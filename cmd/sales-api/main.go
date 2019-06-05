@@ -51,29 +51,29 @@ func main() {
 
 	var cfg struct {
 		Web struct {
-			APIHost         string        `conf:"default:0.0.0.0:3000,env:API_HOST"`
-			DebugHost       string        `conf:"default:0.0.0.0:4000,env:DEBUG_HOST"`
-			ReadTimeout     time.Duration `conf:"default:5s,env:READ_TIMEOUT"`
-			WriteTimeout    time.Duration `conf:"default:5s,env:WRITE_TIMEOUT"`
-			ShutdownTimeout time.Duration `conf:"default:5s,env:SHUTDOWN_TIMEOUT"`
+			APIHost         string        `conf:"default:0.0.0.0:3000"`
+			DebugHost       string        `conf:"default:0.0.0.0:4000"`
+			ReadTimeout     time.Duration `conf:"default:5s"`
+			WriteTimeout    time.Duration `conf:"default:5s"`
+			ShutdownTimeout time.Duration `conf:"default:5s"`
 		}
 		DB struct {
-			User       string `conf:"default:postgres,env:DB_USER"`
-			Password   string `conf:"default:postgres,env:DB_PASSWORD,noprint"`
-			Host       string `conf:"default:localhost,env:DB_HOST"`
-			Name       string `conf:"default:postgres,env:DB_NAME"`
-			DisableTLS bool   `conf:"default:false,env:DB_DISABLE_TLS"`
+			User       string `conf:"default:postgres"`
+			Password   string `conf:"default:postgres,noprint"`
+			Host       string `conf:"default:localhost"`
+			Name       string `conf:"default:postgres"`
+			DisableTLS bool   `conf:"default:false"`
 		}
 		Trace struct {
-			Host         string        `conf:"default:http://tracer:3002/v1/publish,env:HOST"`
-			BatchSize    int           `conf:"default:1000,env:BATCH_SIZE"`
-			SendInterval time.Duration `conf:"default:15s,env:SEND_INTERVAL"`
-			SendTimeout  time.Duration `conf:"default:500ms,env:SEND_TIMEOUT"`
+			Host         string        `conf:"default:http://tracer:3002/v1/publish"`
+			BatchSize    int           `conf:"default:1000"`
+			SendInterval time.Duration `conf:"default:15s"`
+			SendTimeout  time.Duration `conf:"default:500ms"`
 		}
 		Auth struct {
-			KeyID          string `conf:"default:1,env:KEY_ID"`
-			PrivateKeyFile string `conf:"default:/app/private.pem,env:PRIVATE_KEY_FILE"`
-			Algorithm      string `conf:"default:RS256,env:ALGORITHM"`
+			KeyID          string `conf:"default:1"`
+			PrivateKeyFile string `conf:"default:/app/private.pem"`
+			Algorithm      string `conf:"default:RS256"`
 		}
 	}
 

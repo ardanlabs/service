@@ -29,24 +29,24 @@ func main() {
 
 	var cfg struct {
 		Web struct {
-			DebugHost       string        `conf:"default:0.0.0.0:4001,env:DEBUG_HOST"`
-			ReadTimeout     time.Duration `conf:"default:5s,env:READ_TIMEOUT"`
-			WriteTimeout    time.Duration `conf:"default:5s,env:WRITE_TIMEOUT"`
-			ShutdownTimeout time.Duration `conf:"default:5s,env:SHUTDOWN_TIMEOUT"`
+			DebugHost       string        `conf:"default:0.0.0.0:4001"`
+			ReadTimeout     time.Duration `conf:"default:5s"`
+			WriteTimeout    time.Duration `conf:"default:5s"`
+			ShutdownTimeout time.Duration `conf:"default:5s"`
 		}
 		Expvar struct {
-			Host            string        `conf:"default:0.0.0.0:3001,env:HOST"`
-			Route           string        `conf:"default:/metrics,env:ROUTE"`
-			ReadTimeout     time.Duration `conf:"default:5s,env:READ_TIMEOUT"`
-			WriteTimeout    time.Duration `conf:"default:5s,env:WRITE_TIMEOUT"`
-			ShutdownTimeout time.Duration `conf:"default:5s,env:SHUTDOWN_TIMEOUT"`
+			Host            string        `conf:"default:0.0.0.0:3001"`
+			Route           string        `conf:"default:/metrics"`
+			ReadTimeout     time.Duration `conf:"default:5s"`
+			WriteTimeout    time.Duration `conf:"default:5s"`
+			ShutdownTimeout time.Duration `conf:"default:5s"`
 		}
 		Collect struct {
-			From string `conf:"default:http://sales-api:4000/debug/vars,env:FROM"`
+			From string `conf:"default:http://sales-api:4000/debug/vars"`
 		}
 		Publish struct {
-			To       string        `conf:"default:console,env:TO"`
-			Interval time.Duration `conf:"default:5s,env:INTERVAL"`
+			To       string        `conf:"default:console"`
+			Interval time.Duration `conf:"default:5s"`
 		}
 	}
 

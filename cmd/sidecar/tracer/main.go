@@ -28,14 +28,14 @@ func main() {
 
 	var cfg struct {
 		Web struct {
-			APIHost         string        `conf:"default:0.0.0.0:3002,env:API_HOST"`
-			DebugHost       string        `conf:"default:0.0.0.0:4002,env:DEBUG_HOST"`
-			ReadTimeout     time.Duration `conf:"default:5s,env:READ_TIMEOUT"`
-			WriteTimeout    time.Duration `conf:"default:5s,env:WRITE_TIMEOUT"`
-			ShutdownTimeout time.Duration `conf:"default:5s,env:SHUTDOWN_TIMEOUT"`
+			APIHost         string        `conf:"default:0.0.0.0:3002"`
+			DebugHost       string        `conf:"default:0.0.0.0:4002"`
+			ReadTimeout     time.Duration `conf:"default:5s"`
+			WriteTimeout    time.Duration `conf:"default:5s"`
+			ShutdownTimeout time.Duration `conf:"default:5s"`
 		}
 		Zipkin struct {
-			Host string `conf:"default:http://zipkin:9411/api/v2/spans,env:HOST"`
+			Host string `conf:"default:http://zipkin:9411/api/v2/spans"`
 		}
 	}
 
