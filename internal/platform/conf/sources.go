@@ -53,7 +53,8 @@ var ErrHelpWanted = errors.New("help wanted")
 
 // flag is a source for command line arguments.
 type flag struct {
-	m map[string]string
+	m    map[string]string
+	args []string
 }
 
 // newSourceFlag parsing a string of command line arguments. NewFlag will return
@@ -128,7 +129,7 @@ func newSourceFlag(args []string) (*flag, error) {
 		}
 	}
 
-	return &flag{m: m}, nil
+	return &flag{m: m, args: args}, nil
 }
 
 // Source implements the confg.Sourcer interface. Returns the stringfied value

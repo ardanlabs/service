@@ -97,6 +97,34 @@ func TestParse(t *testing.T) {
 	}
 }
 
+func TestParse_Args(t *testing.T) {
+	t.Log("Given the need to capture remaining command line arguments after flags.")
+	{
+		type configArgs struct {
+			Port int
+			Args conf.Args
+		}
+
+		args := []string{"--port", "9000", "migrate", "seed"}
+
+		want := configArgs{
+			Port: 9000,
+			Args: conf.Args{"migrate", "seed"},
+		}
+
+		var cfg configArgs
+		if err := conf.Parse(args, "TEST", &cfg); err != nil {
+			t.Fatalf("\t%s\tShould be able to Parse arguments : %s.", failed, err)
+		}
+		t.Logf("\t%s\tShould be able to Parse arguments.", success)
+
+		if diff := cmp.Diff(want, cfg); diff != "" {
+			t.Fatalf("\t%s\tShould have properly initialized struct value\n%s", failed, diff)
+		}
+		t.Logf("\t%s\tShould have properly initialized struct value.", success)
+	}
+}
+
 func TestErrors(t *testing.T) {
 	t.Log("Given the need to validate errors that can occur with Parse.")
 	{
