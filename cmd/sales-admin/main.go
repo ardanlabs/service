@@ -36,14 +36,14 @@ func main() {
 	var cfg struct {
 		CMD string `con:"env:CMD"`
 		DB  struct {
-			User       string `conf:"default:postgres,env:USER"`
-			Password   string `conf:"default:postgres,env:PASSWORD,noprint"`
-			Host       string `conf:"default:localhost,env:HOST"`
-			Name       string `conf:"default:postgres,env:NAME"`
-			DisableTLS bool   `conf:"default:false,env:DISABLE_TLS"`
+			User       string `conf:"default:postgres"`
+			Password   string `conf:"default:postgres,noprint"`
+			Host       string `conf:"default:localhost"`
+			Name       string `conf:"default:postgres"`
+			DisableTLS bool   `conf:"default:false"`
 		}
 		Auth struct {
-			PrivateKeyFile string `conf:"default:private.pem,env:PRIVATE_KEY_FILE"`
+			PrivateKeyFile string `conf:"default:private.pem"`
 		}
 		User struct {
 			Email    string
