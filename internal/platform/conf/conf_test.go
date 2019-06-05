@@ -218,7 +218,7 @@ func TestUsage(t *testing.T) {
 				return
 			}
 
-			got, err := conf.Usage(&cfg)
+			got, err := conf.Usage("TEST", &cfg)
 			if err != nil {
 				fmt.Print(err)
 				return
@@ -228,26 +228,21 @@ func TestUsage(t *testing.T) {
 			want := `Usage: conf.test [options] [arguments]
 
 OPTIONS
-  --a-string/-s/$A_STRING         <string>    (default: B)  
-  --an-int/$AN_INT                <int>       (default: 9)  
-  --bool/$BOOL                    <bool>  
-  --e-dur/-d/$DURATION            <duration>  (default: 1s)  
-  --ip-ip/$IP_IP                  <string>    (default: 127.0.0.0)  
-  --ip-name/$IP_NAME_VAR          <string>    (default: localhost)  
-  --name/$NAME                    <string>    (default: bill)  
-  --help/-h
+  --a-string/-s/$TEST_A_STRING  <string>    (default: B)
+  --an-int/$TEST_AN_INT         <int>       (default: 9)
+  --bool/$TEST_BOOL             <bool>      
+  --e-dur/-d/$TEST_DURATION     <duration>  (default: 1s)
+  --ip-ip/$TEST_IP_IP           <string>    (default: 127.0.0.0)
+  --ip-name/$TEST_IP_NAME_VAR   <string>    (default: localhost)
+  --name/$TEST_NAME             <string>    (default: bill)
+  --help/-h                     
   display this help message`
 
-			got = strings.ReplaceAll(got, " ", "")
-			want = strings.ReplaceAll(want, " ", "")
-			bGot := []byte(got)
-			bWant := []byte(want)
-			if diff := cmp.Diff(bGot, bWant); diff != "" {
-				t.Log("got:\n", got)
-				t.Log("\n", bGot)
-				t.Log("want:\n", want)
-				t.Log("\n", bWant)
-				t.Fatalf("\t%s\tShould match byte for byte the output.", failed)
+			gotS := strings.Split(got, "\n")
+			wantS := strings.Split(want, "\n")
+			if diff := cmp.Diff(gotS, wantS); diff != "" {
+				t.Errorf("\t%s\tShould match the output byte for byte. See diff:", failed)
+				t.Log(diff)
 			}
 			t.Logf("\t%s\tShould match byte for byte the output.", success)
 		}

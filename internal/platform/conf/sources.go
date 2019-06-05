@@ -42,8 +42,8 @@ func (e *env) Source(fld field) (string, bool) {
 }
 
 // envUsage constructs a usage string for the environment variable.
-func envUsage(fld field) string {
-	return "$" + strings.ToUpper(strings.Join(fld.envKey, `_`))
+func envUsage(namespace string, fld field) string {
+	return "$" + strings.ToUpper(namespace) + "_" + strings.ToUpper(strings.Join(fld.envKey, `_`))
 }
 
 // =============================================================================
