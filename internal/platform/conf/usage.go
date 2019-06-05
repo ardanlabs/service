@@ -15,6 +15,7 @@ func fmtUsage(namespace string, fields []field) string {
 	fields = append(fields, field{
 		name:      "help",
 		boolField: true,
+		field:     reflect.ValueOf(true),
 		flagKey:   []string{"help"},
 		options: fieldOptions{
 			shortFlagChar: 'h',
@@ -29,6 +30,12 @@ func fmtUsage(namespace string, fields []field) string {
 	w.Init(&sb, 0, 4, 2, ' ', tabwriter.TabIndent)
 
 	for _, fld := range fields {
+
+		// Skip printing usage info for fields that just hold arguments.
+		if fld.field.Type() == argsT {
+			continue
+		}
+
 		fmt.Fprintf(w, "  %s", flagUsage(fld))
 
 		if fld.name != "help" {

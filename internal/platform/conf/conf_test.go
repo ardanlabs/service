@@ -274,6 +274,36 @@ OPTIONS
 			}
 			t.Logf("\t%s\tShould match byte for byte the output.", success)
 		}
+
+		t.Logf("\tTest: %d\tWhen using a struct with arguments.", 1)
+		{
+			var cfg struct {
+				Port int
+				Args conf.Args
+			}
+
+			got, err := conf.Usage("TEST", &cfg)
+			if err != nil {
+				fmt.Print(err)
+				return
+			}
+
+			got = strings.TrimRight(got, " \n")
+			want := `Usage: conf.test [options] [arguments]
+
+OPTIONS
+  --port/$TEST_PORT  <int>
+  --help/-h              
+  display this help message`
+
+			gotS := strings.Split(got, "\n")
+			wantS := strings.Split(want, "\n")
+			if diff := cmp.Diff(gotS, wantS); diff != "" {
+				t.Errorf("\t%s\tShould match the output byte for byte. See diff:", failed)
+				t.Log(diff)
+			}
+			t.Logf("\t%s\tShould match byte for byte the output.", success)
+		}
 	}
 }
 
