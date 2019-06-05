@@ -102,13 +102,13 @@ func Parse(args []string, namespace string, cfgStruct interface{}, sources ...So
 }
 
 // Usage provides output to display the config usage on the command line.
-func Usage(v interface{}) (string, error) {
+func Usage(namespace string, v interface{}) (string, error) {
 	fields, err := extractFields(nil, v)
 	if err != nil {
 		return "", err
 	}
 
-	return fmtUsage(fields), nil
+	return fmtUsage(namespace, fields), nil
 }
 
 // String returns a stringified version of the provided conf-tagged

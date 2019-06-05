@@ -45,13 +45,13 @@ Would produce the following usage output:
 Usage: conf.test [options] [arguments]
 
 OPTIONS
-  --a-string/-s/$A_STRING         <string>    (default: B)
-  --an-int/$AN_INT                <int>       (default: 9)
-  --bool/$BOOL                    <bool>
-  --e-dur/-d/$DURATION            <duration>  (default: 1s)
-  --ip-ip/$IP_IP                  <string>    (default: 127.0.0.0)
-  --ip-name/$IP_NAME_VAR          <string>    (default: localhost)
-  --name/$NAME                    <string>    (default: bill)
+  --an-int/$CRUD_AN_INT         <int>       (default: 9)
+  --a-string/-s/$CRUD_A_STRING  <string>    (default: B)
+  --bool/$CRUD_BOOL             <bool>
+  --ip-name/$CRUD_IP_NAME_VAR   <string>    (default: localhost)
+  --ip-ip/$CRUD_IP_IP           <string>    (default: 127.0.0.0)
+  --name/$CRUD_NAME             <string>    (default: bill)
+  --e-dur/-d/$CRUD_DURATION     <duration>  (default: 1s)
   --help/-h
   display this help message
 
