@@ -52,7 +52,7 @@ func main() {
 
 	if err := conf.Parse(os.Args[1:], "METRICS", &cfg); err != nil {
 		if err == conf.ErrHelpWanted {
-			usage, err := conf.Usage(&cfg)
+			usage, err := conf.Usage("METRICS", &cfg)
 			if err != nil {
 				log.Fatalf("main : Parsing Config : %v", err)
 			}

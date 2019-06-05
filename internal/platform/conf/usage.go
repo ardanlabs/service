@@ -5,18 +5,12 @@ import (
 	"os"
 	"path"
 	"reflect"
-	"sort"
 	"strings"
 	"text/tabwriter"
 )
 
-func fmtUsage(fields []field) string {
+func fmtUsage(namespace string, fields []field) string {
 	var sb strings.Builder
-
-	// Sort the fields by their name.
-	sort.SliceStable(fields, func(i, j int) bool {
-		return fields[i].name < fields[j].name
-	})
 
 	fields = append(fields, field{
 		name:      "help",
@@ -38,13 +32,13 @@ func fmtUsage(fields []field) string {
 		fmt.Fprintf(w, "  %s", flagUsage(fld))
 
 		if fld.name != "help" {
-			fmt.Fprintf(w, "/%s\t", envUsage(fld))
+			fmt.Fprintf(w, "/%s\t", envUsage(namespace, fld))
 		}
 
 		typeName, help := getTypeAndHelp(&fld)
-		fmt.Fprintf(w, " %s\t%s\t\n", typeName, getOptString(fld))
+		fmt.Fprintf(w, "%s\t%s\n", typeName, getOptString(fld))
 		if help != "" {
-			fmt.Fprintf(w, "      %s\t\t\n", help)
+			fmt.Fprintf(w, "  %s\n", help)
 		}
 	}
 
