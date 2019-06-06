@@ -64,16 +64,16 @@ func main() {
 			Name       string `conf:"default:postgres"`
 			DisableTLS bool   `conf:"default:false"`
 		}
+		Auth struct {
+			KeyID          string `conf:"default:1"`
+			PrivateKeyFile string `conf:"default:/app/private.pem"`
+			Algorithm      string `conf:"default:RS256"`
+		}
 		Trace struct {
 			Host         string        `conf:"default:http://tracer:3002/v1/publish"`
 			BatchSize    int           `conf:"default:1000"`
 			SendInterval time.Duration `conf:"default:15s"`
 			SendTimeout  time.Duration `conf:"default:500ms"`
-		}
-		Auth struct {
-			KeyID          string `conf:"default:1"`
-			PrivateKeyFile string `conf:"default:/app/private.pem"`
-			Algorithm      string `conf:"default:RS256"`
 		}
 	}
 
@@ -104,7 +104,7 @@ func main() {
 	log.Printf("main : Config :\n%v\n", out)
 
 	// =========================================================================
-	// Find auth keys
+	// Initialize authentication support
 
 	keyContents, err := ioutil.ReadFile(cfg.Auth.PrivateKeyFile)
 	if err != nil {
@@ -164,11 +164,12 @@ func main() {
 	trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
 
 	// =========================================================================
-	// Start Debug Service. Not concerned with shutting this down when the
-	// application is being shutdown.
+	// Start Debug Service
 	//
-	// /debug/vars - Added to the default mux by the expvars package.
-	// /debug/pprof - Added to the default mux by the net/http/pprof package.
+	// /debug/pprof - Added to the default mux by importing the net/http/pprof package.
+	// /debug/vars - Added to the default mux by importing the expvar package.
+	//
+	// Not concerned with shutting this down when the application is shutdown.
 	go func() {
 		log.Printf("main : Debug Listening %s", cfg.Web.DebugHost)
 		log.Printf("main : Debug Listener closed : %v", http.ListenAndServe(cfg.Web.DebugHost, http.DefaultServeMux))
@@ -183,11 +184,10 @@ func main() {
 	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM)
 
 	api := http.Server{
-		Addr:           cfg.Web.APIHost,
-		Handler:        handlers.API(shutdown, log, db, authenticator),
-		ReadTimeout:    cfg.Web.ReadTimeout,
-		WriteTimeout:   cfg.Web.WriteTimeout,
-		MaxHeaderBytes: 1 << 20,
+		Addr:         cfg.Web.APIHost,
+		Handler:      handlers.API(shutdown, log, db, authenticator),
+		ReadTimeout:  cfg.Web.ReadTimeout,
+		WriteTimeout: cfg.Web.WriteTimeout,
 	}
 
 	// Make a channel to listen for errors coming from the listener. Use a
