@@ -3,12 +3,12 @@ package main
 import (
 	"context"
 	"crypto/rsa"
-	"expvar"
+	"expvar" // Register the expvar handlers
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
-	_ "net/http/pprof"
+	_ "net/http/pprof" // Register the pprof handlers
 	"os"
 	"os/signal"
 	"syscall"
@@ -125,7 +125,6 @@ func main() {
 	// =========================================================================
 	// Start Database
 
-	log.Println("main : Started : Initialize Database")
 	db, err := database.Open(database.Config{
 		User:       cfg.DB.User,
 		Password:   cfg.DB.Password,
@@ -196,7 +195,7 @@ func main() {
 
 	// Start the service listening for requests.
 	go func() {
-		log.Printf("main : API Listening %s", cfg.Web.APIHost)
+		log.Printf("main : API listening on %s", api.Addr)
 		serverErrors <- api.ListenAndServe()
 	}()
 
@@ -209,9 +208,9 @@ func main() {
 		log.Fatalf("main : Error starting server: %v", err)
 
 	case sig := <-shutdown:
-		log.Printf("main : %v : Start shutdown..", sig)
+		log.Printf("main : %v : Start shutdown", sig)
 
-		// Create context for Shutdown call.
+		// Give outstanding requests a deadline for completion.
 		ctx, cancel := context.WithTimeout(context.Background(), cfg.Web.ShutdownTimeout)
 		defer cancel()
 
