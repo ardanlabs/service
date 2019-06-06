@@ -82,6 +82,7 @@ func run() error {
 			BatchSize    int           `conf:"default:1000"`
 			SendInterval time.Duration `conf:"default:15s"`
 			SendTimeout  time.Duration `conf:"default:500ms"`
+			Probability  float64       `conf:"default:1"`
 		}
 	}
 
@@ -168,7 +169,9 @@ func run() error {
 	}()
 
 	trace.RegisterExporter(exporter)
-	trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
+	trace.ApplyConfig(trace.Config{
+		DefaultSampler: trace.ProbabilitySampler(cfg.Trace.Probability),
+	})
 
 	// =========================================================================
 	// Start Debug Service
