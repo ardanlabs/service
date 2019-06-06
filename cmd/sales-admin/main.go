@@ -1,6 +1,4 @@
 // This program performs administrative tasks for the garage sale service.
-//
-// Run it with --cmd keygen or --cmd useradd
 
 package main
 
@@ -34,8 +32,7 @@ func main() {
 	// Configuration
 
 	var cfg struct {
-		CMD string `con:"env:CMD"`
-		DB  struct {
+		DB struct {
 			User       string `conf:"default:postgres"`
 			Password   string `conf:"default:postgres,noprint"`
 			Host       string `conf:"default:localhost"`
@@ -45,10 +42,7 @@ func main() {
 		Auth struct {
 			PrivateKeyFile string `conf:"default:private.pem"`
 		}
-		User struct {
-			Email    string
-			Password string
-		}
+		Args conf.Args
 	}
 
 	if err := conf.Parse(os.Args[1:], "SALES", &cfg); err != nil {
@@ -73,17 +67,17 @@ func main() {
 	}
 
 	var err error
-	switch cfg.CMD {
+	switch cfg.Args.Num(0) {
 	case "migrate":
 		err = migrate(dbConfig)
 	case "seed":
 		err = seed(dbConfig)
 	case "useradd":
-		err = useradd(dbConfig, cfg.User.Email, cfg.User.Password)
+		err = useradd(dbConfig, cfg.Args.Num(1), cfg.Args.Num(2))
 	case "keygen":
 		err = keygen(cfg.Auth.PrivateKeyFile)
 	default:
-		err = errors.New("Must provide --cmd")
+		err = errors.New("Must provide a command argument")
 	}
 
 	if err != nil {
@@ -128,11 +122,8 @@ func useradd(cfg database.Config, email, password string) error {
 	}
 	defer db.Close()
 
-	if email == "" {
-		return errors.New("Must provide --user-email")
-	}
-	if password == "" {
-		return errors.New("Must provide --user-password or set the env var SALES_USER_PASSWORD")
+	if email == "" || password == "" {
+		return errors.New("Must provide two additional arguments for email and passsword")
 	}
 
 	fmt.Printf("Admin user will be created with email %q and password %q\n", email, password)

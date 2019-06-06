@@ -55,12 +55,35 @@ OPTIONS
   --help/-h
   display this help message
 
-The API is a single call to `Parse`
+The API is a single call to Parse
 
 	// Parse(args []string, namespace string, cfgStruct interface{}, sources ...Sourcer) error
 
 	if err := conf.Parse(os.Args, "CRUD", &cfg); err != nil {
 		log.Fatalf("main : Parsing Config : %v", err)
 	}
+
+Additionally, if the config struct has a field of the slice type conf.Args
+then it will be populated with any remaining arguments from the command line
+after flags have been processed.
+
+For example a program with a config struct like this:
+
+	var cfg struct {
+		Port int
+		Args conf.Args
+	}
+
+If that program is executed from the command line like this:
+
+	$ my-program --port=9000 serve http
+
+Then the cfg.Args field will contain the string values ["serve", "http"].
+The Args type has a method Num for convenient access to these arguments
+such as this:
+
+	arg0 := cfg.Args.Num(0) // "serve"
+	arg1 := cfg.Args.Num(1) // "http"
+	arg2 := cfg.Args.Num(2) // "" empty string: not enough arguments
 */
 package conf
