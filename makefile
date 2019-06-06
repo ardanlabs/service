@@ -3,16 +3,16 @@ SHELL := /bin/bash
 all: keys sales-api metrics tracer
 
 keys:
-	go run ./cmd/sales-admin/main.go --cmd keygen
+	go run ./cmd/sales-admin/main.go keygen
 
 admin:
-	go run ./cmd/sales-admin/main.go --cmd useradd --db-disable-tls=1 --user-email admin@example.com --user-password gophers
+	go run ./cmd/sales-admin/main.go --db-disable-tls=1 useradd admin@example.com gophers
 
 migrate:
-	go run ./cmd/sales-admin/main.go --cmd migrate --db-disable-tls=1
+	go run ./cmd/sales-admin/main.go --db-disable-tls=1 migrate
 
 seed: migrate
-	go run ./cmd/sales-admin/main.go --cmd seed --db-disable-tls=1
+	go run ./cmd/sales-admin/main.go --db-disable-tls=1 seed
 
 sales-api:
 	docker build \

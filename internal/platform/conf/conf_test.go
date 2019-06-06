@@ -97,6 +97,34 @@ func TestParse(t *testing.T) {
 	}
 }
 
+func TestParse_Args(t *testing.T) {
+	t.Log("Given the need to capture remaining command line arguments after flags.")
+	{
+		type configArgs struct {
+			Port int
+			Args conf.Args
+		}
+
+		args := []string{"--port", "9000", "migrate", "seed"}
+
+		want := configArgs{
+			Port: 9000,
+			Args: conf.Args{"migrate", "seed"},
+		}
+
+		var cfg configArgs
+		if err := conf.Parse(args, "TEST", &cfg); err != nil {
+			t.Fatalf("\t%s\tShould be able to Parse arguments : %s.", failed, err)
+		}
+		t.Logf("\t%s\tShould be able to Parse arguments.", success)
+
+		if diff := cmp.Diff(want, cfg); diff != "" {
+			t.Fatalf("\t%s\tShould have properly initialized struct value\n%s", failed, diff)
+		}
+		t.Logf("\t%s\tShould have properly initialized struct value.", success)
+	}
+}
+
 func TestErrors(t *testing.T) {
 	t.Log("Given the need to validate errors that can occur with Parse.")
 	{
@@ -236,6 +264,36 @@ OPTIONS
   --name/$TEST_NAME             <string>    (default: bill)
   --e-dur/-d/$TEST_DURATION     <duration>  (default: 1s)
   --help/-h                     
+  display this help message`
+
+			gotS := strings.Split(got, "\n")
+			wantS := strings.Split(want, "\n")
+			if diff := cmp.Diff(gotS, wantS); diff != "" {
+				t.Errorf("\t%s\tShould match the output byte for byte. See diff:", failed)
+				t.Log(diff)
+			}
+			t.Logf("\t%s\tShould match byte for byte the output.", success)
+		}
+
+		t.Logf("\tTest: %d\tWhen using a struct with arguments.", 1)
+		{
+			var cfg struct {
+				Port int
+				Args conf.Args
+			}
+
+			got, err := conf.Usage("TEST", &cfg)
+			if err != nil {
+				fmt.Print(err)
+				return
+			}
+
+			got = strings.TrimRight(got, " \n")
+			want := `Usage: conf.test [options] [arguments]
+
+OPTIONS
+  --port/$TEST_PORT  <int>  
+  --help/-h          
   display this help message`
 
 			gotS := strings.Split(got, "\n")

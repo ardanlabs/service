@@ -3,6 +3,7 @@ package conf
 import (
 	"errors"
 	"fmt"
+	"reflect"
 	"strings"
 )
 
@@ -55,6 +56,14 @@ func Parse(args []string, namespace string, cfgStruct interface{}, sources ...So
 
 	// Process all fields found in the config struct provided.
 	for _, field := range fields {
+
+		// If the field is supposed to hold the leftover args then copy them in
+		// from the flags source.
+		if field.field.Type() == argsT {
+			args := reflect.ValueOf(Args(flag.args))
+			field.field.Set(args)
+			continue
+		}
 
 		// Set any default value into the struct for this field.
 		if field.options.defaultVal != "" {
@@ -132,4 +141,19 @@ func String(v interface{}) (string, error) {
 	}
 
 	return s.String(), nil
+}
+
+// Args holds command line arguments after flags have been parsed.
+type Args []string
+
+// argsT is used by Parse and Usage to detect struct fields of the Args type.
+var argsT = reflect.TypeOf(Args{})
+
+// Num returns the i'th argument in the Args slice. It returns an empty string
+// the request element is not present.
+func (a Args) Num(i int) string {
+	if i < 0 || i >= len(a) {
+		return ""
+	}
+	return a[i]
 }
