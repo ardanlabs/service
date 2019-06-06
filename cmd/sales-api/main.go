@@ -20,6 +20,7 @@ import (
 	"github.com/ardanlabs/service/internal/platform/database"
 	itrace "github.com/ardanlabs/service/internal/platform/trace"
 	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/pkg/errors"
 	"go.opencensus.io/trace"
 )
 
@@ -40,6 +41,13 @@ symbols in profiles: https://github.com/golang/go/issues/23376 / https://github.
 var build = "develop"
 
 func main() {
+	if err := run(); err != nil {
+		log.Println("error :", err)
+		os.Exit(1)
+	}
+}
+
+func run() error {
 
 	// =========================================================================
 	// Logging
@@ -81,12 +89,12 @@ func main() {
 		if err == conf.ErrHelpWanted {
 			usage, err := conf.Usage("SALES", &cfg)
 			if err != nil {
-				log.Fatalf("main : Parsing Config : %v", err)
+				return errors.Wrap(err, "generating config usage")
 			}
 			fmt.Println(usage)
-			return
+			return nil
 		}
-		log.Fatalf("main : Parsing Config : %v", err)
+		return errors.Wrap(err, "parsing config")
 	}
 
 	// =========================================================================
@@ -99,7 +107,7 @@ func main() {
 
 	out, err := conf.String(&cfg)
 	if err != nil {
-		log.Fatalf("main : Marshalling Config for output : %v", err)
+		return errors.Wrap(err, "generating config for output")
 	}
 	log.Printf("main : Config :\n%v\n", out)
 
@@ -108,18 +116,18 @@ func main() {
 
 	keyContents, err := ioutil.ReadFile(cfg.Auth.PrivateKeyFile)
 	if err != nil {
-		log.Fatalf("main : Reading auth private key : %v", err)
+		return errors.Wrap(err, "reading auth private key")
 	}
 
 	privateKey, err := jwt.ParseRSAPrivateKeyFromPEM(keyContents)
 	if err != nil {
-		log.Fatalf("main : Parsing auth private key : %v", err)
+		return errors.Wrap(err, "parsing auth private key")
 	}
 
 	f := auth.NewSimpleKeyLookupFunc(cfg.Auth.KeyID, privateKey.Public().(*rsa.PublicKey))
 	authenticator, err := auth.NewAuthenticator(privateKey, cfg.Auth.KeyID, cfg.Auth.Algorithm, f)
 	if err != nil {
-		log.Fatalf("main : Constructing authenticator : %v", err)
+		return errors.Wrap(err, "constructing authenticator")
 	}
 
 	// =========================================================================
@@ -133,7 +141,7 @@ func main() {
 		DisableTLS: cfg.DB.DisableTLS,
 	})
 	if err != nil {
-		log.Fatalf("main : Register DB : %v", err)
+		return errors.Wrap(err, "connecting to db")
 	}
 	defer db.Close()
 
@@ -147,7 +155,7 @@ func main() {
 	log.Printf("main : Tracing Started : %s", cfg.Trace.Host)
 	exporter, err := itrace.NewExporter(logger, cfg.Trace.Host, cfg.Trace.BatchSize, cfg.Trace.SendInterval, cfg.Trace.SendTimeout)
 	if err != nil {
-		log.Fatalf("main : RegiTracingster : ERROR : %v", err)
+		return errors.Wrap(err, "creating tracing exporter")
 	}
 	defer func() {
 		log.Printf("main : Tracing Stopping : %s", cfg.Trace.Host)
@@ -205,7 +213,7 @@ func main() {
 	// Blocking main and waiting for shutdown.
 	select {
 	case err := <-serverErrors:
-		log.Fatalf("main : Error starting server: %v", err)
+		return errors.Wrap(err, "starting server")
 
 	case sig := <-shutdown:
 		log.Printf("main : %v : Start shutdown", sig)
@@ -224,9 +232,11 @@ func main() {
 		// Log the status of this shutdown.
 		switch {
 		case sig == syscall.SIGSTOP:
-			log.Fatal("main : Integrity issue caused shutdown")
+			return errors.New("integrity issue caused shutdown")
 		case err != nil:
-			log.Fatalf("main : Could not stop server gracefully : %v", err)
+			return errors.Wrap(err, "could not stop server gracefully")
 		}
 	}
+
+	return nil
 }
