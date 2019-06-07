@@ -73,7 +73,7 @@ func Retrieve(ctx context.Context, claims auth.Claims, db *sqlx.DB, id string) (
 }
 
 // Create inserts a new user into the database.
-func Create(ctx context.Context, db *sqlx.DB, n *NewUser, now time.Time) (*User, error) {
+func Create(ctx context.Context, db *sqlx.DB, n NewUser, now time.Time) (*User, error) {
 	ctx, span := trace.StartSpan(ctx, "internal.user.Create")
 	defer span.End()
 
@@ -109,7 +109,7 @@ func Create(ctx context.Context, db *sqlx.DB, n *NewUser, now time.Time) (*User,
 }
 
 // Update replaces a user document in the database.
-func Update(ctx context.Context, claims auth.Claims, db *sqlx.DB, id string, upd *UpdateUser, now time.Time) error {
+func Update(ctx context.Context, claims auth.Claims, db *sqlx.DB, id string, upd UpdateUser, now time.Time) error {
 	ctx, span := trace.StartSpan(ctx, "internal.user.Update")
 	defer span.End()
 
