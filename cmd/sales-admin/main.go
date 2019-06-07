@@ -22,11 +22,13 @@ import (
 )
 
 func main() {
+	if err := run(); err != nil {
+		log.Printf("error: %s", err)
+		os.Exit(1)
+	}
+}
 
-	// =========================================================================
-	// Logging
-
-	log := log.New(os.Stdout, "sales-admin : ", log.LstdFlags|log.Lmicroseconds|log.Lshortfile)
+func run() error {
 
 	// =========================================================================
 	// Configuration
@@ -39,9 +41,6 @@ func main() {
 			Name       string `conf:"default:postgres"`
 			DisableTLS bool   `conf:"default:false"`
 		}
-		Auth struct {
-			PrivateKeyFile string `conf:"default:private.pem"`
-		}
 		Args conf.Args
 	}
 
@@ -49,12 +48,12 @@ func main() {
 		if err == conf.ErrHelpWanted {
 			usage, err := conf.Usage("SALES", &cfg)
 			if err != nil {
-				log.Fatalf("main : Parsing Config : %v", err)
+				return errors.Wrap(err, "generating usage")
 			}
 			fmt.Println(usage)
-			return
+			return nil
 		}
-		log.Fatalf("main : Parsing Config : %v", err)
+		return errors.Wrap(err, "error: parsing config")
 	}
 
 	// This is used for multiple commands below.
@@ -75,14 +74,16 @@ func main() {
 	case "useradd":
 		err = useradd(dbConfig, cfg.Args.Num(1), cfg.Args.Num(2))
 	case "keygen":
-		err = keygen(cfg.Auth.PrivateKeyFile)
+		err = keygen(cfg.Args.Num(1))
 	default:
-		err = errors.New("Must provide a command argument")
+		err = errors.New("Must specify a command")
 	}
 
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
+
+	return nil
 }
 
 func migrate(cfg database.Config) error {
@@ -123,7 +124,7 @@ func useradd(cfg database.Config, email, password string) error {
 	defer db.Close()
 
 	if email == "" || password == "" {
-		return errors.New("Must provide two additional arguments for email and passsword")
+		return errors.New("useradd command must be called with two additional arguments for email and password")
 	}
 
 	fmt.Printf("Admin user will be created with email %q and password %q\n", email, password)
@@ -159,6 +160,9 @@ func useradd(cfg database.Config, email, password string) error {
 
 // keygen creates an x509 private key for signing auth tokens.
 func keygen(path string) error {
+	if path == "" {
+		return errors.New("keygen missing argument for key path")
+	}
 
 	key, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
@@ -169,6 +173,7 @@ func keygen(path string) error {
 	if err != nil {
 		return errors.Wrap(err, "creating private file")
 	}
+	defer file.Close()
 
 	block := pem.Block{
 		Type:  "RSA PRIVATE KEY",
