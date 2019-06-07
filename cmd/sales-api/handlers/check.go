@@ -22,7 +22,7 @@ func (c *Check) Health(ctx context.Context, w http.ResponseWriter, r *http.Reque
 	ctx, span := trace.StartSpan(ctx, "handlers.Check.Health")
 	defer span.End()
 
-	var status struct {
+	var health struct {
 		Status string `json:"status"`
 	}
 
@@ -32,10 +32,10 @@ func (c *Check) Health(ctx context.Context, w http.ResponseWriter, r *http.Reque
 		// If the database is not ready we will tell the client and use a 500
 		// status. Do not respond by just returning an error because further up in
 		// the call stack will interpret that as an unhandled error.
-		status.Status = "db not ready"
-		return web.Respond(ctx, w, status, http.StatusInternalServerError)
+		health.Status = "db not ready"
+		return web.Respond(ctx, w, health, http.StatusInternalServerError)
 	}
 
-	status.Status = "ok"
-	return web.Respond(ctx, w, status, http.StatusOK)
+	health.Status = "ok"
+	return web.Respond(ctx, w, health, http.StatusOK)
 }
