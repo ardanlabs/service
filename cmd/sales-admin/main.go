@@ -148,7 +148,7 @@ func useradd(cfg database.Config, email, password string) error {
 		Roles:           []string{auth.RoleAdmin, auth.RoleUser},
 	}
 
-	u, err := user.Create(ctx, db, &nu, time.Now())
+	u, err := user.Create(ctx, db, nu, time.Now())
 	if err != nil {
 		return err
 	}
