@@ -35,7 +35,6 @@ func RespondError(ctx context.Context, w http.ResponseWriter, err error) error {
 }
 
 // Respond converts a Go value to JSON and sends it to the client.
-// If code is StatusNoContent, v is expected to be nil.
 func Respond(ctx context.Context, w http.ResponseWriter, data interface{}, statusCode int) error {
 
 	// Set the status code for the request logger middleware.

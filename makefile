@@ -3,7 +3,7 @@ SHELL := /bin/bash
 all: keys sales-api metrics tracer
 
 keys:
-	go run ./cmd/sales-admin/main.go keygen
+	go run ./cmd/sales-admin/main.go keygen private.pem
 
 admin:
 	go run ./cmd/sales-admin/main.go --db-disable-tls=1 useradd admin@example.com gophers

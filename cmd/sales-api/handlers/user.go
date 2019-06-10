@@ -75,7 +75,7 @@ func (u *User) Create(ctx context.Context, w http.ResponseWriter, r *http.Reques
 		return errors.Wrap(err, "")
 	}
 
-	usr, err := user.Create(ctx, u.db, &nu, v.Now)
+	usr, err := user.Create(ctx, u.db, nu, v.Now)
 	if err != nil {
 		return errors.Wrapf(err, "User: %+v", &usr)
 	}
@@ -103,7 +103,7 @@ func (u *User) Update(ctx context.Context, w http.ResponseWriter, r *http.Reques
 		return errors.Wrap(err, "")
 	}
 
-	err := user.Update(ctx, claims, u.db, params["id"], &upd, v.Now)
+	err := user.Update(ctx, claims, u.db, params["id"], upd, v.Now)
 	if err != nil {
 		switch err {
 		case user.ErrInvalidID:
