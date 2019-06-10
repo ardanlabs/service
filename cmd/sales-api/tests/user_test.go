@@ -26,8 +26,8 @@ func TestUsers(t *testing.T) {
 	shutdown := make(chan os.Signal, 1)
 	tests := UserTests{
 		app:        handlers.API(shutdown, test.Log, test.DB, test.Authenticator),
-		userToken:  test.Token(t, "user@example.com", "gophers"),
-		adminToken: test.Token(t, "admin@example.com", "gophers"),
+		userToken:  test.Token("user@example.com", "gophers"),
+		adminToken: test.Token("admin@example.com", "gophers"),
 	}
 
 	t.Run("getToken401", tests.getToken401)
