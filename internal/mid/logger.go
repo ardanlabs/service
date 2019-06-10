@@ -31,9 +31,8 @@ func Logger(log *log.Logger) web.Middleware {
 
 			err := before(ctx, w, r, params)
 
-			log.Printf("%s : (%d) : %s %s -> %s (%s)\n",
-				v.TraceID,
-				v.StatusCode,
+			log.Printf("%s : (%d) : %s %s -> %s (%s)",
+				v.TraceID, v.StatusCode,
 				r.Method, r.URL.Path,
 				r.RemoteAddr, time.Since(v.Now),
 			)
