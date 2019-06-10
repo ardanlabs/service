@@ -39,7 +39,7 @@ func TestUser(t *testing.T) {
 				PasswordConfirm: "gophers",
 			}
 
-			u, err := user.Create(ctx, db, &nu, now)
+			u, err := user.Create(ctx, db, nu, now)
 			if err != nil {
 				t.Fatalf("\t%s\tShould be able to create user : %s.", tests.Failed, err)
 			}
@@ -61,7 +61,7 @@ func TestUser(t *testing.T) {
 				Email: tests.StringPointer("jacob@ardanlabs.com"),
 			}
 
-			if err := user.Update(ctx, claims, db, u.ID, &upd, now); err != nil {
+			if err := user.Update(ctx, claims, db, u.ID, upd, now); err != nil {
 				t.Fatalf("\t%s\tShould be able to update user : %s.", tests.Failed, err)
 			}
 			t.Logf("\t%s\tShould be able to update user.", tests.Success)
@@ -123,7 +123,7 @@ func TestAuthenticate(t *testing.T) {
 
 			now := time.Date(2018, time.October, 1, 0, 0, 0, 0, time.UTC)
 
-			u, err := user.Create(ctx, db, &nu, now)
+			u, err := user.Create(ctx, db, nu, now)
 			if err != nil {
 				t.Fatalf("\t%s\tShould be able to create user : %s.", tests.Failed, err)
 			}
