@@ -48,6 +48,7 @@ func Setup(t *testing.T) (*sqlx.DB, func()) {
 	}
 
 	if pingError != nil {
+		dumpContainerLogs(t, c)
 		stopContainer(t, c)
 		t.Fatalf("waiting for database to be ready: %v", pingError)
 	}
