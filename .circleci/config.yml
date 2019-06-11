@@ -2,7 +2,21 @@
  jobs:
    build:
      docker:
-       - image: circleci/golang:1.12.4
+       - image: circleci/golang:1.12.4         # The container where "run" commands are executed.
      steps:
-       - checkout
-       - run: echo "A first hello"
+       - checkout                              # Get the source code.
+       - setup_remote_docker:                  # Create an environment where we can run docker commands.
+           docker_layer_caching: true          # Enable caching to speed up image fetching.
+       - run: docker pull postgres:11.1-alpine # Download the DB image used in tests.
+       - run:
+           name: Run tests on remote docker host
+           command: |
+               # Get a list of unique non-vendor directories containing test files.
+               # $pkg will be like ./internal/platform/conf
+               for pkg in $(find . -name "*_test.go" -not -wholename "*vendor*" -exec dirname {} \; | uniq); do
+                 test=$(echo "${pkg}.test" | sed 's@.*/@@')                  # convert "./internal/platform/conf" to "conf.test"
+                 GO111MODULE=on go test -race -mod=readonly -c $pkg -o $test # Build the test binary
+                 scp "$test" remote-docker:"$test"                           # Copy it to the remote docker host
+                 echo "Testing $pkg"                                         #
+                 ssh remote-docker ./"$test" -test.v                         # Run the tests on the remote host
+               done

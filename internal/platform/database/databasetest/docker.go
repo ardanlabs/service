@@ -74,3 +74,14 @@ func stopContainer(t *testing.T, c *container) {
 	}
 	t.Log("Removed:", c.ID)
 }
+
+// dumpContainerLogs runs "docker logs" against the container and send it to t.Log
+func dumpContainerLogs(t *testing.T, c *container) {
+	t.Helper()
+
+	out, err := exec.Command("docker", "logs", c.ID).CombinedOutput()
+	if err != nil {
+		t.Fatalf("could not log container: %v", err)
+	}
+	t.Logf("Logs for %s\n%s:", c.ID, out)
+}
