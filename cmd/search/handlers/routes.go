@@ -9,8 +9,8 @@ import (
 	"github.com/ardanlabs/service/internal/platform/web"
 )
 
-// API returns a handler for a set of routes.
-func API(shutdown chan os.Signal, log *log.Logger) http.Handler {
+// Routes returns a handler for a set of routes.
+func Routes(shutdown chan os.Signal, log *log.Logger) http.Handler {
 
 	// Construct the web.App which holds all routes as well as common Middleware.
 	app := web.NewApp(shutdown, log, mid.Logger(log), mid.Errors(log), mid.Metrics(), mid.Panics())
@@ -28,7 +28,7 @@ func API(shutdown chan os.Signal, log *log.Logger) http.Handler {
 	check := Check{}
 	app.Handle("GET", "/health", check.Health)
 
-	// Register health check endpoint. This route is not authenticated.
+	// Register search endpoint.
 	search := NewSearch(log)
 	app.Handle("GET", "/search", search.Query)
 	app.Handle("POST", "/search", search.Query)
