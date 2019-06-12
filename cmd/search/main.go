@@ -40,7 +40,7 @@ func run() error {
 
 	var cfg struct {
 		Web struct {
-			APIHost         string        `conf:"default:0.0.0.0:5000"`
+			Host            string        `conf:"default:0.0.0.0:5000"`
 			DebugHost       string        `conf:"default:0.0.0.0:6000"`
 			ReadTimeout     time.Duration `conf:"default:5s"`
 			WriteTimeout    time.Duration `conf:"default:5s"`
@@ -102,8 +102,8 @@ func run() error {
 	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM)
 
 	api := http.Server{
-		Addr:         cfg.Web.APIHost,
-		Handler:      handlers.API(shutdown, log),
+		Addr:         cfg.Web.Host,
+		Handler:      handlers.Routes(shutdown, log),
 		ReadTimeout:  cfg.Web.ReadTimeout,
 		WriteTimeout: cfg.Web.WriteTimeout,
 	}
@@ -114,7 +114,7 @@ func run() error {
 
 	// Start the service listening for requests.
 	go func() {
-		log.Printf("main : API Listening %s", cfg.Web.APIHost)
+		log.Printf("main : API Listening %s", cfg.Web.Host)
 		serverErrors <- api.ListenAndServe()
 	}()
 
