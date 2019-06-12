@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/ardanlabs/service/cmd/search/internal/feeds"
-
 	"github.com/ardanlabs/service/cmd/search/internal/search"
 	"github.com/ardanlabs/service/cmd/search/views"
 	"github.com/ardanlabs/service/internal/platform/web"
@@ -28,7 +27,7 @@ func NewSearch(log *log.Logger) *Search {
 func (s *Search) Query(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
 	fv, options := formValues(r)
 
-	var results []views.Result
+	var results []search.Result
 	if r.Method == "POST" && options.Term != "" {
 		var searchers []search.Searcher
 		if options.CNN {
@@ -53,9 +52,9 @@ func (s *Search) Query(ctx context.Context, w http.ResponseWriter, r *http.Reque
 }
 
 // formValues extracts the form data.
-func formValues(r *http.Request) (map[string]interface{}, views.Options) {
+func formValues(r *http.Request) (map[string]interface{}, search.Options) {
 	fv := make(map[string]interface{})
-	var options views.Options
+	var options search.Options
 
 	fv["term"] = r.FormValue("term")
 	options.Term = r.FormValue("term")

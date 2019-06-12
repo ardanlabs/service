@@ -15,35 +15,6 @@ const (
 	LAYOUT  = "Layout"
 )
 
-// Options ...
-type Options struct {
-	Term  string
-	CNN   bool
-	NYT   bool
-	BBC   bool
-	First bool
-}
-
-// Result ...
-type Result struct {
-	Engine  string
-	Title   string
-	Link    string
-	Content string
-}
-
-// TitleHTML fixes encoding issues. The templates expect this
-// method for rendering.
-func (r *Result) TitleHTML() template.HTML {
-	return template.HTML(r.Title)
-}
-
-// ContentHTML fixes encoding issues. The templates expect this
-// method for rendering.
-func (r *Result) ContentHTML() template.HTML {
-	return template.HTML(r.Content)
-}
-
 // views contains a map of static templates for rendering views.
 var views = make(map[string]*template.Template)
 
@@ -98,25 +69,20 @@ func Init() error {
 
 // loadTemplate reads the specified template file for use.
 func loadTemplate(name string, path string) error {
-
-	// Read the html template file.
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
 		return err
 	}
 
-	// Create a template value for this code.
 	tmpl, err := template.New(name).Parse(string(data))
 	if err != nil {
 		return err
 	}
 
-	// Have we processed this file already?
 	if _, exists := views[name]; exists {
 		return fmt.Errorf("template %s already in use", name)
 	}
 
-	// Store the template for use.
 	views[name] = tmpl
 	return nil
 }

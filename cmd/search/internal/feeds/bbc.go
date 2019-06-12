@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 
-	"github.com/ardanlabs/service/cmd/search/views"
+	"github.com/ardanlabs/service/cmd/search/internal/search"
 )
 
 var bbcFeeds = []string{
@@ -23,18 +23,18 @@ func NewBBC() BBC {
 }
 
 // Search performs a search against the BBC RSS feeds.
-func (bbc BBC) Search(ctx context.Context, log *log.Logger, term string) ([]views.Result, error) {
-	results := []views.Result{}
+func (bbc BBC) Search(ctx context.Context, log *log.Logger, term string) ([]search.Match, error) {
+	matches := []search.Match{}
 
 	for _, feed := range bbcFeeds {
-		res, err := rssSearch(ctx, log, term, bbc.FeedName(), feed)
+		match, err := rssSearch(ctx, log, term, bbc.FeedName(), feed)
 		if err != nil {
 			return nil, err
 		}
-		results = append(results, res...)
+		matches = append(matches, match...)
 	}
 
-	return results, nil
+	return matches, nil
 }
 
 // FeedName provides the name of this feed for logging.

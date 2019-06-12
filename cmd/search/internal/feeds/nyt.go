@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 
-	"github.com/ardanlabs/service/cmd/search/views"
+	"github.com/ardanlabs/service/cmd/search/internal/search"
 )
 
 var nytFeeds = []string{
@@ -23,19 +23,18 @@ func NewNYT() NYT {
 }
 
 // Search performs a search against the NYT RSS feeds.
-func (nyt NYT) Search(ctx context.Context, log *log.Logger, term string) ([]views.Result, error) {
-	results := []views.Result{}
+func (nyt NYT) Search(ctx context.Context, log *log.Logger, term string) ([]search.Match, error) {
+	matches := []search.Match{}
 
 	for _, feed := range nytFeeds {
-		res, err := rssSearch(ctx, log, term, nyt.FeedName(), feed)
+		match, err := rssSearch(ctx, log, term, nyt.FeedName(), feed)
 		if err != nil {
-			log.Println("ERROR: ", err)
 			return nil, err
 		}
-		results = append(results, res...)
+		matches = append(matches, match...)
 	}
 
-	return results, nil
+	return matches, nil
 }
 
 // FeedName provides the name of this feed for logging.
