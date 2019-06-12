@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ardanlabs/service/cmd/search/views"
+	"github.com/ardanlabs/service/cmd/search/internal/search"
 	"github.com/ardanlabs/service/internal/platform/web"
 	gc "github.com/patrickmn/go-cache"
 )
@@ -65,7 +65,7 @@ type (
 )
 
 // rssSearch is used against any RSS feeds.
-func rssSearch(ctx context.Context, log *log.Logger, term, engine, uri string) ([]views.Result, error) {
+func rssSearch(ctx context.Context, log *log.Logger, term, engine, uri string) ([]search.Match, error) {
 	var mu *sync.Mutex
 	fetch.Lock()
 	{
@@ -80,59 +80,44 @@ func rssSearch(ctx context.Context, log *log.Logger, term, engine, uri string) (
 	var d Document
 	mu.Lock()
 	{
-		// Look in the cache.
 		v, found := cache.Get(uri)
-
-		// Based on the cache lookup determine what to do.
 		switch {
 		case found:
 			d = v.(Document)
 
 		default:
-
-			// Pull down the rss feed.
 			resp, err := http.Get(uri)
 			if err != nil {
-				return []views.Result{}, err
+				return []search.Match{}, err
 			}
-
-			// Schedule the close of the response body.
 			defer resp.Body.Close()
 
-			// Decode the results into a document.
 			if err := xml.NewDecoder(resp.Body).Decode(&d); err != nil {
-				return []views.Result{}, err
+				return []search.Match{}, err
 			}
 
-			// Convert the description to lower for searching.
 			for i := range d.Channel.Items {
 				d.Channel.Items[i].Search.Description = strings.ToLower(d.Channel.Items[i].Description)
 			}
 
-			// Save this document into the cache.
 			cache.Set(uri, d, expiration)
 
-			// It's important to know the cache is reloading.
+			traceID := "MISSING"
 			v, ok := ctx.Value(web.KeyValues).(*web.Values)
-			if !ok {
-				log.Printf("TRACEID MISSING : feeds : %s : reloaded cache : %s", engine, uri)
-			} else {
-				log.Printf("%s : feeds : %s : reloaded cache : %s", v.TraceID, engine, uri)
+			if ok {
+				traceID = v.TraceID
 			}
+			log.Printf("%s : feeds : %s : reloaded cache : %s", traceID, engine, uri)
 		}
 	}
 	mu.Unlock()
 
-	// Create an empty slice of results.
-	results := []views.Result{}
-
-	// Conver to lower for a case-insensitive search.
+	results := []search.Match{}
 	term = strings.ToLower(term)
 
-	// Capture the data we need for our results if we find the search term.
 	for _, item := range d.Channel.Items {
 		if strings.Contains(item.Search.Description, term) {
-			results = append(results, views.Result{
+			results = append(results, search.Match{
 				Engine:  engine,
 				Title:   item.Title,
 				Link:    item.Link,
