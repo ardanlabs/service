@@ -1,12 +1,11 @@
  version: 2
  jobs:
    build:
-     docker:
-       - image: circleci/golang:1.12.4         # The container where "run" commands are executed.
+     machine:
+       image: ubuntu-1604:201903-01
      steps:
        - checkout                              # Get the source code.
-       - setup_remote_docker:                  # Create an environment where we can run docker commands.
-           docker_layer_caching: true          # Enable caching to speed up image fetching.
+       # You may want to install your own Go here. The default Go in machine is v1.10.3.
        - run: docker pull postgres:11.1-alpine # Download the DB image used in tests.
        - run:
            name: Run tests on remote docker host
