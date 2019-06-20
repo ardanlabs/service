@@ -6,16 +6,15 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/internal/platform/auth"
-	"github.com/ardanlabs/service/internal/platform/database/databasetest"
-	"github.com/ardanlabs/service/internal/platform/tests"
 	"github.com/ardanlabs/service/internal/product"
+	"github.com/ardanlabs/service/internal/tests"
 	"github.com/google/go-cmp/cmp"
 	"github.com/pkg/errors"
 )
 
 // TestProduct validates the full set of CRUD operations on Product values.
 func TestProduct(t *testing.T) {
-	db, teardown := databasetest.Setup(t)
+	db, teardown := tests.NewUnit(t)
 	defer teardown()
 
 	t.Log("Given the need to work with Product records.")

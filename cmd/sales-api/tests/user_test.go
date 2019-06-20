@@ -11,8 +11,8 @@ import (
 
 	"github.com/ardanlabs/service/cmd/sales-api/handlers"
 	"github.com/ardanlabs/service/internal/platform/auth"
-	"github.com/ardanlabs/service/internal/platform/tests"
 	"github.com/ardanlabs/service/internal/platform/web"
+	"github.com/ardanlabs/service/internal/tests"
 	"github.com/ardanlabs/service/internal/user"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
@@ -20,7 +20,7 @@ import (
 
 // TestUsers is the entry point for testing user management functions.
 func TestUsers(t *testing.T) {
-	test := tests.New(t)
+	test := tests.NewIntegration(t)
 	defer test.Teardown()
 
 	shutdown := make(chan os.Signal, 1)

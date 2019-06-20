@@ -10,9 +10,9 @@ import (
 	"testing"
 
 	"github.com/ardanlabs/service/cmd/sales-api/handlers"
-	"github.com/ardanlabs/service/internal/platform/tests"
 	"github.com/ardanlabs/service/internal/platform/web"
 	"github.com/ardanlabs/service/internal/product"
+	"github.com/ardanlabs/service/internal/tests"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 )
@@ -24,7 +24,7 @@ import (
 // subtest needs a fresh instance of the application it can make it or it
 // should be its own Test* function.
 func TestProducts(t *testing.T) {
-	test := tests.New(t)
+	test := tests.NewIntegration(t)
 	defer test.Teardown()
 
 	shutdown := make(chan os.Signal, 1)
