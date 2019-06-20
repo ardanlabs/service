@@ -7,14 +7,14 @@ import (
 	"testing"
 )
 
-// container tracks information about a docker container started for tests.
-type container struct {
+// Container tracks information about a docker container started for tests.
+type Container struct {
 	ID   string
 	Host string // IP:Port
 }
 
-// startContainer runs a postgres container to execute commands.
-func startContainer(t *testing.T) *container {
+// StartContainer runs a postgres container to execute commands.
+func StartContainer(t *testing.T) *Container {
 	t.Helper()
 
 	cmd := exec.Command("docker", "run", "-P", "-d", "postgres:11.1-alpine")
@@ -50,7 +50,7 @@ func startContainer(t *testing.T) *container {
 
 	network := doc[0].NetworkSettings.Ports.TCP5432[0]
 
-	c := container{
+	c := Container{
 		ID:   id,
 		Host: network.HostIP + ":" + network.HostPort,
 	}
@@ -60,8 +60,8 @@ func startContainer(t *testing.T) *container {
 	return &c
 }
 
-// stopContainer stops and removes the specified container.
-func stopContainer(t *testing.T, c *container) {
+// StopContainer stops and removes the specified container.
+func StopContainer(t *testing.T, c *Container) {
 	t.Helper()
 
 	if err := exec.Command("docker", "stop", c.ID).Run(); err != nil {
@@ -75,8 +75,8 @@ func stopContainer(t *testing.T, c *container) {
 	t.Log("Removed:", c.ID)
 }
 
-// dumpContainerLogs runs "docker logs" against the container and send it to t.Log
-func dumpContainerLogs(t *testing.T, c *container) {
+// DumpContainerLogs runs "docker logs" against the container and send it to t.Log
+func DumpContainerLogs(t *testing.T, c *Container) {
 	t.Helper()
 
 	out, err := exec.Command("docker", "logs", c.ID).CombinedOutput()
