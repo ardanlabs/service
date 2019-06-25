@@ -13,7 +13,7 @@ import (
 // API returns a handler for a set of routes.
 func API(shutdown chan os.Signal, log *log.Logger, zipkinHost string, apiHost string) http.Handler {
 
-	app := web.NewApp(shutdown, log, mid.Logger(log), mid.Errors(log))
+	app := web.NewApp(shutdown, log, mid.Logger(log), mid.Errors(log), mid.Panics(log))
 
 	z := NewZipkin(zipkinHost, apiHost, time.Second)
 	app.Handle("POST", "/v1/publish", z.Publish)
