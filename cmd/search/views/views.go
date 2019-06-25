@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"html/template"
 	"io/ioutil"
-	"os"
 )
 
 // These constants represent the different layouts in use.
@@ -52,16 +51,15 @@ func Init() error {
 
 	// In order for the endpoint tests to run this needs to be
 	// physically located. Trying to avoid configuration for now.
-	pwd, _ := os.Getwd()
-	if err := loadTemplate(LAYOUT, pwd+"/views/basic_layout.html"); err != nil {
+	if err := loadTemplate(LAYOUT, "/basic_layout.html"); err != nil {
 		return err
 	}
 
-	if err := loadTemplate(SEARCH, pwd+"/views/search.html"); err != nil {
+	if err := loadTemplate(SEARCH, "/search.html"); err != nil {
 		return err
 	}
 
-	if err := loadTemplate(RESULTS, pwd+"/views/results.html"); err != nil {
+	if err := loadTemplate(RESULTS, "/results.html"); err != nil {
 		return err
 	}
 	return nil
@@ -69,7 +67,12 @@ func Init() error {
 
 // loadTemplate reads the specified template file for use.
 func loadTemplate(name string, path string) error {
-	data, err := ioutil.ReadFile(path)
+	f, err := Assets.Open(path)
+	if err != nil {
+		return err
+	}
+
+	data, err := ioutil.ReadAll(f)
 	if err != nil {
 		return err
 	}

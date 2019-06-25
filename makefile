@@ -23,6 +23,15 @@ sales-api:
 		.
 	docker system prune -f
 
+search:
+	docker build \
+		-t gcr.io/sales-api/search-amd64:1.0 \
+		--build-arg PACKAGE_NAME=search \
+		--build-arg VCS_REF=`git rev-parse HEAD` \
+		--build-arg BUILD_DATE=`date -u +”%Y-%m-%dT%H:%M:%SZ”` \
+		.
+	docker system prune -f
+
 metrics:
 	docker build \
 		-t gcr.io/ardan-starter-kit/metrics-amd64:1.0 \

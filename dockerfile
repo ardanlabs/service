@@ -8,7 +8,9 @@ ARG PACKAGE_PREFIX
 RUN mkdir -p /go/src/github.com/ardanlabs/service
 COPY . /go/src/github.com/ardanlabs/service
 WORKDIR /go/src/github.com/ardanlabs/service/cmd/${PACKAGE_PREFIX}${PACKAGE_NAME}
+RUN go generate
 RUN go build -ldflags "-X main.build=${VCS_REF}" -a -tags netgo
+
 
 # Run the Go Binary in Alpine.
 

@@ -37,6 +37,17 @@ services:
     image: postgres:11.1-alpine
     ports:
       - 5432:5432
+    command: "--listen_addresses=0.0.0.0"
+
+  # This is the search service.
+  search:
+    container_name: search
+    networks:
+      - shared-network
+    image: gcr.io/sales-api/search-amd64:1.0
+    ports:
+      - 5000:5000 # CRUD API
+      - 6000:6000 # DEBUG API
 
   # This is the core CRUD based service.
   sales-api:

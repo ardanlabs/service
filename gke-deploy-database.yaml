@@ -1,0 +1,22 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: sales_db
+spec:
+  replicas: 1
+  strategy: {}
+  template:
+    metadata:
+      name: sales_db
+      labels:
+        database: sales_db
+    spec:
+      containers:
+      - name: sales_db
+        image: postgres:11.1-alpine
+        args: "--listen_addresses==0.0.0.0"
+        ports:
+        - name: sales_db
+          containerPort: 5432
+        resources: {}
+status: {}
