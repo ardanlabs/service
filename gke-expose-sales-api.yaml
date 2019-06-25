@@ -9,11 +9,17 @@ spec:
   - name: "zipkin"
     port: 9411
     targetPort: 9411
+  - name: "search"
+    port: 5000
+    targetPort: 5000
   - name: "sales-api"
     port: 3000
     targetPort: 3000
   - name: "metrics"
     port: 3001
     targetPort: 3001
+  - name: "tracer"
+    port: 3002
+    targetPort: 3002
 status:
   loadBalancer: {}

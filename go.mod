@@ -10,14 +10,17 @@ require (
 	github.com/google/go-cmp v0.2.0
 	github.com/google/uuid v1.1.1
 	github.com/jmoiron/sqlx v1.2.0
-	github.com/kelseyhightower/envconfig v1.3.0
 	github.com/leodido/go-urn v1.1.0 // indirect
 	github.com/lib/pq v1.1.1
 	github.com/openzipkin/zipkin-go v0.1.1
+	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/pkg/errors v0.8.0
+	github.com/shurcooL/httpfs v0.0.0-20190527155220-6a4d4a70508b // indirect
+	github.com/shurcooL/vfsgen v0.0.0-20181202132449-6a9ea43bcacd
 	github.com/stretchr/testify v1.3.0 // indirect
 	go.opencensus.io v0.14.0
-	golang.org/x/crypto v0.0.0-20180910181607-0e37d006457b
+	golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2
+	golang.org/x/tools v0.0.0-20190624222133-a101b041ded4 // indirect
 	google.golang.org/appengine v1.6.0 // indirect
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/validator.v9 v9.28.0

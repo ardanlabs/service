@@ -1,24 +1,22 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: mongo
+  name: sales_db
 spec:
   replicas: 1
   strategy: {}
   template:
     metadata:
-      name: mongo
+      name: sales_db
       labels:
-        database: mongo
+        database: sales_db
     spec:
       containers:
-      - name: mongo
-        image: mongo:3-jessie
-        args:
-        - --bind_ip
-        - 0.0.0.0
+      - name: sales_db
+        image: postgres:11.1-alpine
+        args: "--listen_addresses==0.0.0.0"
         ports:
-        - name: mongo
-          containerPort: 27017
+        - name: sales_db
+          containerPort: 5432
         resources: {}
 status: {}

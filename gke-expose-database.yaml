@@ -1,11 +1,11 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: mongo
+  name: sales_db
 spec:
   selector:
-    database: mongo
+    database: sales_db
   ports:
   - name: "db"
-    port: 27017
-    targetPort: 27017
+    port: 5432
+    targetPort: 5432

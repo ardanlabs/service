@@ -18,6 +18,14 @@ spec:
         - name: zipkin
           containerPort: 9411
         resources: {}
+      - name: search
+        image: gcr.io/sales-api/search-amd64:1.0
+        ports:
+        - name: search
+          containerPort: 5000
+        - name: debug
+          containerPort: 6000
+        resources: {}
       - name: sales-api
         image: gcr.io/sales-api/sales-api-amd64:1.0
         env:
