@@ -1,5 +1,7 @@
 # Ultimate Service
 
+[![CircleCI](https://circleci.com/gh/ardanlabs/service.svg?style=svg)](https://circleci.com/gh/ardanlabs/service)
+
 Copyright 2018, Ardan Labs  
 info@ardanlabs.com
 
