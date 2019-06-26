@@ -21,18 +21,33 @@ limitations under the License.
 
 ## Description
 
-Service is a project that provides a starter-kit for a REST based web service. It provides best practices around Go web services using POD architecture and design. It contains the following features:
+This starter kit is a starting point for building product grade scalable web service applications. The goal of this project is to provide a proven starting point for new projects that reduce the repetitive tasks in getting a new project launched to production. It uses minimal dependencies, implements idiomatic code and follows Go best practices. Collectively, the project lays out everything logically to minimize guess work and enable engineers to quickly maintain a mental model for the project. This inturn will make current developers happy and expedite on-boarding of new engineers.
 
-* Minimal application web framework.
+This project should not be considered a web framework. Coding is a discovery process and with that, this project leaves you in control of your project’s architecture and development. There are five areas of expertise that an engineer or their engineering team must do for a project to grow and scale. Based on our experience, a few core decisions were made for each of these areas that help you focus initially on writing the business logic.
+
+* Micro level - Since business applications require data storage this project implements Postgres. The implementation facilitates the data semantics that define the data being captured and their relationships.
+* Macro level - The project architecture and design provides basic project structure and foundation for development.
+* Business logic - Defines an example Go packages that helps illustrate where value generating activities should reside and how the code will be delivered to clients.
+* Deployment and Operations - Integrates with CircleCI and GCP/GKE for serverless deployments.
+* Observability - Implements OpenCensus and Go standard library support to facilitate observability.
+
+This project contains the following features:
+
+* Minimal web application using standard html/template package.
 * Middleware integration.
-* Database support using MongoDB.
+* Database support using Postgres.
 * CRUD based pattern.
+* Role-based access control (RBAC).
+* Account signup and user management.
 * Distributed logging and tracing.
+* Integration with Opencensus for enterprise-level observability.
 * Testing patterns.
-* User authentication.
-* POD architecture with sidecars for metrics and tracing.
 * Use of Docker, Docker Compose, and Makefiles.
-* Vendoring dependencies with Modules, requires Go 1.11 or higher.
+* Vendoring dependencies with Modules, requires Go 1.12 or higher.
+* Continuous deployment pipeline.
+* Serverless deployments.
+* CLI with boilerplate templates to reduce repetitive copy/pasting.
+* Integration with CircleCI for enterprise-level CI/CD.
 
 ## Local Installation
 
