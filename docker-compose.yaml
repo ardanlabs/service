@@ -10,6 +10,25 @@ networks:
 
 services:
 
+  # This sidecar allows for the viewing of traces.
+  zipkin:
+    container_name: zipkin
+    networks:
+      - shared-network
+    image: openzipkin/zipkin:2.11
+    ports:
+      - 9411:9411
+
+  # This sidecar publishes metrics to the console by default.
+  metrics:
+    container_name: metrics
+    networks:
+      - shared-network
+    image: gcr.io/sales-api/metrics-amd64:1.0
+    ports:
+      - 3001:3001 # EXPVAR API
+      - 4001:4001 # DEBUG API
+
   # This starts a local PostgreSQL DB.
   db:
     container_name: sales_db
@@ -32,34 +51,7 @@ services:
       - SALES_DB_HOST=db
       - SALES_DB_DISABLE_TLS=1 # This is only disabled for our development enviroment.
       # - GODEBUG=gctrace=1
-
-  # This sidecar publishes metrics to the console by default.
-  metrics:
-    container_name: metrics
-    networks:
-      - shared-network
-    image: gcr.io/sales-api/metrics-amd64:1.0
-    ports:
-      - 3001:3001 # EXPVAR API
-      - 4001:4001 # DEBUG API
-
-  # This sidecar publishes tracing to the console by default.
-  tracer:
-    container_name: tracer
-    networks:
-      - shared-network
-    image: gcr.io/sales-api/tracer-amd64:1.0
-    ports:
-      - 3002:3002 # TRACER API
-      - 4002:4002 # DEBUG API
-    # environment:
-      # - SALES_ZIPKIN_HOST=http://zipkin:9411/api/v2/spans
-
-  # This sidecar allows for the viewing of traces.
-  zipkin:
-    container_name: zipkin
-    networks:
-      - shared-network
-    image: openzipkin/zipkin:2.11
-    ports:
-      - 9411:9411
+    depends_on:
+      - metrics
+      - zipkin
+      - db

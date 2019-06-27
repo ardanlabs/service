@@ -2,7 +2,7 @@
 
 [![CircleCI](https://circleci.com/gh/ardanlabs/service.svg?style=svg)](https://circleci.com/gh/ardanlabs/service)
 
-Copyright 2018,2019, Ardan Labs  
+Copyright 2018, 2019, Ardan Labs  
 info@ardanlabs.com
 
 ## Licensing
@@ -132,12 +132,12 @@ The service provides record keeping for someone running a multi-family garage sa
 
 ### Making Requests
 
-#### Initial User
+#### Seeding The Database
 
-To make a request to the service you must have an authenticated user. Users can be created with the API but an initial admin user must first be created. While the service is running you can create the initial user with the command `make admin`
+To do anything the database needs to be defined and seeded with data. This will also create the initial user.
 
 ```
-$ make admin
+$ make seed
 ```
 
 This will create a user with email `admin@example.com` and password `gophers`.
@@ -151,6 +151,10 @@ $ curl --user "admin@example.com:gophers" http://localhost:3000/v1/users/token
 ```
 
 I suggest putting the resulting token in an environment variable like `$TOKEN`.
+
+```
+$ export TOKEN="COPY TOKEN STRING FROM LAST CALL"
+```
 
 #### Authenticated Requests
 
