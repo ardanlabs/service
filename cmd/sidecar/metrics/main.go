@@ -21,7 +21,7 @@ func main() {
 	// =========================================================================
 	// Logging
 
-	log := log.New(os.Stdout, "TRACER : ", log.LstdFlags|log.Lmicroseconds|log.Lshortfile)
+	log := log.New(os.Stdout, "METRICS : ", log.LstdFlags|log.Lmicroseconds|log.Lshortfile)
 	defer log.Println("main : Completed")
 
 	// =========================================================================

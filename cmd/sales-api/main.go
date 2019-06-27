@@ -14,12 +14,14 @@ import (
 	"syscall"
 	"time"
 
+	"contrib.go.opencensus.io/exporter/zipkin"
 	"github.com/ardanlabs/service/cmd/sales-api/internal/handlers"
 	"github.com/ardanlabs/service/internal/platform/auth"
 	"github.com/ardanlabs/service/internal/platform/conf"
 	"github.com/ardanlabs/service/internal/platform/database"
-	itrace "github.com/ardanlabs/service/internal/platform/trace"
 	jwt "github.com/dgrijalva/jwt-go"
+	openzipkin "github.com/openzipkin/zipkin-go"
+	zipkinHTTP "github.com/openzipkin/zipkin-go/reporter/http"
 	"github.com/pkg/errors"
 	"go.opencensus.io/trace"
 )
@@ -77,12 +79,11 @@ func run() error {
 			PrivateKeyFile string `conf:"default:/app/private.pem"`
 			Algorithm      string `conf:"default:RS256"`
 		}
-		Trace struct {
-			Host         string        `conf:"default:http://tracer:3002/v1/publish"`
-			BatchSize    int           `conf:"default:1000"`
-			SendInterval time.Duration `conf:"default:15s"`
-			SendTimeout  time.Duration `conf:"default:500ms"`
-			Probability  float64       `conf:"default:1"`
+		Zipkin struct {
+			LocalEndpoint string  `conf:"default:0.0.0.0:3000"`
+			ReporterURI   string  `conf:"default:http://zipkin:9411/api/v2/spans"`
+			ServiceName   string  `conf:"default:sales-api"`
+			Probability   float64 `conf:"default:0.05"`
 		}
 	}
 
@@ -103,7 +104,7 @@ func run() error {
 
 	// Print the build version for our logs. Also expose it under /debug/vars.
 	expvar.NewString("build").Set(build)
-	log.Printf("main : Started : Application Initializing version %q", build)
+	log.Printf("main : Started : Application initializing : version %q", build)
 	defer log.Println("main : Completed")
 
 	out, err := conf.String(&cfg)
@@ -114,6 +115,8 @@ func run() error {
 
 	// =========================================================================
 	// Initialize authentication support
+
+	log.Println("main : Started : Initializing authentication support")
 
 	keyContents, err := ioutil.ReadFile(cfg.Auth.PrivateKeyFile)
 	if err != nil {
@@ -134,6 +137,8 @@ func run() error {
 	// =========================================================================
 	// Start Database
 
+	log.Println("main : Started : Initializing database support")
+
 	db, err := database.Open(database.Config{
 		User:       cfg.DB.User,
 		Password:   cfg.DB.Password,
@@ -144,34 +149,33 @@ func run() error {
 	if err != nil {
 		return errors.Wrap(err, "connecting to db")
 	}
-	defer db.Close()
+	defer func() {
+		log.Printf("main : Database Stopping : %s", cfg.DB.Host)
+		db.Close()
+	}()
 
 	// =========================================================================
 	// Start Tracing Support
 
-	logger := func(format string, v ...interface{}) {
-		log.Printf(format, v...)
-	}
+	log.Println("main : Started : Initializing zipkin tracing support")
 
-	log.Printf("main : Tracing Started : %s", cfg.Trace.Host)
-	exporter, err := itrace.NewExporter(logger, cfg.Trace.Host, cfg.Trace.BatchSize, cfg.Trace.SendInterval, cfg.Trace.SendTimeout)
+	localEndpoint, err := openzipkin.NewEndpoint("sales-api", cfg.Zipkin.LocalEndpoint)
 	if err != nil {
-		return errors.Wrap(err, "creating tracing exporter")
+		return err
 	}
-	defer func() {
-		log.Printf("main : Tracing Stopping : %s", cfg.Trace.Host)
-		batch, err := exporter.Close()
-		if err != nil {
-			log.Printf("main : Tracing Stopped : ERROR : Batch[%d] : %v", batch, err)
-		} else {
-			log.Printf("main : Tracing Stopped : Flushed Batch[%d]", batch)
-		}
-	}()
 
-	trace.RegisterExporter(exporter)
+	reporter := zipkinHTTP.NewReporter(cfg.Zipkin.ReporterURI)
+	ze := zipkin.NewExporter(reporter, localEndpoint)
+
+	trace.RegisterExporter(ze)
 	trace.ApplyConfig(trace.Config{
-		DefaultSampler: trace.ProbabilitySampler(cfg.Trace.Probability),
+		DefaultSampler: trace.ProbabilitySampler(cfg.Zipkin.Probability),
 	})
+
+	defer func() {
+		log.Printf("main : Tracing Stopping : %s", cfg.Zipkin.LocalEndpoint)
+		reporter.Close()
+	}()
 
 	// =========================================================================
 	// Start Debug Service
@@ -180,6 +184,9 @@ func run() error {
 	// /debug/vars - Added to the default mux by importing the expvar package.
 	//
 	// Not concerned with shutting this down when the application is shutdown.
+
+	log.Println("main : Started : Initializing debugging support")
+
 	go func() {
 		log.Printf("main : Debug Listening %s", cfg.Web.DebugHost)
 		log.Printf("main : Debug Listener closed : %v", http.ListenAndServe(cfg.Web.DebugHost, http.DefaultServeMux))
@@ -187,6 +194,8 @@ func run() error {
 
 	// =========================================================================
 	// Start API Service
+
+	log.Println("main : Started : Initializing API support")
 
 	// Make a channel to listen for an interrupt or terminate signal from the OS.
 	// Use a buffered channel because the signal package requires it.

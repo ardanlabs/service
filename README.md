@@ -2,7 +2,7 @@
 
 [![CircleCI](https://circleci.com/gh/ardanlabs/service.svg?style=svg)](https://circleci.com/gh/ardanlabs/service)
 
-Copyright 2018, Ardan Labs  
+Copyright 2018, 2019, Ardan Labs  
 info@ardanlabs.com
 
 ## Licensing
@@ -23,7 +23,7 @@ limitations under the License.
 
 ## Description
 
-This starter kit is a starting point for building product grade scalable web service applications. The goal of this project is to provide a proven starting point for new projects that reduce the repetitive tasks in getting a new project launched to production. It uses minimal dependencies, implements idiomatic code and follows Go best practices. Collectively, the project lays out everything logically to minimize guess work and enable engineers to quickly maintain a mental model for the project. This inturn will make current developers happy and expedite on-boarding of new engineers.
+This starter kit is a starting point for building production grade scalable web service applications. The goal of this project is to provide a proven starting point for new projects that reduce the repetitive tasks in getting a new project launched to production. It uses minimal dependencies, implements idiomatic code and follows Go best practices. Collectively, the project lays out everything logically to minimize guess work and enable engineers to quickly maintain a mental model for the project. This inturn will make current developers happy and expedite on-boarding of new engineers.
 
 This project should not be considered a web framework. Coding is a discovery process and with that, this project leaves you in control of your project’s architecture and development. There are five areas of expertise that an engineer or their engineering team must do for a project to grow and scale. Based on our experience, a few core decisions were made for each of these areas that help you focus initially on writing the business logic.
 
@@ -132,12 +132,12 @@ The service provides record keeping for someone running a multi-family garage sa
 
 ### Making Requests
 
-#### Initial User
+#### Seeding The Database
 
-To make a request to the service you must have an authenticated user. Users can be created with the API but an initial admin user must first be created. While the service is running you can create the initial user with the command `make admin`
+To do anything the database needs to be defined and seeded with data. This will also create the initial user.
 
 ```
-$ make admin
+$ make seed
 ```
 
 This will create a user with email `admin@example.com` and password `gophers`.
@@ -151,6 +151,10 @@ $ curl --user "admin@example.com:gophers" http://localhost:3000/v1/users/token
 ```
 
 I suggest putting the resulting token in an environment variable like `$TOKEN`.
+
+```
+$ export TOKEN="COPY TOKEN STRING FROM LAST CALL"
+```
 
 #### Authenticated Requests
 
