@@ -10,9 +10,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/ardanlabs/service/cmd/sidecar/metrics/collector"
-	"github.com/ardanlabs/service/cmd/sidecar/metrics/publisher"
-	"github.com/ardanlabs/service/cmd/sidecar/metrics/publisher/expvar"
+	"github.com/ardanlabs/service/cmd/sidecar/metrics/internal/collector"
+	"github.com/ardanlabs/service/cmd/sidecar/metrics/internal/publisher"
+	"github.com/ardanlabs/service/cmd/sidecar/metrics/internal/publisher/expvar"
 	"github.com/ardanlabs/service/internal/platform/conf"
 )
 
