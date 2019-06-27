@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ardanlabs/service/cmd/sales-api/handlers"
+	"github.com/ardanlabs/service/cmd/sales-api/internal/handlers"
 	"github.com/ardanlabs/service/internal/platform/auth"
 	"github.com/ardanlabs/service/internal/platform/web"
 	"github.com/ardanlabs/service/internal/tests"
