@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-all: keys sales-api metrics tracer
+all: keys sales-api metrics
 
 keys:
 	go run ./cmd/sales-admin/main.go keygen private.pem
@@ -27,16 +27,6 @@ metrics:
 	docker build \
 		-t gcr.io/sales-api/metrics-amd64:1.0 \
 		--build-arg PACKAGE_NAME=metrics \
-		--build-arg PACKAGE_PREFIX=sidecar/ \
-		--build-arg VCS_REF=`git rev-parse HEAD` \
-		--build-arg BUILD_DATE=`date -u +”%Y-%m-%dT%H:%M:%SZ”` \
-		.
-	docker system prune -f
-
-tracer:
-	docker build \
-		-t gcr.io/sales-api/tracer-amd64:1.0 \
-		--build-arg PACKAGE_NAME=tracer \
 		--build-arg PACKAGE_PREFIX=sidecar/ \
 		--build-arg VCS_REF=`git rev-parse HEAD` \
 		--build-arg BUILD_DATE=`date -u +”%Y-%m-%dT%H:%M:%SZ”` \

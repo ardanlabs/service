@@ -1,3 +1,5 @@
+# contrib.go.opencensus.io/exporter/zipkin v0.1.1
+contrib.go.opencensus.io/exporter/zipkin
 # github.com/GuiaBolso/darwin v0.0.0-20170210191649-86919dfcf808
 github.com/GuiaBolso/darwin
 # github.com/dgrijalva/jwt-go v3.2.0+incompatible
@@ -18,36 +20,45 @@ github.com/google/go-cmp/cmp/internal/function
 github.com/google/go-cmp/cmp/internal/value
 # github.com/google/uuid v1.1.1
 github.com/google/uuid
+# github.com/hashicorp/golang-lru v0.5.0
+github.com/hashicorp/golang-lru/simplelru
 # github.com/jmoiron/sqlx v1.2.0
 github.com/jmoiron/sqlx
 github.com/jmoiron/sqlx/reflectx
-# github.com/kelseyhightower/envconfig v1.3.0
-github.com/kelseyhightower/envconfig
 # github.com/leodido/go-urn v1.1.0
 github.com/leodido/go-urn
 # github.com/lib/pq v1.1.1
 github.com/lib/pq
 github.com/lib/pq/oid
 github.com/lib/pq/scram
-# github.com/openzipkin/zipkin-go v0.1.1
+# github.com/openzipkin/zipkin-go v0.1.6
+github.com/openzipkin/zipkin-go
+github.com/openzipkin/zipkin-go/reporter/http
 github.com/openzipkin/zipkin-go/model
+github.com/openzipkin/zipkin-go/reporter
+github.com/openzipkin/zipkin-go/idgenerator
+github.com/openzipkin/zipkin-go/propagation
 # github.com/pkg/errors v0.8.0
 github.com/pkg/errors
-# go.opencensus.io v0.14.0
+# go.opencensus.io v0.21.0
 go.opencensus.io/trace
 go.opencensus.io/plugin/ochttp
 go.opencensus.io/plugin/ochttp/propagation/tracecontext
 go.opencensus.io/internal
 go.opencensus.io/trace/internal
+go.opencensus.io/trace/tracestate
 go.opencensus.io/plugin/ochttp/propagation/b3
 go.opencensus.io/stats
 go.opencensus.io/stats/view
 go.opencensus.io/tag
 go.opencensus.io/trace/propagation
 go.opencensus.io
+go.opencensus.io/metric/metricdata
 go.opencensus.io/stats/internal
 go.opencensus.io/internal/tagencoding
-# golang.org/x/crypto v0.0.0-20180910181607-0e37d006457b
+go.opencensus.io/metric/metricproducer
+go.opencensus.io/resource
+# golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2
 golang.org/x/crypto/bcrypt
 golang.org/x/crypto/blowfish
 # gopkg.in/go-playground/validator.v9 v9.28.0
