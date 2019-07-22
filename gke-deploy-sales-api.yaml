@@ -42,15 +42,4 @@ spec:
         - name: debug
           containerPort: 4001
         resources: {}
-      - name: tracer
-        image: gcr.io/sales-api/tracer-amd64:1.0
-        env:
-        - name: TRACER_ZIPKIN_HOST
-          value: "http://localhost:9411/api/v2/spans"
-        ports:
-        - name: tracer
-          containerPort: 3002
-        - name: debug
-          containerPort: 4002
-        resources: {}
 status: {}
