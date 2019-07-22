@@ -16,7 +16,7 @@ seed: migrate
 
 sales-api:
 	docker build \
-		-t gcr.io/sales-api/sales-api-amd64:1.0 \
+		-t gcr.io/ardan-starter-kit/sales-api-amd64:1.0 \
 		--build-arg PACKAGE_NAME=sales-api \
 		--build-arg VCS_REF=`git rev-parse HEAD` \
 		--build-arg BUILD_DATE=`date -u +”%Y-%m-%dT%H:%M:%SZ”` \
@@ -25,7 +25,7 @@ sales-api:
 
 metrics:
 	docker build \
-		-t gcr.io/sales-api/metrics-amd64:1.0 \
+		-t gcr.io/ardan-starter-kit/metrics-amd64:1.0 \
 		--build-arg PACKAGE_NAME=metrics \
 		--build-arg PACKAGE_PREFIX=sidecar/ \
 		--build-arg VCS_REF=`git rev-parse HEAD` \
@@ -56,32 +56,33 @@ remove-all:
 # GKE
 
 config:
-	@echo Setting environment for sales-api
-	gcloud config set project sales-api
+	@echo Setting environment for ardan-starter-kit
+	gcloud config set project ardan-starter-kit
 	gcloud config set compute/zone us-central1-b
 	gcloud auth configure-docker
 	@echo ======================================================================
 
 project:
-	gcloud projects create sales-api
-	gcloud beta billing projects link sales-api --billing-account=$(ACCOUNT_ID)
+	gcloud projects create ardan-starter-kit
+	gcloud beta billing projects link ardan-starter-kit --billing-account=$(ACCOUNT_ID)
 	gcloud services enable container.googleapis.com
 	@echo ======================================================================
 
 cluster:
-	gcloud container clusters create sales-api-cluster --num-nodes=2 --machine-type=n1-standard-2
+	gcloud container clusters create ardan-starter-cluster --num-nodes=2 --machine-type=n1-standard-2
 	gcloud compute instances list
 	@echo ======================================================================
 
 upload:
-	docker push gcr.io/sales-api/sales-api-amd64:1.0
-	docker push gcr.io/sales-api/metrics-amd64:1.0
-	docker push gcr.io/sales-api/tracer-amd64:1.0
+	docker push gcr.io/ardan-starter-kit/sales-api-amd64:1.0
+	docker push gcr.io/ardan-starter-kit/metrics-amd64:1.0
 	@echo ======================================================================
 
 database:
-	kubectl create -f gke-deploy-database.yaml
-	kubectl expose -f gke-expose-database.yaml --type=LoadBalancer
+	gcloud sql instances create ardan-starter-db --database-version=POSTGRES_9_6 --no-backup --tier=db-f1-micro --zone=us-central1-b
+	# https://console.cloud.google.com/sql/instances/ardan-starter-db/overview
+	# Change Password
+	# Whitelist IP address  IP/32
 	@echo ======================================================================
 
 services:
@@ -109,3 +110,13 @@ delete:
 	docker image remove gcr.io/sales-api/metrics-amd64:1.0
 	docker image remove gcr.io/sales-api/tracer-amd64:1.0
 	@echo ======================================================================
+
+#===============================================================================
+# GKE Installation
+#
+# Install the Google Cloud SDK. This contains the gcloud client needed to perform
+# some operatings
+# https://cloud.google.com/sdk/
+#
+# Installing the K8s kubectl client. 
+# https://kubernetes.io/docs/tasks/tools/install-kubectl/
