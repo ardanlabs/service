@@ -12,8 +12,14 @@ spec:
   - name: "sales-api"
     port: 3000
     targetPort: 3000
+  - name: "sales-api-debug"
+    port: 4000
+    targetPort: 4000
   - name: "metrics"
     port: 3001
     targetPort: 3001
+  - name: "metrics-debug"
+    port: 4001
+    targetPort: 4001
 status:
   loadBalancer: {}
