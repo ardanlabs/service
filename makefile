@@ -25,7 +25,7 @@ sales-api:
 
 search:
 	docker build \
-		-t gcr.io/sales-api/search-amd64:1.0 \
+		-t gcr.io/ardan-starter-kitsearch-amd64:1.0 \
 		--build-arg PACKAGE_NAME=search \
 		--build-arg VCS_REF=`git rev-parse HEAD` \
 		--build-arg BUILD_DATE=`date -u +”%Y-%m-%dT%H:%M:%SZ”` \
