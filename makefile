@@ -3,16 +3,16 @@ SHELL := /bin/bash
 all: keys sales-api metrics
 
 keys:
-	go run ./cmd/sales-admin/main.go keygen private.pem
+	GO111MODULE=on go run -mod=vendor ./cmd/sales-admin/main.go keygen private.pem
 
 admin:
-	go run ./cmd/sales-admin/main.go --db-disable-tls=1 useradd admin@example.com gophers
+	GO111MODULE=on go run -mod=vendor ./cmd/sales-admin/main.go --db-disable-tls=1 useradd admin@example.com gophers
 
 migrate:
-	go run ./cmd/sales-admin/main.go --db-disable-tls=1 migrate
+	GO111MODULE=on go run -mod=vendor ./cmd/sales-admin/main.go --db-disable-tls=1 migrate
 
 seed: migrate
-	go run ./cmd/sales-admin/main.go --db-disable-tls=1 seed
+	GO111MODULE=on go run -mod=vendor ./cmd/sales-admin/main.go --db-disable-tls=1 seed
 
 sales-api:
 	docker build \
