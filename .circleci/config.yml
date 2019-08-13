@@ -6,10 +6,10 @@
      steps:
        - checkout
        - run:
-           name: Install Go 1.12.6
+           name: Install Go 1.12.7
            command: |
                sudo rm -rf /usr/local/go
-               wget -O go.tgz https://golang.org/dl/go1.12.6.linux-amd64.tar.gz
+               wget -O go.tgz https://golang.org/dl/go1.12.7.linux-amd64.tar.gz
                sudo tar -C /usr/local -xzf go.tgz
                rm go.tgz
                which go
@@ -19,4 +19,5 @@
            command: docker pull postgres:11.1-alpine
        - run:
            name: Run tests
-           command: go test -v ./...
+           command: 
+               GO111MODULE=on go test -mod=vendor -v ./...
