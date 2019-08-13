@@ -19,4 +19,5 @@
            command: docker pull postgres:11.1-alpine
        - run:
            name: Run tests
-           command: go test -v ./...
+           command:
+               GO111MODULE=on go test -mod=vendor -v ./...
