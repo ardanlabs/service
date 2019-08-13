@@ -41,7 +41,7 @@ down:
 
 test:
 	cd "$$GOPATH/src/github.com/ardanlabs/service"
-	go test ./...
+	GO111MODULE=on go test -mod=vendor ./...
 
 clean:
 	docker system prune -f
