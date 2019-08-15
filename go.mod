@@ -3,6 +3,7 @@ module github.com/ardanlabs/service
 require (
 	contrib.go.opencensus.io/exporter/zipkin v0.1.1
 	github.com/GuiaBolso/darwin v0.0.0-20170210191649-86919dfcf808
+	github.com/ardanlabs/conf v1.0.0
 	github.com/cznic/ql v1.2.0 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/dimfeld/httptreemux v5.0.1+incompatible

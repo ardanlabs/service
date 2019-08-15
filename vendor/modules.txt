@@ -2,6 +2,8 @@
 contrib.go.opencensus.io/exporter/zipkin
 # github.com/GuiaBolso/darwin v0.0.0-20170210191649-86919dfcf808
 github.com/GuiaBolso/darwin
+# github.com/ardanlabs/conf v1.0.0
+github.com/ardanlabs/conf
 # github.com/dgrijalva/jwt-go v3.2.0+incompatible
 github.com/dgrijalva/jwt-go
 # github.com/dimfeld/httptreemux v5.0.1+incompatible

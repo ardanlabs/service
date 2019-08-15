@@ -15,9 +15,9 @@ import (
 	"time"
 
 	"contrib.go.opencensus.io/exporter/zipkin"
+	"github.com/ardanlabs/conf"
 	"github.com/ardanlabs/service/cmd/sales-api/internal/handlers"
 	"github.com/ardanlabs/service/internal/platform/auth"
-	"github.com/ardanlabs/service/internal/platform/conf"
 	"github.com/ardanlabs/service/internal/platform/database"
 	jwt "github.com/dgrijalva/jwt-go"
 	openzipkin "github.com/openzipkin/zipkin-go"
