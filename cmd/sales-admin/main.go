@@ -13,8 +13,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/ardanlabs/conf"
 	"github.com/ardanlabs/service/internal/platform/auth"
-	"github.com/ardanlabs/service/internal/platform/conf"
 	"github.com/ardanlabs/service/internal/platform/database"
 	"github.com/ardanlabs/service/internal/schema"
 	"github.com/ardanlabs/service/internal/user"
