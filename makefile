@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-all: keys sales-api metrics
+all: sales-api metrics
 
 keys:
 	GO111MODULE=on go run -mod=vendor ./cmd/sales-admin/main.go keygen private.pem
@@ -16,6 +16,7 @@ seed: migrate
 
 sales-api:
 	docker build \
+		-f dockerfile.sales-api \
 		-t gcr.io/ardan-starter-kit/sales-api-amd64:1.0 \
 		--build-arg PACKAGE_NAME=sales-api \
 		--build-arg VCS_REF=`git rev-parse HEAD` \
@@ -25,6 +26,7 @@ sales-api:
 
 metrics:
 	docker build \
+		-f dockerfile.metrics \
 		-t gcr.io/ardan-starter-kit/metrics-amd64:1.0 \
 		--build-arg PACKAGE_NAME=metrics \
 		--build-arg PACKAGE_PREFIX=sidecar/ \
@@ -69,7 +71,7 @@ project:
 	@echo ======================================================================
 
 cluster:
-	gcloud container clusters create ardan-starter-cluster --num-nodes=2 --machine-type=n1-standard-2
+	gcloud container clusters create ardan-starter-cluster --enable-ip-alias --num-nodes=2 --machine-type=n1-standard-2
 	gcloud compute instances list
 	@echo ======================================================================
 
@@ -78,20 +80,27 @@ upload:
 	docker push gcr.io/ardan-starter-kit/metrics-amd64:1.0
 	@echo ======================================================================
 
+network:
+	# Creating your own VPC network. We will use the default VPC.
+	gcloud compute networks create ardan-starter-vpc --subnet-mode=auto --bgp-routing-mode=regional
+	gcloud compute addresses create ardan-starter-network --global --purpose=VPC_PEERING --prefix-length=16 --network=ardan-starter-vpc
+	gcloud compute addresses list --global --filter="purpose=VPC_PEERING"
+	@echo ======================================================================
+
 database:
-	gcloud sql instances create ardan-starter-db --database-version=POSTGRES_9_6 --no-backup --tier=db-f1-micro --zone=us-central1-b
-	# https://console.cloud.google.com/sql/instances/ardan-starter-db/overview
-	# Change Password
-	# Whitelist IP address  IP/32
+	gcloud beta sql instances create ardan-starter-db --database-version=POSTGRES_9_6 --no-backup --tier=db-f1-micro --zone=us-central1-b --no-assign-ip --network=default
+	gcloud sql instances describe ardan-starter-db
+	@echo ======================================================================
+
+db-assign-ip:
+	gcloud sql instances patch ardan-starter-db --authorized-networks=[YOUR_IP/32]
+	gcloud sql instances describe ardan-starter-db
 	@echo ======================================================================
 
 services:
+	# Make sure the deploy script has the right IP address for the DB.
 	kubectl create -f gke-deploy-sales-api.yaml
 	kubectl expose -f gke-expose-sales-api.yaml --type=LoadBalancer
-	@echo ======================================================================
-
-shell:
-	kubectl exec -it pod-name --container name -- /bin/bash
 	@echo ======================================================================
 
 status:
@@ -101,14 +110,22 @@ status:
 	kubectl get services sales-api
 	@echo ======================================================================
 
+shell:
+	# kubectl get pods
+	kubectl exec -it <POD NAME> --container sales-api  -- /bin/sh
+	# ./admin --db-disable-tls=1 migrate
+	# ./admin --db-disable-tls=1 seed
+	@echo ======================================================================
+
 delete:
 	kubectl delete services sales-api
 	kubectl delete deployment sales-api	
 	gcloud container clusters delete sales-api-cluster
 	gcloud projects delete sales-api
+	gcloud container images delete gcr.io/ardan-starter-kit/sales-api-amd64:1.0 --force-delete-tags
+	gcloud container images delete gcr.io/ardan-starter-kit/metrics-amd64:1.0 --force-delete-tags
 	docker image remove gcr.io/sales-api/sales-api-amd64:1.0
 	docker image remove gcr.io/sales-api/metrics-amd64:1.0
-	docker image remove gcr.io/sales-api/tracer-amd64:1.0
 	@echo ======================================================================
 
 #===============================================================================
