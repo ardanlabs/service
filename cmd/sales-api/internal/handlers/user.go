@@ -25,12 +25,12 @@ func (u *User) List(ctx context.Context, w http.ResponseWriter, r *http.Request,
 	ctx, span := trace.StartSpan(ctx, "handlers.User.List")
 	defer span.End()
 
-	usrs, err := user.List(ctx, u.db)
+	users, err := user.List(ctx, u.db)
 	if err != nil {
 		return err
 	}
 
-	return web.Respond(ctx, w, usrs, http.StatusOK)
+	return web.Respond(ctx, w, users, http.StatusOK)
 }
 
 // Retrieve returns the specified user from the system.
