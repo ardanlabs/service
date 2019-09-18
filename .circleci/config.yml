@@ -6,10 +6,10 @@
      steps:
        - checkout
        - run:
-           name: Install Go 1.12.7
+           name: Install Go 1.13
            command: |
                sudo rm -rf /usr/local/go
-               wget -O go.tgz https://golang.org/dl/go1.12.7.linux-amd64.tar.gz
+               wget -O go.tgz https://golang.org/dl/go1.13.linux-amd64.tar.gz
                sudo tar -C /usr/local -xzf go.tgz
                rm go.tgz
                which go
@@ -20,4 +20,4 @@
        - run:
            name: Run tests
            command: 
-               GO111MODULE=on go test -mod=vendor -v ./...
+               go test -mod=vendor -v ./...
