@@ -1,5 +1,26 @@
 SHELL := /bin/bash
 
+#===============================================================================
+# Configuration
+
+# The name of the GCP project. You will not be deleting this project but
+# reusing it. It takes over a month for GCP to purge a project name. Pick a
+# name that you want for a long time. The containers will use this name
+# as well. This is exported so the Docker Compose file can use this variable as well.
+export PROJECT = ardan-starter-kit
+
+# The name of the cluster in GKE that all services are deployed under.
+CLUSTER = ardan-starter-cluster
+
+# The name of the database in GCP that will be created and managed.
+DATABASE = ardan-starter-db
+
+# The zone you want to run your Database and GKE cluster in.
+ZONE = us-central1-b
+
+#===============================================================================
+# Dev
+
 all: sales-api metrics
 
 keys:
@@ -17,7 +38,7 @@ seed: migrate
 sales-api:
 	docker build \
 		-f dockerfile.sales-api \
-		-t gcr.io/ardan-starter-kit/sales-api-amd64:1.0 \
+		-t gcr.io/$(PROJECT)/sales-api-amd64:1.0 \
 		--build-arg PACKAGE_NAME=sales-api \
 		--build-arg VCS_REF=`git rev-parse HEAD` \
 		--build-arg BUILD_DATE=`date -u +”%Y-%m-%dT%H:%M:%SZ”` \
@@ -27,7 +48,7 @@ sales-api:
 metrics:
 	docker build \
 		-f dockerfile.metrics \
-		-t gcr.io/ardan-starter-kit/metrics-amd64:1.0 \
+		-t gcr.io/$(PROJECT)/metrics-amd64:1.0 \
 		--build-arg PACKAGE_NAME=metrics \
 		--build-arg PACKAGE_PREFIX=sidecar/ \
 		--build-arg VCS_REF=`git rev-parse HEAD` \
@@ -58,43 +79,36 @@ remove-all:
 # GKE
 
 config:
-	@echo Setting environment for ardan-starter-kit
-	gcloud config set project ardan-starter-kit
-	gcloud config set compute/zone us-central1-b
+	@echo Setting environment for $(PROJECT)
+	gcloud config set project $(PROJECT)
+	gcloud config set compute/zone $(ZONE)
 	gcloud auth configure-docker
 	@echo ======================================================================
 
 project:
-	gcloud projects create ardan-starter-kit
-	gcloud beta billing projects link ardan-starter-kit --billing-account=$(ACCOUNT_ID)
+	gcloud projects create $(PROJECT)
+	gcloud beta billing projects link $(PROJECT) --billing-account=$(ACCOUNT_ID)
 	gcloud services enable container.googleapis.com
 	@echo ======================================================================
 
 cluster:
-	gcloud container clusters create ardan-starter-cluster --enable-ip-alias --num-nodes=2 --machine-type=n1-standard-2
+	gcloud container clusters create $(CLUSTER) --enable-ip-alias --num-nodes=2 --machine-type=n1-standard-2
 	gcloud compute instances list
 	@echo ======================================================================
 
 upload:
-	docker push gcr.io/ardan-starter-kit/sales-api-amd64:1.0
-	docker push gcr.io/ardan-starter-kit/metrics-amd64:1.0
-	@echo ======================================================================
-
-network:
-	# Creating your own VPC network. We will use the default VPC.
-	gcloud compute networks create ardan-starter-vpc --subnet-mode=auto --bgp-routing-mode=regional
-	gcloud compute addresses create ardan-starter-network --global --purpose=VPC_PEERING --prefix-length=16 --network=ardan-starter-vpc
-	gcloud compute addresses list --global --filter="purpose=VPC_PEERING"
+	docker push gcr.io/$(PROJECT)/sales-api-amd64:1.0
+	docker push gcr.io/$(PROJECT)/metrics-amd64:1.0
 	@echo ======================================================================
 
 database:
-	gcloud beta sql instances create ardan-starter-db --database-version=POSTGRES_9_6 --no-backup --tier=db-f1-micro --zone=us-central1-b --no-assign-ip --network=default
-	gcloud sql instances describe ardan-starter-db
+	gcloud beta sql instances create $(DATABASE) --database-version=POSTGRES_9_6 --no-backup --tier=db-f1-micro --zone=$(ZONE) --no-assign-ip --network=default
+	gcloud sql instances describe $(DATABASE)
 	@echo ======================================================================
 
 db-assign-ip:
-	gcloud sql instances patch ardan-starter-db --authorized-networks=[YOUR_IP/32]
-	gcloud sql instances describe ardan-starter-db
+	gcloud sql instances patch $(DATABASE) --authorized-networks=[$(PUBLIC-IP)/32]
+	gcloud sql instances describe $(DATABASE)
 	@echo ======================================================================
 
 services:
@@ -120,10 +134,10 @@ shell:
 delete:
 	kubectl delete services sales-api
 	kubectl delete deployment sales-api	
-	gcloud container clusters delete sales-api-cluster
+	gcloud container clusters delete $(CLUSTER)
 	gcloud projects delete sales-api
-	gcloud container images delete gcr.io/ardan-starter-kit/sales-api-amd64:1.0 --force-delete-tags
-	gcloud container images delete gcr.io/ardan-starter-kit/metrics-amd64:1.0 --force-delete-tags
+	gcloud container images delete gcr.io/$(PROJECT)/sales-api-amd64:1.0 --force-delete-tags
+	gcloud container images delete gcr.io/$(PROJECT)/metrics-amd64:1.0 --force-delete-tags
 	docker image remove gcr.io/sales-api/sales-api-amd64:1.0
 	docker image remove gcr.io/sales-api/metrics-amd64:1.0
 	@echo ======================================================================
