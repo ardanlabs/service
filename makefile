@@ -3,16 +3,16 @@ SHELL := /bin/bash
 all: sales-api metrics
 
 keys:
-	GO111MODULE=on go run ./cmd/sales-admin/main.go keygen private.pem
+	go run ./cmd/sales-admin/main.go keygen private.pem
 
 admin:
-	GO111MODULE=on go run ./cmd/sales-admin/main.go --db-disable-tls=1 useradd admin@example.com gophers
+	go run ./cmd/sales-admin/main.go --db-disable-tls=1 useradd admin@example.com gophers
 
 migrate:
-	GO111MODULE=on go run ./cmd/sales-admin/main.go --db-disable-tls=1 migrate
+	go run ./cmd/sales-admin/main.go --db-disable-tls=1 migrate
 
 seed: migrate
-	GO111MODULE=on go run ./cmd/sales-admin/main.go --db-disable-tls=1 seed
+	go run ./cmd/sales-admin/main.go --db-disable-tls=1 seed
 
 sales-api:
 	docker build \
@@ -43,7 +43,7 @@ down:
 
 test:
 	cd "$$GOPATH/src/github.com/ardanlabs/service"
-	GO111MODULE=on go test ./...
+	go test ./...
 
 clean:
 	docker system prune -f
