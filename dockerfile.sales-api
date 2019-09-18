@@ -1,17 +1,16 @@
 # Build the Go Binary.
 
-FROM golang:1.12.7 as build
+FROM golang:1.13 as build
 ENV CGO_ENABLED 0
-ENV GO111MODULE on
 ARG VCS_REF
 ARG PACKAGE_NAME
 ARG PACKAGE_PREFIX
 RUN mkdir -p /go/src/github.com/ardanlabs/service
 COPY . /go/src/github.com/ardanlabs/service
 WORKDIR /go/src/github.com/ardanlabs/service/cmd/${PACKAGE_PREFIX}${PACKAGE_NAME}
-RUN go build -mod=vendor -ldflags "-X main.build=${VCS_REF}" -a -tags netgo
+RUN go build -ldflags "-X main.build=${VCS_REF}" -a -tags netgo
 WORKDIR /go/src/github.com/ardanlabs/service/cmd/${PACKAGE_PREFIX}sales-admin
-RUN go build -mod=vendor -ldflags "-X main.build=${VCS_REF}" -a -tags netgo
+RUN go build -ldflags "-X main.build=${VCS_REF}" -a -tags netgo
 
 # Run the Go Binary in Alpine.
 
