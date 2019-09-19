@@ -102,6 +102,7 @@ upload:
 	@echo ======================================================================
 
 database:
+	# This is currently broken due to assigning the default network. Having to do this manually at this time.
 	gcloud beta sql instances create $(DATABASE) --database-version=POSTGRES_9_6 --no-backup --tier=db-f1-micro --zone=$(ZONE) --no-assign-ip --network=default
 	gcloud sql instances describe $(DATABASE)
 	@echo ======================================================================
@@ -111,8 +112,13 @@ db-assign-ip:
 	gcloud sql instances describe $(DATABASE)
 	@echo ======================================================================
 
+db-private-ip:
+	# IMPORTANT: Make sure you run this command and get the private IP of the DB.
+	gcloud sql instances describe $(DATABASE)
+	@echo ======================================================================
+
 services:
-	# Make sure the deploy script has the right IP address for the DB.
+	# These scripts needs to be edited for the PROJECT and PRIVATE_DB_IP markers before running.
 	kubectl create -f gke-deploy-sales-api.yaml
 	kubectl expose -f gke-expose-sales-api.yaml --type=LoadBalancer
 	@echo ======================================================================
