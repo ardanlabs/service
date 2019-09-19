@@ -19,10 +19,10 @@ spec:
           containerPort: 9411
         resources: {}
       - name: sales-api
-        image: gcr.io/ardan-starter-kit/sales-api-amd64:1.0
+        image: gcr.io/{{PROJECT}}/sales-api-amd64:1.0
         env:
         - name: SALES_DB_HOST
-          value: GET BY RUNNING "gcloud sql instances describe ardan-starter-db"
+          value: {{PRIVATE_DB_IP}}
         ports:
         - name: sales-api
           containerPort: 3000
@@ -30,7 +30,7 @@ spec:
           containerPort: 4000
         resources: {}
       - name: metrics
-        image: gcr.io/ardan-starter-kit/metrics-amd64:1.0
+        image: gcr.io/{{PROJECT}}/metrics-amd64:1.0
         env:
         - name: METRICS_COLLECT_FROM
           value: "http://localhost:4000/debug/vars"
