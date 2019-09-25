@@ -225,7 +225,7 @@ func run() error {
 	// Blocking main and waiting for shutdown.
 	select {
 	case err := <-serverErrors:
-		return errors.Wrap(err, "starting server")
+		return errors.Wrap(err, "server error")
 
 	case sig := <-shutdown:
 		log.Printf("main : %v : Start shutdown", sig)
