@@ -8,7 +8,7 @@ require (
 	github.com/ardanlabs/conf v1.1.0
 	github.com/cznic/ql v1.2.0 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
-	github.com/dimfeld/httptreemux v5.0.1+incompatible
+	github.com/dimfeld/httptreemux/v5 v5.0.2
 	github.com/go-playground/locales v0.12.1
 	github.com/go-playground/universal-translator v0.16.0
 	github.com/google/go-cmp v0.3.1

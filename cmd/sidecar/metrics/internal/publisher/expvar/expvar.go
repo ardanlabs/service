@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dimfeld/httptreemux"
+	"github.com/dimfeld/httptreemux/v5"
 )
 
 // Expvar provide our basic publishing.
