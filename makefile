@@ -60,6 +60,9 @@ up:
 down:
 	docker-compose down
 
+upgrade:
+	go get $(go list -f '{{if not (or .Main .Indirect)}}{{.Path}}{{end}}' -m all)
+
 test:
 	cd "$$GOPATH/src/github.com/ardanlabs/service"
 	go test ./...
