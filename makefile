@@ -60,9 +60,6 @@ up:
 down:
 	docker-compose down
 
-upgrade:
-	go get $(go list -f '{{if not (or .Main .Indirect)}}{{.Path}}{{end}}' -m all)
-
 test:
 	cd "$$GOPATH/src/github.com/ardanlabs/service"
 	go test ./...
@@ -75,6 +72,16 @@ stop-all:
 
 remove-all:
 	docker rm $(docker ps -aq)
+
+deps-reset:
+	git checkout -- go.mod
+	go mod tidy
+
+deps-upgrade:
+	go get $(go list -f '{{if not (or .Main .Indirect)}}{{.Path}}{{end}}' -m all)
+
+deps-cleancache:
+	go clean -modcache 
 
 #===============================================================================
 # GKE
