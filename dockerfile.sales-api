@@ -1,27 +1,43 @@
 # Build the Go Binary.
-
 FROM golang:1.13 as build
 ENV CGO_ENABLED 0
 ARG VCS_REF
 ARG PACKAGE_NAME
 ARG PACKAGE_PREFIX
+
+# Create a location in the container for the source code. Using the
+# default GOPATH location.
 RUN mkdir -p /go/src/github.com/ardanlabs/service
+
+# Copy the module files first and then download the dependencies. If this
+# doesn't change, we won't need to do this again in future builds.
+COPY go.* /go/src/github.com/ardanlabs/service/
+WORKDIR /go/src/github.com/ardanlabs/service
+RUN go mod download
+
+# Copy the source code into the container.
 COPY . /go/src/github.com/ardanlabs/service
-WORKDIR /go/src/github.com/ardanlabs/service/cmd/${PACKAGE_PREFIX}${PACKAGE_NAME}
-RUN go build -ldflags "-X main.build=${VCS_REF}" -a -tags netgo
+
+# Build the admin tool so we can have it in the container. This should change
+# often so do this first.
 WORKDIR /go/src/github.com/ardanlabs/service/cmd/${PACKAGE_PREFIX}sales-admin
 RUN go build -ldflags "-X main.build=${VCS_REF}" -a -tags netgo
 
-# Run the Go Binary in Alpine.
+# Build the service binary. We are doing this last since this will be different
+# every time we run through this process.
+WORKDIR /go/src/github.com/ardanlabs/service/cmd/${PACKAGE_PREFIX}${PACKAGE_NAME}
+RUN go build -ldflags "-X main.build=${VCS_REF}" -a -tags netgo
 
+
+# Run the Go Binary in Alpine.
 FROM alpine:3.7
 ARG BUILD_DATE
 ARG VCS_REF
 ARG PACKAGE_NAME
 ARG PACKAGE_PREFIX
-COPY --from=build /go/src/github.com/ardanlabs/service/cmd/${PACKAGE_PREFIX}${PACKAGE_NAME}/${PACKAGE_NAME} /app/main
 COPY --from=build /go/src/github.com/ardanlabs/service/private.pem /app/private.pem
 COPY --from=build /go/src/github.com/ardanlabs/service/cmd/${PACKAGE_PREFIX}sales-admin/sales-admin /app/admin
+COPY --from=build /go/src/github.com/ardanlabs/service/cmd/${PACKAGE_PREFIX}${PACKAGE_NAME}/${PACKAGE_NAME} /app/main
 WORKDIR /app
 CMD /app/main
 
