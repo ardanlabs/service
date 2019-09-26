@@ -43,7 +43,6 @@ sales-api:
 		--build-arg VCS_REF=`git rev-parse HEAD` \
 		--build-arg BUILD_DATE=`date -u +”%Y-%m-%dT%H:%M:%SZ”` \
 		.
-	docker system prune -f
 
 metrics:
 	docker build \
@@ -54,7 +53,6 @@ metrics:
 		--build-arg VCS_REF=`git rev-parse HEAD` \
 		--build-arg BUILD_DATE=`date -u +”%Y-%m-%dT%H:%M:%SZ”` \
 		.
-	docker system prune -f
 
 up:
 	docker-compose up
