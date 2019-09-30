@@ -1,5 +1,5 @@
 # Build the Go Binary.
-FROM golang:1.13 as build
+FROM golang:1.13 as build_metrics
 ENV CGO_ENABLED 0
 ARG VCS_REF
 ARG PACKAGE_NAME
@@ -30,7 +30,7 @@ ARG BUILD_DATE
 ARG VCS_REF
 ARG PACKAGE_NAME
 ARG PACKAGE_PREFIX
-COPY --from=build /go/src/github.com/ardanlabs/service/cmd/${PACKAGE_PREFIX}${PACKAGE_NAME}/${PACKAGE_NAME} /app/main
+COPY --from=build_metrics /go/src/github.com/ardanlabs/service/cmd/${PACKAGE_PREFIX}${PACKAGE_NAME}/${PACKAGE_NAME} /app/main
 WORKDIR /app
 CMD /app/main
 
