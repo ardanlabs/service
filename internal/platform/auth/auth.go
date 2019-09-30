@@ -4,7 +4,7 @@ import (
 	"crypto/rsa"
 	"fmt"
 
-	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/pkg/errors"
 )
 
