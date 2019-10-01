@@ -21,9 +21,13 @@ require (
 	github.com/stretchr/testify v1.4.0 // indirect
 	go.opencensus.io v0.22.1
 	golang.org/x/crypto v0.0.0-20190911031432-227b76d455e7
-	gopkg.in/DATA-DOG/go-sqlmock.v1 v1.0.0-00010101000000-000000000000 // indirect
+	gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.0 // indirect
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/validator.v9 v9.29.1
 )
 
-replace gopkg.in/DATA-DOG/go-sqlmock.v1 => gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.0
+exclude (
+	gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.1
+	gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.2
+	gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.3
+)
