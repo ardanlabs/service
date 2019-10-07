@@ -26,8 +26,4 @@ require (
 	gopkg.in/go-playground/validator.v9 v9.29.1
 )
 
-exclude (
-	gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.1
-	gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.2
-	gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.3
-)
+replace gopkg.in/DATA-DOG/go-sqlmock.v1 => gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.0
