@@ -1,7 +1,7 @@
 package schema
 
 import (
-	"github.com/GuiaBolso/darwin"
+	"github.com/dimiro1/darwin"
 	"github.com/jmoiron/sqlx"
 )
 
