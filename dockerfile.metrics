@@ -16,7 +16,9 @@ WORKDIR /go/src/github.com/ardanlabs/service
 RUN go mod download
 
 # Copy the source code into the container.
-COPY . /go/src/github.com/ardanlabs/service
+# Copy the source code into the container.
+COPY cmd cmd
+COPY internal internal
 
 # Build the service binary. We are doing this last since this will be different
 # every time we run through this process.
