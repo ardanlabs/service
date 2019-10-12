@@ -21,7 +21,7 @@ ZONE = us-central1-b
 #===============================================================================
 # Dev
 
-all: sales-api metrics
+all: keys sales-api metrics up 
 
 keys:
 	go run ./cmd/sales-admin/main.go keygen private.pem
@@ -54,14 +54,17 @@ metrics:
 		--build-arg BUILD_DATE=`date -u +”%Y-%m-%dT%H:%M:%SZ”` \
 		.
 
-up:
+up: ##start everything with docker-compose
+	docker-compose pull && docker-compose up
+
+start: ## Start everything with docker-compose without building
 	docker-compose up
 
 down:
 	docker-compose down
 
 test:
-	cd "$$GOPATH/src/github.com/ardanlabs/service"
+	cd "$$GOPATH/src/github.com/service"
 	go test ./...
 
 clean:
@@ -71,7 +74,8 @@ stop-all:
 	docker stop $(docker ps -aq)
 
 remove-all:
-	docker rm $(docker ps -aq)
+	docker rmi -f $(docker images -aq)
+	docker rm -f $(docker ps -aq)
 
 deps-reset:
 	git checkout -- go.mod
