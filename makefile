@@ -54,10 +54,10 @@ metrics:
 		--build-arg BUILD_DATE=`date -u +”%Y-%m-%dT%H:%M:%SZ”` \
 		.
 
-up: ##start everything with docker-compose
+start: ##start everything with docker-compose
 	docker-compose pull && docker-compose up
 
-start: ## Start everything with docker-compose without building
+up: ## Start everything with docker-compose without building
 	docker-compose up
 
 down:
