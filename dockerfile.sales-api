@@ -16,7 +16,10 @@ WORKDIR /go/src/github.com/ardanlabs/service
 RUN go mod download
 
 # Copy the source code into the container.
-COPY . /go/src/github.com/ardanlabs/service
+COPY models.xml models.xml
+COPY private.pem private.pem
+COPY cmd cmd
+COPY internal internal
 
 # Build the admin tool so we can have it in the container. This should change
 # often so do this first.
