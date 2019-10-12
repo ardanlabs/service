@@ -16,7 +16,6 @@ WORKDIR /go/src/github.com/ardanlabs/service
 RUN go mod download
 
 # Copy the source code into the container.
-COPY models.xml models.xml
 COPY private.pem private.pem
 COPY cmd cmd
 COPY internal internal
