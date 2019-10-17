@@ -42,7 +42,6 @@ down:
 	docker-compose down
 
 test:
-	cd "$$GOPATH/src/github.com/ardanlabs/service"
 	go test ./...
 
 clean:
