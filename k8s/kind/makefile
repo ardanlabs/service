@@ -1,5 +1,17 @@
 SHELL := /bin/bash
 
+all:
+	(cd ../.. && make all)
+
+sales-api:
+	(cd ../.. && make sales-api)
+
+metrics:
+	(cd ../.. && make metrics)
+
+test:
+	(cd ../.. && make test)
+
 up:
 	kind create cluster --name ardan-starter-cluster --config kind-config.yaml
 
