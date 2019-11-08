@@ -42,7 +42,7 @@ down:
 	docker-compose down
 
 test:
-	go test ./...
+	go test ./... -count=1
 
 clean:
 	docker system prune -f
