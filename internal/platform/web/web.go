@@ -2,7 +2,6 @@ package web
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"os"
 	"syscall"
@@ -38,16 +37,14 @@ type App struct {
 	*httptreemux.TreeMux
 	och      *ochttp.Handler
 	shutdown chan os.Signal
-	log      *log.Logger
 	mw       []Middleware
 }
 
 // NewApp creates an App value that handle a set of routes for the application.
-func NewApp(shutdown chan os.Signal, log *log.Logger, mw ...Middleware) *App {
+func NewApp(shutdown chan os.Signal, mw ...Middleware) *App {
 	app := App{
 		TreeMux:  httptreemux.New(),
 		shutdown: shutdown,
-		log:      log,
 		mw:       mw,
 	}
 
@@ -68,7 +65,6 @@ func NewApp(shutdown chan os.Signal, log *log.Logger, mw ...Middleware) *App {
 // SignalShutdown is used to gracefully shutdown the app when an integrity
 // issue is identified.
 func (a *App) SignalShutdown() {
-	a.log.Println("error returned from handler indicated integrity issue, shutting down service")
 	a.shutdown <- syscall.SIGSTOP
 }
 
@@ -97,7 +93,6 @@ func (a *App) Handle(verb, path string, handler Handler, mw ...Middleware) {
 
 		// Call the wrapped handler functions.
 		if err := handler(ctx, w, r, params); err != nil {
-			a.log.Printf("*****> critical shutdown error: %v", err)
 			a.SignalShutdown()
 			return
 		}
