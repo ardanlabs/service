@@ -7,23 +7,25 @@ ARG PACKAGE_PREFIX
 
 # Create a location in the container for the source code. Using the
 # default GOPATH location.
-RUN mkdir -p /go/src/github.com/ardanlabs/service
+RUN mkdir -p /service
 
 # Copy the module files first and then download the dependencies. If this
 # doesn't change, we won't need to do this again in future builds.
-COPY go.* /go/src/github.com/ardanlabs/service/
-WORKDIR /go/src/github.com/ardanlabs/service
-RUN go mod download
+# COPY go.* /service/
+# WORKDIR /service
+# RUN go mod download
 
 # Copy the source code into the container.
-# Copy the source code into the container.
+WORKDIR /service
+COPY go.* ./
 COPY cmd cmd
 COPY internal internal
+COPY vendor vendor
 
 # Build the service binary. We are doing this last since this will be different
 # every time we run through this process.
-WORKDIR /go/src/github.com/ardanlabs/service/cmd/${PACKAGE_PREFIX}${PACKAGE_NAME}
-RUN go build -mod=readonly -ldflags "-X main.build=${VCS_REF}"
+WORKDIR /service/cmd/${PACKAGE_PREFIX}${PACKAGE_NAME}
+RUN go build -mod=vendor -ldflags "-X main.build=${VCS_REF}"
 
 
 # Run the Go Binary in Alpine.
@@ -32,7 +34,7 @@ ARG BUILD_DATE
 ARG VCS_REF
 ARG PACKAGE_NAME
 ARG PACKAGE_PREFIX
-COPY --from=build_metrics /go/src/github.com/ardanlabs/service/cmd/${PACKAGE_PREFIX}${PACKAGE_NAME}/${PACKAGE_NAME} /app/main
+COPY --from=build_metrics /service/cmd/${PACKAGE_PREFIX}${PACKAGE_NAME}/${PACKAGE_NAME} /app/main
 WORKDIR /app
 CMD /app/main
 
