@@ -65,7 +65,7 @@ func NewApp(shutdown chan os.Signal, mw ...Middleware) *App {
 // SignalShutdown is used to gracefully shutdown the app when an integrity
 // issue is identified.
 func (a *App) SignalShutdown() {
-	a.shutdown <- syscall.SIGSTOP
+	a.shutdown <- syscall.SIGTERM
 }
 
 // Handle is our mechanism for mounting Handlers for a given HTTP verb and path
