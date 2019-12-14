@@ -59,7 +59,7 @@ deps-reset:
 
 deps-upgrade:
 	# go get $(go list -f '{{if not (or .Main .Indirect)}}{{.Path}}{{end}}' -m all)
-	go get -u -t -d -v ./...
+	go get -t -d -v ./...
 
 deps-cleancache:
 	go clean -modcache
