@@ -14,7 +14,7 @@ github.com/go-playground/locales/currency
 github.com/go-playground/locales/en
 # github.com/go-playground/universal-translator v0.17.0
 github.com/go-playground/universal-translator
-# github.com/golang/groupcache v0.0.0-20191027212112-611e8accdfc9
+# github.com/golang/groupcache v0.0.0-20190702054246-869f871628b6
 github.com/golang/groupcache/lru
 # github.com/google/go-cmp v0.3.1
 github.com/google/go-cmp/cmp
@@ -61,7 +61,7 @@ go.opencensus.io/trace
 go.opencensus.io/trace/internal
 go.opencensus.io/trace/propagation
 go.opencensus.io/trace/tracestate
-# golang.org/x/crypto v0.0.0-20191205180655-e7c4368fe9dd
+# golang.org/x/crypto v0.0.0-20191206172530-e9b2fee46413
 golang.org/x/crypto/bcrypt
 golang.org/x/crypto/blowfish
 # gopkg.in/go-playground/validator.v9 v9.30.2
