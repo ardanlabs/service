@@ -1,15 +1,17 @@
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: sales-api
 spec:
+  selector:
+    matchLabels:
+      app: sales-api
   replicas: 1
   strategy: {}
   template:
     metadata:
-      name: sales-api
       labels:
-        service: sales-api
+        app: sales-api
     spec:
       dnsPolicy: ClusterFirstWithHostNet
       hostNetwork: true
