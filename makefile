@@ -56,6 +56,7 @@ remove-all:
 deps-reset:
 	git checkout -- go.mod
 	go mod tidy
+	go mod vendor
 
 deps-upgrade:
 	# go get $(go list -f '{{if not (or .Main .Indirect)}}{{.Path}}{{end}}' -m all)
