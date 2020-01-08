@@ -29,7 +29,7 @@ upload:
 	@echo ======================================================================
 
 database:
-	# This is currently broken due to assigning the default network. Having to do this manually at this time.
+	# Create User/Password
 	gcloud beta sql instances create $(DATABASE) --database-version=POSTGRES_9_6 --no-backup --tier=db-f1-micro --zone=$(ZONE) --no-assign-ip --network=default
 	gcloud sql instances describe $(DATABASE)
 	@echo ======================================================================
