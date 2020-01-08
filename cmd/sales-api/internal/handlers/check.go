@@ -12,7 +12,8 @@ import (
 
 // Check provides support for orchestration health checks.
 type Check struct {
-	db *sqlx.DB
+	build string
+	db    *sqlx.DB
 
 	// ADD OTHER STATE LIKE THE LOGGER IF NEEDED.
 }
@@ -22,8 +23,11 @@ func (c *Check) Health(ctx context.Context, w http.ResponseWriter, r *http.Reque
 	ctx, span := trace.StartSpan(ctx, "handlers.Check.Health")
 	defer span.End()
 
-	var health struct {
-		Status string `json:"status"`
+	health := struct {
+		Version string `json:"version"`
+		Status  string `json:"status"`
+	}{
+		Version: c.build,
 	}
 
 	// Check if the database is ready.

@@ -29,8 +29,17 @@ services:
 	kubectl create -f deploy-sales-api.yaml
 	@echo ======================================================================
 
+update-sales-api:
+	# Build a new version using 1.1
+	kind load docker-image gcr.io/ardan-starter-kit/sales-api-amd64:1.1 --name ardan-starter-cluster
+	kubectl set image pod <POD_NAME> sales-api=gcr.io/ardan-starter-kit/sales-api-amd64:1.1
+	kubectl delete pod <POD_NAME>
+
 get-pods:
 	kubectl get pods
+
+logs:
+	kubectl logs <POD_NAME> sales-api
 
 status:
 	kubectl get nodes
