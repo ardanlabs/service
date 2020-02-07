@@ -1,6 +1,6 @@
 # contrib.go.opencensus.io/exporter/zipkin v0.1.1
 contrib.go.opencensus.io/exporter/zipkin
-# github.com/ardanlabs/conf v1.2.0
+# github.com/ardanlabs/conf v1.2.1
 github.com/ardanlabs/conf
 # github.com/dgrijalva/jwt-go v3.2.0+incompatible
 github.com/dgrijalva/jwt-go
