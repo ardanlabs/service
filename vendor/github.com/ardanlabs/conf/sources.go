@@ -113,7 +113,7 @@ func newSourceFlag(args []string) (*flag, error) {
 			// -flag=value format which means it might still have a value which would be
 			// the next argument, provided the next argument isn't a flag.
 			if !hasValue {
-				if len(args) > 0 && args[0][0] != '-' {
+				if len(args) > 0 && len(args[0]) > 0 && args[0][0] != '-' {
 
 					// Doesn't look like a flag. Must be a value.
 					value, args = args[0], args[1:]

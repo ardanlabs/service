@@ -4,7 +4,7 @@ go 1.13
 
 require (
 	contrib.go.opencensus.io/exporter/zipkin v0.1.1
-	github.com/ardanlabs/conf v1.2.0
+	github.com/ardanlabs/conf v1.2.1
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/dimfeld/httptreemux/v5 v5.0.2
 	github.com/dimiro1/darwin v0.0.0-20191008194338-370f81775d3b
