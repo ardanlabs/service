@@ -10,15 +10,16 @@ require (
 	github.com/dimiro1/darwin v0.0.0-20191008194338-370f81775d3b
 	github.com/go-playground/locales v0.13.0
 	github.com/go-playground/universal-translator v0.17.0
-	github.com/google/go-cmp v0.3.1
+	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
+	github.com/google/go-cmp v0.4.0
 	github.com/google/uuid v1.1.1
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/leodido/go-urn v1.2.0 // indirect
-	github.com/lib/pq v1.2.0
+	github.com/lib/pq v1.3.0
 	github.com/openzipkin/zipkin-go v0.2.2
-	github.com/pkg/errors v0.8.1
-	go.opencensus.io v0.22.2
-	golang.org/x/crypto v0.0.0-20191206172530-e9b2fee46413
+	github.com/pkg/errors v0.9.1
+	go.opencensus.io v0.22.3
+	golang.org/x/crypto v0.0.0-20200221231518-2aa609cf4a9d
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
-	gopkg.in/go-playground/validator.v9 v9.30.2
+	gopkg.in/go-playground/validator.v9 v9.31.0
 )
