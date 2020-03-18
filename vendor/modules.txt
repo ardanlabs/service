@@ -1,22 +1,31 @@
 # contrib.go.opencensus.io/exporter/zipkin v0.1.1
+## explicit
 contrib.go.opencensus.io/exporter/zipkin
 # github.com/ardanlabs/conf v1.2.1
+## explicit
 github.com/ardanlabs/conf
 # github.com/dgrijalva/jwt-go v3.2.0+incompatible
+## explicit
 github.com/dgrijalva/jwt-go
 # github.com/dimfeld/httptreemux/v5 v5.0.2
+## explicit
 github.com/dimfeld/httptreemux/v5
 # github.com/dimiro1/darwin v0.0.0-20191008194338-370f81775d3b
+## explicit
 github.com/dimiro1/darwin
 # github.com/go-playground/locales v0.13.0
+## explicit
 github.com/go-playground/locales
 github.com/go-playground/locales/currency
 github.com/go-playground/locales/en
 # github.com/go-playground/universal-translator v0.17.0
+## explicit
 github.com/go-playground/universal-translator
 # github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e
+## explicit
 github.com/golang/groupcache/lru
 # github.com/google/go-cmp v0.4.0
+## explicit
 github.com/google/go-cmp/cmp
 github.com/google/go-cmp/cmp/cmpopts
 github.com/google/go-cmp/cmp/internal/diff
@@ -24,17 +33,22 @@ github.com/google/go-cmp/cmp/internal/flags
 github.com/google/go-cmp/cmp/internal/function
 github.com/google/go-cmp/cmp/internal/value
 # github.com/google/uuid v1.1.1
+## explicit
 github.com/google/uuid
 # github.com/jmoiron/sqlx v1.2.0
+## explicit
 github.com/jmoiron/sqlx
 github.com/jmoiron/sqlx/reflectx
 # github.com/leodido/go-urn v1.2.0
+## explicit
 github.com/leodido/go-urn
 # github.com/lib/pq v1.3.0
+## explicit
 github.com/lib/pq
 github.com/lib/pq/oid
 github.com/lib/pq/scram
 # github.com/openzipkin/zipkin-go v0.2.2
+## explicit
 github.com/openzipkin/zipkin-go
 github.com/openzipkin/zipkin-go/idgenerator
 github.com/openzipkin/zipkin-go/model
@@ -42,8 +56,10 @@ github.com/openzipkin/zipkin-go/propagation
 github.com/openzipkin/zipkin-go/reporter
 github.com/openzipkin/zipkin-go/reporter/http
 # github.com/pkg/errors v0.9.1
+## explicit
 github.com/pkg/errors
 # go.opencensus.io v0.22.3
+## explicit
 go.opencensus.io
 go.opencensus.io/internal
 go.opencensus.io/internal/tagencoding
@@ -62,11 +78,15 @@ go.opencensus.io/trace/internal
 go.opencensus.io/trace/propagation
 go.opencensus.io/trace/tracestate
 # golang.org/x/crypto v0.0.0-20200317142112-1b76d66859c6
+## explicit
 golang.org/x/crypto/bcrypt
 golang.org/x/crypto/blowfish
 # golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543
 golang.org/x/xerrors
 golang.org/x/xerrors/internal
+# gopkg.in/go-playground/assert.v1 v1.2.1
+## explicit
 # gopkg.in/go-playground/validator.v9 v9.31.0
+## explicit
 gopkg.in/go-playground/validator.v9
 gopkg.in/go-playground/validator.v9/translations/en
