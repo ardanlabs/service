@@ -26,12 +26,12 @@ COPY vendor vendor
 # Build the admin tool so we can have it in the container. This should change
 # often so do this first.
 WORKDIR /service/cmd/${PACKAGE_PREFIX}sales-admin
-RUN go build -mod=vendor -ldflags "-X main.build=${VCS_REF}"
+RUN go build -ldflags "-X main.build=${VCS_REF}"
 
 # Build the service binary. We are doing this last since this will be different
 # every time we run through this process.
 WORKDIR /service/cmd/${PACKAGE_PREFIX}${PACKAGE_NAME}
-RUN go build -mod=vendor -ldflags "-X main.build=${VCS_REF}"
+RUN go build -ldflags "-X main.build=${VCS_REF}"
 
 
 # Run the Go Binary in Alpine.

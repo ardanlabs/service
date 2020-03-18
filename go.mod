@@ -1,6 +1,6 @@
 module github.com/ardanlabs/service
 
-go 1.13
+go 1.14
 
 require (
 	contrib.go.opencensus.io/exporter/zipkin v0.1.1
