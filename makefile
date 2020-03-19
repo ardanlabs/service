@@ -42,7 +42,7 @@ down:
 	docker-compose down
 
 test:
-	go test -mod=vendor ./... -count=1
+	go test ./... -count=1
 
 clean:
 	docker system prune -f
