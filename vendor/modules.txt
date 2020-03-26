@@ -77,7 +77,7 @@ go.opencensus.io/trace
 go.opencensus.io/trace/internal
 go.opencensus.io/trace/propagation
 go.opencensus.io/trace/tracestate
-# golang.org/x/crypto v0.0.0-20200317142112-1b76d66859c6
+# golang.org/x/crypto v0.0.0-20200323165209-0ec3e9974c59
 ## explicit
 golang.org/x/crypto/bcrypt
 golang.org/x/crypto/blowfish
