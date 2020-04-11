@@ -6,7 +6,7 @@
      steps:
        - checkout
        - run:
-           name: Install Go 1.14.1
+           name: Install Go 1.14.2
            command: |
                sudo rm -rf /usr/local/go
                wget -O go.tgz https://dl.google.com/go/go1.14.1.linux-amd64.tar.gz
