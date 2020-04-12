@@ -2,13 +2,24 @@ package httptreemux
 
 import (
 	"fmt"
+	"net/http"
 	"net/url"
 	"strings"
 )
 
+type MiddlewareFunc func(next HandlerFunc) HandlerFunc
+
+func handlerWithMiddlewares(handler HandlerFunc, stack []MiddlewareFunc) HandlerFunc {
+	for i := len(stack) - 1; i >= 0; i-- {
+		handler = stack[i](handler)
+	}
+	return handler
+}
+
 type Group struct {
-	path string
-	mux  *TreeMux
+	path  string
+	mux   *TreeMux
+	stack []MiddlewareFunc
 }
 
 // Add a sub-group to this group
@@ -23,7 +34,38 @@ func (g *Group) NewGroup(path string) *Group {
 	if path[len(path)-1] == '/' {
 		path = path[:len(path)-1]
 	}
-	return &Group{path, g.mux}
+	return &Group{
+		path:  path,
+		mux:   g.mux,
+		stack: g.stack[:len(g.stack):len(g.stack)],
+	}
+}
+
+// Use appends a middleware handler to the Group middleware stack.
+func (g *Group) Use(fn MiddlewareFunc) {
+	g.stack = append(g.stack, fn)
+}
+
+type handlerWithParams struct {
+	handler HandlerFunc
+	params  map[string]string
+}
+
+func (h handlerWithParams) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	h.handler(w, r, h.params)
+}
+
+// UseHandler is like Use but accepts http.Handler middleware.
+func (g *Group) UseHandler(middleware func(http.Handler) http.Handler) {
+	g.stack = append(g.stack, func(next HandlerFunc) HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request, params map[string]string) {
+			nextHandler := handlerWithParams{
+				handler: next,
+				params:  params,
+			}
+			middleware(nextHandler).ServeHTTP(w, r)
+		}
+	})
 }
 
 // Path elements starting with : indicate a wildcard in the path. A wildcard will only match on a
@@ -91,6 +133,10 @@ func (g *Group) NewGroup(path string) *Group {
 func (g *Group) Handle(method string, path string, handler HandlerFunc) {
 	g.mux.mutex.Lock()
 	defer g.mux.mutex.Unlock()
+
+	if len(g.stack) > 0 {
+		handler = handlerWithMiddlewares(handler, g.stack)
+	}
 
 	addSlash := false
 	addOne := func(thePath string) {

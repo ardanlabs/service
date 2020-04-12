@@ -7,6 +7,10 @@ This is inspired by [Julien Schmidt's httprouter](https://www.github.com/juliens
 
 Release notes may be found using the [Github releases tab](https://github.com/dimfeld/httptreemux/releases). Version numbers are compatible with the [Semantic Versioning 2.0.0](http://semver.org/) convention, and a new release is made after every change to the code.
 
+## Installing with Go Modules
+
+When using Go Modules, import this repository with `import "github.com/dimfeld/httptreemux/v5"` to ensure that you get the right version.
+
 ## Why?
 There are a lot of good routers out there. But looking at the ones that were really lightweight, I couldn't quite get something that fit with the route patterns I wanted. The code itself is simple enough, so I spent an evening writing this.
 
