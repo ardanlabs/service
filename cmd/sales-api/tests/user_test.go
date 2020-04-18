@@ -63,12 +63,13 @@ func (ut *UserTests) getToken401(t *testing.T) {
 
 	t.Log("Given the need to deny tokens to unknown users.")
 	{
-		t.Log("\tTest 0:\tWhen fetching a token with an unrecognized email.")
+		testID := 0
+		t.Logf("\tTest %d:\tWhen fetching a token with an unrecognized email.", testID)
 		{
 			if w.Code != http.StatusUnauthorized {
-				t.Fatalf("\t%s\tShould receive a status code of 401 for the response : %v", tests.Failed, w.Code)
+				t.Fatalf("\t%s\tTest %d:\tShould receive a status code of 401 for the response : %v", tests.Failed, testID, w.Code)
 			}
-			t.Logf("\t%s\tShould receive a status code of 401 for the response.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould receive a status code of 401 for the response.", tests.Success, testID)
 		}
 	}
 }
@@ -85,20 +86,21 @@ func (ut *UserTests) getToken200(t *testing.T) {
 
 	t.Log("Given the need to issues tokens to known users.")
 	{
-		t.Log("\tTest 0:\tWhen fetching a token with valid credentials.")
+		testID := 0
+		t.Logf("\tTest %d:\tWhen fetching a token with valid credentials.", testID)
 		{
 			if w.Code != http.StatusOK {
-				t.Fatalf("\t%s\tShould receive a status code of 200 for the response : %v", tests.Failed, w.Code)
+				t.Fatalf("\t%s\tTest %d:\tShould receive a status code of 200 for the response : %v", tests.Failed, testID, w.Code)
 			}
-			t.Logf("\t%s\tShould receive a status code of 200 for the response.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould receive a status code of 200 for the response.", tests.Success, testID)
 
 			var got struct {
 				Token string `json:"token"`
 			}
 			if err := json.NewDecoder(w.Body).Decode(&got); err != nil {
-				t.Fatalf("\t%s\tShould be able to unmarshal the response : %v", tests.Failed, err)
+				t.Fatalf("\t%s\tTest %d:\tShould be able to unmarshal the response : %v", tests.Failed, testID, err)
 			}
-			t.Logf("\t%s\tShould be able to unmarshal the response.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould be able to unmarshal the response.", tests.Success, testID)
 
 			// TODO(jlw) Should we ensure the token is valid?
 		}
@@ -122,19 +124,20 @@ func (ut *UserTests) postUser400(t *testing.T) {
 
 	t.Log("Given the need to validate a new user can't be created with an invalid document.")
 	{
-		t.Log("\tTest 0:\tWhen using an incomplete user value.")
+		testID := 0
+		t.Logf("\tTest %d:\tWhen using an incomplete user value.", testID)
 		{
 			if w.Code != http.StatusBadRequest {
-				t.Fatalf("\t%s\tShould receive a status code of 400 for the response : %v", tests.Failed, w.Code)
+				t.Fatalf("\t%s\tTest %d:\tShould receive a status code of 400 for the response : %v", tests.Failed, testID, w.Code)
 			}
-			t.Logf("\t%s\tShould receive a status code of 400 for the response.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould receive a status code of 400 for the response.", tests.Success, testID)
 
 			// Inspect the response.
 			var got web.ErrorResponse
 			if err := json.NewDecoder(w.Body).Decode(&got); err != nil {
-				t.Fatalf("\t%s\tShould be able to unmarshal the response to an error type : %v", tests.Failed, err)
+				t.Fatalf("\t%s\tTest %d:\tShould be able to unmarshal the response to an error type : %v", tests.Failed, testID, err)
 			}
-			t.Logf("\t%s\tShould be able to unmarshal the response to an error type.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould be able to unmarshal the response to an error type.", tests.Success, testID)
 
 			// Define what we want to see.
 			want := web.ErrorResponse{
@@ -154,9 +157,9 @@ func (ut *UserTests) postUser400(t *testing.T) {
 			})
 
 			if diff := cmp.Diff(want, got, sorter); diff != "" {
-				t.Fatalf("\t%s\tShould get the expected result. Diff:\n%s", tests.Failed, diff)
+				t.Fatalf("\t%s\tTest %d:\tShould get the expected result. Diff:\n%s", tests.Failed, testID, diff)
 			}
-			t.Logf("\t%s\tShould get the expected result.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould get the expected result.", tests.Success, testID)
 		}
 	}
 }
@@ -178,12 +181,13 @@ func (ut *UserTests) postUser401(t *testing.T) {
 
 	t.Log("Given the need to validate a new user can't be created with an invalid document.")
 	{
-		t.Log("\tTest 0:\tWhen using an incomplete user value.")
+		testID := 0
+		t.Logf("\tTest %d:\tWhen using an incomplete user value.", testID)
 		{
 			if w.Code != http.StatusForbidden {
-				t.Fatalf("\t%s\tShould receive a status code of 403 for the response : %v", tests.Failed, w.Code)
+				t.Fatalf("\t%s\tTest %d:\tShould receive a status code of 403 for the response : %v", tests.Failed, testID, w.Code)
 			}
-			t.Logf("\t%s\tShould receive a status code of 403 for the response.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould receive a status code of 403 for the response.", tests.Success, testID)
 		}
 	}
 }
@@ -205,12 +209,13 @@ func (ut *UserTests) postUser403(t *testing.T) {
 
 	t.Log("Given the need to validate a new user can't be created with an invalid document.")
 	{
-		t.Log("\tTest 0:\tWhen using an incomplete user value.")
+		testID := 0
+		t.Logf("\tTest %d:\tWhen using an incomplete user value.", testID)
 		{
 			if w.Code != http.StatusUnauthorized {
-				t.Fatalf("\t%s\tShould receive a status code of 401 for the response : %v", tests.Failed, w.Code)
+				t.Fatalf("\t%s\tTest %d:\tShould receive a status code of 401 for the response : %v", tests.Failed, testID, w.Code)
 			}
-			t.Logf("\t%s\tShould receive a status code of 401 for the response.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould receive a status code of 401 for the response.", tests.Success, testID)
 		}
 	}
 }
@@ -228,21 +233,22 @@ func (ut *UserTests) getUser400(t *testing.T) {
 
 	t.Log("Given the need to validate getting a user with a malformed userid.")
 	{
-		t.Logf("\tTest 0:\tWhen using the new user %s.", id)
+		testID := 0
+		t.Logf("\tTest %d:\tWhen using the new user %s.", testID, id)
 		{
 			if w.Code != http.StatusBadRequest {
-				t.Fatalf("\t%s\tShould receive a status code of 400 for the response : %v", tests.Failed, w.Code)
+				t.Fatalf("\t%s\tTest %d:\tShould receive a status code of 400 for the response : %v", tests.Failed, testID, w.Code)
 			}
-			t.Logf("\t%s\tShould receive a status code of 400 for the response.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould receive a status code of 400 for the response.", tests.Success, testID)
 
 			recv := w.Body.String()
 			resp := `{"error":"ID is not in its proper form"}`
 			if resp != recv {
-				t.Log("Got :", recv)
-				t.Log("Want:", resp)
-				t.Fatalf("\t%s\tShould get the expected result.", tests.Failed)
+				t.Logf("\t\tTest %d:\tGot : %v", testID, recv)
+				t.Logf("\t\tTest %d:\tWant: %v", testID, resp)
+				t.Fatalf("\t%s\tTest %d:\tShould get the expected result.", tests.Failed, testID)
 			}
-			t.Logf("\t%s\tShould get the expected result.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould get the expected result.", tests.Success, testID)
 		}
 	}
 }
@@ -251,7 +257,8 @@ func (ut *UserTests) getUser400(t *testing.T) {
 func (ut *UserTests) getUser403(t *testing.T) {
 	t.Log("Given the need to validate regular users can't fetch other users.")
 	{
-		t.Logf("\tTest 0:\tWhen fetching the admin user as a regular user.")
+		testID := 0
+		t.Logf("\tTest %d:\tWhen fetching the admin user as a regular user.", testID)
 		{
 			r := httptest.NewRequest("GET", "/v1/users/"+tests.AdminID, nil)
 			w := httptest.NewRecorder()
@@ -261,21 +268,22 @@ func (ut *UserTests) getUser403(t *testing.T) {
 			ut.app.ServeHTTP(w, r)
 
 			if w.Code != http.StatusForbidden {
-				t.Fatalf("\t%s\tShould receive a status code of 403 for the response : %v", tests.Failed, w.Code)
+				t.Fatalf("\t%s\tTest %d:\tShould receive a status code of 403 for the response : %v", tests.Failed, testID, w.Code)
 			}
-			t.Logf("\t%s\tShould receive a status code of 403 for the response.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould receive a status code of 403 for the response.", tests.Success, testID)
 
 			recv := w.Body.String()
 			resp := `{"error":"Attempted action is not allowed"}`
 			if resp != recv {
 				t.Log("Got :", recv)
 				t.Log("Want:", resp)
-				t.Fatalf("\t%s\tShould get the expected result.", tests.Failed)
+				t.Fatalf("\t%s\tTest %d:\tShould get the expected result.", tests.Failed, testID)
 			}
-			t.Logf("\t%s\tShould get the expected result.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould get the expected result.", tests.Success, testID)
 		}
 
-		t.Logf("\tTest 1:\tWhen fetching the user as themselves.")
+		testID = 1
+		t.Logf("\tTest %d:\tWhen fetching the user as themselves.", testID)
 		{
 
 			r := httptest.NewRequest("GET", "/v1/users/"+tests.UserID, nil)
@@ -285,9 +293,9 @@ func (ut *UserTests) getUser403(t *testing.T) {
 
 			ut.app.ServeHTTP(w, r)
 			if w.Code != http.StatusOK {
-				t.Fatalf("\t%s\tShould receive a status code of 200 for the response : %v", tests.Failed, w.Code)
+				t.Fatalf("\t%s\tTest %d:\tShould receive a status code of 200 for the response : %v", tests.Failed, testID, w.Code)
 			}
-			t.Logf("\t%s\tShould receive a status code of 200 for the response.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould receive a status code of 200 for the response.", tests.Success, testID)
 		}
 	}
 }
@@ -305,21 +313,22 @@ func (ut *UserTests) getUser404(t *testing.T) {
 
 	t.Log("Given the need to validate getting a user with an unknown id.")
 	{
-		t.Logf("\tTest 0:\tWhen using the new user %s.", id)
+		testID := 0
+		t.Logf("\tTest %d:\tWhen using the new user %s.", testID, id)
 		{
 			if w.Code != http.StatusNotFound {
-				t.Fatalf("\t%s\tShould receive a status code of 404 for the response : %v", tests.Failed, w.Code)
+				t.Fatalf("\t%s\tTest %d:\tShould receive a status code of 404 for the response : %v", tests.Failed, testID, w.Code)
 			}
-			t.Logf("\t%s\tShould receive a status code of 404 for the response.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould receive a status code of 404 for the response.", tests.Success, testID)
 
 			recv := w.Body.String()
 			resp := "User not found"
 			if !strings.Contains(recv, resp) {
-				t.Log("Got :", recv)
-				t.Log("Want:", resp)
-				t.Fatalf("\t%s\tShould get the expected result.", tests.Failed)
+				t.Logf("\t\tTest %d:\tGot : %v", testID, recv)
+				t.Logf("\t\tTest %d:\tWant: %v", testID, resp)
+				t.Fatalf("\t%s\tTest %d:\tShould get the expected result.", tests.Failed, testID)
 			}
-			t.Logf("\t%s\tShould get the expected result.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould get the expected result.", tests.Success, testID)
 		}
 	}
 }
@@ -337,12 +346,13 @@ func (ut *UserTests) deleteUserNotFound(t *testing.T) {
 
 	t.Log("Given the need to validate deleting a user that does not exist.")
 	{
-		t.Logf("\tTest 0:\tWhen using the new user %s.", id)
+		testID := 0
+		t.Logf("\tTest %d:\tWhen using the new user %s.", testID, id)
 		{
 			if w.Code != http.StatusNoContent {
-				t.Fatalf("\t%s\tShould receive a status code of 204 for the response : %v", tests.Failed, w.Code)
+				t.Fatalf("\t%s\tTest %d:\tShould receive a status code of 204 for the response : %v", tests.Failed, testID, w.Code)
 			}
-			t.Logf("\t%s\tShould receive a status code of 204 for the response.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould receive a status code of 204 for the response.", tests.Success, testID)
 		}
 	}
 }
@@ -369,21 +379,22 @@ func (ut *UserTests) putUser404(t *testing.T) {
 
 	t.Log("Given the need to validate updating a user that does not exist.")
 	{
-		t.Logf("\tTest 0:\tWhen using the new user %s.", id)
+		testID := 0
+		t.Logf("\tTest %d:\tWhen using the new user %s.", testID, id)
 		{
 			if w.Code != http.StatusNotFound {
-				t.Fatalf("\t%s\tShould receive a status code of 404 for the response : %v", tests.Failed, w.Code)
+				t.Fatalf("\t%s\tTest %d:\tShould receive a status code of 404 for the response : %v", tests.Failed, testID, w.Code)
 			}
-			t.Logf("\t%s\tShould receive a status code of 404 for the response.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould receive a status code of 404 for the response.", tests.Success, testID)
 
 			recv := w.Body.String()
 			resp := "User not found"
 			if !strings.Contains(recv, resp) {
-				t.Log("Got :", recv)
-				t.Log("Want:", resp)
-				t.Fatalf("\t%s\tShould get the expected result.", tests.Failed)
+				t.Logf("\t\tTest %d:\tGot : %v", testID, recv)
+				t.Logf("\t\tTest %d:\tWant: %v", testID, resp)
+				t.Fatalf("\t%s\tTest %d:\tShould get the expected result.", tests.Failed, testID)
 			}
-			t.Logf("\t%s\tShould get the expected result.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould get the expected result.", tests.Success, testID)
 		}
 	}
 }
@@ -425,15 +436,16 @@ func (ut *UserTests) postUser201(t *testing.T) user.User {
 
 	t.Log("Given the need to create a new user with the users endpoint.")
 	{
-		t.Log("\tTest 0:\tWhen using the declared user value.")
+		testID := 0
+		t.Logf("\tTest %d:\tWhen using the declared user value.", testID)
 		{
 			if w.Code != http.StatusCreated {
-				t.Fatalf("\t%s\tShould receive a status code of 201 for the response : %v", tests.Failed, w.Code)
+				t.Fatalf("\t%s\tTest %d:\tShould receive a status code of 201 for the response : %v", tests.Failed, testID, w.Code)
 			}
-			t.Logf("\t%s\tShould receive a status code of 201 for the response.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould receive a status code of 201 for the response.", tests.Success, testID)
 
 			if err := json.NewDecoder(w.Body).Decode(&u); err != nil {
-				t.Fatalf("\t%s\tShould be able to unmarshal the response : %v", tests.Failed, err)
+				t.Fatalf("\t%s\tTest %d:\tShould be able to unmarshal the response : %v", tests.Failed, testID, err)
 			}
 
 			// Define what we wanted to receive. We will just trust the generated
@@ -444,9 +456,9 @@ func (ut *UserTests) postUser201(t *testing.T) user.User {
 			want.Roles = []string{auth.RoleAdmin}
 
 			if diff := cmp.Diff(want, u); diff != "" {
-				t.Fatalf("\t%s\tShould get the expected result. Diff:\n%s", tests.Failed, diff)
+				t.Fatalf("\t%s\tTest %d:\tShould get the expected result. Diff:\n%s", tests.Failed, testID, diff)
 			}
-			t.Logf("\t%s\tShould get the expected result.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould get the expected result.", tests.Success, testID)
 		}
 	}
 
@@ -464,12 +476,13 @@ func (ut *UserTests) deleteUser204(t *testing.T, id string) {
 
 	t.Log("Given the need to validate deleting a user that does exist.")
 	{
-		t.Logf("\tTest 0:\tWhen using the new user %s.", id)
+		testID := 0
+		t.Logf("\tTest %d:\tWhen using the new user %s.", testID, id)
 		{
 			if w.Code != http.StatusNoContent {
-				t.Fatalf("\t%s\tShould receive a status code of 204 for the response : %v", tests.Failed, w.Code)
+				t.Fatalf("\t%s\tTest %d:\tShould receive a status code of 204 for the response : %v", tests.Failed, testID, w.Code)
 			}
-			t.Logf("\t%s\tShould receive a status code of 204 for the response.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould receive a status code of 204 for the response.", tests.Success, testID)
 		}
 	}
 }
@@ -485,16 +498,17 @@ func (ut *UserTests) getUser200(t *testing.T, id string) {
 
 	t.Log("Given the need to validate getting a user that exsits.")
 	{
-		t.Logf("\tTest 0:\tWhen using the new user %s.", id)
+		testID := 0
+		t.Logf("\tTest %d:\tWhen using the new user %s.", testID, id)
 		{
 			if w.Code != http.StatusOK {
-				t.Fatalf("\t%s\tShould receive a status code of 200 for the response : %v", tests.Failed, w.Code)
+				t.Fatalf("\t%s\tTest %d:\tShould receive a status code of 200 for the response : %v", tests.Failed, testID, w.Code)
 			}
-			t.Logf("\t%s\tShould receive a status code of 200 for the response.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould receive a status code of 200 for the response.", tests.Success, testID)
 
 			var u user.User
 			if err := json.NewDecoder(w.Body).Decode(&u); err != nil {
-				t.Fatalf("\t%s\tShould be able to unmarshal the response : %v", tests.Failed, err)
+				t.Fatalf("\t%s\tTest %d:\tShould be able to unmarshal the response : %v", tests.Failed, testID, err)
 			}
 
 			// Define what we wanted to receive. We will just trust the generated
@@ -506,9 +520,9 @@ func (ut *UserTests) getUser200(t *testing.T, id string) {
 			want.Roles = []string{auth.RoleAdmin}
 
 			if diff := cmp.Diff(want, u); diff != "" {
-				t.Fatalf("\t%s\tShould get the expected result. Diff:\n%s", tests.Failed, diff)
+				t.Fatalf("\t%s\tTest %d:\tShould get the expected result. Diff:\n%s", tests.Failed, testID, diff)
 			}
-			t.Logf("\t%s\tShould get the expected result.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould get the expected result.", tests.Success, testID)
 		}
 	}
 }
@@ -526,12 +540,13 @@ func (ut *UserTests) putUser204(t *testing.T, id string) {
 
 	t.Log("Given the need to update a user with the users endpoint.")
 	{
-		t.Log("\tTest 0:\tWhen using the modified user value.")
+		testID := 0
+		t.Logf("\tTest %d:\tWhen using the modified user value.", testID)
 		{
 			if w.Code != http.StatusNoContent {
-				t.Fatalf("\t%s\tShould receive a status code of 204 for the response : %v", tests.Failed, w.Code)
+				t.Fatalf("\t%s\tTest %d:\tShould receive a status code of 204 for the response : %v", tests.Failed, testID, w.Code)
 			}
-			t.Logf("\t%s\tShould receive a status code of 204 for the response.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould receive a status code of 204 for the response.", tests.Success, testID)
 
 			r = httptest.NewRequest("GET", "/v1/users/"+id, nil)
 			w = httptest.NewRecorder()
@@ -541,24 +556,24 @@ func (ut *UserTests) putUser204(t *testing.T, id string) {
 			ut.app.ServeHTTP(w, r)
 
 			if w.Code != http.StatusOK {
-				t.Fatalf("\t%s\tShould receive a status code of 200 for the retrieve : %v", tests.Failed, w.Code)
+				t.Fatalf("\t%s\tTest %d:\tShould receive a status code of 200 for the retrieve : %v", tests.Failed, testID, w.Code)
 			}
-			t.Logf("\t%s\tShould receive a status code of 200 for the retrieve.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould receive a status code of 200 for the retrieve.", tests.Success, testID)
 
 			var ru user.User
 			if err := json.NewDecoder(w.Body).Decode(&ru); err != nil {
-				t.Fatalf("\t%s\tShould be able to unmarshal the response : %v", tests.Failed, err)
+				t.Fatalf("\t%s\tTest %d:\tShould be able to unmarshal the response : %v", tests.Failed, testID, err)
 			}
 
 			if ru.Name != "Jacob Walker" {
-				t.Fatalf("\t%s\tShould see an updated Name : got %q want %q", tests.Failed, ru.Name, "Jacob Walker")
+				t.Fatalf("\t%s\tTest %d:\tShould see an updated Name : got %q want %q", tests.Failed, testID, ru.Name, "Jacob Walker")
 			}
-			t.Logf("\t%s\tShould see an updated Name.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould see an updated Name.", tests.Success, testID)
 
 			if ru.Email != "bill@ardanlabs.com" {
-				t.Fatalf("\t%s\tShould not affect other fields like Email : got %q want %q", tests.Failed, ru.Email, "bill@ardanlabs.com")
+				t.Fatalf("\t%s\tTest %d:\tShould not affect other fields like Email : got %q want %q", tests.Failed, testID, ru.Email, "bill@ardanlabs.com")
 			}
-			t.Logf("\t%s\tShould not affect other fields like Email.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould not affect other fields like Email.", tests.Success, testID)
 		}
 	}
 }
@@ -576,12 +591,13 @@ func (ut *UserTests) putUser403(t *testing.T, id string) {
 
 	t.Log("Given the need to update a user with the users endpoint.")
 	{
-		t.Log("\tTest 0:\tWhen a non-admin user makes a request")
+		testID := 0
+		t.Logf("\tTest %d:\tWhen a non-admin user makes a request", testID)
 		{
 			if w.Code != http.StatusForbidden {
-				t.Fatalf("\t%s\tShould receive a status code of 403 for the response : %v", tests.Failed, w.Code)
+				t.Fatalf("\t%s\tTest %d:\tShould receive a status code of 403 for the response : %v", tests.Failed, testID, w.Code)
 			}
-			t.Logf("\t%s\tShould receive a status code of 403 for the response.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould receive a status code of 403 for the response.", tests.Success, testID)
 		}
 	}
 }

@@ -18,7 +18,8 @@ func TestUser(t *testing.T) {
 
 	t.Log("Given the need to work with User records.")
 	{
-		t.Log("\tWhen handling a single User.")
+		testID := 0
+		t.Logf("\tTest %d:\tWhen handling a single User.", testID)
 		{
 			ctx := tests.Context()
 			now := time.Date(2018, time.October, 1, 0, 0, 0, 0, time.UTC)
@@ -40,20 +41,20 @@ func TestUser(t *testing.T) {
 
 			u, err := user.Create(ctx, db, nu, now)
 			if err != nil {
-				t.Fatalf("\t%s\tShould be able to create user : %s.", tests.Failed, err)
+				t.Fatalf("\t%s\tTest %d:\tShould be able to create user : %s.", tests.Failed, testID, err)
 			}
-			t.Logf("\t%s\tShould be able to create user.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould be able to create user.", tests.Success, testID)
 
 			savedU, err := user.Retrieve(ctx, claims, db, u.ID)
 			if err != nil {
-				t.Fatalf("\t%s\tShould be able to retrieve user by ID: %s.", tests.Failed, err)
+				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve user by ID: %s.", tests.Failed, testID, err)
 			}
-			t.Logf("\t%s\tShould be able to retrieve user by ID.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould be able to retrieve user by ID.", tests.Success, testID)
 
 			if diff := cmp.Diff(u, savedU); diff != "" {
-				t.Fatalf("\t%s\tShould get back the same user. Diff:\n%s", tests.Failed, diff)
+				t.Fatalf("\t%s\tTest %d:\tShould get back the same user. Diff:\n%s", tests.Failed, testID, diff)
 			}
-			t.Logf("\t%s\tShould get back the same user.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould get back the same user.", tests.Success, testID)
 
 			upd := user.UpdateUser{
 				Name:  tests.StringPointer("Jacob Walker"),
@@ -61,42 +62,42 @@ func TestUser(t *testing.T) {
 			}
 
 			if err := user.Update(ctx, claims, db, u.ID, upd, now); err != nil {
-				t.Fatalf("\t%s\tShould be able to update user : %s.", tests.Failed, err)
+				t.Fatalf("\t%s\tTest %d:\tShould be able to update user : %s.", tests.Failed, testID, err)
 			}
-			t.Logf("\t%s\tShould be able to update user.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould be able to update user.", tests.Success, testID)
 
 			savedU, err = user.Retrieve(ctx, claims, db, u.ID)
 			if err != nil {
-				t.Fatalf("\t%s\tShould be able to retrieve user : %s.", tests.Failed, err)
+				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve user : %s.", tests.Failed, testID, err)
 			}
-			t.Logf("\t%s\tShould be able to retrieve user.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould be able to retrieve user.", tests.Success, testID)
 
 			if savedU.Name != *upd.Name {
-				t.Errorf("\t%s\tShould be able to see updates to Name.", tests.Failed)
-				t.Log("\t\tGot:", savedU.Name)
-				t.Log("\t\tExp:", *upd.Name)
+				t.Errorf("\t%s\tTest %d:\tShould be able to see updates to Name.", tests.Failed, testID)
+				t.Logf("\t\tTest %d:\tGot: %v", testID, savedU.Name)
+				t.Logf("\t\tTest %d:\tExp: %v", testID, *upd.Name)
 			} else {
-				t.Logf("\t%s\tShould be able to see updates to Name.", tests.Success)
+				t.Logf("\t%s\tTest %d:\tShould be able to see updates to Name.", tests.Success, testID)
 			}
 
 			if savedU.Email != *upd.Email {
-				t.Errorf("\t%s\tShould be able to see updates to Email.", tests.Failed)
-				t.Log("\t\tGot:", savedU.Email)
-				t.Log("\t\tExp:", *upd.Email)
+				t.Errorf("\t%s\tTest %d:\tShould be able to see updates to Email.", tests.Failed, testID)
+				t.Logf("\t\tTest %d:\tGot: %v", testID, savedU.Email)
+				t.Logf("\t\tTest %d:\tExp: %v", testID, *upd.Email)
 			} else {
-				t.Logf("\t%s\tShould be able to see updates to Email.", tests.Success)
+				t.Logf("\t%s\tTest %d:\tShould be able to see updates to Email.", tests.Success, testID)
 			}
 
 			if err := user.Delete(ctx, db, u.ID); err != nil {
-				t.Fatalf("\t%s\tShould be able to delete user : %s.", tests.Failed, err)
+				t.Fatalf("\t%s\tTest %d:\tShould be able to delete user : %s.", tests.Failed, testID, err)
 			}
-			t.Logf("\t%s\tShould be able to delete user.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould be able to delete user.", tests.Success, testID)
 
 			savedU, err = user.Retrieve(ctx, claims, db, u.ID)
 			if errors.Cause(err) != user.ErrNotFound {
-				t.Fatalf("\t%s\tShould NOT be able to retrieve user : %s.", tests.Failed, err)
+				t.Fatalf("\t%s\tTest %d:\tShould NOT be able to retrieve user : %s.", tests.Failed, testID, err)
 			}
-			t.Logf("\t%s\tShould NOT be able to retrieve user.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould NOT be able to retrieve user.", tests.Success, testID)
 		}
 	}
 }
@@ -108,7 +109,8 @@ func TestAuthenticate(t *testing.T) {
 
 	t.Log("Given the need to authenticate users")
 	{
-		t.Log("\tWhen handling a single User.")
+		testID := 0
+		t.Logf("\tTest %d:\tWhen handling a single User.", testID)
 		{
 			ctx := tests.Context()
 
@@ -124,15 +126,15 @@ func TestAuthenticate(t *testing.T) {
 
 			u, err := user.Create(ctx, db, nu, now)
 			if err != nil {
-				t.Fatalf("\t%s\tShould be able to create user : %s.", tests.Failed, err)
+				t.Fatalf("\t%s\tTest %d:\tShould be able to create user : %s.", tests.Failed, testID, err)
 			}
-			t.Logf("\t%s\tShould be able to create user.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould be able to create user.", tests.Success, testID)
 
 			claims, err := user.Authenticate(ctx, db, now, "anna@ardanlabs.com", "goroutines")
 			if err != nil {
-				t.Fatalf("\t%s\tShould be able to generate claims : %s.", tests.Failed, err)
+				t.Fatalf("\t%s\tTest %d:\tShould be able to generate claims : %s.", tests.Failed, testID, err)
 			}
-			t.Logf("\t%s\tShould be able to generate claims.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould be able to generate claims.", tests.Success, testID)
 
 			want := auth.Claims{}
 			want.Subject = u.ID
@@ -141,9 +143,9 @@ func TestAuthenticate(t *testing.T) {
 			want.IssuedAt = now.Unix()
 
 			if diff := cmp.Diff(want, claims); diff != "" {
-				t.Fatalf("\t%s\tShould get back the expected claims. Diff:\n%s", tests.Failed, diff)
+				t.Fatalf("\t%s\tTest %d:\tShould get back the expected claims. Diff:\n%s", tests.Failed, testID, diff)
 			}
-			t.Logf("\t%s\tShould get back the expected claims.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould get back the expected claims.", tests.Success, testID)
 		}
 	}
 }

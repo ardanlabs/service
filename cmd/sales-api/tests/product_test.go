@@ -62,19 +62,20 @@ func (pt *ProductTests) postProduct400(t *testing.T) {
 
 	t.Log("Given the need to validate a new product can't be created with an invalid document.")
 	{
-		t.Log("\tTest 0:\tWhen using an incomplete product value.")
+		testID := 0
+		t.Logf("\tTest %d:\tWhen using an incomplete product value.", testID)
 		{
 			if w.Code != http.StatusBadRequest {
-				t.Fatalf("\t%s\tShould receive a status code of 400 for the response : %v", tests.Failed, w.Code)
+				t.Fatalf("\t%s\tTest %d:\tShould receive a status code of 400 for the response : %v", tests.Failed, testID, w.Code)
 			}
-			t.Logf("\t%s\tShould receive a status code of 400 for the response.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould receive a status code of 400 for the response.", tests.Success, testID)
 
 			// Inspect the response.
 			var got web.ErrorResponse
 			if err := json.NewDecoder(w.Body).Decode(&got); err != nil {
-				t.Fatalf("\t%s\tShould be able to unmarshal the response to an error type : %v", tests.Failed, err)
+				t.Fatalf("\t%s\tTest %d:\tShould be able to unmarshal the response to an error type : %v", tests.Failed, testID, err)
 			}
-			t.Logf("\t%s\tShould be able to unmarshal the response to an error type.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould be able to unmarshal the response to an error type.", tests.Success, testID)
 
 			// Define what we want to see.
 			want := web.ErrorResponse{
@@ -93,9 +94,9 @@ func (pt *ProductTests) postProduct400(t *testing.T) {
 			})
 
 			if diff := cmp.Diff(want, got, sorter); diff != "" {
-				t.Fatalf("\t%s\tShould get the expected result. Diff:\n%s", tests.Failed, diff)
+				t.Fatalf("\t%s\tTest %d:\tShould get the expected result. Diff:\n%s", tests.Failed, testID, diff)
 			}
-			t.Logf("\t%s\tShould get the expected result.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould get the expected result.", tests.Success, testID)
 		}
 	}
 }
@@ -123,12 +124,13 @@ func (pt *ProductTests) postProduct401(t *testing.T) {
 
 	t.Log("Given the need to validate a new product can't be created with an invalid document.")
 	{
-		t.Log("\tTest 0:\tWhen using an incomplete product value.")
+		testID := 0
+		t.Logf("\tTest %d:\tWhen using an incomplete product value.", testID)
 		{
 			if w.Code != http.StatusUnauthorized {
-				t.Fatalf("\t%s\tShould receive a status code of 401 for the response : %v", tests.Failed, w.Code)
+				t.Fatalf("\t%s\tTest %d:\tShould receive a status code of 401 for the response : %v", tests.Failed, testID, w.Code)
 			}
-			t.Logf("\t%s\tShould receive a status code of 401 for the response.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould receive a status code of 401 for the response.", tests.Success, testID)
 		}
 	}
 }
@@ -146,21 +148,22 @@ func (pt *ProductTests) getProduct400(t *testing.T) {
 
 	t.Log("Given the need to validate getting a product with a malformed id.")
 	{
-		t.Logf("\tTest 0:\tWhen using the new product %s.", id)
+		testID := 0
+		t.Logf("\tTest %d:\tWhen using the new product %s.", testID, id)
 		{
 			if w.Code != http.StatusBadRequest {
-				t.Fatalf("\t%s\tShould receive a status code of 400 for the response : %v", tests.Failed, w.Code)
+				t.Fatalf("\t%s\tTest %d:\tShould receive a status code of 400 for the response : %v", tests.Failed, testID, w.Code)
 			}
-			t.Logf("\t%s\tShould receive a status code of 400 for the response.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould receive a status code of 400 for the response.", tests.Success, testID)
 
 			recv := w.Body.String()
 			resp := `{"error":"ID is not in its proper form"}`
 			if resp != recv {
-				t.Log("Got :", recv)
-				t.Log("Want:", resp)
-				t.Fatalf("\t%s\tShould get the expected result.", tests.Failed)
+				t.Logf("\t\tTest %d:\tGot : %v", testID, recv)
+				t.Logf("\t\tTest %d:\tWant: %v", testID, resp)
+				t.Fatalf("\t%s\tTest %d:\tShould get the expected result.", tests.Failed, testID)
 			}
-			t.Logf("\t%s\tShould get the expected result.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould get the expected result.", tests.Success, testID)
 		}
 	}
 }
@@ -178,21 +181,22 @@ func (pt *ProductTests) getProduct404(t *testing.T) {
 
 	t.Log("Given the need to validate getting a product with an unknown id.")
 	{
-		t.Logf("\tTest 0:\tWhen using the new product %s.", id)
+		testID := 0
+		t.Logf("\tTest %d:\tWhen using the new product %s.", testID, id)
 		{
 			if w.Code != http.StatusNotFound {
-				t.Fatalf("\t%s\tShould receive a status code of 404 for the response : %v", tests.Failed, w.Code)
+				t.Fatalf("\t%s\tTest %d:\tShould receive a status code of 404 for the response : %v", tests.Failed, testID, w.Code)
 			}
-			t.Logf("\t%s\tShould receive a status code of 404 for the response.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould receive a status code of 404 for the response.", tests.Success, testID)
 
 			recv := w.Body.String()
 			resp := "Product not found"
 			if !strings.Contains(recv, resp) {
-				t.Log("Got :", recv)
-				t.Log("Want:", resp)
-				t.Fatalf("\t%s\tShould get the expected result.", tests.Failed)
+				t.Logf("\t\tTest %d:\tGot : %v", testID, recv)
+				t.Logf("\t\tTest %d:\tWant: %v", testID, resp)
+				t.Fatalf("\t%s\tTest %d:\tShould get the expected result.", tests.Failed, testID)
 			}
-			t.Logf("\t%s\tShould get the expected result.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould get the expected result.", tests.Success, testID)
 		}
 	}
 }
@@ -210,12 +214,13 @@ func (pt *ProductTests) deleteProductNotFound(t *testing.T) {
 
 	t.Log("Given the need to validate deleting a product that does not exist.")
 	{
-		t.Logf("\tTest 0:\tWhen using the new product %s.", id)
+		testID := 0
+		t.Logf("\tTest %d:\tWhen using the new product %s.", testID, id)
 		{
 			if w.Code != http.StatusNoContent {
-				t.Fatalf("\t%s\tShould receive a status code of 204 for the response : %v", tests.Failed, w.Code)
+				t.Fatalf("\t%s\tTest %d:\tShould receive a status code of 204 for the response : %v", tests.Failed, testID, w.Code)
 			}
-			t.Logf("\t%s\tShould receive a status code of 204 for the response.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould receive a status code of 204 for the response.", tests.Success, testID)
 		}
 	}
 }
@@ -242,21 +247,22 @@ func (pt *ProductTests) putProduct404(t *testing.T) {
 
 	t.Log("Given the need to validate updating a product that does not exist.")
 	{
-		t.Logf("\tTest 0:\tWhen using the new product %s.", id)
+		testID := 0
+		t.Logf("\tTest %d:\tWhen using the new product %s.", testID, id)
 		{
 			if w.Code != http.StatusNotFound {
-				t.Fatalf("\t%s\tShould receive a status code of 404 for the response : %v", tests.Failed, w.Code)
+				t.Fatalf("\t%s\tTest %d:\tShould receive a status code of 404 for the response : %v", tests.Failed, testID, w.Code)
 			}
-			t.Logf("\t%s\tShould receive a status code of 404 for the response.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould receive a status code of 404 for the response.", tests.Success, testID)
 
 			recv := w.Body.String()
 			resp := "Product not found"
 			if !strings.Contains(recv, resp) {
-				t.Log("Got :", recv)
-				t.Log("Want:", resp)
-				t.Fatalf("\t%s\tShould get the expected result.", tests.Failed)
+				t.Logf("\t\tTest %d:\tGot : %v", testID, recv)
+				t.Logf("\t\tTest %d:\tWant: %v", testID, resp)
+				t.Fatalf("\t%s\tTest %d:\tShould get the expected result.", tests.Failed, testID)
 			}
-			t.Logf("\t%s\tShould get the expected result.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould get the expected result.", tests.Success, testID)
 		}
 	}
 }
@@ -295,15 +301,16 @@ func (pt *ProductTests) postProduct201(t *testing.T) product.Product {
 
 	t.Log("Given the need to create a new product with the products endpoint.")
 	{
-		t.Log("\tTest 0:\tWhen using the declared product value.")
+		testID := 0
+		t.Logf("\tTest %d:\tWhen using the declared product value.", testID)
 		{
 			if w.Code != http.StatusCreated {
-				t.Fatalf("\t%s\tShould receive a status code of 201 for the response : %v", tests.Failed, w.Code)
+				t.Fatalf("\t%s\tTest %d:\tShould receive a status code of 201 for the response : %v", tests.Failed, testID, w.Code)
 			}
-			t.Logf("\t%s\tShould receive a status code of 201 for the response.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould receive a status code of 201 for the response.", tests.Success, testID)
 
 			if err := json.NewDecoder(w.Body).Decode(&p); err != nil {
-				t.Fatalf("\t%s\tShould be able to unmarshal the response : %v", tests.Failed, err)
+				t.Fatalf("\t%s\tTest %d:\tShould be able to unmarshal the response : %v", tests.Failed, testID, err)
 			}
 
 			// Define what we wanted to receive. We will just trust the generated
@@ -314,9 +321,9 @@ func (pt *ProductTests) postProduct201(t *testing.T) product.Product {
 			want.Quantity = 60
 
 			if diff := cmp.Diff(want, p); diff != "" {
-				t.Fatalf("\t%s\tShould get the expected result. Diff:\n%s", tests.Failed, diff)
+				t.Fatalf("\t%s\tTest %d:\tShould get the expected result. Diff:\n%s", tests.Failed, testID, diff)
 			}
-			t.Logf("\t%s\tShould get the expected result.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould get the expected result.", tests.Success, testID)
 		}
 	}
 
@@ -334,12 +341,13 @@ func (pt *ProductTests) deleteProduct204(t *testing.T, id string) {
 
 	t.Log("Given the need to validate deleting a product that does exist.")
 	{
-		t.Logf("\tTest 0:\tWhen using the new product %s.", id)
+		testID := 0
+		t.Logf("\tTest %d:\tWhen using the new product %s.", testID, id)
 		{
 			if w.Code != http.StatusNoContent {
-				t.Fatalf("\t%s\tShould receive a status code of 204 for the response : %v", tests.Failed, w.Code)
+				t.Fatalf("\t%s\tTest %d:\tShould receive a status code of 204 for the response : %v", tests.Failed, testID, w.Code)
 			}
-			t.Logf("\t%s\tShould receive a status code of 204 for the response.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould receive a status code of 204 for the response.", tests.Success, testID)
 		}
 	}
 }
@@ -355,16 +363,17 @@ func (pt *ProductTests) getProduct200(t *testing.T, id string) {
 
 	t.Log("Given the need to validate getting a product that exists.")
 	{
-		t.Logf("\tTest 0:\tWhen using the new product %s.", id)
+		testID := 0
+		t.Logf("\tTest : %d\tWhen using the new product %s.", testID, id)
 		{
 			if w.Code != http.StatusOK {
-				t.Fatalf("\t%s\tShould receive a status code of 200 for the response : %v", tests.Failed, w.Code)
+				t.Fatalf("\t%s\tTest : %d\tShould receive a status code of 200 for the response : %v", tests.Failed, testID, w.Code)
 			}
-			t.Logf("\t%s\tShould receive a status code of 200 for the response.", tests.Success)
+			t.Logf("\t%s\tTest : %d\tShould receive a status code of 200 for the response.", tests.Success, testID)
 
 			var p product.Product
 			if err := json.NewDecoder(w.Body).Decode(&p); err != nil {
-				t.Fatalf("\t%s\tShould be able to unmarshal the response : %v", tests.Failed, err)
+				t.Fatalf("\t%s\tTest : %d\tShould be able to unmarshal the response : %v", tests.Failed, testID, err)
 			}
 
 			// Define what we wanted to receive. We will just trust the generated
@@ -376,9 +385,9 @@ func (pt *ProductTests) getProduct200(t *testing.T, id string) {
 			want.Quantity = 60
 
 			if diff := cmp.Diff(want, p); diff != "" {
-				t.Fatalf("\t%s\tShould get the expected result. Diff:\n%s", tests.Failed, diff)
+				t.Fatalf("\t%s\tTest : %d\tShould get the expected result. Diff:\n%s", tests.Failed, testID, diff)
 			}
-			t.Logf("\t%s\tShould get the expected result.", tests.Success)
+			t.Logf("\t%s\tTest : %d\tShould get the expected result.", tests.Success, testID)
 		}
 	}
 }
@@ -395,12 +404,13 @@ func (pt *ProductTests) putProduct204(t *testing.T, id string) {
 
 	t.Log("Given the need to update a product with the products endpoint.")
 	{
-		t.Log("\tTest 0:\tWhen using the modified product value.")
+		testID := 0
+		t.Logf("\tTest %d:\tWhen using the modified product value.", testID)
 		{
 			if w.Code != http.StatusNoContent {
-				t.Fatalf("\t%s\tShould receive a status code of 204 for the response : %v", tests.Failed, w.Code)
+				t.Fatalf("\t%s\tTest %d:\tShould receive a status code of 204 for the response : %v", tests.Failed, testID, w.Code)
 			}
-			t.Logf("\t%s\tShould receive a status code of 204 for the response.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould receive a status code of 204 for the response.", tests.Success, testID)
 
 			r = httptest.NewRequest("GET", "/v1/products/"+id, nil)
 			w = httptest.NewRecorder()
@@ -410,19 +420,19 @@ func (pt *ProductTests) putProduct204(t *testing.T, id string) {
 			pt.app.ServeHTTP(w, r)
 
 			if w.Code != http.StatusOK {
-				t.Fatalf("\t%s\tShould receive a status code of 200 for the retrieve : %v", tests.Failed, w.Code)
+				t.Fatalf("\t%s\tTest %d:\tShould receive a status code of 200 for the retrieve : %v", tests.Failed, testID, w.Code)
 			}
-			t.Logf("\t%s\tShould receive a status code of 200 for the retrieve.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould receive a status code of 200 for the retrieve.", tests.Success, testID)
 
 			var ru product.Product
 			if err := json.NewDecoder(w.Body).Decode(&ru); err != nil {
-				t.Fatalf("\t%s\tShould be able to unmarshal the response : %v", tests.Failed, err)
+				t.Fatalf("\t%s\tTest %d:\tShould be able to unmarshal the response : %v", tests.Failed, testID, err)
 			}
 
 			if ru.Name != "Graphic Novels" {
-				t.Fatalf("\t%s\tShould see an updated Name : got %q want %q", tests.Failed, ru.Name, "Graphic Novels")
+				t.Fatalf("\t%s\tTest %d:\tShould see an updated Name : got %q want %q", tests.Failed, testID, ru.Name, "Graphic Novels")
 			}
-			t.Logf("\t%s\tShould see an updated Name.", tests.Success)
+			t.Logf("\t%s\tTest %d:\tShould see an updated Name.", tests.Success, testID)
 		}
 	}
 }
