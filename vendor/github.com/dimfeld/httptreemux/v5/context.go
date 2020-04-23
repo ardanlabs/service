@@ -58,10 +58,13 @@ func (cg *ContextGroup) NewGroup(path string) *ContextGroup {
 // Handle allows handling HTTP requests via an http.HandlerFunc, as opposed to an httptreemux.HandlerFunc.
 // Any parameters from the request URL are stored in a map[string]string in the request's context.
 func (cg *ContextGroup) Handle(method, path string, handler http.HandlerFunc) {
+	fullPath := cg.group.path + path
 	cg.group.Handle(method, path, func(w http.ResponseWriter, r *http.Request, params map[string]string) {
-		if params != nil {
-			r = r.WithContext(AddParamsToContext(r.Context(), params))
+		routeData := &contextData{
+			route:  fullPath,
+			params: params,
 		}
+		r = r.WithContext(AddRouteDataToContext(r.Context(), routeData))
 		handler(w, r)
 	})
 }
@@ -69,10 +72,13 @@ func (cg *ContextGroup) Handle(method, path string, handler http.HandlerFunc) {
 // Handler allows handling HTTP requests via an http.Handler interface, as opposed to an httptreemux.HandlerFunc.
 // Any parameters from the request URL are stored in a map[string]string in the request's context.
 func (cg *ContextGroup) Handler(method, path string, handler http.Handler) {
+	fullPath := cg.group.path + path
 	cg.group.Handle(method, path, func(w http.ResponseWriter, r *http.Request, params map[string]string) {
-		if params != nil {
-			r = r.WithContext(AddParamsToContext(r.Context(), params))
+		routeData := &contextData{
+			route:  fullPath,
+			params: params,
 		}
+		r = r.WithContext(AddRouteDataToContext(r.Context(), routeData))
 		handler.ServeHTTP(w, r)
 	})
 }
@@ -112,22 +118,72 @@ func (cg *ContextGroup) OPTIONS(path string, handler http.HandlerFunc) {
 	cg.Handle("OPTIONS", path, handler)
 }
 
-// ContextParams returns the params map associated with the given context if one exists. Otherwise, an empty map is returned.
-func ContextParams(ctx context.Context) map[string]string {
-	if p, ok := ctx.Value(paramsContextKey).(map[string]string); ok {
-		return p
+type contextData struct {
+	route  string
+	params map[string]string
+}
+
+func (cd *contextData) Route() string {
+	return cd.route
+}
+
+func (cd *contextData) Params() map[string]string {
+	if cd.params != nil {
+		return cd.params
 	}
 	return map[string]string{}
 }
 
+// ContextRouteData is the information associated with the matched path.
+// Route() returns the matched route, without expanded wildcards.
+// Params() returns a map of the route's wildcards and their matched values.
+type ContextRouteData interface {
+	Route() string
+	Params() map[string]string
+}
+
+// ContextParams returns a map of the route's wildcards and their matched values.
+func ContextParams(ctx context.Context) map[string]string {
+	if cd := ContextData(ctx); cd != nil {
+		return cd.Params()
+	}
+	return map[string]string{}
+}
+
+// ContextRoute returns the matched route, without expanded wildcards.
+func ContextRoute(ctx context.Context) string {
+	if cd := ContextData(ctx); cd != nil {
+		return cd.Route()
+	}
+	return ""
+}
+
+// ContextData returns the ContextRouteData associated with the matched path
+func ContextData(ctx context.Context) ContextRouteData {
+	if p, ok := ctx.Value(contextDataKey).(ContextRouteData); ok {
+		return p
+	}
+	return nil
+}
+
+// AddRouteDataToContext can be used for testing handlers, to insert route data into the request's `Context`.
+func AddRouteDataToContext(ctx context.Context, data ContextRouteData) context.Context {
+	return context.WithValue(ctx, contextDataKey, data)
+}
+
 // AddParamsToContext inserts a parameters map into a context using
-// the package's internal context key. Clients of this package should
-// really only use this for unit tests.
+// the package's internal context key. This function is deprecated.
+// Use AddRouteDataToContext instead.
 func AddParamsToContext(ctx context.Context, params map[string]string) context.Context {
-	return context.WithValue(ctx, paramsContextKey, params)
+	data := &contextData{
+		route:  "",
+		params: params,
+	}
+	return AddRouteDataToContext(ctx, data)
 }
 
 type contextKey int
 
-// paramsContextKey is used to retrieve a path's params map from a request's context.
-const paramsContextKey contextKey = 0
+// contextDataKey is used to retrieve the path's params map and matched route
+// from a request's context.
+const contextDataKey contextKey = 0

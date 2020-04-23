@@ -36,9 +36,15 @@ group.GET("/v1/:id", func(w http.ResponseWriter, r *http.Request, params map[str
 // UsingContext returns a version of the router or group with context support.
 ctxGroup := group.UsingContext() // sibling to 'group' node in tree
 ctxGroup.GET("/v2/:id", func(w http.ResponseWriter, r *http.Request) {
-    params := httptreemux.ContextParams(r.Context())
+    ctxData := httptreemux.ContextData(r.Context())
+    params := ctxData.Params()
     id := params["id"]
-    fmt.Fprintf(w, "GET /api/v2/%s", id)
+
+    // Useful for middleware to see which route was hit without dealing with wildcards
+    routePath := ctxData.Route()
+
+    // Prints GET /api/v2/:id id=...
+    fmt.Fprintf(w, "GET %s id=%s", routePath, id)
 })
 
 http.ListenAndServe(":8080", router)
@@ -58,9 +64,15 @@ router.GET("/:page", func(w http.ResponseWriter, r *http.Request) {
 
 group := router.NewGroup("/api")
 group.GET("/v1/:id", func(w http.ResponseWriter, r *http.Request) {
-    params := httptreemux.ContextParams(r.Context())
+    ctxData := httptreemux.ContextData(r.Context())
+    params := ctxData.Params()
     id := params["id"]
-    fmt.Fprintf(w, "GET /api/v1/%s", id)
+
+    // Useful for middleware to see which route was hit without dealing with wildcards
+    routePath := ctxData.Route()
+
+    // Prints GET /api/v1/:id id=...
+    fmt.Fprintf(w, "GET %s id=%s", routePath, id)
 })
 
 http.ListenAndServe(":8080", router)
@@ -240,7 +252,7 @@ code snippet that can perform this transformation for you, should you want it.
 When using `httprouter`, a route with a catch-all parameter (e.g. `/images/*path`) will match on URLs like `/images/` where the catch-all parameter is empty. This router does not match on empty catch-all parameters, but the behavior can be duplicated by adding a route without the catch-all (e.g. `/images/`).
 
 ## Middleware
-This package provides no middleware. But there are a lot of great options out there and it's pretty easy to write your own.
+This package provides no middleware. But there are a lot of great options out there and it's pretty easy to write your own. The router provides the `Use` and `UseHandler` functions to ease the creation of middleware chains. (Real documentation of these functions coming soon.)
 
 # Acknowledgements
 

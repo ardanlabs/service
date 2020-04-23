@@ -1,13 +1,13 @@
 # contrib.go.opencensus.io/exporter/zipkin v0.1.1
 ## explicit
 contrib.go.opencensus.io/exporter/zipkin
-# github.com/ardanlabs/conf v1.2.1
+# github.com/ardanlabs/conf v1.2.2
 ## explicit
 github.com/ardanlabs/conf
 # github.com/dgrijalva/jwt-go v3.2.0+incompatible
 ## explicit
 github.com/dgrijalva/jwt-go
-# github.com/dimfeld/httptreemux/v5 v5.1.0
+# github.com/dimfeld/httptreemux/v5 v5.2.1
 ## explicit
 github.com/dimfeld/httptreemux/v5
 # github.com/dimiro1/darwin v0.0.0-20191008194338-370f81775d3b
@@ -42,7 +42,7 @@ github.com/jmoiron/sqlx/reflectx
 # github.com/leodido/go-urn v1.2.0
 ## explicit
 github.com/leodido/go-urn
-# github.com/lib/pq v1.3.0
+# github.com/lib/pq v1.4.0
 ## explicit
 github.com/lib/pq
 github.com/lib/pq/oid
@@ -77,7 +77,7 @@ go.opencensus.io/trace
 go.opencensus.io/trace/internal
 go.opencensus.io/trace/propagation
 go.opencensus.io/trace/tracestate
-# golang.org/x/crypto v0.0.0-20200406173513-056763e48d71
+# golang.org/x/crypto v0.0.0-20200422194213-44a606286825
 ## explicit
 golang.org/x/crypto/bcrypt
 golang.org/x/crypto/blowfish
