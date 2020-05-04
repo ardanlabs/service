@@ -64,7 +64,9 @@ tidy:
 
 deps-upgrade:
 	# go get $(go list -f '{{if not (or .Main .Indirect)}}{{.Path}}{{end}}' -m all)
+	deps-upgrade:
 	go get -u -t -d -v ./...
+	go mod vendor
 
 deps-cleancache:
 	go clean -modcache
