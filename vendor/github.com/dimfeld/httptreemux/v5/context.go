@@ -172,14 +172,19 @@ func AddRouteDataToContext(ctx context.Context, data ContextRouteData) context.C
 }
 
 // AddParamsToContext inserts a parameters map into a context using
-// the package's internal context key. This function is deprecated.
-// Use AddRouteDataToContext instead.
+// the package's internal context key.
 func AddParamsToContext(ctx context.Context, params map[string]string) context.Context {
-	data := &contextData{
-		route:  "",
+	return AddRouteDataToContext(ctx, &contextData{
 		params: params,
-	}
-	return AddRouteDataToContext(ctx, data)
+	})
+}
+
+// AddRouteToContext inserts a route into a context using
+// the package's internal context key.
+func AddRouteToContext(ctx context.Context, route string) context.Context {
+	return AddRouteDataToContext(ctx, &contextData{
+		route: route,
+	})
 }
 
 type contextKey int
