@@ -9,12 +9,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ardanlabs/service/internal/data"
 	"github.com/ardanlabs/service/internal/platform/auth"
 	"github.com/ardanlabs/service/internal/platform/database"
 	"github.com/ardanlabs/service/internal/platform/database/databasetest"
 	"github.com/ardanlabs/service/internal/platform/web"
-	"github.com/ardanlabs/service/internal/schema"
-	"github.com/ardanlabs/service/internal/user"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 )
@@ -41,8 +40,6 @@ const (
 // It returns the database to use as well as a function to call at the end of
 // the test.
 func NewUnit(t *testing.T) (*sqlx.DB, func()) {
-	t.Helper()
-
 	c := databasetest.StartContainer(t)
 
 	db, err := database.Open(database.Config{
@@ -76,7 +73,7 @@ func NewUnit(t *testing.T) (*sqlx.DB, func()) {
 		t.Fatalf("waiting for database to be ready: %v", pingError)
 	}
 
-	if err := schema.Migrate(db); err != nil {
+	if err := data.Migrate(db); err != nil {
 		databasetest.StopContainer(t, c)
 		t.Fatalf("migrating: %s", err)
 	}
@@ -104,12 +101,11 @@ type Test struct {
 
 // NewIntegration creates a database, seeds it, constructs an authenticator.
 func NewIntegration(t *testing.T) *Test {
-	t.Helper()
 
 	// Initialize and seed database. Store the cleanup function call later.
 	db, cleanup := NewUnit(t)
 
-	if err := schema.Seed(db); err != nil {
+	if err := data.Seed(db); err != nil {
 		t.Fatal(err)
 	}
 
@@ -146,9 +142,7 @@ func (test *Test) Teardown() {
 
 // Token generates an authenticated token for a user.
 func (test *Test) Token(email, pass string) string {
-	test.t.Helper()
-
-	claims, err := user.Authenticate(
+	claims, err := data.Authenticate(
 		context.Background(), test.DB, time.Now(),
 		email, pass,
 	)

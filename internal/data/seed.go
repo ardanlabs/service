@@ -1,8 +1,6 @@
-package schema
+package data
 
-import (
-	"github.com/jmoiron/sqlx"
-)
+import "github.com/jmoiron/sqlx"
 
 // Seed runs the set of seed-data queries against db. The queries are ran in a
 // transaction and rolled back if any fail.

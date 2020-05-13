@@ -1,4 +1,4 @@
-package schema
+package data
 
 import (
 	"github.com/dimiro1/darwin"
@@ -9,9 +9,7 @@ import (
 // defined in this package.
 func Migrate(db *sqlx.DB) error {
 	driver := darwin.NewGenericDriver(db.DB, darwin.PostgresDialect{})
-
 	d := darwin.New(driver, migrations, nil)
-
 	return d.Migrate()
 }
 
