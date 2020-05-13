@@ -1,10 +1,11 @@
-package databasetest
+package database
 
 import (
 	"bytes"
 	"encoding/json"
 	"os/exec"
-	"testing"
+
+	"github.com/pkg/errors"
 )
 
 // Container tracks information about a docker container started for tests.
@@ -14,22 +15,21 @@ type Container struct {
 }
 
 // StartContainer runs a postgres container to execute commands.
-func StartContainer(t *testing.T) *Container {
+func StartContainer() (*Container, error) {
 	cmd := exec.Command("docker", "run", "-P", "-d", "postgres:11.1-alpine")
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	if err := cmd.Run(); err != nil {
-		t.Fatalf("could not start container: %v", err)
+		return nil, errors.Wrap(err, "starting docker")
 	}
 
 	id := out.String()[:12]
-	t.Log("DB ContainerID:", id)
 
 	cmd = exec.Command("docker", "inspect", id)
 	out.Reset()
 	cmd.Stdout = &out
 	if err := cmd.Run(); err != nil {
-		t.Fatalf("could not inspect container %s: %v", id, err)
+		return nil, errors.Wrapf(err, "could not inspect container %s", id)
 	}
 
 	var doc []struct {
@@ -43,7 +43,7 @@ func StartContainer(t *testing.T) *Container {
 		} `json:"NetworkSettings"`
 	}
 	if err := json.Unmarshal(out.Bytes(), &doc); err != nil {
-		t.Fatalf("could not decode json: %v", err)
+		return nil, errors.Wrap(err, "could not decode json")
 	}
 
 	network := doc[0].NetworkSettings.Ports.TCP5432[0]
@@ -53,29 +53,27 @@ func StartContainer(t *testing.T) *Container {
 		Host: network.HostIP + ":" + network.HostPort,
 	}
 
-	t.Log("DB Host:", c.Host)
-
-	return &c
+	return &c, nil
 }
 
 // StopContainer stops and removes the specified container.
-func StopContainer(t *testing.T, c *Container) {
+func StopContainer(c *Container) error {
 	if err := exec.Command("docker", "stop", c.ID).Run(); err != nil {
-		t.Fatalf("could not stop container: %v", err)
+		return errors.Wrapf(err, "could not stop container: %s", c.ID)
 	}
-	t.Log("Stopped:", c.ID)
 
 	if err := exec.Command("docker", "rm", c.ID, "-v").Run(); err != nil {
-		t.Fatalf("could not remove container: %v", err)
+		return errors.Wrapf(err, "could not remove container: %s", c.ID)
 	}
-	t.Log("Removed:", c.ID)
+
+	return nil
 }
 
 // DumpContainerLogs runs "docker logs" against the container and send it to t.Log
-func DumpContainerLogs(t *testing.T, c *Container) {
+func DumpContainerLogs(c *Container) (string, error) {
 	out, err := exec.Command("docker", "logs", c.ID).CombinedOutput()
 	if err != nil {
-		t.Fatalf("could not log container: %v", err)
+		return "", errors.Wrapf(err, "could not log container: %s", c.ID)
 	}
-	t.Logf("Logs for %s\n%s:", c.ID, out)
+	return string(out), nil
 }

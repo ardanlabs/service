@@ -12,7 +12,6 @@ import (
 	"github.com/ardanlabs/service/internal/data"
 	"github.com/ardanlabs/service/internal/platform/auth"
 	"github.com/ardanlabs/service/internal/platform/database"
-	"github.com/ardanlabs/service/internal/platform/database/databasetest"
 	"github.com/ardanlabs/service/internal/platform/web"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
@@ -32,15 +31,15 @@ const (
 )
 
 // NewUnit creates a test database inside a Docker container. It creates the
-// required table structure but the database is otherwise empty.
-//
-// It does not return errors as this intended for testing only. Instead it will
-// call Fatal on the provided testing.T if anything goes wrong.
-//
-// It returns the database to use as well as a function to call at the end of
-// the test.
+// required table structure but the database is otherwise empty. It returns
+// the database to use as well as a function to call at the end of the test.
 func NewUnit(t *testing.T) (*sqlx.DB, func()) {
-	c := databasetest.StartContainer(t)
+	c, err := database.StartContainer()
+	if err != nil {
+		t.Fatalf("creating database: %v", err)
+	}
+	t.Logf("DB ContainerID: %s", c.ID)
+	t.Logf("DB Host: %s", c.Host)
 
 	db, err := database.Open(database.Config{
 		User:       "postgres",
@@ -53,7 +52,7 @@ func NewUnit(t *testing.T) (*sqlx.DB, func()) {
 		t.Fatalf("opening database connection: %v", err)
 	}
 
-	t.Log("waiting for database to be ready")
+	t.Log("waiting for database to be ready ...")
 
 	// Wait for the database to be ready. Wait 100ms longer between each attempt.
 	// Do not try more than 20 times.
@@ -68,14 +67,22 @@ func NewUnit(t *testing.T) (*sqlx.DB, func()) {
 	}
 
 	if pingError != nil {
-		databasetest.DumpContainerLogs(t, c)
-		databasetest.StopContainer(t, c)
-		t.Fatalf("waiting for database to be ready: %v", pingError)
+		out, err := database.DumpContainerLogs(c)
+		if err != nil {
+			t.Logf("dumping container logs: %v", err)
+		}
+		if err := database.StopContainer(c); err != nil {
+			t.Errorf("stopping container: %v", err)
+		}
+		t.Logf(out)
+		t.Fatalf("database never ready: %v", pingError)
 	}
 
 	if err := data.Migrate(db); err != nil {
-		databasetest.StopContainer(t, c)
-		t.Fatalf("migrating: %s", err)
+		if err := database.StopContainer(c); err != nil {
+			t.Errorf("stopping container: %v", err)
+		}
+		t.Fatalf("migrating error: %s", err)
 	}
 
 	// teardown is the function that should be invoked when the caller is done
@@ -83,7 +90,12 @@ func NewUnit(t *testing.T) (*sqlx.DB, func()) {
 	teardown := func() {
 		t.Helper()
 		db.Close()
-		databasetest.StopContainer(t, c)
+		if err := database.StopContainer(c); err != nil {
+			t.Errorf("stopping container: %v", err)
+			return
+		}
+		t.Log("Stopped:", c.ID)
+		t.Log("Removed:", c.ID)
 	}
 
 	return db, teardown
