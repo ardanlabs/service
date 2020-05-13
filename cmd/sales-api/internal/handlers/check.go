@@ -10,17 +10,13 @@ import (
 	"go.opencensus.io/trace"
 )
 
-// Check provides support for orchestration health checks.
-type Check struct {
+type check struct {
 	build string
 	db    *sqlx.DB
-
-	// ADD OTHER STATE LIKE THE LOGGER IF NEEDED.
 }
 
-// Health validates the service is healthy and ready to accept requests.
-func (c *Check) Health(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-	ctx, span := trace.StartSpan(ctx, "handlers.Check.Health")
+func (c *check) health(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
+	ctx, span := trace.StartSpan(ctx, "handlers.check.health")
 	defer span.End()
 
 	health := struct {

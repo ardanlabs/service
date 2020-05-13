@@ -273,7 +273,7 @@ func (ut *UserTests) getUser403(t *testing.T) {
 			t.Logf("\t%s\tTest %d:\tShould receive a status code of 403 for the response.", tests.Success, testID)
 
 			recv := w.Body.String()
-			resp := `{"error":"Attempted action is not allowed"}`
+			resp := `{"error":"attempted action is not allowed"}`
 			if resp != recv {
 				t.Log("Got :", recv)
 				t.Log("Want:", resp)
@@ -322,7 +322,7 @@ func (ut *UserTests) getUser404(t *testing.T) {
 			t.Logf("\t%s\tTest %d:\tShould receive a status code of 404 for the response.", tests.Success, testID)
 
 			recv := w.Body.String()
-			resp := "User not found"
+			resp := "not found"
 			if !strings.Contains(recv, resp) {
 				t.Logf("\t\tTest %d:\tGot : %v", testID, recv)
 				t.Logf("\t\tTest %d:\tWant: %v", testID, resp)
@@ -388,7 +388,7 @@ func (ut *UserTests) putUser404(t *testing.T) {
 			t.Logf("\t%s\tTest %d:\tShould receive a status code of 404 for the response.", tests.Success, testID)
 
 			recv := w.Body.String()
-			resp := "User not found"
+			resp := "not found"
 			if !strings.Contains(recv, resp) {
 				t.Logf("\t\tTest %d:\tGot : %v", testID, recv)
 				t.Logf("\t\tTest %d:\tWant: %v", testID, resp)

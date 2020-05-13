@@ -12,16 +12,12 @@ import (
 	"go.opencensus.io/trace"
 )
 
-// Product represents the Product API method handler set.
-type Product struct {
+type product struct {
 	db *sqlx.DB
-
-	// ADD OTHER STATE LIKE THE LOGGER IF NEEDED.
 }
 
-// List gets all existing products in the system.
-func (p *Product) List(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-	ctx, span := trace.StartSpan(ctx, "handlers.Product.List")
+func (p *product) list(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
+	ctx, span := trace.StartSpan(ctx, "handlers.product.list")
 	defer span.End()
 
 	products, err := data.Retrieve.Product.List(ctx, p.db)
@@ -32,8 +28,7 @@ func (p *Product) List(ctx context.Context, w http.ResponseWriter, r *http.Reque
 	return web.Respond(ctx, w, products, http.StatusOK)
 }
 
-// Retrieve returns the specified product from the system.
-func (p *Product) Retrieve(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
+func (p *product) retrieve(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
 	ctx, span := trace.StartSpan(ctx, "handlers.Product.Retrieve")
 	defer span.End()
 
@@ -52,10 +47,8 @@ func (p *Product) Retrieve(ctx context.Context, w http.ResponseWriter, r *http.R
 	return web.Respond(ctx, w, prod, http.StatusOK)
 }
 
-// Create decodes the body of a request to create a new product. The full
-// product with generated fields is sent back in the response.
-func (p *Product) Create(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-	ctx, span := trace.StartSpan(ctx, "handlers.Product.Create")
+func (p *product) create(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
+	ctx, span := trace.StartSpan(ctx, "handlers.product.create")
 	defer span.End()
 
 	claims, ok := ctx.Value(auth.Key).(auth.Claims)
@@ -81,10 +74,8 @@ func (p *Product) Create(ctx context.Context, w http.ResponseWriter, r *http.Req
 	return web.Respond(ctx, w, prod, http.StatusCreated)
 }
 
-// Update decodes the body of a request to update an existing product. The ID
-// of the product is part of the request URL.
-func (p *Product) Update(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-	ctx, span := trace.StartSpan(ctx, "handlers.Product.Update")
+func (p *product) update(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
+	ctx, span := trace.StartSpan(ctx, "handlers.product.update")
 	defer span.End()
 
 	claims, ok := ctx.Value(auth.Key).(auth.Claims)
@@ -118,9 +109,8 @@ func (p *Product) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 	return web.Respond(ctx, w, nil, http.StatusNoContent)
 }
 
-// Delete removes a single product identified by an ID in the request URL.
-func (p *Product) Delete(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-	ctx, span := trace.StartSpan(ctx, "handlers.Product.Delete")
+func (p *product) delete(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
+	ctx, span := trace.StartSpan(ctx, "handlers.product.delete")
 	defer span.End()
 
 	if err := data.Delete.Product(ctx, p.db, params["id"]); err != nil {

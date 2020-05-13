@@ -12,17 +12,13 @@ import (
 	"go.opencensus.io/trace"
 )
 
-// User represents the User API method handler set.
-type User struct {
+type user struct {
 	db            *sqlx.DB
 	authenticator *auth.Authenticator
-
-	// ADD OTHER STATE LIKE THE LOGGER AND CONFIG HERE.
 }
 
-// List returns all the existing users in the system.
-func (u *User) List(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-	ctx, span := trace.StartSpan(ctx, "handlers.User.List")
+func (u *user) list(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
+	ctx, span := trace.StartSpan(ctx, "handlers.user.list")
 	defer span.End()
 
 	users, err := data.Retrieve.User.List(ctx, u.db)
@@ -33,9 +29,8 @@ func (u *User) List(ctx context.Context, w http.ResponseWriter, r *http.Request,
 	return web.Respond(ctx, w, users, http.StatusOK)
 }
 
-// Retrieve returns the specified user from the system.
-func (u *User) Retrieve(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-	ctx, span := trace.StartSpan(ctx, "handlers.User.Retrieve")
+func (u *user) retrieve(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
+	ctx, span := trace.StartSpan(ctx, "handlers.user.retrieve")
 	defer span.End()
 
 	claims, ok := ctx.Value(auth.Key).(auth.Claims)
@@ -60,9 +55,8 @@ func (u *User) Retrieve(ctx context.Context, w http.ResponseWriter, r *http.Requ
 	return web.Respond(ctx, w, usr, http.StatusOK)
 }
 
-// Create inserts a new user into the system.
-func (u *User) Create(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-	ctx, span := trace.StartSpan(ctx, "handlers.User.Create")
+func (u *user) create(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
+	ctx, span := trace.StartSpan(ctx, "handlers.user.create")
 	defer span.End()
 
 	v, ok := ctx.Value(web.KeyValues).(*web.Values)
@@ -83,9 +77,8 @@ func (u *User) Create(ctx context.Context, w http.ResponseWriter, r *http.Reques
 	return web.Respond(ctx, w, usr, http.StatusCreated)
 }
 
-// Update updates the specified user in the system.
-func (u *User) Update(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-	ctx, span := trace.StartSpan(ctx, "handlers.User.Update")
+func (u *user) update(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
+	ctx, span := trace.StartSpan(ctx, "handlers.user.update")
 	defer span.End()
 
 	v, ok := ctx.Value(web.KeyValues).(*web.Values)
@@ -120,9 +113,8 @@ func (u *User) Update(ctx context.Context, w http.ResponseWriter, r *http.Reques
 	return web.Respond(ctx, w, nil, http.StatusNoContent)
 }
 
-// Delete removes the specified user from the system.
-func (u *User) Delete(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-	ctx, span := trace.StartSpan(ctx, "handlers.User.Delete")
+func (u *user) delete(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
+	ctx, span := trace.StartSpan(ctx, "handlers.user.delete")
 	defer span.End()
 
 	err := data.Delete.User(ctx, u.db, params["id"])
@@ -142,9 +134,7 @@ func (u *User) Delete(ctx context.Context, w http.ResponseWriter, r *http.Reques
 	return web.Respond(ctx, w, nil, http.StatusNoContent)
 }
 
-// Token handles a request to authenticate a user. It expects a request using
-// Basic Auth with a user's email and password. It responds with a JWT.
-func (u *User) Token(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
+func (u *user) token(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
 	ctx, span := trace.StartSpan(ctx, "handlers.User.Token")
 	defer span.End()
 
