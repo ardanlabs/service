@@ -46,7 +46,7 @@ func main() {
 	log := log.New(os.Stdout, "SALES : ", log.LstdFlags|log.Lmicroseconds|log.Lshortfile)
 
 	if err := run(log); err != nil {
-		log.Println("error :", err)
+		log.Println("main: error:", err)
 		os.Exit(1)
 	}
 }
@@ -113,13 +113,13 @@ func run(log *log.Logger) error {
 	// Print the build version for our logs. Also expose it under /debug/vars.
 	expvar.NewString("build").Set(build)
 	log.Printf("main : Started : Application initializing : version %q", build)
-	defer log.Println("main : Completed")
+	defer log.Println("main: Completed")
 
 	out, err := conf.String(&cfg)
 	if err != nil {
 		return errors.Wrap(err, "generating config for output")
 	}
-	log.Printf("main : Config :\n%v\n", out)
+	log.Printf("main: Config :\n%v\n", out)
 
 	// =========================================================================
 	// Initialize authentication support
@@ -145,7 +145,7 @@ func run(log *log.Logger) error {
 	// =========================================================================
 	// Start Database
 
-	log.Println("main : Started : Initializing database support")
+	log.Println("main: Initializing database support")
 
 	db, err := database.Open(database.Config{
 		User:       cfg.DB.User,
@@ -158,14 +158,14 @@ func run(log *log.Logger) error {
 		return errors.Wrap(err, "connecting to db")
 	}
 	defer func() {
-		log.Printf("main : Database Stopping : %s", cfg.DB.Host)
+		log.Printf("main: Database Stopping : %s", cfg.DB.Host)
 		db.Close()
 	}()
 
 	// =========================================================================
 	// Start Tracing Support
 
-	log.Println("main : Started : Initializing zipkin tracing support")
+	log.Println("main: Initializing zipkin tracing support")
 
 	localEndpoint, err := openzipkin.NewEndpoint(cfg.Zipkin.ServiceName, cfg.Zipkin.LocalEndpoint)
 	if err != nil {
@@ -181,7 +181,7 @@ func run(log *log.Logger) error {
 	})
 
 	defer func() {
-		log.Printf("main : Tracing Stopping : %s", cfg.Zipkin.LocalEndpoint)
+		log.Printf("main: Tracing Stopping : %s", cfg.Zipkin.LocalEndpoint)
 		reporter.Close()
 	}()
 
@@ -193,17 +193,17 @@ func run(log *log.Logger) error {
 	//
 	// Not concerned with shutting this down when the application is shutdown.
 
-	log.Println("main : Started : Initializing debugging support")
+	log.Println("main: Initializing debugging support")
 
 	go func() {
-		log.Printf("main : Debug Listening %s", cfg.Web.DebugHost)
-		log.Printf("main : Debug Listener closed : %v", http.ListenAndServe(cfg.Web.DebugHost, http.DefaultServeMux))
+		log.Printf("main: Debug Listening %s", cfg.Web.DebugHost)
+		log.Printf("main: Debug Listener closed : %v", http.ListenAndServe(cfg.Web.DebugHost, http.DefaultServeMux))
 	}()
 
 	// =========================================================================
 	// Start API Service
 
-	log.Println("main : Started : Initializing API support")
+	log.Println("main: Initializing API support")
 
 	// Make a channel to listen for an interrupt or terminate signal from the OS.
 	// Use a buffered channel because the signal package requires it.
@@ -223,7 +223,7 @@ func run(log *log.Logger) error {
 
 	// Start the service listening for requests.
 	go func() {
-		log.Printf("main : API listening on %s", api.Addr)
+		log.Printf("main: API listening on %s", api.Addr)
 		serverErrors <- api.ListenAndServe()
 	}()
 
@@ -236,7 +236,7 @@ func run(log *log.Logger) error {
 		return errors.Wrap(err, "server error")
 
 	case sig := <-shutdown:
-		log.Printf("main : %v : Start shutdown", sig)
+		log.Printf("main: %v : Start shutdown", sig)
 
 		// Give outstanding requests a deadline for completion.
 		ctx, cancel := context.WithTimeout(context.Background(), cfg.Web.ShutdownTimeout)
@@ -245,7 +245,7 @@ func run(log *log.Logger) error {
 		// Asking listener to shutdown and load shed.
 		err := api.Shutdown(ctx)
 		if err != nil {
-			log.Printf("main : Graceful shutdown did not complete in %v : %v", cfg.Web.ShutdownTimeout, err)
+			log.Printf("main: Graceful shutdown did not complete in %v : %v", cfg.Web.ShutdownTimeout, err)
 			err = api.Close()
 		}
 

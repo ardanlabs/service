@@ -24,7 +24,7 @@ func main() {
 	log := log.New(os.Stdout, "METRICS : ", log.LstdFlags|log.Lmicroseconds|log.Lshortfile)
 
 	if err := run(log); err != nil {
-		log.Println("error :", err)
+		log.Println("main: error:", err)
 		os.Exit(1)
 	}
 }
@@ -84,7 +84,7 @@ func run(log *log.Logger) error {
 	if err != nil {
 		return errors.Wrap(err, "generating config for output")
 	}
-	log.Printf("main : Config :\n%v\n", out)
+	log.Printf("main: Config:\n%v\n", out)
 
 	// =========================================================================
 	// Start Debug Service. Not concerned with shutting this down when the
@@ -92,8 +92,8 @@ func run(log *log.Logger) error {
 	//
 	// /debug/pprof - Added to the default mux by the net/http/pprof package.
 	go func() {
-		log.Printf("main : Debug Listening %s", cfg.Web.DebugHost)
-		log.Printf("main : Debug Listener closed : %v", http.ListenAndServe(cfg.Web.DebugHost, http.DefaultServeMux))
+		log.Printf("main: Debug Listening %s", cfg.Web.DebugHost)
+		log.Printf("main: Debug Listener closed : %v", http.ListenAndServe(cfg.Web.DebugHost, http.DefaultServeMux))
 	}()
 
 	// =========================================================================
@@ -131,6 +131,6 @@ func run(log *log.Logger) error {
 	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM)
 	<-shutdown
 
-	log.Println("main : Start shutdown...")
+	log.Println("main: Start shutdown...")
 	return nil
 }
