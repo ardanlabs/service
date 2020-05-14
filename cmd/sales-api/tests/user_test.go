@@ -54,11 +54,10 @@ type UserTests struct {
 
 // getToken401 ensures an unknown user can't generate a token.
 func (ut *UserTests) getToken401(t *testing.T) {
-	r := httptest.NewRequest("GET", "/v1/users/token", nil)
+	r := httptest.NewRequest(http.MethodGet, "/v1/users/token", nil)
 	w := httptest.NewRecorder()
 
 	r.SetBasicAuth("unknown@example.com", "some-password")
-
 	ut.app.ServeHTTP(w, r)
 
 	t.Log("Given the need to deny tokens to unknown users.")
@@ -74,14 +73,11 @@ func (ut *UserTests) getToken401(t *testing.T) {
 	}
 }
 
-// getToken200
 func (ut *UserTests) getToken200(t *testing.T) {
-
-	r := httptest.NewRequest("GET", "/v1/users/token", nil)
+	r := httptest.NewRequest(http.MethodGet, "/v1/users/token", nil)
 	w := httptest.NewRecorder()
 
 	r.SetBasicAuth("admin@example.com", "gophers")
-
 	ut.app.ServeHTTP(w, r)
 
 	t.Log("Given the need to issues tokens to known users.")
@@ -115,11 +111,10 @@ func (ut *UserTests) postUser400(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	r := httptest.NewRequest("POST", "/v1/users", bytes.NewBuffer(body))
+	r := httptest.NewRequest(http.MethodPost, "/v1/users", bytes.NewBuffer(body))
 	w := httptest.NewRecorder()
 
 	r.Header.Set("Authorization", "Bearer "+ut.adminToken)
-
 	ut.app.ServeHTTP(w, r)
 
 	t.Log("Given the need to validate a new user can't be created with an invalid document.")
@@ -132,15 +127,13 @@ func (ut *UserTests) postUser400(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould receive a status code of 400 for the response.", tests.Success, testID)
 
-			// Inspect the response.
 			var got web.ErrorResponse
 			if err := json.NewDecoder(w.Body).Decode(&got); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to unmarshal the response to an error type : %v", tests.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to unmarshal the response to an error type.", tests.Success, testID)
 
-			// Define what we want to see.
-			want := web.ErrorResponse{
+			exp := web.ErrorResponse{
 				Error: "field validation error",
 				Fields: []web.FieldError{
 					{Field: "name", Error: "name is a required field"},
@@ -156,7 +149,7 @@ func (ut *UserTests) postUser400(t *testing.T) {
 				return a.Field < b.Field
 			})
 
-			if diff := cmp.Diff(want, got, sorter); diff != "" {
+			if diff := cmp.Diff(got, exp, sorter); diff != "" {
 				t.Fatalf("\t%s\tTest %d:\tShould get the expected result. Diff:\n%s", tests.Failed, testID, diff)
 			}
 			t.Logf("\t%s\tTest %d:\tShould get the expected result.", tests.Success, testID)
@@ -172,11 +165,10 @@ func (ut *UserTests) postUser401(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	r := httptest.NewRequest("POST", "/v1/users", bytes.NewBuffer(body))
+	r := httptest.NewRequest(http.MethodPost, "/v1/users", bytes.NewBuffer(body))
 	w := httptest.NewRecorder()
 
 	r.Header.Set("Authorization", "Bearer "+ut.userToken)
-
 	ut.app.ServeHTTP(w, r)
 
 	t.Log("Given the need to validate a new user can't be created with an invalid document.")
@@ -200,11 +192,10 @@ func (ut *UserTests) postUser403(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	r := httptest.NewRequest("POST", "/v1/users", bytes.NewBuffer(body))
+	r := httptest.NewRequest(http.MethodPost, "/v1/users", bytes.NewBuffer(body))
 	w := httptest.NewRecorder()
 
-	// Not setting the Authorization header
-
+	// Not setting the Authorization header.
 	ut.app.ServeHTTP(w, r)
 
 	t.Log("Given the need to validate a new user can't be created with an invalid document.")
@@ -224,11 +215,10 @@ func (ut *UserTests) postUser403(t *testing.T) {
 func (ut *UserTests) getUser400(t *testing.T) {
 	id := "12345"
 
-	r := httptest.NewRequest("GET", "/v1/users/"+id, nil)
+	r := httptest.NewRequest(http.MethodGet, "/v1/users/"+id, nil)
 	w := httptest.NewRecorder()
 
 	r.Header.Set("Authorization", "Bearer "+ut.adminToken)
-
 	ut.app.ServeHTTP(w, r)
 
 	t.Log("Given the need to validate getting a user with a malformed userid.")
@@ -241,11 +231,11 @@ func (ut *UserTests) getUser400(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould receive a status code of 400 for the response.", tests.Success, testID)
 
-			recv := w.Body.String()
-			resp := `{"error":"ID is not in its proper form"}`
-			if resp != recv {
-				t.Logf("\t\tTest %d:\tGot : %v", testID, recv)
-				t.Logf("\t\tTest %d:\tWant: %v", testID, resp)
+			got := w.Body.String()
+			exp := `{"error":"ID is not in its proper form"}`
+			if got != exp {
+				t.Logf("\t\tTest %d:\tGot : %v", testID, got)
+				t.Logf("\t\tTest %d:\tExp: %v", testID, exp)
 				t.Fatalf("\t%s\tTest %d:\tShould get the expected result.", tests.Failed, testID)
 			}
 			t.Logf("\t%s\tTest %d:\tShould get the expected result.", tests.Success, testID)
@@ -253,18 +243,17 @@ func (ut *UserTests) getUser400(t *testing.T) {
 	}
 }
 
-// getUser403 validates a regular user can't fetch anyone but themselves
+// getUser403 validates a regular user can't fetch anyone but themselves.
 func (ut *UserTests) getUser403(t *testing.T) {
 	t.Log("Given the need to validate regular users can't fetch other users.")
 	{
 		testID := 0
 		t.Logf("\tTest %d:\tWhen fetching the admin user as a regular data.", testID)
 		{
-			r := httptest.NewRequest("GET", "/v1/users/"+tests.AdminID, nil)
+			r := httptest.NewRequest(http.MethodGet, "/v1/users/"+tests.AdminID, nil)
 			w := httptest.NewRecorder()
 
 			r.Header.Set("Authorization", "Bearer "+ut.userToken)
-
 			ut.app.ServeHTTP(w, r)
 
 			if w.Code != http.StatusForbidden {
@@ -286,12 +275,12 @@ func (ut *UserTests) getUser403(t *testing.T) {
 		t.Logf("\tTest %d:\tWhen fetching the user as themselves.", testID)
 		{
 
-			r := httptest.NewRequest("GET", "/v1/users/"+tests.UserID, nil)
+			r := httptest.NewRequest(http.MethodGet, "/v1/users/"+tests.UserID, nil)
 			w := httptest.NewRecorder()
 
 			r.Header.Set("Authorization", "Bearer "+ut.userToken)
-
 			ut.app.ServeHTTP(w, r)
+
 			if w.Code != http.StatusOK {
 				t.Fatalf("\t%s\tTest %d:\tShould receive a status code of 200 for the response : %v", tests.Failed, testID, w.Code)
 			}
@@ -304,11 +293,10 @@ func (ut *UserTests) getUser403(t *testing.T) {
 func (ut *UserTests) getUser404(t *testing.T) {
 	id := "c50a5d66-3c4d-453f-af3f-bc960ed1a503"
 
-	r := httptest.NewRequest("GET", "/v1/users/"+id, nil)
+	r := httptest.NewRequest(http.MethodGet, "/v1/users/"+id, nil)
 	w := httptest.NewRecorder()
 
 	r.Header.Set("Authorization", "Bearer "+ut.adminToken)
-
 	ut.app.ServeHTTP(w, r)
 
 	t.Log("Given the need to validate getting a user with an unknown id.")
@@ -321,11 +309,11 @@ func (ut *UserTests) getUser404(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould receive a status code of 404 for the response.", tests.Success, testID)
 
-			recv := w.Body.String()
-			resp := "not found"
-			if !strings.Contains(recv, resp) {
-				t.Logf("\t\tTest %d:\tGot : %v", testID, recv)
-				t.Logf("\t\tTest %d:\tWant: %v", testID, resp)
+			got := w.Body.String()
+			exp := "not found"
+			if !strings.Contains(got, exp) {
+				t.Logf("\t\tTest %d:\tGot : %v", testID, got)
+				t.Logf("\t\tTest %d:\tExp: %v", testID, exp)
 				t.Fatalf("\t%s\tTest %d:\tShould get the expected result.", tests.Failed, testID)
 			}
 			t.Logf("\t%s\tTest %d:\tShould get the expected result.", tests.Success, testID)
@@ -337,11 +325,10 @@ func (ut *UserTests) getUser404(t *testing.T) {
 func (ut *UserTests) deleteUserNotFound(t *testing.T) {
 	id := "a71f77b2-b1ae-4964-a847-f9eecba09d74"
 
-	r := httptest.NewRequest("DELETE", "/v1/users/"+id, nil)
+	r := httptest.NewRequest(http.MethodDelete, "/v1/users/"+id, nil)
 	w := httptest.NewRecorder()
 
 	r.Header.Set("Authorization", "Bearer "+ut.adminToken)
-
 	ut.app.ServeHTTP(w, r)
 
 	t.Log("Given the need to validate deleting a user that does not exist.")
@@ -359,22 +346,20 @@ func (ut *UserTests) deleteUserNotFound(t *testing.T) {
 
 // putUser404 validates updating a user that does not exist.
 func (ut *UserTests) putUser404(t *testing.T) {
+	id := "3097c45e-780a-421b-9eae-43c2fda2bf14"
+
 	u := data.UpdateUser{
 		Name: tests.StringPointer("Doesn't Exist"),
 	}
-
-	id := "3097c45e-780a-421b-9eae-43c2fda2bf14"
-
 	body, err := json.Marshal(&u)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	r := httptest.NewRequest("PUT", "/v1/users/"+id, bytes.NewBuffer(body))
+	r := httptest.NewRequest(http.MethodPut, "/v1/users/"+id, bytes.NewBuffer(body))
 	w := httptest.NewRecorder()
 
 	r.Header.Set("Authorization", "Bearer "+ut.adminToken)
-
 	ut.app.ServeHTTP(w, r)
 
 	t.Log("Given the need to validate updating a user that does not exist.")
@@ -387,11 +372,11 @@ func (ut *UserTests) putUser404(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould receive a status code of 404 for the response.", tests.Success, testID)
 
-			recv := w.Body.String()
-			resp := "not found"
-			if !strings.Contains(recv, resp) {
-				t.Logf("\t\tTest %d:\tGot : %v", testID, recv)
-				t.Logf("\t\tTest %d:\tWant: %v", testID, resp)
+			got := w.Body.String()
+			exp := "not found"
+			if !strings.Contains(got, exp) {
+				t.Logf("\t\tTest %d:\tGot : %v", testID, got)
+				t.Logf("\t\tTest %d:\tExp: %v", testID, exp)
 				t.Fatalf("\t%s\tTest %d:\tShould get the expected result.", tests.Failed, testID)
 			}
 			t.Logf("\t%s\tTest %d:\tShould get the expected result.", tests.Success, testID)
@@ -424,15 +409,14 @@ func (ut *UserTests) postUser201(t *testing.T) data.User {
 		t.Fatal(err)
 	}
 
-	r := httptest.NewRequest("POST", "/v1/users", bytes.NewBuffer(body))
+	r := httptest.NewRequest(http.MethodPost, "/v1/users", bytes.NewBuffer(body))
 	w := httptest.NewRecorder()
 
 	r.Header.Set("Authorization", "Bearer "+ut.adminToken)
-
 	ut.app.ServeHTTP(w, r)
 
-	// u is the value we will return.
-	var u data.User
+	// This needs to be returned for other tests.
+	var got data.User
 
 	t.Log("Given the need to create a new user with the users endpoint.")
 	{
@@ -444,34 +428,33 @@ func (ut *UserTests) postUser201(t *testing.T) data.User {
 			}
 			t.Logf("\t%s\tTest %d:\tShould receive a status code of 201 for the response.", tests.Success, testID)
 
-			if err := json.NewDecoder(w.Body).Decode(&u); err != nil {
+			if err := json.NewDecoder(w.Body).Decode(&got); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to unmarshal the response : %v", tests.Failed, testID, err)
 			}
 
 			// Define what we wanted to receive. We will just trust the generated
 			// fields like ID and Dates so we copy u.
-			want := u
-			want.Name = "Bill Kennedy"
-			want.Email = "bill@ardanlabs.com"
-			want.Roles = []string{auth.RoleAdmin}
+			exp := got
+			exp.Name = "Bill Kennedy"
+			exp.Email = "bill@ardanlabs.com"
+			exp.Roles = []string{auth.RoleAdmin}
 
-			if diff := cmp.Diff(want, u); diff != "" {
+			if diff := cmp.Diff(got, exp); diff != "" {
 				t.Fatalf("\t%s\tTest %d:\tShould get the expected result. Diff:\n%s", tests.Failed, testID, diff)
 			}
 			t.Logf("\t%s\tTest %d:\tShould get the expected result.", tests.Success, testID)
 		}
 	}
 
-	return u
+	return got
 }
 
 // deleteUser200 validates deleting a user that does exist.
 func (ut *UserTests) deleteUser204(t *testing.T, id string) {
-	r := httptest.NewRequest("DELETE", "/v1/users/"+id, nil)
+	r := httptest.NewRequest(http.MethodDelete, "/v1/users/"+id, nil)
 	w := httptest.NewRecorder()
 
 	r.Header.Set("Authorization", "Bearer "+ut.adminToken)
-
 	ut.app.ServeHTTP(w, r)
 
 	t.Log("Given the need to validate deleting a user that does exist.")
@@ -489,11 +472,10 @@ func (ut *UserTests) deleteUser204(t *testing.T, id string) {
 
 // getUser200 validates a user request for an existing userid.
 func (ut *UserTests) getUser200(t *testing.T, id string) {
-	r := httptest.NewRequest("GET", "/v1/users/"+id, nil)
+	r := httptest.NewRequest(http.MethodGet, "/v1/users/"+id, nil)
 	w := httptest.NewRecorder()
 
 	r.Header.Set("Authorization", "Bearer "+ut.adminToken)
-
 	ut.app.ServeHTTP(w, r)
 
 	t.Log("Given the need to validate getting a user that exsits.")
@@ -506,20 +488,20 @@ func (ut *UserTests) getUser200(t *testing.T, id string) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould receive a status code of 200 for the response.", tests.Success, testID)
 
-			var u data.User
-			if err := json.NewDecoder(w.Body).Decode(&u); err != nil {
+			var got data.User
+			if err := json.NewDecoder(w.Body).Decode(&got); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to unmarshal the response : %v", tests.Failed, testID, err)
 			}
 
 			// Define what we wanted to receive. We will just trust the generated
 			// fields like Dates so we copy p.
-			want := u
-			want.ID = id
-			want.Name = "Bill Kennedy"
-			want.Email = "bill@ardanlabs.com"
-			want.Roles = []string{auth.RoleAdmin}
+			exp := got
+			exp.ID = id
+			exp.Name = "Bill Kennedy"
+			exp.Email = "bill@ardanlabs.com"
+			exp.Roles = []string{auth.RoleAdmin}
 
-			if diff := cmp.Diff(want, u); diff != "" {
+			if diff := cmp.Diff(got, exp); diff != "" {
 				t.Fatalf("\t%s\tTest %d:\tShould get the expected result. Diff:\n%s", tests.Failed, testID, diff)
 			}
 			t.Logf("\t%s\tTest %d:\tShould get the expected result.", tests.Success, testID)
@@ -531,11 +513,10 @@ func (ut *UserTests) getUser200(t *testing.T, id string) {
 func (ut *UserTests) putUser204(t *testing.T, id string) {
 	body := `{"name": "Jacob Walker"}`
 
-	r := httptest.NewRequest("PUT", "/v1/users/"+id, strings.NewReader(body))
+	r := httptest.NewRequest(http.MethodPut, "/v1/users/"+id, strings.NewReader(body))
 	w := httptest.NewRecorder()
 
 	r.Header.Set("Authorization", "Bearer "+ut.adminToken)
-
 	ut.app.ServeHTTP(w, r)
 
 	t.Log("Given the need to update a user with the users endpoint.")
@@ -548,11 +529,10 @@ func (ut *UserTests) putUser204(t *testing.T, id string) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould receive a status code of 204 for the response.", tests.Success, testID)
 
-			r = httptest.NewRequest("GET", "/v1/users/"+id, nil)
+			r = httptest.NewRequest(http.MethodGet, "/v1/users/"+id, nil)
 			w = httptest.NewRecorder()
 
 			r.Header.Set("Authorization", "Bearer "+ut.adminToken)
-
 			ut.app.ServeHTTP(w, r)
 
 			if w.Code != http.StatusOK {
@@ -582,11 +562,10 @@ func (ut *UserTests) putUser204(t *testing.T, id string) {
 func (ut *UserTests) putUser403(t *testing.T, id string) {
 	body := `{"name": "Anna Walker"}`
 
-	r := httptest.NewRequest("PUT", "/v1/users/"+id, strings.NewReader(body))
+	r := httptest.NewRequest(http.MethodPut, "/v1/users/"+id, strings.NewReader(body))
 	w := httptest.NewRecorder()
 
 	r.Header.Set("Authorization", "Bearer "+ut.userToken)
-
 	ut.app.ServeHTTP(w, r)
 
 	t.Log("Given the need to update a user with the users endpoint.")

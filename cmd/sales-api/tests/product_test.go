@@ -53,11 +53,10 @@ type ProductTests struct {
 // postProduct400 validates a product can't be created with the endpoint
 // unless a valid product document is submitted.
 func (pt *ProductTests) postProduct400(t *testing.T) {
-	r := httptest.NewRequest("POST", "/v1/products", strings.NewReader(`{}`))
+	r := httptest.NewRequest(http.MethodPost, "/v1/products", strings.NewReader(`{}`))
 	w := httptest.NewRecorder()
 
 	r.Header.Set("Authorization", "Bearer "+pt.userToken)
-
 	pt.app.ServeHTTP(w, r)
 
 	t.Log("Given the need to validate a new product can't be created with an invalid document.")
@@ -78,7 +77,7 @@ func (pt *ProductTests) postProduct400(t *testing.T) {
 			t.Logf("\t%s\tTest %d:\tShould be able to unmarshal the response to an error type.", tests.Success, testID)
 
 			// Define what we want to see.
-			want := web.ErrorResponse{
+			exp := web.ErrorResponse{
 				Error: "field validation error",
 				Fields: []web.FieldError{
 					{Field: "name", Error: "name is a required field"},
@@ -93,7 +92,7 @@ func (pt *ProductTests) postProduct400(t *testing.T) {
 				return a.Field < b.Field
 			})
 
-			if diff := cmp.Diff(want, got, sorter); diff != "" {
+			if diff := cmp.Diff(got, exp, sorter); diff != "" {
 				t.Fatalf("\t%s\tTest %d:\tShould get the expected result. Diff:\n%s", tests.Failed, testID, diff)
 			}
 			t.Logf("\t%s\tTest %d:\tShould get the expected result.", tests.Success, testID)
@@ -115,11 +114,10 @@ func (pt *ProductTests) postProduct401(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	r := httptest.NewRequest("POST", "/v1/products", bytes.NewBuffer(body))
+	r := httptest.NewRequest(http.MethodPost, "/v1/products", bytes.NewBuffer(body))
 	w := httptest.NewRecorder()
 
-	// Not setting an authorization header
-
+	// Not setting an authorization header.
 	pt.app.ServeHTTP(w, r)
 
 	t.Log("Given the need to validate a new product can't be created with an invalid document.")
@@ -139,11 +137,10 @@ func (pt *ProductTests) postProduct401(t *testing.T) {
 func (pt *ProductTests) getProduct400(t *testing.T) {
 	id := "12345"
 
-	r := httptest.NewRequest("GET", "/v1/products/"+id, nil)
+	r := httptest.NewRequest(http.MethodGet, "/v1/products/"+id, nil)
 	w := httptest.NewRecorder()
 
 	r.Header.Set("Authorization", "Bearer "+pt.userToken)
-
 	pt.app.ServeHTTP(w, r)
 
 	t.Log("Given the need to validate getting a product with a malformed id.")
@@ -156,11 +153,11 @@ func (pt *ProductTests) getProduct400(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould receive a status code of 400 for the response.", tests.Success, testID)
 
-			recv := w.Body.String()
-			resp := `{"error":"ID is not in its proper form"}`
-			if resp != recv {
-				t.Logf("\t\tTest %d:\tGot : %v", testID, recv)
-				t.Logf("\t\tTest %d:\tWant: %v", testID, resp)
+			got := w.Body.String()
+			exp := `{"error":"ID is not in its proper form"}`
+			if got != exp {
+				t.Logf("\t\tTest %d:\tGot : %v", testID, got)
+				t.Logf("\t\tTest %d:\tExp: %v", testID, exp)
 				t.Fatalf("\t%s\tTest %d:\tShould get the expected result.", tests.Failed, testID)
 			}
 			t.Logf("\t%s\tTest %d:\tShould get the expected result.", tests.Success, testID)
@@ -172,11 +169,10 @@ func (pt *ProductTests) getProduct400(t *testing.T) {
 func (pt *ProductTests) getProduct404(t *testing.T) {
 	id := "a224a8d6-3f9e-4b11-9900-e81a25d80702"
 
-	r := httptest.NewRequest("GET", "/v1/products/"+id, nil)
+	r := httptest.NewRequest(http.MethodGet, "/v1/products/"+id, nil)
 	w := httptest.NewRecorder()
 
 	r.Header.Set("Authorization", "Bearer "+pt.userToken)
-
 	pt.app.ServeHTTP(w, r)
 
 	t.Log("Given the need to validate getting a product with an unknown id.")
@@ -189,11 +185,11 @@ func (pt *ProductTests) getProduct404(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould receive a status code of 404 for the response.", tests.Success, testID)
 
-			recv := w.Body.String()
-			resp := "not found"
-			if !strings.Contains(recv, resp) {
-				t.Logf("\t\tTest %d:\tGot : %v", testID, recv)
-				t.Logf("\t\tTest %d:\tWant: %v", testID, resp)
+			got := w.Body.String()
+			exp := "not found"
+			if !strings.Contains(got, exp) {
+				t.Logf("\t\tTest %d:\tGot : %v", testID, got)
+				t.Logf("\t\tTest %d:\tExp: %v", testID, exp)
 				t.Fatalf("\t%s\tTest %d:\tShould get the expected result.", tests.Failed, testID)
 			}
 			t.Logf("\t%s\tTest %d:\tShould get the expected result.", tests.Success, testID)
@@ -205,11 +201,10 @@ func (pt *ProductTests) getProduct404(t *testing.T) {
 func (pt *ProductTests) deleteProductNotFound(t *testing.T) {
 	id := "112262f1-1a77-4374-9f22-39e575aa6348"
 
-	r := httptest.NewRequest("DELETE", "/v1/products/"+id, nil)
+	r := httptest.NewRequest(http.MethodDelete, "/v1/products/"+id, nil)
 	w := httptest.NewRecorder()
 
 	r.Header.Set("Authorization", "Bearer "+pt.userToken)
-
 	pt.app.ServeHTTP(w, r)
 
 	t.Log("Given the need to validate deleting a product that does not exist.")
@@ -227,22 +222,20 @@ func (pt *ProductTests) deleteProductNotFound(t *testing.T) {
 
 // putProduct404 validates updating a product that does not exist.
 func (pt *ProductTests) putProduct404(t *testing.T) {
+	id := "9b468f90-1cf1-4377-b3fa-68b450d632a0"
+
 	up := data.UpdateProduct{
 		Name: tests.StringPointer("Nonexistent"),
 	}
-
-	id := "9b468f90-1cf1-4377-b3fa-68b450d632a0"
-
 	body, err := json.Marshal(&up)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	r := httptest.NewRequest("PUT", "/v1/products/"+id, bytes.NewBuffer(body))
+	r := httptest.NewRequest(http.MethodPut, "/v1/products/"+id, bytes.NewBuffer(body))
 	w := httptest.NewRecorder()
 
 	r.Header.Set("Authorization", "Bearer "+pt.userToken)
-
 	pt.app.ServeHTTP(w, r)
 
 	t.Log("Given the need to validate updating a product that does not exist.")
@@ -255,11 +248,11 @@ func (pt *ProductTests) putProduct404(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould receive a status code of 404 for the response.", tests.Success, testID)
 
-			recv := w.Body.String()
-			resp := "not found"
-			if !strings.Contains(recv, resp) {
-				t.Logf("\t\tTest %d:\tGot : %v", testID, recv)
-				t.Logf("\t\tTest %d:\tWant: %v", testID, resp)
+			got := w.Body.String()
+			exp := "not found"
+			if !strings.Contains(got, exp) {
+				t.Logf("\t\tTest %d:\tGot : %v", testID, got)
+				t.Logf("\t\tTest %d:\tExp: %v", testID, exp)
 				t.Fatalf("\t%s\tTest %d:\tShould get the expected result.", tests.Failed, testID)
 			}
 			t.Logf("\t%s\tTest %d:\tShould get the expected result.", tests.Success, testID)
@@ -289,15 +282,14 @@ func (pt *ProductTests) postProduct201(t *testing.T) data.Product {
 		t.Fatal(err)
 	}
 
-	r := httptest.NewRequest("POST", "/v1/products", bytes.NewBuffer(body))
+	r := httptest.NewRequest(http.MethodPost, "/v1/products", bytes.NewBuffer(body))
 	w := httptest.NewRecorder()
 
 	r.Header.Set("Authorization", "Bearer "+pt.userToken)
-
 	pt.app.ServeHTTP(w, r)
 
-	// p is the value we will return.
-	var p data.Product
+	// This needs to be returned for other tests.
+	var got data.Product
 
 	t.Log("Given the need to create a new product with the products endpoint.")
 	{
@@ -309,34 +301,33 @@ func (pt *ProductTests) postProduct201(t *testing.T) data.Product {
 			}
 			t.Logf("\t%s\tTest %d:\tShould receive a status code of 201 for the response.", tests.Success, testID)
 
-			if err := json.NewDecoder(w.Body).Decode(&p); err != nil {
+			if err := json.NewDecoder(w.Body).Decode(&got); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to unmarshal the response : %v", tests.Failed, testID, err)
 			}
 
 			// Define what we wanted to receive. We will just trust the generated
 			// fields like ID and Dates so we copy p.
-			want := p
-			want.Name = "Comic Books"
-			want.Cost = 25
-			want.Quantity = 60
+			exp := got
+			exp.Name = "Comic Books"
+			exp.Cost = 25
+			exp.Quantity = 60
 
-			if diff := cmp.Diff(want, p); diff != "" {
+			if diff := cmp.Diff(got, exp); diff != "" {
 				t.Fatalf("\t%s\tTest %d:\tShould get the expected result. Diff:\n%s", tests.Failed, testID, diff)
 			}
 			t.Logf("\t%s\tTest %d:\tShould get the expected result.", tests.Success, testID)
 		}
 	}
 
-	return p
+	return got
 }
 
 // deleteProduct200 validates deleting a product that does exist.
 func (pt *ProductTests) deleteProduct204(t *testing.T, id string) {
-	r := httptest.NewRequest("DELETE", "/v1/products/"+id, nil)
+	r := httptest.NewRequest(http.MethodDelete, "/v1/products/"+id, nil)
 	w := httptest.NewRecorder()
 
 	r.Header.Set("Authorization", "Bearer "+pt.userToken)
-
 	pt.app.ServeHTTP(w, r)
 
 	t.Log("Given the need to validate deleting a product that does exist.")
@@ -354,11 +345,10 @@ func (pt *ProductTests) deleteProduct204(t *testing.T, id string) {
 
 // getProduct200 validates a product request for an existing id.
 func (pt *ProductTests) getProduct200(t *testing.T, id string) {
-	r := httptest.NewRequest("GET", "/v1/products/"+id, nil)
+	r := httptest.NewRequest(http.MethodGet, "/v1/products/"+id, nil)
 	w := httptest.NewRecorder()
 
 	r.Header.Set("Authorization", "Bearer "+pt.userToken)
-
 	pt.app.ServeHTTP(w, r)
 
 	t.Log("Given the need to validate getting a product that exists.")
@@ -371,20 +361,20 @@ func (pt *ProductTests) getProduct200(t *testing.T, id string) {
 			}
 			t.Logf("\t%s\tTest : %d\tShould receive a status code of 200 for the response.", tests.Success, testID)
 
-			var p data.Product
-			if err := json.NewDecoder(w.Body).Decode(&p); err != nil {
+			var got data.Product
+			if err := json.NewDecoder(w.Body).Decode(&got); err != nil {
 				t.Fatalf("\t%s\tTest : %d\tShould be able to unmarshal the response : %v", tests.Failed, testID, err)
 			}
 
 			// Define what we wanted to receive. We will just trust the generated
 			// fields like Dates so we copy p.
-			want := p
-			want.ID = id
-			want.Name = "Comic Books"
-			want.Cost = 25
-			want.Quantity = 60
+			exp := got
+			exp.ID = id
+			exp.Name = "Comic Books"
+			exp.Cost = 25
+			exp.Quantity = 60
 
-			if diff := cmp.Diff(want, p); diff != "" {
+			if diff := cmp.Diff(got, exp); diff != "" {
 				t.Fatalf("\t%s\tTest : %d\tShould get the expected result. Diff:\n%s", tests.Failed, testID, diff)
 			}
 			t.Logf("\t%s\tTest : %d\tShould get the expected result.", tests.Success, testID)
@@ -395,11 +385,10 @@ func (pt *ProductTests) getProduct200(t *testing.T, id string) {
 // putProduct204 validates updating a product that does exist.
 func (pt *ProductTests) putProduct204(t *testing.T, id string) {
 	body := `{"name": "Graphic Novels", "cost": 100}`
-	r := httptest.NewRequest("PUT", "/v1/products/"+id, strings.NewReader(body))
+	r := httptest.NewRequest(http.MethodPut, "/v1/products/"+id, strings.NewReader(body))
 	w := httptest.NewRecorder()
 
 	r.Header.Set("Authorization", "Bearer "+pt.userToken)
-
 	pt.app.ServeHTTP(w, r)
 
 	t.Log("Given the need to update a product with the products endpoint.")
@@ -412,11 +401,10 @@ func (pt *ProductTests) putProduct204(t *testing.T, id string) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould receive a status code of 204 for the response.", tests.Success, testID)
 
-			r = httptest.NewRequest("GET", "/v1/products/"+id, nil)
+			r = httptest.NewRequest(http.MethodGet, "/v1/products/"+id, nil)
 			w = httptest.NewRecorder()
 
 			r.Header.Set("Authorization", "Bearer "+pt.userToken)
-
 			pt.app.ServeHTTP(w, r)
 
 			if w.Code != http.StatusOK {
