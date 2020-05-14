@@ -22,7 +22,6 @@ var build = "develop"
 
 func main() {
 	log := log.New(os.Stdout, "METRICS : ", log.LstdFlags|log.Lmicroseconds|log.Lshortfile)
-	defer log.Println("main : Completed")
 
 	if err := run(log); err != nil {
 		log.Println("error :", err)
