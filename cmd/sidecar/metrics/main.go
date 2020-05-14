@@ -14,20 +14,29 @@ import (
 	"github.com/ardanlabs/service/cmd/sidecar/metrics/internal/collector"
 	"github.com/ardanlabs/service/cmd/sidecar/metrics/internal/publisher"
 	"github.com/ardanlabs/service/cmd/sidecar/metrics/internal/publisher/expvar"
+	"github.com/pkg/errors"
 )
 
+// build is the git version of this program. It is set using build flags in the makefile.
+var build = "develop"
+
 func main() {
-
-	// =========================================================================
-	// Logging
-
 	log := log.New(os.Stdout, "METRICS : ", log.LstdFlags|log.Lmicroseconds|log.Lshortfile)
 	defer log.Println("main : Completed")
+
+	if err := run(log); err != nil {
+		log.Println("error :", err)
+		os.Exit(1)
+	}
+}
+
+func run(log *log.Logger) error {
 
 	// =========================================================================
 	// Configuration
 
 	var cfg struct {
+		conf.Version
 		Web struct {
 			DebugHost       string        `conf:"default:0.0.0.0:4001"`
 			ReadTimeout     time.Duration `conf:"default:5s"`
@@ -49,22 +58,32 @@ func main() {
 			Interval time.Duration `conf:"default:5s"`
 		}
 	}
+	cfg.Version.SVN = build
+	cfg.Version.Desc = "copyright information here"
 
 	if err := conf.Parse(os.Args[1:], "METRICS", &cfg); err != nil {
-		if err == conf.ErrHelpWanted {
+		switch err {
+		case conf.ErrHelpWanted:
 			usage, err := conf.Usage("METRICS", &cfg)
 			if err != nil {
-				log.Fatalf("main : Parsing Config : %v", err)
+				return errors.Wrap(err, "generating config usage")
 			}
 			fmt.Println(usage)
-			return
+			return nil
+		case conf.ErrVersionWanted:
+			version, err := conf.VersionString("METRICS", &cfg)
+			if err != nil {
+				return errors.Wrap(err, "generating config version")
+			}
+			fmt.Println(version)
+			return nil
 		}
-		log.Fatalf("main : Parsing Config : %v", err)
+		return errors.Wrap(err, "parsing config")
 	}
 
 	out, err := conf.String(&cfg)
 	if err != nil {
-		log.Fatalf("main : Marshalling Config for output : %v", err)
+		return errors.Wrap(err, "generating config for output")
 	}
 	log.Printf("main : Config :\n%v\n", out)
 
@@ -90,7 +109,7 @@ func main() {
 	// Initialize to allow for the collection of metrics.
 	collector, err := collector.New(cfg.Collect.From)
 	if err != nil {
-		log.Fatalf("main : Starting collector : %v", err)
+		return errors.Wrap(err, "starting collector")
 	}
 
 	// Create a stdout publisher.
@@ -100,7 +119,7 @@ func main() {
 	// Start the publisher to collect/publish metrics.
 	publish, err := publisher.New(log, collector, cfg.Publish.Interval, exp.Publish, stdout.Publish)
 	if err != nil {
-		log.Fatalf("main : Starting publisher : %v", err)
+		return errors.Wrap(err, "starting publisher")
 	}
 	defer publish.Stop()
 
@@ -114,4 +133,5 @@ func main() {
 	<-shutdown
 
 	log.Println("main : Start shutdown...")
+	return nil
 }

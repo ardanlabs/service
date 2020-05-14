@@ -32,6 +32,37 @@ type Sourcer interface {
 	Source(fld Field) (string, bool)
 }
 
+// Version provides the abitily to add version and description to the application.
+type Version struct {
+	SVN  string
+	Desc string
+}
+
+// VersionString provides output to display the application version and description on the command line.
+func VersionString(namespace string, v interface{}) (string, error) {
+	fields, err := extractFields(nil, v)
+	if err != nil {
+		return "", err
+	}
+
+	var str strings.Builder
+	for i := range fields {
+		if fields[i].Name == versionKey && fields[i].Field.Len() > 0 {
+			str.WriteString("Version: ")
+			str.WriteString(fields[i].Field.String())
+			continue
+		}
+		if fields[i].Name == descKey && fields[i].Field.Len() > 0 {
+			if str.Len() > 0 {
+				str.WriteString("\n")
+			}
+			str.WriteString(fields[i].Field.String())
+			break
+		}
+	}
+	return str.String(), nil
+}
+
 // Parse parses configuration into the provided struct.
 func Parse(args []string, namespace string, cfgStruct interface{}, sources ...Sourcer) error {
 

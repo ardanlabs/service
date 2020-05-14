@@ -51,6 +51,9 @@ func envUsage(namespace string, fld Field) string {
 // ErrHelpWanted provides an indication help was requested.
 var ErrHelpWanted = errors.New("help wanted")
 
+// ErrVersionWanted provides an indication version was requested.
+var ErrVersionWanted = errors.New("version wanted")
+
 // flag is a source for command line arguments.
 type flag struct {
 	m    map[string]string
@@ -107,6 +110,10 @@ func newSourceFlag(args []string) (*flag, error) {
 
 			if name == "help" || name == "h" || name == "?" {
 				return nil, ErrHelpWanted
+			}
+
+			if name == "version" || name == "v" {
+				return nil, ErrVersionWanted
 			}
 
 			// If we don't have a value yet, it's possible the flag was not in the

@@ -43,23 +43,22 @@ symbols in profiles: https://github.com/golang/go/issues/23376 / https://github.
 var build = "develop"
 
 func main() {
-	if err := run(); err != nil {
+	log := log.New(os.Stdout, "SALES : ", log.LstdFlags|log.Lmicroseconds|log.Lshortfile)
+	defer log.Println("main : Completed")
+
+	if err := run(log); err != nil {
 		log.Println("error :", err)
 		os.Exit(1)
 	}
 }
 
-func run() error {
-
-	// =========================================================================
-	// Logging
-
-	log := log.New(os.Stdout, "SALES : ", log.LstdFlags|log.Lmicroseconds|log.Lshortfile)
+func run(log *log.Logger) error {
 
 	// =========================================================================
 	// Configuration
 
 	var cfg struct {
+		conf.Version
 		Web struct {
 			APIHost         string        `conf:"default:0.0.0.0:3000"`
 			DebugHost       string        `conf:"default:0.0.0.0:4000"`
@@ -86,14 +85,24 @@ func run() error {
 			Probability   float64 `conf:"default:0.05"`
 		}
 	}
+	cfg.Version.SVN = build
+	cfg.Version.Desc = "copyright information here"
 
 	if err := conf.Parse(os.Args[1:], "SALES", &cfg); err != nil {
-		if err == conf.ErrHelpWanted {
+		switch err {
+		case conf.ErrHelpWanted:
 			usage, err := conf.Usage("SALES", &cfg)
 			if err != nil {
 				return errors.Wrap(err, "generating config usage")
 			}
 			fmt.Println(usage)
+			return nil
+		case conf.ErrVersionWanted:
+			version, err := conf.VersionString("SALES", &cfg)
+			if err != nil {
+				return errors.Wrap(err, "generating config version")
+			}
+			fmt.Println(version)
 			return nil
 		}
 		return errors.Wrap(err, "parsing config")
