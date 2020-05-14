@@ -29,6 +29,8 @@ spec:
           value: 0.0.0.0
         - name: SALES_DB_DISABLE_TLS
           value: "true"
+        - name: SALES_Zipkin_Reporter_URI
+          value: http://0.0.0.0:9411/api/v2/spans
         ports:
         - name: sales-api
           containerPort: 3000
