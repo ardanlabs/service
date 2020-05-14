@@ -17,10 +17,7 @@ RUN mkdir -p /service
 
 # Copy the source code into the container.
 WORKDIR /service
-COPY go.* ./
-COPY cmd cmd
-COPY internal internal
-COPY vendor vendor
+COPY . .
 
 # Build the service binary. We are doing this last since this will be different
 # every time we run through this process.
