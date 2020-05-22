@@ -7,7 +7,7 @@ import (
 
 	"github.com/ardanlabs/service/internal/data"
 	"github.com/ardanlabs/service/internal/platform/auth"
-	"github.com/ardanlabs/service/internal/tests"
+	"github.com/ardanlabs/service/internal/platform/tests"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/google/go-cmp/cmp"
 	"github.com/pkg/errors"

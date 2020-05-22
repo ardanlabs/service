@@ -30,21 +30,21 @@ const (
 	UserID  = "45b5fbd3-755f-4379-8f07-a58d4a30fa2f"
 )
 
+// dbImage is the image to use for running the database.
+const dbImage string = "postgres:11.1-alpine"
+
 // NewUnit creates a test database inside a Docker container. It creates the
 // required table structure but the database is otherwise empty. It returns
 // the database to use as well as a function to call at the end of the test.
 func NewUnit(t *testing.T) (*sqlx.DB, func()) {
-	c, err := database.StartContainer()
-	if err != nil {
-		t.Fatalf("creating database: %v", err)
-	}
-	t.Logf("DB ContainerID: %s", c.ID)
-	t.Logf("DB Host: %s", c.Host)
+
+	// Start a DB container instance with dgraph running.
+	c := startDBContainer(t, dbImage)
 
 	db, err := database.Open(database.Config{
 		User:       "postgres",
 		Password:   "postgres",
-		Host:       c.Host,
+		Host:       c.DBHost,
 		Name:       "postgres",
 		DisableTLS: true,
 	})
@@ -67,21 +67,13 @@ func NewUnit(t *testing.T) (*sqlx.DB, func()) {
 	}
 
 	if pingError != nil {
-		out, err := database.DumpContainerLogs(c)
-		if err != nil {
-			t.Logf("dumping container logs: %v", err)
-		}
-		if err := database.StopContainer(c); err != nil {
-			t.Errorf("stopping container: %v", err)
-		}
-		t.Logf(out)
+		dumpContainerLogs(t, c.ID)
+		stopContainer(t, c.ID)
 		t.Fatalf("database never ready: %v", pingError)
 	}
 
 	if err := data.Migrate(db); err != nil {
-		if err := database.StopContainer(c); err != nil {
-			t.Errorf("stopping container: %v", err)
-		}
+		stopContainer(t, c.ID)
 		t.Fatalf("migrating error: %s", err)
 	}
 
@@ -90,12 +82,7 @@ func NewUnit(t *testing.T) (*sqlx.DB, func()) {
 	teardown := func() {
 		t.Helper()
 		db.Close()
-		if err := database.StopContainer(c); err != nil {
-			t.Errorf("stopping container: %v", err)
-			return
-		}
-		t.Log("Stopped:", c.ID)
-		t.Log("Removed:", c.ID)
+		stopContainer(t, c.ID)
 	}
 
 	return db, teardown
