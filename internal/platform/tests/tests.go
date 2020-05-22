@@ -23,7 +23,7 @@ const (
 	Failed  = "\u2717"
 )
 
-// Configuration for running tests set in the makefile.
+// Configuration for running tests.
 const (
 	dbImage = "postgres:11.1-alpine"
 	AdminID = "5cf37266-3473-4006-984f-9325122678b7"

@@ -44,3 +44,27 @@ INSERT INTO users (user_id, name, email, roles, password_hash, date_created, dat
 	('45b5fbd3-755f-4379-8f07-a58d4a30fa2f', 'User Gopher', 'user@example.com', '{USER}', '$2a$10$9/XASPKBbJKVfCAZKDH.UuhsuALDr5vVm6VrYA9VFR8rccK86C1hW', '2019-03-24 00:00:00', '2019-03-24 00:00:00')
 	ON CONFLICT DO NOTHING;
 `
+
+// DeleteAll runs the set of Drop-table queries against db. The queries are ran in a
+// transaction and rolled back if any fail.
+func DeleteAll(db *sqlx.DB) error {
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+
+	if _, err := tx.Exec(deleteAll); err != nil {
+		if err := tx.Rollback(); err != nil {
+			return err
+		}
+		return err
+	}
+
+	return tx.Commit()
+}
+
+// deleteAll is used to clean the database between tests.
+const deleteAll = `
+DELETE FROM products;
+DELETE FROM sales;
+DELETE FROM users;`
