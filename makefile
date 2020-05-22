@@ -4,18 +4,6 @@ export PROJECT = ardan-starter-kit
 
 all: sales-api metrics
 
-keys:
-	go run ./cmd/sales-admin/main.go keygen private.pem
-
-admin:
-	go run ./cmd/sales-admin/main.go --db-disable-tls=1 useradd admin@example.com gophers
-
-migrate:
-	go run ./cmd/sales-admin/main.go --db-disable-tls=1 migrate
-
-seed: migrate
-	go run ./cmd/sales-admin/main.go --db-disable-tls=1 seed
-
 sales-api:
 	docker build \
 		-f dockerfile.sales-api \
@@ -35,11 +23,28 @@ metrics:
 		--build-arg BUILD_DATE=`date -u +”%Y-%m-%dT%H:%M:%SZ”` \
 		.
 
+run: up seed
+
 up:
-	docker-compose up
+	docker-compose up --detach
 
 down:
 	docker-compose down
+
+logs:
+	docker-compose logs -f
+
+keys:
+	go run ./cmd/sales-admin/main.go keygen private.pem
+
+admin:
+	go run ./cmd/sales-admin/main.go --db-disable-tls=1 useradd admin@example.com gophers
+
+migrate:
+	go run ./cmd/sales-admin/main.go --db-disable-tls=1 migrate
+
+seed: migrate
+	go run ./cmd/sales-admin/main.go --db-disable-tls=1 seed
 
 test:
 	go test ./... -count=1
