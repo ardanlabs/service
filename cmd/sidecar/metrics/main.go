@@ -93,7 +93,9 @@ func run(log *log.Logger) error {
 	// /debug/pprof - Added to the default mux by the net/http/pprof package.
 	go func() {
 		log.Printf("main: Debug Listening %s", cfg.Web.DebugHost)
-		log.Printf("main: Debug Listener closed : %v", http.ListenAndServe(cfg.Web.DebugHost, http.DefaultServeMux))
+		if err := http.ListenAndServe(cfg.Web.DebugHost, http.DefaultServeMux); err != nil {
+			log.Printf("main: Debug Listener closed : %v", err)
+		}
 	}()
 
 	// =========================================================================
