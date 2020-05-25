@@ -40,7 +40,7 @@ COPY --from=build_sales-api /service/private.pem /app/private.pem
 COPY --from=build_sales-api /service/cmd/${PACKAGE_PREFIX}sales-admin/sales-admin /app/admin
 COPY --from=build_sales-api /service/cmd/${PACKAGE_PREFIX}${PACKAGE_NAME}/${PACKAGE_NAME} /app/main
 WORKDIR /app
-CMD /app/main
+CMD ["/app/main"]
 
 LABEL org.opencontainers.image.created="${BUILD_DATE}" \
       org.opencontainers.image.title="${PACKAGE_NAME}" \
