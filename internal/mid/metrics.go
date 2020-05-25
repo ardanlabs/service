@@ -7,7 +7,7 @@ import (
 	"runtime"
 
 	"github.com/ardanlabs/service/internal/platform/web"
-	"go.opencensus.io/trace"
+	"go.opentelemetry.io/otel/api/global"
 )
 
 // m contains the global program counters for the application.
@@ -29,7 +29,7 @@ func Metrics() web.Middleware {
 
 		// Wrap this handler around the next one provided.
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-			ctx, span := trace.StartSpan(ctx, "internal.mid.Metrics")
+			ctx, span := global.Tracer("service").Start(ctx, "internal.mid.metrics")
 			defer span.End()
 
 			err := before(ctx, w, r, params)

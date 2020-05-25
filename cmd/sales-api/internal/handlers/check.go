@@ -7,7 +7,7 @@ import (
 	"github.com/ardanlabs/service/internal/platform/database"
 	"github.com/ardanlabs/service/internal/platform/web"
 	"github.com/jmoiron/sqlx"
-	"go.opencensus.io/trace"
+	"go.opentelemetry.io/otel/api/global"
 )
 
 type check struct {
@@ -16,7 +16,7 @@ type check struct {
 }
 
 func (c *check) health(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-	ctx, span := trace.StartSpan(ctx, "handlers.check.health")
+	ctx, span := global.Tracer("service").Start(ctx, "handlers.check.health")
 	defer span.End()
 
 	health := struct {

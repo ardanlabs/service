@@ -9,7 +9,7 @@ import (
 	"github.com/ardanlabs/service/internal/platform/web"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
-	"go.opencensus.io/trace"
+	"go.opentelemetry.io/otel/api/global"
 )
 
 type product struct {
@@ -17,7 +17,7 @@ type product struct {
 }
 
 func (p *product) list(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-	ctx, span := trace.StartSpan(ctx, "handlers.product.list")
+	ctx, span := global.Tracer("service").Start(ctx, "handlers.product.list")
 	defer span.End()
 
 	products, err := data.Retrieve.Product.List(ctx, p.db)
@@ -29,7 +29,7 @@ func (p *product) list(ctx context.Context, w http.ResponseWriter, r *http.Reque
 }
 
 func (p *product) retrieve(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-	ctx, span := trace.StartSpan(ctx, "handlers.Product.Retrieve")
+	ctx, span := global.Tracer("service").Start(ctx, "handlers.product.retrieve")
 	defer span.End()
 
 	prod, err := data.Retrieve.Product.One(ctx, p.db, params["id"])
@@ -48,7 +48,7 @@ func (p *product) retrieve(ctx context.Context, w http.ResponseWriter, r *http.R
 }
 
 func (p *product) create(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-	ctx, span := trace.StartSpan(ctx, "handlers.product.create")
+	ctx, span := global.Tracer("service").Start(ctx, "handlers.product.create")
 	defer span.End()
 
 	claims, ok := ctx.Value(auth.Key).(auth.Claims)
@@ -75,7 +75,7 @@ func (p *product) create(ctx context.Context, w http.ResponseWriter, r *http.Req
 }
 
 func (p *product) update(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-	ctx, span := trace.StartSpan(ctx, "handlers.product.update")
+	ctx, span := global.Tracer("service").Start(ctx, "handlers.product.update")
 	defer span.End()
 
 	claims, ok := ctx.Value(auth.Key).(auth.Claims)
@@ -110,7 +110,7 @@ func (p *product) update(ctx context.Context, w http.ResponseWriter, r *http.Req
 }
 
 func (p *product) delete(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-	ctx, span := trace.StartSpan(ctx, "handlers.product.delete")
+	ctx, span := global.Tracer("service").Start(ctx, "handlers.product.delete")
 	defer span.End()
 
 	if err := data.Delete.Product(ctx, p.db, params["id"]); err != nil {

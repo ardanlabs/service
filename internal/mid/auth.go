@@ -8,7 +8,7 @@ import (
 	"github.com/ardanlabs/service/internal/platform/auth"
 	"github.com/ardanlabs/service/internal/platform/web"
 	"github.com/pkg/errors"
-	"go.opencensus.io/trace"
+	"go.opentelemetry.io/otel/api/global"
 )
 
 // ErrForbidden is returned when an authenticated user does not have a
@@ -26,7 +26,7 @@ func Authenticate(authenticator *auth.Authenticator) web.Middleware {
 
 		// Wrap this handler around the next one provided.
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-			ctx, span := trace.StartSpan(ctx, "internal.mid.Authenticate")
+			ctx, span := global.Tracer("service").Start(ctx, "internal.mid.authenticate")
 			defer span.End()
 
 			// Parse the authorization header. Expected header is of
@@ -62,7 +62,7 @@ func HasRole(roles ...string) web.Middleware {
 	f := func(after web.Handler) web.Handler {
 
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-			ctx, span := trace.StartSpan(ctx, "internal.mid.HasRole")
+			ctx, span := global.Tracer("service").Start(ctx, "internal.mid.hasrole")
 			defer span.End()
 
 			claims, ok := ctx.Value(auth.Key).(auth.Claims)
