@@ -10,11 +10,11 @@ import (
 )
 
 // Init creates a new trace provider instance and registers it as global trace provider.
-func Init(ServiceName string, LocalEndpoint string, ReporterURI string, logger *log.Logger) error {
+func Init(ServiceName string, LocalEndpoint string, ReporterURI string, log *log.Logger) error {
 	exporter, err := zipkin.NewExporter(
 		ReporterURI,
 		ServiceName,
-		zipkin.WithLogger(logger),
+		zipkin.WithLogger(log),
 	)
 	if err != nil {
 		return errors.Wrap(err, "creating new exporter")
