@@ -14,16 +14,13 @@ import (
 	"syscall"
 	"time"
 
-	"contrib.go.opencensus.io/exporter/zipkin"
 	"github.com/ardanlabs/conf"
 	"github.com/ardanlabs/service/cmd/sales-api/internal/handlers"
 	"github.com/ardanlabs/service/internal/platform/auth"
 	"github.com/ardanlabs/service/internal/platform/database"
+	"github.com/ardanlabs/service/internal/platform/trace"
 	"github.com/dgrijalva/jwt-go"
-	openzipkin "github.com/openzipkin/zipkin-go"
-	zipkinHTTP "github.com/openzipkin/zipkin-go/reporter/http"
 	"github.com/pkg/errors"
-	"go.opencensus.io/trace"
 )
 
 /*
@@ -167,23 +164,10 @@ func run(log *log.Logger) error {
 
 	log.Println("main: Initializing zipkin tracing support")
 
-	localEndpoint, err := openzipkin.NewEndpoint(cfg.Zipkin.ServiceName, cfg.Zipkin.LocalEndpoint)
+	err = trace.InitTracer(cfg.Zipkin.ServiceName, cfg.Zipkin.LocalEndpoint, cfg.Zipkin.ReporterURI, log)
 	if err != nil {
 		return err
 	}
-
-	reporter := zipkinHTTP.NewReporter(cfg.Zipkin.ReporterURI)
-	ze := zipkin.NewExporter(reporter, localEndpoint)
-
-	trace.RegisterExporter(ze)
-	trace.ApplyConfig(trace.Config{
-		DefaultSampler: trace.ProbabilitySampler(cfg.Zipkin.Probability),
-	})
-
-	defer func() {
-		log.Printf("main: Tracing Stopping : %s", cfg.Zipkin.LocalEndpoint)
-		reporter.Close()
-	}()
 
 	// =========================================================================
 	// Start Debug Service

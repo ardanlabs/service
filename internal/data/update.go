@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/internal/platform/auth"
+	"github.com/ardanlabs/service/internal/platform/trace"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
-	"go.opencensus.io/trace"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -18,8 +18,7 @@ var Update update
 
 // User replaces a user document in the database.
 func (update) User(ctx context.Context, claims auth.Claims, db *sqlx.DB, id string, upd UpdateUser, now time.Time) error {
-	ctx, span := trace.StartSpan(ctx, "internal.data.update.user")
-	defer span.End()
+	ctx = trace.NewSpan(ctx, "internal.data.update.user")
 
 	u, err := Retrieve.User.One(ctx, claims, db, id)
 	if err != nil {
@@ -63,8 +62,7 @@ func (update) User(ctx context.Context, claims auth.Claims, db *sqlx.DB, id stri
 // Product modifies data about a Product. It will error if the specified ID is
 // invalid or does not reference an existing Product.
 func (update) Product(ctx context.Context, db *sqlx.DB, user auth.Claims, id string, update UpdateProduct, now time.Time) error {
-	ctx, span := trace.StartSpan(ctx, "internal.data.update.product")
-	defer span.End()
+	ctx = trace.NewSpan(ctx, "internal.data.update.product")
 
 	p, err := Retrieve.Product.One(ctx, db, id)
 	if err != nil {

@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ardanlabs/service/internal/platform/trace"
 	"github.com/ardanlabs/service/internal/platform/web"
-	"go.opencensus.io/trace"
 )
 
 // Logger writes some information about the request to the logs in the
@@ -19,8 +19,7 @@ func Logger(log *log.Logger) web.Middleware {
 
 		// Create the handler that will be attached in the middleware chain.
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-			ctx, span := trace.StartSpan(ctx, "internal.mid.Logger")
-			defer span.End()
+			ctx = trace.NewSpan(ctx, "internal.mid.Logger")
 
 			// If the context is missing this value, request the service
 			// to be shutdown gracefully.

@@ -5,10 +5,10 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/internal/platform/auth"
+	"github.com/ardanlabs/service/internal/platform/trace"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
-	"go.opencensus.io/trace"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -19,8 +19,7 @@ var Create create
 
 // User inserts a new user into the database.
 func (create) User(ctx context.Context, db *sqlx.DB, n NewUser, now time.Time) (*User, error) {
-	ctx, span := trace.StartSpan(ctx, "internal.data.create.user")
-	defer span.End()
+	ctx = trace.NewSpan(ctx, "internal.data.create.user")
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(n.Password), bcrypt.DefaultCost)
 	if err != nil {
@@ -51,8 +50,7 @@ func (create) User(ctx context.Context, db *sqlx.DB, n NewUser, now time.Time) (
 // Product adds a Product to the database. It returns the created Product with
 // fields like ID and DateCreated populated.
 func (create) Product(ctx context.Context, db *sqlx.DB, user auth.Claims, np NewProduct, now time.Time) (*Product, error) {
-	ctx, span := trace.StartSpan(ctx, "internal.data.create.product")
-	defer span.End()
+	ctx = trace.NewSpan(ctx, "internal.data.create.product")
 
 	p := Product{
 		ID:          uuid.New().String(),

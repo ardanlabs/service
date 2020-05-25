@@ -6,10 +6,10 @@ import (
 
 	"github.com/ardanlabs/service/internal/data"
 	"github.com/ardanlabs/service/internal/platform/auth"
+	"github.com/ardanlabs/service/internal/platform/trace"
 	"github.com/ardanlabs/service/internal/platform/web"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
-	"go.opencensus.io/trace"
 )
 
 type product struct {
@@ -17,9 +17,7 @@ type product struct {
 }
 
 func (p *product) list(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-	ctx, span := trace.StartSpan(ctx, "handlers.product.list")
-	defer span.End()
-
+	ctx = trace.NewSpan(ctx, "handlers.product.list")
 	products, err := data.Retrieve.Product.List(ctx, p.db)
 	if err != nil {
 		return err
@@ -29,8 +27,7 @@ func (p *product) list(ctx context.Context, w http.ResponseWriter, r *http.Reque
 }
 
 func (p *product) retrieve(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-	ctx, span := trace.StartSpan(ctx, "handlers.Product.Retrieve")
-	defer span.End()
+	ctx = trace.NewSpan(ctx, "handlers.Product.Retrieve")
 
 	prod, err := data.Retrieve.Product.One(ctx, p.db, params["id"])
 	if err != nil {
@@ -48,8 +45,7 @@ func (p *product) retrieve(ctx context.Context, w http.ResponseWriter, r *http.R
 }
 
 func (p *product) create(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-	ctx, span := trace.StartSpan(ctx, "handlers.product.create")
-	defer span.End()
+	ctx = trace.NewSpan(ctx, "handlers.product.create")
 
 	claims, ok := ctx.Value(auth.Key).(auth.Claims)
 	if !ok {
@@ -75,8 +71,7 @@ func (p *product) create(ctx context.Context, w http.ResponseWriter, r *http.Req
 }
 
 func (p *product) update(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-	ctx, span := trace.StartSpan(ctx, "handlers.product.update")
-	defer span.End()
+	ctx = trace.NewSpan(ctx, "handlers.product.update")
 
 	claims, ok := ctx.Value(auth.Key).(auth.Claims)
 	if !ok {
@@ -110,8 +105,7 @@ func (p *product) update(ctx context.Context, w http.ResponseWriter, r *http.Req
 }
 
 func (p *product) delete(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-	ctx, span := trace.StartSpan(ctx, "handlers.product.delete")
-	defer span.End()
+	ctx = trace.NewSpan(ctx, "handlers.product.delete")
 
 	if err := data.Delete.Product(ctx, p.db, params["id"]); err != nil {
 		switch err {

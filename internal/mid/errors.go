@@ -5,8 +5,8 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/ardanlabs/service/internal/platform/trace"
 	"github.com/ardanlabs/service/internal/platform/web"
-	"go.opencensus.io/trace"
 )
 
 // Errors handles errors coming out of the call chain. It detects normal
@@ -19,8 +19,7 @@ func Errors(log *log.Logger) web.Middleware {
 
 		// Create the handler that will be attached in the middleware chain.
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-			ctx, span := trace.StartSpan(ctx, "internal.mid.Errors")
-			defer span.End()
+			ctx = trace.NewSpan(ctx, "internal.mid.Errors")
 
 			// If the context is missing this value, request the service
 			// to be shutdown gracefully.

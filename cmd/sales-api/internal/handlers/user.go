@@ -6,10 +6,10 @@ import (
 
 	"github.com/ardanlabs/service/internal/data"
 	"github.com/ardanlabs/service/internal/platform/auth"
+	"github.com/ardanlabs/service/internal/platform/trace"
 	"github.com/ardanlabs/service/internal/platform/web"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
-	"go.opencensus.io/trace"
 )
 
 type user struct {
@@ -18,8 +18,7 @@ type user struct {
 }
 
 func (u *user) list(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-	ctx, span := trace.StartSpan(ctx, "handlers.user.list")
-	defer span.End()
+	ctx = trace.NewSpan(ctx, "handlers.user.list")
 
 	users, err := data.Retrieve.User.List(ctx, u.db)
 	if err != nil {
@@ -30,8 +29,7 @@ func (u *user) list(ctx context.Context, w http.ResponseWriter, r *http.Request,
 }
 
 func (u *user) retrieve(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-	ctx, span := trace.StartSpan(ctx, "handlers.user.retrieve")
-	defer span.End()
+	ctx = trace.NewSpan(ctx, "handlers.user.retrieve")
 
 	claims, ok := ctx.Value(auth.Key).(auth.Claims)
 	if !ok {
@@ -56,8 +54,7 @@ func (u *user) retrieve(ctx context.Context, w http.ResponseWriter, r *http.Requ
 }
 
 func (u *user) create(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-	ctx, span := trace.StartSpan(ctx, "handlers.user.create")
-	defer span.End()
+	ctx = trace.NewSpan(ctx, "handlers.user.create")
 
 	v, ok := ctx.Value(web.KeyValues).(*web.Values)
 	if !ok {
@@ -78,8 +75,7 @@ func (u *user) create(ctx context.Context, w http.ResponseWriter, r *http.Reques
 }
 
 func (u *user) update(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-	ctx, span := trace.StartSpan(ctx, "handlers.user.update")
-	defer span.End()
+	ctx = trace.NewSpan(ctx, "handlers.user.update")
 
 	v, ok := ctx.Value(web.KeyValues).(*web.Values)
 	if !ok {
@@ -114,8 +110,7 @@ func (u *user) update(ctx context.Context, w http.ResponseWriter, r *http.Reques
 }
 
 func (u *user) delete(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-	ctx, span := trace.StartSpan(ctx, "handlers.user.delete")
-	defer span.End()
+	ctx = trace.NewSpan(ctx, "handlers.user.delete")
 
 	err := data.Delete.User(ctx, u.db, params["id"])
 	if err != nil {
@@ -135,8 +130,7 @@ func (u *user) delete(ctx context.Context, w http.ResponseWriter, r *http.Reques
 }
 
 func (u *user) token(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-	ctx, span := trace.StartSpan(ctx, "handlers.User.Token")
-	defer span.End()
+	ctx = trace.NewSpan(ctx, "handlers.User.Token")
 
 	v, ok := ctx.Value(web.KeyValues).(*web.Values)
 	if !ok {

@@ -3,10 +3,10 @@ package data
 import (
 	"context"
 
+	"github.com/ardanlabs/service/internal/platform/trace"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
-	"go.opencensus.io/trace"
 )
 
 type delete struct{}
@@ -16,8 +16,7 @@ var Delete delete
 
 // Delete removes a user from the database.
 func (delete) User(ctx context.Context, db *sqlx.DB, id string) error {
-	ctx, span := trace.StartSpan(ctx, "internal.data.delete.user")
-	defer span.End()
+	ctx = trace.NewSpan(ctx, "internal.data.delete.user")
 
 	if _, err := uuid.Parse(id); err != nil {
 		return ErrInvalidID
@@ -33,8 +32,7 @@ func (delete) User(ctx context.Context, db *sqlx.DB, id string) error {
 
 // Product removes the product identified by a given ID.
 func (delete) Product(ctx context.Context, db *sqlx.DB, id string) error {
-	ctx, span := trace.StartSpan(ctx, "internal.data.delete.product")
-	defer span.End()
+	ctx = trace.NewSpan(ctx, "internal.data.delete.product")
 
 	if _, err := uuid.Parse(id); err != nil {
 		return ErrInvalidID

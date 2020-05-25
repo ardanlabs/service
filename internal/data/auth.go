@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/internal/platform/auth"
+	"github.com/ardanlabs/service/internal/platform/trace"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
-	"go.opencensus.io/trace"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -16,8 +16,7 @@ import (
 // success it returns a Claims value representing this user. The claims can be
 // used to generate a token for future authentication.
 func Authenticate(ctx context.Context, db *sqlx.DB, now time.Time, email, password string) (auth.Claims, error) {
-	ctx, span := trace.StartSpan(ctx, "internal.user.Authenticate")
-	defer span.End()
+	ctx = trace.NewSpan(ctx, "internal.user.Authenticate")
 
 	const q = `SELECT * FROM users WHERE email = $1`
 

@@ -5,9 +5,9 @@ import (
 	"net/http"
 
 	"github.com/ardanlabs/service/internal/platform/database"
+	"github.com/ardanlabs/service/internal/platform/trace"
 	"github.com/ardanlabs/service/internal/platform/web"
 	"github.com/jmoiron/sqlx"
-	"go.opencensus.io/trace"
 )
 
 type check struct {
@@ -16,9 +16,7 @@ type check struct {
 }
 
 func (c *check) health(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-	ctx, span := trace.StartSpan(ctx, "handlers.check.health")
-	defer span.End()
-
+	ctx = trace.NewSpan(ctx, "handlers.check.health")
 	health := struct {
 		Version string `json:"version"`
 		Status  string `json:"status"`

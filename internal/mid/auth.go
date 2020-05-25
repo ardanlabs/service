@@ -6,9 +6,9 @@ import (
 	"strings"
 
 	"github.com/ardanlabs/service/internal/platform/auth"
+	"github.com/ardanlabs/service/internal/platform/trace"
 	"github.com/ardanlabs/service/internal/platform/web"
 	"github.com/pkg/errors"
-	"go.opencensus.io/trace"
 )
 
 // ErrForbidden is returned when an authenticated user does not have a
@@ -26,8 +26,7 @@ func Authenticate(authenticator *auth.Authenticator) web.Middleware {
 
 		// Wrap this handler around the next one provided.
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-			ctx, span := trace.StartSpan(ctx, "internal.mid.Authenticate")
-			defer span.End()
+			ctx = trace.NewSpan(ctx, "internal.mid.Authenticate")
 
 			// Parse the authorization header. Expected header is of
 			// the format `Bearer <token>`.
@@ -62,8 +61,7 @@ func HasRole(roles ...string) web.Middleware {
 	f := func(after web.Handler) web.Handler {
 
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-			ctx, span := trace.StartSpan(ctx, "internal.mid.HasRole")
-			defer span.End()
+			ctx = trace.NewSpan(ctx, "internal.mid.HasRole")
 
 			claims, ok := ctx.Value(auth.Key).(auth.Claims)
 			if !ok {

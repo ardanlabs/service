@@ -8,9 +8,8 @@ import (
 	"time"
 
 	"github.com/dimfeld/httptreemux/v5"
-	"go.opencensus.io/plugin/ochttp"
-	"go.opencensus.io/plugin/ochttp/propagation/tracecontext"
-	"go.opencensus.io/trace"
+	"go.opentelemetry.io/otel/api/global"
+	"go.opentelemetry.io/plugin/othttp"
 )
 
 // ctxKey represents the type of value for the context key.
@@ -35,7 +34,7 @@ type Handler func(ctx context.Context, w http.ResponseWriter, r *http.Request, p
 // data/logic on this App struct
 type App struct {
 	*httptreemux.TreeMux
-	och      *ochttp.Handler
+	oth      http.Handler
 	shutdown chan os.Signal
 	mw       []Middleware
 }
@@ -54,11 +53,7 @@ func NewApp(shutdown chan os.Signal, mw ...Middleware) *App {
 	// This is configured to use the W3C TraceContext standard to set the remote
 	// parent if an client request includes the appropriate headers.
 	// https://w3c.github.io/trace-context/
-	app.och = &ochttp.Handler{
-		Handler:     app.TreeMux,
-		Propagation: &tracecontext.HTTPFormat{},
-	}
-
+	app.oth = othttp.NewHandler(app.TreeMux, "server")
 	return &app
 }
 
@@ -80,7 +75,7 @@ func (a *App) Handle(verb, path string, handler Handler, mw ...Middleware) {
 
 	// The function to execute for each request.
 	h := func(w http.ResponseWriter, r *http.Request, params map[string]string) {
-		ctx, span := trace.StartSpan(r.Context(), "internal.platform.web")
+		ctx, span := global.Tracer("main").Start(r.Context(), "internal.platform.web")
 		defer span.End()
 
 		// Set the context with the required values to
@@ -106,5 +101,5 @@ func (a *App) Handle(verb, path string, handler Handler, mw ...Middleware) {
 // of the embedded TreeMux by using the ochttp.Handler instead. That Handler
 // wraps the TreeMux handler so the routes are served.
 func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	a.och.ServeHTTP(w, r)
+	a.oth.ServeHTTP(w, r)
 }
