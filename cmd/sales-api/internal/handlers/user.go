@@ -9,7 +9,7 @@ import (
 	"github.com/ardanlabs/service/internal/platform/web"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
-	"go.opencensus.io/trace"
+	"go.opentelemetry.io/otel/api/global"
 )
 
 type user struct {
@@ -18,7 +18,7 @@ type user struct {
 }
 
 func (u *user) list(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-	ctx, span := trace.StartSpan(ctx, "handlers.user.list")
+	ctx, span := global.Tracer("service").Start(ctx, "handlers.user.list")
 	defer span.End()
 
 	users, err := data.Retrieve.User.List(ctx, u.db)
@@ -30,7 +30,7 @@ func (u *user) list(ctx context.Context, w http.ResponseWriter, r *http.Request,
 }
 
 func (u *user) retrieve(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-	ctx, span := trace.StartSpan(ctx, "handlers.user.retrieve")
+	ctx, span := global.Tracer("service").Start(ctx, "handlers.user.retrieve")
 	defer span.End()
 
 	claims, ok := ctx.Value(auth.Key).(auth.Claims)
@@ -56,7 +56,7 @@ func (u *user) retrieve(ctx context.Context, w http.ResponseWriter, r *http.Requ
 }
 
 func (u *user) create(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-	ctx, span := trace.StartSpan(ctx, "handlers.user.create")
+	ctx, span := global.Tracer("service").Start(ctx, "handlers.user.create")
 	defer span.End()
 
 	v, ok := ctx.Value(web.KeyValues).(*web.Values)
@@ -78,7 +78,7 @@ func (u *user) create(ctx context.Context, w http.ResponseWriter, r *http.Reques
 }
 
 func (u *user) update(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-	ctx, span := trace.StartSpan(ctx, "handlers.user.update")
+	ctx, span := global.Tracer("service").Start(ctx, "handlers.user.update")
 	defer span.End()
 
 	v, ok := ctx.Value(web.KeyValues).(*web.Values)
@@ -114,7 +114,7 @@ func (u *user) update(ctx context.Context, w http.ResponseWriter, r *http.Reques
 }
 
 func (u *user) delete(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-	ctx, span := trace.StartSpan(ctx, "handlers.user.delete")
+	ctx, span := global.Tracer("service").Start(ctx, "handlers.user.delete")
 	defer span.End()
 
 	err := data.Delete.User(ctx, u.db, params["id"])
@@ -135,7 +135,7 @@ func (u *user) delete(ctx context.Context, w http.ResponseWriter, r *http.Reques
 }
 
 func (u *user) token(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
-	ctx, span := trace.StartSpan(ctx, "handlers.User.Token")
+	ctx, span := global.Tracer("service").Start(ctx, "handlers.user.token")
 	defer span.End()
 
 	v, ok := ctx.Value(web.KeyValues).(*web.Values)

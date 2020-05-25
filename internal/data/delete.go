@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
-	"go.opencensus.io/trace"
+	"go.opentelemetry.io/otel/api/global"
 )
 
 type delete struct{}
@@ -16,7 +16,7 @@ var Delete delete
 
 // Delete removes a user from the database.
 func (delete) User(ctx context.Context, db *sqlx.DB, id string) error {
-	ctx, span := trace.StartSpan(ctx, "internal.data.delete.user")
+	ctx, span := global.Tracer("service").Start(ctx, "internal.data.delete.user")
 	defer span.End()
 
 	if _, err := uuid.Parse(id); err != nil {
@@ -33,7 +33,7 @@ func (delete) User(ctx context.Context, db *sqlx.DB, id string) error {
 
 // Product removes the product identified by a given ID.
 func (delete) Product(ctx context.Context, db *sqlx.DB, id string) error {
-	ctx, span := trace.StartSpan(ctx, "internal.data.delete.product")
+	ctx, span := global.Tracer("service").Start(ctx, "internal.data.delete.product")
 	defer span.End()
 
 	if _, err := uuid.Parse(id); err != nil {

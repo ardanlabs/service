@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
-	"go.opencensus.io/trace"
+	"go.opentelemetry.io/otel/api/global"
 )
 
 type retrieve struct {
@@ -23,7 +23,7 @@ type retUser struct{}
 
 // List retrieves a list of existing users from the database.
 func (retUser) List(ctx context.Context, db *sqlx.DB) ([]User, error) {
-	ctx, span := trace.StartSpan(ctx, "internal.data.retrieve.user.list")
+	ctx, span := global.Tracer("service").Start(ctx, "internal.data.retrieve.user.list")
 	defer span.End()
 
 	users := []User{}
@@ -38,7 +38,7 @@ func (retUser) List(ctx context.Context, db *sqlx.DB) ([]User, error) {
 
 // One gets the specified user from the database.
 func (retUser) One(ctx context.Context, claims auth.Claims, db *sqlx.DB, id string) (*User, error) {
-	ctx, span := trace.StartSpan(ctx, "internal.data.retrieve.user.one")
+	ctx, span := global.Tracer("service").Start(ctx, "internal.data.retrieve.user.one")
 	defer span.End()
 
 	if _, err := uuid.Parse(id); err != nil {
@@ -67,7 +67,7 @@ type retProduct struct{}
 
 // List gets all Products from the database.
 func (retProduct) List(ctx context.Context, db *sqlx.DB) ([]Product, error) {
-	ctx, span := trace.StartSpan(ctx, "internal.data.retrieve.product.list")
+	ctx, span := global.Tracer("service").Start(ctx, "internal.data.retrieve.product.list")
 	defer span.End()
 
 	products := []Product{}
@@ -88,7 +88,7 @@ func (retProduct) List(ctx context.Context, db *sqlx.DB) ([]Product, error) {
 
 // One finds the product identified by a given ID.
 func (retProduct) One(ctx context.Context, db *sqlx.DB, id string) (*Product, error) {
-	ctx, span := trace.StartSpan(ctx, "internal.data.retrieve.product.one")
+	ctx, span := global.Tracer("service").Start(ctx, "internal.data.retrieve.product.one")
 	defer span.End()
 
 	if _, err := uuid.Parse(id); err != nil {
