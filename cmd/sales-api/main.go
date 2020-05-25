@@ -75,10 +75,9 @@ func run(log *log.Logger) error {
 			Algorithm      string `conf:"default:RS256"`
 		}
 		Zipkin struct {
-			LocalEndpoint string  `conf:"default:0.0.0.0:3000"`
-			ReporterURI   string  `conf:"default:http://zipkin:9411/api/v2/spans"`
-			ServiceName   string  `conf:"default:sales-api"`
-			Probability   float64 `conf:"default:0.05"`
+			ReporterURI string  `conf:"default:http://zipkin:9411/api/v2/spans"`
+			ServiceName string  `conf:"default:sales-api"`
+			Probability float64 `conf:"default:0.05"`
 		}
 	}
 	cfg.Version.SVN = build
@@ -164,7 +163,7 @@ func run(log *log.Logger) error {
 
 	log.Println("main: Initializing zipkin tracing support")
 
-	if err := tracer.Init(cfg.Zipkin.ServiceName, cfg.Zipkin.LocalEndpoint, cfg.Zipkin.ReporterURI, log); err != nil {
+	if err := tracer.Init(cfg.Zipkin.ServiceName, cfg.Zipkin.ReporterURI, cfg.Zipkin.Probability, log); err != nil {
 		return errors.Wrap(err, "starting tracer")
 	}
 
