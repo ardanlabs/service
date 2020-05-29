@@ -97,15 +97,12 @@ type Test struct {
 
 // NewIntegration creates a database, seeds it, constructs an authenticator.
 func NewIntegration(t *testing.T) *Test {
-
-	// Initialize and seed database. Store the cleanup function call later.
 	db, cleanup := NewUnit(t)
 
 	if err := data.Seed(db); err != nil {
 		t.Fatal(err)
 	}
 
-	// Create the logger to use.
 	log := log.New(os.Stdout, "TEST : ", log.LstdFlags|log.Lmicroseconds|log.Lshortfile)
 
 	// Create RSA keys to enable authentication in our service.

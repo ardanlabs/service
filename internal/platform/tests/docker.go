@@ -13,7 +13,6 @@ type DBContainer struct {
 	DBHost string // IP:Port
 }
 
-// startDBContainer runs a postgres container to execute commands.
 func startDBContainer(t *testing.T, image string) *DBContainer {
 	cmd := exec.Command("docker", "run", "-P", "-d", image)
 	var out bytes.Buffer
@@ -58,7 +57,6 @@ func startDBContainer(t *testing.T, image string) *DBContainer {
 	return &c
 }
 
-// stopContainer stops and removes the specified container.
 func stopContainer(t *testing.T, id string) {
 	if err := exec.Command("docker", "stop", id).Run(); err != nil {
 		t.Fatalf("could not stop container: %v", err)
@@ -71,7 +69,6 @@ func stopContainer(t *testing.T, id string) {
 	t.Log("Removed:", id)
 }
 
-// dumpContainerLogs runs "docker logs" against the container and send it to t.Log
 func dumpContainerLogs(t *testing.T, id string) {
 	out, err := exec.Command("docker", "logs", id).CombinedOutput()
 	if err != nil {
