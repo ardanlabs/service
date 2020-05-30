@@ -11,13 +11,15 @@ require (
 	github.com/go-playground/universal-translator v0.17.0
 	github.com/google/go-cmp v0.4.1
 	github.com/google/uuid v1.1.1
+	github.com/jcmturner/gokrb5/v8 v8.3.0 // indirect
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/leodido/go-urn v1.2.0 // indirect
-	github.com/lib/pq v1.5.2
+	github.com/lib/pq v1.6.0
 	github.com/pkg/errors v0.9.1
 	go.opentelemetry.io/otel v0.6.0
 	go.opentelemetry.io/otel/exporters/trace/zipkin v0.6.0
 	golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37
+	golang.org/x/net v0.0.0-20200528225125-3c3fba18258b // indirect
 	google.golang.org/grpc v1.29.1 // indirect
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/validator.v9 v9.31.0
