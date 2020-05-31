@@ -71,7 +71,7 @@ func run(log *log.Logger) error {
 		}
 		Auth struct {
 			KeyID          string `conf:"default:1"`
-			PrivateKeyFile string `conf:"default:/app/private.pem"`
+			PrivateKeyFile string `conf:"default:../../private.pem"`
 			Algorithm      string `conf:"default:RS256"`
 		}
 		Zipkin struct {

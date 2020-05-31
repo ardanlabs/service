@@ -21,6 +21,8 @@ spec:
       - name: sales-api
         image: gcr.io/{{PROJECT}}/sales-api-amd64:1.0
         env:
+        - name: SALES_AUTH_PRIVATE_KEY_FILE
+          value: "/app/private.pem"
         - name: SALES_DB_HOST
           value: {{PRIVATE_DB_IP}}
         ports:

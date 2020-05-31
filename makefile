@@ -2,6 +2,8 @@ SHELL := /bin/bash
 
 export PROJECT = ardan-starter-kit
 
+# Building containers
+
 all: sales-api metrics
 
 sales-api:
@@ -23,6 +25,8 @@ metrics:
 		--build-arg BUILD_DATE=`date -u +”%Y-%m-%dT%H:%M:%SZ”` \
 		.
 
+# Running from within docker compose
+
 run: up seed
 
 up:
@@ -34,30 +38,44 @@ down:
 logs:
 	docker-compose logs -f
 
+# Running from within the local computer
+
+run-local: up-local seed
+
+up-local:
+	docker run -it -d -p 5432:5432 postgres:11.1-alpine
+
+sales-local:
+	cd cmd/sales-api; \
+	go run main.go
+
+FILES := $(shell docker ps -aq)
+
+down-local:
+	docker stop $(FILES)
+	docker rm $(FILES)
+
+# Administration
+
 keys:
-	go run ./cmd/sales-admin/main.go keygen private.pem
+	go run cmd/sales-admin/main.go keygen private.pem
 
 admin:
-	go run ./cmd/sales-admin/main.go --db-disable-tls=1 useradd admin@example.com gophers
+	go run cmd/sales-admin/main.go --db-disable-tls=1 useradd admin@example.com gophers
 
 migrate:
-	go run ./cmd/sales-admin/main.go --db-disable-tls=1 migrate
+	go run cmd/sales-admin/main.go --db-disable-tls=1 migrate
 
 seed: migrate
-	go run ./cmd/sales-admin/main.go --db-disable-tls=1 seed
+	go run cmd/sales-admin/main.go --db-disable-tls=1 seed
+
+# Running tests within the local computer
 
 test:
 	go test ./... -count=1
 	staticcheck ./...
 
-clean:
-	docker system prune -f
-
-stop-all:
-	docker stop $(docker ps -aq)
-
-remove-all:
-	docker rm $(docker ps -aq)
+# Modules support
 
 deps-reset:
 	git checkout -- go.mod
@@ -75,3 +93,8 @@ deps-upgrade:
 
 deps-cleancache:
 	go clean -modcache
+
+# Docker support
+
+clean:
+	docker system prune -f
