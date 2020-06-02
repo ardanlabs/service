@@ -1,5 +1,5 @@
 # Build the Go Binary.
-FROM golang:1.14.3 as build_sales-api
+FROM golang:1.14.4 as build_sales-api
 ENV CGO_ENABLED 0
 ARG VCS_REF
 ARG PACKAGE_NAME
