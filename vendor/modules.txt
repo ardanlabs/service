@@ -128,7 +128,7 @@ golang.org/x/crypto/bcrypt
 golang.org/x/crypto/blowfish
 golang.org/x/crypto/md4
 golang.org/x/crypto/pbkdf2
-# golang.org/x/net v0.0.0-20200528225125-3c3fba18258b
+# golang.org/x/net v0.0.0-20200602114024-627f9648deb9
 ## explicit
 golang.org/x/net/http2/hpack
 # golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543

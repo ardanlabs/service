@@ -15,7 +15,7 @@ import (
 func Errors(log *log.Logger) web.Middleware {
 
 	// This is the actual middleware function to be executed.
-	f := func(before web.Handler) web.Handler {
+	m := func(before web.Handler) web.Handler {
 
 		// Create the handler that will be attached in the middleware chain.
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
@@ -54,5 +54,5 @@ func Errors(log *log.Logger) web.Middleware {
 		return h
 	}
 
-	return f
+	return m
 }
