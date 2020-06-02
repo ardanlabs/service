@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/dimfeld/httptreemux/v5"
 	en "github.com/go-playground/locales/en"
 	ut "github.com/go-playground/universal-translator"
 	validator "gopkg.in/go-playground/validator.v9"
@@ -40,6 +41,11 @@ func init() {
 		}
 		return name
 	})
+}
+
+// Params returns the web call parameters from the request.
+func Params(r *http.Request) map[string]string {
+	return httptreemux.ContextParams(r.Context())
 }
 
 // Decode reads the body of an HTTP request looking for a JSON document. The

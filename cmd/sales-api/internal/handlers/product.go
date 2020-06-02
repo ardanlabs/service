@@ -7,7 +7,6 @@ import (
 	"github.com/ardanlabs/service/internal/data"
 	"github.com/ardanlabs/service/internal/platform/auth"
 	"github.com/ardanlabs/service/internal/platform/web"
-	"github.com/dimfeld/httptreemux/v5"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/api/global"
@@ -33,7 +32,7 @@ func (p *product) retrieve(ctx context.Context, w http.ResponseWriter, r *http.R
 	ctx, span := global.Tracer("service").Start(ctx, "handlers.product.retrieve")
 	defer span.End()
 
-	params := httptreemux.ContextParams(r.Context())
+	params := web.Params(r)
 	prod, err := data.Retrieve.Product.One(ctx, p.db, params["id"])
 	if err != nil {
 		switch err {
@@ -95,7 +94,7 @@ func (p *product) update(ctx context.Context, w http.ResponseWriter, r *http.Req
 		return errors.Wrap(err, "")
 	}
 
-	params := httptreemux.ContextParams(r.Context())
+	params := web.Params(r)
 	if err := data.Update.Product(ctx, p.db, claims, params["id"], up, v.Now); err != nil {
 		switch err {
 		case data.ErrInvalidID:
@@ -116,7 +115,7 @@ func (p *product) delete(ctx context.Context, w http.ResponseWriter, r *http.Req
 	ctx, span := global.Tracer("service").Start(ctx, "handlers.product.delete")
 	defer span.End()
 
-	params := httptreemux.ContextParams(r.Context())
+	params := web.Params(r)
 	if err := data.Delete.Product(ctx, p.db, params["id"]); err != nil {
 		switch err {
 		case data.ErrInvalidID:

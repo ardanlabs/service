@@ -7,7 +7,6 @@ import (
 	"github.com/ardanlabs/service/internal/data"
 	"github.com/ardanlabs/service/internal/platform/auth"
 	"github.com/ardanlabs/service/internal/platform/web"
-	"github.com/dimfeld/httptreemux/v5"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/api/global"
@@ -39,7 +38,7 @@ func (u *user) retrieve(ctx context.Context, w http.ResponseWriter, r *http.Requ
 		return errors.New("claims missing from context")
 	}
 
-	params := httptreemux.ContextParams(r.Context())
+	params := web.Params(r)
 	usr, err := data.Retrieve.User.One(ctx, claims, u.db, params["id"])
 	if err != nil {
 		switch err {
@@ -98,7 +97,7 @@ func (u *user) update(ctx context.Context, w http.ResponseWriter, r *http.Reques
 		return errors.Wrap(err, "")
 	}
 
-	params := httptreemux.ContextParams(r.Context())
+	params := web.Params(r)
 	err := data.Update.User(ctx, claims, u.db, params["id"], upd, v.Now)
 	if err != nil {
 		switch err {
@@ -120,7 +119,7 @@ func (u *user) delete(ctx context.Context, w http.ResponseWriter, r *http.Reques
 	ctx, span := global.Tracer("service").Start(ctx, "handlers.user.delete")
 	defer span.End()
 
-	params := httptreemux.ContextParams(r.Context())
+	params := web.Params(r)
 	err := data.Delete.User(ctx, u.db, params["id"])
 	if err != nil {
 		switch err {
