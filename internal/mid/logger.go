@@ -18,7 +18,7 @@ func Logger(log *log.Logger) web.Middleware {
 	f := func(before web.Handler) web.Handler {
 
 		// Create the handler that will be attached in the middleware chain.
-		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
+		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 			ctx, span := global.Tracer("service").Start(ctx, "internal.mid.logger")
 			defer span.End()
 
@@ -29,7 +29,7 @@ func Logger(log *log.Logger) web.Middleware {
 				return web.NewShutdownError("web value missing from context")
 			}
 
-			err := before(ctx, w, r, params)
+			err := before(ctx, w, r)
 
 			log.Printf("%s : (%d) : %s %s -> %s (%s)",
 				v.TraceID, v.StatusCode,

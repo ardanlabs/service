@@ -28,11 +28,11 @@ func Metrics() web.Middleware {
 	f := func(before web.Handler) web.Handler {
 
 		// Wrap this handler around the next one provided.
-		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
+		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 			ctx, span := global.Tracer("service").Start(ctx, "internal.mid.metrics")
 			defer span.End()
 
-			err := before(ctx, w, r, params)
+			err := before(ctx, w, r)
 
 			// Increment the request counter.
 			m.req.Add(1)

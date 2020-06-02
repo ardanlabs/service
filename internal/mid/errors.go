@@ -18,7 +18,7 @@ func Errors(log *log.Logger) web.Middleware {
 	f := func(before web.Handler) web.Handler {
 
 		// Create the handler that will be attached in the middleware chain.
-		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
+		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 			ctx, span := global.Tracer("service").Start(ctx, "internal.mid.errors")
 			defer span.End()
 
@@ -29,7 +29,8 @@ func Errors(log *log.Logger) web.Middleware {
 				return web.NewShutdownError("web value missing from context")
 			}
 
-			if err := before(ctx, w, r, params); err != nil {
+			// Run the handler chain and catch any propagated error.
+			if err := before(ctx, w, r); err != nil {
 
 				// Log the error.
 				log.Printf("%s : ERROR : %v", v.TraceID, err)

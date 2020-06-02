@@ -7,6 +7,7 @@ import (
 	"github.com/ardanlabs/service/internal/data"
 	"github.com/ardanlabs/service/internal/platform/auth"
 	"github.com/ardanlabs/service/internal/platform/web"
+	"github.com/dimfeld/httptreemux/v5"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/api/global"
@@ -16,7 +17,7 @@ type product struct {
 	db *sqlx.DB
 }
 
-func (p *product) list(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
+func (p *product) list(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	ctx, span := global.Tracer("service").Start(ctx, "handlers.product.list")
 	defer span.End()
 
@@ -28,10 +29,11 @@ func (p *product) list(ctx context.Context, w http.ResponseWriter, r *http.Reque
 	return web.Respond(ctx, w, products, http.StatusOK)
 }
 
-func (p *product) retrieve(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
+func (p *product) retrieve(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	ctx, span := global.Tracer("service").Start(ctx, "handlers.product.retrieve")
 	defer span.End()
 
+	params := httptreemux.ContextParams(r.Context())
 	prod, err := data.Retrieve.Product.One(ctx, p.db, params["id"])
 	if err != nil {
 		switch err {
@@ -47,7 +49,7 @@ func (p *product) retrieve(ctx context.Context, w http.ResponseWriter, r *http.R
 	return web.Respond(ctx, w, prod, http.StatusOK)
 }
 
-func (p *product) create(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
+func (p *product) create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	ctx, span := global.Tracer("service").Start(ctx, "handlers.product.create")
 	defer span.End()
 
@@ -74,7 +76,7 @@ func (p *product) create(ctx context.Context, w http.ResponseWriter, r *http.Req
 	return web.Respond(ctx, w, prod, http.StatusCreated)
 }
 
-func (p *product) update(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
+func (p *product) update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	ctx, span := global.Tracer("service").Start(ctx, "handlers.product.update")
 	defer span.End()
 
@@ -93,6 +95,7 @@ func (p *product) update(ctx context.Context, w http.ResponseWriter, r *http.Req
 		return errors.Wrap(err, "")
 	}
 
+	params := httptreemux.ContextParams(r.Context())
 	if err := data.Update.Product(ctx, p.db, claims, params["id"], up, v.Now); err != nil {
 		switch err {
 		case data.ErrInvalidID:
@@ -109,10 +112,11 @@ func (p *product) update(ctx context.Context, w http.ResponseWriter, r *http.Req
 	return web.Respond(ctx, w, nil, http.StatusNoContent)
 }
 
-func (p *product) delete(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
+func (p *product) delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	ctx, span := global.Tracer("service").Start(ctx, "handlers.product.delete")
 	defer span.End()
 
+	params := httptreemux.ContextParams(r.Context())
 	if err := data.Delete.Product(ctx, p.db, params["id"]); err != nil {
 		switch err {
 		case data.ErrInvalidID:

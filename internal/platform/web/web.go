@@ -27,13 +27,13 @@ type Values struct {
 
 // A Handler is a type that handles an http request within our own little mini
 // framework.
-type Handler func(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error
+type Handler func(ctx context.Context, w http.ResponseWriter, r *http.Request) error
 
 // App is the entrypoint into our application and what configures our context
 // object for each of our http handlers. Feel free to add any configuration
 // data/logic on this App struct
 type App struct {
-	*httptreemux.TreeMux
+	*httptreemux.ContextMux
 	oth      http.Handler
 	shutdown chan os.Signal
 	mw       []Middleware
@@ -42,9 +42,9 @@ type App struct {
 // NewApp creates an App value that handle a set of routes for the application.
 func NewApp(shutdown chan os.Signal, mw ...Middleware) *App {
 	app := App{
-		TreeMux:  httptreemux.New(),
-		shutdown: shutdown,
-		mw:       mw,
+		ContextMux: httptreemux.NewContextMux(),
+		shutdown:   shutdown,
+		mw:         mw,
 	}
 
 	// Create an OpenCensus HTTP Handler which wraps the router. This will start
@@ -55,12 +55,6 @@ func NewApp(shutdown chan os.Signal, mw ...Middleware) *App {
 	// https://w3c.github.io/trace-context/
 	app.oth = othttp.NewHandler(app.TreeMux, "server")
 	return &app
-}
-
-// SignalShutdown is used to gracefully shutdown the app when an integrity
-// issue is identified.
-func (a *App) SignalShutdown() {
-	a.shutdown <- syscall.SIGTERM
 }
 
 // Handle is our mechanism for mounting Handlers for a given HTTP verb and path
@@ -74,7 +68,7 @@ func (a *App) Handle(verb, path string, handler Handler, mw ...Middleware) {
 	handler = wrapMiddleware(a.mw, handler)
 
 	// The function to execute for each request.
-	h := func(w http.ResponseWriter, r *http.Request, params map[string]string) {
+	h := func(w http.ResponseWriter, r *http.Request) {
 
 		// Start or expand a distributed trace.
 		ctx, span := global.Tracer("service").Start(r.Context(), "internal.platform.web.roothandler")
@@ -89,14 +83,14 @@ func (a *App) Handle(verb, path string, handler Handler, mw ...Middleware) {
 		ctx = context.WithValue(ctx, KeyValues, &v)
 
 		// Call the wrapped handler functions.
-		if err := handler(ctx, w, r, params); err != nil {
+		if err := handler(ctx, w, r); err != nil {
 			a.SignalShutdown()
 			return
 		}
 	}
 
 	// Add this handler for the specified verb and route.
-	a.TreeMux.Handle(verb, path, h)
+	a.ContextMux.Handle(verb, path, h)
 }
 
 // ServeHTTP implements the http.Handler interface. It overrides the ServeHTTP
@@ -104,4 +98,10 @@ func (a *App) Handle(verb, path string, handler Handler, mw ...Middleware) {
 // wraps the TreeMux handler so the routes are served.
 func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	a.oth.ServeHTTP(w, r)
+}
+
+// SignalShutdown is used to gracefully shutdown the app when an integrity
+// issue is identified.
+func (a *App) SignalShutdown() {
+	a.shutdown <- syscall.SIGTERM
 }
