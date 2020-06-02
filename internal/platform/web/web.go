@@ -57,12 +57,6 @@ func NewApp(shutdown chan os.Signal, mw ...Middleware) *App {
 	return &app
 }
 
-// SignalShutdown is used to gracefully shutdown the app when an integrity
-// issue is identified.
-func (a *App) SignalShutdown() {
-	a.shutdown <- syscall.SIGTERM
-}
-
 // Handle is our mechanism for mounting Handlers for a given HTTP verb and path
 // pair, this makes for really easy, convenient routing.
 func (a *App) Handle(verb, path string, handler Handler, mw ...Middleware) {
@@ -104,4 +98,10 @@ func (a *App) Handle(verb, path string, handler Handler, mw ...Middleware) {
 // wraps the TreeMux handler so the routes are served.
 func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	a.oth.ServeHTTP(w, r)
+}
+
+// SignalShutdown is used to gracefully shutdown the app when an integrity
+// issue is identified.
+func (a *App) SignalShutdown() {
+	a.shutdown <- syscall.SIGTERM
 }

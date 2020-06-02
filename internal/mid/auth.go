@@ -37,6 +37,7 @@ func Authenticate(authenticator *auth.Authenticator) web.Middleware {
 				return web.NewRequestError(err, http.StatusUnauthorized)
 			}
 
+			// Start a span to measure just the time spent in ParseClaims.
 			claims, err := authenticator.ParseClaims(parts[1])
 			if err != nil {
 				return web.NewRequestError(err, http.StatusUnauthorized)

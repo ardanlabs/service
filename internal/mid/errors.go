@@ -29,6 +29,7 @@ func Errors(log *log.Logger) web.Middleware {
 				return web.NewShutdownError("web value missing from context")
 			}
 
+			// Run the handler chain and catch any propagated error.
 			if err := before(ctx, w, r); err != nil {
 
 				// Log the error.
