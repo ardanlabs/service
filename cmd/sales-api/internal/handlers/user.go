@@ -7,6 +7,7 @@ import (
 	"github.com/ardanlabs/service/internal/data"
 	"github.com/ardanlabs/service/internal/platform/auth"
 	"github.com/ardanlabs/service/internal/platform/web"
+	"github.com/dimfeld/httptreemux/v5"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/api/global"
@@ -17,7 +18,7 @@ type user struct {
 	authenticator *auth.Authenticator
 }
 
-func (u *user) list(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
+func (u *user) list(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	ctx, span := global.Tracer("service").Start(ctx, "handlers.user.list")
 	defer span.End()
 
@@ -29,7 +30,7 @@ func (u *user) list(ctx context.Context, w http.ResponseWriter, r *http.Request,
 	return web.Respond(ctx, w, users, http.StatusOK)
 }
 
-func (u *user) retrieve(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
+func (u *user) retrieve(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	ctx, span := global.Tracer("service").Start(ctx, "handlers.user.retrieve")
 	defer span.End()
 
@@ -38,6 +39,7 @@ func (u *user) retrieve(ctx context.Context, w http.ResponseWriter, r *http.Requ
 		return errors.New("claims missing from context")
 	}
 
+	params := httptreemux.ContextParams(r.Context())
 	usr, err := data.Retrieve.User.One(ctx, claims, u.db, params["id"])
 	if err != nil {
 		switch err {
@@ -55,7 +57,7 @@ func (u *user) retrieve(ctx context.Context, w http.ResponseWriter, r *http.Requ
 	return web.Respond(ctx, w, usr, http.StatusOK)
 }
 
-func (u *user) create(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
+func (u *user) create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	ctx, span := global.Tracer("service").Start(ctx, "handlers.user.create")
 	defer span.End()
 
@@ -77,7 +79,7 @@ func (u *user) create(ctx context.Context, w http.ResponseWriter, r *http.Reques
 	return web.Respond(ctx, w, usr, http.StatusCreated)
 }
 
-func (u *user) update(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
+func (u *user) update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	ctx, span := global.Tracer("service").Start(ctx, "handlers.user.update")
 	defer span.End()
 
@@ -96,6 +98,7 @@ func (u *user) update(ctx context.Context, w http.ResponseWriter, r *http.Reques
 		return errors.Wrap(err, "")
 	}
 
+	params := httptreemux.ContextParams(r.Context())
 	err := data.Update.User(ctx, claims, u.db, params["id"], upd, v.Now)
 	if err != nil {
 		switch err {
@@ -113,10 +116,11 @@ func (u *user) update(ctx context.Context, w http.ResponseWriter, r *http.Reques
 	return web.Respond(ctx, w, nil, http.StatusNoContent)
 }
 
-func (u *user) delete(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
+func (u *user) delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	ctx, span := global.Tracer("service").Start(ctx, "handlers.user.delete")
 	defer span.End()
 
+	params := httptreemux.ContextParams(r.Context())
 	err := data.Delete.User(ctx, u.db, params["id"])
 	if err != nil {
 		switch err {
@@ -134,7 +138,7 @@ func (u *user) delete(ctx context.Context, w http.ResponseWriter, r *http.Reques
 	return web.Respond(ctx, w, nil, http.StatusNoContent)
 }
 
-func (u *user) token(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
+func (u *user) token(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	ctx, span := global.Tracer("service").Start(ctx, "handlers.user.token")
 	defer span.End()
 

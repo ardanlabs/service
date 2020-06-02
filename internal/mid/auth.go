@@ -25,7 +25,7 @@ func Authenticate(authenticator *auth.Authenticator) web.Middleware {
 	f := func(after web.Handler) web.Handler {
 
 		// Wrap this handler around the next one provided.
-		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
+		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 			ctx, span := global.Tracer("service").Start(ctx, "internal.mid.authenticate")
 			defer span.End()
 
@@ -45,7 +45,7 @@ func Authenticate(authenticator *auth.Authenticator) web.Middleware {
 			// Add claims to the context so they can be retrieved later.
 			ctx = context.WithValue(ctx, auth.Key, claims)
 
-			return after(ctx, w, r, params)
+			return after(ctx, w, r)
 		}
 
 		return h
@@ -61,7 +61,7 @@ func HasRole(roles ...string) web.Middleware {
 	// This is the actual middleware function to be executed.
 	f := func(after web.Handler) web.Handler {
 
-		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
+		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 			ctx, span := global.Tracer("service").Start(ctx, "internal.mid.hasrole")
 			defer span.End()
 
@@ -74,7 +74,7 @@ func HasRole(roles ...string) web.Middleware {
 				return ErrForbidden
 			}
 
-			return after(ctx, w, r, params)
+			return after(ctx, w, r)
 		}
 
 		return h

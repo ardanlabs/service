@@ -15,7 +15,7 @@ type check struct {
 	db    *sqlx.DB
 }
 
-func (c *check) health(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
+func (c *check) health(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	ctx, span := global.Tracer("service").Start(ctx, "handlers.check.health")
 	defer span.End()
 
