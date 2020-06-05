@@ -55,6 +55,9 @@ down-local:
 	docker stop $(FILES)
 	docker rm $(FILES)
 
+logs-local:
+	docker logs -f $(FILES)
+
 # Administration
 
 keys:

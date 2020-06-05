@@ -55,6 +55,9 @@ func run() error {
 		return errors.Wrap(err, "error: parsing config")
 	}
 
+	// =========================================================================
+	// Commands
+
 	// This is used for multiple commands below.
 	dbConfig := database.Config{
 		User:       cfg.DB.User,
