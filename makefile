@@ -61,7 +61,7 @@ logs-local:
 # Administration
 
 keys:
-	go run cmd/sales-admin/main.go keygen private.pem
+	go run cmd/sales-admin/main.go keygen
 
 admin:
 	go run cmd/sales-admin/main.go --db-disable-tls=1 useradd admin@example.com gophers
