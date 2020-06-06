@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/internal/platform/auth"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/api/global"
@@ -41,6 +42,16 @@ func Authenticate(ctx context.Context, db *sqlx.DB, now time.Time, email, passwo
 
 	// If we are this far the request is valid. Create some claims for the user
 	// and generate their token.
-	claims := auth.NewClaims(u.ID, u.Roles, now, time.Hour)
+	claims := auth.Claims{
+		StandardClaims: jwt.StandardClaims{
+			Issuer:    "service project",
+			Subject:   u.ID,
+			Audience:  "students",
+			ExpiresAt: now.Add(time.Hour).Unix(),
+			IssuedAt:  now.Unix(),
+		},
+		Roles: u.Roles,
+	}
+
 	return claims, nil
 }

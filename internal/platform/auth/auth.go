@@ -2,36 +2,26 @@ package auth
 
 import (
 	"crypto/rsa"
-	"fmt"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/pkg/errors"
 )
 
-// KeyLookupFunc is used to map a JWT key id (kid) to the corresponding public key.
-// It is a requirement for creating an Authenticator.
+// KeyLookupFunc defines the signature of a function to lookup public keys.
+//
+// In a production system, a key id (KID) is used to retrieve the correct
+// public key to parse a JWT for auth and claims. A key lookup function is
+// provided to perform the task of retrieving a KID for a given public key.
+//
+// A key lookup function is required for creating an Authenticator.
 //
 // * Private keys should be rotated. During the transition period, tokens
 // signed with the old and new keys can coexist by looking up the correct
-// public key by key id (kid).
+// public key by KID.
 //
-// * Key-id-to-public-key resolution is usually accomplished via a public JWKS
+// * KID to public key resolution is usually accomplished via a public JWKS
 // endpoint. See https://auth0.com/docs/jwks for more details.
 type KeyLookupFunc func(kid string) (*rsa.PublicKey, error)
-
-// NewSimpleKeyLookupFunc is a simple implementation of KeyFunc that only ever
-// supports one key. This is easy for development but in production should be
-// replaced with a caching layer that calls a JWKS endpoint.
-func NewSimpleKeyLookupFunc(activeKID string, publicKey *rsa.PublicKey) KeyLookupFunc {
-	f := func(kid string) (*rsa.PublicKey, error) {
-		if activeKID != kid {
-			return nil, fmt.Errorf("unrecognized key id %q", kid)
-		}
-		return publicKey, nil
-	}
-
-	return f
-}
 
 // Authenticator is used to authenticate clients. It can generate a token for a
 // set of user claims and recreate the claims by parsing the token.
@@ -99,9 +89,9 @@ func (a *Authenticator) GenerateToken(claims Claims) (string, error) {
 // verifies that the token was signed using our key.
 func (a *Authenticator) ParseClaims(tokenStr string) (Claims, error) {
 
-	// f is a function that returns the public key for validating a token. We use
-	// the parsed (but unverified) token to find the key id. That ID is passed to
-	// our KeyFunc to find the public key to use for verification.
+	// keyFunc is a function that returns the public key for validating a token.
+	// We use the parsed (but unverified) token to find the key id. That ID is
+	// passed to our KeyFunc to find the public key to use for verification.
 	keyFunc := func(t *jwt.Token) (interface{}, error) {
 		kid, ok := t.Header["kid"]
 		if !ok {
@@ -111,7 +101,6 @@ func (a *Authenticator) ParseClaims(tokenStr string) (Claims, error) {
 		if !ok {
 			return nil, errors.New("user token key id (kid) must be string")
 		}
-
 		return a.pubKeyLookupFunc(userKID)
 	}
 

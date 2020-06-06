@@ -122,18 +122,24 @@ func run(log *log.Logger) error {
 
 	log.Println("main : Started : Initializing authentication support")
 
-	keyContents, err := ioutil.ReadFile(cfg.Auth.PrivateKeyFile)
+	privatePEM, err := ioutil.ReadFile(cfg.Auth.PrivateKeyFile)
 	if err != nil {
 		return errors.Wrap(err, "reading auth private key")
 	}
 
-	privateKey, err := jwt.ParseRSAPrivateKeyFromPEM(keyContents)
+	privateKey, err := jwt.ParseRSAPrivateKeyFromPEM(privatePEM)
 	if err != nil {
 		return errors.Wrap(err, "parsing auth private key")
 	}
 
-	f := auth.NewSimpleKeyLookupFunc(cfg.Auth.KeyID, privateKey.Public().(*rsa.PublicKey))
-	authenticator, err := auth.NewAuthenticator(privateKey, cfg.Auth.KeyID, cfg.Auth.Algorithm, f)
+	keyLookupFunc := func(kid string) (*rsa.PublicKey, error) {
+		switch kid {
+		case cfg.Auth.KeyID:
+			return privateKey.Public().(*rsa.PublicKey), nil
+		}
+		return nil, fmt.Errorf("no public key found for the specified kid: %s", kid)
+	}
+	authenticator, err := auth.NewAuthenticator(privateKey, cfg.Auth.KeyID, cfg.Auth.Algorithm, keyLookupFunc)
 	if err != nil {
 		return errors.Wrap(err, "constructing authenticator")
 	}

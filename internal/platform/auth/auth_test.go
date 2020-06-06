@@ -1,7 +1,10 @@
 package auth_test
 
 import (
+	"crypto/rsa"
+	"errors"
 	"testing"
+	"time"
 
 	"github.com/ardanlabs/service/internal/platform/auth"
 	"github.com/dgrijalva/jwt-go"
@@ -10,48 +13,60 @@ import (
 func TestAuthenticator(t *testing.T) {
 
 	// Parse the private key used to generate the token.
-	prvKey, err := jwt.ParseRSAPrivateKeyFromPEM([]byte(privateRSAKey))
+	privateKey, err := jwt.ParseRSAPrivateKeyFromPEM([]byte(privateRSAKey))
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// Parse the public key used to validate the token.
-	pubKey, err := jwt.ParseRSAPublicKeyFromPEM([]byte(publicRSAKey))
+	publicKey, err := jwt.ParseRSAPublicKeyFromPEM([]byte(publicRSAKey))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	a, err := auth.NewAuthenticator(prvKey, privateRSAKeyID, "RS256", auth.NewSimpleKeyLookupFunc(privateRSAKeyID, pubKey))
+	// Create a key lookup function that returns the public key for the test KID.
+	keyLookupFunc := func(kid string) (*rsa.PublicKey, error) {
+		if kid != KID {
+			return nil, errors.New("no public key found")
+		}
+		return publicKey, nil
+	}
+	a, err := auth.NewAuthenticator(privateKey, KID, "RS256", keyLookupFunc)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	// Generate the token.
-	signedClaims := auth.Claims{
-		Roles: []string{auth.RoleAdmin},
+	claims := auth.Claims{
+		StandardClaims: jwt.StandardClaims{
+			Issuer:    "service project",
+			Subject:   "0x01",
+			Audience:  "students",
+			ExpiresAt: time.Now().Add(8760 * time.Hour).Unix(),
+			IssuedAt:  time.Now().Unix(),
+		},
+		Roles: []string{"ADMIN"},
 	}
 
-	tknStr, err := a.GenerateToken(signedClaims)
+	token, err := a.GenerateToken(claims)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	parsedClaims, err := a.ParseClaims(tknStr)
+	parsedClaims, err := a.ParseClaims(token)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	// Assert expected claims.
-	if exp, got := len(signedClaims.Roles), len(parsedClaims.Roles); exp != got {
+	if exp, got := len(claims.Roles), len(parsedClaims.Roles); exp != got {
 		t.Fatalf("expected %v roles, got %v", exp, got)
 	}
-	if exp, got := signedClaims.Roles[0], parsedClaims.Roles[0]; exp != got {
+	if exp, got := claims.Roles[0], parsedClaims.Roles[0]; exp != got {
 		t.Fatalf("expected roles[0] == %v, got %v", exp, got)
 	}
 }
 
-// The key id we would have generated for the private below key
-const privateRSAKeyID = "54bb2165-71e1-41a6-af3e-7da4a0e1e2c1"
+// The key id we would have generated for the keys below.
+const KID = "54bb2165-71e1-41a6-af3e-7da4a0e1e2c1"
 
 // Output of:
 // openssl genpkey -algorithm RSA -out private.pem -pkeyopt rsa_keygen_bits:2048

@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"crypto/rsa"
+	"errors"
 	"log"
 	"os"
 	"testing"
@@ -106,15 +107,21 @@ func NewIntegration(t *testing.T) *Test {
 	log := log.New(os.Stdout, "TEST : ", log.LstdFlags|log.Lmicroseconds|log.Lshortfile)
 
 	// Create RSA keys to enable authentication in our service.
-	key, err := rsa.GenerateKey(rand.Reader, 2048)
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	// Build an authenticator using this static key.
-	kid := "4754d86b-7a6d-4df5-9c65-224741361492"
-	kf := auth.NewSimpleKeyLookupFunc(kid, key.Public().(*rsa.PublicKey))
-	authenticator, err := auth.NewAuthenticator(key, kid, "RS256", kf)
+	// Build an authenticator using this key lookup function to retrieve
+	// the corresponding public key.
+	KID := "4754d86b-7a6d-4df5-9c65-224741361492"
+	keyLookupFunc := func(kid string) (*rsa.PublicKey, error) {
+		if kid != KID {
+			return nil, errors.New("no public key found")
+		}
+		return privateKey.Public().(*rsa.PublicKey), nil
+	}
+	authenticator, err := auth.NewAuthenticator(privateKey, KID, "RS256", keyLookupFunc)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -135,20 +142,17 @@ func (test *Test) Teardown() {
 
 // Token generates an authenticated token for a user.
 func (test *Test) Token(email, pass string) string {
-	claims, err := data.Authenticate(
-		context.Background(), test.DB, time.Now(),
-		email, pass,
-	)
+	claims, err := data.Authenticate(context.Background(), test.DB, time.Now(), email, pass)
 	if err != nil {
 		test.t.Fatal(err)
 	}
 
-	tkn, err := test.Authenticator.GenerateToken(claims)
+	token, err := test.Authenticator.GenerateToken(claims)
 	if err != nil {
 		test.t.Fatal(err)
 	}
 
-	return tkn
+	return token
 }
 
 // Context returns an app level context for testing.
