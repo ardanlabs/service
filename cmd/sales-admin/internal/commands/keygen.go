@@ -15,7 +15,7 @@ import (
 func KeyGen() error {
 
 	// Generate a new private key.
-	key, err := rsa.GenerateKey(rand.Reader, 2048)
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
 		return ErrHelp
 	}
@@ -30,12 +30,18 @@ func KeyGen() error {
 	// Construct a PEM block for the private key.
 	privateBlock := pem.Block{
 		Type:  "RSA PRIVATE KEY",
-		Bytes: x509.MarshalPKCS1PrivateKey(key),
+		Bytes: x509.MarshalPKCS1PrivateKey(privateKey),
 	}
 
 	// Write the private key to the private key file.
 	if err := pem.Encode(privateFile, &privateBlock); err != nil {
 		return errors.Wrap(err, "encoding to private file")
+	}
+
+	// Marshal the public key from the private key to PKIX.
+	asn1Bytes, err := x509.MarshalPKIXPublicKey(&privateKey.PublicKey)
+	if err != nil {
+		return errors.Wrap(err, "marshaling public key")
 	}
 
 	// Create a file for the public key information in PEM form.
@@ -48,7 +54,7 @@ func KeyGen() error {
 	// Construct a PEM block for the public key.
 	publicBlock := pem.Block{
 		Type:  "RSA PUBLIC KEY",
-		Bytes: x509.MarshalPKCS1PublicKey(&key.PublicKey),
+		Bytes: asn1Bytes,
 	}
 
 	// Write the public key to the private key file.
