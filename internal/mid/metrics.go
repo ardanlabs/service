@@ -27,7 +27,7 @@ func Metrics() web.Middleware {
 	// This is the actual middleware function to be executed.
 	m := func(before web.Handler) web.Handler {
 
-		// Wrap this handler around the next one provided.
+		// Create the handler that will be attached in the middleware chain.
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 			ctx, span := global.Tracer("service").Start(ctx, "internal.mid.metrics")
 			defer span.End()

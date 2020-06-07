@@ -37,27 +37,27 @@ func (retUser) List(ctx context.Context, db *sqlx.DB) ([]User, error) {
 }
 
 // One gets the specified user from the database.
-func (retUser) One(ctx context.Context, claims auth.Claims, db *sqlx.DB, id string) (*User, error) {
+func (retUser) One(ctx context.Context, claims auth.Claims, db *sqlx.DB, userID string) (*User, error) {
 	ctx, span := global.Tracer("service").Start(ctx, "internal.data.retrieve.user.one")
 	defer span.End()
 
-	if _, err := uuid.Parse(id); err != nil {
+	if _, err := uuid.Parse(userID); err != nil {
 		return nil, ErrInvalidID
 	}
 
-	// If you are not an admin and looking to retrieve someone else then you are rejected.
-	if !claims.HasRole(auth.RoleAdmin) && claims.Subject != id {
+	// If you are not an admin and looking to retrieve someone other than yourself.
+	if !claims.HasRole(auth.RoleAdmin) && claims.Subject != userID {
 		return nil, ErrForbidden
 	}
 
 	var u User
 	const q = `SELECT * FROM users WHERE user_id = $1`
-	if err := db.GetContext(ctx, &u, q, id); err != nil {
+	if err := db.GetContext(ctx, &u, q, userID); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, ErrNotFound
 		}
 
-		return nil, errors.Wrapf(err, "selecting user %q", id)
+		return nil, errors.Wrapf(err, "selecting user %q", userID)
 	}
 
 	return &u, nil
