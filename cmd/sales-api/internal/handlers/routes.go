@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/ardanlabs/service/internal/auth" // Import is removed in final PR
 	"github.com/ardanlabs/service/internal/mid"
-	"github.com/ardanlabs/service/internal/platform/auth" // Import is removed in final PR
 	"github.com/ardanlabs/service/internal/platform/web"
 	"github.com/jmoiron/sqlx"
 )

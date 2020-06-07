@@ -10,8 +10,8 @@ import (
 	"testing"
 
 	"github.com/ardanlabs/service/cmd/sales-api/internal/handlers"
+	"github.com/ardanlabs/service/internal/auth"
 	"github.com/ardanlabs/service/internal/data"
-	"github.com/ardanlabs/service/internal/platform/auth"
 	"github.com/ardanlabs/service/internal/platform/tests"
 	"github.com/ardanlabs/service/internal/platform/web"
 	"github.com/google/go-cmp/cmp"

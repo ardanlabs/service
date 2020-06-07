@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ardanlabs/service/internal/auth"
 	"github.com/ardanlabs/service/internal/data"
-	"github.com/ardanlabs/service/internal/platform/auth"
 	"github.com/ardanlabs/service/internal/platform/tests"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/google/go-cmp/cmp"

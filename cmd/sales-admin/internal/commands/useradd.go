@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/ardanlabs/service/internal/auth"
 	"github.com/ardanlabs/service/internal/data"
-	"github.com/ardanlabs/service/internal/platform/auth"
 	"github.com/ardanlabs/service/internal/platform/database"
 	"github.com/pkg/errors"
 )
