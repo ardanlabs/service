@@ -19,7 +19,7 @@ RUN mkdir -p /service
 WORKDIR /service
 COPY . .
 
-# Build the admin tool so we can have it in the container. This should change
+# Build the admin tool so we can have it in the container. This should not change
 # often so do this first.
 WORKDIR /service/cmd/${PACKAGE_PREFIX}sales-admin
 RUN go build -ldflags "-X main.build=${VCS_REF}"
