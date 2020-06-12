@@ -38,33 +38,7 @@ down:
 logs:
 	docker-compose logs -f
 
-# Running from within the local computer
-
-run-local: up-local seed
-
-up-local:
-	docker run -it -d -p 5432:5432 postgres:11.1-alpine
-
-sales-local:
-	cd cmd/sales-api; \
-	go run main.go
-
-FILES := $(shell docker ps -aq)
-
-down-local:
-	docker stop $(FILES)
-	docker rm $(FILES)
-
-logs-local:
-	docker logs -f $(FILES)
-
 # Administration
-
-keys:
-	go run cmd/sales-admin/main.go keygen
-
-admin:
-	go run cmd/sales-admin/main.go --db-disable-tls=1 useradd admin@example.com gophers
 
 migrate:
 	go run cmd/sales-admin/main.go --db-disable-tls=1 migrate
@@ -99,5 +73,14 @@ deps-cleancache:
 
 # Docker support
 
+FILES := $(shell docker ps -aq)
+
+down-local:
+	docker stop $(FILES)
+	docker rm $(FILES)
+
 clean:
-	docker system prune -f
+	docker system prune -f	
+
+logs-local:
+	docker logs -f $(FILES)
