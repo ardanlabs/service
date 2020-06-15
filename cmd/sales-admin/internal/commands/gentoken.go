@@ -107,6 +107,6 @@ func GenToken(cfg database.Config, id string, privateKeyFile string, algorithm s
 		return errors.Wrap(err, "generating token")
 	}
 
-	fmt.Printf("-----BEGIN TOKEN-----\n%s\n-----BEGIN TOKEN-----\n", token)
+	fmt.Printf("-----BEGIN TOKEN-----\n%s\n-----END TOKEN-----\n", token)
 	return nil
 }
