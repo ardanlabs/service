@@ -232,18 +232,9 @@ func run(log *log.Logger) error {
 		ctx, cancel := context.WithTimeout(context.Background(), cfg.Web.ShutdownTimeout)
 		defer cancel()
 
-		// Asking listener to shutdown and load shed.
-		err := api.Shutdown(ctx)
-		if err != nil {
-			log.Printf("main: Graceful shutdown did not complete in %v : %v", cfg.Web.ShutdownTimeout, err)
-			err = api.Close()
-		}
-
-		// Log the status of this shutdown.
-		switch {
-		case sig == syscall.SIGSTOP:
-			return errors.New("integrity issue caused shutdown")
-		case err != nil:
+		// Asking listener to shutdown and shed load.
+		if err := api.Shutdown(ctx); err != nil {
+			api.Close()
 			return errors.Wrap(err, "could not stop server gracefully")
 		}
 	}
