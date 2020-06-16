@@ -1,0 +1,175 @@
+package handlers
+
+import (
+	"context"
+	"net/http"
+
+	"github.com/ardanlabs/service/business/auth"
+	"github.com/ardanlabs/service/business/data"
+	"github.com/ardanlabs/service/business/data/user"
+	"github.com/ardanlabs/service/foundation/web"
+	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
+	"go.opentelemetry.io/otel/api/global"
+)
+
+type userHandlers struct {
+	db            *sqlx.DB
+	authenticator *auth.Authenticator
+}
+
+func (h *userHandlers) list(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	ctx, span := global.Tracer("service").Start(ctx, "handlers.user.list")
+	defer span.End()
+
+	users, err := user.List(ctx, h.db)
+	if err != nil {
+		return err
+	}
+
+	return web.Respond(ctx, w, users, http.StatusOK)
+}
+
+func (h *userHandlers) retrieve(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	ctx, span := global.Tracer("service").Start(ctx, "handlers.user.retrieve")
+	defer span.End()
+
+	claims, ok := ctx.Value(auth.Key).(auth.Claims)
+	if !ok {
+		return errors.New("claims missing from context")
+	}
+
+	params := web.Params(r)
+	usr, err := user.One(ctx, claims, h.db, params["id"])
+	if err != nil {
+		switch err {
+		case data.ErrInvalidID:
+			return web.NewRequestError(err, http.StatusBadRequest)
+		case data.ErrNotFound:
+			return web.NewRequestError(err, http.StatusNotFound)
+		case data.ErrForbidden:
+			return web.NewRequestError(err, http.StatusForbidden)
+		default:
+			return errors.Wrapf(err, "Id: %s", params["id"])
+		}
+	}
+
+	return web.Respond(ctx, w, usr, http.StatusOK)
+}
+
+func (h *userHandlers) create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	ctx, span := global.Tracer("service").Start(ctx, "handlers.user.create")
+	defer span.End()
+
+	v, ok := ctx.Value(web.KeyValues).(*web.Values)
+	if !ok {
+		return web.NewShutdownError("web value missing from context")
+	}
+
+	var nu data.NewUser
+	if err := web.Decode(r, &nu); err != nil {
+		return errors.Wrap(err, "")
+	}
+
+	usr, err := user.Create(ctx, h.db, nu, v.Now)
+	if err != nil {
+		return errors.Wrapf(err, "User: %+v", &usr)
+	}
+
+	return web.Respond(ctx, w, usr, http.StatusCreated)
+}
+
+func (h *userHandlers) update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	ctx, span := global.Tracer("service").Start(ctx, "handlers.user.update")
+	defer span.End()
+
+	v, ok := ctx.Value(web.KeyValues).(*web.Values)
+	if !ok {
+		return web.NewShutdownError("web value missing from context")
+	}
+
+	claims, ok := ctx.Value(auth.Key).(auth.Claims)
+	if !ok {
+		return errors.New("claims missing from context")
+	}
+
+	var upd data.UpdateUser
+	if err := web.Decode(r, &upd); err != nil {
+		return errors.Wrap(err, "")
+	}
+
+	params := web.Params(r)
+	err := user.Update(ctx, claims, h.db, params["id"], upd, v.Now)
+	if err != nil {
+		switch err {
+		case data.ErrInvalidID:
+			return web.NewRequestError(err, http.StatusBadRequest)
+		case data.ErrNotFound:
+			return web.NewRequestError(err, http.StatusNotFound)
+		case data.ErrForbidden:
+			return web.NewRequestError(err, http.StatusForbidden)
+		default:
+			return errors.Wrapf(err, "ID: %s  User: %+v", params["id"], &upd)
+		}
+	}
+
+	return web.Respond(ctx, w, nil, http.StatusNoContent)
+}
+
+func (h *userHandlers) delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	ctx, span := global.Tracer("service").Start(ctx, "handlers.user.delete")
+	defer span.End()
+
+	params := web.Params(r)
+	err := user.Delete(ctx, h.db, params["id"])
+	if err != nil {
+		switch err {
+		case data.ErrInvalidID:
+			return web.NewRequestError(err, http.StatusBadRequest)
+		case data.ErrNotFound:
+			return web.NewRequestError(err, http.StatusNotFound)
+		case data.ErrForbidden:
+			return web.NewRequestError(err, http.StatusForbidden)
+		default:
+			return errors.Wrapf(err, "Id: %s", params["id"])
+		}
+	}
+
+	return web.Respond(ctx, w, nil, http.StatusNoContent)
+}
+
+func (h *userHandlers) token(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	ctx, span := global.Tracer("service").Start(ctx, "handlers.user.token")
+	defer span.End()
+
+	v, ok := ctx.Value(web.KeyValues).(*web.Values)
+	if !ok {
+		return web.NewShutdownError("web value missing from context")
+	}
+
+	email, pass, ok := r.BasicAuth()
+	if !ok {
+		err := errors.New("must provide email and password in Basic auth")
+		return web.NewRequestError(err, http.StatusUnauthorized)
+	}
+
+	claims, err := user.Authenticate(ctx, h.db, v.Now, email, pass)
+	if err != nil {
+		switch err {
+		case data.ErrAuthenticationFailure:
+			return web.NewRequestError(err, http.StatusUnauthorized)
+		default:
+			return errors.Wrap(err, "authenticating")
+		}
+	}
+
+	var tkn struct {
+		Token string `json:"token"`
+	}
+	tkn.Token, err = h.authenticator.GenerateToken(claims)
+	if err != nil {
+		return errors.Wrap(err, "generating token")
+	}
+
+	return web.Respond(ctx, w, tkn, http.StatusOK)
+}

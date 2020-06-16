@@ -21,12 +21,12 @@ COPY . .
 
 # Build the admin tool so we can have it in the container. This should not change
 # often so do this first.
-WORKDIR /service/cmd/${PACKAGE_PREFIX}sales-admin
+WORKDIR /service/app/${PACKAGE_PREFIX}sales-admin
 RUN go build -ldflags "-X main.build=${VCS_REF}"
 
 # Build the service binary. We are doing this last since this will be different
 # every time we run through this process.
-WORKDIR /service/cmd/${PACKAGE_PREFIX}${PACKAGE_NAME}
+WORKDIR /service/app/${PACKAGE_PREFIX}${PACKAGE_NAME}
 RUN go build -ldflags "-X main.build=${VCS_REF}"
 
 
@@ -37,8 +37,8 @@ ARG VCS_REF
 ARG PACKAGE_NAME
 ARG PACKAGE_PREFIX
 COPY --from=build_sales-api /service/private.pem /app/private.pem
-COPY --from=build_sales-api /service/cmd/${PACKAGE_PREFIX}sales-admin/sales-admin /app/admin
-COPY --from=build_sales-api /service/cmd/${PACKAGE_PREFIX}${PACKAGE_NAME}/${PACKAGE_NAME} /app/main
+COPY --from=build_sales-api /service/app/${PACKAGE_PREFIX}sales-admin/sales-admin /app/admin
+COPY --from=build_sales-api /service/app/${PACKAGE_PREFIX}${PACKAGE_NAME}/${PACKAGE_NAME} /app/main
 WORKDIR /app
 CMD ["/app/main"]
 

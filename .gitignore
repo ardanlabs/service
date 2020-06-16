@@ -1,7 +1,7 @@
 # Binaries
-cmd/sales-admin/sales-admin
-cmd/sales-api/sales-api
-cmd/sidecar/metrics/metrics
+app/sales-admin/sales-admin
+app/sales-api/sales-api
+app/sidecar/metrics/metrics
 
 # Mac
 .DS_Store
