@@ -25,7 +25,7 @@ func TestUser(t *testing.T) {
 			ctx := tests.Context()
 			now := time.Date(2018, time.October, 1, 0, 0, 0, 0, time.UTC)
 
-			nu := data.NewUser{
+			nu := user.NewUser{
 				Name:            "Bill Kennedy",
 				Email:           "bill@ardanlabs.com",
 				Roles:           []string{auth.RoleAdmin},
@@ -66,7 +66,7 @@ func TestUser(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould get back the same user.", tests.Success, testID)
 
-			upd := data.UpdateUser{
+			upd := user.UpdateUser{
 				Name:  tests.StringPointer("Jacob Walker"),
 				Email: tests.StringPointer("jacob@ardanlabs.com"),
 			}
@@ -104,7 +104,7 @@ func TestUser(t *testing.T) {
 			t.Logf("\t%s\tTest %d:\tShould be able to delete user.", tests.Success, testID)
 
 			_, err = user.One(ctx, claims, db, u.ID)
-			if errors.Cause(err) != data.ErrNotFound {
+			if errors.Cause(err) != user.ErrNotFound {
 				t.Fatalf("\t%s\tTest %d:\tShould NOT be able to retrieve user : %s.", tests.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould NOT be able to retrieve user.", tests.Success, testID)
@@ -123,7 +123,7 @@ func TestAuthenticate(t *testing.T) {
 		{
 			ctx := tests.Context()
 
-			nu := data.NewUser{
+			nu := user.NewUser{
 				Name:            "Anna Walker",
 				Email:           "anna@ardanlabs.com",
 				Roles:           []string{auth.RoleAdmin},

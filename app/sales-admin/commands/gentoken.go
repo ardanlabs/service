@@ -72,9 +72,9 @@ func GenToken(cfg database.Config, id string, privateKeyFile string, algorithm s
 	// to the corresponding public key, the algorithms to use (RS256), and the
 	// key lookup function to perform the actual retrieve of the KID to public
 	// key lookup.
-	authenticator, err := auth.NewAuthenticator(privateKey, keyID, algorithm, keyLookupFunc)
+	a, err := auth.New(privateKey, keyID, algorithm, keyLookupFunc)
 	if err != nil {
-		return errors.Wrap(err, "constructing authenticator")
+		return errors.Wrap(err, "constructing auth")
 	}
 
 	// Generating a token requires defining a set of claims. In this applications
@@ -102,7 +102,7 @@ func GenToken(cfg database.Config, id string, privateKeyFile string, algorithm s
 	// with need to be configured with the information found in the public key
 	// file to validate these claims. Dgraph does not support key rotate at
 	// this time.
-	token, err := authenticator.GenerateToken(claims)
+	token, err := a.GenerateToken(claims)
 	if err != nil {
 		return errors.Wrap(err, "generating token")
 	}

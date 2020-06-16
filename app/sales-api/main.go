@@ -139,9 +139,9 @@ func run(log *log.Logger) error {
 		}
 		return nil, fmt.Errorf("no public key found for the specified kid: %s", kid)
 	}
-	authenticator, err := auth.NewAuthenticator(privateKey, cfg.Auth.KeyID, cfg.Auth.Algorithm, keyLookupFunc)
+	a, err := auth.New(privateKey, cfg.Auth.KeyID, cfg.Auth.Algorithm, keyLookupFunc)
 	if err != nil {
-		return errors.Wrap(err, "constructing authenticator")
+		return errors.Wrap(err, "constructing auth")
 	}
 
 	// =========================================================================
@@ -202,7 +202,7 @@ func run(log *log.Logger) error {
 
 	api := http.Server{
 		Addr:         cfg.Web.APIHost,
-		Handler:      handlers.API(build, shutdown, log, db, authenticator),
+		Handler:      handlers.API(build, shutdown, log, db, a),
 		ReadTimeout:  cfg.Web.ReadTimeout,
 		WriteTimeout: cfg.Web.WriteTimeout,
 	}

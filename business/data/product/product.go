@@ -7,20 +7,34 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/auth"
-	"github.com/ardanlabs/service/business/data"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/api/global"
 )
 
+var (
+	// ErrNotFound is used when a specific User is requested but does not exist.
+	ErrNotFound = errors.New("not found")
+
+	// ErrInvalidID occurs when an ID is not in a valid form.
+	ErrInvalidID = errors.New("ID is not in its proper form")
+
+	// ErrAuthenticationFailure occurs when a user attempts to authenticate but
+	// anything goes wrong.
+	ErrAuthenticationFailure = errors.New("authentication failed")
+
+	// ErrForbidden occurs when a user tries to do something that is forbidden to them according to our access control policies.
+	ErrForbidden = errors.New("attempted action is not allowed")
+)
+
 // Create adds a Product to the database. It returns the created Product with
 // fields like ID and DateCreated populated.
-func Create(ctx context.Context, db *sqlx.DB, user auth.Claims, np data.NewProduct, now time.Time) (data.Product, error) {
+func Create(ctx context.Context, db *sqlx.DB, user auth.Claims, np NewProduct, now time.Time) (Product, error) {
 	ctx, span := global.Tracer("service").Start(ctx, "internal.data.product.create")
 	defer span.End()
 
-	p := data.Product{
+	p := Product{
 		ID:          uuid.New().String(),
 		Name:        np.Name,
 		Cost:        np.Cost,
@@ -35,7 +49,7 @@ func Create(ctx context.Context, db *sqlx.DB, user auth.Claims, np data.NewProdu
 		VALUES ($1, $2, $3, $4, $5, $6, $7)`
 
 	if _, err := db.ExecContext(ctx, q, p.ID, p.UserID, p.Name, p.Cost, p.Quantity, p.DateCreated, p.DateUpdated); err != nil {
-		return data.Product{}, errors.Wrap(err, "inserting product")
+		return Product{}, errors.Wrap(err, "inserting product")
 	}
 
 	return p, nil
@@ -43,7 +57,7 @@ func Create(ctx context.Context, db *sqlx.DB, user auth.Claims, np data.NewProdu
 
 // Update modifies data about a Product. It will error if the specified ID is
 // invalid or does not reference an existing Product.
-func Update(ctx context.Context, db *sqlx.DB, user auth.Claims, id string, update data.UpdateProduct, now time.Time) error {
+func Update(ctx context.Context, db *sqlx.DB, user auth.Claims, id string, update UpdateProduct, now time.Time) error {
 	ctx, span := global.Tracer("service").Start(ctx, "internal.data.product.update")
 	defer span.End()
 
@@ -54,7 +68,7 @@ func Update(ctx context.Context, db *sqlx.DB, user auth.Claims, id string, updat
 
 	// If you are not an admin and looking to retrieve someone elses product.
 	if !user.HasRole(auth.RoleAdmin) && p.UserID != user.Subject {
-		return data.ErrForbidden
+		return ErrForbidden
 	}
 
 	if update.Name != nil {
@@ -88,7 +102,7 @@ func Delete(ctx context.Context, db *sqlx.DB, id string) error {
 	defer span.End()
 
 	if _, err := uuid.Parse(id); err != nil {
-		return data.ErrInvalidID
+		return ErrInvalidID
 	}
 
 	const q = `DELETE FROM products WHERE product_id = $1`
@@ -101,7 +115,7 @@ func Delete(ctx context.Context, db *sqlx.DB, id string) error {
 }
 
 // List gets all Products from the database.
-func List(ctx context.Context, db *sqlx.DB) ([]data.Product, error) {
+func List(ctx context.Context, db *sqlx.DB) ([]Product, error) {
 	ctx, span := global.Tracer("service").Start(ctx, "internal.data.product.list")
 	defer span.End()
 
@@ -113,7 +127,7 @@ func List(ctx context.Context, db *sqlx.DB) ([]data.Product, error) {
 		LEFT JOIN sales AS s ON p.product_id = s.product_id
 		GROUP BY p.product_id`
 
-	products := []data.Product{}
+	products := []Product{}
 	if err := db.SelectContext(ctx, &products, q); err != nil {
 		return nil, errors.Wrap(err, "selecting products")
 	}
@@ -122,12 +136,12 @@ func List(ctx context.Context, db *sqlx.DB) ([]data.Product, error) {
 }
 
 // One finds the product identified by a given ID.
-func One(ctx context.Context, db *sqlx.DB, id string) (data.Product, error) {
+func One(ctx context.Context, db *sqlx.DB, id string) (Product, error) {
 	ctx, span := global.Tracer("service").Start(ctx, "internal.data.product.one")
 	defer span.End()
 
 	if _, err := uuid.Parse(id); err != nil {
-		return data.Product{}, data.ErrInvalidID
+		return Product{}, ErrInvalidID
 	}
 
 	const q = `SELECT
@@ -139,12 +153,12 @@ func One(ctx context.Context, db *sqlx.DB, id string) (data.Product, error) {
 		WHERE p.product_id = $1
 		GROUP BY p.product_id`
 
-	var p data.Product
+	var p Product
 	if err := db.GetContext(ctx, &p, q, id); err != nil {
 		if err == sql.ErrNoRows {
-			return data.Product{}, data.ErrNotFound
+			return Product{}, ErrNotFound
 		}
-		return data.Product{}, errors.Wrap(err, "selecting single product")
+		return Product{}, errors.Wrap(err, "selecting single product")
 	}
 
 	return p, nil

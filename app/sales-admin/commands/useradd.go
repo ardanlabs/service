@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/auth"
-	"github.com/ardanlabs/service/business/data"
 	"github.com/ardanlabs/service/business/data/user"
 	"github.com/ardanlabs/service/foundation/database"
 	"github.com/pkg/errors"
@@ -28,7 +27,7 @@ func UserAdd(cfg database.Config, email, password string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	nu := data.NewUser{
+	nu := user.NewUser{
 		Email:           email,
 		Password:        password,
 		PasswordConfirm: password,

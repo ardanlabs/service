@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"github.com/ardanlabs/service/app/sales-api/handlers"
-	"github.com/ardanlabs/service/business/data"
+	"github.com/ardanlabs/service/business/data/product"
 	"github.com/ardanlabs/service/business/tests"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/google/go-cmp/cmp"
@@ -29,7 +29,7 @@ func TestProducts(t *testing.T) {
 
 	shutdown := make(chan os.Signal, 1)
 	tests := ProductTests{
-		app:       handlers.API("develop", shutdown, test.Log, test.DB, test.Authenticator),
+		app:       handlers.API("develop", shutdown, test.Log, test.DB, test.Auth),
 		userToken: test.Token("admin@example.com", "gophers"),
 	}
 
@@ -103,7 +103,7 @@ func (pt *ProductTests) postProduct400(t *testing.T) {
 // postProduct401 validates a product can't be created with the endpoint
 // unless the user is authenticated
 func (pt *ProductTests) postProduct401(t *testing.T) {
-	np := data.NewProduct{
+	np := product.NewProduct{
 		Name:     "Comic Books",
 		Cost:     25,
 		Quantity: 60,
@@ -224,7 +224,7 @@ func (pt *ProductTests) deleteProductNotFound(t *testing.T) {
 func (pt *ProductTests) putProduct404(t *testing.T) {
 	id := "9b468f90-1cf1-4377-b3fa-68b450d632a0"
 
-	up := data.UpdateProduct{
+	up := product.UpdateProduct{
 		Name: tests.StringPointer("Nonexistent"),
 	}
 	body, err := json.Marshal(&up)
@@ -270,8 +270,8 @@ func (pt *ProductTests) crudProduct(t *testing.T) {
 }
 
 // postProduct201 validates a product can be created with the endpoint.
-func (pt *ProductTests) postProduct201(t *testing.T) data.Product {
-	np := data.NewProduct{
+func (pt *ProductTests) postProduct201(t *testing.T) product.Product {
+	np := product.NewProduct{
 		Name:     "Comic Books",
 		Cost:     25,
 		Quantity: 60,
@@ -289,7 +289,7 @@ func (pt *ProductTests) postProduct201(t *testing.T) data.Product {
 	pt.app.ServeHTTP(w, r)
 
 	// This needs to be returned for other tests.
-	var got data.Product
+	var got product.Product
 
 	t.Log("Given the need to create a new product with the products endpoint.")
 	{
@@ -361,7 +361,7 @@ func (pt *ProductTests) getProduct200(t *testing.T, id string) {
 			}
 			t.Logf("\t%s\tTest : %d\tShould receive a status code of 200 for the response.", tests.Success, testID)
 
-			var got data.Product
+			var got product.Product
 			if err := json.NewDecoder(w.Body).Decode(&got); err != nil {
 				t.Fatalf("\t%s\tTest : %d\tShould be able to unmarshal the response : %v", tests.Failed, testID, err)
 			}
@@ -412,7 +412,7 @@ func (pt *ProductTests) putProduct204(t *testing.T, id string) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould receive a status code of 200 for the retrieve.", tests.Success, testID)
 
-			var ru data.Product
+			var ru product.Product
 			if err := json.NewDecoder(w.Body).Decode(&ru); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to unmarshal the response : %v", tests.Failed, testID, err)
 			}

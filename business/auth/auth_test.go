@@ -35,7 +35,7 @@ func TestAuthenticator(t *testing.T) {
 				}
 				return publicKey, nil
 			}
-			a, err := auth.NewAuthenticator(privateKey, KID, "RS256", keyLookupFunc)
+			a, err := auth.New(privateKey, KID, "RS256", keyLookupFunc)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to create an authenticator: %v", tests.Failed, testID, err)
 			}
@@ -58,7 +58,7 @@ func TestAuthenticator(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to generate a JWT.", tests.Success, testID)
 
-			parsedClaims, err := a.ParseClaims(token)
+			parsedClaims, err := a.ValidateToken(token)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to parse the claims: %v", tests.Failed, testID, err)
 			}

@@ -68,5 +68,4 @@ func DeleteAll(db *sqlx.DB) error {
 // deleteAll is used to clean the database between tests.
 const deleteAll = `
 DELETE FROM products;
-DELETE FROM sales;
 DELETE FROM users;`

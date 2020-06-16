@@ -90,9 +90,9 @@ func NewUnit(t *testing.T) (*sqlx.DB, func()) {
 
 // Test owns state for running and shutting down tests.
 type Test struct {
-	DB            *sqlx.DB
-	Log           *log.Logger
-	Authenticator *auth.Authenticator
+	DB   *sqlx.DB
+	Log  *log.Logger
+	Auth *auth.Auth
 
 	t       *testing.T
 	cleanup func()
@@ -123,17 +123,17 @@ func NewIntegration(t *testing.T) *Test {
 		}
 		return privateKey.Public().(*rsa.PublicKey), nil
 	}
-	authenticator, err := auth.NewAuthenticator(privateKey, KID, "RS256", keyLookupFunc)
+	auth, err := auth.New(privateKey, KID, "RS256", keyLookupFunc)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	return &Test{
-		DB:            db,
-		Log:           log,
-		Authenticator: authenticator,
-		t:             t,
-		cleanup:       cleanup,
+		DB:      db,
+		Log:     log,
+		Auth:    auth,
+		t:       t,
+		cleanup: cleanup,
 	}
 }
 
@@ -149,7 +149,7 @@ func (test *Test) Token(email, pass string) string {
 		test.t.Fatal(err)
 	}
 
-	token, err := test.Authenticator.GenerateToken(claims)
+	token, err := test.Auth.GenerateToken(claims)
 	if err != nil {
 		test.t.Fatal(err)
 	}

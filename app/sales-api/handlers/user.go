@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/ardanlabs/service/business/auth"
-	"github.com/ardanlabs/service/business/data"
 	"github.com/ardanlabs/service/business/data/user"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/jmoiron/sqlx"
@@ -14,8 +13,8 @@ import (
 )
 
 type userHandlers struct {
-	db            *sqlx.DB
-	authenticator *auth.Authenticator
+	db   *sqlx.DB
+	auth *auth.Auth
 }
 
 func (h *userHandlers) list(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
@@ -43,11 +42,11 @@ func (h *userHandlers) retrieve(ctx context.Context, w http.ResponseWriter, r *h
 	usr, err := user.One(ctx, claims, h.db, params["id"])
 	if err != nil {
 		switch err {
-		case data.ErrInvalidID:
+		case user.ErrInvalidID:
 			return web.NewRequestError(err, http.StatusBadRequest)
-		case data.ErrNotFound:
+		case user.ErrNotFound:
 			return web.NewRequestError(err, http.StatusNotFound)
-		case data.ErrForbidden:
+		case user.ErrForbidden:
 			return web.NewRequestError(err, http.StatusForbidden)
 		default:
 			return errors.Wrapf(err, "Id: %s", params["id"])
@@ -66,7 +65,7 @@ func (h *userHandlers) create(ctx context.Context, w http.ResponseWriter, r *htt
 		return web.NewShutdownError("web value missing from context")
 	}
 
-	var nu data.NewUser
+	var nu user.NewUser
 	if err := web.Decode(r, &nu); err != nil {
 		return errors.Wrap(err, "")
 	}
@@ -93,7 +92,7 @@ func (h *userHandlers) update(ctx context.Context, w http.ResponseWriter, r *htt
 		return errors.New("claims missing from context")
 	}
 
-	var upd data.UpdateUser
+	var upd user.UpdateUser
 	if err := web.Decode(r, &upd); err != nil {
 		return errors.Wrap(err, "")
 	}
@@ -102,11 +101,11 @@ func (h *userHandlers) update(ctx context.Context, w http.ResponseWriter, r *htt
 	err := user.Update(ctx, claims, h.db, params["id"], upd, v.Now)
 	if err != nil {
 		switch err {
-		case data.ErrInvalidID:
+		case user.ErrInvalidID:
 			return web.NewRequestError(err, http.StatusBadRequest)
-		case data.ErrNotFound:
+		case user.ErrNotFound:
 			return web.NewRequestError(err, http.StatusNotFound)
-		case data.ErrForbidden:
+		case user.ErrForbidden:
 			return web.NewRequestError(err, http.StatusForbidden)
 		default:
 			return errors.Wrapf(err, "ID: %s  User: %+v", params["id"], &upd)
@@ -124,11 +123,11 @@ func (h *userHandlers) delete(ctx context.Context, w http.ResponseWriter, r *htt
 	err := user.Delete(ctx, h.db, params["id"])
 	if err != nil {
 		switch err {
-		case data.ErrInvalidID:
+		case user.ErrInvalidID:
 			return web.NewRequestError(err, http.StatusBadRequest)
-		case data.ErrNotFound:
+		case user.ErrNotFound:
 			return web.NewRequestError(err, http.StatusNotFound)
-		case data.ErrForbidden:
+		case user.ErrForbidden:
 			return web.NewRequestError(err, http.StatusForbidden)
 		default:
 			return errors.Wrapf(err, "Id: %s", params["id"])
@@ -156,7 +155,7 @@ func (h *userHandlers) token(ctx context.Context, w http.ResponseWriter, r *http
 	claims, err := user.Authenticate(ctx, h.db, v.Now, email, pass)
 	if err != nil {
 		switch err {
-		case data.ErrAuthenticationFailure:
+		case user.ErrAuthenticationFailure:
 			return web.NewRequestError(err, http.StatusUnauthorized)
 		default:
 			return errors.Wrap(err, "authenticating")
@@ -166,7 +165,7 @@ func (h *userHandlers) token(ctx context.Context, w http.ResponseWriter, r *http
 	var tkn struct {
 		Token string `json:"token"`
 	}
-	tkn.Token, err = h.authenticator.GenerateToken(claims)
+	tkn.Token, err = h.auth.GenerateToken(claims)
 	if err != nil {
 		return errors.Wrap(err, "generating token")
 	}

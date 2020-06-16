@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/auth"
-	"github.com/ardanlabs/service/business/data"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
@@ -16,17 +15,32 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+var (
+	// ErrNotFound is used when a specific User is requested but does not exist.
+	ErrNotFound = errors.New("not found")
+
+	// ErrInvalidID occurs when an ID is not in a valid form.
+	ErrInvalidID = errors.New("ID is not in its proper form")
+
+	// ErrAuthenticationFailure occurs when a user attempts to authenticate but
+	// anything goes wrong.
+	ErrAuthenticationFailure = errors.New("authentication failed")
+
+	// ErrForbidden occurs when a user tries to do something that is forbidden to them according to our access control policies.
+	ErrForbidden = errors.New("attempted action is not allowed")
+)
+
 // Create inserts a new user into the database.
-func Create(ctx context.Context, db *sqlx.DB, n data.NewUser, now time.Time) (data.User, error) {
+func Create(ctx context.Context, db *sqlx.DB, n NewUser, now time.Time) (User, error) {
 	ctx, span := global.Tracer("service").Start(ctx, "internal.data.user.create")
 	defer span.End()
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(n.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return data.User{}, errors.Wrap(err, "generating password hash")
+		return User{}, errors.Wrap(err, "generating password hash")
 	}
 
-	u := data.User{
+	u := User{
 		ID:           uuid.New().String(),
 		Name:         n.Name,
 		Email:        n.Email,
@@ -41,14 +55,14 @@ func Create(ctx context.Context, db *sqlx.DB, n data.NewUser, now time.Time) (da
 		VALUES ($1, $2, $3, $4, $5, $6, $7)`
 
 	if _, err = db.ExecContext(ctx, q, u.ID, u.Name, u.Email, u.PasswordHash, u.Roles, u.DateCreated, u.DateUpdated); err != nil {
-		return data.User{}, errors.Wrap(err, "inserting user")
+		return User{}, errors.Wrap(err, "inserting user")
 	}
 
 	return u, nil
 }
 
 // Update replaces a user document in the database.
-func Update(ctx context.Context, claims auth.Claims, db *sqlx.DB, id string, upd data.UpdateUser, now time.Time) error {
+func Update(ctx context.Context, claims auth.Claims, db *sqlx.DB, id string, upd UpdateUser, now time.Time) error {
 	ctx, span := global.Tracer("service").Start(ctx, "internal.data.update.user")
 	defer span.End()
 
@@ -96,7 +110,7 @@ func Delete(ctx context.Context, db *sqlx.DB, id string) error {
 	defer span.End()
 
 	if _, err := uuid.Parse(id); err != nil {
-		return data.ErrInvalidID
+		return ErrInvalidID
 	}
 
 	const q = `DELETE FROM users WHERE user_id = $1`
@@ -109,13 +123,13 @@ func Delete(ctx context.Context, db *sqlx.DB, id string) error {
 }
 
 // List retrieves a list of existing users from the database.
-func List(ctx context.Context, db *sqlx.DB) ([]data.User, error) {
+func List(ctx context.Context, db *sqlx.DB) ([]User, error) {
 	ctx, span := global.Tracer("service").Start(ctx, "internal.data.user.list")
 	defer span.End()
 
 	const q = `SELECT * FROM users`
 
-	users := []data.User{}
+	users := []User{}
 	if err := db.SelectContext(ctx, &users, q); err != nil {
 		return nil, errors.Wrap(err, "selecting users")
 	}
@@ -124,27 +138,27 @@ func List(ctx context.Context, db *sqlx.DB) ([]data.User, error) {
 }
 
 // One gets the specified user from the database.
-func One(ctx context.Context, claims auth.Claims, db *sqlx.DB, userID string) (data.User, error) {
+func One(ctx context.Context, claims auth.Claims, db *sqlx.DB, userID string) (User, error) {
 	ctx, span := global.Tracer("service").Start(ctx, "internal.data.user.one")
 	defer span.End()
 
 	if _, err := uuid.Parse(userID); err != nil {
-		return data.User{}, data.ErrInvalidID
+		return User{}, ErrInvalidID
 	}
 
 	// If you are not an admin and looking to retrieve someone other than yourself.
 	if !claims.HasRole(auth.RoleAdmin) && claims.Subject != userID {
-		return data.User{}, data.ErrForbidden
+		return User{}, ErrForbidden
 	}
 
 	const q = `SELECT * FROM users WHERE user_id = $1`
 
-	var u data.User
+	var u User
 	if err := db.GetContext(ctx, &u, q, userID); err != nil {
 		if err == sql.ErrNoRows {
-			return data.User{}, data.ErrNotFound
+			return User{}, ErrNotFound
 		}
-		return data.User{}, errors.Wrapf(err, "selecting user %q", userID)
+		return User{}, errors.Wrapf(err, "selecting user %q", userID)
 	}
 
 	return u, nil
@@ -159,13 +173,13 @@ func Authenticate(ctx context.Context, db *sqlx.DB, now time.Time, email, passwo
 
 	const q = `SELECT * FROM users WHERE email = $1`
 
-	var u data.User
+	var u User
 	if err := db.GetContext(ctx, &u, q, email); err != nil {
 
 		// Normally we would return ErrNotFound in this scenario but we do not want
 		// to leak to an unauthenticated user which emails are in the system.
 		if err == sql.ErrNoRows {
-			return auth.Claims{}, data.ErrAuthenticationFailure
+			return auth.Claims{}, ErrAuthenticationFailure
 		}
 
 		return auth.Claims{}, errors.Wrap(err, "selecting single user")
@@ -174,7 +188,7 @@ func Authenticate(ctx context.Context, db *sqlx.DB, now time.Time, email, passwo
 	// Compare the provided password with the saved hash. Use the bcrypt
 	// comparison function so it is cryptographically secure.
 	if err := bcrypt.CompareHashAndPassword(u.PasswordHash, []byte(password)); err != nil {
-		return auth.Claims{}, data.ErrAuthenticationFailure
+		return auth.Claims{}, ErrAuthenticationFailure
 	}
 
 	// If we are this far the request is valid. Create some claims for the user

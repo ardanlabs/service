@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/ardanlabs/service/business/auth"
-	"github.com/ardanlabs/service/business/data"
 	"github.com/ardanlabs/service/business/data/product"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/jmoiron/sqlx"
@@ -37,9 +36,9 @@ func (h *productHandlers) retrieve(ctx context.Context, w http.ResponseWriter, r
 	prod, err := product.One(ctx, h.db, params["id"])
 	if err != nil {
 		switch err {
-		case data.ErrInvalidID:
+		case product.ErrInvalidID:
 			return web.NewRequestError(err, http.StatusBadRequest)
-		case data.ErrNotFound:
+		case product.ErrNotFound:
 			return web.NewRequestError(err, http.StatusNotFound)
 		default:
 			return errors.Wrapf(err, "ID: %s", params["id"])
@@ -63,7 +62,7 @@ func (h *productHandlers) create(ctx context.Context, w http.ResponseWriter, r *
 		return web.NewShutdownError("web value missing from context")
 	}
 
-	var np data.NewProduct
+	var np product.NewProduct
 	if err := web.Decode(r, &np); err != nil {
 		return errors.Wrap(err, "decoding new product")
 	}
@@ -90,7 +89,7 @@ func (h *productHandlers) update(ctx context.Context, w http.ResponseWriter, r *
 		return web.NewShutdownError("web value missing from context")
 	}
 
-	var up data.UpdateProduct
+	var up product.UpdateProduct
 	if err := web.Decode(r, &up); err != nil {
 		return errors.Wrap(err, "")
 	}
@@ -98,11 +97,11 @@ func (h *productHandlers) update(ctx context.Context, w http.ResponseWriter, r *
 	params := web.Params(r)
 	if err := product.Update(ctx, h.db, claims, params["id"], up, v.Now); err != nil {
 		switch err {
-		case data.ErrInvalidID:
+		case product.ErrInvalidID:
 			return web.NewRequestError(err, http.StatusBadRequest)
-		case data.ErrNotFound:
+		case product.ErrNotFound:
 			return web.NewRequestError(err, http.StatusNotFound)
-		case data.ErrForbidden:
+		case product.ErrForbidden:
 			return web.NewRequestError(err, http.StatusForbidden)
 		default:
 			return errors.Wrapf(err, "updating product %q: %+v", params["id"], up)
@@ -119,7 +118,7 @@ func (h *productHandlers) delete(ctx context.Context, w http.ResponseWriter, r *
 	params := web.Params(r)
 	if err := product.Delete(ctx, h.db, params["id"]); err != nil {
 		switch err {
-		case data.ErrInvalidID:
+		case product.ErrInvalidID:
 			return web.NewRequestError(err, http.StatusBadRequest)
 		default:
 			return errors.Wrapf(err, "Id: %s", params["id"])

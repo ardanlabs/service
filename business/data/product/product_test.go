@@ -23,7 +23,7 @@ func TestProduct(t *testing.T) {
 		testID := 0
 		t.Logf("\tTest %d:\tWhen handling a single Product.", testID)
 		{
-			np := data.NewProduct{
+			np := product.NewProduct{
 				Name:     "Comic Books",
 				Cost:     10,
 				Quantity: 55,
@@ -64,7 +64,7 @@ func TestProduct(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould get back the same product.", tests.Success, testID)
 
-			upd := data.UpdateProduct{
+			upd := product.UpdateProduct{
 				Name:     tests.StringPointer("Comics"),
 				Cost:     tests.IntPointer(50),
 				Quantity: tests.IntPointer(40),
@@ -95,7 +95,7 @@ func TestProduct(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould get back the same product.", tests.Success, testID)
 
-			upd = data.UpdateProduct{
+			upd = product.UpdateProduct{
 				Name: tests.StringPointer("Graphic Novels"),
 			}
 
@@ -122,7 +122,7 @@ func TestProduct(t *testing.T) {
 			t.Logf("\t%s\tTest %d:\tShould be able to delete product.", tests.Success, testID)
 
 			_, err = product.One(ctx, db, p.ID)
-			if errors.Cause(err) != data.ErrNotFound {
+			if errors.Cause(err) != product.ErrNotFound {
 				t.Fatalf("\t%s\tTest %d:\tShould NOT be able to retrieve deleted product : %s.", tests.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould NOT be able to retrieve deleted product.", tests.Success, testID)
