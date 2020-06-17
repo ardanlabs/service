@@ -3,7 +3,7 @@ package commands
 import (
 	"fmt"
 
-	"github.com/ardanlabs/service/business/data"
+	"github.com/ardanlabs/service/business/data/schema"
 	"github.com/ardanlabs/service/foundation/database"
 	"github.com/pkg/errors"
 )
@@ -19,7 +19,7 @@ func Migrate(cfg database.Config) error {
 	}
 	defer db.Close()
 
-	if err := data.Migrate(db); err != nil {
+	if err := schema.Migrate(db); err != nil {
 		return errors.Wrap(err, "migrate database")
 	}
 

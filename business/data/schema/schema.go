@@ -1,5 +1,5 @@
-// Package data contains the database schema, migrations and seeding data.
-package data
+// Package schema contains the database schema, migrations and seeding data.
+package schema
 
 import (
 	"github.com/dimiro1/darwin"

@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/auth"
-	"github.com/ardanlabs/service/business/data"
+	"github.com/ardanlabs/service/business/data/schema"
 	"github.com/ardanlabs/service/business/data/user"
 	"github.com/ardanlabs/service/foundation/database"
 	"github.com/ardanlabs/service/foundation/web"
@@ -72,7 +72,7 @@ func NewUnit(t *testing.T) (*sqlx.DB, func()) {
 		t.Fatalf("database never ready: %v", pingError)
 	}
 
-	if err := data.Migrate(db); err != nil {
+	if err := schema.Migrate(db); err != nil {
 		stopContainer(t, c.ID)
 		t.Fatalf("migrating error: %s", err)
 	}
@@ -102,7 +102,7 @@ type Test struct {
 func NewIntegration(t *testing.T) *Test {
 	db, cleanup := NewUnit(t)
 
-	if err := data.Seed(db); err != nil {
+	if err := schema.Seed(db); err != nil {
 		t.Fatal(err)
 	}
 
