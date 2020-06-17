@@ -57,7 +57,7 @@ func Create(ctx context.Context, db *sqlx.DB, user auth.Claims, np NewProduct, n
 
 // Update modifies data about a Product. It will error if the specified ID is
 // invalid or does not reference an existing Product.
-func Update(ctx context.Context, db *sqlx.DB, user auth.Claims, id string, update UpdateProduct, now time.Time) error {
+func Update(ctx context.Context, db *sqlx.DB, user auth.Claims, id string, up UpdateProduct, now time.Time) error {
 	ctx, span := global.Tracer("service").Start(ctx, "internal.data.product.update")
 	defer span.End()
 
@@ -71,14 +71,14 @@ func Update(ctx context.Context, db *sqlx.DB, user auth.Claims, id string, updat
 		return ErrForbidden
 	}
 
-	if update.Name != nil {
-		p.Name = *update.Name
+	if up.Name != nil {
+		p.Name = *up.Name
 	}
-	if update.Cost != nil {
-		p.Cost = *update.Cost
+	if up.Cost != nil {
+		p.Cost = *up.Cost
 	}
-	if update.Quantity != nil {
-		p.Quantity = *update.Quantity
+	if up.Quantity != nil {
+		p.Quantity = *up.Quantity
 	}
 	p.DateUpdated = now
 

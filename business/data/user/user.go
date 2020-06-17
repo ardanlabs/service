@@ -31,21 +31,21 @@ var (
 )
 
 // Create inserts a new user into the database.
-func Create(ctx context.Context, db *sqlx.DB, n NewUser, now time.Time) (User, error) {
+func Create(ctx context.Context, db *sqlx.DB, nu NewUser, now time.Time) (User, error) {
 	ctx, span := global.Tracer("service").Start(ctx, "internal.data.user.create")
 	defer span.End()
 
-	hash, err := bcrypt.GenerateFromPassword([]byte(n.Password), bcrypt.DefaultCost)
+	hash, err := bcrypt.GenerateFromPassword([]byte(nu.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return User{}, errors.Wrap(err, "generating password hash")
 	}
 
 	u := User{
 		ID:           uuid.New().String(),
-		Name:         n.Name,
-		Email:        n.Email,
+		Name:         nu.Name,
+		Email:        nu.Email,
 		PasswordHash: hash,
-		Roles:        n.Roles,
+		Roles:        nu.Roles,
 		DateCreated:  now.UTC(),
 		DateUpdated:  now.UTC(),
 	}
@@ -62,7 +62,7 @@ func Create(ctx context.Context, db *sqlx.DB, n NewUser, now time.Time) (User, e
 }
 
 // Update replaces a user document in the database.
-func Update(ctx context.Context, claims auth.Claims, db *sqlx.DB, id string, upd UpdateUser, now time.Time) error {
+func Update(ctx context.Context, claims auth.Claims, db *sqlx.DB, id string, uu UpdateUser, now time.Time) error {
 	ctx, span := global.Tracer("service").Start(ctx, "internal.data.update.user")
 	defer span.End()
 
@@ -71,17 +71,17 @@ func Update(ctx context.Context, claims auth.Claims, db *sqlx.DB, id string, upd
 		return err
 	}
 
-	if upd.Name != nil {
-		u.Name = *upd.Name
+	if uu.Name != nil {
+		u.Name = *uu.Name
 	}
-	if upd.Email != nil {
-		u.Email = *upd.Email
+	if uu.Email != nil {
+		u.Email = *uu.Email
 	}
-	if upd.Roles != nil {
-		u.Roles = upd.Roles
+	if uu.Roles != nil {
+		u.Roles = uu.Roles
 	}
-	if upd.Password != nil {
-		pw, err := bcrypt.GenerateFromPassword([]byte(*upd.Password), bcrypt.DefaultCost)
+	if uu.Password != nil {
+		pw, err := bcrypt.GenerateFromPassword([]byte(*uu.Password), bcrypt.DefaultCost)
 		if err != nil {
 			return errors.Wrap(err, "generating password hash")
 		}
