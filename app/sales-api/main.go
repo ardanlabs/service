@@ -167,6 +167,9 @@ func run(log *log.Logger) error {
 	// =========================================================================
 	// Start Tracing Support
 
+	// WARNING: The current Init settings are using defaults which I listed out
+	// for readability. Please review the documentation for opentelemetry.
+
 	log.Println("main: Initializing zipkin tracing support")
 
 	if err := tracer.Init(cfg.Zipkin.ServiceName, cfg.Zipkin.ReporterURI, cfg.Zipkin.Probability, log); err != nil {

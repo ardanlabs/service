@@ -26,8 +26,9 @@ func Init(serviceName string, reporterURI string, probability float64, log *log.
 	tp, err := sdktrace.NewProvider(
 		sdktrace.WithConfig(sdktrace.Config{DefaultSampler: sdktrace.AlwaysSample()}),
 		sdktrace.WithBatcher(exporter,
-			sdktrace.WithBatchTimeout(5),
-			sdktrace.WithMaxExportBatchSize(10),
+			sdktrace.WithMaxExportBatchSize(sdktrace.DefaultMaxExportBatchSize),
+			sdktrace.WithBatchTimeout(sdktrace.DefaultBatchTimeout),
+			sdktrace.WithMaxExportBatchSize(sdktrace.DefaultMaxExportBatchSize),
 		),
 	)
 	if err != nil {
