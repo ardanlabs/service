@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sales-api
+data:
+  db_host: 0.0.0.0
+  db_disable_tls: "true"
+  zipkin_uri: http://0.0.0.0:9411/api/v2/spans
