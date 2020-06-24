@@ -1,0 +1,7 @@
+version: '3.8'
+
+services:
+
+  sales-api:
+    environment:
+      - SALES_DB_DISABLE_TLS=1

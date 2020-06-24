@@ -32,13 +32,13 @@ metrics:
 run: up seed
 
 up:
-	docker-compose -f z/compose/docker-compose.yaml up --detach --remove-orphans
+	docker-compose -f z/compose/compose.yaml -f z/compose/compose-config.yaml up --detach --remove-orphans
 
 down:
-	docker-compose -f z/compose/docker-compose.yaml down --remove-orphans
+	docker-compose -f z/compose/compose.yaml down --remove-orphans
 
 logs:
-	docker-compose -f z/compose/docker-compose.yaml logs -f
+	docker-compose -f z/compose/compose.yaml logs -f
 
 # ==============================================================================
 # Running from within k8s/dev

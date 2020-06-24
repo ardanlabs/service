@@ -1,4 +1,3 @@
-# https://docs.docker.com/compose/compose-file
 version: '3.8'
 
 networks:
@@ -7,7 +6,6 @@ networks:
 
 services:
 
-  # This sidecar allows for the viewing of traces.
   zipkin:
     container_name: zipkin
     networks:
@@ -16,7 +14,6 @@ services:
     ports:
       - 9411:9411
 
-  # This starts a local PostgreSQL DB.
   db:
     container_name: sales_db
     networks:
@@ -25,7 +22,6 @@ services:
     ports:
       - 5432:5432
 
-    # This is the core CRUD based service.
   sales-api:
     container_name: sales-api
     networks:
@@ -34,14 +30,10 @@ services:
     ports:
       - 3000:3000 # CRUD API
       - 4000:4000 # DEBUG API
-    environment:
-      - SALES_DB_DISABLE_TLS=1 # This is only disabled for our development enviroment.
-      # - GODEBUG=gctrace=1
     depends_on:
       - zipkin
       - db
 
-  # This sidecar publishes metrics to the console by default.
   metrics:
     container_name: metrics
     networks:
