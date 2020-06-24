@@ -25,8 +25,7 @@ load:
 	# kind load docker-image postgres:11.1-alpine --name ardan-starter-cluster
 
 services:
-	kubectl create -f deploy-postgres.yaml
-	kubectl create -f deploy-sales-api.yaml
+	kustomize build . | kubectl apply -f -
 	@echo ======================================================================
 
 update-sales-api:
@@ -39,18 +38,17 @@ get-pods:
 	kubectl get pods
 
 logs:
-	kubectl logs <POD_NAME> sales-api
+	kubectl logs -lapp=sales-api --all-containers=true
 
 status:
 	kubectl get nodes
 	kubectl get pods
 	kubectl get services sales-api
-	kubectl logs <POD_ID> -c sales-api
 	@echo ======================================================================
 
 shell:
 	# kubectl get pods
-	# kubectl exec -it <POD NAME> --container sales-api  -- /bin/sh
+	# kubectl exec -it <POD NAME> --container app -- /bin/sh
 	# ./admin --db-disable-tls=1 migrate
 	# ./admin --db-disable-tls=1 seed
 	# curl --user "admin@example.com:gophers" http://localhost:3000/v1/users/token
@@ -59,6 +57,5 @@ shell:
 	@echo ======================================================================
 
 delete:
-	kubectl delete services sales-api
-	kubectl delete deployment sales-api	
+	kustomize build . | kubectl delete -f -
 	@echo ======================================================================

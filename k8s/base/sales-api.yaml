@@ -6,8 +6,6 @@ spec:
   selector:
     matchLabels:
       app: sales-api
-  replicas: 1
-  strategy: {}
   template:
     metadata:
       labels:
@@ -22,21 +20,30 @@ spec:
         - name: zipkin
           containerPort: 9411
         resources: {}
-      - name: sales-api
+      - name: app
         image: gcr.io/ardan-starter-kit/sales-api-amd64:1.0
         env:
         - name: SALES_AUTH_PRIVATE_KEY_FILE
           value: "/app/private.pem"
         - name: SALES_DB_HOST
-          value: 0.0.0.0
+          valueFrom:
+            configMapKeyRef:
+              name: sales-api
+              key: db_host
         - name: SALES_DB_DISABLE_TLS
-          value: "true"
+          valueFrom:
+            configMapKeyRef:
+              name: sales-api
+              key: db_disable_tls
         - name: SALES_Zipkin_Reporter_URI
-          value: http://0.0.0.0:9411/api/v2/spans
+          valueFrom:
+            configMapKeyRef:
+              name: sales-api
+              key: zipkin_uri
         ports:
-        - name: sales-api
+        - name: app
           containerPort: 3000
-        - name: debug
+        - name: app-debug
           containerPort: 4000
         resources: {}
       - name: metrics
@@ -47,7 +54,7 @@ spec:
         ports:
         - name: metrics
           containerPort: 3001
-        - name: debug
+        - name: metrics-debug
           containerPort: 4001
         resources: {}
 ---
@@ -59,18 +66,18 @@ spec:
   selector:
     service: sales-api
   ports:
-  - name: "zipkin"
+  - name: zipkin
     port: 9411
-    targetPort: 9411
-  - name: "sales-api"
+    targetPort: zipkin
+  - name: app
     port: 3000
-    targetPort: 3000
-  - name: "sales-api-debug"
+    targetPort: app
+  - name: app-debug
     port: 4000
-    targetPort: 4000
-  - name: "metrics"
+    targetPort: app-debug
+  - name: metrics
     port: 3001
-    targetPort: 3001
-  - name: "metrics-debug"
+    targetPort: metrics
+  - name: metrics-debug
     port: 4001
-    targetPort: 4001
+    targetPort: metrics-debug
