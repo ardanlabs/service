@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sales-api
+spec:
+  selector:
+    matchLabels:
+      app: sales-api
+  template:
+    metadata:
+      labels:
+        app: sales-api
+    spec:
+      dnsPolicy: ClusterFirstWithHostNet
+      hostNetwork: true
+      containers:
+      - name: zipkin
+        image: openzipkin/zipkin:2.11
+        ports:
+        - name: zipkin
+          containerPort: 9411
+        resources: {}
+      - name: app
+        image: gcr.io/ardan-starter-kit/sales-api-amd64:1.0
+        env:
+        - name: SALES_AUTH_PRIVATE_KEY_FILE
+          value: "/app/private.pem"
+        - name: SALES_DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: sales-api
+              key: db_host
+        - name: SALES_DB_DISABLE_TLS
+          valueFrom:
+            configMapKeyRef:
+              name: sales-api
+              key: db_disable_tls
+        - name: SALES_Zipkin_Reporter_URI
+          valueFrom:
+            configMapKeyRef:
+              name: sales-api
+              key: zipkin_uri
+        ports:
+        - name: app
+          containerPort: 3000
+        - name: app-debug
+          containerPort: 4000
+        resources: {}
+      - name: metrics
+        image: gcr.io/ardan-starter-kit/metrics-amd64:1.0
+        env:
+        - name: METRICS_COLLECT_FROM
+          value: "http://localhost:4000/debug/vars"
+        ports:
+        - name: metrics
+          containerPort: 3001
+        - name: metrics-debug
+          containerPort: 4001
+        resources: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sales-api
+spec:
+  selector:
+    service: sales-api
+  ports:
+  - name: zipkin
+    port: 9411
+    targetPort: zipkin
+  - name: app
+    port: 3000
+    targetPort: app
+  - name: app-debug
+    port: 4000
+    targetPort: app-debug
+  - name: metrics
+    port: 3001
+    targetPort: metrics
+  - name: metrics-debug
+    port: 4001
+    targetPort: metrics-debug
