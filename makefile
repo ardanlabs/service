@@ -9,7 +9,7 @@ all: sales-api metrics
 
 sales-api:
 	docker build \
-		-f z/compose/dockerfile.sales-api \
+		-f zarf/compose/dockerfile.sales-api \
 		-t gcr.io/$(PROJECT)/sales-api-amd64:1.0 \
 		--build-arg PACKAGE_NAME=sales-api \
 		--build-arg VCS_REF=`git rev-parse HEAD` \
@@ -18,7 +18,7 @@ sales-api:
 
 metrics:
 	docker build \
-		-f z/compose/dockerfile.metrics \
+		-f zarf/compose/dockerfile.metrics \
 		-t gcr.io/$(PROJECT)/metrics-amd64:1.0 \
 		--build-arg PACKAGE_NAME=metrics \
 		--build-arg PACKAGE_PREFIX=sidecar/ \
@@ -32,19 +32,19 @@ metrics:
 run: up seed
 
 up:
-	docker-compose -f z/compose/compose.yaml -f z/compose/compose-config.yaml up --detach --remove-orphans
+	docker-compose -f zarf/compose/compose.yaml -f zarf/compose/compose-config.yaml up --detach --remove-orphans
 
 down:
-	docker-compose -f z/compose/compose.yaml down --remove-orphans
+	docker-compose -f zarf/compose/compose.yaml down --remove-orphans
 
 logs:
-	docker-compose -f z/compose/compose.yaml logs -f
+	docker-compose -f zarf/compose/compose.yaml logs -f
 
 # ==============================================================================
 # Running from within k8s/dev
 
 kind-up:
-	kind create cluster --name ardan-starter-cluster --config z/k8s/dev/kind-config.yaml
+	kind create cluster --name ardan-starter-cluster --config zarf/k8s/dev/kind-config.yaml
 
 kind-down:
 	kind delete cluster --name ardan-starter-cluster
@@ -54,7 +54,7 @@ kind-load:
 	kind load docker-image gcr.io/ardan-starter-kit/metrics-amd64:1.0 --name ardan-starter-cluster
 
 kind-services:
-	kustomize build z/k8s/dev | kubectl apply -f -
+	kustomize build zarf/k8s/dev | kubectl apply -f -
 	@echo ======================================================================
 
 kind-update-sales-api:
