@@ -23,8 +23,6 @@ spec:
       - name: app
         image: gcr.io/ardan-starter-kit/sales-api-amd64:1.0
         env:
-        - name: SALES_AUTH_PRIVATE_KEY_FILE
-          value: "/app/private.pem"
         - name: SALES_DB_HOST
           valueFrom:
             configMapKeyRef:
@@ -35,11 +33,11 @@ spec:
             configMapKeyRef:
               name: sales-api
               key: db_disable_tls
-        - name: SALES_Zipkin_Reporter_URI
+        - name: SALES_ZIPKIN_REPORTER_URI
           valueFrom:
             configMapKeyRef:
               name: sales-api
-              key: zipkin_uri
+              key: zipkin_reporter_uri
         ports:
         - name: app
           containerPort: 3000
@@ -50,7 +48,10 @@ spec:
         image: gcr.io/ardan-starter-kit/metrics-amd64:1.0
         env:
         - name: METRICS_COLLECT_FROM
-          value: "http://localhost:4000/debug/vars"
+          valueFrom:
+            configMapKeyRef:
+              name: sales-api
+              key: collect_from
         ports:
         - name: metrics
           containerPort: 3001

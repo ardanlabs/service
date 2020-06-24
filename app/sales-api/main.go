@@ -65,13 +65,13 @@ func run(log *log.Logger) error {
 		DB struct {
 			User       string `conf:"default:postgres"`
 			Password   string `conf:"default:postgres,noprint"`
-			Host       string `conf:"default:0.0.0.0"`
+			Host       string `conf:"default:db"`
 			Name       string `conf:"default:postgres"`
 			DisableTLS bool   `conf:"default:false"`
 		}
 		Auth struct {
 			KeyID          string `conf:"default:1"`
-			PrivateKeyFile string `conf:"default:../../private.pem"`
+			PrivateKeyFile string `conf:"default:/app/private.pem"`
 			Algorithm      string `conf:"default:RS256"`
 		}
 		Zipkin struct {

@@ -5,4 +5,5 @@ metadata:
 data:
   db_host: 0.0.0.0
   db_disable_tls: "true"
-  zipkin_uri: http://0.0.0.0:9411/api/v2/spans
+  zipkin_reporter_uri: "http://0.0.0.0:9411/api/v2/spans"
+  collect_from: "http://0.0.0.0:4000/debug/vars"
