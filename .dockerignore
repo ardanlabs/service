@@ -1,5 +1,4 @@
 .circleci/
-k8s/
 z/
 .dockerignore
 .gitgnore
