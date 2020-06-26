@@ -55,6 +55,16 @@ spec:
           containerPort: 3001
         - name: metrics-debug
           containerPort: 4001
+      - name: liveness
+        image: k8s.gcr.io/liveness
+        args:
+        - /server
+        livenessProbe:
+          httpGet:
+            path: /v1/health
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 60
 ---
 apiVersion: v1
 kind: Service
