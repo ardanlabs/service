@@ -55,13 +55,12 @@ kind-load:
 
 kind-services:
 	kustomize build zarf/k8s/dev | kubectl apply -f -
-	@echo ======================================================================
 
-kind-update-sales-api:
-	# Build a new version using 1.1
-	kind load docker-image gcr.io/ardan-starter-kit/sales-api-amd64:1.1 --name ardan-starter-cluster
-	kubectl set image pod <POD_NAME> sales-api=gcr.io/ardan-starter-kit/sales-api-amd64:1.1
-	kubectl delete pod <POD_NAME>
+kind-update:
+	kubectl delete deployment sales-api
+	kind load docker-image gcr.io/ardan-starter-kit/sales-api-amd64:1.0 --name ardan-starter-cluster
+	kind load docker-image gcr.io/ardan-starter-kit/metrics-amd64:1.0 --name ardan-starter-cluster
+	kustomize build zarf/k8s/dev | kubectl apply -f -
 
 kind-logs:
 	kubectl logs -lapp=sales-api --all-containers=true -f
@@ -70,21 +69,26 @@ kind-status:
 	kubectl get nodes
 	kubectl get pods
 	kubectl get services sales-api
-	@echo ======================================================================
+
+kind-status-full:
+	kubectl describe pod -lapp=sales-api
+
+POD_NAME := $(shell kubectl get pods | grep sales-api | cut -c1-26)
 
 kind-shell:
-	# kubectl get pods
-	# kubectl exec -it <POD NAME> --container app -- /bin/sh
+	kubectl exec -it $(POD_NAME) --container app -- /bin/sh
+
+kind-database:
 	# ./admin --db-disable-tls=1 migrate
 	# ./admin --db-disable-tls=1 seed
+
+kind-test:
 	# curl --user "admin@example.com:gophers" http://localhost:3000/v1/users/token
 	# export TOKEN="COPY TOKEN STRING FROM LAST CALL"
 	# curl -H "Authorization: Bearer ${TOKEN}" http://localhost:3000/v1/users
-	@echo ======================================================================
 
 kind-delete:
-	kustomize build . | kubectl delete -f -
-	@echo ======================================================================
+	kustomize build zarf/k8s/dev | kubectl delete -f -
 
 # ==============================================================================
 # Administration
