@@ -20,7 +20,7 @@ spec:
         - name: zipkin
           containerPort: 9411
       - name: app
-        image: gcr.io/ardan-starter-kit/sales-api-amd64:1.0
+        image: sales-api-amd64:1.0
         env:
         - name: SALES_DB_HOST
           valueFrom:
@@ -49,7 +49,7 @@ spec:
           initialDelaySeconds: 30
           periodSeconds: 15
       - name: metrics
-        image: gcr.io/ardan-starter-kit/metrics-amd64:1.0
+        image: metrics-amd64:1.0
         env:
         - name: METRICS_COLLECT_FROM
           valueFrom:

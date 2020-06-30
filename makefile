@@ -5,12 +5,12 @@ export PROJECT = ardan-starter-kit
 # ==============================================================================
 # Building containers
 
-all: sales-api metrics
+all: sales metrics
 
-sales-api:
+sales:
 	docker build \
 		-f zarf/compose/dockerfile.sales-api \
-		-t gcr.io/$(PROJECT)/sales-api-amd64:1.0 \
+		-t sales-api-amd64:1.0 \
 		--build-arg PACKAGE_NAME=sales-api \
 		--build-arg VCS_REF=`git rev-parse HEAD` \
 		--build-arg BUILD_DATE=`date -u +”%Y-%m-%dT%H:%M:%SZ”` \
@@ -19,7 +19,7 @@ sales-api:
 metrics:
 	docker build \
 		-f zarf/compose/dockerfile.metrics \
-		-t gcr.io/$(PROJECT)/metrics-amd64:1.0 \
+		-t metrics-amd64:1.0 \
 		--build-arg PACKAGE_NAME=metrics \
 		--build-arg PACKAGE_PREFIX=sidecar/ \
 		--build-arg VCS_REF=`git rev-parse HEAD` \
@@ -50,25 +50,26 @@ kind-down:
 	kind delete cluster --name ardan-starter-cluster
 
 kind-load:
-	kind load docker-image gcr.io/ardan-starter-kit/sales-api-amd64:1.0 --name ardan-starter-cluster
-	kind load docker-image gcr.io/ardan-starter-kit/metrics-amd64:1.0 --name ardan-starter-cluster
+	kind load docker-image sales-api-amd64:1.0 --name ardan-starter-cluster
+	kind load docker-image metrics-amd64:1.0 --name ardan-starter-cluster
 
 kind-services:
 	kustomize build zarf/k8s/dev | kubectl apply -f -
 
-kind-update:
-	kubectl delete deployment sales-api
-	kind load docker-image gcr.io/ardan-starter-kit/sales-api-amd64:1.0 --name ardan-starter-cluster
-	kind load docker-image gcr.io/ardan-starter-kit/metrics-amd64:1.0 --name ardan-starter-cluster
-	kustomize build zarf/k8s/dev | kubectl apply -f -
+kind-sales: sales
+	kind load docker-image sales-api-amd64:1.0 --name ardan-starter-cluster
+	kubectl delete pods -lapp=sales-api
+
+kind-metrics: metrics
+	kind load docker-image metrics-amd64:1.0 --name ardan-starter-cluster
+	kubectl delete pods -lapp=sales-api
 
 kind-logs:
 	kubectl logs -lapp=sales-api --all-containers=true -f
 
 kind-status:
 	kubectl get nodes
-	kubectl get pods
-	kubectl get services sales-api
+	kubectl get pods --watch
 
 kind-status-full:
 	kubectl describe pod -lapp=sales-api
