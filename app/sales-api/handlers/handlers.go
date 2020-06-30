@@ -37,7 +37,7 @@ func API(build string, shutdown chan os.Signal, log *log.Logger, db *sqlx.DB, a 
 	app.Handle(http.MethodPut, "/v1/users/:id", u.update, mid.Authenticate(a), mid.HasRole(auth.RoleAdmin))
 	app.Handle(http.MethodDelete, "/v1/users/:id", u.delete, mid.Authenticate(a), mid.HasRole(auth.RoleAdmin))
 
-	// This route is not authenticated
+	// This route is not authenticated.
 	app.Handle(http.MethodGet, "/v1/users/token", u.token)
 
 	// Register product and sale endpoints.
