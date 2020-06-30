@@ -60,7 +60,7 @@ func NewApp(shutdown chan os.Signal, mw ...Middleware) *App {
 
 // Handle is our mechanism for mounting Handlers for a given HTTP verb and path
 // pair, this makes for really easy, convenient routing.
-func (a *App) Handle(verb, path string, handler Handler, mw ...Middleware) {
+func (a *App) Handle(method string, path string, handler Handler, mw ...Middleware) {
 
 	// First wrap handler specific middleware around this handler.
 	handler = wrapMiddleware(mw, handler)
@@ -91,7 +91,7 @@ func (a *App) Handle(verb, path string, handler Handler, mw ...Middleware) {
 	}
 
 	// Add this handler for the specified verb and route.
-	a.ContextMux.Handle(verb, path, h)
+	a.ContextMux.Handle(method, path, h)
 }
 
 // ServeHTTP implements the http.Handler interface. It overrides the ServeHTTP
