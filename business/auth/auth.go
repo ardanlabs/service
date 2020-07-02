@@ -78,7 +78,7 @@ type Auth struct {
 // - The public key func is nil.
 // - The key ID is blank.
 // - The specified algorithm is unsupported.
-func New(privateKey *rsa.PrivateKey, activeKID, algorithm string, publicKeyLookupFunc KeyLookupFunc) (*Auth, error) {
+func New(privateKey *rsa.PrivateKey, activeKID string, algorithm string, publicKeyLookupFunc KeyLookupFunc) (*Auth, error) {
 	if privateKey == nil {
 		return nil, errors.New("private key cannot be nil")
 	}

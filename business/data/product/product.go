@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	// ErrNotFound is used when a specific User is requested but does not exist.
+	// ErrNotFound is used when a specific Product is requested but does not exist.
 	ErrNotFound = errors.New("not found")
 
 	// ErrInvalidID occurs when an ID is not in a valid form.

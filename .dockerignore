@@ -1,9 +1,8 @@
 .circleci/
-z/
+zarf/
 .dockerignore
 .gitgnore
 CONTRIBUTORS
-docker*
 LICENSE
 makefile
 README.md
