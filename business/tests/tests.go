@@ -37,17 +37,16 @@ const (
 // required table structure but the database is otherwise empty. It returns
 // the database to use as well as a function to call at the end of the test.
 func NewUnit(t *testing.T) (*sqlx.DB, func()) {
+	c := startContainer(t, dbImage)
 
-	// Start a DB container instance with dgraph running.
-	c := startDBContainer(t, dbImage)
-
-	db, err := database.Open(database.Config{
+	cfg := database.Config{
 		User:       "postgres",
 		Password:   "postgres",
-		Host:       c.DBHost,
+		Host:       c.Host,
 		Name:       "postgres",
 		DisableTLS: true,
-	})
+	}
+	db, err := database.Open(cfg)
 	if err != nil {
 		t.Fatalf("opening database connection: %v", err)
 	}

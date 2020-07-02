@@ -3,17 +3,18 @@ package tests
 import (
 	"bytes"
 	"encoding/json"
+	"net"
 	"os/exec"
 	"testing"
 )
 
-// DBContainer tracks information about the DB docker container started for tests.
-type DBContainer struct {
-	ID     string
-	DBHost string // IP:Port
+// Container tracks information about the docker container started for tests.
+type Container struct {
+	ID   string
+	Host string // IP:Port
 }
 
-func startDBContainer(t *testing.T, image string) *DBContainer {
+func startContainer(t *testing.T, image string) *Container {
 	cmd := exec.Command("docker", "run", "-P", "-d", image)
 	var out bytes.Buffer
 	cmd.Stdout = &out
@@ -44,16 +45,16 @@ func startDBContainer(t *testing.T, image string) *DBContainer {
 		t.Fatalf("could not decode json: %v", err)
 	}
 
-	dbHost := doc[0].NetworkSettings.Ports.TCP5432[0]
+	host := doc[0].NetworkSettings.Ports.TCP5432[0]
 
-	c := DBContainer{
-		ID:     id,
-		DBHost: dbHost.HostIP + ":" + dbHost.HostPort,
+	c := Container{
+		ID:   id,
+		Host: net.JoinHostPort(host.HostIP, host.HostPort),
 	}
 
-	t.Logf("Image:          %s", image)
-	t.Logf("DB ContainerID: %s", c.ID)
-	t.Logf("DB Host:        %s", c.DBHost)
+	t.Logf("Image:       %s", image)
+	t.Logf("ContainerID: %s", c.ID)
+	t.Logf("Host:        %s", c.Host)
 
 	return &c
 }
