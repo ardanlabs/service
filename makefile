@@ -74,10 +74,8 @@ kind-status:
 kind-status-full:
 	kubectl describe pod -lapp=sales-api
 
-POD_NAME := $(shell kubectl get pods | grep sales-api | cut -c1-26)
-
 kind-shell:
-	kubectl exec -it $(POD_NAME) --container app -- /bin/sh
+	kubectl exec -it $(shell kubectl get pods | grep sales-api | cut -c1-26) --container app -- /bin/sh
 
 kind-database:
 	# ./admin --db-disable-tls=1 migrate
