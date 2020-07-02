@@ -26,7 +26,7 @@ services:
     container_name: sales-api
     networks:
       - shared-network
-    image: gcr.io/${PROJECT}/sales-api-amd64:1.0
+    image: sales-api-amd64:1.0
     ports:
       - 3000:3000 # CRUD API
       - 4000:4000 # DEBUG API
@@ -38,7 +38,7 @@ services:
     container_name: metrics
     networks:
       - shared-network
-    image: gcr.io/${PROJECT}/metrics-amd64:1.0
+    image: metrics-amd64:1.0
     ports:
       - 3001:3001 # EXPVAR API
       - 4001:4001 # DEBUG API

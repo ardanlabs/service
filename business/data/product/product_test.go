@@ -7,7 +7,6 @@ import (
 
 	"github.com/ardanlabs/service/business/auth"
 	"github.com/ardanlabs/service/business/data/product"
-	"github.com/ardanlabs/service/business/data/schema"
 	"github.com/ardanlabs/service/business/tests"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/google/go-cmp/cmp"
@@ -30,11 +29,6 @@ func TestProduct(t *testing.T) {
 			}
 			now := time.Date(2019, time.January, 1, 0, 0, 0, 0, time.UTC)
 			ctx := context.Background()
-
-			if err := schema.DeleteAll(db); err != nil {
-				t.Fatalf("\t%s\tTest %d:\tShould be able to delete all data : %s.", tests.Failed, testID, err)
-			}
-			t.Logf("\t%s\tTest %d:\tShould be able to delete all data.", tests.Success, testID)
 
 			claims := auth.Claims{
 				StandardClaims: jwt.StandardClaims{

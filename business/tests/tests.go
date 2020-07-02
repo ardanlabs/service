@@ -127,13 +127,15 @@ func NewIntegration(t *testing.T) *Test {
 		t.Fatal(err)
 	}
 
-	return &Test{
+	test := Test{
 		DB:      db,
 		Log:     log,
 		Auth:    auth,
 		t:       t,
 		cleanup: cleanup,
 	}
+
+	return &test
 }
 
 // Teardown releases any resources used for the test.

@@ -17,6 +17,14 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
+// ProductTests holds methods for each product subtest. This type allows
+// passing dependencies for tests while still providing a convenient syntax
+// when subtests are registered.
+type ProductTests struct {
+	app       http.Handler
+	userToken string
+}
+
 // TestProducts runs a series of tests to exercise Product behavior from the
 // API level. The subtests all share the same database and application for
 // speed and convenience. The downside is the order the tests are ran matters
@@ -40,14 +48,6 @@ func TestProducts(t *testing.T) {
 	t.Run("deleteProductNotFound", tests.deleteProductNotFound)
 	t.Run("putProduct404", tests.putProduct404)
 	t.Run("crudProducts", tests.crudProduct)
-}
-
-// ProductTests holds methods for each product subtest. This type allows
-// passing dependencies for tests while still providing a convenient syntax
-// when subtests are registered.
-type ProductTests struct {
-	app       http.Handler
-	userToken string
 }
 
 // postProduct400 validates a product can't be created with the endpoint
