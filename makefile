@@ -3,6 +3,14 @@ SHELL := /bin/bash
 export PROJECT = ardan-starter-kit
 
 # ==============================================================================
+# Testing running system
+
+# curl --user "admin@example.com:gophers" http://localhost:3000/v1/users/token
+# export TOKEN="COPY TOKEN STRING FROM LAST CALL"
+# curl -H "Authorization: Bearer ${TOKEN}" http://localhost:3000/v1/users
+# hey -m GET -c 100 -n 10000 -H "Authorization: Bearer ${TOKEN}" http://localhost:3000/v1/users
+
+# ==============================================================================
 # Building containers
 
 all: sales metrics
@@ -80,11 +88,6 @@ kind-shell:
 kind-database:
 	# ./admin --db-disable-tls=1 migrate
 	# ./admin --db-disable-tls=1 seed
-
-kind-test:
-	# curl --user "admin@example.com:gophers" http://localhost:3000/v1/users/token
-	# export TOKEN="COPY TOKEN STRING FROM LAST CALL"
-	# curl -H "Authorization: Bearer ${TOKEN}" http://localhost:3000/v1/users
 
 kind-delete:
 	kustomize build zarf/k8s/dev | kubectl delete -f -

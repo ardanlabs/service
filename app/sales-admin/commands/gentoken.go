@@ -59,12 +59,12 @@ func GenToken(cfg database.Config, id string, privateKeyFile string, algorithm s
 	// In this code, I am writing a lookup function that will return the public
 	// key for the private key provided with an arbitary KID.
 	keyID := "54bb2165-71e1-41a6-af3e-7da4a0e1e2c1"
-	keyLookupFunc := func(kid string) (*rsa.PublicKey, error) {
-		switch kid {
+	keyLookupFunc := func(publicKID string) (*rsa.PublicKey, error) {
+		switch publicKID {
 		case keyID:
-			return privateKey.Public().(*rsa.PublicKey), nil
+			return &privateKey.PublicKey, nil
 		}
-		return nil, fmt.Errorf("no public key found for the specified kid: %s", kid)
+		return nil, fmt.Errorf("no public key found for the specified kid: %s", publicKID)
 	}
 
 	// An authenticator maintains the state required to handle JWT processing.

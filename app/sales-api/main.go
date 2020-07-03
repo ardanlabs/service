@@ -70,7 +70,7 @@ func run(log *log.Logger) error {
 			DisableTLS bool   `conf:"default:false"`
 		}
 		Auth struct {
-			KeyID          string `conf:"default:1"`
+			KeyID          string `conf:"default:54bb2165-71e1-41a6-af3e-7da4a0e1e2c1"`
 			PrivateKeyFile string `conf:"default:/app/private.pem"`
 			Algorithm      string `conf:"default:RS256"`
 		}
@@ -132,12 +132,12 @@ func run(log *log.Logger) error {
 		return errors.Wrap(err, "parsing auth private key")
 	}
 
-	keyLookupFunc := func(kid string) (*rsa.PublicKey, error) {
-		switch kid {
+	keyLookupFunc := func(publicKID string) (*rsa.PublicKey, error) {
+		switch publicKID {
 		case cfg.Auth.KeyID:
 			return privateKey.Public().(*rsa.PublicKey), nil
 		}
-		return nil, fmt.Errorf("no public key found for the specified kid: %s", kid)
+		return nil, fmt.Errorf("no public key found for the specified kid: %s", publicKID)
 	}
 	a, err := auth.New(privateKey, cfg.Auth.KeyID, cfg.Auth.Algorithm, keyLookupFunc)
 	if err != nil {

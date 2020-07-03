@@ -23,19 +23,17 @@ func TestAuthenticator(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to parse the private key from pem.", tests.Success, testID)
 
-			publicKey, err := jwt.ParseRSAPublicKeyFromPEM([]byte(publicRSAKey))
-			if err != nil {
-				t.Fatalf("\t%s\tTest %d:\tShould be able to parse the public key from pem: %v", tests.Failed, testID, err)
-			}
-			t.Logf("\t%s\tTest %d:\tShould be able to parse the public key from pem.", tests.Success, testID)
+			// The key id we are stating represents the public key in the
+			// public key store.
+			const keyID = "54bb2165-71e1-41a6-af3e-7da4a0e1e2c1"
 
-			keyLookupFunc := func(kid string) (*rsa.PublicKey, error) {
-				if kid != KID {
+			keyLookupFunc := func(publicKID string) (*rsa.PublicKey, error) {
+				if publicKID != keyID {
 					return nil, errors.New("no public key found")
 				}
-				return publicKey, nil
+				return &privateKey.PublicKey, nil
 			}
-			a, err := auth.New(privateKey, KID, "RS256", keyLookupFunc)
+			a, err := auth.New(privateKey, keyID, "RS256", keyLookupFunc)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to create an authenticator: %v", tests.Failed, testID, err)
 			}
@@ -81,9 +79,6 @@ func TestAuthenticator(t *testing.T) {
 	}
 }
 
-// The key id we would have generated for the keys below.
-const KID = "54bb2165-71e1-41a6-af3e-7da4a0e1e2c1"
-
 // Output of:
 // openssl genpkey -algorithm RSA -out private.pem -pkeyopt rsa_keygen_bits:2048
 // ./sales-admin keygen
@@ -115,15 +110,6 @@ xumKGh//G0AYsjqP02ItzOm2mWnbI3FrNlKmGFvR6VxIZMOyXvpLofHucjJ5SWli
 eYjPklKcXaMftt1FVO4n+EKj1k1+Tv14nytq/J5WN+r4FBlNEYj/6vg=
 -----END RSA PRIVATE KEY-----`
 
-// Output of:
+// To generate a public key PEM file.
 // openssl rsa -pubout -in private.pem -out public.pem
 // ./sales-admin keygen
-const publicRSAKey = `-----BEGIN RSA PUBLIC KEY-----
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvMAHb0IoLvoYuW2kA+LT
-mnk+hfnBq1eYIh4CT/rMPCxgtzjqU0guQOMnLg69ydyA5uu37v6rbS1+stuBTEiM
-Ql/bxAhgLkGrUhgpZ10Bt6GzSEgwQNloZoGaxe4p20wMPpT4kcMKNHkQds3uONNc
-LxPUmfjbbH64g+seg28pbgQPwKFKtF7bIsOBgz0g5Ptn5mrkdzqMPUSy9k9VCu+R
-42LH9c75JsRzz4FeN+VzwMAL6yQnZvOi7/zOgNyxeVia8XVKykrnhgcpiOn5oaLR
-BzQGN00Z7TuBRIfDJWU21qQN4Cq7keZmMP4gqCVWjYneK4bzrG/+H2w9BJ2TsmMG
-vwIDAQAB
------END RSA PUBLIC KEY-----`
