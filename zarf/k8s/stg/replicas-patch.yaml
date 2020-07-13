@@ -3,4 +3,4 @@ kind: Deployment
 metadata:
   name: sales-api
 spec:
-  replicas: 3
+  replicas: 1

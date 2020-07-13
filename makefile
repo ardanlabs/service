@@ -168,6 +168,8 @@ gcp-cluster:
 	gcloud compute instances list
 
 gcp-upload:
+	docker tag sales-api-amd64:1.0 gcr.io/$(PROJECT)/sales-api-amd64:1.0
+	docker tag metrics-amd64:1.0 gcr.io/$(PROJECT)/metrics-amd64:1.0
 	docker push gcr.io/$(PROJECT)/sales-api-amd64:1.0
 	docker push gcr.io/$(PROJECT)/metrics-amd64:1.0
 
@@ -185,9 +187,10 @@ gcp-db-private-ip:
 	gcloud sql instances describe $(DATABASE)
 
 gcp-services:
-	# These scripts needs to be edited for the PROJECT and PRIVATE_DB_IP markers before running.
-	kubectl create -f deploy-sales-api.yaml
-	kubectl expose -f expose-sales-api.yaml --type=LoadBalancer
+	# The zarf/k8s/stg/stg-config.yaml file needs the private IP of the database.
+	kustomize build zarf/k8s/stg | kubectl apply -f -
+	# kubectl create -f deploy-sales-api.yaml
+	# kubectl expose -f expose-sales-api.yaml --type=LoadBalancer
 
 gcp-status:
 	gcloud container clusters list
@@ -195,9 +198,11 @@ gcp-status:
 	kubectl get pods
 	kubectl get services sales-api
 
+gcp-logs:
+	kubectl logs -lapp=sales-api --all-containers=true -f
+
 gcp-shell:
-	# kubectl get pods
-	kubectl exec -it <POD NAME> --container sales-api  -- /bin/sh
+	kubectl exec -it $(shell kubectl get pods | grep sales-api | cut -c1-26 | head -1) --container app -- /bin/sh
 	# ./admin --db-disable-tls=1 migrate
 	# ./admin --db-disable-tls=1 seed
 

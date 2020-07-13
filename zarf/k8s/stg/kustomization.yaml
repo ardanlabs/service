@@ -6,4 +6,4 @@ resources:
 patches:
   - ./replicas-patch.yaml
   - ./loadbalancer-patch.yaml
-
+  - ./images-patch.yaml
