@@ -16,7 +16,7 @@ import (
 // ctxKey represents the type of value for the context key.
 type ctxKey int
 
-// KeyValues is how request values or stored/retrieved.
+// KeyValues is how request values are stored/retrieved.
 const KeyValues ctxKey = 1
 
 // Values represent state for each request.
