@@ -72,7 +72,7 @@ func (a *App) Handle(method string, path string, handler Handler, mw ...Middlewa
 	h := func(w http.ResponseWriter, r *http.Request) {
 
 		// Start or expand a distributed trace.
-		ctx, span := global.Tracer("service").Start(r.Context(), "internal.platform.web.roothandler")
+		ctx, span := global.Tracer("service").Start(r.Context(), "foundation.web.roothandler")
 		defer span.End()
 
 		// Set the context with the required values to
