@@ -44,7 +44,7 @@ func Open(cfg Config) (*sqlx.DB, error) {
 // StatusCheck returns nil if it can successfully talk to the database. It
 // returns a non-nil error otherwise.
 func StatusCheck(ctx context.Context, db *sqlx.DB) error {
-	ctx, span := global.Tracer("service").Start(ctx, "platform.database.statuscheck")
+	ctx, span := global.Tracer("service").Start(ctx, "foundation.database.statuscheck")
 	defer span.End()
 
 	// Run a simple query to determine connectivity. The db has a "Ping" method
