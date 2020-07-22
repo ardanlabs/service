@@ -16,6 +16,7 @@ package trace
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"reflect"
 	"sync"
@@ -23,7 +24,9 @@ import (
 
 	"google.golang.org/grpc/codes"
 
+	"go.opentelemetry.io/otel/api/global"
 	"go.opentelemetry.io/otel/api/kv"
+	"go.opentelemetry.io/otel/api/kv/value"
 	apitrace "go.opentelemetry.io/otel/api/trace"
 	export "go.opentelemetry.io/otel/sdk/export/trace"
 	"go.opentelemetry.io/otel/sdk/internal"
@@ -101,7 +104,10 @@ func (s *span) SetAttributes(attributes ...kv.KeyValue) {
 }
 
 func (s *span) SetAttribute(k string, v interface{}) {
-	s.SetAttributes(kv.Infer(k, v))
+	attr := kv.Infer(k, v)
+	if attr.Value.Type() != value.INVALID {
+		s.SetAttributes(attr)
+	}
 }
 
 func (s *span) End(options ...apitrace.EndOption) {
@@ -200,12 +206,14 @@ func (s *span) addEventWithTimestamp(timestamp time.Time, name string, attrs ...
 	})
 }
 
+var errUninitializedSpan = errors.New("failed to set name on uninitialized span")
+
 func (s *span) SetName(name string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	if s.data == nil {
-		// TODO: now what?
+		global.Handle(errUninitializedSpan)
 		return
 	}
 	s.data.Name = name
@@ -289,7 +297,9 @@ func (s *span) copyToCappedAttributes(attributes ...kv.KeyValue) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	for _, a := range attributes {
-		s.attributes.add(a)
+		if a.Value.Type() != value.INVALID {
+			s.attributes.add(a)
+		}
 	}
 }
 
@@ -338,12 +348,13 @@ func startSpanInternal(tr *tracer, name string, parent apitrace.SpanContext, rem
 		startTime = time.Now()
 	}
 	span.data = &export.SpanData{
-		SpanContext:     span.spanContext,
-		StartTime:       startTime,
-		SpanKind:        apitrace.ValidateSpanKind(o.SpanKind),
-		Name:            name,
-		HasRemoteParent: remoteParent,
-		Resource:        cfg.Resource,
+		SpanContext:            span.spanContext,
+		StartTime:              startTime,
+		SpanKind:               apitrace.ValidateSpanKind(o.SpanKind),
+		Name:                   name,
+		HasRemoteParent:        remoteParent,
+		Resource:               cfg.Resource,
+		InstrumentationLibrary: tr.instrumentationLibrary,
 	}
 	span.attributes = newAttributesMap(cfg.MaxAttributesPerSpan)
 	span.messageEvents = newEvictedQueue(cfg.MaxEventsPerSpan)
@@ -394,7 +405,6 @@ func makeSamplingDecision(data samplingData) SamplingResult {
 		sampled := sampler.ShouldSample(SamplingParameters{
 			ParentContext:   data.parent,
 			TraceID:         spanContext.TraceID,
-			SpanID:          spanContext.SpanID,
 			Name:            data.name,
 			HasRemoteParent: data.remoteParent,
 			Kind:            data.kind,

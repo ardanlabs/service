@@ -17,10 +17,13 @@ package othttp
 import (
 	"io"
 	"net/http"
+	"time"
 
 	"go.opentelemetry.io/otel/api/global"
 	"go.opentelemetry.io/otel/api/kv"
+	"go.opentelemetry.io/otel/api/metric"
 	"go.opentelemetry.io/otel/api/propagation"
+	"go.opentelemetry.io/otel/api/standard"
 	"go.opentelemetry.io/otel/api/trace"
 )
 
@@ -35,12 +38,15 @@ type Handler struct {
 	handler   http.Handler
 
 	tracer            trace.Tracer
+	meter             metric.Meter
 	propagators       propagation.Propagators
 	spanStartOptions  []trace.StartOption
 	readEvent         bool
 	writeEvent        bool
 	filters           []Filter
 	spanNameFormatter func(string, *http.Request) string
+	counters          map[string]metric.Int64Counter
+	valueRecorders    map[string]metric.Int64ValueRecorder
 }
 
 func defaultHandlerFormatter(operation string, _ *http.Request) string {
@@ -55,8 +61,11 @@ func NewHandler(handler http.Handler, operation string, opts ...Option) http.Han
 		operation: operation,
 	}
 
+	const domain = "go.opentelemetry.io/otel/instrumentation/othttp"
+
 	defaultOpts := []Option{
-		WithTracer(global.Tracer("go.opentelemetry.io/plugin/othttp")),
+		WithTracer(global.Tracer(domain)),
+		WithMeter(global.Meter(domain)),
 		WithPropagators(global.Propagators()),
 		WithSpanOptions(trace.WithSpanKind(trace.SpanKindServer)),
 		WithSpanNameFormatter(defaultHandlerFormatter),
@@ -64,12 +73,14 @@ func NewHandler(handler http.Handler, operation string, opts ...Option) http.Han
 
 	c := NewConfig(append(defaultOpts, opts...)...)
 	h.configure(c)
+	h.createMeasures()
 
 	return &h
 }
 
 func (h *Handler) configure(c *Config) {
 	h.tracer = c.Tracer
+	h.meter = c.Meter
 	h.propagators = c.Propagators
 	h.spanStartOptions = c.SpanStartOptions
 	h.readEvent = c.ReadEvent
@@ -78,8 +89,33 @@ func (h *Handler) configure(c *Config) {
 	h.spanNameFormatter = c.SpanNameFormatter
 }
 
+func handleErr(err error) {
+	if err != nil {
+		global.Handle(err)
+	}
+}
+
+func (h *Handler) createMeasures() {
+	h.counters = make(map[string]metric.Int64Counter)
+	h.valueRecorders = make(map[string]metric.Int64ValueRecorder)
+
+	requestBytesCounter, err := h.meter.NewInt64Counter(RequestContentLength)
+	handleErr(err)
+
+	responseBytesCounter, err := h.meter.NewInt64Counter(ResponseContentLength)
+	handleErr(err)
+
+	serverLatencyMeasure, err := h.meter.NewInt64ValueRecorder(ServerLatency)
+	handleErr(err)
+
+	h.counters[RequestContentLength] = requestBytesCounter
+	h.counters[ResponseContentLength] = responseBytesCounter
+	h.valueRecorders[ServerLatency] = serverLatencyMeasure
+}
+
 // ServeHTTP serves HTTP requests (http.Handler)
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	requestStartTime := time.Now()
 	for _, f := range h.filters {
 		if !f(r) {
 			// Simply pass through to the handler if a filter rejects the request
@@ -88,7 +124,11 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	opts := append([]trace.StartOption{}, h.spanStartOptions...) // start with the configured options
+	opts := append([]trace.StartOption{
+		trace.WithAttributes(standard.NetAttributesFromHTTPRequest("tcp", r)...),
+		trace.WithAttributes(standard.EndUserAttributesFromHTTPRequest(r)...),
+		trace.WithAttributes(standard.HTTPServerAttributesFromHTTPRequest(h.operation, "", r)...),
+	}, h.spanStartOptions...) // start with the configured options
 
 	ctx := propagation.ExtractHTTP(r.Context(), h.propagators, r.Header)
 	ctx, span := h.tracer.Start(ctx, h.spanNameFormatter(h.operation, r), opts...)
@@ -112,16 +152,25 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	rww := &respWriterWrapper{ResponseWriter: w, record: writeRecordFunc, ctx: ctx, props: h.propagators}
 
-	setBasicAttributes(span, r)
-	span.SetAttributes(RemoteAddrKey.String(r.RemoteAddr))
-
 	h.handler.ServeHTTP(rww, r.WithContext(ctx))
 
-	setAfterServeAttributes(span, bw.read, rww.written, int64(rww.statusCode), bw.err, rww.err)
+	setAfterServeAttributes(span, bw.read, rww.written, rww.statusCode, bw.err, rww.err)
+
+	// Add request metrics
+
+	labels := standard.HTTPServerMetricAttributesFromHTTPRequest(h.operation, r)
+
+	h.counters[RequestContentLength].Add(ctx, bw.read, labels...)
+	h.counters[ResponseContentLength].Add(ctx, rww.written, labels...)
+
+	elapsedTime := time.Since(requestStartTime).Microseconds()
+
+	h.valueRecorders[ServerLatency].Record(ctx, elapsedTime, labels...)
 }
 
-func setAfterServeAttributes(span trace.Span, read, wrote, statusCode int64, rerr, werr error) {
-	kv := make([]kv.KeyValue, 0, 5)
+func setAfterServeAttributes(span trace.Span, read, wrote int64, statusCode int, rerr, werr error) {
+	kv := []kv.KeyValue{}
+
 	// TODO: Consider adding an event after each read and write, possibly as an
 	// option (defaulting to off), so as to not create needlessly verbose spans.
 	if read > 0 {
@@ -134,7 +183,8 @@ func setAfterServeAttributes(span trace.Span, read, wrote, statusCode int64, rer
 		kv = append(kv, WroteBytesKey.Int64(wrote))
 	}
 	if statusCode > 0 {
-		kv = append(kv, StatusCodeKey.Int64(statusCode))
+		kv = append(kv, standard.HTTPAttributesFromHTTPStatusCode(statusCode)...)
+		span.SetStatus(standard.SpanStatusFromHTTPStatusCode(statusCode))
 	}
 	if werr != nil && werr != io.EOF {
 		kv = append(kv, WriteErrorKey.String(werr.Error()))
@@ -147,7 +197,7 @@ func setAfterServeAttributes(span trace.Span, read, wrote, statusCode int64, rer
 func WithRouteTag(route string, h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		span := trace.SpanFromContext(r.Context())
-		span.SetAttributes(RouteKey.String(route))
+		span.SetAttributes(standard.HTTPRouteKey.String(route))
 		h.ServeHTTP(w, r)
 	})
 }
