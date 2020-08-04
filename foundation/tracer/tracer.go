@@ -12,7 +12,7 @@ import (
 
 // Init creates a new trace provider instance and registers it as global trace provider.
 func Init(serviceName string, reporterURI string, probability float64, log *log.Logger) error {
-	exporter, err := zipkin.NewExporter(
+	exporter, err := zipkin.NewRawExporter(
 		reporterURI,
 		serviceName,
 		zipkin.WithLogger(log),
