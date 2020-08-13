@@ -14,11 +14,13 @@ require (
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/leodido/go-urn v1.2.0 // indirect
 	github.com/lib/pq v1.8.0
+	github.com/openzipkin/zipkin-go v0.2.3 // indirect
 	github.com/pkg/errors v0.9.1
 	go.opentelemetry.io/otel v0.10.0
 	go.opentelemetry.io/otel/exporters/trace/zipkin v0.10.0
 	go.opentelemetry.io/otel/sdk v0.10.0
 	golang.org/x/crypto v0.0.0-20200728195943-123391ffb6de
+	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/grpc v1.31.0 // indirect
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/validator.v9 v9.31.0
