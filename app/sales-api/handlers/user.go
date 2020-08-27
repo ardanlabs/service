@@ -17,11 +17,11 @@ type userHandlers struct {
 	auth *auth.Auth
 }
 
-func (h *userHandlers) list(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (h *userHandlers) query(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	ctx, span := global.Tracer("service").Start(ctx, "handlers.user.list")
 	defer span.End()
 
-	users, err := user.List(ctx, h.db)
+	users, err := user.Query(ctx, h.db)
 	if err != nil {
 		return err
 	}
@@ -29,7 +29,7 @@ func (h *userHandlers) list(ctx context.Context, w http.ResponseWriter, r *http.
 	return web.Respond(ctx, w, users, http.StatusOK)
 }
 
-func (h *userHandlers) retrieve(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (h *userHandlers) queryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	ctx, span := global.Tracer("service").Start(ctx, "handlers.user.retrieve")
 	defer span.End()
 
@@ -39,7 +39,7 @@ func (h *userHandlers) retrieve(ctx context.Context, w http.ResponseWriter, r *h
 	}
 
 	params := web.Params(r)
-	usr, err := user.One(ctx, claims, h.db, params["id"])
+	usr, err := user.QueryByID(ctx, claims, h.db, params["id"])
 	if err != nil {
 		switch err {
 		case user.ErrInvalidID:

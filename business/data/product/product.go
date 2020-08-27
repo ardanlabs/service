@@ -57,7 +57,7 @@ func Update(ctx context.Context, db *sqlx.DB, user auth.Claims, id string, up Up
 	ctx, span := global.Tracer("service").Start(ctx, "business.data.product.update")
 	defer span.End()
 
-	p, err := One(ctx, db, id)
+	p, err := QueryByID(ctx, db, id)
 	if err != nil {
 		return err
 	}
@@ -110,8 +110,8 @@ func Delete(ctx context.Context, db *sqlx.DB, id string) error {
 	return nil
 }
 
-// List gets all Products from the database.
-func List(ctx context.Context, db *sqlx.DB) ([]Product, error) {
+// Query gets all Products from the database.
+func Query(ctx context.Context, db *sqlx.DB) ([]Product, error) {
 	ctx, span := global.Tracer("service").Start(ctx, "business.data.product.list")
 	defer span.End()
 
@@ -131,8 +131,8 @@ func List(ctx context.Context, db *sqlx.DB) ([]Product, error) {
 	return products, nil
 }
 
-// One finds the product identified by a given ID.
-func One(ctx context.Context, db *sqlx.DB, id string) (Product, error) {
+// QueryByID finds the product identified by a given ID.
+func QueryByID(ctx context.Context, db *sqlx.DB, id string) (Product, error) {
 	ctx, span := global.Tracer("service").Start(ctx, "business.data.product.one")
 	defer span.End()
 

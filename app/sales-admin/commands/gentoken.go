@@ -38,7 +38,7 @@ func GenToken(cfg database.Config, id string, privateKeyFile string, algorithm s
 		},
 		Roles: []string{auth.RoleAdmin},
 	}
-	user, err := user.One(ctx, claims, db, id)
+	user, err := user.QueryByID(ctx, claims, db, id)
 	if err != nil {
 		return errors.Wrap(err, "retrieve user")
 	}

@@ -16,11 +16,11 @@ type productHandlers struct {
 	db *sqlx.DB
 }
 
-func (h *productHandlers) list(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (h *productHandlers) query(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	ctx, span := global.Tracer("service").Start(ctx, "handlers.product.list")
 	defer span.End()
 
-	products, err := product.List(ctx, h.db)
+	products, err := product.Query(ctx, h.db)
 	if err != nil {
 		return err
 	}
@@ -28,12 +28,12 @@ func (h *productHandlers) list(ctx context.Context, w http.ResponseWriter, r *ht
 	return web.Respond(ctx, w, products, http.StatusOK)
 }
 
-func (h *productHandlers) retrieve(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (h *productHandlers) queryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	ctx, span := global.Tracer("service").Start(ctx, "handlers.product.retrieve")
 	defer span.End()
 
 	params := web.Params(r)
-	prod, err := product.One(ctx, h.db, params["id"])
+	prod, err := product.QueryByID(ctx, h.db, params["id"])
 	if err != nil {
 		switch err {
 		case product.ErrInvalidID:

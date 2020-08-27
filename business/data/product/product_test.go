@@ -47,7 +47,7 @@ func TestProduct(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to create a product.", tests.Success, testID)
 
-			saved, err := product.One(ctx, db, p.ID)
+			saved, err := product.QueryByID(ctx, db, p.ID)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve product by ID: %s.", tests.Failed, testID, err)
 			}
@@ -70,7 +70,7 @@ func TestProduct(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to update product.", tests.Success, testID)
 
-			saved, err = product.One(ctx, db, p.ID)
+			saved, err = product.QueryByID(ctx, db, p.ID)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve updated product : %s.", tests.Failed, testID, err)
 			}
@@ -98,7 +98,7 @@ func TestProduct(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to update just some fields of product.", tests.Success, testID)
 
-			saved, err = product.One(ctx, db, p.ID)
+			saved, err = product.QueryByID(ctx, db, p.ID)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve updated product : %s.", tests.Failed, testID, err)
 			}
@@ -115,7 +115,7 @@ func TestProduct(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to delete product.", tests.Success, testID)
 
-			_, err = product.One(ctx, db, p.ID)
+			_, err = product.QueryByID(ctx, db, p.ID)
 			if errors.Cause(err) != product.ErrNotFound {
 				t.Fatalf("\t%s\tTest %d:\tShould NOT be able to retrieve deleted product : %s.", tests.Failed, testID, err)
 			}

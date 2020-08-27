@@ -22,7 +22,7 @@ func Users(cfg database.Config) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	users, err := user.List(ctx, db)
+	users, err := user.Query(ctx, db)
 	if err != nil {
 		return errors.Wrap(err, "retrieve users")
 	}

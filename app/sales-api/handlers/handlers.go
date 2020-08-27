@@ -31,9 +31,9 @@ func API(build string, shutdown chan os.Signal, log *log.Logger, db *sqlx.DB, a 
 		db:   db,
 		auth: a,
 	}
-	app.Handle(http.MethodGet, "/v1/users", u.list, mid.Authenticate(a), mid.HasRole(auth.RoleAdmin))
+	app.Handle(http.MethodGet, "/v1/users", u.query, mid.Authenticate(a), mid.HasRole(auth.RoleAdmin))
 	app.Handle(http.MethodPost, "/v1/users", u.create, mid.Authenticate(a), mid.HasRole(auth.RoleAdmin))
-	app.Handle(http.MethodGet, "/v1/users/:id", u.retrieve, mid.Authenticate(a))
+	app.Handle(http.MethodGet, "/v1/users/:id", u.queryByID, mid.Authenticate(a))
 	app.Handle(http.MethodPut, "/v1/users/:id", u.update, mid.Authenticate(a), mid.HasRole(auth.RoleAdmin))
 	app.Handle(http.MethodDelete, "/v1/users/:id", u.delete, mid.Authenticate(a), mid.HasRole(auth.RoleAdmin))
 
@@ -44,9 +44,9 @@ func API(build string, shutdown chan os.Signal, log *log.Logger, db *sqlx.DB, a 
 	p := productHandlers{
 		db: db,
 	}
-	app.Handle(http.MethodGet, "/v1/products", p.list, mid.Authenticate(a))
+	app.Handle(http.MethodGet, "/v1/products", p.query, mid.Authenticate(a))
 	app.Handle(http.MethodPost, "/v1/products", p.create, mid.Authenticate(a))
-	app.Handle(http.MethodGet, "/v1/products/:id", p.retrieve, mid.Authenticate(a))
+	app.Handle(http.MethodGet, "/v1/products/:id", p.queryByID, mid.Authenticate(a))
 	app.Handle(http.MethodPut, "/v1/products/:id", p.update, mid.Authenticate(a))
 	app.Handle(http.MethodDelete, "/v1/products/:id", p.delete, mid.Authenticate(a))
 
