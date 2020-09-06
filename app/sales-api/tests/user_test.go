@@ -157,9 +157,9 @@ func (ut *UserTests) postUser400(t *testing.T) {
 	}
 }
 
-// postUser401 validates a user can't be created unless the calling user is
-// authenticated.
-func (ut *UserTests) postUser401(t *testing.T) {
+// postUser403 validates a user can't be created unless the calling user is
+// an admin. Regular users can't do this.
+func (ut *UserTests) postUser403(t *testing.T) {
 	body, err := json.Marshal(&user.User{})
 	if err != nil {
 		t.Fatal(err)
@@ -184,9 +184,9 @@ func (ut *UserTests) postUser401(t *testing.T) {
 	}
 }
 
-// postUser403 validates a user can't be created unless the calling user is
-// an admin. Regular users can't do this.
-func (ut *UserTests) postUser403(t *testing.T) {
+// postUser401 validates a user can't be created unless the calling user is
+// authenticated.
+func (ut *UserTests) postUser401(t *testing.T) {
 	body, err := json.Marshal(&user.User{})
 	if err != nil {
 		t.Fatal(err)
