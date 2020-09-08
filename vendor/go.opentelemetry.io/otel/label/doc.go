@@ -12,7 +12,5 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package othttp provides a http.Handler and functions that are
-// intended to be used to add tracing by wrapping
-// existing handlers (with Handler) and routes WithRouteTag.
-package othttp
+// Package label provides key and value labels.
+package label // import "go.opentelemetry.io/otel/label"

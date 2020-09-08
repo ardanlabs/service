@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/dimfeld/httptreemux/v5"
+	// "go.opentelemetry.io/contrib/othttp"
 	"go.opentelemetry.io/otel/api/global"
-	"go.opentelemetry.io/otel/instrumentation/othttp"
 )
 
 // ctxKey represents the type of value for the context key.
@@ -35,7 +35,7 @@ type Handler func(ctx context.Context, w http.ResponseWriter, r *http.Request) e
 // data/logic on this App struct
 type App struct {
 	*httptreemux.ContextMux
-	oth      http.Handler
+	// oth      http.Handler
 	shutdown chan os.Signal
 	mw       []Middleware
 }
@@ -54,7 +54,7 @@ func NewApp(shutdown chan os.Signal, mw ...Middleware) *App {
 	// This is configured to use the W3C TraceContext standard to set the remote
 	// parent if an client request includes the appropriate headers.
 	// https://w3c.github.io/trace-context/
-	app.oth = othttp.NewHandler(app.TreeMux, "server")
+	// app.oth = othttp.NewHandler(app.TreeMux, "server")
 	return &app
 }
 
@@ -97,9 +97,9 @@ func (a *App) Handle(method string, path string, handler Handler, mw ...Middlewa
 // ServeHTTP implements the http.Handler interface. It overrides the ServeHTTP
 // of the embedded TreeMux by using the ochttp.Handler instead. That Handler
 // wraps the TreeMux handler so the routes are served.
-func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	a.oth.ServeHTTP(w, r)
-}
+// func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+// 	a.oth.ServeHTTP(w, r)
+// }
 
 // SignalShutdown is used to gracefully shutdown the app when an integrity
 // issue is identified.
