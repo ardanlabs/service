@@ -16,11 +16,11 @@ type check struct {
 	db    *sqlx.DB
 }
 
-// If the database is not ready we will tell the client and use a 500
-// status. Do not respond by just returning an error because further up in
-// the call stack will interpret that as a non-trusted error.
-func (c *check) health(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	ctx, span := global.Tracer("service").Start(ctx, "handlers.check.health")
+// readiness checks if the database is ready and if not will return a 500 status.
+// Do not respond by just returning an error because further up in the call
+// stack it will interpret that as a non-trusted error.
+func (c *check) readiness(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	ctx, span := global.Tracer("service").Start(ctx, "handlers.check.readiness")
 	defer span.End()
 
 	status := "ok"
@@ -37,14 +37,18 @@ func (c *check) health(ctx context.Context, w http.ResponseWriter, r *http.Reque
 		Version: c.build,
 		Status:  status,
 	}
+
 	return web.Respond(ctx, w, health, statusCode)
 }
 
-// The Info route returns simple status info if the service is alive. If the
+// liveness returns simple status info if the service is alive. If the
 // app is deployed to a Kubernetes cluster, it will also return pod, node, and
 // namespace details via the Downward API. The Kubernetes environment variables
 // need to be set within your Pod/Deployment manifest.
-func (c *check) info(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (c *check) liveness(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	ctx, span := global.Tracer("service").Start(ctx, "handlers.check.liveness")
+	defer span.End()
+
 	host, err := os.Hostname()
 	if err != nil {
 		host = "unavailable"

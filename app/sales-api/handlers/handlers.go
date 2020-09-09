@@ -24,8 +24,8 @@ func API(build string, shutdown chan os.Signal, log *log.Logger, db *sqlx.DB, a 
 		build: build,
 		db:    db,
 	}
-	app.Handle(http.MethodGet, "/v1/health", c.health)
-	app.Handle(http.MethodGet, "/v1/info", c.info)
+	app.Handle(http.MethodGet, "/v1/readiness", c.readiness)
+	app.Handle(http.MethodGet, "/v1/liveness", c.liveness)
 
 	// Register user management and authentication endpoints.
 	u := userHandlers{
