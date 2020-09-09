@@ -45,10 +45,11 @@ func (c *check) health(ctx context.Context, w http.ResponseWriter, r *http.Reque
 // namespace details via the Downward API. The Kubernetes environment variables
 // need to be set within your Pod/Deployment manifest.
 func (c *check) info(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	status := "up"
-	statusCode := http.StatusOK
+	host, err := os.Hostname()
+	if err != nil {
+		host = "unavailable"
+	}
 
-	host, _ := os.Hostname()
 	info := struct {
 		Status    string `json:"status,omitempty"`
 		Host      string `json:"host,omitempty"`
@@ -57,7 +58,7 @@ func (c *check) info(ctx context.Context, w http.ResponseWriter, r *http.Request
 		Node      string `json:"node,omitempty"`
 		Namespace string `json:"namespace,omitempty"`
 	}{
-		Status:    status,
+		Status:    "up",
 		Host:      host,
 		Pod:       os.Getenv("KUBERNETES_PODNAME"),
 		PodIP:     os.Getenv("KUBERNETES_NAMESPACE_POD_IP"),
@@ -65,5 +66,5 @@ func (c *check) info(ctx context.Context, w http.ResponseWriter, r *http.Request
 		Namespace: os.Getenv("KUBERNETES_NAMESPACE"),
 	}
 
-	return web.Respond(ctx, w, info, statusCode)
+	return web.Respond(ctx, w, info, http.StatusOK)
 }
