@@ -31,11 +31,9 @@ func (c *check) readiness(ctx context.Context, w http.ResponseWriter, r *http.Re
 	}
 
 	health := struct {
-		Version string `json:"version"`
-		Status  string `json:"status"`
+		Status string `json:"status"`
 	}{
-		Version: c.build,
-		Status:  status,
+		Status: status,
 	}
 
 	return web.Respond(ctx, w, health, statusCode)
@@ -56,6 +54,7 @@ func (c *check) liveness(ctx context.Context, w http.ResponseWriter, r *http.Req
 
 	info := struct {
 		Status    string `json:"status,omitempty"`
+		Build     string `json:"build,omitempty"`
 		Host      string `json:"host,omitempty"`
 		Pod       string `json:"pod,omitempty"`
 		PodIP     string `json:"podIP,omitempty"`
@@ -63,6 +62,7 @@ func (c *check) liveness(ctx context.Context, w http.ResponseWriter, r *http.Req
 		Namespace string `json:"namespace,omitempty"`
 	}{
 		Status:    "up",
+		Build:     c.build,
 		Host:      host,
 		Pod:       os.Getenv("KUBERNETES_PODNAME"),
 		PodIP:     os.Getenv("KUBERNETES_NAMESPACE_POD_IP"),
