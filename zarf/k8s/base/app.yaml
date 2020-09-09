@@ -37,6 +37,18 @@ spec:
             configMapKeyRef:
               name: sales-api
               key: zipkin_reporter_uri
+        - name: KUBERNETES_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: KUBERNETES_NAMESPACE_POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: KUBERNETES_NODENAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
         ports:
         - name: app
           containerPort: 3000
@@ -45,6 +57,12 @@ spec:
         readinessProbe:
           httpGet:
             path: /v1/health
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 15
+        livenessProbe:
+          httpGet:
+            path: /v1/info
             port: 3000
           initialDelaySeconds: 30
           periodSeconds: 15
