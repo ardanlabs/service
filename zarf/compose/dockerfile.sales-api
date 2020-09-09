@@ -1,5 +1,5 @@
 # Build the Go Binary.
-FROM golang:1.15 as build_sales-api
+FROM golang:1.15.1 as build_sales-api
 ENV CGO_ENABLED 0
 ARG VCS_REF
 ARG PACKAGE_NAME
@@ -31,7 +31,7 @@ RUN go build -ldflags "-X main.build=${VCS_REF}"
 
 
 # Run the Go Binary in Alpine.
-FROM alpine:3.7
+FROM alpine:3.12
 ARG BUILD_DATE
 ARG VCS_REF
 ARG PACKAGE_NAME

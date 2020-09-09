@@ -6,10 +6,10 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Install Go 1.15
+          name: Install Go 1.15.2
           command: |
               sudo rm -rf /usr/local/go
-              wget -O go.tgz https://dl.google.com/go/go1.15.linux-amd64.tar.gz
+              wget -O go.tgz https://dl.google.com/go/go1.15.2.linux-amd64.tar.gz
               sudo tar -C /usr/local -xzf go.tgz
               which go
               go version
@@ -20,14 +20,14 @@ jobs:
       - run:
           name: Run staticheck
           command: |
-              wget -O staticcheck.tgz https://github.com/dominikh/go-tools/releases/download/2020.1.4/staticcheck_linux_amd64.tar.gz
+              wget -O staticcheck.tgz https://github.com/dominikh/go-tools/releases/download/2020.1.5/staticcheck_linux_amd64.tar.gz
               sudo tar -xzf staticcheck.tgz
               ./staticcheck/staticcheck --version
               ./staticcheck/staticcheck ./...
       - run:
           name: Download the DB image
           command: |
-              docker pull postgres:11.1-alpine
+              docker pull postgres:12.4-alpine
       - run:
           name: Run tests
           command: |
