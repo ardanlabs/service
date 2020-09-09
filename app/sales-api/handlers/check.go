@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"net/http"
+	"os"
 
 	"github.com/ardanlabs/service/foundation/database"
 	"github.com/ardanlabs/service/foundation/web"
@@ -37,4 +38,32 @@ func (c *check) health(ctx context.Context, w http.ResponseWriter, r *http.Reque
 		Status:  status,
 	}
 	return web.Respond(ctx, w, health, statusCode)
+}
+
+// The Info route returns simple status info if the service is alive. If the
+// app is deployed to a Kubernetes cluster, it will also return pod, node, and
+// namespace details via the Downward API. The Kubernetes environment variables
+// need to be set within your Pod/Deployment manifest.
+func (c *check) info(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	status := "up"
+	statusCode := http.StatusOK
+
+	host, _ := os.Hostname()
+	info := struct {
+		Status    string `json:"status,omitempty"`
+		Host      string `json:"host,omitempty"`
+		Pod       string `json:"pod,omitempty"`
+		PodIP     string `json:"podIP,omitempty"`
+		Node      string `json:"node,omitempty"`
+		Namespace string `json:"namespace,omitempty"`
+	}{
+		Status:    status,
+		Host:      host,
+		Pod:       os.Getenv("KUBERNETES_PODNAME"),
+		PodIP:     os.Getenv("KUBERNETES_NAMESPACE_POD_IP"),
+		Node:      os.Getenv("KUBERNETES_NODENAME"),
+		Namespace: os.Getenv("KUBERNETES_NAMESPACE"),
+	}
+
+	return web.Respond(ctx, w, info, statusCode)
 }
