@@ -52,12 +52,14 @@ func (c *check) info(ctx context.Context, w http.ResponseWriter, r *http.Request
 	info := struct {
 		Status    string `json:"status,omitempty"`
 		Host      string `json:"host,omitempty"`
-		PodIP     string `json:"pod_ip,omitempty"`
+		Pod       string `json:"pod,omitempty"`
+		PodIP     string `json:"podIP,omitempty"`
 		Node      string `json:"node,omitempty"`
 		Namespace string `json:"namespace,omitempty"`
 	}{
 		Status:    status,
 		Host:      host,
+		Pod:       os.Getenv("KUBERNETES_PODNAME"),
 		PodIP:     os.Getenv("KUBERNETES_NAMESPACE_POD_IP"),
 		Node:      os.Getenv("KUBERNETES_NODENAME"),
 		Namespace: os.Getenv("KUBERNETES_NAMESPACE"),
