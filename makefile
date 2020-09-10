@@ -20,19 +20,16 @@ all: sales metrics
 
 sales:
 	docker build \
-		-f zarf/compose/dockerfile.sales-api \
+		-f zarf/docker/dockerfile.sales-api \
 		-t sales-api-amd64:1.0 \
-		--build-arg PACKAGE_NAME=sales-api \
 		--build-arg VCS_REF=`git rev-parse HEAD` \
 		--build-arg BUILD_DATE=`date -u +”%Y-%m-%dT%H:%M:%SZ”` \
 		.
 
 metrics:
 	docker build \
-		-f zarf/compose/dockerfile.metrics \
+		-f zarf/docker/dockerfile.metrics \
 		-t metrics-amd64:1.0 \
-		--build-arg PACKAGE_NAME=metrics \
-		--build-arg PACKAGE_PREFIX=sidecar/ \
 		--build-arg VCS_REF=`git rev-parse HEAD` \
 		--build-arg BUILD_DATE=`date -u +”%Y-%m-%dT%H:%M:%SZ”` \
 		.

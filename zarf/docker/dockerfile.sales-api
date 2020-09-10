@@ -1,9 +1,7 @@
 # Build the Go Binary.
-FROM golang:1.15.1 as build_metrics
+FROM golang:1.15.1 as build_sales-api
 ENV CGO_ENABLED 0
 ARG VCS_REF
-ARG PACKAGE_NAME
-ARG PACKAGE_PREFIX
 
 # Create a location in the container for the source code. Using the
 # default GOPATH location.
@@ -19,9 +17,14 @@ RUN mkdir -p /service
 WORKDIR /service
 COPY . .
 
+# Build the admin tool so we can have it in the container. This should not change
+# often so do this first.
+WORKDIR /service/app/sales-admin
+RUN go build -ldflags "-X main.build=${VCS_REF}"
+
 # Build the service binary. We are doing this last since this will be different
 # every time we run through this process.
-WORKDIR /service/app/${PACKAGE_PREFIX}${PACKAGE_NAME}
+WORKDIR /service/app/sales-api
 RUN go build -ldflags "-X main.build=${VCS_REF}"
 
 
@@ -31,13 +34,15 @@ ARG BUILD_DATE
 ARG VCS_REF
 ARG PACKAGE_NAME
 ARG PACKAGE_PREFIX
-COPY --from=build_metrics /service/app/${PACKAGE_PREFIX}${PACKAGE_NAME}/${PACKAGE_NAME} /app/main
+COPY --from=build_sales-api /service/private.pem /app/private.pem
+COPY --from=build_sales-api /service/app/sales-admin/sales-admin /app/admin
+COPY --from=build_sales-api /service/app/sales-api/sales-api /app/sales-api
 WORKDIR /app
-CMD ["/app/main"]
+CMD ["/app/sales-api"]
 
 LABEL org.opencontainers.image.created="${BUILD_DATE}" \
-      org.opencontainers.image.title="${PACKAGE_NAME}" \
+      org.opencontainers.image.title="sales-api" \
       org.opencontainers.image.authors="William Kennedy <bill@ardanlabs.com>" \
-      org.opencontainers.image.source="https://github.com/ardanlabs/service/cmd/${PACKAGE_PREFIX}${PACKAGE_NAME}" \
+      org.opencontainers.image.source="https://github.com/ardanlabs/service/app/sales-api" \
       org.opencontainers.image.revision="${VCS_REF}" \
       org.opencontainers.image.vendor="Ardan Labs"
