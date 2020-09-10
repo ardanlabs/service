@@ -7,11 +7,16 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/auth"
-	"github.com/ardanlabs/service/business/tests"
 	"github.com/dgrijalva/jwt-go"
 )
 
-func TestAuthenticator(t *testing.T) {
+// Success and failure markers.
+const (
+	success = "\u2713"
+	failed  = "\u2717"
+)
+
+func TestAuth(t *testing.T) {
 	t.Log("Given the need to be able to authenticate and authorize access.")
 	{
 		testID := 0
@@ -19,9 +24,9 @@ func TestAuthenticator(t *testing.T) {
 		{
 			privateKey, err := jwt.ParseRSAPrivateKeyFromPEM([]byte(privateRSAKey))
 			if err != nil {
-				t.Fatalf("\t%s\tTest %d:\tShould be able to parse the private key from pem: %v", tests.Failed, testID, err)
+				t.Fatalf("\t%s\tTest %d:\tShould be able to parse the private key from pem: %v", failed, testID, err)
 			}
-			t.Logf("\t%s\tTest %d:\tShould be able to parse the private key from pem.", tests.Success, testID)
+			t.Logf("\t%s\tTest %d:\tShould be able to parse the private key from pem.", success, testID)
 
 			// The key id we are stating represents the public key in the
 			// public key store.
@@ -33,16 +38,17 @@ func TestAuthenticator(t *testing.T) {
 				}
 				return &privateKey.PublicKey, nil
 			}
+
 			a, err := auth.New(privateKey, keyID, "RS256", keyLookupFunc)
 			if err != nil {
-				t.Fatalf("\t%s\tTest %d:\tShould be able to create an authenticator: %v", tests.Failed, testID, err)
+				t.Fatalf("\t%s\tTest %d:\tShould be able to create an authenticator: %v", failed, testID, err)
 			}
-			t.Logf("\t%s\tTest %d:\tShould be able to create an authenticator.", tests.Success, testID)
+			t.Logf("\t%s\tTest %d:\tShould be able to create an authenticator.", success, testID)
 
 			claims := auth.Claims{
 				StandardClaims: jwt.StandardClaims{
-					Issuer:    "travel project",
-					Subject:   "0x01",
+					Issuer:    "service project",
+					Subject:   "5cf37266-3473-4006-984f-9325122678b7",
 					Audience:  "students",
 					ExpiresAt: time.Now().Add(8760 * time.Hour).Unix(),
 					IssuedAt:  time.Now().Unix(),
@@ -52,29 +58,29 @@ func TestAuthenticator(t *testing.T) {
 
 			token, err := a.GenerateToken(claims)
 			if err != nil {
-				t.Fatalf("\t%s\tTest %d:\tShould be able to generate a JWT: %v", tests.Failed, testID, err)
+				t.Fatalf("\t%s\tTest %d:\tShould be able to generate a JWT: %v", failed, testID, err)
 			}
-			t.Logf("\t%s\tTest %d:\tShould be able to generate a JWT.", tests.Success, testID)
+			t.Logf("\t%s\tTest %d:\tShould be able to generate a JWT.", success, testID)
 
 			parsedClaims, err := a.ValidateToken(token)
 			if err != nil {
-				t.Fatalf("\t%s\tTest %d:\tShould be able to parse the claims: %v", tests.Failed, testID, err)
+				t.Fatalf("\t%s\tTest %d:\tShould be able to parse the claims: %v", failed, testID, err)
 			}
-			t.Logf("\t%s\tTest %d:\tShould be able to parse the claims.", tests.Success, testID)
+			t.Logf("\t%s\tTest %d:\tShould be able to parse the claims.", success, testID)
 
 			if exp, got := len(claims.Roles), len(parsedClaims.Roles); exp != got {
 				t.Logf("\t\tTest %d:\texp: %d", testID, exp)
 				t.Logf("\t\tTest %d:\tgot: %d", testID, got)
-				t.Fatalf("\t%s\tTest %d:\tShould have the expexted number of roles: %v", tests.Failed, testID, err)
+				t.Fatalf("\t%s\tTest %d:\tShould have the expexted number of roles: %v", failed, testID, err)
 			}
-			t.Logf("\t%s\tTest %d:\tShould have the expexted number of roles.", tests.Success, testID)
+			t.Logf("\t%s\tTest %d:\tShould have the expexted number of roles.", success, testID)
 
 			if exp, got := claims.Roles[0], parsedClaims.Roles[0]; exp != got {
 				t.Logf("\t\tTest %d:\texp: %v", testID, exp)
 				t.Logf("\t\tTest %d:\tgot: %v", testID, got)
-				t.Fatalf("\t%s\tTest %d:\tShould have the expexted roles: %v", tests.Failed, testID, err)
+				t.Fatalf("\t%s\tTest %d:\tShould have the expexted roles: %v", failed, testID, err)
 			}
-			t.Logf("\t%s\tTest %d:\tShould have the expexted roles.", tests.Success, testID)
+			t.Logf("\t%s\tTest %d:\tShould have the expexted roles.", success, testID)
 		}
 	}
 }

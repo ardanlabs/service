@@ -133,7 +133,8 @@ func run(log *log.Logger) error {
 		}
 		return nil, fmt.Errorf("no public key found for the specified kid: %s", publicKID)
 	}
-	a, err := auth.New(privateKey, cfg.Auth.KeyID, cfg.Auth.Algorithm, keyLookupFunc)
+
+	auth, err := auth.New(privateKey, cfg.Auth.KeyID, cfg.Auth.Algorithm, keyLookupFunc)
 	if err != nil {
 		return errors.Wrap(err, "constructing auth")
 	}
@@ -199,7 +200,7 @@ func run(log *log.Logger) error {
 
 	api := http.Server{
 		Addr:         cfg.Web.APIHost,
-		Handler:      handlers.API(build, shutdown, log, db, a),
+		Handler:      handlers.API(build, shutdown, log, db, auth),
 		ReadTimeout:  cfg.Web.ReadTimeout,
 		WriteTimeout: cfg.Web.WriteTimeout,
 	}
