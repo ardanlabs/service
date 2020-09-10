@@ -24,12 +24,6 @@ import (
 )
 
 /*
-ZipKin: http://localhost:9411
-AddLoad: hey -m GET -c 10 -n 10000 "http://localhost:3000/v1/users"
-expvarmon -ports=":4000" -vars="build,requests,goroutines,errors,mem:memstats.Alloc"
-*/
-
-/*
 Need to figure out timeouts for http service.
 You might want to reset your DB_HOST env var during test tear down.
 Service should start even without a DB running yet.

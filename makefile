@@ -8,7 +8,10 @@ export PROJECT = ardan-starter-kit
 # curl --user "admin@example.com:gophers" http://localhost:3000/v1/users/token
 # export TOKEN="COPY TOKEN STRING FROM LAST CALL"
 # curl -H "Authorization: Bearer ${TOKEN}" http://localhost:3000/v1/users
+
 # hey -m GET -c 100 -n 10000 -H "Authorization: Bearer ${TOKEN}" http://localhost:3000/v1/users
+# zipkin: http://localhost:9411
+# expvarmon -ports=":4000" -vars="build,requests,goroutines,errors,mem:memstats.Alloc"
 
 # ==============================================================================
 # Building containers
