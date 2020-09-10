@@ -169,11 +169,6 @@ func QueryByEmail(ctx context.Context, claims auth.Claims, db *sqlx.DB, email st
 	ctx, span := global.Tracer("service").Start(ctx, "business.data.user.querybyemail")
 	defer span.End()
 
-	// If you are not an admin you can't run this query.
-	if !claims.HasRole(auth.RoleAdmin) {
-		return User{}, ErrForbidden
-	}
-
 	const q = `SELECT * FROM users WHERE email = $1`
 
 	var u User
@@ -184,8 +179,8 @@ func QueryByEmail(ctx context.Context, claims auth.Claims, db *sqlx.DB, email st
 		return User{}, errors.Wrapf(err, "selecting user %q", email)
 	}
 
-	// If you are looking to retrieve someone other than yourself.
-	if claims.Subject != u.ID {
+	// If you are not an admin and looking to retrieve someone other than yourself.
+	if !claims.HasRole(auth.RoleAdmin) && claims.Subject != u.ID {
 		return User{}, ErrForbidden
 	}
 

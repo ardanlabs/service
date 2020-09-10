@@ -47,7 +47,7 @@ func TestUser(t *testing.T) {
 			claims := auth.Claims{
 				StandardClaims: jwt.StandardClaims{
 					Issuer:    "service project",
-					Subject:   "718ffbea-f4a1-4667-8ae3-b349da52675e",
+					Subject:   u.ID,
 					Audience:  "students",
 					ExpiresAt: now.Add(time.Hour).Unix(),
 					IssuedAt:  now.Unix(),
