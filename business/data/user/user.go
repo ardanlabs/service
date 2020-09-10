@@ -124,7 +124,7 @@ func Delete(ctx context.Context, db *sqlx.DB, id string) error {
 
 // Query retrieves a list of existing users from the database.
 func Query(ctx context.Context, db *sqlx.DB) ([]User, error) {
-	ctx, span := global.Tracer("service").Start(ctx, "business.data.user.list")
+	ctx, span := global.Tracer("service").Start(ctx, "business.data.user.query")
 	defer span.End()
 
 	const q = `SELECT * FROM users`
@@ -139,7 +139,7 @@ func Query(ctx context.Context, db *sqlx.DB) ([]User, error) {
 
 // QueryByID gets the specified user from the database.
 func QueryByID(ctx context.Context, claims auth.Claims, db *sqlx.DB, userID string) (User, error) {
-	ctx, span := global.Tracer("service").Start(ctx, "business.data.user.one")
+	ctx, span := global.Tracer("service").Start(ctx, "business.data.user.querybyid")
 	defer span.End()
 
 	if _, err := uuid.Parse(userID); err != nil {
@@ -159,6 +159,34 @@ func QueryByID(ctx context.Context, claims auth.Claims, db *sqlx.DB, userID stri
 			return User{}, ErrNotFound
 		}
 		return User{}, errors.Wrapf(err, "selecting user %q", userID)
+	}
+
+	return u, nil
+}
+
+// QueryByEmail gets the specified user from the database by email.
+func QueryByEmail(ctx context.Context, claims auth.Claims, db *sqlx.DB, email string) (User, error) {
+	ctx, span := global.Tracer("service").Start(ctx, "business.data.user.querybyemail")
+	defer span.End()
+
+	// If you are not an admin you can't run this query.
+	if !claims.HasRole(auth.RoleAdmin) {
+		return User{}, ErrForbidden
+	}
+
+	const q = `SELECT * FROM users WHERE email = $1`
+
+	var u User
+	if err := db.GetContext(ctx, &u, q, email); err != nil {
+		if err == sql.ErrNoRows {
+			return User{}, ErrNotFound
+		}
+		return User{}, errors.Wrapf(err, "selecting user %q", email)
+	}
+
+	// If you are looking to retrieve someone other than yourself.
+	if claims.Subject != u.ID {
+		return User{}, ErrForbidden
 	}
 
 	return u, nil

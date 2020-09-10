@@ -4,6 +4,8 @@ metadata:
   name: sales-api
 data:
   db_host: 0.0.0.0
-  db_disable_tls: "true"
+  db_name: postgres
+  db_user: postgres
+  db_pass: postgres
   zipkin_reporter_uri: "http://0.0.0.0:9411/api/v2/spans"
   collect_from: "http://0.0.0.0:4000/debug/vars"

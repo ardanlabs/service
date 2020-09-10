@@ -111,10 +111,10 @@ func run() error {
 		}
 
 	case "gentoken":
-		email := cfg.Args.Num(1)
+		id := cfg.Args.Num(1)
 		privateKeyFile := cfg.Args.Num(2)
 		algorithm := cfg.Args.Num(3)
-		if err := commands.GenToken(dbConfig, email, privateKeyFile, algorithm); err != nil {
+		if err := commands.GenToken(dbConfig, id, privateKeyFile, algorithm); err != nil {
 			return errors.Wrap(err, "generating token")
 		}
 

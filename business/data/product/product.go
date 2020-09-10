@@ -112,7 +112,7 @@ func Delete(ctx context.Context, db *sqlx.DB, id string) error {
 
 // Query gets all Products from the database.
 func Query(ctx context.Context, db *sqlx.DB) ([]Product, error) {
-	ctx, span := global.Tracer("service").Start(ctx, "business.data.product.list")
+	ctx, span := global.Tracer("service").Start(ctx, "business.data.product.query")
 	defer span.End()
 
 	const q = `SELECT
@@ -133,7 +133,7 @@ func Query(ctx context.Context, db *sqlx.DB) ([]Product, error) {
 
 // QueryByID finds the product identified by a given ID.
 func QueryByID(ctx context.Context, db *sqlx.DB, id string) (Product, error) {
-	ctx, span := global.Tracer("service").Start(ctx, "business.data.product.one")
+	ctx, span := global.Tracer("service").Start(ctx, "business.data.product.querybyid")
 	defer span.End()
 
 	if _, err := uuid.Parse(id); err != nil {

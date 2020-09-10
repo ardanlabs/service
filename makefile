@@ -96,10 +96,10 @@ kind-delete:
 # Administration
 
 migrate:
-	go run app/sales-admin/main.go --db-disable-tls=1 migrate
+	go run app/sales-admin/main.go migrate
 
 seed: migrate
-	go run app/sales-admin/main.go --db-disable-tls=1 seed
+	go run app/sales-admin/main.go seed
 
 # ==============================================================================
 # Running tests within the local computer

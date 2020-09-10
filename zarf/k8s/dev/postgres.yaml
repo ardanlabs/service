@@ -20,12 +20,21 @@ spec:
         image: postgres:11.1-alpine
         imagePullPolicy: Always
         env:
-        - name: DB_USER
-          value: postgres
-        - name: DB_PASS
-          value: postgres
         - name: DB_NAME
-          value: postgres
+          valueFrom:
+            configMapKeyRef:
+              name: sales-api
+              key: db_name
+        - name: DB_USER
+          valueFrom:
+            configMapKeyRef:
+              name: sales-api
+              key: db_user
+        - name: DB_PASS
+          valueFrom:
+            configMapKeyRef:
+              name: sales-api
+              key: db_pass
         ports:
         - name: postgres
           containerPort: 5432

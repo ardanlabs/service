@@ -34,7 +34,7 @@ func GenToken(cfg database.Config, id string, privateKeyFile string, algorithm s
 	// The call to retrieve a user requires an Admin role by the caller.
 	claims := auth.Claims{
 		StandardClaims: jwt.StandardClaims{
-			Subject: "admin",
+			Subject: id,
 		},
 		Roles: []string{auth.RoleAdmin},
 	}

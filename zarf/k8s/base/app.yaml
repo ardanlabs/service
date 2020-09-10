@@ -27,11 +27,6 @@ spec:
             configMapKeyRef:
               name: sales-api
               key: db_host
-        - name: SALES_DB_DISABLE_TLS
-          valueFrom:
-            configMapKeyRef:
-              name: sales-api
-              key: db_disable_tls
         - name: SALES_ZIPKIN_REPORTER_URI
           valueFrom:
             configMapKeyRef:
