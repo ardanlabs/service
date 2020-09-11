@@ -33,11 +33,6 @@ func TestUser(t *testing.T) {
 				PasswordConfirm: "gophers",
 			}
 
-			if err := schema.DeleteAll(db); err != nil {
-				t.Fatalf("\t%s\tTest %d:\tShould be able to delete all data : %s.", tests.Failed, testID, err)
-			}
-			t.Logf("\t%s\tTest %d:\tShould be able to delete all data.", tests.Success, testID)
-
 			u, err := user.Create(ctx, db, nu, now)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to create user : %s.", tests.Failed, testID, err)

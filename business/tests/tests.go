@@ -88,6 +88,30 @@ func NewUnit(t *testing.T) (*sqlx.DB, func()) {
 	return db, teardown
 }
 
+// Context returns an app level context for testing.
+func Context() context.Context {
+	values := web.Values{
+		TraceID: uuid.New().String(),
+		Now:     time.Now(),
+	}
+
+	return context.WithValue(context.Background(), web.KeyValues, &values)
+}
+
+// StringPointer is a helper to get a *string from a string. It is in the tests
+// package because we normally don't want to deal with pointers to basic types
+// but it's useful in some tests.
+func StringPointer(s string) *string {
+	return &s
+}
+
+// IntPointer is a helper to get a *int from a int. It is in the tests package
+// because we normally don't want to deal with pointers to basic types but it's
+// useful in some tests.
+func IntPointer(i int) *int {
+	return &i
+}
+
 // Test owns state for running and shutting down tests.
 type Test struct {
 	DB   *sqlx.DB
@@ -157,28 +181,4 @@ func (test *Test) Token(email, pass string) string {
 	}
 
 	return token
-}
-
-// Context returns an app level context for testing.
-func Context() context.Context {
-	values := web.Values{
-		TraceID: uuid.New().String(),
-		Now:     time.Now(),
-	}
-
-	return context.WithValue(context.Background(), web.KeyValues, &values)
-}
-
-// StringPointer is a helper to get a *string from a string. It is in the tests
-// package because we normally don't want to deal with pointers to basic types
-// but it's useful in some tests.
-func StringPointer(s string) *string {
-	return &s
-}
-
-// IntPointer is a helper to get a *int from a int. It is in the tests package
-// because we normally don't want to deal with pointers to basic types but it's
-// useful in some tests.
-func IntPointer(i int) *int {
-	return &i
 }
