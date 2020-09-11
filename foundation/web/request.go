@@ -15,12 +15,15 @@ import (
 )
 
 // validate holds the settings and caches for validating request struct values.
-var validate = validator.New()
+var validate *validator.Validate
 
 // translator is a cache of locale and translation information.
 var translator *ut.UniversalTranslator
 
 func init() {
+
+	// Instantiate the validator for use.
+	validate = validator.New()
 
 	// Instantiate the english locale for the validator library.
 	enLocale := en.New()
