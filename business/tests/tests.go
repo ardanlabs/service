@@ -147,6 +147,7 @@ func NewIntegration(t *testing.T) *Test {
 		}
 		return privateKey.Public().(*rsa.PublicKey), nil
 	}
+
 	auth, err := auth.New(privateKey, KID, "RS256", keyLookupFunc)
 	if err != nil {
 		t.Fatal(err)
