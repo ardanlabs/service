@@ -27,7 +27,7 @@ jobs:
       - run:
           name: Download the DB image
           command: |
-              docker pull postgres:12.4-alpine
+              docker pull postgres:13-alpine
       - run:
           name: Run tests
           command: |
