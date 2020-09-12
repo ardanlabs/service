@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: sales-api
+  name: app-config
 data:
   db_host: 10.3.0.9
   zipkin_reporter_uri: "http://0.0.0.0:9411/api/v2/spans"

@@ -18,9 +18,9 @@ services:
     container_name: sales_db
     networks:
       - shared-network
-    image: postgres:11.1-alpine
+    image: postgres:13-alpine
     ports:
-      - 5432:5432
+      - 5432:5432      
 
   sales-api:
     container_name: sales-api

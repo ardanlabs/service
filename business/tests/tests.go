@@ -27,9 +27,10 @@ const (
 )
 
 // Configuration for running tests.
-const (
-	dbImage = "postgres:11.1-alpine"
+var (
+	dbImage = "postgres:13-alpine"
 	dbPort  = "5432"
+	dbArgs  = []string{"-e", "POSTGRES_PASSWORD=postgres"}
 	AdminID = "5cf37266-3473-4006-984f-9325122678b7"
 	UserID  = "45b5fbd3-755f-4379-8f07-a58d4a30fa2f"
 )
@@ -38,7 +39,7 @@ const (
 // required table structure but the database is otherwise empty. It returns
 // the database to use as well as a function to call at the end of the test.
 func NewUnit(t *testing.T) (*sqlx.DB, func()) {
-	c := startContainer(t, dbImage, dbPort)
+	c := startContainer(t, dbImage, dbPort, dbArgs...)
 
 	cfg := database.Config{
 		User:       "postgres",

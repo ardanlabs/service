@@ -1,11 +1,9 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: sales-api
+  name: app-config
 data:
   db_host: 0.0.0.0
-  db_name: postgres
-  db_user: postgres
-  db_pass: postgres
+  db_password: postgres
   zipkin_reporter_uri: "http://0.0.0.0:9411/api/v2/spans"
   collect_from: "http://0.0.0.0:4000/debug/vars"

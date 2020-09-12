@@ -25,12 +25,12 @@ spec:
         - name: SALES_DB_HOST
           valueFrom:
             configMapKeyRef:
-              name: sales-api
+              name: app-config
               key: db_host
         - name: SALES_ZIPKIN_REPORTER_URI
           valueFrom:
             configMapKeyRef:
-              name: sales-api
+              name: app-config
               key: zipkin_reporter_uri
         - name: KUBERNETES_NAMESPACE
           valueFrom:
@@ -71,7 +71,7 @@ spec:
         - name: METRICS_COLLECT_FROM
           valueFrom:
             configMapKeyRef:
-              name: sales-api
+              name: app-config
               key: collect_from
         ports:
         - name: metrics

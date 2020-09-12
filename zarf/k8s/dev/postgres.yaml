@@ -17,24 +17,14 @@ spec:
       hostNetwork: true
       containers:
       - name: postgres
-        image: postgres:11.1-alpine
+        image: postgres:13-alpine
         imagePullPolicy: Always
         env:
-        - name: DB_NAME
+        - name: POSTGRES_PASSWORD
           valueFrom:
             configMapKeyRef:
-              name: sales-api
-              key: db_name
-        - name: DB_USER
-          valueFrom:
-            configMapKeyRef:
-              name: sales-api
-              key: db_user
-        - name: DB_PASS
-          valueFrom:
-            configMapKeyRef:
-              name: sales-api
-              key: db_pass
+              name: app-config
+              key: db_password
         ports:
         - name: postgres
           containerPort: 5432

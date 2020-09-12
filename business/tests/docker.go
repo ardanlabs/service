@@ -14,8 +14,12 @@ type Container struct {
 	Host string // IP:Port
 }
 
-func startContainer(t *testing.T, image string, port string) *Container {
-	cmd := exec.Command("docker", "run", "-P", "-d", image)
+func startContainer(t *testing.T, image string, port string, args ...string) *Container {
+	arg := []string{"run", "-P", "-d"}
+	arg = append(arg, args...)
+	arg = append(arg, image)
+
+	cmd := exec.Command("docker", arg...)
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	if err := cmd.Run(); err != nil {
