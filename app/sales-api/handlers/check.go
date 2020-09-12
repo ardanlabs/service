@@ -8,7 +8,7 @@ import (
 	"github.com/ardanlabs/service/foundation/database"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/jmoiron/sqlx"
-	"go.opentelemetry.io/otel/api/global"
+	"go.opentelemetry.io/otel/api/trace"
 )
 
 type check struct {
@@ -20,7 +20,7 @@ type check struct {
 // Do not respond by just returning an error because further up in the call
 // stack it will interpret that as a non-trusted error.
 func (c *check) readiness(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	ctx, span := global.Tracer("service").Start(ctx, "handlers.check.readiness")
+	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "handlers.check.readiness")
 	defer span.End()
 
 	status := "ok"
@@ -44,7 +44,7 @@ func (c *check) readiness(ctx context.Context, w http.ResponseWriter, r *http.Re
 // namespace details via the Downward API. The Kubernetes environment variables
 // need to be set within your Pod/Deployment manifest.
 func (c *check) liveness(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	ctx, span := global.Tracer("service").Start(ctx, "handlers.check.liveness")
+	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "handlers.check.liveness")
 	defer span.End()
 
 	host, err := os.Hostname()

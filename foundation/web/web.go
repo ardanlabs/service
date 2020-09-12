@@ -10,7 +10,7 @@ import (
 
 	"github.com/dimfeld/httptreemux/v5"
 	othttp "go.opentelemetry.io/contrib/instrumentation/net/http"
-	"go.opentelemetry.io/otel/api/global"
+	"go.opentelemetry.io/otel/api/trace"
 )
 
 // ctxKey represents the type of value for the context key.
@@ -54,7 +54,7 @@ func NewApp(shutdown chan os.Signal, mw ...Middleware) *App {
 	// This is configured to use the W3C TraceContext standard to set the remote
 	// parent if an client request includes the appropriate headers.
 	// https://w3c.github.io/trace-context/
-	app.otmux = othttp.NewHandler(app.mux.TreeMux, "server")
+	app.otmux = othttp.NewHandler(app.mux.TreeMux, "request")
 	return &app
 }
 
@@ -72,7 +72,8 @@ func (a *App) Handle(method string, path string, handler Handler, mw ...Middlewa
 	h := func(w http.ResponseWriter, r *http.Request) {
 
 		// Start or expand a distributed trace.
-		ctx, span := global.Tracer("service").Start(r.Context(), "foundation.web.roothandler")
+		ctx := r.Context()
+		ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, r.URL.Path)
 		defer span.End()
 
 		// Set the context with the required values to

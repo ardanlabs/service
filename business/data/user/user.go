@@ -11,7 +11,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
-	"go.opentelemetry.io/otel/api/global"
+	"go.opentelemetry.io/otel/api/trace"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -32,7 +32,7 @@ var (
 
 // Create inserts a new user into the database.
 func Create(ctx context.Context, db *sqlx.DB, nu NewUser, now time.Time) (User, error) {
-	ctx, span := global.Tracer("service").Start(ctx, "internal.data.user.create")
+	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "internal.data.user.create")
 	defer span.End()
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(nu.Password), bcrypt.DefaultCost)
@@ -63,7 +63,7 @@ func Create(ctx context.Context, db *sqlx.DB, nu NewUser, now time.Time) (User, 
 
 // Update replaces a user document in the database.
 func Update(ctx context.Context, claims auth.Claims, db *sqlx.DB, id string, uu UpdateUser, now time.Time) error {
-	ctx, span := global.Tracer("service").Start(ctx, "business.data.user.update")
+	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.user.update")
 	defer span.End()
 
 	u, err := QueryByID(ctx, claims, db, id)
@@ -106,7 +106,7 @@ func Update(ctx context.Context, claims auth.Claims, db *sqlx.DB, id string, uu 
 
 // Delete removes a user from the database.
 func Delete(ctx context.Context, db *sqlx.DB, id string) error {
-	ctx, span := global.Tracer("service").Start(ctx, "business.data.user.delete")
+	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.user.delete")
 	defer span.End()
 
 	if _, err := uuid.Parse(id); err != nil {
@@ -124,7 +124,7 @@ func Delete(ctx context.Context, db *sqlx.DB, id string) error {
 
 // Query retrieves a list of existing users from the database.
 func Query(ctx context.Context, db *sqlx.DB) ([]User, error) {
-	ctx, span := global.Tracer("service").Start(ctx, "business.data.user.query")
+	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.user.query")
 	defer span.End()
 
 	const q = `SELECT * FROM users`
@@ -139,7 +139,7 @@ func Query(ctx context.Context, db *sqlx.DB) ([]User, error) {
 
 // QueryByID gets the specified user from the database.
 func QueryByID(ctx context.Context, claims auth.Claims, db *sqlx.DB, userID string) (User, error) {
-	ctx, span := global.Tracer("service").Start(ctx, "business.data.user.querybyid")
+	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.user.querybyid")
 	defer span.End()
 
 	if _, err := uuid.Parse(userID); err != nil {
@@ -166,7 +166,7 @@ func QueryByID(ctx context.Context, claims auth.Claims, db *sqlx.DB, userID stri
 
 // QueryByEmail gets the specified user from the database by email.
 func QueryByEmail(ctx context.Context, claims auth.Claims, db *sqlx.DB, email string) (User, error) {
-	ctx, span := global.Tracer("service").Start(ctx, "business.data.user.querybyemail")
+	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.user.querybyemail")
 	defer span.End()
 
 	const q = `SELECT * FROM users WHERE email = $1`
@@ -191,7 +191,7 @@ func QueryByEmail(ctx context.Context, claims auth.Claims, db *sqlx.DB, email st
 // success it returns a Claims value representing this user. The claims can be
 // used to generate a token for future authentication.
 func Authenticate(ctx context.Context, db *sqlx.DB, now time.Time, email, password string) (auth.Claims, error) {
-	ctx, span := global.Tracer("service").Start(ctx, "business.data.user.authenticate")
+	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.user.authenticate")
 	defer span.End()
 
 	const q = `SELECT * FROM users WHERE email = $1`

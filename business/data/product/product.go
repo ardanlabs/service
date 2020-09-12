@@ -10,7 +10,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
-	"go.opentelemetry.io/otel/api/global"
+	"go.opentelemetry.io/otel/api/trace"
 )
 
 var (
@@ -27,7 +27,7 @@ var (
 // Create adds a Product to the database. It returns the created Product with
 // fields like ID and DateCreated populated.
 func Create(ctx context.Context, db *sqlx.DB, user auth.Claims, np NewProduct, now time.Time) (Product, error) {
-	ctx, span := global.Tracer("service").Start(ctx, "business.data.product.create")
+	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.product.create")
 	defer span.End()
 
 	p := Product{
@@ -54,7 +54,7 @@ func Create(ctx context.Context, db *sqlx.DB, user auth.Claims, np NewProduct, n
 // Update modifies data about a Product. It will error if the specified ID is
 // invalid or does not reference an existing Product.
 func Update(ctx context.Context, db *sqlx.DB, user auth.Claims, id string, up UpdateProduct, now time.Time) error {
-	ctx, span := global.Tracer("service").Start(ctx, "business.data.product.update")
+	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.product.update")
 	defer span.End()
 
 	p, err := QueryByID(ctx, db, id)
@@ -94,7 +94,7 @@ func Update(ctx context.Context, db *sqlx.DB, user auth.Claims, id string, up Up
 
 // Delete removes the product identified by a given ID.
 func Delete(ctx context.Context, db *sqlx.DB, id string) error {
-	ctx, span := global.Tracer("service").Start(ctx, "business.data.product.delete")
+	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.product.delete")
 	defer span.End()
 
 	if _, err := uuid.Parse(id); err != nil {
@@ -112,7 +112,7 @@ func Delete(ctx context.Context, db *sqlx.DB, id string) error {
 
 // Query gets all Products from the database.
 func Query(ctx context.Context, db *sqlx.DB) ([]Product, error) {
-	ctx, span := global.Tracer("service").Start(ctx, "business.data.product.query")
+	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.product.query")
 	defer span.End()
 
 	const q = `SELECT
@@ -133,7 +133,7 @@ func Query(ctx context.Context, db *sqlx.DB) ([]Product, error) {
 
 // QueryByID finds the product identified by a given ID.
 func QueryByID(ctx context.Context, db *sqlx.DB, id string) (Product, error) {
-	ctx, span := global.Tracer("service").Start(ctx, "business.data.product.querybyid")
+	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.product.querybyid")
 	defer span.End()
 
 	if _, err := uuid.Parse(id); err != nil {

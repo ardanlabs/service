@@ -6,12 +6,12 @@ import (
 	"net/http"
 
 	"github.com/pkg/errors"
-	"go.opentelemetry.io/otel/api/global"
+	"go.opentelemetry.io/otel/api/trace"
 )
 
 // Respond converts a Go value to JSON and sends it to the client.
 func Respond(ctx context.Context, w http.ResponseWriter, data interface{}, statusCode int) error {
-	ctx, span := global.Tracer("service").Start(ctx, "foundation.web.respond")
+	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "foundation.web.respond")
 	defer span.End()
 
 	// Set the status code for the request logger middleware.

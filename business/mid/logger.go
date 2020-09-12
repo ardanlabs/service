@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/foundation/web"
-	"go.opentelemetry.io/otel/api/global"
+	"go.opentelemetry.io/otel/api/trace"
 )
 
 // Logger writes some information about the request to the logs in the
@@ -19,7 +19,7 @@ func Logger(log *log.Logger) web.Middleware {
 
 		// Create the handler that will be attached in the middleware chain.
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-			ctx, span := global.Tracer("service").Start(ctx, "business.mid.logger")
+			ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.mid.logger")
 			defer span.End()
 
 			// If the context is missing this value, request the service

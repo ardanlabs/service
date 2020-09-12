@@ -9,7 +9,7 @@ import (
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
-	"go.opentelemetry.io/otel/api/global"
+	"go.opentelemetry.io/otel/api/trace"
 )
 
 type userHandlers struct {
@@ -18,7 +18,7 @@ type userHandlers struct {
 }
 
 func (h *userHandlers) query(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	ctx, span := global.Tracer("service").Start(ctx, "handlers.user.list")
+	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "handlers.user.list")
 	defer span.End()
 
 	users, err := user.Query(ctx, h.db)
@@ -30,7 +30,7 @@ func (h *userHandlers) query(ctx context.Context, w http.ResponseWriter, r *http
 }
 
 func (h *userHandlers) queryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	ctx, span := global.Tracer("service").Start(ctx, "handlers.user.retrieve")
+	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "handlers.user.retrieve")
 	defer span.End()
 
 	claims, ok := ctx.Value(auth.Key).(auth.Claims)
@@ -57,7 +57,7 @@ func (h *userHandlers) queryByID(ctx context.Context, w http.ResponseWriter, r *
 }
 
 func (h *userHandlers) create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	ctx, span := global.Tracer("service").Start(ctx, "handlers.user.create")
+	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "handlers.user.create")
 	defer span.End()
 
 	v, ok := ctx.Value(web.KeyValues).(*web.Values)
@@ -79,7 +79,7 @@ func (h *userHandlers) create(ctx context.Context, w http.ResponseWriter, r *htt
 }
 
 func (h *userHandlers) update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	ctx, span := global.Tracer("service").Start(ctx, "handlers.user.update")
+	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "handlers.user.update")
 	defer span.End()
 
 	v, ok := ctx.Value(web.KeyValues).(*web.Values)
@@ -116,7 +116,7 @@ func (h *userHandlers) update(ctx context.Context, w http.ResponseWriter, r *htt
 }
 
 func (h *userHandlers) delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	ctx, span := global.Tracer("service").Start(ctx, "handlers.user.delete")
+	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "handlers.user.delete")
 	defer span.End()
 
 	params := web.Params(r)
@@ -138,7 +138,7 @@ func (h *userHandlers) delete(ctx context.Context, w http.ResponseWriter, r *htt
 }
 
 func (h *userHandlers) token(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	ctx, span := global.Tracer("service").Start(ctx, "handlers.user.token")
+	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "handlers.user.token")
 	defer span.End()
 
 	v, ok := ctx.Value(web.KeyValues).(*web.Values)
