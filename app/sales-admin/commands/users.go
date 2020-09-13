@@ -3,6 +3,7 @@ package commands
 import (
 	"context"
 	"encoding/json"
+	"log"
 	"os"
 	"time"
 
@@ -12,7 +13,7 @@ import (
 )
 
 // Users retrieves all users from the database.
-func Users(cfg database.Config) error {
+func Users(traceID string, log *log.Logger, cfg database.Config) error {
 	db, err := database.Open(cfg)
 	if err != nil {
 		return errors.Wrap(err, "connect database")
@@ -22,7 +23,7 @@ func Users(cfg database.Config) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	users, err := user.Query(ctx, db)
+	users, err := user.Query(ctx, traceID, log, db)
 	if err != nil {
 		return errors.Wrap(err, "retrieve users")
 	}

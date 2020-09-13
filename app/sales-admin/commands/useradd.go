@@ -3,6 +3,7 @@ package commands
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/ardanlabs/service/business/auth"
@@ -12,7 +13,7 @@ import (
 )
 
 // UserAdd adds new users into the database.
-func UserAdd(cfg database.Config, email, password string) error {
+func UserAdd(traceID string, log *log.Logger, cfg database.Config, email, password string) error {
 	if email == "" || password == "" {
 		fmt.Println("help: useradd <email> <password>")
 		return ErrHelp
@@ -33,7 +34,7 @@ func UserAdd(cfg database.Config, email, password string) error {
 		PasswordConfirm: password,
 		Roles:           []string{auth.RoleAdmin, auth.RoleUser},
 	}
-	u, err := user.Create(ctx, db, nu, time.Now())
+	u, err := user.Create(ctx, traceID, log, db, nu, time.Now())
 	if err != nil {
 		return errors.Wrap(err, "create user")
 	}

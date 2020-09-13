@@ -4,9 +4,11 @@ package user
 import (
 	"context"
 	"database/sql"
+	"log"
 	"time"
 
 	"github.com/ardanlabs/service/business/auth"
+	"github.com/ardanlabs/service/foundation/database"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
@@ -31,7 +33,7 @@ var (
 )
 
 // Create inserts a new user into the database.
-func Create(ctx context.Context, db *sqlx.DB, nu NewUser, now time.Time) (User, error) {
+func Create(ctx context.Context, traceID string, log *log.Logger, db *sqlx.DB, nu NewUser, now time.Time) (User, error) {
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "internal.data.user.create")
 	defer span.End()
 
@@ -54,6 +56,10 @@ func Create(ctx context.Context, db *sqlx.DB, nu NewUser, now time.Time) (User, 
 		(user_id, name, email, password_hash, roles, date_created, date_updated)
 		VALUES ($1, $2, $3, $4, $5, $6, $7)`
 
+	log.Printf("%s : %s : query : %s", traceID, "user.Create",
+		database.Log(q, u.ID, u.Name, u.Email, u.PasswordHash, u.Roles, u.DateCreated, u.DateUpdated),
+	)
+
 	if _, err = db.ExecContext(ctx, q, u.ID, u.Name, u.Email, u.PasswordHash, u.Roles, u.DateCreated, u.DateUpdated); err != nil {
 		return User{}, errors.Wrap(err, "inserting user")
 	}
@@ -62,11 +68,11 @@ func Create(ctx context.Context, db *sqlx.DB, nu NewUser, now time.Time) (User, 
 }
 
 // Update replaces a user document in the database.
-func Update(ctx context.Context, claims auth.Claims, db *sqlx.DB, id string, uu UpdateUser, now time.Time) error {
+func Update(ctx context.Context, traceID string, log *log.Logger, claims auth.Claims, db *sqlx.DB, id string, uu UpdateUser, now time.Time) error {
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.user.update")
 	defer span.End()
 
-	u, err := QueryByID(ctx, claims, db, id)
+	u, err := QueryByID(ctx, traceID, log, claims, db, id)
 	if err != nil {
 		return err
 	}
@@ -97,6 +103,10 @@ func Update(ctx context.Context, claims auth.Claims, db *sqlx.DB, id string, uu 
 		"date_updated" = $6
 		WHERE user_id = $1`
 
+	log.Printf("%s : %s : query : %s", traceID, "user.Update",
+		database.Log(q, u.ID, u.Name, u.Email, u.PasswordHash, u.Roles, u.DateCreated, u.DateUpdated),
+	)
+
 	if _, err = db.ExecContext(ctx, q, id, u.Name, u.Email, u.Roles, u.PasswordHash, u.DateUpdated); err != nil {
 		return errors.Wrap(err, "updating user")
 	}
@@ -105,7 +115,7 @@ func Update(ctx context.Context, claims auth.Claims, db *sqlx.DB, id string, uu 
 }
 
 // Delete removes a user from the database.
-func Delete(ctx context.Context, db *sqlx.DB, id string) error {
+func Delete(ctx context.Context, traceID string, log *log.Logger, db *sqlx.DB, id string) error {
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.user.delete")
 	defer span.End()
 
@@ -115,6 +125,10 @@ func Delete(ctx context.Context, db *sqlx.DB, id string) error {
 
 	const q = `DELETE FROM users WHERE user_id = $1`
 
+	log.Printf("%s : %s : query : %s", traceID, "user.Delete",
+		database.Log(q, id),
+	)
+
 	if _, err := db.ExecContext(ctx, q, id); err != nil {
 		return errors.Wrapf(err, "deleting user %s", id)
 	}
@@ -123,11 +137,15 @@ func Delete(ctx context.Context, db *sqlx.DB, id string) error {
 }
 
 // Query retrieves a list of existing users from the database.
-func Query(ctx context.Context, db *sqlx.DB) ([]User, error) {
+func Query(ctx context.Context, traceID string, log *log.Logger, db *sqlx.DB) ([]User, error) {
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.user.query")
 	defer span.End()
 
 	const q = `SELECT * FROM users`
+
+	log.Printf("%s : %s : query : %s", traceID, "user.Query",
+		database.Log(q),
+	)
 
 	users := []User{}
 	if err := db.SelectContext(ctx, &users, q); err != nil {
@@ -138,7 +156,7 @@ func Query(ctx context.Context, db *sqlx.DB) ([]User, error) {
 }
 
 // QueryByID gets the specified user from the database.
-func QueryByID(ctx context.Context, claims auth.Claims, db *sqlx.DB, userID string) (User, error) {
+func QueryByID(ctx context.Context, traceID string, log *log.Logger, claims auth.Claims, db *sqlx.DB, userID string) (User, error) {
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.user.querybyid")
 	defer span.End()
 
@@ -153,6 +171,10 @@ func QueryByID(ctx context.Context, claims auth.Claims, db *sqlx.DB, userID stri
 
 	const q = `SELECT * FROM users WHERE user_id = $1`
 
+	log.Printf("%s : %s : query : %s", traceID, "user.QueryByID",
+		database.Log(q, userID),
+	)
+
 	var u User
 	if err := db.GetContext(ctx, &u, q, userID); err != nil {
 		if err == sql.ErrNoRows {
@@ -165,11 +187,15 @@ func QueryByID(ctx context.Context, claims auth.Claims, db *sqlx.DB, userID stri
 }
 
 // QueryByEmail gets the specified user from the database by email.
-func QueryByEmail(ctx context.Context, claims auth.Claims, db *sqlx.DB, email string) (User, error) {
+func QueryByEmail(ctx context.Context, traceID string, log *log.Logger, claims auth.Claims, db *sqlx.DB, email string) (User, error) {
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.user.querybyemail")
 	defer span.End()
 
 	const q = `SELECT * FROM users WHERE email = $1`
+
+	log.Printf("%s : %s : query : %s", traceID, "user.QueryByEmail",
+		database.Log(q, email),
+	)
 
 	var u User
 	if err := db.GetContext(ctx, &u, q, email); err != nil {
@@ -190,11 +216,15 @@ func QueryByEmail(ctx context.Context, claims auth.Claims, db *sqlx.DB, email st
 // Authenticate finds a user by their email and verifies their password. On
 // success it returns a Claims value representing this user. The claims can be
 // used to generate a token for future authentication.
-func Authenticate(ctx context.Context, db *sqlx.DB, now time.Time, email, password string) (auth.Claims, error) {
+func Authenticate(ctx context.Context, traceID string, log *log.Logger, db *sqlx.DB, now time.Time, email, password string) (auth.Claims, error) {
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.user.authenticate")
 	defer span.End()
 
 	const q = `SELECT * FROM users WHERE email = $1`
+
+	log.Printf("%s : %s : query : %s", traceID, "user.Authenticate",
+		database.Log(q, email),
+	)
 
 	var u User
 	if err := db.GetContext(ctx, &u, q, email); err != nil {

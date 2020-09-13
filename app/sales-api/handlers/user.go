@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"log"
 	"net/http"
 
 	"github.com/ardanlabs/service/business/auth"
@@ -13,6 +14,7 @@ import (
 )
 
 type userHandlers struct {
+	log  *log.Logger
 	db   *sqlx.DB
 	auth *auth.Auth
 }
@@ -21,7 +23,12 @@ func (h *userHandlers) query(ctx context.Context, w http.ResponseWriter, r *http
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "handlers.user.list")
 	defer span.End()
 
-	users, err := user.Query(ctx, h.db)
+	v, ok := ctx.Value(web.KeyValues).(*web.Values)
+	if !ok {
+		return web.NewShutdownError("web value missing from context")
+	}
+
+	users, err := user.Query(ctx, v.TraceID, h.log, h.db)
 	if err != nil {
 		return err
 	}
@@ -33,13 +40,18 @@ func (h *userHandlers) queryByID(ctx context.Context, w http.ResponseWriter, r *
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "handlers.user.retrieve")
 	defer span.End()
 
+	v, ok := ctx.Value(web.KeyValues).(*web.Values)
+	if !ok {
+		return web.NewShutdownError("web value missing from context")
+	}
+
 	claims, ok := ctx.Value(auth.Key).(auth.Claims)
 	if !ok {
 		return errors.New("claims missing from context")
 	}
 
 	params := web.Params(r)
-	usr, err := user.QueryByID(ctx, claims, h.db, params["id"])
+	usr, err := user.QueryByID(ctx, v.TraceID, h.log, claims, h.db, params["id"])
 	if err != nil {
 		switch err {
 		case user.ErrInvalidID:
@@ -70,7 +82,7 @@ func (h *userHandlers) create(ctx context.Context, w http.ResponseWriter, r *htt
 		return errors.Wrap(err, "")
 	}
 
-	usr, err := user.Create(ctx, h.db, nu, v.Now)
+	usr, err := user.Create(ctx, v.TraceID, h.log, h.db, nu, v.Now)
 	if err != nil {
 		return errors.Wrapf(err, "User: %+v", &usr)
 	}
@@ -98,7 +110,7 @@ func (h *userHandlers) update(ctx context.Context, w http.ResponseWriter, r *htt
 	}
 
 	params := web.Params(r)
-	err := user.Update(ctx, claims, h.db, params["id"], upd, v.Now)
+	err := user.Update(ctx, v.TraceID, h.log, claims, h.db, params["id"], upd, v.Now)
 	if err != nil {
 		switch err {
 		case user.ErrInvalidID:
@@ -119,8 +131,13 @@ func (h *userHandlers) delete(ctx context.Context, w http.ResponseWriter, r *htt
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "handlers.user.delete")
 	defer span.End()
 
+	v, ok := ctx.Value(web.KeyValues).(*web.Values)
+	if !ok {
+		return web.NewShutdownError("web value missing from context")
+	}
+
 	params := web.Params(r)
-	err := user.Delete(ctx, h.db, params["id"])
+	err := user.Delete(ctx, v.TraceID, h.log, h.db, params["id"])
 	if err != nil {
 		switch err {
 		case user.ErrInvalidID:
@@ -152,7 +169,7 @@ func (h *userHandlers) token(ctx context.Context, w http.ResponseWriter, r *http
 		return web.NewRequestError(err, http.StatusUnauthorized)
 	}
 
-	claims, err := user.Authenticate(ctx, h.db, v.Now, email, pass)
+	claims, err := user.Authenticate(ctx, v.TraceID, h.log, h.db, v.Now, email, pass)
 	if err != nil {
 		switch err {
 		case user.ErrAuthenticationFailure:

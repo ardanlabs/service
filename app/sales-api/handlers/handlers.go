@@ -29,6 +29,7 @@ func API(build string, shutdown chan os.Signal, log *log.Logger, db *sqlx.DB, a 
 
 	// Register user management and authentication endpoints.
 	u := userHandlers{
+		log:  log,
 		db:   db,
 		auth: a,
 	}
@@ -43,7 +44,8 @@ func API(build string, shutdown chan os.Signal, log *log.Logger, db *sqlx.DB, a 
 
 	// Register product and sale endpoints.
 	p := productHandlers{
-		db: db,
+		log: log,
+		db:  db,
 	}
 	app.Handle(http.MethodGet, "/v1/products", p.query, mid.Authenticate(a))
 	app.Handle(http.MethodPost, "/v1/products", p.create, mid.Authenticate(a))

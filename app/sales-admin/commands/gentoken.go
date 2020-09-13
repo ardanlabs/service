@@ -5,6 +5,7 @@ import (
 	"crypto/rsa"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"time"
 
 	"github.com/ardanlabs/service/business/auth"
@@ -15,7 +16,7 @@ import (
 )
 
 // GenToken generates a JWT for the specified user.
-func GenToken(cfg database.Config, id string, privateKeyFile string, algorithm string) error {
+func GenToken(traceID string, log *log.Logger, cfg database.Config, id string, privateKeyFile string, algorithm string) error {
 	if id == "" || privateKeyFile == "" || algorithm == "" {
 		fmt.Println("help: gentoken <id> <private_key_file> <algorithm>")
 		fmt.Println("algorithm: RS256, HS256")
@@ -38,7 +39,7 @@ func GenToken(cfg database.Config, id string, privateKeyFile string, algorithm s
 		},
 		Roles: []string{auth.RoleAdmin},
 	}
-	user, err := user.QueryByID(ctx, claims, db, id)
+	user, err := user.QueryByID(ctx, traceID, log, claims, db, id)
 	if err != nil {
 		return errors.Wrap(err, "retrieve user")
 	}

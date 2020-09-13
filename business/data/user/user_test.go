@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/auth"
-	"github.com/ardanlabs/service/business/data/schema"
 	"github.com/ardanlabs/service/business/data/user"
 	"github.com/ardanlabs/service/business/tests"
 	"github.com/dgrijalva/jwt-go"
@@ -14,7 +13,7 @@ import (
 )
 
 func TestUser(t *testing.T) {
-	db, teardown := tests.NewUnit(t)
+	log, db, teardown := tests.NewUnit(t)
 	t.Cleanup(teardown)
 
 	t.Log("Given the need to work with User records.")
@@ -24,6 +23,7 @@ func TestUser(t *testing.T) {
 		{
 			ctx := tests.Context()
 			now := time.Date(2018, time.October, 1, 0, 0, 0, 0, time.UTC)
+			traceID := "00000000-0000-0000-0000-000000000000"
 
 			nu := user.NewUser{
 				Name:            "Bill Kennedy",
@@ -33,7 +33,7 @@ func TestUser(t *testing.T) {
 				PasswordConfirm: "gophers",
 			}
 
-			u, err := user.Create(ctx, db, nu, now)
+			u, err := user.Create(ctx, traceID, log, db, nu, now)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to create user : %s.", tests.Failed, testID, err)
 			}
@@ -50,7 +50,7 @@ func TestUser(t *testing.T) {
 				Roles: []string{auth.RoleAdmin, auth.RoleUser},
 			}
 
-			savedU, err := user.QueryByID(ctx, claims, db, u.ID)
+			savedU, err := user.QueryByID(ctx, traceID, log, claims, db, u.ID)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve user by ID: %s.", tests.Failed, testID, err)
 			}
@@ -66,12 +66,12 @@ func TestUser(t *testing.T) {
 				Email: tests.StringPointer("jacob@ardanlabs.com"),
 			}
 
-			if err := user.Update(ctx, claims, db, u.ID, upd, now); err != nil {
+			if err := user.Update(ctx, traceID, log, claims, db, u.ID, upd, now); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to update user : %s.", tests.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to update user.", tests.Success, testID)
 
-			savedU, err = user.QueryByEmail(ctx, claims, db, *upd.Email)
+			savedU, err = user.QueryByEmail(ctx, traceID, log, claims, db, *upd.Email)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve user by Email : %s.", tests.Failed, testID, err)
 			}
@@ -93,12 +93,12 @@ func TestUser(t *testing.T) {
 				t.Logf("\t%s\tTest %d:\tShould be able to see updates to Email.", tests.Success, testID)
 			}
 
-			if err := user.Delete(ctx, db, u.ID); err != nil {
+			if err := user.Delete(ctx, traceID, log, db, u.ID); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to delete user : %s.", tests.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to delete user.", tests.Success, testID)
 
-			_, err = user.QueryByID(ctx, claims, db, u.ID)
+			_, err = user.QueryByID(ctx, traceID, log, claims, db, u.ID)
 			if errors.Cause(err) != user.ErrNotFound {
 				t.Fatalf("\t%s\tTest %d:\tShould NOT be able to retrieve user : %s.", tests.Failed, testID, err)
 			}
@@ -108,7 +108,7 @@ func TestUser(t *testing.T) {
 }
 
 func TestAuthenticate(t *testing.T) {
-	db, teardown := tests.NewUnit(t)
+	log, db, teardown := tests.NewUnit(t)
 	t.Cleanup(teardown)
 
 	t.Log("Given the need to authenticate users")
@@ -117,6 +117,8 @@ func TestAuthenticate(t *testing.T) {
 		t.Logf("\tTest %d:\tWhen handling a single User.", testID)
 		{
 			ctx := tests.Context()
+			now := time.Date(2018, time.October, 1, 0, 0, 0, 0, time.UTC)
+			traceID := "00000000-0000-0000-0000-000000000000"
 
 			nu := user.NewUser{
 				Name:            "Anna Walker",
@@ -126,20 +128,13 @@ func TestAuthenticate(t *testing.T) {
 				PasswordConfirm: "goroutines",
 			}
 
-			now := time.Date(2018, time.October, 1, 0, 0, 0, 0, time.UTC)
-
-			if err := schema.DeleteAll(db); err != nil {
-				t.Fatalf("\t%s\tTest %d:\tShould be able to delete all data : %s.", tests.Failed, testID, err)
-			}
-			t.Logf("\t%s\tTest %d:\tShould be able to delete all data.", tests.Success, testID)
-
-			u, err := user.Create(ctx, db, nu, now)
+			u, err := user.Create(ctx, traceID, log, db, nu, now)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to create user : %s.", tests.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to create user.", tests.Success, testID)
 
-			claims, err := user.Authenticate(ctx, db, now, "anna@ardanlabs.com", "goroutines")
+			claims, err := user.Authenticate(ctx, traceID, log, db, now, "anna@ardanlabs.com", "goroutines")
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to generate claims : %s.", tests.Failed, testID, err)
 			}
