@@ -6,8 +6,8 @@ import (
 	"github.com/lib/pq"
 )
 
-// User represents someone with access to our system.
-type User struct {
+// Info represents an individual user.
+type Info struct {
 	ID           string         `db:"user_id" json:"id"`
 	Name         string         `db:"name" json:"name"`
 	Email        string         `db:"email" json:"email"`

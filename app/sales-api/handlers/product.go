@@ -2,23 +2,20 @@ package handlers
 
 import (
 	"context"
-	"log"
 	"net/http"
 
 	"github.com/ardanlabs/service/business/auth"
 	"github.com/ardanlabs/service/business/data/product"
 	"github.com/ardanlabs/service/foundation/web"
-	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/api/trace"
 )
 
-type productHandlers struct {
-	log *log.Logger
-	db  *sqlx.DB
+type productGroup struct {
+	product product.Product
 }
 
-func (h *productHandlers) query(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (pg productGroup) query(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "handlers.product.list")
 	defer span.End()
 
@@ -27,7 +24,7 @@ func (h *productHandlers) query(ctx context.Context, w http.ResponseWriter, r *h
 		return web.NewShutdownError("web value missing from context")
 	}
 
-	products, err := product.Query(ctx, v.TraceID, h.log, h.db)
+	products, err := pg.product.Query(ctx, v.TraceID)
 	if err != nil {
 		return err
 	}
@@ -35,7 +32,7 @@ func (h *productHandlers) query(ctx context.Context, w http.ResponseWriter, r *h
 	return web.Respond(ctx, w, products, http.StatusOK)
 }
 
-func (h *productHandlers) queryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (pg productGroup) queryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "handlers.product.retrieve")
 	defer span.End()
 
@@ -45,7 +42,7 @@ func (h *productHandlers) queryByID(ctx context.Context, w http.ResponseWriter, 
 	}
 
 	params := web.Params(r)
-	prod, err := product.QueryByID(ctx, v.TraceID, h.log, h.db, params["id"])
+	prod, err := pg.product.QueryByID(ctx, v.TraceID, params["id"])
 	if err != nil {
 		switch err {
 		case product.ErrInvalidID:
@@ -60,7 +57,7 @@ func (h *productHandlers) queryByID(ctx context.Context, w http.ResponseWriter, 
 	return web.Respond(ctx, w, prod, http.StatusOK)
 }
 
-func (h *productHandlers) create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (pg productGroup) create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "handlers.product.create")
 	defer span.End()
 
@@ -79,7 +76,7 @@ func (h *productHandlers) create(ctx context.Context, w http.ResponseWriter, r *
 		return errors.Wrap(err, "decoding new product")
 	}
 
-	prod, err := product.Create(ctx, v.TraceID, h.log, h.db, claims, np, v.Now)
+	prod, err := pg.product.Create(ctx, v.TraceID, claims, np, v.Now)
 	if err != nil {
 		return errors.Wrapf(err, "creating new product: %+v", np)
 	}
@@ -87,7 +84,7 @@ func (h *productHandlers) create(ctx context.Context, w http.ResponseWriter, r *
 	return web.Respond(ctx, w, prod, http.StatusCreated)
 }
 
-func (h *productHandlers) update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (pg productGroup) update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "handlers.product.update")
 	defer span.End()
 
@@ -107,7 +104,7 @@ func (h *productHandlers) update(ctx context.Context, w http.ResponseWriter, r *
 	}
 
 	params := web.Params(r)
-	if err := product.Update(ctx, v.TraceID, h.log, h.db, claims, params["id"], up, v.Now); err != nil {
+	if err := pg.product.Update(ctx, v.TraceID, claims, params["id"], up, v.Now); err != nil {
 		switch err {
 		case product.ErrInvalidID:
 			return web.NewRequestError(err, http.StatusBadRequest)
@@ -123,7 +120,7 @@ func (h *productHandlers) update(ctx context.Context, w http.ResponseWriter, r *
 	return web.Respond(ctx, w, nil, http.StatusNoContent)
 }
 
-func (h *productHandlers) delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (pg productGroup) delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "handlers.product.delete")
 	defer span.End()
 
@@ -133,7 +130,7 @@ func (h *productHandlers) delete(ctx context.Context, w http.ResponseWriter, r *
 	}
 
 	params := web.Params(r)
-	if err := product.Delete(ctx, v.TraceID, h.log, h.db, params["id"]); err != nil {
+	if err := pg.product.Delete(ctx, v.TraceID, params["id"]); err != nil {
 		switch err {
 		case product.ErrInvalidID:
 			return web.NewRequestError(err, http.StatusBadRequest)

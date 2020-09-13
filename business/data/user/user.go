@@ -32,17 +32,31 @@ var (
 	ErrForbidden = errors.New("attempted action is not allowed")
 )
 
+// User manages the set of API's for user access.
+type User struct {
+	log *log.Logger
+	db  *sqlx.DB
+}
+
+// New constructs a User for api access.
+func New(log *log.Logger, db *sqlx.DB) User {
+	return User{
+		log: log,
+		db:  db,
+	}
+}
+
 // Create inserts a new user into the database.
-func Create(ctx context.Context, traceID string, log *log.Logger, db *sqlx.DB, nu NewUser, now time.Time) (User, error) {
+func (u User) Create(ctx context.Context, traceID string, nu NewUser, now time.Time) (Info, error) {
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "internal.data.user.create")
 	defer span.End()
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(nu.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return User{}, errors.Wrap(err, "generating password hash")
+		return Info{}, errors.Wrap(err, "generating password hash")
 	}
 
-	u := User{
+	usr := Info{
 		ID:           uuid.New().String(),
 		Name:         nu.Name,
 		Email:        nu.Email,
@@ -56,44 +70,44 @@ func Create(ctx context.Context, traceID string, log *log.Logger, db *sqlx.DB, n
 		(user_id, name, email, password_hash, roles, date_created, date_updated)
 		VALUES ($1, $2, $3, $4, $5, $6, $7)`
 
-	log.Printf("%s : %s : query : %s", traceID, "user.Create",
-		database.Log(q, u.ID, u.Name, u.Email, u.PasswordHash, u.Roles, u.DateCreated, u.DateUpdated),
+	u.log.Printf("%s : %s : query : %s", traceID, "user.Create",
+		database.Log(q, usr.ID, usr.Name, usr.Email, usr.PasswordHash, usr.Roles, usr.DateCreated, usr.DateUpdated),
 	)
 
-	if _, err = db.ExecContext(ctx, q, u.ID, u.Name, u.Email, u.PasswordHash, u.Roles, u.DateCreated, u.DateUpdated); err != nil {
-		return User{}, errors.Wrap(err, "inserting user")
+	if _, err = u.db.ExecContext(ctx, q, usr.ID, usr.Name, usr.Email, usr.PasswordHash, usr.Roles, usr.DateCreated, usr.DateUpdated); err != nil {
+		return Info{}, errors.Wrap(err, "inserting user")
 	}
 
-	return u, nil
+	return usr, nil
 }
 
 // Update replaces a user document in the database.
-func Update(ctx context.Context, traceID string, log *log.Logger, claims auth.Claims, db *sqlx.DB, id string, uu UpdateUser, now time.Time) error {
+func (u User) Update(ctx context.Context, traceID string, claims auth.Claims, userID string, uu UpdateUser, now time.Time) error {
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.user.update")
 	defer span.End()
 
-	u, err := QueryByID(ctx, traceID, log, claims, db, id)
+	usr, err := u.QueryByID(ctx, traceID, claims, userID)
 	if err != nil {
 		return err
 	}
 
 	if uu.Name != nil {
-		u.Name = *uu.Name
+		usr.Name = *uu.Name
 	}
 	if uu.Email != nil {
-		u.Email = *uu.Email
+		usr.Email = *uu.Email
 	}
 	if uu.Roles != nil {
-		u.Roles = uu.Roles
+		usr.Roles = uu.Roles
 	}
 	if uu.Password != nil {
 		pw, err := bcrypt.GenerateFromPassword([]byte(*uu.Password), bcrypt.DefaultCost)
 		if err != nil {
 			return errors.Wrap(err, "generating password hash")
 		}
-		u.PasswordHash = pw
+		usr.PasswordHash = pw
 	}
-	u.DateUpdated = now
+	usr.DateUpdated = now
 
 	const q = `UPDATE users SET
 		"name" = $2,
@@ -103,11 +117,11 @@ func Update(ctx context.Context, traceID string, log *log.Logger, claims auth.Cl
 		"date_updated" = $6
 		WHERE user_id = $1`
 
-	log.Printf("%s : %s : query : %s", traceID, "user.Update",
-		database.Log(q, u.ID, u.Name, u.Email, u.PasswordHash, u.Roles, u.DateCreated, u.DateUpdated),
+	u.log.Printf("%s : %s : query : %s", traceID, "user.Update",
+		database.Log(q, usr.ID, usr.Name, usr.Email, usr.PasswordHash, usr.Roles, usr.DateCreated, usr.DateUpdated),
 	)
 
-	if _, err = db.ExecContext(ctx, q, id, u.Name, u.Email, u.Roles, u.PasswordHash, u.DateUpdated); err != nil {
+	if _, err = u.db.ExecContext(ctx, q, userID, usr.Name, usr.Email, usr.Roles, usr.PasswordHash, usr.DateUpdated); err != nil {
 		return errors.Wrap(err, "updating user")
 	}
 
@@ -115,29 +129,29 @@ func Update(ctx context.Context, traceID string, log *log.Logger, claims auth.Cl
 }
 
 // Delete removes a user from the database.
-func Delete(ctx context.Context, traceID string, log *log.Logger, db *sqlx.DB, id string) error {
+func (u User) Delete(ctx context.Context, traceID string, userID string) error {
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.user.delete")
 	defer span.End()
 
-	if _, err := uuid.Parse(id); err != nil {
+	if _, err := uuid.Parse(userID); err != nil {
 		return ErrInvalidID
 	}
 
 	const q = `DELETE FROM users WHERE user_id = $1`
 
-	log.Printf("%s : %s : query : %s", traceID, "user.Delete",
-		database.Log(q, id),
+	u.log.Printf("%s : %s : query : %s", traceID, "user.Delete",
+		database.Log(q, userID),
 	)
 
-	if _, err := db.ExecContext(ctx, q, id); err != nil {
-		return errors.Wrapf(err, "deleting user %s", id)
+	if _, err := u.db.ExecContext(ctx, q, userID); err != nil {
+		return errors.Wrapf(err, "deleting user %s", userID)
 	}
 
 	return nil
 }
 
 // Query retrieves a list of existing users from the database.
-func Query(ctx context.Context, traceID string, log *log.Logger, db *sqlx.DB) ([]User, error) {
+func (u User) Query(ctx context.Context, traceID string) ([]Info, error) {
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.user.query")
 	defer span.End()
 
@@ -147,8 +161,8 @@ func Query(ctx context.Context, traceID string, log *log.Logger, db *sqlx.DB) ([
 		database.Log(q),
 	)
 
-	users := []User{}
-	if err := db.SelectContext(ctx, &users, q); err != nil {
+	users := []Info{}
+	if err := u.db.SelectContext(ctx, &users, q); err != nil {
 		return nil, errors.Wrap(err, "selecting users")
 	}
 
@@ -156,78 +170,78 @@ func Query(ctx context.Context, traceID string, log *log.Logger, db *sqlx.DB) ([
 }
 
 // QueryByID gets the specified user from the database.
-func QueryByID(ctx context.Context, traceID string, log *log.Logger, claims auth.Claims, db *sqlx.DB, userID string) (User, error) {
+func (u User) QueryByID(ctx context.Context, traceID string, claims auth.Claims, userID string) (Info, error) {
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.user.querybyid")
 	defer span.End()
 
 	if _, err := uuid.Parse(userID); err != nil {
-		return User{}, ErrInvalidID
+		return Info{}, ErrInvalidID
 	}
 
 	// If you are not an admin and looking to retrieve someone other than yourself.
 	if !claims.HasRole(auth.RoleAdmin) && claims.Subject != userID {
-		return User{}, ErrForbidden
+		return Info{}, ErrForbidden
 	}
 
 	const q = `SELECT * FROM users WHERE user_id = $1`
 
-	log.Printf("%s : %s : query : %s", traceID, "user.QueryByID",
+	u.log.Printf("%s : %s : query : %s", traceID, "user.QueryByID",
 		database.Log(q, userID),
 	)
 
-	var u User
-	if err := db.GetContext(ctx, &u, q, userID); err != nil {
+	var usr Info
+	if err := u.db.GetContext(ctx, &usr, q, userID); err != nil {
 		if err == sql.ErrNoRows {
-			return User{}, ErrNotFound
+			return Info{}, ErrNotFound
 		}
-		return User{}, errors.Wrapf(err, "selecting user %q", userID)
+		return Info{}, errors.Wrapf(err, "selecting user %q", userID)
 	}
 
-	return u, nil
+	return usr, nil
 }
 
 // QueryByEmail gets the specified user from the database by email.
-func QueryByEmail(ctx context.Context, traceID string, log *log.Logger, claims auth.Claims, db *sqlx.DB, email string) (User, error) {
+func (u User) QueryByEmail(ctx context.Context, traceID string, claims auth.Claims, email string) (Info, error) {
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.user.querybyemail")
 	defer span.End()
 
 	const q = `SELECT * FROM users WHERE email = $1`
 
-	log.Printf("%s : %s : query : %s", traceID, "user.QueryByEmail",
+	u.log.Printf("%s : %s : query : %s", traceID, "user.QueryByEmail",
 		database.Log(q, email),
 	)
 
-	var u User
-	if err := db.GetContext(ctx, &u, q, email); err != nil {
+	var usr Info
+	if err := u.db.GetContext(ctx, &usr, q, email); err != nil {
 		if err == sql.ErrNoRows {
-			return User{}, ErrNotFound
+			return Info{}, ErrNotFound
 		}
-		return User{}, errors.Wrapf(err, "selecting user %q", email)
+		return Info{}, errors.Wrapf(err, "selecting user %q", email)
 	}
 
 	// If you are not an admin and looking to retrieve someone other than yourself.
-	if !claims.HasRole(auth.RoleAdmin) && claims.Subject != u.ID {
-		return User{}, ErrForbidden
+	if !claims.HasRole(auth.RoleAdmin) && claims.Subject != usr.ID {
+		return Info{}, ErrForbidden
 	}
 
-	return u, nil
+	return usr, nil
 }
 
 // Authenticate finds a user by their email and verifies their password. On
-// success it returns a Claims value representing this user. The claims can be
+// success it returns a Claims Info representing this user. The claims can be
 // used to generate a token for future authentication.
-func Authenticate(ctx context.Context, traceID string, log *log.Logger, db *sqlx.DB, now time.Time, email, password string) (auth.Claims, error) {
+func (u User) Authenticate(ctx context.Context, traceID string, now time.Time, email, password string) (auth.Claims, error) {
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.user.authenticate")
 	defer span.End()
 
 	const q = `SELECT * FROM users WHERE email = $1`
 
-	log.Printf("%s : %s : query : %s", traceID, "user.Authenticate",
+	u.log.Printf("%s : %s : query : %s", traceID, "user.Authenticate",
 		database.Log(q, email),
 	)
 
-	var u User
-	if err := db.GetContext(ctx, &u, q, email); err != nil {
+	var usr Info
+	if err := u.db.GetContext(ctx, &usr, q, email); err != nil {
 
 		// Normally we would return ErrNotFound in this scenario but we do not want
 		// to leak to an unauthenticated user which emails are in the system.
@@ -240,7 +254,7 @@ func Authenticate(ctx context.Context, traceID string, log *log.Logger, db *sqlx
 
 	// Compare the provided password with the saved hash. Use the bcrypt
 	// comparison function so it is cryptographically secure.
-	if err := bcrypt.CompareHashAndPassword(u.PasswordHash, []byte(password)); err != nil {
+	if err := bcrypt.CompareHashAndPassword(usr.PasswordHash, []byte(password)); err != nil {
 		return auth.Claims{}, ErrAuthenticationFailure
 	}
 
@@ -249,12 +263,12 @@ func Authenticate(ctx context.Context, traceID string, log *log.Logger, db *sqlx
 	claims := auth.Claims{
 		StandardClaims: jwt.StandardClaims{
 			Issuer:    "service project",
-			Subject:   u.ID,
+			Subject:   usr.ID,
 			Audience:  "students",
 			ExpiresAt: now.Add(time.Hour).Unix(),
 			IssuedAt:  now.Unix(),
 		},
-		Roles: u.Roles,
+		Roles: usr.Roles,
 	}
 
 	return claims, nil

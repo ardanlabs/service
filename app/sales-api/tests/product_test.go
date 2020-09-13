@@ -270,7 +270,7 @@ func (pt *ProductTests) crudProduct(t *testing.T) {
 }
 
 // postProduct201 validates a product can be created with the endpoint.
-func (pt *ProductTests) postProduct201(t *testing.T) product.Product {
+func (pt *ProductTests) postProduct201(t *testing.T) product.Info {
 	np := product.NewProduct{
 		Name:     "Comic Books",
 		Cost:     25,
@@ -289,7 +289,7 @@ func (pt *ProductTests) postProduct201(t *testing.T) product.Product {
 	pt.app.ServeHTTP(w, r)
 
 	// This needs to be returned for other tests.
-	var got product.Product
+	var got product.Info
 
 	t.Log("Given the need to create a new product with the products endpoint.")
 	{
@@ -361,7 +361,7 @@ func (pt *ProductTests) getProduct200(t *testing.T, id string) {
 			}
 			t.Logf("\t%s\tTest : %d\tShould receive a status code of 200 for the response.", tests.Success, testID)
 
-			var got product.Product
+			var got product.Info
 			if err := json.NewDecoder(w.Body).Decode(&got); err != nil {
 				t.Fatalf("\t%s\tTest : %d\tShould be able to unmarshal the response : %v", tests.Failed, testID, err)
 			}
@@ -412,7 +412,7 @@ func (pt *ProductTests) putProduct204(t *testing.T, id string) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould receive a status code of 200 for the retrieve.", tests.Success, testID)
 
-			var ru product.Product
+			var ru product.Info
 			if err := json.NewDecoder(w.Body).Decode(&ru); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to unmarshal the response : %v", tests.Failed, testID, err)
 			}

@@ -26,18 +26,32 @@ var (
 	ErrForbidden = errors.New("attempted action is not allowed")
 )
 
+// Product manages the set of API's for product access.
+type Product struct {
+	log *log.Logger
+	db  *sqlx.DB
+}
+
+// New constructs a Product for api access.
+func New(log *log.Logger, db *sqlx.DB) Product {
+	return Product{
+		log: log,
+		db:  db,
+	}
+}
+
 // Create adds a Product to the database. It returns the created Product with
 // fields like ID and DateCreated populated.
-func Create(ctx context.Context, traceID string, log *log.Logger, db *sqlx.DB, user auth.Claims, np NewProduct, now time.Time) (Product, error) {
+func (p Product) Create(ctx context.Context, traceID string, claims auth.Claims, np NewProduct, now time.Time) (Info, error) {
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.product.create")
 	defer span.End()
 
-	p := Product{
+	prd := Info{
 		ID:          uuid.New().String(),
 		Name:        np.Name,
 		Cost:        np.Cost,
 		Quantity:    np.Quantity,
-		UserID:      user.Subject,
+		UserID:      claims.Subject,
 		DateCreated: now.UTC(),
 		DateUpdated: now.UTC(),
 	}
@@ -46,43 +60,43 @@ func Create(ctx context.Context, traceID string, log *log.Logger, db *sqlx.DB, u
 		(product_id, user_id, name, cost, quantity, date_created, date_updated)
 		VALUES ($1, $2, $3, $4, $5, $6, $7)`
 
-	log.Printf("%s : %s : query : %s", traceID, "product.Create",
-		database.Log(q, p.ID, p.UserID, p.Name, p.Cost, p.Quantity, p.DateCreated, p.DateUpdated),
+	p.log.Printf("%s : %s : query : %s", traceID, "product.Create",
+		database.Log(q, prd.ID, prd.UserID, prd.Name, prd.Cost, prd.Quantity, prd.DateCreated, prd.DateUpdated),
 	)
 
-	if _, err := db.ExecContext(ctx, q, p.ID, p.UserID, p.Name, p.Cost, p.Quantity, p.DateCreated, p.DateUpdated); err != nil {
-		return Product{}, errors.Wrap(err, "inserting product")
+	if _, err := p.db.ExecContext(ctx, q, prd.ID, prd.UserID, prd.Name, prd.Cost, prd.Quantity, prd.DateCreated, prd.DateUpdated); err != nil {
+		return Info{}, errors.Wrap(err, "inserting product")
 	}
 
-	return p, nil
+	return prd, nil
 }
 
 // Update modifies data about a Product. It will error if the specified ID is
 // invalid or does not reference an existing Product.
-func Update(ctx context.Context, traceID string, log *log.Logger, db *sqlx.DB, user auth.Claims, id string, up UpdateProduct, now time.Time) error {
+func (p Product) Update(ctx context.Context, traceID string, claims auth.Claims, productID string, up UpdateProduct, now time.Time) error {
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.product.update")
 	defer span.End()
 
-	p, err := QueryByID(ctx, traceID, log, db, id)
+	prd, err := p.QueryByID(ctx, traceID, productID)
 	if err != nil {
 		return err
 	}
 
 	// If you are not an admin and looking to retrieve someone elses product.
-	if !user.HasRole(auth.RoleAdmin) && p.UserID != user.Subject {
+	if !claims.HasRole(auth.RoleAdmin) && prd.UserID != claims.Subject {
 		return ErrForbidden
 	}
 
 	if up.Name != nil {
-		p.Name = *up.Name
+		prd.Name = *up.Name
 	}
 	if up.Cost != nil {
-		p.Cost = *up.Cost
+		prd.Cost = *up.Cost
 	}
 	if up.Quantity != nil {
-		p.Quantity = *up.Quantity
+		prd.Quantity = *up.Quantity
 	}
-	p.DateUpdated = now
+	prd.DateUpdated = now
 
 	const q = `UPDATE products SET
 		"name" = $2,
@@ -91,11 +105,11 @@ func Update(ctx context.Context, traceID string, log *log.Logger, db *sqlx.DB, u
 		"date_updated" = $5
 		WHERE product_id = $1`
 
-	log.Printf("%s : %s : query : %s", traceID, "product.Update",
-		database.Log(q, id, p.Name, p.Cost, p.Quantity, p.DateUpdated),
+	p.log.Printf("%s : %s : query : %s", traceID, "product.Update",
+		database.Log(q, productID, prd.Name, prd.Cost, prd.Quantity, prd.DateUpdated),
 	)
 
-	if _, err = db.ExecContext(ctx, q, id, p.Name, p.Cost, p.Quantity, p.DateUpdated); err != nil {
+	if _, err = p.db.ExecContext(ctx, q, productID, prd.Name, prd.Cost, prd.Quantity, prd.DateUpdated); err != nil {
 		return errors.Wrap(err, "updating product")
 	}
 
@@ -103,29 +117,29 @@ func Update(ctx context.Context, traceID string, log *log.Logger, db *sqlx.DB, u
 }
 
 // Delete removes the product identified by a given ID.
-func Delete(ctx context.Context, traceID string, log *log.Logger, db *sqlx.DB, id string) error {
+func (p Product) Delete(ctx context.Context, traceID string, productID string) error {
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.product.delete")
 	defer span.End()
 
-	if _, err := uuid.Parse(id); err != nil {
+	if _, err := uuid.Parse(productID); err != nil {
 		return ErrInvalidID
 	}
 
 	const q = `DELETE FROM products WHERE product_id = $1`
 
-	log.Printf("%s : %s : query : %s", traceID, "product.Delete",
-		database.Log(q, id),
+	p.log.Printf("%s : %s : query : %s", traceID, "product.Delete",
+		database.Log(q, productID),
 	)
 
-	if _, err := db.ExecContext(ctx, q, id); err != nil {
-		return errors.Wrapf(err, "deleting product %s", id)
+	if _, err := p.db.ExecContext(ctx, q, productID); err != nil {
+		return errors.Wrapf(err, "deleting product %s", productID)
 	}
 
 	return nil
 }
 
 // Query gets all Products from the database.
-func Query(ctx context.Context, traceID string, log *log.Logger, db *sqlx.DB) ([]Product, error) {
+func (p Product) Query(ctx context.Context, traceID string) ([]Info, error) {
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.product.query")
 	defer span.End()
 
@@ -137,12 +151,12 @@ func Query(ctx context.Context, traceID string, log *log.Logger, db *sqlx.DB) ([
 		LEFT JOIN sales AS s ON p.product_id = s.product_id
 		GROUP BY p.product_id`
 
-	log.Printf("%s : %s : query : %s", traceID, "product.Query",
+	p.log.Printf("%s : %s : query : %s", traceID, "product.Query",
 		database.Log(q),
 	)
 
-	products := []Product{}
-	if err := db.SelectContext(ctx, &products, q); err != nil {
+	products := []Info{}
+	if err := p.db.SelectContext(ctx, &products, q); err != nil {
 		return nil, errors.Wrap(err, "selecting products")
 	}
 
@@ -150,12 +164,12 @@ func Query(ctx context.Context, traceID string, log *log.Logger, db *sqlx.DB) ([
 }
 
 // QueryByID finds the product identified by a given ID.
-func QueryByID(ctx context.Context, traceID string, log *log.Logger, db *sqlx.DB, id string) (Product, error) {
+func (p Product) QueryByID(ctx context.Context, traceID string, productID string) (Info, error) {
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.product.querybyid")
 	defer span.End()
 
-	if _, err := uuid.Parse(id); err != nil {
-		return Product{}, ErrInvalidID
+	if _, err := uuid.Parse(productID); err != nil {
+		return Info{}, ErrInvalidID
 	}
 
 	const q = `SELECT
@@ -167,17 +181,17 @@ func QueryByID(ctx context.Context, traceID string, log *log.Logger, db *sqlx.DB
 		WHERE p.product_id = $1
 		GROUP BY p.product_id`
 
-	log.Printf("%s : %s : query : %s", traceID, "product.QueryByID",
-		database.Log(q, id),
+	p.log.Printf("%s : %s : query : %s", traceID, "product.QueryByID",
+		database.Log(q, productID),
 	)
 
-	var p Product
-	if err := db.GetContext(ctx, &p, q, id); err != nil {
+	var prd Info
+	if err := p.db.GetContext(ctx, &prd, q, productID); err != nil {
 		if err == sql.ErrNoRows {
-			return Product{}, ErrNotFound
+			return Info{}, ErrNotFound
 		}
-		return Product{}, errors.Wrap(err, "selecting single product")
+		return Info{}, errors.Wrap(err, "selecting single product")
 	}
 
-	return p, nil
+	return prd, nil
 }

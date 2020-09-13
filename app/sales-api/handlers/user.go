@@ -2,24 +2,21 @@ package handlers
 
 import (
 	"context"
-	"log"
 	"net/http"
 
 	"github.com/ardanlabs/service/business/auth"
 	"github.com/ardanlabs/service/business/data/user"
 	"github.com/ardanlabs/service/foundation/web"
-	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/api/trace"
 )
 
-type userHandlers struct {
-	log  *log.Logger
-	db   *sqlx.DB
+type userGroup struct {
+	user user.User
 	auth *auth.Auth
 }
 
-func (h *userHandlers) query(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (ug userGroup) query(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "handlers.user.list")
 	defer span.End()
 
@@ -28,7 +25,7 @@ func (h *userHandlers) query(ctx context.Context, w http.ResponseWriter, r *http
 		return web.NewShutdownError("web value missing from context")
 	}
 
-	users, err := user.Query(ctx, v.TraceID, h.log, h.db)
+	users, err := ug.user.Query(ctx, v.TraceID)
 	if err != nil {
 		return err
 	}
@@ -36,7 +33,7 @@ func (h *userHandlers) query(ctx context.Context, w http.ResponseWriter, r *http
 	return web.Respond(ctx, w, users, http.StatusOK)
 }
 
-func (h *userHandlers) queryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (ug userGroup) queryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "handlers.user.retrieve")
 	defer span.End()
 
@@ -51,7 +48,7 @@ func (h *userHandlers) queryByID(ctx context.Context, w http.ResponseWriter, r *
 	}
 
 	params := web.Params(r)
-	usr, err := user.QueryByID(ctx, v.TraceID, h.log, claims, h.db, params["id"])
+	usr, err := ug.user.QueryByID(ctx, v.TraceID, claims, params["id"])
 	if err != nil {
 		switch err {
 		case user.ErrInvalidID:
@@ -68,7 +65,7 @@ func (h *userHandlers) queryByID(ctx context.Context, w http.ResponseWriter, r *
 	return web.Respond(ctx, w, usr, http.StatusOK)
 }
 
-func (h *userHandlers) create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (ug userGroup) create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "handlers.user.create")
 	defer span.End()
 
@@ -82,7 +79,7 @@ func (h *userHandlers) create(ctx context.Context, w http.ResponseWriter, r *htt
 		return errors.Wrap(err, "")
 	}
 
-	usr, err := user.Create(ctx, v.TraceID, h.log, h.db, nu, v.Now)
+	usr, err := ug.user.Create(ctx, v.TraceID, nu, v.Now)
 	if err != nil {
 		return errors.Wrapf(err, "User: %+v", &usr)
 	}
@@ -90,7 +87,7 @@ func (h *userHandlers) create(ctx context.Context, w http.ResponseWriter, r *htt
 	return web.Respond(ctx, w, usr, http.StatusCreated)
 }
 
-func (h *userHandlers) update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (ug userGroup) update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "handlers.user.update")
 	defer span.End()
 
@@ -110,7 +107,7 @@ func (h *userHandlers) update(ctx context.Context, w http.ResponseWriter, r *htt
 	}
 
 	params := web.Params(r)
-	err := user.Update(ctx, v.TraceID, h.log, claims, h.db, params["id"], upd, v.Now)
+	err := ug.user.Update(ctx, v.TraceID, claims, params["id"], upd, v.Now)
 	if err != nil {
 		switch err {
 		case user.ErrInvalidID:
@@ -127,7 +124,7 @@ func (h *userHandlers) update(ctx context.Context, w http.ResponseWriter, r *htt
 	return web.Respond(ctx, w, nil, http.StatusNoContent)
 }
 
-func (h *userHandlers) delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (ug userGroup) delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "handlers.user.delete")
 	defer span.End()
 
@@ -137,7 +134,7 @@ func (h *userHandlers) delete(ctx context.Context, w http.ResponseWriter, r *htt
 	}
 
 	params := web.Params(r)
-	err := user.Delete(ctx, v.TraceID, h.log, h.db, params["id"])
+	err := ug.user.Delete(ctx, v.TraceID, params["id"])
 	if err != nil {
 		switch err {
 		case user.ErrInvalidID:
@@ -154,7 +151,7 @@ func (h *userHandlers) delete(ctx context.Context, w http.ResponseWriter, r *htt
 	return web.Respond(ctx, w, nil, http.StatusNoContent)
 }
 
-func (h *userHandlers) token(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (ug userGroup) token(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "handlers.user.token")
 	defer span.End()
 
@@ -169,7 +166,7 @@ func (h *userHandlers) token(ctx context.Context, w http.ResponseWriter, r *http
 		return web.NewRequestError(err, http.StatusUnauthorized)
 	}
 
-	claims, err := user.Authenticate(ctx, v.TraceID, h.log, h.db, v.Now, email, pass)
+	claims, err := ug.user.Authenticate(ctx, v.TraceID, v.Now, email, pass)
 	if err != nil {
 		switch err {
 		case user.ErrAuthenticationFailure:
@@ -182,7 +179,7 @@ func (h *userHandlers) token(ctx context.Context, w http.ResponseWriter, r *http
 	var tkn struct {
 		Token string `json:"token"`
 	}
-	tkn.Token, err = h.auth.GenerateToken(claims)
+	tkn.Token, err = ug.auth.GenerateToken(claims)
 	if err != nil {
 		return errors.Wrap(err, "generating token")
 	}

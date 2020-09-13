@@ -174,7 +174,8 @@ func (test *Test) Teardown() {
 
 // Token generates an authenticated token for a user.
 func (test *Test) Token(email, pass string) string {
-	claims, err := user.Authenticate(context.Background(), test.TraceID, test.Log, test.DB, time.Now(), email, pass)
+	u := user.New(test.Log, test.DB)
+	claims, err := u.Authenticate(context.Background(), test.TraceID, time.Now(), email, pass)
 	if err != nil {
 		test.t.Fatal(err)
 	}

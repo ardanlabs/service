@@ -2,8 +2,8 @@ package product
 
 import "time"
 
-// Product is an item we sell.
-type Product struct {
+// Info represents an individual product.
+type Info struct {
 	ID          string    `db:"product_id" json:"id"`             // Unique identifier.
 	Name        string    `db:"name" json:"name"`                 // Display name of the product.
 	Cost        int       `db:"cost" json:"cost"`                 // Price for one item in cents.

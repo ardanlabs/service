@@ -16,6 +16,8 @@ func TestUser(t *testing.T) {
 	log, db, teardown := tests.NewUnit(t)
 	t.Cleanup(teardown)
 
+	u := user.New(log, db)
+
 	t.Log("Given the need to work with User records.")
 	{
 		testID := 0
@@ -33,7 +35,7 @@ func TestUser(t *testing.T) {
 				PasswordConfirm: "gophers",
 			}
 
-			u, err := user.Create(ctx, traceID, log, db, nu, now)
+			usr, err := u.Create(ctx, traceID, nu, now)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to create user : %s.", tests.Failed, testID, err)
 			}
@@ -42,7 +44,7 @@ func TestUser(t *testing.T) {
 			claims := auth.Claims{
 				StandardClaims: jwt.StandardClaims{
 					Issuer:    "service project",
-					Subject:   u.ID,
+					Subject:   usr.ID,
 					Audience:  "students",
 					ExpiresAt: now.Add(time.Hour).Unix(),
 					IssuedAt:  now.Unix(),
@@ -50,13 +52,13 @@ func TestUser(t *testing.T) {
 				Roles: []string{auth.RoleAdmin, auth.RoleUser},
 			}
 
-			savedU, err := user.QueryByID(ctx, traceID, log, claims, db, u.ID)
+			saved, err := u.QueryByID(ctx, traceID, claims, usr.ID)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve user by ID: %s.", tests.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to retrieve user by ID.", tests.Success, testID)
 
-			if diff := cmp.Diff(u, savedU); diff != "" {
+			if diff := cmp.Diff(usr, saved); diff != "" {
 				t.Fatalf("\t%s\tTest %d:\tShould get back the same user. Diff:\n%s", tests.Failed, testID, diff)
 			}
 			t.Logf("\t%s\tTest %d:\tShould get back the same user.", tests.Success, testID)
@@ -66,39 +68,39 @@ func TestUser(t *testing.T) {
 				Email: tests.StringPointer("jacob@ardanlabs.com"),
 			}
 
-			if err := user.Update(ctx, traceID, log, claims, db, u.ID, upd, now); err != nil {
+			if err := u.Update(ctx, traceID, claims, usr.ID, upd, now); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to update user : %s.", tests.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to update user.", tests.Success, testID)
 
-			savedU, err = user.QueryByEmail(ctx, traceID, log, claims, db, *upd.Email)
+			saved, err = u.QueryByEmail(ctx, traceID, claims, *upd.Email)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve user by Email : %s.", tests.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to retrieve user by Email.", tests.Success, testID)
 
-			if savedU.Name != *upd.Name {
+			if saved.Name != *upd.Name {
 				t.Errorf("\t%s\tTest %d:\tShould be able to see updates to Name.", tests.Failed, testID)
-				t.Logf("\t\tTest %d:\tGot: %v", testID, savedU.Name)
+				t.Logf("\t\tTest %d:\tGot: %v", testID, saved.Name)
 				t.Logf("\t\tTest %d:\tExp: %v", testID, *upd.Name)
 			} else {
 				t.Logf("\t%s\tTest %d:\tShould be able to see updates to Name.", tests.Success, testID)
 			}
 
-			if savedU.Email != *upd.Email {
+			if saved.Email != *upd.Email {
 				t.Errorf("\t%s\tTest %d:\tShould be able to see updates to Email.", tests.Failed, testID)
-				t.Logf("\t\tTest %d:\tGot: %v", testID, savedU.Email)
+				t.Logf("\t\tTest %d:\tGot: %v", testID, saved.Email)
 				t.Logf("\t\tTest %d:\tExp: %v", testID, *upd.Email)
 			} else {
 				t.Logf("\t%s\tTest %d:\tShould be able to see updates to Email.", tests.Success, testID)
 			}
 
-			if err := user.Delete(ctx, traceID, log, db, u.ID); err != nil {
+			if err := u.Delete(ctx, traceID, usr.ID); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to delete user : %s.", tests.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to delete user.", tests.Success, testID)
 
-			_, err = user.QueryByID(ctx, traceID, log, claims, db, u.ID)
+			_, err = u.QueryByID(ctx, traceID, claims, usr.ID)
 			if errors.Cause(err) != user.ErrNotFound {
 				t.Fatalf("\t%s\tTest %d:\tShould NOT be able to retrieve user : %s.", tests.Failed, testID, err)
 			}
@@ -110,6 +112,8 @@ func TestUser(t *testing.T) {
 func TestAuthenticate(t *testing.T) {
 	log, db, teardown := tests.NewUnit(t)
 	t.Cleanup(teardown)
+
+	u := user.New(log, db)
 
 	t.Log("Given the need to authenticate users")
 	{
@@ -128,23 +132,23 @@ func TestAuthenticate(t *testing.T) {
 				PasswordConfirm: "goroutines",
 			}
 
-			u, err := user.Create(ctx, traceID, log, db, nu, now)
+			usr, err := u.Create(ctx, traceID, nu, now)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to create user : %s.", tests.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to create user.", tests.Success, testID)
 
-			claims, err := user.Authenticate(ctx, traceID, log, db, now, "anna@ardanlabs.com", "goroutines")
+			claims, err := u.Authenticate(ctx, traceID, now, "anna@ardanlabs.com", "goroutines")
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to generate claims : %s.", tests.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to generate claims.", tests.Success, testID)
 
 			want := auth.Claims{
-				Roles: u.Roles,
+				Roles: usr.Roles,
 				StandardClaims: jwt.StandardClaims{
 					Issuer:    "service project",
-					Subject:   u.ID,
+					Subject:   usr.ID,
 					Audience:  "students",
 					ExpiresAt: now.Add(time.Hour).Unix(),
 					IssuedAt:  now.Unix(),

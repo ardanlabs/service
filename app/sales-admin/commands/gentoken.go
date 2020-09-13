@@ -32,6 +32,8 @@ func GenToken(traceID string, log *log.Logger, cfg database.Config, id string, p
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
+	u := user.New(log, db)
+
 	// The call to retrieve a user requires an Admin role by the caller.
 	claims := auth.Claims{
 		StandardClaims: jwt.StandardClaims{
@@ -39,7 +41,8 @@ func GenToken(traceID string, log *log.Logger, cfg database.Config, id string, p
 		},
 		Roles: []string{auth.RoleAdmin},
 	}
-	user, err := user.QueryByID(ctx, traceID, log, claims, db, id)
+
+	usr, err := u.QueryByID(ctx, traceID, claims, id)
 	if err != nil {
 		return errors.Wrap(err, "retrieve user")
 	}
@@ -92,11 +95,11 @@ func GenToken(traceID string, log *log.Logger, cfg database.Config, id string, p
 	claims = auth.Claims{
 		StandardClaims: jwt.StandardClaims{
 			Issuer:    "service project",
-			Subject:   user.ID,
+			Subject:   usr.ID,
 			ExpiresAt: time.Now().Add(8760 * time.Hour).Unix(),
 			IssuedAt:  time.Now().Unix(),
 		},
-		Roles: user.Roles,
+		Roles: usr.Roles,
 	}
 
 	// This will generate a JWT with the claims embedded in them. The database
