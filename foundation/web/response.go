@@ -72,5 +72,6 @@ func RespondError(ctx context.Context, w http.ResponseWriter, err error) error {
 	if err := Respond(ctx, w, er, http.StatusInternalServerError); err != nil {
 		return err
 	}
+
 	return nil
 }
