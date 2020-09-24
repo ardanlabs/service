@@ -60,7 +60,7 @@ func Authenticate(a *auth.Auth) web.Middleware {
 func HasRole(roles ...string) web.Middleware {
 
 	// This is the actual middleware function to be executed.
-	m := func(after web.Handler) web.Handler {
+	m := func(handler web.Handler) web.Handler {
 
 		// Create the handler that will be attached in the middleware chain.
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
@@ -76,7 +76,7 @@ func HasRole(roles ...string) web.Middleware {
 				return ErrForbidden
 			}
 
-			return after(ctx, w, r)
+			return handler(ctx, w, r)
 		}
 
 		return h

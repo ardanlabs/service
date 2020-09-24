@@ -16,7 +16,7 @@ import (
 func Panics(log *log.Logger) web.Middleware {
 
 	// This is the actual middleware function to be executed.
-	m := func(after web.Handler) web.Handler {
+	m := func(handler web.Handler) web.Handler {
 
 		// Create the handler that will be attached in the middleware chain.
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) (err error) {
@@ -42,7 +42,7 @@ func Panics(log *log.Logger) web.Middleware {
 			}()
 
 			// Call the next Handler and set its return value in the err variable.
-			return after(ctx, w, r)
+			return handler(ctx, w, r)
 		}
 
 		return h
