@@ -5,6 +5,11 @@ export PROJECT = ardan-starter-kit
 # ==============================================================================
 # Testing running system
 
+# // To generate a private/public key PEM file.
+# openssl genpkey -algorithm RSA -out private.pem -pkeyopt rsa_keygen_bits:2048
+# openssl rsa -pubout -in private.pem -out public.pem
+# ./sales-admin genkey
+
 # curl --user "admin@example.com:gophers" http://localhost:3000/v1/users/token/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
 # export TOKEN="COPY TOKEN STRING FROM LAST CALL"
 # curl -H "Authorization: Bearer ${TOKEN}" http://localhost:3000/v1/users
@@ -105,7 +110,7 @@ seed: migrate
 # Running tests within the local computer
 
 test:
-	go test ./... -count=1
+	go test -v ./... -count=1
 	staticcheck ./...
 
 # ==============================================================================

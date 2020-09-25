@@ -115,15 +115,15 @@ func (a *Auth) RemoveKey(kid string) {
 func (a *Auth) GenerateToken(kid string, claims Claims) (string, error) {
 	method := jwt.GetSigningMethod(a.algorithm)
 
-	tkn := jwt.NewWithClaims(method, claims)
-	tkn.Header["kid"] = kid
+	token := jwt.NewWithClaims(method, claims)
+	token.Header["kid"] = kid
 
-	keyID, ok := a.keys[kid]
+	privateKey, ok := a.keys[kid]
 	if !ok {
 		return "", errors.New("kid lookup failed")
 	}
 
-	str, err := tkn.SignedString(keyID)
+	str, err := token.SignedString(privateKey)
 	if err != nil {
 		return "", errors.Wrap(err, "signing token")
 	}
