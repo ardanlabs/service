@@ -34,11 +34,11 @@ func API(build string, shutdown chan os.Signal, log *log.Logger, db *sqlx.DB, a 
 		user: user.New(log, db),
 		auth: a,
 	}
-	app.Handle(http.MethodGet, "/v1/users", ug.query, mid.Authenticate(a), mid.HasRole(auth.RoleAdmin))
-	app.Handle(http.MethodPost, "/v1/users", ug.create, mid.Authenticate(a), mid.HasRole(auth.RoleAdmin))
+	app.Handle(http.MethodGet, "/v1/users", ug.query, mid.Authenticate(a), mid.Authorize(auth.RoleAdmin))
+	app.Handle(http.MethodPost, "/v1/users", ug.create, mid.Authenticate(a), mid.Authorize(auth.RoleAdmin))
 	app.Handle(http.MethodGet, "/v1/users/:id", ug.queryByID, mid.Authenticate(a))
-	app.Handle(http.MethodPut, "/v1/users/:id", ug.update, mid.Authenticate(a), mid.HasRole(auth.RoleAdmin))
-	app.Handle(http.MethodDelete, "/v1/users/:id", ug.delete, mid.Authenticate(a), mid.HasRole(auth.RoleAdmin))
+	app.Handle(http.MethodPut, "/v1/users/:id", ug.update, mid.Authenticate(a), mid.Authorize(auth.RoleAdmin))
+	app.Handle(http.MethodDelete, "/v1/users/:id", ug.delete, mid.Authenticate(a), mid.Authorize(auth.RoleAdmin))
 	app.Handle(http.MethodGet, "/v1/users/token/:kid", ug.token)
 
 	// Register product and sale endpoints.

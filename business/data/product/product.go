@@ -83,7 +83,7 @@ func (p Product) Update(ctx context.Context, traceID string, claims auth.Claims,
 	}
 
 	// If you are not an admin and looking to retrieve someone elses product.
-	if !claims.HasRole(auth.RoleAdmin) && prd.UserID != claims.Subject {
+	if !claims.Authorized(auth.RoleAdmin) && prd.UserID != claims.Subject {
 		return ErrForbidden
 	}
 

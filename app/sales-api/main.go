@@ -129,7 +129,7 @@ func run(log *log.Logger) error {
 	lookup := func(kid string) (*rsa.PublicKey, error) {
 		switch kid {
 		case cfg.Auth.KeyID:
-			return privateKey.Public().(*rsa.PublicKey), nil
+			return &privateKey.PublicKey, nil
 		}
 		return nil, fmt.Errorf("no public key found for the specified kid: %s", kid)
 	}

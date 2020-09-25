@@ -179,7 +179,7 @@ func (u User) QueryByID(ctx context.Context, traceID string, claims auth.Claims,
 	}
 
 	// If you are not an admin and looking to retrieve someone other than yourself.
-	if !claims.HasRole(auth.RoleAdmin) && claims.Subject != userID {
+	if !claims.Authorized(auth.RoleAdmin) && claims.Subject != userID {
 		return Info{}, ErrForbidden
 	}
 
@@ -220,7 +220,7 @@ func (u User) QueryByEmail(ctx context.Context, traceID string, claims auth.Clai
 	}
 
 	// If you are not an admin and looking to retrieve someone other than yourself.
-	if !claims.HasRole(auth.RoleAdmin) && claims.Subject != usr.ID {
+	if !claims.Authorized(auth.RoleAdmin) && claims.Subject != usr.ID {
 		return Info{}, ErrForbidden
 	}
 

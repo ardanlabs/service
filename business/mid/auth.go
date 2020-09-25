@@ -2,6 +2,7 @@ package mid
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -9,13 +10,6 @@ import (
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/api/trace"
-)
-
-// ErrForbidden is returned when an authenticated user does not have a
-// sufficient role for an action.
-var ErrForbidden = web.NewRequestError(
-	errors.New("you are not authorized for that action"),
-	http.StatusForbidden,
 )
 
 // Authenticate validates a JWT from the `Authorization` header.
@@ -55,9 +49,9 @@ func Authenticate(a *auth.Auth) web.Middleware {
 	return m
 }
 
-// HasRole validates that an authenticated user has at least one role from a
+// Authorize validates that an authenticated user has at least one role from a
 // specified list. This method constructs the actual function that is used.
-func HasRole(roles ...string) web.Middleware {
+func Authorize(roles ...string) web.Middleware {
 
 	// This is the actual middleware function to be executed.
 	m := func(handler web.Handler) web.Handler {
@@ -72,8 +66,11 @@ func HasRole(roles ...string) web.Middleware {
 				return errors.New("claims missing from context: HasRole called without/before Authenticate")
 			}
 
-			if !claims.HasRole(roles...) {
-				return ErrForbidden
+			if !claims.Authorized(roles...) {
+				return web.NewRequestError(
+					fmt.Errorf("you are not authorized for that action: claims: %v exp: %v", claims.Roles, roles),
+					http.StatusForbidden,
+				)
 			}
 
 			return handler(ctx, w, r)
