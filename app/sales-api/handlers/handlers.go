@@ -39,7 +39,7 @@ func API(build string, shutdown chan os.Signal, log *log.Logger, db *sqlx.DB, a 
 	app.Handle(http.MethodGet, "/v1/users/:id", ug.queryByID, mid.Authenticate(a))
 	app.Handle(http.MethodPut, "/v1/users/:id", ug.update, mid.Authenticate(a), mid.HasRole(auth.RoleAdmin))
 	app.Handle(http.MethodDelete, "/v1/users/:id", ug.delete, mid.Authenticate(a), mid.HasRole(auth.RoleAdmin))
-	app.Handle(http.MethodGet, "/v1/users/token", ug.token)
+	app.Handle(http.MethodGet, "/v1/users/token/:kid", ug.token)
 
 	// Register product and sale endpoints.
 	pg := productGroup{

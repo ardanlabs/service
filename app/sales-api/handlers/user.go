@@ -176,10 +176,12 @@ func (ug userGroup) token(ctx context.Context, w http.ResponseWriter, r *http.Re
 		}
 	}
 
+	params := web.Params(r)
+
 	var tkn struct {
 		Token string `json:"token"`
 	}
-	tkn.Token, err = ug.auth.GenerateToken(claims)
+	tkn.Token, err = ug.auth.GenerateToken(params["kid"], claims)
 	if err != nil {
 		return errors.Wrap(err, "generating token")
 	}

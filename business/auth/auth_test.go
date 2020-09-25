@@ -2,7 +2,7 @@ package auth_test
 
 import (
 	"crypto/rsa"
-	"errors"
+	"fmt"
 	"testing"
 	"time"
 
@@ -31,15 +31,15 @@ func TestAuth(t *testing.T) {
 			// The key id we are stating represents the public key in the
 			// public key store.
 			const keyID = "54bb2165-71e1-41a6-af3e-7da4a0e1e2c1"
-
-			keyLookupFunc := func(publicKID string) (*rsa.PublicKey, error) {
-				if publicKID != keyID {
-					return nil, errors.New("no public key found")
+			lookup := func(kid string) (*rsa.PublicKey, error) {
+				switch kid {
+				case keyID:
+					return &privateKey.PublicKey, nil
 				}
-				return &privateKey.PublicKey, nil
+				return nil, fmt.Errorf("no public key found for the specified kid: %s", kid)
 			}
 
-			a, err := auth.New(privateKey, keyID, "RS256", keyLookupFunc)
+			a, err := auth.New("RS256", lookup, auth.Keys{keyID: privateKey})
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to create an authenticator: %v", failed, testID, err)
 			}
@@ -56,7 +56,7 @@ func TestAuth(t *testing.T) {
 				Roles: []string{auth.RoleAdmin},
 			}
 
-			token, err := a.GenerateToken(claims)
+			token, err := a.GenerateToken(keyID, claims)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to generate a JWT: %v", failed, testID, err)
 			}

@@ -5,7 +5,7 @@ import (
 	"context"
 	"crypto/rand"
 	"crypto/rsa"
-	"errors"
+	"fmt"
 	"log"
 	"os"
 	"testing"
@@ -121,6 +121,7 @@ type Test struct {
 	DB      *sqlx.DB
 	Log     *log.Logger
 	Auth    *auth.Auth
+	KID     string
 
 	t       *testing.T
 	cleanup func()
@@ -142,15 +143,16 @@ func NewIntegration(t *testing.T) *Test {
 
 	// Build an authenticator using this key lookup function to retrieve
 	// the corresponding public key.
-	KID := "4754d86b-7a6d-4df5-9c65-224741361492"
-	keyLookupFunc := func(kid string) (*rsa.PublicKey, error) {
-		if kid != KID {
-			return nil, errors.New("no public key found")
+	kidID := "4754d86b-7a6d-4df5-9c65-224741361492"
+	lookup := func(kid string) (*rsa.PublicKey, error) {
+		switch kid {
+		case kidID:
+			return &privateKey.PublicKey, nil
 		}
-		return privateKey.Public().(*rsa.PublicKey), nil
+		return nil, fmt.Errorf("no public key found for the specified kid: %s", kid)
 	}
 
-	auth, err := auth.New(privateKey, KID, "RS256", keyLookupFunc)
+	auth, err := auth.New("RS256", lookup, auth.Keys{kidID: privateKey})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -160,6 +162,7 @@ func NewIntegration(t *testing.T) *Test {
 		DB:      db,
 		Log:     log,
 		Auth:    auth,
+		KID:     kidID,
 		t:       t,
 		cleanup: cleanup,
 	}
@@ -173,14 +176,14 @@ func (test *Test) Teardown() {
 }
 
 // Token generates an authenticated token for a user.
-func (test *Test) Token(email, pass string) string {
+func (test *Test) Token(kid string, email, pass string) string {
 	u := user.New(test.Log, test.DB)
 	claims, err := u.Authenticate(context.Background(), test.TraceID, time.Now(), email, pass)
 	if err != nil {
 		test.t.Fatal(err)
 	}
 
-	token, err := test.Auth.GenerateToken(claims)
+	token, err := test.Auth.GenerateToken(kid, claims)
 	if err != nil {
 		test.t.Fatal(err)
 	}

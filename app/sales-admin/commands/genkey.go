@@ -11,8 +11,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-// KeyGen creates an x509 private/public key for auth tokens.
-func KeyGen() error {
+// GenKey creates an x509 private/public key for auth tokens.
+func GenKey() error {
 
 	// Generate a new private key.
 	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)

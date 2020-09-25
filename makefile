@@ -5,7 +5,7 @@ export PROJECT = ardan-starter-kit
 # ==============================================================================
 # Testing running system
 
-# curl --user "admin@example.com:gophers" http://localhost:3000/v1/users/token
+# curl --user "admin@example.com:gophers" http://localhost:3000/v1/users/token/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
 # export TOKEN="COPY TOKEN STRING FROM LAST CALL"
 # curl -H "Authorization: Bearer ${TOKEN}" http://localhost:3000/v1/users
 
