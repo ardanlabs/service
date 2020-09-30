@@ -27,9 +27,9 @@ RUN go build -ldflags "-X main.build=${VCS_REF}"
 FROM alpine:3.12
 ARG BUILD_DATE
 ARG VCS_REF
-COPY --from=build_metrics /service/app/sidecar/metrics/metrics /app/metrics
-WORKDIR /app
-CMD ["/app/metrics"]
+COPY --from=build_metrics /service/app/sidecar/metrics/metrics /service/metrics
+WORKDIR /service
+CMD ["./metrics"]
 
 LABEL org.opencontainers.image.created="${BUILD_DATE}" \
       org.opencontainers.image.title="metrics" \

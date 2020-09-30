@@ -32,13 +32,11 @@ RUN go build -ldflags "-X main.build=${VCS_REF}"
 FROM alpine:3.12
 ARG BUILD_DATE
 ARG VCS_REF
-ARG PACKAGE_NAME
-ARG PACKAGE_PREFIX
-COPY --from=build_sales-api /service/private.pem /app/private.pem
-COPY --from=build_sales-api /service/app/sales-admin/sales-admin /app/admin
-COPY --from=build_sales-api /service/app/sales-api/sales-api /app/sales-api
-WORKDIR /app
-CMD ["/app/sales-api"]
+COPY --from=build_sales-api /service/private.pem /service/private.pem
+COPY --from=build_sales-api /service/app/sales-admin/sales-admin /service/admin
+COPY --from=build_sales-api /service/app/sales-api/sales-api /service/sales-api
+WORKDIR /service
+CMD ["./sales-api"]
 
 LABEL org.opencontainers.image.created="${BUILD_DATE}" \
       org.opencontainers.image.title="sales-api" \
