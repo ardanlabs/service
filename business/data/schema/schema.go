@@ -15,10 +15,9 @@ func Migrate(db *sqlx.DB) error {
 }
 
 // migrations contains the queries needed to construct the database schema.
-// Entries should never be removed from this slice once they have been ran in
-// production.
+// Entries should never be removed once they have been run in production.
 //
-// Using constants in a .go file is an easy way to ensure the queries are part
+// Using constants in a .go file is an easy way to ensure the schema is part
 // of the compiled executable and avoids pathing issues with the working
 // directory. It has the downside that it lacks syntax highlighting and may be
 // harder to read for some cases compared to using .sql files. You may also
@@ -26,7 +25,7 @@ func Migrate(db *sqlx.DB) error {
 var migrations = []darwin.Migration{
 	{
 		Version:     1.1,
-		Description: "Add users",
+		Description: "Create table users",
 		Script: `
 CREATE TABLE users (
 	user_id       UUID,
@@ -34,16 +33,15 @@ CREATE TABLE users (
 	email         TEXT UNIQUE,
 	roles         TEXT[],
 	password_hash TEXT,
-
-	date_created TIMESTAMP,
-	date_updated TIMESTAMP,
+	date_created  TIMESTAMP,
+	date_updated  TIMESTAMP,
 
 	PRIMARY KEY (user_id)
 );`,
 	},
 	{
 		Version:     1.2,
-		Description: "Add products",
+		Description: "Create table products",
 		Script: `
 CREATE TABLE products (
 	product_id   UUID,
@@ -58,7 +56,7 @@ CREATE TABLE products (
 	},
 	{
 		Version:     1.3,
-		Description: "Add sales",
+		Description: "Create table sales",
 		Script: `
 CREATE TABLE sales (
 	sale_id      UUID,
@@ -73,10 +71,10 @@ CREATE TABLE sales (
 	},
 	{
 		Version:     2.1,
-		Description: "Add user column to products",
+		Description: "Alter table products with user column",
 		Script: `
-	ALTER TABLE products
+ALTER TABLE products
 	ADD COLUMN user_id UUID DEFAULT '00000000-0000-0000-0000-000000000000'
-	`,
+`,
 	},
 }
