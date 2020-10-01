@@ -37,7 +37,7 @@ func TestProducts(t *testing.T) {
 
 	shutdown := make(chan os.Signal, 1)
 	tests := ProductTests{
-		app:       handlers.API("develop", shutdown, test.Log, test.DB, test.Auth),
+		app:       handlers.API("develop", shutdown, test.Log, test.Auth, test.DB),
 		userToken: test.Token(test.KID, "admin@example.com", "gophers"),
 	}
 
