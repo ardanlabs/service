@@ -25,7 +25,7 @@ func Migrate(db *sqlx.DB) error {
 // consider a combined approach using a tool like packr or go-bindata.
 var migrations = []darwin.Migration{
 	{
-		Version:     3,
+		Version:     1.1,
 		Description: "Add users",
 		Script: `
 CREATE TABLE users (
@@ -42,22 +42,7 @@ CREATE TABLE users (
 );`,
 	},
 	{
-		Version:     2,
-		Description: "Add sales",
-		Script: `
-CREATE TABLE sales (
-	sale_id      UUID,
-	product_id   UUID,
-	quantity     INT,
-	paid         INT,
-	date_created TIMESTAMP,
-
-	PRIMARY KEY (sale_id),
-	FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE
-);`,
-	},
-	{
-		Version:     1,
+		Version:     1.2,
 		Description: "Add products",
 		Script: `
 CREATE TABLE products (
@@ -72,11 +57,26 @@ CREATE TABLE products (
 );`,
 	},
 	{
-		Version:     4,
+		Version:     1.3,
+		Description: "Add sales",
+		Script: `
+CREATE TABLE sales (
+	sale_id      UUID,
+	product_id   UUID,
+	quantity     INT,
+	paid         INT,
+	date_created TIMESTAMP,
+
+	PRIMARY KEY (sale_id),
+	FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE
+);`,
+	},
+	{
+		Version:     2.1,
 		Description: "Add user column to products",
 		Script: `
-ALTER TABLE products
+	ALTER TABLE products
 	ADD COLUMN user_id UUID DEFAULT '00000000-0000-0000-0000-000000000000'
-`,
+	`,
 	},
 }
