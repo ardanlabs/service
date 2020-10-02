@@ -49,7 +49,7 @@ func TestUser(t *testing.T) {
 					ExpiresAt: now.Add(time.Hour).Unix(),
 					IssuedAt:  now.Unix(),
 				},
-				Roles: []string{auth.RoleAdmin, auth.RoleUser},
+				Roles: []string{auth.RoleUser},
 			}
 
 			saved, err := u.QueryByID(ctx, traceID, claims, usr.ID)
@@ -66,6 +66,16 @@ func TestUser(t *testing.T) {
 			upd := user.UpdateUser{
 				Name:  tests.StringPointer("Jacob Walker"),
 				Email: tests.StringPointer("jacob@ardanlabs.com"),
+			}
+
+			claims = auth.Claims{
+				StandardClaims: jwt.StandardClaims{
+					Issuer:    "service project",
+					Audience:  "students",
+					ExpiresAt: now.Add(time.Hour).Unix(),
+					IssuedAt:  now.Unix(),
+				},
+				Roles: []string{auth.RoleAdmin},
 			}
 
 			if err := u.Update(ctx, traceID, claims, usr.ID, upd, now); err != nil {
