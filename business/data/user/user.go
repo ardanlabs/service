@@ -66,9 +66,7 @@ func (u User) Create(ctx context.Context, traceID string, nu NewUser, now time.T
 		DateUpdated:  now.UTC(),
 	}
 
-	const q = `INSERT INTO users
-		(user_id, name, email, password_hash, roles, date_created, date_updated)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)`
+	const q = `INSERT INTO users (user_id, name, email, password_hash, roles, date_created, date_updated) VALUES ($1, $2, $3, $4, $5, $6, $7)`
 
 	u.log.Printf("%s : %s : query : %s", traceID, "user.Create",
 		database.Log(q, usr.ID, usr.Name, usr.Email, usr.PasswordHash, usr.Roles, usr.DateCreated, usr.DateUpdated),
@@ -109,13 +107,7 @@ func (u User) Update(ctx context.Context, traceID string, claims auth.Claims, us
 	}
 	usr.DateUpdated = now
 
-	const q = `UPDATE users SET
-		"name" = $2,
-		"email" = $3,
-		"roles" = $4,
-		"password_hash" = $5,
-		"date_updated" = $6
-		WHERE user_id = $1`
+	const q = `UPDATE users SET "name" = $2, "email" = $3, "roles" = $4, "password_hash" = $5, "date_updated" = $6 WHERE user_id = $1`
 
 	u.log.Printf("%s : %s : query : %s", traceID, "user.Update",
 		database.Log(q, usr.ID, usr.Name, usr.Email, usr.PasswordHash, usr.Roles, usr.DateCreated, usr.DateUpdated),
