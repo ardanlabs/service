@@ -56,9 +56,7 @@ func (p Product) Create(ctx context.Context, traceID string, claims auth.Claims,
 		DateUpdated: now.UTC(),
 	}
 
-	const q = `INSERT INTO products
-		(product_id, user_id, name, cost, quantity, date_created, date_updated)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)`
+	const q = `INSERT INTO products (product_id, user_id, name, cost, quantity, date_created, date_updated) VALUES ($1, $2, $3, $4, $5, $6, $7)`
 
 	p.log.Printf("%s : %s : query : %s", traceID, "product.Create",
 		database.Log(q, prd.ID, prd.UserID, prd.Name, prd.Cost, prd.Quantity, prd.DateCreated, prd.DateUpdated),
@@ -98,12 +96,7 @@ func (p Product) Update(ctx context.Context, traceID string, claims auth.Claims,
 	}
 	prd.DateUpdated = now
 
-	const q = `UPDATE products SET
-		"name" = $2,
-		"cost" = $3,
-		"quantity" = $4,
-		"date_updated" = $5
-		WHERE product_id = $1`
+	const q = `UPDATE products SET "name" = $2, "cost" = $3, "quantity" = $4, "date_updated" = $5 WHERE product_id = $1`
 
 	p.log.Printf("%s : %s : query : %s", traceID, "product.Update",
 		database.Log(q, productID, prd.Name, prd.Cost, prd.Quantity, prd.DateUpdated),
@@ -139,24 +132,27 @@ func (p Product) Delete(ctx context.Context, traceID string, productID string) e
 }
 
 // Query gets all Products from the database.
-func (p Product) Query(ctx context.Context, traceID string) ([]Info, error) {
+func (p Product) Query(ctx context.Context, traceID string, pageNumber int, rowsPerPage int) ([]Info, error) {
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.product.query")
 	defer span.End()
 
 	const q = `SELECT
-			p.*,
-			COALESCE(SUM(s.quantity) ,0) AS sold,
-			COALESCE(SUM(s.paid), 0) AS revenue
-		FROM products AS p
-		LEFT JOIN sales AS s ON p.product_id = s.product_id
-		GROUP BY p.product_id`
+		p.*,
+		COALESCE(SUM(s.quantity) ,0) AS sold,
+		COALESCE(SUM(s.paid), 0) AS revenue
+	FROM products AS p
+	LEFT JOIN sales AS s ON p.product_id = s.product_id
+	GROUP BY p.product_id
+	ORDER BY user_id
+	OFFSET $1 ROWS FETCH NEXT $2 ROWS ONLY`
+	offset := (pageNumber - 1) * rowsPerPage
 
 	p.log.Printf("%s : %s : query : %s", traceID, "product.Query",
-		database.Log(q),
+		database.Log(q, offset, rowsPerPage),
 	)
 
 	products := []Info{}
-	if err := p.db.SelectContext(ctx, &products, q); err != nil {
+	if err := p.db.SelectContext(ctx, &products, q, offset, rowsPerPage); err != nil {
 		return nil, errors.Wrap(err, "selecting products")
 	}
 
@@ -173,13 +169,13 @@ func (p Product) QueryByID(ctx context.Context, traceID string, productID string
 	}
 
 	const q = `SELECT
-			p.*,
-			COALESCE(SUM(s.quantity), 0) AS sold,
-			COALESCE(SUM(s.paid), 0) AS revenue
-		FROM products AS p
-		LEFT JOIN sales AS s ON p.product_id = s.product_id
-		WHERE p.product_id = $1
-		GROUP BY p.product_id`
+		p.*,
+		COALESCE(SUM(s.quantity), 0) AS sold,
+		COALESCE(SUM(s.paid), 0) AS revenue
+	FROM products AS p
+	LEFT JOIN sales AS s ON p.product_id = s.product_id
+	WHERE p.product_id = $1
+	GROUP BY p.product_id`
 
 	p.log.Printf("%s : %s : query : %s", traceID, "product.QueryByID",
 		database.Log(q, productID),

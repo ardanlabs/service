@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/auth"
+	"github.com/ardanlabs/service/business/data/schema"
 	"github.com/ardanlabs/service/business/data/user"
 	"github.com/ardanlabs/service/business/tests"
 	"github.com/dgrijalva/jwt-go"
@@ -115,6 +116,54 @@ func TestUser(t *testing.T) {
 				t.Fatalf("\t%s\tTest %d:\tShould NOT be able to retrieve user : %s.", tests.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould NOT be able to retrieve user.", tests.Success, testID)
+		}
+	}
+}
+
+func TestUserPaging(t *testing.T) {
+	log, db, teardown := tests.NewUnit(t)
+	t.Cleanup(teardown)
+
+	schema.Seed(db)
+
+	u := user.New(log, db)
+
+	t.Log("Given the need to page through User records.")
+	{
+		testID := 0
+		t.Logf("\tTest %d:\tWhen paging through 2 users.", testID)
+		{
+			ctx := tests.Context()
+			traceID := "00000000-0000-0000-0000-000000000000"
+
+			users1, err := u.Query(ctx, traceID, 1, 1)
+			if err != nil {
+				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve users for page 1 : %s.", tests.Failed, testID, err)
+			}
+			t.Logf("\t%s\tTest %d:\tShould be able to retrieve users for page 1.", tests.Success, testID)
+
+			if len(users1) != 1 {
+				t.Fatalf("\t%s\tTest %d:\tShould have a single user : %s.", tests.Failed, testID, err)
+			}
+			t.Logf("\t%s\tTest %d:\tShould have a single user.", tests.Success, testID)
+
+			users2, err := u.Query(ctx, traceID, 2, 1)
+			if err != nil {
+				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve users for page 2 : %s.", tests.Failed, testID, err)
+			}
+			t.Logf("\t%s\tTest %d:\tShould be able to retrieve users for page 2.", tests.Success, testID)
+
+			if len(users2) != 1 {
+				t.Fatalf("\t%s\tTest %d:\tShould have a single user : %s.", tests.Failed, testID, err)
+			}
+			t.Logf("\t%s\tTest %d:\tShould have a single user.", tests.Success, testID)
+
+			if users1[0].ID == users2[0].ID {
+				t.Logf("\t\tTest %d:\tUser1: %v", testID, users1[0].ID)
+				t.Logf("\t\tTest %d:\tUser2: %v", testID, users2[0].ID)
+				t.Fatalf("\t%s\tTest %d:\tShould have different users : %s.", tests.Failed, testID, err)
+			}
+			t.Logf("\t%s\tTest %d:\tShould have different users.", tests.Success, testID)
 		}
 	}
 }

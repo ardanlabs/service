@@ -105,7 +105,9 @@ func run(log *log.Logger) error {
 		}
 
 	case "users":
-		if err := commands.Users(traceID, log, dbConfig); err != nil {
+		pageNumber := cfg.Args.Num(1)
+		rowsPerPage := cfg.Args.Num(2)
+		if err := commands.Users(traceID, log, dbConfig, pageNumber, rowsPerPage); err != nil {
 			return errors.Wrap(err, "getting users")
 		}
 

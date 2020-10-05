@@ -151,18 +151,19 @@ func (u User) Delete(ctx context.Context, traceID string, userID string) error {
 }
 
 // Query retrieves a list of existing users from the database.
-func (u User) Query(ctx context.Context, traceID string) ([]Info, error) {
+func (u User) Query(ctx context.Context, traceID string, pageNumber int, rowsPerPage int) ([]Info, error) {
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.user.query")
 	defer span.End()
 
-	const q = `SELECT * FROM users`
+	const q = `SELECT * FROM users ORDER BY user_id OFFSET $1 ROWS FETCH NEXT $2 ROWS ONLY`
+	offset := (pageNumber - 1) * rowsPerPage
 
 	log.Printf("%s : %s : query : %s", traceID, "user.Query",
-		database.Log(q),
+		database.Log(q, offset, rowsPerPage),
 	)
 
 	users := []Info{}
-	if err := u.db.SelectContext(ctx, &users, q); err != nil {
+	if err := u.db.SelectContext(ctx, &users, q, offset, rowsPerPage); err != nil {
 		return nil, errors.Wrap(err, "selecting users")
 	}
 

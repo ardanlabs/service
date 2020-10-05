@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"net/http"
+	"strconv"
 
 	"github.com/ardanlabs/service/business/auth"
 	"github.com/ardanlabs/service/business/data/user"
@@ -25,9 +26,19 @@ func (ug userGroup) query(ctx context.Context, w http.ResponseWriter, r *http.Re
 		return web.NewShutdownError("web value missing from context")
 	}
 
-	users, err := ug.user.Query(ctx, v.TraceID)
+	params := web.Params(r)
+	pageNumber, err := strconv.Atoi(params["page"])
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "Page: %s", params["page"])
+	}
+	rowsPerPage, err := strconv.Atoi(params["rows"])
+	if err != nil {
+		return errors.Wrapf(err, "Rows: %s", params["rows"])
+	}
+
+	users, err := ug.user.Query(ctx, v.TraceID, pageNumber, rowsPerPage)
+	if err != nil {
+		return errors.Wrap(err, "unable to query for users")
 	}
 
 	return web.Respond(ctx, w, users, http.StatusOK)

@@ -74,7 +74,7 @@ func TestProduct(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to update product.", tests.Success, testID)
 
-			saved, err = p.QueryByID(ctx, traceID, prd.ID)
+			products, err := p.Query(ctx, traceID, 1, 1)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve updated product : %s.", tests.Failed, testID, err)
 			}
@@ -88,7 +88,7 @@ func TestProduct(t *testing.T) {
 			want.Quantity = *upd.Quantity
 			want.DateUpdated = updatedTime
 
-			if diff := cmp.Diff(want, saved); diff != "" {
+			if diff := cmp.Diff(want, products[0]); diff != "" {
 				t.Fatalf("\t%s\tTest %d:\tShould get back the same product. Diff:\n%s", tests.Failed, testID, diff)
 			}
 			t.Logf("\t%s\tTest %d:\tShould get back the same product.", tests.Success, testID)
