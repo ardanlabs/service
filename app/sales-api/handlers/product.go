@@ -85,7 +85,7 @@ func (pg productGroup) create(ctx context.Context, w http.ResponseWriter, r *htt
 
 	var np product.NewProduct
 	if err := web.Decode(r, &np); err != nil {
-		return web.NewRequestError(err, http.StatusBadRequest)
+		return errors.Wrapf(err, "unable to decode payload")
 	}
 
 	prod, err := pg.product.Create(ctx, v.TraceID, claims, np, v.Now)
@@ -112,7 +112,7 @@ func (pg productGroup) update(ctx context.Context, w http.ResponseWriter, r *htt
 
 	var upd product.UpdateProduct
 	if err := web.Decode(r, &upd); err != nil {
-		return web.NewRequestError(err, http.StatusBadRequest)
+		return errors.Wrapf(err, "unable to decode payload")
 	}
 
 	params := web.Params(r)
