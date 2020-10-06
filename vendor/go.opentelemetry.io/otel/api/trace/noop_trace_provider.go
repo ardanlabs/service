@@ -14,11 +14,17 @@
 
 package trace
 
-type NoopProvider struct{}
+type noopTracerProvider struct{}
 
-var _ Provider = NoopProvider{}
+var _ TracerProvider = noopTracerProvider{}
 
 // Tracer returns noop implementation of Tracer.
-func (p NoopProvider) Tracer(_ string, _ ...TracerOption) Tracer {
-	return NoopTracer{}
+func (p noopTracerProvider) Tracer(_ string, _ ...TracerOption) Tracer {
+	return noopTracer{}
+}
+
+// NoopTracerProvider returns a noop implementation of TracerProvider. The
+// Tracer and Spans created from the noop provider will also be noop.
+func NoopTracerProvider() TracerProvider {
+	return noopTracerProvider{}
 }

@@ -12,8 +12,5 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// This package implements the correlation functionality as specified
-// in the OpenTelemetry specification. Currently it provides a data
-// structure for storing correlations (Map) and a way of putting Map
-// object into the context and retrieving it from context.
-package correlation // import "go.opentelemetry.io/otel/api/correlation"
+// Package unit provides units.
+package unit // import "go.opentelemetry.io/otel/unit"

@@ -12,14 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package http
+package otelhttp
 
 import (
 	"context"
 	"io"
 	"net/http"
 
-	"go.opentelemetry.io/otel/api/global"
 	"go.opentelemetry.io/otel/api/propagation"
 	"go.opentelemetry.io/otel/api/trace"
 	"go.opentelemetry.io/otel/semconv"
@@ -34,7 +33,7 @@ type Transport struct {
 
 	tracer            trace.Tracer
 	propagators       propagation.Propagators
-	spanStartOptions  []trace.StartOption
+	spanStartOptions  []trace.SpanOption
 	filters           []Filter
 	spanNameFormatter func(string, *http.Request) string
 }
@@ -49,19 +48,17 @@ func NewTransport(base http.RoundTripper, opts ...Option) *Transport {
 	}
 
 	defaultOpts := []Option{
-		WithTracer(global.Tracer("go.opentelemetry.io/contrib/instrumentation/net/http")),
-		WithPropagators(global.Propagators()),
 		WithSpanOptions(trace.WithSpanKind(trace.SpanKindClient)),
 		WithSpanNameFormatter(defaultTransportFormatter),
 	}
 
-	c := NewConfig(append(defaultOpts, opts...)...)
-	t.configure(c)
+	c := newConfig(append(defaultOpts, opts...)...)
+	t.applyConfig(c)
 
 	return &t
 }
 
-func (t *Transport) configure(c *Config) {
+func (t *Transport) applyConfig(c *config) {
 	t.tracer = c.Tracer
 	t.propagators = c.Propagators
 	t.spanStartOptions = c.SpanStartOptions
@@ -84,7 +81,7 @@ func (t *Transport) RoundTrip(r *http.Request) (*http.Response, error) {
 		}
 	}
 
-	opts := append([]trace.StartOption{}, t.spanStartOptions...) // start with the configured options
+	opts := append([]trace.SpanOption{}, t.spanStartOptions...) // start with the configured options
 
 	ctx, span := t.tracer.Start(r.Context(), t.spanNameFormatter("", r), opts...)
 

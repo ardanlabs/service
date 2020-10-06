@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package http provides a http.Handler and functions that are
-// intended to be used to add tracing by wrapping
-// existing handlers (with Handler) and routes WithRouteTag.
-package http
+// Package otelhttp provides an http.Handler and functions that are intended
+// to be used to add tracing by wrapping existing handlers (with Handler) and
+// routes WithRouteTag.
+package otelhttp // import go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp

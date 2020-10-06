@@ -51,29 +51,31 @@ github.com/openzipkin/zipkin-go/model
 # github.com/pkg/errors v0.9.1
 ## explicit
 github.com/pkg/errors
-# go.opentelemetry.io/contrib/instrumentation/net/http v0.11.0
+# go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.12.0
 ## explicit
-go.opentelemetry.io/contrib/instrumentation/net/http
-# go.opentelemetry.io/otel v0.12.0 => go.opentelemetry.io/otel v0.11.0
+go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp
+# go.opentelemetry.io/otel v0.12.0
 ## explicit
 go.opentelemetry.io/otel
-go.opentelemetry.io/otel/api/correlation
+go.opentelemetry.io/otel/api/baggage
 go.opentelemetry.io/otel/api/global
 go.opentelemetry.io/otel/api/global/internal
 go.opentelemetry.io/otel/api/metric
 go.opentelemetry.io/otel/api/metric/registry
 go.opentelemetry.io/otel/api/propagation
 go.opentelemetry.io/otel/api/trace
-go.opentelemetry.io/otel/api/unit
 go.opentelemetry.io/otel/codes
 go.opentelemetry.io/otel/internal
+go.opentelemetry.io/otel/internal/trace/noop
 go.opentelemetry.io/otel/internal/trace/parent
 go.opentelemetry.io/otel/label
+go.opentelemetry.io/otel/propagators
 go.opentelemetry.io/otel/semconv
-# go.opentelemetry.io/otel/exporters/trace/zipkin v0.12.0 => go.opentelemetry.io/otel/exporters/trace/zipkin v0.11.0
+go.opentelemetry.io/otel/unit
+# go.opentelemetry.io/otel/exporters/trace/zipkin v0.12.0
 ## explicit
 go.opentelemetry.io/otel/exporters/trace/zipkin
-# go.opentelemetry.io/otel/sdk v0.12.0 => go.opentelemetry.io/otel/sdk v0.11.0
+# go.opentelemetry.io/otel/sdk v0.12.0
 ## explicit
 go.opentelemetry.io/otel/sdk
 go.opentelemetry.io/otel/sdk/export/trace
@@ -91,7 +93,6 @@ golang.org/x/crypto/blowfish
 golang.org/x/xerrors
 golang.org/x/xerrors/internal
 # google.golang.org/grpc v1.32.0
-## explicit
 google.golang.org/grpc/codes
 # gopkg.in/go-playground/assert.v1 v1.2.1
 ## explicit
@@ -99,6 +100,3 @@ google.golang.org/grpc/codes
 ## explicit
 gopkg.in/go-playground/validator.v9
 gopkg.in/go-playground/validator.v9/translations/en
-# go.opentelemetry.io/otel => go.opentelemetry.io/otel v0.11.0
-# go.opentelemetry.io/otel/exporters/trace/zipkin => go.opentelemetry.io/otel/exporters/trace/zipkin v0.11.0
-# go.opentelemetry.io/otel/sdk => go.opentelemetry.io/otel/sdk v0.11.0

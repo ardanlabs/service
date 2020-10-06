@@ -18,19 +18,20 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"go.opentelemetry.io/otel/api/correlation"
+	"go.opentelemetry.io/otel/api/baggage"
 	"go.opentelemetry.io/otel/api/metric"
 	"go.opentelemetry.io/otel/api/propagation"
 	"go.opentelemetry.io/otel/api/trace"
+	"go.opentelemetry.io/otel/propagators"
 )
 
 type (
-	traceProviderHolder struct {
-		tp trace.Provider
+	tracerProviderHolder struct {
+		tp trace.TracerProvider
 	}
 
 	meterProviderHolder struct {
-		mp metric.Provider
+		mp metric.MeterProvider
 	}
 
 	propagatorsHolder struct {
@@ -47,35 +48,35 @@ var (
 	delegateTraceOnce sync.Once
 )
 
-// TraceProvider is the internal implementation for global.TraceProvider.
-func TraceProvider() trace.Provider {
-	return globalTracer.Load().(traceProviderHolder).tp
+// TracerProvider is the internal implementation for global.TracerProvider.
+func TracerProvider() trace.TracerProvider {
+	return globalTracer.Load().(tracerProviderHolder).tp
 }
 
-// SetTraceProvider is the internal implementation for global.SetTraceProvider.
-func SetTraceProvider(tp trace.Provider) {
+// SetTracerProvider is the internal implementation for global.SetTracerProvider.
+func SetTracerProvider(tp trace.TracerProvider) {
 	delegateTraceOnce.Do(func() {
-		current := TraceProvider()
+		current := TracerProvider()
 		if current == tp {
 			// Setting the provider to the prior default is nonsense, panic.
 			// Panic is acceptable because we are likely still early in the
 			// process lifetime.
-			panic("invalid Provider, the global instance cannot be reinstalled")
-		} else if def, ok := current.(*traceProvider); ok {
+			panic("invalid TracerProvider, the global instance cannot be reinstalled")
+		} else if def, ok := current.(*tracerProvider); ok {
 			def.setDelegate(tp)
 		}
 
 	})
-	globalTracer.Store(traceProviderHolder{tp: tp})
+	globalTracer.Store(tracerProviderHolder{tp: tp})
 }
 
 // MeterProvider is the internal implementation for global.MeterProvider.
-func MeterProvider() metric.Provider {
+func MeterProvider() metric.MeterProvider {
 	return globalMeter.Load().(meterProviderHolder).mp
 }
 
 // SetMeterProvider is the internal implementation for global.SetMeterProvider.
-func SetMeterProvider(mp metric.Provider) {
+func SetMeterProvider(mp metric.MeterProvider) {
 	delegateMeterOnce.Do(func() {
 		current := MeterProvider()
 
@@ -83,7 +84,7 @@ func SetMeterProvider(mp metric.Provider) {
 			// Setting the provider to the prior default is nonsense, panic.
 			// Panic is acceptable because we are likely still early in the
 			// process lifetime.
-			panic("invalid Provider, the global instance cannot be reinstalled")
+			panic("invalid MeterProvider, the global instance cannot be reinstalled")
 		} else if def, ok := current.(*meterProvider); ok {
 			def.setDelegate(mp)
 		}
@@ -103,7 +104,7 @@ func SetPropagators(pr propagation.Propagators) {
 
 func defaultTracerValue() *atomic.Value {
 	v := &atomic.Value{}
-	v.Store(traceProviderHolder{tp: &traceProvider{}})
+	v.Store(tracerProviderHolder{tp: &tracerProvider{}})
 	return v
 }
 
@@ -120,13 +121,13 @@ func defaultPropagatorsValue() *atomic.Value {
 }
 
 // getDefaultPropagators returns a default Propagators, configured
-// with W3C trace and correlation context propagation.
+// with W3C trace and baggage propagation.
 func getDefaultPropagators() propagation.Propagators {
-	tcPropagator := trace.TraceContext{}
-	ccPropagator := correlation.CorrelationContext{}
+	tcPropagator := propagators.TraceContext{}
+	bagPropagator := baggage.Baggage{}
 	return propagation.New(
-		propagation.WithExtractors(tcPropagator, ccPropagator),
-		propagation.WithInjectors(tcPropagator, ccPropagator),
+		propagation.WithExtractors(tcPropagator, bagPropagator),
+		propagation.WithInjectors(tcPropagator, bagPropagator),
 	)
 }
 

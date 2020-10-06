@@ -22,6 +22,7 @@ import (
 	"go.opentelemetry.io/otel/sdk/instrumentation"
 	"go.opentelemetry.io/otel/sdk/resource"
 
+	"go.opentelemetry.io/otel/api/trace"
 	apitrace "go.opentelemetry.io/otel/api/trace"
 )
 
@@ -29,76 +30,61 @@ const (
 	defaultTracerName = "go.opentelemetry.io/otel/sdk/tracer"
 )
 
-// batcher contains export.SpanBatcher and its options.
-type batcher struct {
-	b    export.SpanBatcher
-	opts []BatchSpanProcessorOption
+// TODO (MrAlias): unify this API option design:
+// https://github.com/open-telemetry/opentelemetry-go/issues/536
+
+// TracerProviderConfig
+type TracerProviderConfig struct {
+	processors []SpanProcessor
+	config     Config
 }
 
-// ProviderOptions
-type ProviderOptions struct {
-	syncers  []export.SpanSyncer
-	batchers []batcher
-	config   Config
-}
+type TracerProviderOption func(*TracerProviderConfig)
 
-type ProviderOption func(*ProviderOptions)
-
-type Provider struct {
+type TracerProvider struct {
 	mu             sync.Mutex
 	namedTracer    map[instrumentation.Library]*tracer
 	spanProcessors atomic.Value
 	config         atomic.Value // access atomically
 }
 
-var _ apitrace.Provider = &Provider{}
+var _ apitrace.TracerProvider = &TracerProvider{}
 
-// NewProvider creates an instance of trace provider. Optional
+// NewTracerProvider creates an instance of trace provider. Optional
 // parameter configures the provider with common options applicable
 // to all tracer instances that will be created by this provider.
-func NewProvider(opts ...ProviderOption) (*Provider, error) {
-	o := &ProviderOptions{}
+func NewTracerProvider(opts ...TracerProviderOption) *TracerProvider {
+	o := &TracerProviderConfig{}
 
 	for _, opt := range opts {
 		opt(o)
 	}
 
-	tp := &Provider{
+	tp := &TracerProvider{
 		namedTracer: make(map[instrumentation.Library]*tracer),
 	}
 	tp.config.Store(&Config{
-		DefaultSampler:       ParentSample(AlwaysSample()),
+		DefaultSampler:       ParentBased(AlwaysSample()),
 		IDGenerator:          defIDGenerator(),
 		MaxAttributesPerSpan: DefaultMaxAttributesPerSpan,
 		MaxEventsPerSpan:     DefaultMaxEventsPerSpan,
 		MaxLinksPerSpan:      DefaultMaxLinksPerSpan,
 	})
 
-	for _, syncer := range o.syncers {
-		ssp := NewSimpleSpanProcessor(syncer)
-		tp.RegisterSpanProcessor(ssp)
-	}
-
-	for _, batcher := range o.batchers {
-		bsp, err := NewBatchSpanProcessor(batcher.b, batcher.opts...)
-		if err != nil {
-			return nil, err
-		}
-		tp.RegisterSpanProcessor(bsp)
+	for _, sp := range o.processors {
+		tp.RegisterSpanProcessor(sp)
 	}
 
 	tp.ApplyConfig(o.config)
 
-	return tp, nil
+	return tp
 }
 
 // Tracer with the given name. If a tracer for the given name does not exist,
 // it is created first. If the name is empty, DefaultTracerName is used.
-func (p *Provider) Tracer(name string, opts ...apitrace.TracerOption) apitrace.Tracer {
-	c := new(apitrace.TracerConfig)
-	for _, o := range opts {
-		o(c)
-	}
+func (p *TracerProvider) Tracer(name string, opts ...apitrace.TracerOption) apitrace.Tracer {
+	c := trace.NewTracerConfig(opts...)
+
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	if name == "" {
@@ -120,41 +106,58 @@ func (p *Provider) Tracer(name string, opts ...apitrace.TracerOption) apitrace.T
 }
 
 // RegisterSpanProcessor adds the given SpanProcessor to the list of SpanProcessors
-func (p *Provider) RegisterSpanProcessor(s SpanProcessor) {
+func (p *TracerProvider) RegisterSpanProcessor(s SpanProcessor) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	new := make(spanProcessorMap)
-	if old, ok := p.spanProcessors.Load().(spanProcessorMap); ok {
-		for k, v := range old {
-			new[k] = v
-		}
+	new := spanProcessorStates{}
+	if old, ok := p.spanProcessors.Load().(spanProcessorStates); ok {
+		new = append(new, old...)
 	}
-	new[s] = &sync.Once{}
+	newSpanSync := &spanProcessorState{
+		sp:    s,
+		state: &sync.Once{},
+	}
+	new = append(new, newSpanSync)
 	p.spanProcessors.Store(new)
 }
 
 // UnregisterSpanProcessor removes the given SpanProcessor from the list of SpanProcessors
-func (p *Provider) UnregisterSpanProcessor(s SpanProcessor) {
+func (p *TracerProvider) UnregisterSpanProcessor(s SpanProcessor) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	new := make(spanProcessorMap)
-	if old, ok := p.spanProcessors.Load().(spanProcessorMap); ok {
-		for k, v := range old {
-			new[k] = v
+	new := spanProcessorStates{}
+	old, ok := p.spanProcessors.Load().(spanProcessorStates)
+	if !ok || len(old) == 0 {
+		return
+	}
+	new = append(new, old...)
+
+	// stop the span processor if it is started and remove it from the list
+	var stopOnce *spanProcessorState
+	var idx int
+	for i, sps := range new {
+		if sps.sp == s {
+			stopOnce = sps
+			idx = i
 		}
 	}
-	if stopOnce, ok := new[s]; ok && stopOnce != nil {
-		stopOnce.Do(func() {
+	if stopOnce != nil {
+		stopOnce.state.Do(func() {
 			s.Shutdown()
 		})
 	}
-	delete(new, s)
+	if len(new) > 1 {
+		copy(new[idx:], new[idx+1:])
+	}
+	new[len(new)-1] = nil
+	new = new[:len(new)-1]
+
 	p.spanProcessors.Store(new)
 }
 
 // ApplyConfig changes the configuration of the provider.
 // If a field in the configuration is empty or nil then its original value is preserved.
-func (p *Provider) ApplyConfig(cfg Config) {
+func (p *TracerProvider) ApplyConfig(cfg Config) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	c := *p.config.Load().(*Config)
@@ -179,37 +182,36 @@ func (p *Provider) ApplyConfig(cfg Config) {
 	p.config.Store(&c)
 }
 
-// WithSyncer options appends the syncer to the existing list of Syncers.
-// This option can be used multiple times.
-// The Syncers are wrapped into SimpleSpanProcessors and registered
-// with the provider.
-func WithSyncer(syncer export.SpanSyncer) ProviderOption {
-	return func(opts *ProviderOptions) {
-		opts.syncers = append(opts.syncers, syncer)
-	}
+// WithSyncer registers the exporter with the TracerProvider using a
+// SimpleSpanProcessor.
+func WithSyncer(e export.SpanExporter) TracerProviderOption {
+	return WithSpanProcessor(NewSimpleSpanProcessor(e))
 }
 
-// WithBatcher options appends the batcher to the existing list of Batchers.
-// This option can be used multiple times.
-// The Batchers are wrapped into BatchedSpanProcessors and registered
-// with the provider.
-func WithBatcher(b export.SpanBatcher, bopts ...BatchSpanProcessorOption) ProviderOption {
-	return func(opts *ProviderOptions) {
-		opts.batchers = append(opts.batchers, batcher{b, bopts})
+// WithBatcher registers the exporter with the TracerProvider using a
+// BatchSpanProcessor configured with the passed opts.
+func WithBatcher(e export.SpanExporter, opts ...BatchSpanProcessorOption) TracerProviderOption {
+	return WithSpanProcessor(NewBatchSpanProcessor(e, opts...))
+}
+
+// WithSpanProcessor registers the SpanProcessor with a TracerProvider.
+func WithSpanProcessor(sp SpanProcessor) TracerProviderOption {
+	return func(opts *TracerProviderConfig) {
+		opts.processors = append(opts.processors, sp)
 	}
 }
 
 // WithConfig option sets the configuration to provider.
-func WithConfig(config Config) ProviderOption {
-	return func(opts *ProviderOptions) {
+func WithConfig(config Config) TracerProviderOption {
+	return func(opts *TracerProviderConfig) {
 		opts.config = config
 	}
 }
 
 // WithResource option attaches a resource to the provider.
 // The resource is added to the span when it is started.
-func WithResource(r *resource.Resource) ProviderOption {
-	return func(opts *ProviderOptions) {
+func WithResource(r *resource.Resource) TracerProviderOption {
+	return func(opts *TracerProviderConfig) {
 		opts.config.Resource = r
 	}
 }

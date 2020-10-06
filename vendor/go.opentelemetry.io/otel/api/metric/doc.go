@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// metric package provides an API for reporting diagnostic
-// measurements using instruments categorized as follows:
+// Package metric provides support for reporting measurements using instruments.
+//
+// Instruments are categorized as below:
 //
 // Synchronous instruments are called by the user with a Context.
 // Asynchronous instruments are called by the SDK during collection.
@@ -41,9 +42,9 @@
 //
 // The Meter interface supports allocating new instruments as well as
 // interfaces for recording batches of synchronous measurements or
-// asynchronous observations.  To obtain a Meter, use a Provider.
+// asynchronous observations.  To obtain a Meter, use a MeterProvider.
 //
-// The Provider interface supports obtaining a named Meter interface.
-// To obtain a Provider implementation, initialize and configure any
+// The MeterProvider interface supports obtaining a named Meter interface. To
+// obtain a MeterProvider implementation, initialize and configure any
 // compatible SDK.
 package metric // import "go.opentelemetry.io/otel/api/metric"

@@ -23,7 +23,7 @@ func Init(serviceName string, reporterURI string, probability float64, log *log.
 
 	// For demoing purposes, always sample. In a production application, you should
 	// configure this to a trace.ProbabilitySampler set at the desired probability.
-	tp, err := sdktrace.NewProvider(
+	tp := sdktrace.NewTracerProvider(
 		sdktrace.WithConfig(sdktrace.Config{DefaultSampler: sdktrace.AlwaysSample()}),
 		sdktrace.WithBatcher(exporter,
 			sdktrace.WithMaxExportBatchSize(sdktrace.DefaultMaxExportBatchSize),
@@ -31,10 +31,7 @@ func Init(serviceName string, reporterURI string, probability float64, log *log.
 			sdktrace.WithMaxExportBatchSize(sdktrace.DefaultMaxExportBatchSize),
 		),
 	)
-	if err != nil {
-		return errors.Wrap(err, "creating new provider")
-	}
 
-	global.SetTraceProvider(tp)
+	global.SetTracerProvider(tp)
 	return nil
 }

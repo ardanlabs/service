@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package otel
+/*
+Package propagators contains OpenTelemetry context propagators.
 
-// ErrorHandler handles irremediable events.
-type ErrorHandler interface {
-	// Handle handles any error deemed irremediable by an OpenTelemetry
-	// component.
-	Handle(error)
-}
+OpenTelemetry propagators are used to extract and inject context data from and
+into messages exchanged by applications. The propagator supported by this
+package is the W3C Trace Context encoding (https://www.w3.org/TR/trace-context/).
+*/
+package propagators // import "go.opentelemetry.io/otel/propagators"

@@ -12,5 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package trace provides tracing support.
-package trace // import "go.opentelemetry.io/otel/api/trace"
+// Package noop provides noop tracing implementations for tracer and span.
+package noop
+
+import (
+	"context"
+
+	"go.opentelemetry.io/otel/api/trace"
+)
+
+var (
+	// Tracer is a noop tracer that starts noop spans.
+	Tracer trace.Tracer
+
+	// Span is a noop Span.
+	Span trace.Span
+)
+
+func init() {
+	Tracer = trace.NoopTracerProvider().Tracer("")
+	_, Span = Tracer.Start(context.Background(), "")
+}

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package http
+package otelhttp
 
 import (
 	"io"
@@ -42,7 +42,7 @@ type Handler struct {
 	tracer            trace.Tracer
 	meter             metric.Meter
 	propagators       propagation.Propagators
-	spanStartOptions  []trace.StartOption
+	spanStartOptions  []trace.SpanOption
 	readEvent         bool
 	writeEvent        bool
 	filters           []Filter
@@ -63,24 +63,19 @@ func NewHandler(handler http.Handler, operation string, opts ...Option) http.Han
 		operation: operation,
 	}
 
-	const domain = "go.opentelemetry.io/contrib/instrumentation/net/http"
-
 	defaultOpts := []Option{
-		WithTracer(global.Tracer(domain)),
-		WithMeter(global.Meter(domain)),
-		WithPropagators(global.Propagators()),
 		WithSpanOptions(trace.WithSpanKind(trace.SpanKindServer)),
 		WithSpanNameFormatter(defaultHandlerFormatter),
 	}
 
-	c := NewConfig(append(defaultOpts, opts...)...)
+	c := newConfig(append(defaultOpts, opts...)...)
 	h.configure(c)
 	h.createMeasures()
 
 	return &h
 }
 
-func (h *Handler) configure(c *Config) {
+func (h *Handler) configure(c *config) {
 	h.tracer = c.Tracer
 	h.meter = c.Meter
 	h.propagators = c.Propagators
@@ -126,7 +121,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	opts := append([]trace.StartOption{
+	opts := append([]trace.SpanOption{
 		trace.WithAttributes(semconv.NetAttributesFromHTTPRequest("tcp", r)...),
 		trace.WithAttributes(semconv.EndUserAttributesFromHTTPRequest(r)...),
 		trace.WithAttributes(semconv.HTTPServerAttributesFromHTTPRequest(h.operation, "", r)...),
@@ -170,13 +165,16 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		},
 	})
 
+	labeler := &Labeler{}
+	ctx = injectLabeler(ctx, labeler)
+
 	h.handler.ServeHTTP(w, r.WithContext(ctx))
 
 	setAfterServeAttributes(span, bw.read, rww.written, rww.statusCode, bw.err, rww.err)
 
 	// Add request metrics
 
-	labels := semconv.HTTPServerMetricAttributesFromHTTPRequest(h.operation, r)
+	labels := append(labeler.Get(), semconv.HTTPServerMetricAttributesFromHTTPRequest(h.operation, r)...)
 
 	h.counters[RequestContentLength].Add(ctx, bw.read, labels...)
 	h.counters[ResponseContentLength].Add(ctx, rww.written, labels...)

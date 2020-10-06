@@ -12,5 +12,5 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package trace provides tracing support.
-package trace // import "go.opentelemetry.io/otel/api/trace"
+// Package global provides global providers, propagators and more.
+package global // import "go.opentelemetry.io/otel/api/global"

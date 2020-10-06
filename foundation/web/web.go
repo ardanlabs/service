@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/dimfeld/httptreemux/v5"
-	othttp "go.opentelemetry.io/contrib/instrumentation/net/http"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel/api/trace"
 )
 
@@ -54,7 +54,7 @@ func NewApp(shutdown chan os.Signal, mw ...Middleware) *App {
 	// This is configured to use the W3C TraceContext standard to set the remote
 	// parent if an client request includes the appropriate headers.
 	// https://w3c.github.io/trace-context/
-	app.otmux = othttp.NewHandler(app.mux.TreeMux, "request")
+	app.otmux = otelhttp.NewHandler(app.mux.TreeMux, "request")
 	return &app
 }
 

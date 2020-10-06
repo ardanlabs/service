@@ -12,4 +12,5 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package unit // import "go.opentelemetry.io/otel/api/unit"
+// Package baggage provides types and utilities for baggage features.
+package baggage // import "go.opentelemetry.io/otel/api/baggage"
