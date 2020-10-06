@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -28,11 +29,11 @@ func (pg productGroup) query(ctx context.Context, w http.ResponseWriter, r *http
 	params := web.Params(r)
 	pageNumber, err := strconv.Atoi(params["page"])
 	if err != nil {
-		return errors.Wrapf(err, "Page: %s", params["page"])
+		return web.NewRequestError(fmt.Errorf("invalid page format: %s", params["page"]), http.StatusBadRequest)
 	}
 	rowsPerPage, err := strconv.Atoi(params["rows"])
 	if err != nil {
-		return errors.Wrapf(err, "Rows: %s", params["rows"])
+		return web.NewRequestError(fmt.Errorf("invalid rows format: %s", params["rows"]), http.StatusBadRequest)
 	}
 
 	products, err := pg.product.Query(ctx, v.TraceID, pageNumber, rowsPerPage)
@@ -84,7 +85,7 @@ func (pg productGroup) create(ctx context.Context, w http.ResponseWriter, r *htt
 
 	var np product.NewProduct
 	if err := web.Decode(r, &np); err != nil {
-		return errors.Wrap(err, "decoding new product")
+		return web.NewRequestError(err, http.StatusBadRequest)
 	}
 
 	prod, err := pg.product.Create(ctx, v.TraceID, claims, np, v.Now)
@@ -109,13 +110,13 @@ func (pg productGroup) update(ctx context.Context, w http.ResponseWriter, r *htt
 		return web.NewShutdownError("claims missing from context")
 	}
 
-	var up product.UpdateProduct
-	if err := web.Decode(r, &up); err != nil {
-		return errors.Wrap(err, "")
+	var upd product.UpdateProduct
+	if err := web.Decode(r, &upd); err != nil {
+		return web.NewRequestError(err, http.StatusBadRequest)
 	}
 
 	params := web.Params(r)
-	if err := pg.product.Update(ctx, v.TraceID, claims, params["id"], up, v.Now); err != nil {
+	if err := pg.product.Update(ctx, v.TraceID, claims, params["id"], upd, v.Now); err != nil {
 		switch err {
 		case product.ErrInvalidID:
 			return web.NewRequestError(err, http.StatusBadRequest)
@@ -124,7 +125,7 @@ func (pg productGroup) update(ctx context.Context, w http.ResponseWriter, r *htt
 		case product.ErrForbidden:
 			return web.NewRequestError(err, http.StatusForbidden)
 		default:
-			return errors.Wrapf(err, "updating product %q: %+v", params["id"], up)
+			return errors.Wrapf(err, "ID: %s  User: %+v", params["id"], &upd)
 		}
 	}
 
@@ -146,7 +147,7 @@ func (pg productGroup) delete(ctx context.Context, w http.ResponseWriter, r *htt
 		case product.ErrInvalidID:
 			return web.NewRequestError(err, http.StatusBadRequest)
 		default:
-			return errors.Wrapf(err, "Id: %s", params["id"])
+			return errors.Wrapf(err, "ID: %s", params["id"])
 		}
 	}
 

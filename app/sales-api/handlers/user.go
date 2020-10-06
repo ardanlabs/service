@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -29,11 +30,11 @@ func (ug userGroup) query(ctx context.Context, w http.ResponseWriter, r *http.Re
 	params := web.Params(r)
 	pageNumber, err := strconv.Atoi(params["page"])
 	if err != nil {
-		return errors.Wrapf(err, "Page: %s", params["page"])
+		return web.NewRequestError(fmt.Errorf("invalid page format: %s", params["page"]), http.StatusBadRequest)
 	}
 	rowsPerPage, err := strconv.Atoi(params["rows"])
 	if err != nil {
-		return errors.Wrapf(err, "Rows: %s", params["rows"])
+		return web.NewRequestError(fmt.Errorf("invalid rows format: %s", params["rows"]), http.StatusBadRequest)
 	}
 
 	users, err := ug.user.Query(ctx, v.TraceID, pageNumber, rowsPerPage)
@@ -69,7 +70,7 @@ func (ug userGroup) queryByID(ctx context.Context, w http.ResponseWriter, r *htt
 		case user.ErrForbidden:
 			return web.NewRequestError(err, http.StatusForbidden)
 		default:
-			return errors.Wrapf(err, "Id: %s", params["id"])
+			return errors.Wrapf(err, "ID: %s", params["id"])
 		}
 	}
 
@@ -87,7 +88,7 @@ func (ug userGroup) create(ctx context.Context, w http.ResponseWriter, r *http.R
 
 	var nu user.NewUser
 	if err := web.Decode(r, &nu); err != nil {
-		return errors.Wrap(err, "")
+		return web.NewRequestError(err, http.StatusBadRequest)
 	}
 
 	usr, err := ug.user.Create(ctx, v.TraceID, nu, v.Now)
@@ -114,7 +115,7 @@ func (ug userGroup) update(ctx context.Context, w http.ResponseWriter, r *http.R
 
 	var upd user.UpdateUser
 	if err := web.Decode(r, &upd); err != nil {
-		return errors.Wrap(err, "")
+		return web.NewRequestError(err, http.StatusBadRequest)
 	}
 
 	params := web.Params(r)
@@ -155,7 +156,7 @@ func (ug userGroup) delete(ctx context.Context, w http.ResponseWriter, r *http.R
 		case user.ErrForbidden:
 			return web.NewRequestError(err, http.StatusForbidden)
 		default:
-			return errors.Wrapf(err, "Id: %s", params["id"])
+			return errors.Wrapf(err, "ID: %s", params["id"])
 		}
 	}
 
