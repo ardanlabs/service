@@ -37,7 +37,7 @@ func Panics(log *log.Logger) web.Middleware {
 					err = errors.Errorf("panic: %v", r)
 
 					// Log the Go stack trace for this panic'd goroutine.
-					log.Printf("%s : PANIC     :\n%s", v.TraceID, debug.Stack())
+					log.Printf("%s: PANIC:\n%s", v.TraceID, debug.Stack())
 				}
 			}()
 

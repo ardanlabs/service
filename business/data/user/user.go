@@ -66,9 +66,13 @@ func (u User) Create(ctx context.Context, traceID string, nu NewUser, now time.T
 		DateUpdated:  now.UTC(),
 	}
 
-	const q = `INSERT INTO users (user_id, name, email, password_hash, roles, date_created, date_updated) VALUES ($1, $2, $3, $4, $5, $6, $7)`
+	const q = `
+	INSERT INTO users
+		(user_id, name, email, password_hash, roles, date_created, date_updated)
+	VALUES
+		($1, $2, $3, $4, $5, $6, $7)`
 
-	u.log.Printf("%s : %s : query : %s", traceID, "user.Create",
+	u.log.Printf("%s: %s: %s", traceID, "user.Create",
 		database.Log(q, usr.ID, usr.Name, usr.Email, usr.PasswordHash, usr.Roles, usr.DateCreated, usr.DateUpdated),
 	)
 
@@ -107,9 +111,19 @@ func (u User) Update(ctx context.Context, traceID string, claims auth.Claims, us
 	}
 	usr.DateUpdated = now
 
-	const q = `UPDATE users SET "name" = $2, "email" = $3, "roles" = $4, "password_hash" = $5, "date_updated" = $6 WHERE user_id = $1`
+	const q = `
+	UPDATE
+		users
+	SET 
+		"name" = $2,
+		"email" = $3,
+		"roles" = $4,
+		"password_hash" = $5,
+		"date_updated" = $6
+	WHERE
+		user_id = $1`
 
-	u.log.Printf("%s : %s : query : %s", traceID, "user.Update",
+	u.log.Printf("%s: %s: %s", traceID, "user.Update",
 		database.Log(q, usr.ID, usr.Name, usr.Email, usr.Roles, usr.PasswordHash, usr.DateCreated, usr.DateUpdated),
 	)
 
@@ -129,9 +143,13 @@ func (u User) Delete(ctx context.Context, traceID string, userID string) error {
 		return ErrInvalidID
 	}
 
-	const q = `DELETE FROM users WHERE user_id = $1`
+	const q = `
+	DELETE FROM
+		users
+	WHERE
+		user_id = $1`
 
-	u.log.Printf("%s : %s : query : %s", traceID, "user.Delete",
+	u.log.Printf("%s: %s: %s", traceID, "user.Delete",
 		database.Log(q, userID),
 	)
 
@@ -147,10 +165,18 @@ func (u User) Query(ctx context.Context, traceID string, pageNumber int, rowsPer
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.user.query")
 	defer span.End()
 
-	const q = `SELECT * FROM users ORDER BY user_id OFFSET $1 ROWS FETCH NEXT $2 ROWS ONLY`
+	const q = `
+	SELECT
+		*
+	FROM
+		users
+	ORDER BY
+		user_id
+	OFFSET $1 ROWS FETCH NEXT $2 ROWS ONLY`
+
 	offset := (pageNumber - 1) * rowsPerPage
 
-	log.Printf("%s : %s : query : %s", traceID, "user.Query",
+	u.log.Printf("%s: %s: %s", traceID, "user.Query",
 		database.Log(q, offset, rowsPerPage),
 	)
 
@@ -176,9 +202,15 @@ func (u User) QueryByID(ctx context.Context, traceID string, claims auth.Claims,
 		return Info{}, ErrForbidden
 	}
 
-	const q = `SELECT * FROM users WHERE user_id = $1`
+	const q = `
+	SELECT
+		*
+	FROM
+		users
+	WHERE 
+		user_id = $1`
 
-	u.log.Printf("%s : %s : query : %s", traceID, "user.QueryByID",
+	u.log.Printf("%s: %s: %s", traceID, "user.QueryByID",
 		database.Log(q, userID),
 	)
 
@@ -198,9 +230,15 @@ func (u User) QueryByEmail(ctx context.Context, traceID string, claims auth.Clai
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.user.querybyemail")
 	defer span.End()
 
-	const q = `SELECT * FROM users WHERE email = $1`
+	const q = `
+	SELECT
+		*
+	FROM
+		users
+	WHERE
+		email = $1`
 
-	u.log.Printf("%s : %s : query : %s", traceID, "user.QueryByEmail",
+	u.log.Printf("%s: %s: %s", traceID, "user.QueryByEmail",
 		database.Log(q, email),
 	)
 
@@ -227,9 +265,15 @@ func (u User) Authenticate(ctx context.Context, traceID string, now time.Time, e
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.user.authenticate")
 	defer span.End()
 
-	const q = `SELECT * FROM users WHERE email = $1`
+	const q = `
+	SELECT
+		*
+	FROM
+		users
+	WHERE
+		email = $1`
 
-	u.log.Printf("%s : %s : query : %s", traceID, "user.Authenticate",
+	u.log.Printf("%s: %s: %s", traceID, "user.Authenticate",
 		database.Log(q, email),
 	)
 

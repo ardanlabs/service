@@ -56,9 +56,13 @@ func (p Product) Create(ctx context.Context, traceID string, claims auth.Claims,
 		DateUpdated: now.UTC(),
 	}
 
-	const q = `INSERT INTO products (product_id, user_id, name, cost, quantity, date_created, date_updated) VALUES ($1, $2, $3, $4, $5, $6, $7)`
+	const q = `
+	INSERT INTO products
+		(product_id, user_id, name, cost, quantity, date_created, date_updated)
+	VALUES
+		($1, $2, $3, $4, $5, $6, $7)`
 
-	p.log.Printf("%s : %s : query : %s", traceID, "product.Create",
+	p.log.Printf("%s: %s: %s", traceID, "product.Create",
 		database.Log(q, prd.ID, prd.UserID, prd.Name, prd.Cost, prd.Quantity, prd.DateCreated, prd.DateUpdated),
 	)
 
@@ -96,9 +100,18 @@ func (p Product) Update(ctx context.Context, traceID string, claims auth.Claims,
 	}
 	prd.DateUpdated = now
 
-	const q = `UPDATE products SET "name" = $2, "cost" = $3, "quantity" = $4, "date_updated" = $5 WHERE product_id = $1`
+	const q = `
+	UPDATE
+		products
+	SET
+		"name" = $2,
+		"cost" = $3,
+		"quantity" = $4,
+		"date_updated" = $5
+	WHERE
+		product_id = $1`
 
-	p.log.Printf("%s : %s : query : %s", traceID, "product.Update",
+	p.log.Printf("%s: %s: %s", traceID, "product.Update",
 		database.Log(q, productID, prd.Name, prd.Cost, prd.Quantity, prd.DateUpdated),
 	)
 
@@ -118,9 +131,13 @@ func (p Product) Delete(ctx context.Context, traceID string, productID string) e
 		return ErrInvalidID
 	}
 
-	const q = `DELETE FROM products WHERE product_id = $1`
+	const q = `
+	DELETE FROM
+		products
+	WHERE
+		product_id = $1`
 
-	p.log.Printf("%s : %s : query : %s", traceID, "product.Delete",
+	p.log.Printf("%s: %s: %s", traceID, "product.Delete",
 		database.Log(q, productID),
 	)
 
@@ -136,18 +153,23 @@ func (p Product) Query(ctx context.Context, traceID string, pageNumber int, rows
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.product.query")
 	defer span.End()
 
-	const q = `SELECT
+	const q = `
+	SELECT
 		p.*,
 		COALESCE(SUM(s.quantity) ,0) AS sold,
 		COALESCE(SUM(s.paid), 0) AS revenue
-	FROM products AS p
-	LEFT JOIN sales AS s ON p.product_id = s.product_id
-	GROUP BY p.product_id
-	ORDER BY user_id
+	FROM
+		products AS p
+	LEFT JOIN
+		sales AS s ON p.product_id = s.product_id
+	GROUP BY
+		p.product_id
+	ORDER BY
+		user_id
 	OFFSET $1 ROWS FETCH NEXT $2 ROWS ONLY`
 	offset := (pageNumber - 1) * rowsPerPage
 
-	p.log.Printf("%s : %s : query : %s", traceID, "product.Query",
+	p.log.Printf("%s: %s: %s", traceID, "product.Query",
 		database.Log(q, offset, rowsPerPage),
 	)
 
@@ -168,16 +190,21 @@ func (p Product) QueryByID(ctx context.Context, traceID string, productID string
 		return Info{}, ErrInvalidID
 	}
 
-	const q = `SELECT
+	const q = `
+	SELECT
 		p.*,
 		COALESCE(SUM(s.quantity), 0) AS sold,
 		COALESCE(SUM(s.paid), 0) AS revenue
-	FROM products AS p
-	LEFT JOIN sales AS s ON p.product_id = s.product_id
-	WHERE p.product_id = $1
-	GROUP BY p.product_id`
+	FROM
+		products AS p
+	LEFT JOIN
+		sales AS s ON p.product_id = s.product_id
+	WHERE
+		p.product_id = $1
+	GROUP BY
+		p.product_id`
 
-	p.log.Printf("%s : %s : query : %s", traceID, "product.QueryByID",
+	p.log.Printf("%s: %s: %s", traceID, "product.QueryByID",
 		database.Log(q, productID),
 	)
 

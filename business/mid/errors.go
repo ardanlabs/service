@@ -33,7 +33,7 @@ func Errors(log *log.Logger) web.Middleware {
 			if err := handler(ctx, w, r); err != nil {
 
 				// Log the error.
-				log.Printf("%s : ERROR     : %v", v.TraceID, err)
+				log.Printf("%s: ERROR: %v", v.TraceID, err)
 
 				// Respond to the error.
 				if err := web.RespondError(ctx, w, err); err != nil {

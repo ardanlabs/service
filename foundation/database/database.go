@@ -76,6 +76,8 @@ func Log(query string, args ...interface{}) string {
 		}
 
 		query = strings.Replace(query, n, a, 1)
+		query = strings.Replace(query, "\t", "", -1)
+		query = strings.Replace(query, "\n", " ", -1)
 	}
 
 	return query
