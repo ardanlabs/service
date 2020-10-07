@@ -18,9 +18,11 @@ import (
 	"github.com/ardanlabs/service/app/sales-api/handlers"
 	"github.com/ardanlabs/service/business/auth"
 	"github.com/ardanlabs/service/foundation/database"
-	"github.com/ardanlabs/service/foundation/tracer"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/pkg/errors"
+	"go.opentelemetry.io/otel/api/global"
+	"go.opentelemetry.io/otel/exporters/trace/zipkin"
+	"go.opentelemetry.io/otel/sdk/trace"
 )
 
 /*
@@ -162,14 +164,31 @@ func run(log *log.Logger) error {
 	// =========================================================================
 	// Start Tracing Support
 
-	// WARNING: The current Init settings are using defaults which I listed out
-	// for readability. Please review the documentation for opentelemetry.
+	// WARNING: The current Init settings are using defaults which may not be
+	// compatible with your project. Please review the documentation for
+	// opentelemetry.
 
-	log.Println("main: Initializing zipkin tracing support")
+	log.Println("main: Initializing OT/Zipkin tracing support")
 
-	if err := tracer.Init(cfg.Zipkin.ServiceName, cfg.Zipkin.ReporterURI, cfg.Zipkin.Probability, log); err != nil {
-		return errors.Wrap(err, "starting tracer")
+	exporter, err := zipkin.NewRawExporter(
+		cfg.Zipkin.ReporterURI,
+		cfg.Zipkin.ServiceName,
+		zipkin.WithLogger(log),
+	)
+	if err != nil {
+		return errors.Wrap(err, "creating new exporter")
 	}
+
+	tp := trace.NewTracerProvider(
+		trace.WithConfig(trace.Config{DefaultSampler: trace.TraceIDRatioBased(cfg.Zipkin.Probability)}),
+		trace.WithBatcher(exporter,
+			trace.WithMaxExportBatchSize(trace.DefaultMaxExportBatchSize),
+			trace.WithBatchTimeout(trace.DefaultBatchTimeout),
+			trace.WithMaxExportBatchSize(trace.DefaultMaxExportBatchSize),
+		),
+	)
+
+	global.SetTracerProvider(tp)
 
 	// =========================================================================
 	// Start Debug Service
