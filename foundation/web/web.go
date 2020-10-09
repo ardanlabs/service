@@ -74,9 +74,21 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	a.otmux.ServeHTTP(w, r)
 }
 
-// Handle is our mechanism for mounting Handlers for a given HTTP verb and path
-// pair, this makes for really easy, convenient routing.
+// HandleDebug sets a handler function for a given HTTP method and path pair
+// to the default http package server mux.
+func (a *App) HandleDebug(method string, path string, handler Handler, mw ...Middleware) {
+	a.handle(true, method, path, handler, mw...)
+}
+
+// Handle sets a handler function for a given HTTP method and path pair
+// to the application server mux.
 func (a *App) Handle(method string, path string, handler Handler, mw ...Middleware) {
+	a.handle(false, method, path, handler, mw...)
+}
+
+// handle performs the real work of applying boilerplate and framework code
+// for a handler.
+func (a *App) handle(debug bool, method string, path string, handler Handler, mw ...Middleware) {
 
 	// First wrap handler specific middleware around this handler.
 	handler = wrapMiddleware(mw, handler)
@@ -108,5 +120,17 @@ func (a *App) Handle(method string, path string, handler Handler, mw ...Middlewa
 	}
 
 	// Add this handler for the specified verb and route.
+	if debug {
+		f := func(w http.ResponseWriter, r *http.Request) {
+			switch {
+			case r.Method == method:
+				h(w, r)
+			default:
+				w.WriteHeader(http.StatusNotFound)
+			}
+		}
+		http.DefaultServeMux.HandleFunc(path, f)
+		return
+	}
 	a.mux.Handle(method, path, h)
 }

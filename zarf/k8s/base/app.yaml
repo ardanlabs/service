@@ -56,13 +56,13 @@ spec:
         readinessProbe:
           httpGet:
             path: /v1/readiness
-            port: 3000
+            port: 4000
           initialDelaySeconds: 30
           periodSeconds: 15
         livenessProbe:
           httpGet:
             path: /v1/liveness
-            port: 3000
+            port: 4000
           initialDelaySeconds: 30
           periodSeconds: 15
       - name: metrics
