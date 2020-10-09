@@ -32,7 +32,9 @@ type Handler func(ctx context.Context, w http.ResponseWriter, r *http.Request) e
 
 // registered keeps track of handlers registered to the http default server
 // mux. This is a singleton and used by the standard library for metrics
-// and profiling.
+// and profiling. The application may want to add other handlers like
+// readiness and liveness to that mux. If this is not tracked, the routes
+// could try to be registered more than once, causing a panic.
 var registered = make(map[string]bool)
 
 // App is the entrypoint into our application and what configures our context
