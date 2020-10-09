@@ -55,13 +55,13 @@ spec:
           containerPort: 4000
         readinessProbe:
           httpGet:
-            path: /v1/readiness
+            path: /debug/readiness
             port: 4000
           initialDelaySeconds: 30
           periodSeconds: 15
         livenessProbe:
           httpGet:
-            path: /v1/liveness
+            path: /debug/liveness
             port: 4000
           initialDelaySeconds: 30
           periodSeconds: 15

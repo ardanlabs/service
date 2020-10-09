@@ -26,8 +26,8 @@ func API(build string, shutdown chan os.Signal, log *log.Logger, a *auth.Auth, d
 		build: build,
 		db:    db,
 	}
-	app.HandleDebug(http.MethodGet, "/v1/readiness", cg.readiness)
-	app.HandleDebug(http.MethodGet, "/v1/liveness", cg.liveness)
+	app.HandleDebug(http.MethodGet, "/readiness", cg.readiness)
+	app.HandleDebug(http.MethodGet, "/liveness", cg.liveness)
 
 	// Register user management and authentication endpoints.
 	ug := userGroup{

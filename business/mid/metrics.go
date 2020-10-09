@@ -5,6 +5,7 @@ import (
 	"expvar"
 	"net/http"
 	"runtime"
+	"strings"
 
 	"github.com/ardanlabs/service/foundation/web"
 	"go.opentelemetry.io/otel/api/trace"
@@ -29,6 +30,12 @@ func Metrics() web.Middleware {
 
 		// Create the handler that will be attached in the middleware chain.
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+
+			// Don't count anything on /debug routes towards metrics.
+			if strings.HasPrefix(r.URL.Path, "/debug") {
+				return nil
+			}
+
 			ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.mid.metrics")
 			defer span.End()
 

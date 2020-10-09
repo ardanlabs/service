@@ -82,7 +82,7 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // HandleDebug sets a handler function for a given HTTP method and path pair
-// to the default http package server mux.
+// to the default http package server mux. /debug is added to the path.
 func (a *App) HandleDebug(method string, path string, handler Handler, mw ...Middleware) {
 	a.handle(true, method, path, handler, mw...)
 }
@@ -144,7 +144,7 @@ func (a *App) handle(debug bool, method string, path string, handler Handler, mw
 				w.WriteHeader(http.StatusNotFound)
 			}
 		}
-		http.DefaultServeMux.HandleFunc(path, f)
+		http.DefaultServeMux.HandleFunc("/debug"+path, f)
 		return
 	}
 	a.mux.Handle(method, path, h)
