@@ -34,6 +34,7 @@ func Logger(log *log.Logger) web.Middleware {
 				r.Method, r.URL.Path, r.RemoteAddr,
 			)
 
+			// Call the next handler.
 			err := handler(ctx, w, r)
 
 			log.Printf("%s: completed: %s %s -> %s (%d) (%s)",

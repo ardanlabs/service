@@ -41,7 +41,7 @@ func Panics(log *log.Logger) web.Middleware {
 				}
 			}()
 
-			// Call the next Handler and set its return value in the err variable.
+			// Call the next handler and set its return value in the err variable.
 			return handler(ctx, w, r)
 		}
 
