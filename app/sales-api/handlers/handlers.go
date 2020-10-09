@@ -21,7 +21,7 @@ func API(build string, shutdown chan os.Signal, log *log.Logger, a *auth.Auth, d
 	// Construct the web.App which holds all routes as well as common Middleware.
 	app := web.NewApp(shutdown, mid.Logger(log), mid.Errors(log), mid.Metrics(), mid.Panics(log))
 
-	// Register health check endpoint. This route is not authenticated.
+	// Register debug check endpoints.
 	cg := checkGroup{
 		build: build,
 		db:    db,
