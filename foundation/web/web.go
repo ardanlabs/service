@@ -94,7 +94,6 @@ func (a *App) Handle(method string, path string, handler Handler, mw ...Middlewa
 // handle performs the real work of applying boilerplate and framework code
 // for a handler.
 func (a *App) handle(debug bool, method string, path string, handler Handler, mw ...Middleware) {
-
 	if debug {
 		// Track all the handlers that are being registered so we don't have
 		// the same handlers registered twice to this singleton.
