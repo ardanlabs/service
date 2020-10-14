@@ -53,7 +53,8 @@ Our classes are perfect for intermediate-level developers who have at least a fe
 _William Kennedy is a managing partner at Ardan Labs in Miami, Florida. Ardan Labs is a high-performance development and training firm working with startups and fortune 500 companies. He is also a co-author of the book Go in Action, the author of the blog GoingGo.Net, and a founding member of GoBridge which is working to increase Go adoption through diversity._
 
 _**Video Training**_  
-[Ultimate Go Video](https://education.ardanlabs.com)
+[Ultimate Go Video](https://education.ardanlabs.com)  
+[Ardan Labs YouTube Channel](http://youtube.ardanlabs.com/)
 
 _**Blog**_  
 [Going Go](https://www.ardanlabs.com/blog/)    
@@ -66,6 +67,8 @@ _**Articles**_
 [IT World Canada](http://www.itworldcanada.com/article/nascent-google-development-language-shows-promise-for-more-productive-coding/387449)
 
 _**Video**_  
+[Go Generics Draft Proposal (2020)](https://www.youtube.com/watch?v=gIEPspmbMHM&t=2069s)
+
 [Training Within The Go Community (2019)](https://www.youtube.com/watch?v=PSR1twjzzAM&feature=youtu.be)  
 
 [GopherCon Australia (2019) - Modules](https://www.youtube.com/watch?v=MVxbVR_6Tac)  
