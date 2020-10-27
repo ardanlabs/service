@@ -15,7 +15,7 @@ spec:
       hostNetwork: true
       containers:
       - name: zipkin
-        image: openzipkin/zipkin:2.21
+        image: openzipkin/zipkin:2.22
         ports:
         - name: zipkin
           containerPort: 9411

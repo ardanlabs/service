@@ -18,11 +18,9 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"go.opentelemetry.io/otel/api/baggage"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/api/metric"
-	"go.opentelemetry.io/otel/api/propagation"
 	"go.opentelemetry.io/otel/api/trace"
-	"go.opentelemetry.io/otel/propagators"
 )
 
 type (
@@ -35,7 +33,7 @@ type (
 	}
 
 	propagatorsHolder struct {
-		pr propagation.Propagators
+		tm otel.TextMapPropagator
 	}
 )
 
@@ -92,14 +90,14 @@ func SetMeterProvider(mp metric.MeterProvider) {
 	globalMeter.Store(meterProviderHolder{mp: mp})
 }
 
-// Propagators is the internal implementation for global.Propagators.
-func Propagators() propagation.Propagators {
-	return globalPropagators.Load().(propagatorsHolder).pr
+// TextMapPropagator is the internal implementation for global.TextMapPropagator.
+func TextMapPropagator() otel.TextMapPropagator {
+	return globalPropagators.Load().(propagatorsHolder).tm
 }
 
-// SetPropagators is the internal implementation for global.SetPropagators.
-func SetPropagators(pr propagation.Propagators) {
-	globalPropagators.Store(propagatorsHolder{pr: pr})
+// SetTextMapPropagator is the internal implementation for global.SetTextMapPropagator.
+func SetTextMapPropagator(p otel.TextMapPropagator) {
+	globalPropagators.Store(propagatorsHolder{tm: p})
 }
 
 func defaultTracerValue() *atomic.Value {
@@ -116,19 +114,14 @@ func defaultMeterValue() *atomic.Value {
 
 func defaultPropagatorsValue() *atomic.Value {
 	v := &atomic.Value{}
-	v.Store(propagatorsHolder{pr: getDefaultPropagators()})
+	v.Store(propagatorsHolder{tm: getDefaultTextMapPropagator()})
 	return v
 }
 
-// getDefaultPropagators returns a default Propagators, configured
-// with W3C trace and baggage propagation.
-func getDefaultPropagators() propagation.Propagators {
-	tcPropagator := propagators.TraceContext{}
-	bagPropagator := baggage.Baggage{}
-	return propagation.New(
-		propagation.WithExtractors(tcPropagator, bagPropagator),
-		propagation.WithInjectors(tcPropagator, bagPropagator),
-	)
+// getDefaultTextMapPropagator returns the default TextMapPropagator,
+// configured with W3C trace and baggage propagation.
+func getDefaultTextMapPropagator() otel.TextMapPropagator {
+	return otel.NewCompositeTextMapPropagator()
 }
 
 // ResetForTest restores the initial global state, for testing purposes.

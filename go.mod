@@ -15,13 +15,12 @@ require (
 	github.com/kr/pretty v0.2.1 // indirect
 	github.com/leodido/go-urn v1.2.0 // indirect
 	github.com/lib/pq v1.8.0
-	github.com/openzipkin/zipkin-go v0.2.5 // indirect
 	github.com/pkg/errors v0.9.1
-	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.12.0
-	go.opentelemetry.io/otel v0.12.0
-	go.opentelemetry.io/otel/exporters/trace/zipkin v0.12.0
-	go.opentelemetry.io/otel/sdk v0.12.0
-	golang.org/x/crypto v0.0.0-20201002170205-7f63de1d35b0
+	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.13.0
+	go.opentelemetry.io/otel v0.13.0
+	go.opentelemetry.io/otel/exporters/trace/zipkin v0.13.0
+	go.opentelemetry.io/otel/sdk v0.13.0
+	golang.org/x/crypto v0.0.0-20201016220609-9e8e0b390897
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/validator.v9 v9.31.0

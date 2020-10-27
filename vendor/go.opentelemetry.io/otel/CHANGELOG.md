@@ -8,6 +8,39 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.13.0] - 2020-10-08
+
+### Added
+
+- OTLP Metric exporter supports Histogram aggregation. (#1209)
+- The `Code` struct from the `go.opentelemetry.io/otel/codes` package now supports JSON marshaling and unmarshaling as well as implements the `Stringer` interface. (#1214)
+- A Baggage API to implement the OpenTelemetry specification. (#1217)
+
+### Changed
+
+- Set default propagator to no-op propagator. (#1184)
+- The `HTTPSupplier`, `HTTPExtractor`, `HTTPInjector`, and `HTTPPropagator` from the `go.opentelemetry.io/otel/api/propagation` package were replaced with unified `TextMapCarrier` and `TextMapPropagator` in the `go.opentelemetry.io/otel` package. (#1212)
+- The `New` function from the `go.opentelemetry.io/otel/api/propagation` package was replaced with `NewCompositeTextMapPropagator` in the `go.opentelemetry.io/otel` package. (#1212)
+- The status codes of the `go.opentelemetry.io/otel/codes` package have been updated to match the latest OpenTelemetry specification.
+   They now are `Unset`, `Error`, and `Ok`.
+   They no longer track the gRPC codes. (#1214)
+- The `StatusCode` field of the `SpanData` struct in the `go.opentelemetry.io/otel/sdk/export/trace` package now uses the codes package from this package instead of the gRPC project. (#1214)
+- Move the `go.opentelemetry.io/otel/api/baggage` package into `go.opentelemetry.io/otel/propagators`. (#1217)
+
+### Fixed
+
+- Copies of data from arrays and slices passed to `go.opentelemetry.io/otel/label.ArrayValue()` are now used in the returned `Value` instead of using the mutable data itself. (#1226)
+
+### Removed
+
+- The `ExtractHTTP` and `InjectHTTP` functions from the `go.opentelemetry.io/otel/api/propagation` package were removed. (#1212)
+- The `Propagators` interface from the `go.opentelemetry.io/otel/api/propagation` package was removed to conform to the OpenTelemetry specification.
+   The explicit `TextMapPropagator` type can be used in its place as this is the `Propagator` type the specification defines. (#1212)
+- The `SetAttribute` method of the `Span` from the `go.opentelemetry.io/otel/api/trace` package was removed given its redundancy with the `SetAttributes` method. (#1216)
+- The internal implementation of Baggage storage is removed in favor of using the new Baggage API functionality. (#1217)
+- Remove duplicate hostname key `HostHostNameKey` in Resource semantic conventions. (#1219)
+- Nested array/slice support has been removed. (#1226)
+
 ## [0.12.0] - 2020-09-24
 
 ### Added
@@ -70,6 +103,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Renamed `SamplingDecision` values to comply with OpenTelemetry specification change. (#1192)
 - Renamed Zipkin attribute names from `ot.status_code & ot.status_description` to `otel.status_code & otel.status_description`. (#1201)
 - The default SDK now invokes registered `SpanProcessor`s in the order they were registered with the `TracerProvider`. (#1195)
+- Add test of spans being processed by the `SpanProcessor`s in the order they were registered. (#1203)
 
 ### Removed
 
@@ -863,7 +897,8 @@ It contains api and sdk for trace and meter.
 - CODEOWNERS file to track owners of this project.
 
 
-[Unreleased]: https://github.com/open-telemetry/opentelemetry-go/compare/v0.12.0...HEAD
+[Unreleased]: https://github.com/open-telemetry/opentelemetry-go/compare/v0.13.0...HEAD
+[0.13.0]: https://github.com/open-telemetry/opentelemetry-go/releases/tag/v0.13.0
 [0.12.0]: https://github.com/open-telemetry/opentelemetry-go/releases/tag/v0.12.0
 [0.11.0]: https://github.com/open-telemetry/opentelemetry-go/releases/tag/v0.11.0
 [0.10.0]: https://github.com/open-telemetry/opentelemetry-go/releases/tag/v0.10.0

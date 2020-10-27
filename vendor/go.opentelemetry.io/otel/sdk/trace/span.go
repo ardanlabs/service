@@ -89,7 +89,7 @@ func (s *span) SetStatus(code codes.Code, msg string) {
 		return
 	}
 	s.mu.Lock()
-	s.data.StatusCode = internal.ConvertCode(code)
+	s.data.StatusCode = code
 	s.data.StatusMessage = msg
 	s.mu.Unlock()
 }
@@ -99,13 +99,6 @@ func (s *span) SetAttributes(attributes ...label.KeyValue) {
 		return
 	}
 	s.copyToCappedAttributes(attributes...)
-}
-
-func (s *span) SetAttribute(k string, v interface{}) {
-	attr := label.Any(k, v)
-	if attr.Value.Type() != label.INVALID {
-		s.SetAttributes(attr)
-	}
 }
 
 // End ends the span.
@@ -174,7 +167,7 @@ func (s *span) RecordError(ctx context.Context, err error, opts ...apitrace.Erro
 		cfg.Timestamp = time.Now()
 	}
 
-	if cfg.StatusCode != codes.OK {
+	if cfg.StatusCode != codes.Unset {
 		s.SetStatus(cfg.StatusCode, "")
 	}
 

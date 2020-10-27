@@ -21,9 +21,9 @@ import (
 
 	"github.com/felixge/httpsnoop"
 
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/api/global"
 	"go.opentelemetry.io/otel/api/metric"
-	"go.opentelemetry.io/otel/api/propagation"
 	"go.opentelemetry.io/otel/api/trace"
 	"go.opentelemetry.io/otel/label"
 	"go.opentelemetry.io/otel/semconv"
@@ -41,7 +41,7 @@ type Handler struct {
 
 	tracer            trace.Tracer
 	meter             metric.Meter
-	propagators       propagation.Propagators
+	propagators       otel.TextMapPropagator
 	spanStartOptions  []trace.SpanOption
 	readEvent         bool
 	writeEvent        bool
@@ -127,7 +127,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		trace.WithAttributes(semconv.HTTPServerAttributesFromHTTPRequest(h.operation, "", r)...),
 	}, h.spanStartOptions...) // start with the configured options
 
-	ctx := propagation.ExtractHTTP(r.Context(), h.propagators, r.Header)
+	ctx := h.propagators.Extract(r.Context(), r.Header)
 	ctx, span := h.tracer.Start(ctx, h.spanNameFormatter(h.operation, r), opts...)
 	defer span.End()
 
