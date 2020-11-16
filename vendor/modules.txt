@@ -20,7 +20,7 @@ github.com/go-playground/locales/en
 # github.com/go-playground/universal-translator v0.17.0
 ## explicit
 github.com/go-playground/universal-translator
-# github.com/google/go-cmp v0.5.2
+# github.com/google/go-cmp v0.5.3
 ## explicit
 github.com/google/go-cmp/cmp
 github.com/google/go-cmp/cmp/cmpopts
@@ -81,7 +81,7 @@ go.opentelemetry.io/otel/sdk/internal
 go.opentelemetry.io/otel/sdk/resource
 go.opentelemetry.io/otel/sdk/trace
 go.opentelemetry.io/otel/sdk/trace/internal
-# golang.org/x/crypto v0.0.0-20201016220609-9e8e0b390897
+# golang.org/x/crypto v0.0.0-20201112155050-0c6587e931a9
 ## explicit
 golang.org/x/crypto/bcrypt
 golang.org/x/crypto/blowfish
