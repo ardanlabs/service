@@ -39,7 +39,7 @@ var registered = make(map[string]bool)
 
 // App is the entrypoint into our application and what configures our context
 // object for each of our http handlers. Feel free to add any configuration
-// data/logic on this App struct
+// data/logic on this App struct.
 type App struct {
 	mux      *httptreemux.ContextMux
 	otmux    http.Handler
