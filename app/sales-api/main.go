@@ -60,7 +60,7 @@ func run(log *log.Logger) error {
 		}
 		Auth struct {
 			KeyID          string `conf:"default:54bb2165-71e1-41a6-af3e-7da4a0e1e2c1"`
-			PrivateKeyFile string `conf:"default:/service/private.pem"`
+			PrivateKeyFile string `conf:"default:./private.pem"`
 			Algorithm      string `conf:"default:RS256"`
 		}
 		DB struct {
