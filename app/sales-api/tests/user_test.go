@@ -37,8 +37,8 @@ func TestUsers(t *testing.T) {
 	tests := UserTests{
 		app:        handlers.API("develop", shutdown, test.Log, test.Auth, test.DB),
 		kid:        test.KID,
-		userToken:  test.Token(test.KID, "user@example.com", "gophers"),
-		adminToken: test.Token(test.KID, "admin@example.com", "gophers"),
+		userToken:  test.Token("user@example.com", "gophers"),
+		adminToken: test.Token("admin@example.com", "gophers"),
 	}
 
 	t.Run("getToken401", tests.getToken401)

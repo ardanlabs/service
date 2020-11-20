@@ -15,8 +15,6 @@ import (
 	"github.com/ardanlabs/service/business/data/schema"
 	"github.com/ardanlabs/service/business/data/user"
 	"github.com/ardanlabs/service/foundation/database"
-	"github.com/ardanlabs/service/foundation/web"
-	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -49,10 +47,10 @@ func NewUnit(t *testing.T) (*log.Logger, *sqlx.DB, func()) {
 		DisableTLS: true,
 	})
 	if err != nil {
-		t.Fatalf("opening database connection: %v", err)
+		t.Fatalf("Opening database connection: %v", err)
 	}
 
-	t.Log("waiting for database to be ready ...")
+	t.Log("Waiting for database to be ready ...")
 
 	// Wait for the database to be ready. Wait 100ms longer between each attempt.
 	// Do not try more than 20 times.
@@ -69,12 +67,12 @@ func NewUnit(t *testing.T) (*log.Logger, *sqlx.DB, func()) {
 	if pingError != nil {
 		dumpContainerLogs(t, c.ID)
 		stopContainer(t, c.ID)
-		t.Fatalf("database never ready: %v", pingError)
+		t.Fatalf("Database never ready: %v", pingError)
 	}
 
 	if err := schema.Migrate(db); err != nil {
 		stopContainer(t, c.ID)
-		t.Fatalf("migrating error: %s", err)
+		t.Fatalf("Migrating error: %s", err)
 	}
 
 	// teardown is the function that should be invoked when the caller is done
@@ -88,16 +86,6 @@ func NewUnit(t *testing.T) (*log.Logger, *sqlx.DB, func()) {
 	log := log.New(os.Stdout, "TEST : ", log.LstdFlags|log.Lmicroseconds|log.Lshortfile)
 
 	return log, db, teardown
-}
-
-// Context returns an app level context for testing.
-func Context() context.Context {
-	values := web.Values{
-		TraceID: uuid.New().String(),
-		Now:     time.Now(),
-	}
-
-	return context.WithValue(context.Background(), web.KeyValues, &values)
 }
 
 // StringPointer is a helper to get a *string from a string. It is in the tests
@@ -116,19 +104,19 @@ func IntPointer(i int) *int {
 
 // Test owns state for running and shutting down tests.
 type Test struct {
-	TraceID string
-	DB      *sqlx.DB
-	Log     *log.Logger
-	Auth    *auth.Auth
-	KID     string
+	TraceID  string
+	DB       *sqlx.DB
+	Log      *log.Logger
+	Auth     *auth.Auth
+	KID      string
+	Teardown func()
 
-	t       *testing.T
-	cleanup func()
+	t *testing.T
 }
 
 // NewIntegration creates a database, seeds it, constructs an authenticator.
 func NewIntegration(t *testing.T) *Test {
-	log, db, cleanup := NewUnit(t)
+	log, db, teardown := NewUnit(t)
 
 	if err := schema.Seed(db); err != nil {
 		t.Fatal(err)
@@ -157,32 +145,29 @@ func NewIntegration(t *testing.T) *Test {
 	}
 
 	test := Test{
-		TraceID: "00000000-0000-0000-0000-000000000000",
-		DB:      db,
-		Log:     log,
-		Auth:    auth,
-		KID:     kidID,
-		t:       t,
-		cleanup: cleanup,
+		TraceID:  "00000000-0000-0000-0000-000000000000",
+		DB:       db,
+		Log:      log,
+		Auth:     auth,
+		KID:      kidID,
+		t:        t,
+		Teardown: teardown,
 	}
 
 	return &test
 }
 
-// Teardown releases any resources used for the test.
-func (test *Test) Teardown() {
-	test.cleanup()
-}
-
 // Token generates an authenticated token for a user.
-func (test *Test) Token(kid string, email, pass string) string {
+func (test *Test) Token(email, pass string) string {
+	test.t.Log("Generating token for test ...")
+
 	u := user.New(test.Log, test.DB)
 	claims, err := u.Authenticate(context.Background(), test.TraceID, time.Now(), email, pass)
 	if err != nil {
 		test.t.Fatal(err)
 	}
 
-	token, err := test.Auth.GenerateToken(kid, claims)
+	token, err := test.Auth.GenerateToken(test.KID, claims)
 	if err != nil {
 		test.t.Fatal(err)
 	}
