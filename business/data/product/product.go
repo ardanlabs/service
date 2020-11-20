@@ -123,12 +123,17 @@ func (p Product) Update(ctx context.Context, traceID string, claims auth.Claims,
 }
 
 // Delete removes the product identified by a given ID.
-func (p Product) Delete(ctx context.Context, traceID string, productID string) error {
+func (p Product) Delete(ctx context.Context, traceID string, claims auth.Claims, productID string) error {
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.product.delete")
 	defer span.End()
 
 	if _, err := uuid.Parse(productID); err != nil {
 		return ErrInvalidID
+	}
+
+	// If you are not an admin.
+	if !claims.Authorized(auth.RoleAdmin) {
+		return ErrForbidden
 	}
 
 	const q = `

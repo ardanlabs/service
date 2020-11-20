@@ -145,8 +145,13 @@ func (ug userGroup) delete(ctx context.Context, w http.ResponseWriter, r *http.R
 		return web.NewShutdownError("web value missing from context")
 	}
 
+	claims, ok := ctx.Value(auth.Key).(auth.Claims)
+	if !ok {
+		return errors.New("claims missing from context")
+	}
+
 	params := web.Params(r)
-	err := ug.user.Delete(ctx, v.TraceID, params["id"])
+	err := ug.user.Delete(ctx, v.TraceID, claims, params["id"])
 	if err != nil {
 		switch err {
 		case user.ErrInvalidID:

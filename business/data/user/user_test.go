@@ -1,6 +1,7 @@
 package user_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -24,7 +25,7 @@ func TestUser(t *testing.T) {
 		testID := 0
 		t.Logf("\tTest %d:\tWhen handling a single User.", testID)
 		{
-			ctx := tests.Context()
+			ctx := context.Background()
 			now := time.Date(2018, time.October, 1, 0, 0, 0, 0, time.UTC)
 			traceID := "00000000-0000-0000-0000-000000000000"
 
@@ -106,7 +107,7 @@ func TestUser(t *testing.T) {
 				t.Logf("\t%s\tTest %d:\tShould be able to see updates to Email.", tests.Success, testID)
 			}
 
-			if err := u.Delete(ctx, traceID, usr.ID); err != nil {
+			if err := u.Delete(ctx, traceID, claims, usr.ID); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to delete user : %s.", tests.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to delete user.", tests.Success, testID)
@@ -133,7 +134,7 @@ func TestUserPaging(t *testing.T) {
 		testID := 0
 		t.Logf("\tTest %d:\tWhen paging through 2 users.", testID)
 		{
-			ctx := tests.Context()
+			ctx := context.Background()
 			traceID := "00000000-0000-0000-0000-000000000000"
 
 			users1, err := u.Query(ctx, traceID, 1, 1)
@@ -179,7 +180,7 @@ func TestAuthenticate(t *testing.T) {
 		testID := 0
 		t.Logf("\tTest %d:\tWhen handling a single User.", testID)
 		{
-			ctx := tests.Context()
+			ctx := context.Background()
 			now := time.Date(2018, time.October, 1, 0, 0, 0, 0, time.UTC)
 			traceID := "00000000-0000-0000-0000-000000000000"
 

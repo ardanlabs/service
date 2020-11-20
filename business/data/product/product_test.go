@@ -114,7 +114,7 @@ func TestProduct(t *testing.T) {
 				t.Logf("\t%s\tTest %d:\tShould be able to see updated Name field.", tests.Success, testID)
 			}
 
-			if err := p.Delete(ctx, traceID, prd.ID); err != nil {
+			if err := p.Delete(ctx, traceID, claims, prd.ID); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to delete product : %s.", tests.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to delete product.", tests.Success, testID)

@@ -141,8 +141,13 @@ func (pg productGroup) delete(ctx context.Context, w http.ResponseWriter, r *htt
 		return web.NewShutdownError("web value missing from context")
 	}
 
+	claims, ok := ctx.Value(auth.Key).(auth.Claims)
+	if !ok {
+		return errors.New("claims missing from context")
+	}
+
 	params := web.Params(r)
-	if err := pg.product.Delete(ctx, v.TraceID, params["id"]); err != nil {
+	if err := pg.product.Delete(ctx, v.TraceID, claims, params["id"]); err != nil {
 		switch err {
 		case product.ErrInvalidID:
 			return web.NewRequestError(err, http.StatusBadRequest)

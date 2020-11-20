@@ -41,14 +41,13 @@ var (
 func NewUnit(t *testing.T) (*log.Logger, *sqlx.DB, func()) {
 	c := startContainer(t, dbImage, dbPort, dbArgs...)
 
-	cfg := database.Config{
+	db, err := database.Open(database.Config{
 		User:       "postgres",
 		Password:   "postgres",
 		Host:       c.Host,
 		Name:       "postgres",
 		DisableTLS: true,
-	}
-	db, err := database.Open(cfg)
+	})
 	if err != nil {
 		t.Fatalf("opening database connection: %v", err)
 	}
