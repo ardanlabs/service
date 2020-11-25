@@ -8,7 +8,7 @@ import (
 
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/pkg/errors"
-	"go.opentelemetry.io/otel/api/trace"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // Panics recovers from panics and converts the panic to an error so it is

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package zipkin
+package zipkin // import "go.opentelemetry.io/otel/exporters/trace/zipkin"
 
 import (
 	"encoding/binary"
@@ -21,9 +21,9 @@ import (
 
 	zkmodel "github.com/openzipkin/zipkin-go/model"
 
-	"go.opentelemetry.io/otel/api/trace"
 	"go.opentelemetry.io/otel/label"
 	export "go.opentelemetry.io/otel/sdk/export/trace"
+	"go.opentelemetry.io/otel/trace"
 )
 
 const (
@@ -67,7 +67,7 @@ func toZipkinSpanContext(data *export.SpanData) zkmodel.SpanContext {
 	}
 }
 
-func toZipkinTraceID(traceID trace.ID) zkmodel.TraceID {
+func toZipkinTraceID(traceID trace.TraceID) zkmodel.TraceID {
 	return zkmodel.TraceID{
 		High: binary.BigEndian.Uint64(traceID[:8]),
 		Low:  binary.BigEndian.Uint64(traceID[8:]),

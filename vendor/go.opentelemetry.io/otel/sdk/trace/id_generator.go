@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package trace
+package trace // import "go.opentelemetry.io/otel/sdk/trace"
 
 import (
 	"math/rand"
 	"sync"
 
-	"go.opentelemetry.io/otel/api/trace"
+	"go.opentelemetry.io/otel/trace"
 
 	"go.opentelemetry.io/otel/sdk/trace/internal"
 )
@@ -41,10 +41,10 @@ func (gen *defaultIDGenerator) NewSpanID() trace.SpanID {
 
 // NewTraceID returns a non-zero trace ID from a randomly-chosen sequence.
 // mu should be held while this function is called.
-func (gen *defaultIDGenerator) NewTraceID() trace.ID {
+func (gen *defaultIDGenerator) NewTraceID() trace.TraceID {
 	gen.Lock()
 	defer gen.Unlock()
-	tid := trace.ID{}
+	tid := trace.TraceID{}
 	gen.randSource.Read(tid[:])
 	return tid
 }

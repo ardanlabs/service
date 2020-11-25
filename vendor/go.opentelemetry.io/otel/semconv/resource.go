@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package semconv
+package semconv // import "go.opentelemetry.io/otel/semconv"
 
 import "go.opentelemetry.io/otel/label"
 
@@ -213,8 +213,15 @@ const (
 	CloudZoneKey = label.Key("cloud.zone")
 )
 
+// Semantic conventions for common cloud provider resource attributes.
 var (
 	CloudProviderAWS   = CloudProviderKey.String("aws")
 	CloudProviderAzure = CloudProviderKey.String("azure")
 	CloudProviderGCP   = CloudProviderKey.String("gcp")
+)
+
+// Semantic conventions for deployment attributes.
+const (
+	// Name of the deployment environment (aka deployment tier); e.g. (staging, production).
+	DeploymentEnvironmentKey = label.Key("deployment.environment")
 )

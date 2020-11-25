@@ -17,19 +17,19 @@ package parent
 import (
 	"context"
 
-	"go.opentelemetry.io/otel/api/trace"
 	"go.opentelemetry.io/otel/label"
+	"go.opentelemetry.io/otel/trace"
 )
 
 func GetSpanContextAndLinks(ctx context.Context, ignoreContext bool) (trace.SpanContext, bool, []trace.Link) {
-	lsctx := trace.SpanFromContext(ctx).SpanContext()
+	lsctx := trace.SpanContextFromContext(ctx)
 	rsctx := trace.RemoteSpanContextFromContext(ctx)
 
 	if ignoreContext {
 		links := addLinkIfValid(nil, lsctx, "current")
 		links = addLinkIfValid(links, rsctx, "remote")
 
-		return trace.EmptySpanContext(), false, links
+		return trace.SpanContext{}, false, links
 	}
 	if lsctx.IsValid() {
 		return lsctx, false, nil
@@ -37,7 +37,7 @@ func GetSpanContextAndLinks(ctx context.Context, ignoreContext bool) (trace.Span
 	if rsctx.IsValid() {
 		return rsctx, true, nil
 	}
-	return trace.EmptySpanContext(), false, nil
+	return trace.SpanContext{}, false, nil
 }
 
 func addLinkIfValid(links []trace.Link, sc trace.SpanContext, kind string) []trace.Link {

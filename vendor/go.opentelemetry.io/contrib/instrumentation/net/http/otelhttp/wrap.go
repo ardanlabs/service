@@ -19,7 +19,7 @@ import (
 	"io"
 	"net/http"
 
-	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/propagation"
 )
 
 var _ io.ReadCloser = &bodyWrapper{}
@@ -61,7 +61,7 @@ type respWriterWrapper struct {
 	// used to inject the header
 	ctx context.Context
 
-	props otel.TextMapPropagator
+	props propagation.TextMapPropagator
 
 	written     int64
 	statusCode  int

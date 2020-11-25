@@ -143,8 +143,8 @@ func newSourceFlag(args []string) (*flag, error) {
 // stored at the specified key from the flag source.
 func (f *flag) Source(fld Field) (string, bool) {
 	if fld.Options.ShortFlagChar != 0 {
-		flagKey := []string{string(fld.Options.ShortFlagChar)}
-		k := strings.ToLower(strings.Join(flagKey, `-`))
+		flagKey := fld.Options.ShortFlagChar
+		k := strings.ToLower(string(flagKey))
 		if val, found := f.m[k]; found {
 			return val, found
 		}

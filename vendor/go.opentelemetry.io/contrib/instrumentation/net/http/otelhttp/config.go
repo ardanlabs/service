@@ -17,10 +17,11 @@ package otelhttp
 import (
 	"net/http"
 
+	"go.opentelemetry.io/contrib"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/api/global"
-	"go.opentelemetry.io/otel/api/metric"
-	"go.opentelemetry.io/otel/api/trace"
+	"go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/propagation"
+	"go.opentelemetry.io/otel/trace"
 )
 
 const (
@@ -32,7 +33,7 @@ const (
 type config struct {
 	Tracer            trace.Tracer
 	Meter             metric.Meter
-	Propagators       otel.TextMapPropagator
+	Propagators       propagation.TextMapPropagator
 	SpanStartOptions  []trace.SpanOption
 	ReadEvent         bool
 	WriteEvent        bool
@@ -59,16 +60,22 @@ func (o OptionFunc) Apply(c *config) {
 // newConfig creates a new config struct and applies opts to it.
 func newConfig(opts ...Option) *config {
 	c := &config{
-		Propagators:    global.TextMapPropagator(),
-		TracerProvider: global.TracerProvider(),
-		MeterProvider:  global.MeterProvider(),
+		Propagators:    otel.GetTextMapPropagator(),
+		TracerProvider: otel.GetTracerProvider(),
+		MeterProvider:  otel.GetMeterProvider(),
 	}
 	for _, opt := range opts {
 		opt.Apply(c)
 	}
 
-	c.Tracer = c.TracerProvider.Tracer(instrumentationName)
-	c.Meter = c.MeterProvider.Meter(instrumentationName)
+	c.Tracer = c.TracerProvider.Tracer(
+		instrumentationName,
+		trace.WithInstrumentationVersion(contrib.SemVersion()),
+	)
+	c.Meter = c.MeterProvider.Meter(
+		instrumentationName,
+		metric.WithInstrumentationVersion(contrib.SemVersion()),
+	)
 
 	return c
 }
@@ -100,8 +107,7 @@ func WithPublicEndpoint() Option {
 
 // WithPropagators configures specific propagators. If this
 // option isn't specified then
-// go.opentelemetry.io/otel/api/global.TextMapPropagator() is used.
-func WithPropagators(ps otel.TextMapPropagator) Option {
+func WithPropagators(ps propagation.TextMapPropagator) Option {
 	return OptionFunc(func(c *config) {
 		c.Propagators = ps
 	})

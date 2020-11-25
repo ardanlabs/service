@@ -10,7 +10,7 @@ import (
 	"github.com/ardanlabs/service/business/data/product"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/pkg/errors"
-	"go.opentelemetry.io/otel/api/trace"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type productGroup struct {

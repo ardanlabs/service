@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/ardanlabs/service/foundation/web"
-	"go.opentelemetry.io/otel/api/trace"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // m contains the global program counters for the application.

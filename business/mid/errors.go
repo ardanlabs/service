@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/ardanlabs/service/foundation/web"
-	"go.opentelemetry.io/otel/api/trace"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // Errors handles errors coming out of the call chain. It detects normal

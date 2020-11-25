@@ -10,7 +10,7 @@ services:
     container_name: zipkin
     networks:
       - shared-network
-    image: openzipkin/zipkin:2.22
+    image: openzipkin/zipkin:2.23
     ports:
       - 9411:9411
 

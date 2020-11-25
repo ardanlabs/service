@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package zipkin
+package zipkin // import "go.opentelemetry.io/otel/exporters/trace/zipkin"
 
 import (
 	"bytes"
@@ -26,7 +26,7 @@ import (
 	"net/url"
 	"sync"
 
-	"go.opentelemetry.io/otel/api/global"
+	"go.opentelemetry.io/otel"
 	export "go.opentelemetry.io/otel/sdk/export/trace"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 )
@@ -133,7 +133,7 @@ func InstallNewPipeline(collectorURL, serviceName string, opts ...Option) error 
 		return err
 	}
 
-	global.SetTracerProvider(tp)
+	otel.SetTracerProvider(tp)
 	return nil
 }
 

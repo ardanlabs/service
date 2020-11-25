@@ -12,20 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package trace
+package trace // import "go.opentelemetry.io/otel/sdk/trace"
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"reflect"
 	"sync"
 	"time"
 
-	"go.opentelemetry.io/otel/api/global"
-	apitrace "go.opentelemetry.io/otel/api/trace"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/label"
+	"go.opentelemetry.io/otel/trace"
+
 	export "go.opentelemetry.io/otel/sdk/export/trace"
 	"go.opentelemetry.io/otel/sdk/internal"
 )
@@ -36,16 +36,21 @@ const (
 	errorEventName  = "error"
 )
 
-// span implements apitrace.Span interface.
+var emptySpanContext = trace.SpanContext{}
+
+// span is an implementation of the OpenTelemetry Span API representing the
+// individual component of a trace.
 type span struct {
+	// mu protects the contents of this span.
+	mu sync.Mutex
+
 	// data contains information recorded about the span.
 	//
 	// It will be non-nil if we are exporting the span or recording events for it.
 	// Otherwise, data is nil, and the span is simply a carrier for the
 	// SpanContext, so that the trace ID is propagated.
 	data        *export.SpanData
-	mu          sync.Mutex // protects the contents of *data (but not the pointer value.)
-	spanContext apitrace.SpanContext
+	spanContext trace.SpanContext
 
 	// attributes are capped at configured limit. When the capacity is reached an oldest entry
 	// is removed to create room for a new entry.
@@ -57,19 +62,21 @@ type span struct {
 	// links are stored in FIFO queue capped by configured limit.
 	links *evictedQueue
 
-	// spanStore is the spanStore this span belongs to, if any, otherwise it is nil.
-	//*spanStore
+	// endOnce ensures End is only called once.
 	endOnce sync.Once
 
-	executionTracerTaskEnd func()  // ends the execution tracer span
-	tracer                 *tracer // tracer used to create span.
+	// executionTracerTaskEnd ends the execution tracer span.
+	executionTracerTaskEnd func()
+
+	// tracer is the SDK tracer that created this span.
+	tracer *tracer
 }
 
-var _ apitrace.Span = &span{}
+var _ trace.Span = &span{}
 
-func (s *span) SpanContext() apitrace.SpanContext {
+func (s *span) SpanContext() trace.SpanContext {
 	if s == nil {
-		return apitrace.EmptySpanContext()
+		return trace.SpanContext{}
 	}
 	return s.spanContext
 }
@@ -108,7 +115,7 @@ func (s *span) SetAttributes(attributes ...label.KeyValue) {
 //
 // If this method is called while panicking an error event is added to the
 // Span before ending it and the panic is continued.
-func (s *span) End(options ...apitrace.SpanOption) {
+func (s *span) End(options ...trace.SpanOption) {
 	if s == nil {
 		return
 	}
@@ -116,11 +123,12 @@ func (s *span) End(options ...apitrace.SpanOption) {
 	if recovered := recover(); recovered != nil {
 		// Record but don't stop the panic.
 		defer panic(recovered)
-		s.addEventWithTimestamp(
-			time.Now(),
+		s.addEvent(
 			errorEventName,
-			errorTypeKey.String(typeStr(recovered)),
-			errorMessageKey.String(fmt.Sprint(recovered)),
+			trace.WithAttributes(
+				errorTypeKey.String(typeStr(recovered)),
+				errorMessageKey.String(fmt.Sprint(recovered)),
+			),
 		)
 	}
 
@@ -130,7 +138,7 @@ func (s *span) End(options ...apitrace.SpanOption) {
 	if !s.IsRecording() {
 		return
 	}
-	config := apitrace.NewSpanConfig(options...)
+	config := trace.NewSpanConfig(options...)
 	s.endOnce.Do(func() {
 		sps, ok := s.tracer.provider.spanProcessors.Load().(spanProcessorStates)
 		mustExportOrProcess := ok && len(sps) > 0
@@ -148,33 +156,17 @@ func (s *span) End(options ...apitrace.SpanOption) {
 	})
 }
 
-func (s *span) RecordError(ctx context.Context, err error, opts ...apitrace.ErrorOption) {
-	if s == nil || err == nil {
+func (s *span) RecordError(err error, opts ...trace.EventOption) {
+	if s == nil || err == nil || !s.IsRecording() {
 		return
 	}
 
-	if !s.IsRecording() {
-		return
-	}
-
-	cfg := apitrace.ErrorConfig{}
-
-	for _, o := range opts {
-		o(&cfg)
-	}
-
-	if cfg.Timestamp.IsZero() {
-		cfg.Timestamp = time.Now()
-	}
-
-	if cfg.StatusCode != codes.Unset {
-		s.SetStatus(cfg.StatusCode, "")
-	}
-
-	s.AddEventWithTimestamp(ctx, cfg.Timestamp, errorEventName,
+	s.SetStatus(codes.Error, "")
+	opts = append(opts, trace.WithAttributes(
 		errorTypeKey.String(typeStr(err)),
 		errorMessageKey.String(err.Error()),
-	)
+	))
+	s.addEvent(errorEventName, opts...)
 }
 
 func typeStr(i interface{}) string {
@@ -186,31 +178,26 @@ func typeStr(i interface{}) string {
 	return fmt.Sprintf("%s.%s", t.PkgPath(), t.Name())
 }
 
-func (s *span) Tracer() apitrace.Tracer {
+func (s *span) Tracer() trace.Tracer {
 	return s.tracer
 }
 
-func (s *span) AddEvent(ctx context.Context, name string, attrs ...label.KeyValue) {
+func (s *span) AddEvent(name string, o ...trace.EventOption) {
 	if !s.IsRecording() {
 		return
 	}
-	s.addEventWithTimestamp(time.Now(), name, attrs...)
+	s.addEvent(name, o...)
 }
 
-func (s *span) AddEventWithTimestamp(ctx context.Context, timestamp time.Time, name string, attrs ...label.KeyValue) {
-	if !s.IsRecording() {
-		return
-	}
-	s.addEventWithTimestamp(timestamp, name, attrs...)
-}
+func (s *span) addEvent(name string, o ...trace.EventOption) {
+	c := trace.NewEventConfig(o...)
 
-func (s *span) addEventWithTimestamp(timestamp time.Time, name string, attrs ...label.KeyValue) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.messageEvents.add(export.Event{
 		Name:       name,
-		Attributes: attrs,
-		Time:       timestamp,
+		Attributes: c.Attributes,
+		Time:       c.Timestamp,
 	})
 }
 
@@ -221,18 +208,17 @@ func (s *span) SetName(name string) {
 	defer s.mu.Unlock()
 
 	if s.data == nil {
-		global.Handle(errUninitializedSpan)
+		otel.Handle(errUninitializedSpan)
 		return
 	}
 	s.data.Name = name
 	// SAMPLING
 	noParent := !s.data.ParentSpanID.IsValid()
-	var ctx apitrace.SpanContext
+	var ctx trace.SpanContext
 	if noParent {
-		ctx = apitrace.EmptySpanContext()
+		ctx = trace.SpanContext{}
 	} else {
 		// FIXME: Where do we get the parent context from?
-		// From SpanStore?
 		ctx = s.data.SpanContext
 	}
 	data := samplingData{
@@ -255,7 +241,7 @@ func (s *span) SetName(name string) {
 	}
 }
 
-func (s *span) addLink(link apitrace.Link) {
+func (s *span) addLink(link trace.Link) {
 	if !s.IsRecording() {
 		return
 	}
@@ -285,10 +271,10 @@ func (s *span) makeSpanData() *export.SpanData {
 	return &sd
 }
 
-func (s *span) interfaceArrayToLinksArray() []apitrace.Link {
-	linkArr := make([]apitrace.Link, 0)
+func (s *span) interfaceArrayToLinksArray() []trace.Link {
+	linkArr := make([]trace.Link, 0)
 	for _, value := range s.links.queue {
-		linkArr = append(linkArr, value.(apitrace.Link))
+		linkArr = append(linkArr, value.(trace.Link))
 	}
 	return linkArr
 }
@@ -320,14 +306,14 @@ func (s *span) addChild() {
 	s.mu.Unlock()
 }
 
-func startSpanInternal(tr *tracer, name string, parent apitrace.SpanContext, remoteParent bool, o *apitrace.SpanConfig) *span {
+func startSpanInternal(tr *tracer, name string, parent trace.SpanContext, remoteParent bool, o *trace.SpanConfig) *span {
 	var noParent bool
 	span := &span{}
 	span.spanContext = parent
 
 	cfg := tr.provider.config.Load().(*Config)
 
-	if parent == apitrace.EmptySpanContext() {
+	if parent == emptySpanContext {
 		span.spanContext.TraceID = cfg.IDGenerator.NewTraceID()
 		noParent = true
 	}
@@ -345,8 +331,6 @@ func startSpanInternal(tr *tracer, name string, parent apitrace.SpanContext, rem
 	}
 	sampled := makeSamplingDecision(data)
 
-	// TODO: [rghetia] restore when spanstore is added.
-	// if !internal.LocalSpanStoreEnabled && !span.spanContext.IsSampled() && !o.Record {
 	if !span.spanContext.IsSampled() && !o.Record {
 		return span
 	}
@@ -358,7 +342,7 @@ func startSpanInternal(tr *tracer, name string, parent apitrace.SpanContext, rem
 	span.data = &export.SpanData{
 		SpanContext:            span.spanContext,
 		StartTime:              startTime,
-		SpanKind:               apitrace.ValidateSpanKind(o.SpanKind),
+		SpanKind:               trace.ValidateSpanKind(o.SpanKind),
 		Name:                   name,
 		HasRemoteParent:        remoteParent,
 		Resource:               cfg.Resource,
@@ -373,14 +357,6 @@ func startSpanInternal(tr *tracer, name string, parent apitrace.SpanContext, rem
 	if !noParent {
 		span.data.ParentSpanID = parent.SpanID
 	}
-	// TODO: [rghetia] restore when spanstore is added.
-	//if internal.LocalSpanStoreEnabled {
-	//	ss := spanStoreForNameCreateIfNew(name)
-	//	if ss != nil {
-	//		span.spanStore = ss
-	//		ss.add(span)
-	//	}
-	//}
 
 	return span
 }
@@ -388,46 +364,31 @@ func startSpanInternal(tr *tracer, name string, parent apitrace.SpanContext, rem
 type samplingData struct {
 	noParent     bool
 	remoteParent bool
-	parent       apitrace.SpanContext
+	parent       trace.SpanContext
 	name         string
 	cfg          *Config
 	span         *span
 	attributes   []label.KeyValue
-	links        []apitrace.Link
-	kind         apitrace.SpanKind
+	links        []trace.Link
+	kind         trace.SpanKind
 }
 
 func makeSamplingDecision(data samplingData) SamplingResult {
-	if data.noParent || data.remoteParent {
-		// If this span is the child of a local span and no
-		// Sampler is set in the options, keep the parent's
-		// TraceFlags.
-		//
-		// Otherwise, consult the Sampler in the options if it
-		// is non-nil, otherwise the default sampler.
-		sampler := data.cfg.DefaultSampler
-		//if o.Sampler != nil {
-		//	sampler = o.Sampler
-		//}
-		spanContext := &data.span.spanContext
-		sampled := sampler.ShouldSample(SamplingParameters{
-			ParentContext:   data.parent,
-			TraceID:         spanContext.TraceID,
-			Name:            data.name,
-			HasRemoteParent: data.remoteParent,
-			Kind:            data.kind,
-			Attributes:      data.attributes,
-			Links:           data.links,
-		})
-		if sampled.Decision == RecordAndSample {
-			spanContext.TraceFlags |= apitrace.FlagsSampled
-		} else {
-			spanContext.TraceFlags &^= apitrace.FlagsSampled
-		}
-		return sampled
+	sampler := data.cfg.DefaultSampler
+	spanContext := &data.span.spanContext
+	sampled := sampler.ShouldSample(SamplingParameters{
+		ParentContext:   data.parent,
+		TraceID:         spanContext.TraceID,
+		Name:            data.name,
+		HasRemoteParent: data.remoteParent,
+		Kind:            data.kind,
+		Attributes:      data.attributes,
+		Links:           data.links,
+	})
+	if sampled.Decision == RecordAndSample {
+		spanContext.TraceFlags |= trace.FlagsSampled
+	} else {
+		spanContext.TraceFlags &^= trace.FlagsSampled
 	}
-	if data.parent.TraceFlags&apitrace.FlagsSampled != 0 {
-		return SamplingResult{Decision: RecordAndSample}
-	}
-	return SamplingResult{Decision: Drop}
+	return sampled
 }

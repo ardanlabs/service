@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/foundation/web"
-	"go.opentelemetry.io/otel/api/trace"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // Logger writes some information about the request to the logs in the

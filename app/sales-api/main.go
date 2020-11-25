@@ -20,7 +20,7 @@ import (
 	"github.com/ardanlabs/service/foundation/database"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/pkg/errors"
-	"go.opentelemetry.io/otel/api/global"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/trace/zipkin"
 	"go.opentelemetry.io/otel/sdk/trace"
 )
@@ -188,7 +188,7 @@ func run(log *log.Logger) error {
 		),
 	)
 
-	global.SetTracerProvider(tp)
+	otel.SetTracerProvider(tp)
 
 	// =========================================================================
 	// Start Debug Service

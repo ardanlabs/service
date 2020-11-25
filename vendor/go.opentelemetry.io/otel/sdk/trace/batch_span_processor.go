@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package trace
+package trace // import "go.opentelemetry.io/otel/sdk/trace"
 
 import (
 	"context"
@@ -21,7 +21,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"go.opentelemetry.io/otel/api/global"
+	"go.opentelemetry.io/otel"
 	export "go.opentelemetry.io/otel/sdk/export/trace"
 )
 
@@ -112,7 +112,7 @@ func NewBatchSpanProcessor(exporter export.SpanExporter, options ...BatchSpanPro
 }
 
 // OnStart method does nothing.
-func (bsp *BatchSpanProcessor) OnStart(sd *export.SpanData) {}
+func (bsp *BatchSpanProcessor) OnStart(parent context.Context, sd *export.SpanData) {}
 
 // OnEnd method enqueues export.SpanData for later processing.
 func (bsp *BatchSpanProcessor) OnEnd(sd *export.SpanData) {
@@ -125,11 +125,23 @@ func (bsp *BatchSpanProcessor) OnEnd(sd *export.SpanData) {
 
 // Shutdown flushes the queue and waits until all spans are processed.
 // It only executes once. Subsequent call does nothing.
-func (bsp *BatchSpanProcessor) Shutdown() {
+func (bsp *BatchSpanProcessor) Shutdown(ctx context.Context) error {
+	var err error
 	bsp.stopOnce.Do(func() {
-		close(bsp.stopCh)
-		bsp.stopWait.Wait()
+		wait := make(chan struct{})
+		go func() {
+			close(bsp.stopCh)
+			bsp.stopWait.Wait()
+			close(wait)
+		}()
+		// Wait until the wait group is done or the context is cancelled
+		select {
+		case <-wait:
+		case <-ctx.Done():
+			err = ctx.Err()
+		}
 	})
+	return err
 }
 
 // ForceFlush exports all ended spans that have not yet been exported.
@@ -170,7 +182,7 @@ func (bsp *BatchSpanProcessor) exportSpans() {
 
 	if len(bsp.batch) > 0 {
 		if err := bsp.e.ExportSpans(context.Background(), bsp.batch); err != nil {
-			global.Handle(err)
+			otel.Handle(err)
 		}
 		bsp.batch = bsp.batch[:0]
 	}

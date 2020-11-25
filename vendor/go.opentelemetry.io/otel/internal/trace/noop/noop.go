@@ -18,7 +18,7 @@ package noop
 import (
 	"context"
 
-	"go.opentelemetry.io/otel/api/trace"
+	"go.opentelemetry.io/otel/trace"
 )
 
 var (
@@ -30,6 +30,6 @@ var (
 )
 
 func init() {
-	Tracer = trace.NoopTracerProvider().Tracer("")
+	Tracer = trace.NewNoopTracerProvider().Tracer("")
 	_, Span = Tracer.Start(context.Background(), "")
 }
