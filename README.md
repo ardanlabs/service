@@ -169,7 +169,7 @@ https://www.ardanlabs.com/blog/2016/05/installing-go-and-your-workspace.html
 
 **Visual Studio Code**  
 https://code.visualstudio.com/Updates  
-https://github.com/microsoft/vscode-go
+https://github.com/golang/vscode-go
 
 **VIM**  
 http://www.vim.org/download.php  
