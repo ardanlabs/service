@@ -1,5 +1,5 @@
 # Build the Go Binary.
-FROM golang:1.15.5 as build_metrics
+FROM golang:1.15.6 as build_metrics
 ENV CGO_ENABLED 0
 ARG VCS_REF
 

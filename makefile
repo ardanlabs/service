@@ -57,7 +57,7 @@ logs:
 # Running from within k8s/dev
 
 kind-up:
-	kind create cluster --image kindest/node:v1.19.4 --name ardan-starter-cluster --config zarf/k8s/dev/kind-config.yaml
+	kind create cluster --image kindest/node:v1.20.0 --name ardan-starter-cluster --config zarf/k8s/dev/kind-config.yaml
 
 kind-down:
 	kind delete cluster --name ardan-starter-cluster
