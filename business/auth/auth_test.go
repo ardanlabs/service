@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/auth"
-	"github.com/dgrijalva/jwt-go"
+	"github.com/dgrijalva/jwt-go/v4"
 )
 
 // Success and failure markers.
@@ -50,9 +50,8 @@ func TestAuth(t *testing.T) {
 				StandardClaims: jwt.StandardClaims{
 					Issuer:    "service project",
 					Subject:   "5cf37266-3473-4006-984f-9325122678b7",
-					Audience:  "students",
-					ExpiresAt: time.Now().Add(8760 * time.Hour).Unix(),
-					IssuedAt:  time.Now().Unix(),
+					ExpiresAt: jwt.At(time.Now().Add(8760 * time.Hour)),
+					IssuedAt:  jwt.Now(),
 				},
 				Roles: []string{auth.RoleAdmin},
 			}

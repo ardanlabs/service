@@ -18,7 +18,7 @@ import (
 	"github.com/ardanlabs/service/app/sales-api/handlers"
 	"github.com/ardanlabs/service/business/auth"
 	"github.com/ardanlabs/service/foundation/database"
-	"github.com/dgrijalva/jwt-go"
+	"github.com/dgrijalva/jwt-go/v4"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/trace/zipkin"

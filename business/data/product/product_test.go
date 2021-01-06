@@ -8,7 +8,7 @@ import (
 	"github.com/ardanlabs/service/business/auth"
 	"github.com/ardanlabs/service/business/data/product"
 	"github.com/ardanlabs/service/business/tests"
-	"github.com/dgrijalva/jwt-go"
+	"github.com/dgrijalva/jwt-go/v4"
 	"github.com/google/go-cmp/cmp"
 	"github.com/pkg/errors"
 )
@@ -32,9 +32,8 @@ func TestProduct(t *testing.T) {
 				StandardClaims: jwt.StandardClaims{
 					Issuer:    "service project",
 					Subject:   "718ffbea-f4a1-4667-8ae3-b349da52675e",
-					Audience:  "students",
-					ExpiresAt: now.Add(time.Hour).Unix(),
-					IssuedAt:  now.Unix(),
+					ExpiresAt: jwt.At(now.Add(time.Hour)),
+					IssuedAt:  jwt.At(now),
 				},
 				Roles: []string{auth.RoleAdmin, auth.RoleUser},
 			}

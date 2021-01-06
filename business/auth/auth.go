@@ -5,7 +5,7 @@ import (
 	"crypto/rsa"
 	"sync"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/dgrijalva/jwt-go/v4"
 	"github.com/pkg/errors"
 )
 
@@ -91,15 +91,13 @@ func New(algorithm string, lookup PublicKeyLookup, keys Keys) (*Auth, error) {
 	// Create the token parser to use. The algorithm used to sign the JWT must be
 	// validated to avoid a critical vulnerability:
 	// https://auth0.com/blog/critical-vulnerabilities-in-json-web-token-libraries/
-	parser := jwt.Parser{
-		ValidMethods: []string{algorithm},
-	}
+	parser := jwt.NewParser(jwt.WithValidMethods([]string{algorithm}), jwt.WithAudience("student"))
 
 	a := Auth{
 		algorithm: algorithm,
 		method:    method,
 		keyFunc:   keyFunc,
-		parser:    &parser,
+		parser:    parser,
 		keys:      keys,
 	}
 

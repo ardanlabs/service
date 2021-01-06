@@ -3,9 +3,9 @@
 # github.com/ardanlabs/conf v1.3.3
 ## explicit
 github.com/ardanlabs/conf
-# github.com/dgrijalva/jwt-go v3.2.0+incompatible
+# github.com/dgrijalva/jwt-go/v4 v4.0.0-preview1
 ## explicit
-github.com/dgrijalva/jwt-go
+github.com/dgrijalva/jwt-go/v4
 # github.com/dimfeld/httptreemux/v5 v5.2.2
 ## explicit
 github.com/dimfeld/httptreemux/v5

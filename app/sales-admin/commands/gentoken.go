@@ -11,7 +11,7 @@ import (
 	"github.com/ardanlabs/service/business/auth"
 	"github.com/ardanlabs/service/business/data/user"
 	"github.com/ardanlabs/service/foundation/database"
-	"github.com/dgrijalva/jwt-go"
+	"github.com/dgrijalva/jwt-go/v4"
 	"github.com/pkg/errors"
 )
 
@@ -96,8 +96,8 @@ func GenToken(traceID string, log *log.Logger, cfg database.Config, id string, p
 		StandardClaims: jwt.StandardClaims{
 			Issuer:    "service project",
 			Subject:   usr.ID,
-			ExpiresAt: time.Now().Add(8760 * time.Hour).Unix(),
-			IssuedAt:  time.Now().Unix(),
+			ExpiresAt: jwt.At(time.Now().Add(8760 * time.Hour)),
+			IssuedAt:  jwt.Now(),
 		},
 		Roles: usr.Roles,
 	}
