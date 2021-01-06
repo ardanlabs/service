@@ -6,6 +6,9 @@ ALL_DOCS := $(shell find . -name '*.md' -type f | sort)
 ALL_GO_MOD_DIRS := $(filter-out $(TOOLS_MOD_DIR), $(shell find . -type f -name 'go.mod' -exec dirname {} \; | sort))
 ALL_COVERAGE_MOD_DIRS := $(shell find . -type f -name 'go.mod' -exec dirname {} \; | egrep -v '^./example|^$(TOOLS_MOD_DIR)' | sort)
 
+# URLs to check if all contrib entries exist in the registry.
+REGISTRY_BASE_URL = https://raw.githubusercontent.com/open-telemetry/opentelemetry.io/master/content/en/registry
+CONTRIB_REPO_URL = https://github.com/open-telemetry/opentelemetry-go-contrib/tree/master
 
 # Mac OS Catalina 10.5.x doesn't support 386. Hence skip 386 test
 SKIP_386_TEST = false
@@ -158,6 +161,29 @@ license-check:
 	           echo "license header checking failed:"; echo "$${licRes}"; \
 	           exit 1; \
 	   fi
+
+.PHONY: registry-links-check
+registry-links-check:
+	@checkRes=$$( \
+		for f in $$( find ./instrumentation ./exporters ./detectors ! -path './instrumentation/net/*' -type f -name 'go.mod' -exec dirname {} \; | egrep -v '/example|/utils' | sort ) \
+			./instrumentation/net/http; do \
+			TYPE="instrumentation"; \
+			if $$(echo "$$f" | grep -q "exporters"); then \
+				TYPE="exporter"; \
+			fi; \
+			if $$(echo "$$f" | grep -q "detectors"); then \
+				TYPE="detector"; \
+			fi; \
+			NAME=$$(echo "$$f" | sed -e 's/.*\///' -e 's/.*otel//'); \
+			LINK=$(CONTRIB_REPO_URL)/$$(echo "$$f" | sed -e 's/..//' -e 's/\/otel.*$$//'); \
+			if ! $$(curl -s $(REGISTRY_BASE_URL)/$${TYPE}-go-$${NAME}.md | grep -q "$${LINK}"); then \
+				echo "$$f"; \
+			fi \
+		done; \
+	); \
+	if [ -n "$$checkRes" ]; then \
+		echo "WARNING: registry link check failed for the following packages:"; echo "$${checkRes}"; \
+	fi
 
 .PHONY: dependabot-check
 dependabot-check:

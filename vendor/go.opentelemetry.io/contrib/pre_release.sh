@@ -144,6 +144,9 @@ make lint
 # Add changes and commit.
 git add .
 make ci
+# Check whether registry links are up to date
+make registry-links-check
+
 declare COMMIT_MSG=""
 if [ -n "${OTEL_TAG}" ]; then
     COMMIT_MSG+="Bumping otel version to ${OTEL_TAG}"

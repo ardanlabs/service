@@ -8,12 +8,32 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.15.1] - 2020-12-14
+
+### Added
+
+- Add registry link check to `Makefile` and pre-release script. (#446)
+- A new AWS X-Ray ID Generator (#459)
+
+### Fixed
+
+- Fixes the body replacement in otelhttp to not to mutate a nil body. (#484)
+
+## [0.15.0] - 2020-12-11
+
+### Added
+
+- A new Amazon EKS resource detector. (#465)
+- A new `gcp.CloudRun` detector for detecting resource from a Cloud Run instance. (#455)
+
 ## [0.14.0] - 2020-11-20
 
 ### Added
 
 - `otelhttp.{Get,Head,Post,PostForm}` convenience wrappers for their `http` counterparts. (#390)
 - The AWS detector now adds the cloud zone, host image ID, host type, and host name to the returned `Resource`. (#410)
+- Add Amazon ECS Resource Detector for AWS X-Ray. (#466)
+- Add propagator for AWS X-Ray (#462)
 
 ### Changed
 
@@ -229,7 +249,9 @@ First official tagged release of `contrib` repository.
 - Prefix support for dogstatsd (#34)
 - Update Go Runtime package to use batch observer (#44)
 
-[Unreleased]: https://github.com/open-telemetry/opentelemetry-go-contrib/compare/v0.14.0...HEAD
+[Unreleased]: https://github.com/open-telemetry/opentelemetry-go-contrib/compare/v0.15.1...HEAD
+[0.15.1]: https://github.com/open-telemetry/opentelemetry-go-contrib/releases/tag/v0.15.1
+[0.15.0]: https://github.com/open-telemetry/opentelemetry-go-contrib/releases/tag/v0.15.0
 [0.14.0]: https://github.com/open-telemetry/opentelemetry-go-contrib/releases/tag/v0.14.0
 [0.13.0]: https://github.com/open-telemetry/opentelemetry-go-contrib/releases/tag/v0.13.0
 [0.12.0]: https://github.com/open-telemetry/opentelemetry-go-contrib/releases/tag/v0.12.0

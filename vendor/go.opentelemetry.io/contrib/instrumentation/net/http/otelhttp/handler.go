@@ -137,8 +137,16 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			span.AddEvent("read", trace.WithAttributes(ReadBytesKey.Int64(n)))
 		}
 	}
-	bw := bodyWrapper{ReadCloser: r.Body, record: readRecordFunc}
-	r.Body = &bw
+
+	var bw bodyWrapper
+	// if request body is nil we don't want to mutate the body as it will affect
+	// the identity of it in a unforeseeable way because we assert ReadCloser
+	// fullfills a certain interface and it is indeed nil.
+	if r.Body != nil {
+		bw.ReadCloser = r.Body
+		bw.record = readRecordFunc
+		r.Body = &bw
+	}
 
 	writeRecordFunc := func(int64) {}
 	if h.writeEvent {
@@ -172,10 +180,8 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	setAfterServeAttributes(span, bw.read, rww.written, rww.statusCode, bw.err, rww.err)
 
-	// Add request metrics
-
+	// Add metrics
 	labels := append(labeler.Get(), semconv.HTTPServerMetricAttributesFromHTTPRequest(h.operation, r)...)
-
 	h.counters[RequestContentLength].Add(ctx, bw.read, labels...)
 	h.counters[ResponseContentLength].Add(ctx, rww.written, labels...)
 
