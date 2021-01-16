@@ -48,7 +48,7 @@ func New(log *log.Logger, db *sqlx.DB) User {
 
 // Create inserts a new user into the database.
 func (u User) Create(ctx context.Context, traceID string, nu NewUser, now time.Time) (Info, error) {
-	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "internal.data.user.create")
+	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.user.create")
 	defer span.End()
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(nu.Password), bcrypt.DefaultCost)
