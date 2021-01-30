@@ -90,7 +90,7 @@ func (u User) Update(ctx context.Context, traceID string, claims auth.Claims, us
 
 	usr, err := u.QueryByID(ctx, traceID, claims, userID)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "updating user")
 	}
 
 	if uu.Name != nil {
