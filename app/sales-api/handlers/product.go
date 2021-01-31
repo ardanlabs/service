@@ -56,7 +56,7 @@ func (pg productGroup) queryByID(ctx context.Context, w http.ResponseWriter, r *
 	params := web.Params(r)
 	prod, err := pg.product.QueryByID(ctx, v.TraceID, params["id"])
 	if err != nil {
-		switch err {
+		switch errors.Cause(err) {
 		case product.ErrInvalidID:
 			return web.NewRequestError(err, http.StatusBadRequest)
 		case product.ErrNotFound:
@@ -117,7 +117,7 @@ func (pg productGroup) update(ctx context.Context, w http.ResponseWriter, r *htt
 
 	params := web.Params(r)
 	if err := pg.product.Update(ctx, v.TraceID, claims, params["id"], upd, v.Now); err != nil {
-		switch err {
+		switch errors.Cause(err) {
 		case product.ErrInvalidID:
 			return web.NewRequestError(err, http.StatusBadRequest)
 		case product.ErrNotFound:
@@ -148,7 +148,7 @@ func (pg productGroup) delete(ctx context.Context, w http.ResponseWriter, r *htt
 
 	params := web.Params(r)
 	if err := pg.product.Delete(ctx, v.TraceID, claims, params["id"]); err != nil {
-		switch err {
+		switch errors.Cause(err) {
 		case product.ErrInvalidID:
 			return web.NewRequestError(err, http.StatusBadRequest)
 		default:

@@ -62,7 +62,7 @@ func (ug userGroup) queryByID(ctx context.Context, w http.ResponseWriter, r *htt
 	params := web.Params(r)
 	usr, err := ug.user.QueryByID(ctx, v.TraceID, claims, params["id"])
 	if err != nil {
-		switch err {
+		switch errors.Cause(err) {
 		case user.ErrInvalidID:
 			return web.NewRequestError(err, http.StatusBadRequest)
 		case user.ErrNotFound:
@@ -121,7 +121,7 @@ func (ug userGroup) update(ctx context.Context, w http.ResponseWriter, r *http.R
 	params := web.Params(r)
 	err := ug.user.Update(ctx, v.TraceID, claims, params["id"], upd, v.Now)
 	if err != nil {
-		switch err {
+		switch errors.Cause(err) {
 		case user.ErrInvalidID:
 			return web.NewRequestError(err, http.StatusBadRequest)
 		case user.ErrNotFound:
@@ -153,7 +153,7 @@ func (ug userGroup) delete(ctx context.Context, w http.ResponseWriter, r *http.R
 	params := web.Params(r)
 	err := ug.user.Delete(ctx, v.TraceID, claims, params["id"])
 	if err != nil {
-		switch err {
+		switch errors.Cause(err) {
 		case user.ErrInvalidID:
 			return web.NewRequestError(err, http.StatusBadRequest)
 		case user.ErrNotFound:
@@ -185,7 +185,7 @@ func (ug userGroup) token(ctx context.Context, w http.ResponseWriter, r *http.Re
 
 	claims, err := ug.user.Authenticate(ctx, v.TraceID, v.Now, email, pass)
 	if err != nil {
-		switch err {
+		switch errors.Cause(err) {
 		case user.ErrAuthenticationFailure:
 			return web.NewRequestError(err, http.StatusUnauthorized)
 		default:
