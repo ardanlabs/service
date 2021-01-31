@@ -81,7 +81,7 @@ func (p Product) Update(ctx context.Context, traceID string, claims auth.Claims,
 
 	prd, err := p.QueryByID(ctx, traceID, productID)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "updating product")
 	}
 
 	// If you are not an admin and looking to retrieve someone elses product.
