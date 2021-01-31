@@ -23,7 +23,7 @@ endif
 
 GOTEST_MIN = go test -v -timeout 30s
 GOTEST = $(GOTEST_MIN) -race
-GOTEST_WITH_COVERAGE = $(GOTEST) -coverprofile=coverage.txt -covermode=atomic
+GOTEST_WITH_COVERAGE = $(GOTEST) -coverprofile=coverage.out -covermode=atomic -coverpkg=./...
 
 .DEFAULT_GOAL := precommit
 
@@ -47,49 +47,53 @@ precommit: dependabot-check license-check generate build lint test
 
 .PHONY: test-with-coverage
 test-with-coverage:
-	set -e; for dir in $(ALL_COVERAGE_MOD_DIRS); do \
+	set -e; \
+	printf "" > coverage.txt; \
+	for dir in $(ALL_COVERAGE_MOD_DIRS); do \
 	  echo "go test ./... + coverage in $${dir}"; \
 	  (cd "$${dir}" && \
 	    $(GOTEST_WITH_COVERAGE) ./... && \
-	    go tool cover -html=coverage.txt -o coverage.html); \
-	done
+	    go tool cover -html=coverage.out -o coverage.html); \
+	  [ -f "$${dir}/coverage.out" ] && cat "$${dir}/coverage.out" >> coverage.txt; \
+	done; \
+	sed -i.bak -e '2,$$ { /^mode: /d; }' coverage.txt && rm coverage.txt.bak
 
 .PHONY: ci
 ci: precommit check-clean-work-tree test-with-coverage test-386
 
 .PHONY: test-gocql
 test-gocql:
-	@if ./.circleci/should_build.sh gocql; then \
+	@if ./tools/should_build.sh gocql; then \
 	  set -e; \
 	  docker run --name cass-integ --rm -p 9042:9042 -d cassandra:3; \
-	  CMD=cassandra IMG_NAME=cass-integ ./.circleci/wait.sh; \
+	  CMD=cassandra IMG_NAME=cass-integ ./tools/wait.sh; \
 	  (cd instrumentation/github.com/gocql/gocql/otelgocql && \
 	    $(GOTEST_WITH_COVERAGE) . && \
-	    go tool cover -html=coverage.txt -o coverage.html); \
+	    go tool cover -html=coverage.out -o coverage.html); \
 	  docker stop cass-integ; \
 	fi
 
 .PHONY: test-mongo-driver
 test-mongo-driver:
-	@if ./.circleci/should_build.sh mongo-driver; then \
+	@if ./tools/should_build.sh mongo-driver; then \
 	  set -e; \
 	  docker run --name mongo-integ --rm -p 27017:27017 -d mongo; \
-	  CMD=mongo IMG_NAME=mongo-integ ./.circleci/wait.sh; \
+	  CMD=mongo IMG_NAME=mongo-integ ./tools/wait.sh; \
 	  (cd instrumentation/go.mongodb.org/mongo-driver/mongo/otelmongo && \
 	    $(GOTEST_WITH_COVERAGE) . && \
-	    go tool cover -html=coverage.txt -o coverage.html); \
+	    go tool cover -html=coverage.out -o coverage.html); \
 	  docker stop mongo-integ; \
 	fi
 
 .PHONY: test-gomemcache
 test-gomemcache:
-	@if ./.circleci/should_build.sh gomemcache; then \
+	@if ./tools/should_build.sh gomemcache; then \
 	  set -e; \
 	  docker run --name gomemcache-integ --rm -p 11211:11211 -d memcached; \
-	  CMD=gomemcache IMG_NAME=gomemcache-integ  ./.circleci/wait.sh; \
+	  CMD=gomemcache IMG_NAME=gomemcache-integ  ./tools/wait.sh; \
 	  (cd instrumentation/github.com/bradfitz/gomemcache/memcache/otelmemcache && \
 	    $(GOTEST_WITH_COVERAGE) . && \
-	    go tool cover -html=coverage.txt -o coverage.html); \
+	    go tool cover -html=coverage.out -o coverage.html); \
 	  docker stop gomemcache-integ ; \
 	fi
 

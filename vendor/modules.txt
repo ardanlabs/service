@@ -1,5 +1,7 @@
 # github.com/DATA-DOG/go-sqlmock v1.5.0
 ## explicit
+# github.com/DataDog/sketches-go v0.0.1
+## explicit
 # github.com/ardanlabs/conf v1.3.3
 ## explicit
 github.com/ardanlabs/conf
@@ -32,10 +34,12 @@ github.com/google/go-cmp/cmp/internal/diff
 github.com/google/go-cmp/cmp/internal/flags
 github.com/google/go-cmp/cmp/internal/function
 github.com/google/go-cmp/cmp/internal/value
-# github.com/google/uuid v1.1.4
+# github.com/google/gofuzz v1.1.0
+## explicit
+# github.com/google/uuid v1.2.0
 ## explicit
 github.com/google/uuid
-# github.com/jmoiron/sqlx v1.2.0
+# github.com/jmoiron/sqlx v1.3.1
 ## explicit
 github.com/jmoiron/sqlx
 github.com/jmoiron/sqlx/reflectx
@@ -56,12 +60,14 @@ github.com/openzipkin/zipkin-go/model
 # github.com/pkg/errors v0.9.1
 ## explicit
 github.com/pkg/errors
-# go.opentelemetry.io/contrib v0.15.1
+# github.com/stretchr/testify v1.7.0
+## explicit
+# go.opentelemetry.io/contrib v0.16.0
 go.opentelemetry.io/contrib
-# go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.15.1
+# go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.16.0
 ## explicit
 go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp
-# go.opentelemetry.io/otel v0.15.0
+# go.opentelemetry.io/otel v0.16.0
 ## explicit
 go.opentelemetry.io/otel
 go.opentelemetry.io/otel/codes
@@ -78,10 +84,10 @@ go.opentelemetry.io/otel/propagation
 go.opentelemetry.io/otel/semconv
 go.opentelemetry.io/otel/trace
 go.opentelemetry.io/otel/unit
-# go.opentelemetry.io/otel/exporters/trace/zipkin v0.15.0
+# go.opentelemetry.io/otel/exporters/trace/zipkin v0.16.0
 ## explicit
 go.opentelemetry.io/otel/exporters/trace/zipkin
-# go.opentelemetry.io/otel/sdk v0.15.0
+# go.opentelemetry.io/otel/sdk v0.16.0
 ## explicit
 go.opentelemetry.io/otel/sdk/export/trace
 go.opentelemetry.io/otel/sdk/instrumentation
@@ -104,5 +110,5 @@ golang.org/x/xerrors/internal
 ## explicit
 gopkg.in/go-playground/validator.v9
 gopkg.in/go-playground/validator.v9/translations/en
-# gopkg.in/yaml.v3 v3.0.0-20210105161348-2e78108cf5f8
+# gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 ## explicit
