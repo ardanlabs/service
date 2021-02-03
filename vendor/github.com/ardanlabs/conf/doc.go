@@ -104,9 +104,12 @@ your config type
 Then you can set these values at run time for display.
 
 	cfg := struct {
+		Version conf.Version
+	}{
 		Version: conf.Version{
-			SVN: "v1.0.0",
+			SVN:  "v1.0.0",
 			Desc: "Service Description",
+		},
 	}
 
 	if err := conf.Parse(os.Args[1:], "APP", &cfg); err != nil {

@@ -1,8 +1,6 @@
 # github.com/DATA-DOG/go-sqlmock v1.5.0
 ## explicit
-# github.com/DataDog/sketches-go v0.0.1
-## explicit
-# github.com/ardanlabs/conf v1.3.3
+# github.com/ardanlabs/conf v1.3.4
 ## explicit
 github.com/ardanlabs/conf
 # github.com/dgrijalva/jwt-go/v4 v4.0.0-preview1
@@ -24,8 +22,6 @@ github.com/go-playground/locales/en
 # github.com/go-playground/universal-translator v0.17.0
 ## explicit
 github.com/go-playground/universal-translator
-# github.com/go-sql-driver/mysql v1.5.0
-## explicit
 # github.com/google/go-cmp v0.5.4
 ## explicit
 github.com/google/go-cmp/cmp
@@ -34,8 +30,6 @@ github.com/google/go-cmp/cmp/internal/diff
 github.com/google/go-cmp/cmp/internal/flags
 github.com/google/go-cmp/cmp/internal/function
 github.com/google/go-cmp/cmp/internal/value
-# github.com/google/gofuzz v1.1.0
-## explicit
 # github.com/google/uuid v1.2.0
 ## explicit
 github.com/google/uuid
@@ -53,8 +47,6 @@ github.com/leodido/go-urn
 github.com/lib/pq
 github.com/lib/pq/oid
 github.com/lib/pq/scram
-# github.com/mattn/go-sqlite3 v1.14.6
-## explicit
 # github.com/openzipkin/zipkin-go v0.2.5
 github.com/openzipkin/zipkin-go/model
 # github.com/pkg/errors v0.9.1
