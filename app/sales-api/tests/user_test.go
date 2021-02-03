@@ -451,7 +451,7 @@ func (ut *UserTests) postUser201(t *testing.T) user.Info {
 	return got
 }
 
-// deleteUser200 validates deleting a user that does exist.
+// deleteUser204 validates deleting a user that does exist.
 func (ut *UserTests) deleteUser204(t *testing.T, id string) {
 	r := httptest.NewRequest(http.MethodDelete, "/v1/users/"+id, nil)
 	w := httptest.NewRecorder()
