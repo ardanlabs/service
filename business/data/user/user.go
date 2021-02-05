@@ -185,7 +185,7 @@ func (u User) Query(ctx context.Context, traceID string, pageNumber int, rowsPer
 		database.Log(q, offset, rowsPerPage),
 	)
 
-	users := []Info{}
+	var users []Info
 	if err := u.db.SelectContext(ctx, &users, q, offset, rowsPerPage); err != nil {
 		return nil, errors.Wrap(err, "selecting users")
 	}
