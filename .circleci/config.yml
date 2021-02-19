@@ -6,10 +6,10 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Install Go 1.15.7
+          name: Install Go 1.16
           command: |
               sudo rm -rf /usr/local/go
-              wget -O go.tgz https://dl.google.com/go/go1.15.7.linux-amd64.tar.gz
+              wget -O go.tgz https://dl.google.com/go/go1.16.linux-amd64.tar.gz
               sudo tar -C /usr/local -xzf go.tgz
               which go
               go version
