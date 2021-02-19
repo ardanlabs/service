@@ -58,7 +58,7 @@ In nearly all cases, `<new_contrib_tag>` should be the same as
 4. Push the changes to upstream.
 
     ```
-    git diff master
+    git diff main
     git push
     ```
 

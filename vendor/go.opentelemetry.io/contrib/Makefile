@@ -7,8 +7,8 @@ ALL_GO_MOD_DIRS := $(filter-out $(TOOLS_MOD_DIR), $(shell find . -type f -name '
 ALL_COVERAGE_MOD_DIRS := $(shell find . -type f -name 'go.mod' -exec dirname {} \; | egrep -v '^./example|^$(TOOLS_MOD_DIR)' | sort)
 
 # URLs to check if all contrib entries exist in the registry.
-REGISTRY_BASE_URL = https://raw.githubusercontent.com/open-telemetry/opentelemetry.io/master/content/en/registry
-CONTRIB_REPO_URL = https://github.com/open-telemetry/opentelemetry-go-contrib/tree/master
+REGISTRY_BASE_URL = https://raw.githubusercontent.com/open-telemetry/opentelemetry.io/main/content/en/registry
+CONTRIB_REPO_URL = https://github.com/open-telemetry/opentelemetry-go-contrib/tree/main
 
 # Mac OS Catalina 10.5.x doesn't support 386. Hence skip 386 test
 SKIP_386_TEST = false

@@ -20,6 +20,7 @@ import (
 	"go.opentelemetry.io/contrib"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/metric/global"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -62,7 +63,7 @@ func newConfig(opts ...Option) *config {
 	c := &config{
 		Propagators:    otel.GetTextMapPropagator(),
 		TracerProvider: otel.GetTracerProvider(),
-		MeterProvider:  otel.GetMeterProvider(),
+		MeterProvider:  global.GetMeterProvider(),
 	}
 	for _, opt := range opts {
 		opt.Apply(c)

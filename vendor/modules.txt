@@ -37,8 +37,6 @@ github.com/google/uuid
 ## explicit
 github.com/jmoiron/sqlx
 github.com/jmoiron/sqlx/reflectx
-# github.com/kr/text v0.2.0
-## explicit
 # github.com/leodido/go-urn v1.2.1
 ## explicit
 github.com/leodido/go-urn
@@ -52,14 +50,12 @@ github.com/openzipkin/zipkin-go/model
 # github.com/pkg/errors v0.9.1
 ## explicit
 github.com/pkg/errors
-# github.com/stretchr/testify v1.7.0
-## explicit
-# go.opentelemetry.io/contrib v0.16.0
+# go.opentelemetry.io/contrib v0.17.0
 go.opentelemetry.io/contrib
-# go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.16.0
+# go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.17.0
 ## explicit
 go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp
-# go.opentelemetry.io/otel v0.16.0
+# go.opentelemetry.io/otel v0.17.0
 ## explicit
 go.opentelemetry.io/otel
 go.opentelemetry.io/otel/codes
@@ -69,24 +65,28 @@ go.opentelemetry.io/otel/internal/global
 go.opentelemetry.io/otel/internal/trace/noop
 go.opentelemetry.io/otel/internal/trace/parent
 go.opentelemetry.io/otel/label
-go.opentelemetry.io/otel/metric
-go.opentelemetry.io/otel/metric/number
-go.opentelemetry.io/otel/metric/registry
 go.opentelemetry.io/otel/propagation
 go.opentelemetry.io/otel/semconv
-go.opentelemetry.io/otel/trace
 go.opentelemetry.io/otel/unit
-# go.opentelemetry.io/otel/exporters/trace/zipkin v0.16.0
+# go.opentelemetry.io/otel/exporters/trace/zipkin v0.17.0
 ## explicit
 go.opentelemetry.io/otel/exporters/trace/zipkin
-# go.opentelemetry.io/otel/sdk v0.16.0
+# go.opentelemetry.io/otel/metric v0.17.0
+go.opentelemetry.io/otel/metric
+go.opentelemetry.io/otel/metric/global
+go.opentelemetry.io/otel/metric/number
+go.opentelemetry.io/otel/metric/registry
+# go.opentelemetry.io/otel/sdk v0.17.0
 ## explicit
 go.opentelemetry.io/otel/sdk/export/trace
 go.opentelemetry.io/otel/sdk/instrumentation
 go.opentelemetry.io/otel/sdk/internal
 go.opentelemetry.io/otel/sdk/resource
 go.opentelemetry.io/otel/sdk/trace
-# golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad
+# go.opentelemetry.io/otel/trace v0.17.0
+## explicit
+go.opentelemetry.io/otel/trace
+# golang.org/x/crypto v0.0.0-20210218145215-b8e89b74b9df
 ## explicit
 golang.org/x/crypto/bcrypt
 golang.org/x/crypto/blowfish
@@ -94,8 +94,6 @@ golang.org/x/crypto/blowfish
 ## explicit
 golang.org/x/xerrors
 golang.org/x/xerrors/internal
-# gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c
-## explicit
 # gopkg.in/go-playground/assert.v1 v1.2.1
 ## explicit
 # gopkg.in/go-playground/validator.v9 v9.31.0
