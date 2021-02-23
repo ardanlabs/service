@@ -46,8 +46,54 @@ func init() {
 	})
 }
 
+// =============================================================================
+
 // ErrInvalidID occurs when an ID is not in a valid form.
 var ErrInvalidID = errors.New("ID is not in its proper form")
+
+// GenerateID generate a unique id for entities.
+func GenerateID() string {
+	return uuid.New().String()
+}
+
+// CheckID validates that the format of an id is valid.
+func CheckID(id string) error {
+	if _, err := uuid.Parse(id); err != nil {
+		return ErrInvalidID
+	}
+	return nil
+}
+
+// Check validates the provided model against it's declared tags.
+func Check(val interface{}) error {
+	if err := validate.Struct(val); err != nil {
+
+		// Use a type assertion to get the real error value.
+		verrors, ok := err.(validator.ValidationErrors)
+		if !ok {
+			return err
+		}
+
+		// lang controls the language of the error messages. You could look at the
+		// Accept-Language header if you intend to support multiple languages.
+		lang, _ := translator.GetTranslator("en")
+
+		var fields FieldErrors
+		for _, verror := range verrors {
+			field := FieldError{
+				Field: verror.Field(),
+				Error: verror.Translate(lang),
+			}
+			fields = append(fields, field)
+		}
+
+		return fields
+	}
+
+	return nil
+}
+
+// =============================================================================
 
 // ErrorResponse is the form used for API responses from failures in the API.
 type ErrorResponse struct {
@@ -91,46 +137,4 @@ func (fe FieldErrors) Error() string {
 		return err.Error()
 	}
 	return string(d)
-}
-
-// GenerateID generate a unique id for entities.
-func GenerateID() string {
-	return uuid.New().String()
-}
-
-// CheckID validates that the format of an id is valid.
-func CheckID(id string) error {
-	if _, err := uuid.Parse(id); err != nil {
-		return ErrInvalidID
-	}
-	return nil
-}
-
-// Check validates the provided model against it's declared tags.
-func Check(val interface{}) error {
-	if err := validate.Struct(val); err != nil {
-
-		// Use a type assertion to get the real error value.
-		verrors, ok := err.(validator.ValidationErrors)
-		if !ok {
-			return err
-		}
-
-		// lang controls the language of the error messages. You could look at the
-		// Accept-Language header if you intend to support multiple languages.
-		lang, _ := translator.GetTranslator("en")
-
-		var fields FieldErrors
-		for _, verror := range verrors {
-			field := FieldError{
-				Field: verror.Field(),
-				Error: verror.Translate(lang),
-			}
-			fields = append(fields, field)
-		}
-
-		return fields
-	}
-
-	return nil
 }
