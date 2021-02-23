@@ -104,19 +104,19 @@ func run(log *log.Logger) error {
 
 	// Print the build version for our logs. Also expose it under /debug/vars.
 	expvar.NewString("build").Set(build)
-	log.Printf("main : Started : Application initializing : version %q", build)
+	log.Printf("main: Started: Application initializing: version %q", build)
 	defer log.Println("main: Completed")
 
 	out, err := conf.String(&cfg)
 	if err != nil {
 		return errors.Wrap(err, "generating config for output")
 	}
-	log.Printf("main: Config :\n%v\n", out)
+	log.Printf("main: Config:\n%v\n", out)
 
 	// =========================================================================
 	// Initialize authentication support
 
-	log.Println("main : Started : Initializing authentication support")
+	log.Println("main: Started: Initializing authentication support")
 
 	privatePEM, err := ioutil.ReadFile(cfg.Auth.PrivateKeyFile)
 	if err != nil {
@@ -157,7 +157,7 @@ func run(log *log.Logger) error {
 		return errors.Wrap(err, "connecting to db")
 	}
 	defer func() {
-		log.Printf("main: Database Stopping : %s", cfg.DB.Host)
+		log.Printf("main: Database Stopping: %s", cfg.DB.Host)
 		db.Close()
 	}()
 
@@ -203,7 +203,7 @@ func run(log *log.Logger) error {
 	go func() {
 		log.Printf("main: Debug Listening %s", cfg.Web.DebugHost)
 		if err := http.ListenAndServe(cfg.Web.DebugHost, http.DefaultServeMux); err != nil {
-			log.Printf("main: Debug Listener closed : %v", err)
+			log.Printf("main: Debug Listener closed: %v", err)
 		}
 	}()
 
@@ -243,7 +243,7 @@ func run(log *log.Logger) error {
 		return errors.Wrap(err, "server error")
 
 	case sig := <-shutdown:
-		log.Printf("main: %v : Start shutdown", sig)
+		log.Printf("main: %v: Start shutdown", sig)
 
 		// Give outstanding requests a deadline for completion.
 		ctx, cancel := context.WithTimeout(context.Background(), cfg.Web.ShutdownTimeout)
