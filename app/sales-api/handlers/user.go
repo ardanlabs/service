@@ -8,6 +8,7 @@ import (
 
 	"github.com/ardanlabs/service/business/auth"
 	"github.com/ardanlabs/service/business/data/user"
+	"github.com/ardanlabs/service/business/validate"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/trace"
@@ -30,11 +31,11 @@ func (ug userGroup) query(ctx context.Context, w http.ResponseWriter, r *http.Re
 	params := web.Params(r)
 	pageNumber, err := strconv.Atoi(params["page"])
 	if err != nil {
-		return web.NewRequestError(fmt.Errorf("invalid page format: %s", params["page"]), http.StatusBadRequest)
+		return validate.NewRequestError(fmt.Errorf("invalid page format: %s", params["page"]), http.StatusBadRequest)
 	}
 	rowsPerPage, err := strconv.Atoi(params["rows"])
 	if err != nil {
-		return web.NewRequestError(fmt.Errorf("invalid rows format: %s", params["rows"]), http.StatusBadRequest)
+		return validate.NewRequestError(fmt.Errorf("invalid rows format: %s", params["rows"]), http.StatusBadRequest)
 	}
 
 	users, err := ug.user.Query(ctx, v.TraceID, pageNumber, rowsPerPage)
@@ -64,11 +65,11 @@ func (ug userGroup) queryByID(ctx context.Context, w http.ResponseWriter, r *htt
 	if err != nil {
 		switch errors.Cause(err) {
 		case user.ErrInvalidID:
-			return web.NewRequestError(err, http.StatusBadRequest)
+			return validate.NewRequestError(err, http.StatusBadRequest)
 		case user.ErrNotFound:
-			return web.NewRequestError(err, http.StatusNotFound)
+			return validate.NewRequestError(err, http.StatusNotFound)
 		case user.ErrForbidden:
-			return web.NewRequestError(err, http.StatusForbidden)
+			return validate.NewRequestError(err, http.StatusForbidden)
 		default:
 			return errors.Wrapf(err, "ID: %s", params["id"])
 		}
@@ -123,11 +124,11 @@ func (ug userGroup) update(ctx context.Context, w http.ResponseWriter, r *http.R
 	if err != nil {
 		switch errors.Cause(err) {
 		case user.ErrInvalidID:
-			return web.NewRequestError(err, http.StatusBadRequest)
+			return validate.NewRequestError(err, http.StatusBadRequest)
 		case user.ErrNotFound:
-			return web.NewRequestError(err, http.StatusNotFound)
+			return validate.NewRequestError(err, http.StatusNotFound)
 		case user.ErrForbidden:
-			return web.NewRequestError(err, http.StatusForbidden)
+			return validate.NewRequestError(err, http.StatusForbidden)
 		default:
 			return errors.Wrapf(err, "ID: %s  User: %+v", params["id"], &upd)
 		}
@@ -155,11 +156,11 @@ func (ug userGroup) delete(ctx context.Context, w http.ResponseWriter, r *http.R
 	if err != nil {
 		switch errors.Cause(err) {
 		case user.ErrInvalidID:
-			return web.NewRequestError(err, http.StatusBadRequest)
+			return validate.NewRequestError(err, http.StatusBadRequest)
 		case user.ErrNotFound:
-			return web.NewRequestError(err, http.StatusNotFound)
+			return validate.NewRequestError(err, http.StatusNotFound)
 		case user.ErrForbidden:
-			return web.NewRequestError(err, http.StatusForbidden)
+			return validate.NewRequestError(err, http.StatusForbidden)
 		default:
 			return errors.Wrapf(err, "ID: %s", params["id"])
 		}
@@ -180,14 +181,14 @@ func (ug userGroup) token(ctx context.Context, w http.ResponseWriter, r *http.Re
 	email, pass, ok := r.BasicAuth()
 	if !ok {
 		err := errors.New("must provide email and password in Basic auth")
-		return web.NewRequestError(err, http.StatusUnauthorized)
+		return validate.NewRequestError(err, http.StatusUnauthorized)
 	}
 
 	claims, err := ug.user.Authenticate(ctx, v.TraceID, v.Now, email, pass)
 	if err != nil {
 		switch errors.Cause(err) {
 		case user.ErrAuthenticationFailure:
-			return web.NewRequestError(err, http.StatusUnauthorized)
+			return validate.NewRequestError(err, http.StatusUnauthorized)
 		default:
 			return errors.Wrap(err, "authenticating")
 		}

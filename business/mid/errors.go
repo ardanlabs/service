@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/ardanlabs/service/foundation/validate"
+	"github.com/ardanlabs/service/business/validate"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/trace"
@@ -37,17 +37,30 @@ func Errors(log *log.Logger) web.Middleware {
 				// Log the error.
 				log.Printf("%s: ERROR: %v", v.TraceID, err)
 
-				// If this is a data validation error, construct a trusted error.
-				if valErr, ok := errors.Cause(err).(validate.FieldErrors); ok {
-					err = &web.Error{
-						Err:    errors.New("data validation error"),
-						Status: http.StatusBadRequest,
-						Fields: valErr,
+				// Build out the error response.
+				var er validate.ErrorResponse
+				var status int
+				switch act := errors.Cause(err).(type) {
+				case validate.FieldErrors:
+					er = validate.ErrorResponse{
+						Error:  "data validation error",
+						Fields: act.Error(),
 					}
+					status = http.StatusBadRequest
+				case *validate.RequestError:
+					er = validate.ErrorResponse{
+						Error: act.Error(),
+					}
+					status = act.Status
+				default:
+					er = validate.ErrorResponse{
+						Error: http.StatusText(http.StatusInternalServerError),
+					}
+					status = http.StatusInternalServerError
 				}
 
-				// Respond to the error.
-				if err := web.RespondError(ctx, w, err); err != nil {
+				// Respond with the error back to the client.
+				if err := web.Respond(ctx, w, er, status); err != nil {
 					return err
 				}
 

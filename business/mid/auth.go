@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/ardanlabs/service/business/auth"
+	"github.com/ardanlabs/service/business/validate"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/trace"
@@ -30,13 +31,13 @@ func Authenticate(a *auth.Auth) web.Middleware {
 			parts := strings.Split(authStr, " ")
 			if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
 				err := errors.New("expected authorization header format: bearer <token>")
-				return web.NewRequestError(err, http.StatusUnauthorized)
+				return validate.NewRequestError(err, http.StatusUnauthorized)
 			}
 
 			// Validate the token is signed by us.
 			claims, err := a.ValidateToken(parts[1])
 			if err != nil {
-				return web.NewRequestError(err, http.StatusUnauthorized)
+				return validate.NewRequestError(err, http.StatusUnauthorized)
 			}
 
 			// Add claims to the context so they can be retrieved later.
@@ -71,7 +72,7 @@ func Authorize(roles ...string) web.Middleware {
 			}
 
 			if !claims.Authorized(roles...) {
-				return web.NewRequestError(
+				return validate.NewRequestError(
 					fmt.Errorf("you are not authorized for that action: claims: %v exp: %v", claims.Roles, roles),
 					http.StatusForbidden,
 				)

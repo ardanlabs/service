@@ -8,10 +8,9 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/auth"
+	"github.com/ardanlabs/service/business/validate"
 	"github.com/ardanlabs/service/foundation/database"
-	"github.com/ardanlabs/service/foundation/validate"
 	"github.com/dgrijalva/jwt-go/v4"
-	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/trace"
@@ -62,7 +61,7 @@ func (u User) Create(ctx context.Context, traceID string, nu NewUser, now time.T
 	}
 
 	usr := Info{
-		ID:           uuid.New().String(),
+		ID:           validate.GenerateID(),
 		Name:         nu.Name,
 		Email:        nu.Email,
 		PasswordHash: hash,
@@ -148,7 +147,7 @@ func (u User) Delete(ctx context.Context, traceID string, claims auth.Claims, us
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.user.delete")
 	defer span.End()
 
-	if _, err := uuid.Parse(userID); err != nil {
+	if err := validate.CheckID(userID); err != nil {
 		return ErrInvalidID
 	}
 
@@ -207,7 +206,7 @@ func (u User) QueryByID(ctx context.Context, traceID string, claims auth.Claims,
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.user.querybyid")
 	defer span.End()
 
-	if _, err := uuid.Parse(userID); err != nil {
+	if err := validate.CheckID(userID); err != nil {
 		return Info{}, ErrInvalidID
 	}
 

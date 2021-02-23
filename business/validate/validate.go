@@ -3,11 +3,13 @@ package validate
 
 import (
 	"encoding/json"
+	"errors"
 	"reflect"
 	"strings"
 
 	en "github.com/go-playground/locales/en"
 	ut "github.com/go-playground/universal-translator"
+	"github.com/google/uuid"
 	validator "gopkg.in/go-playground/validator.v9"
 	en_translations "gopkg.in/go-playground/validator.v9/translations/en"
 )
@@ -44,6 +46,35 @@ func init() {
 	})
 }
 
+// ErrInvalidID occurs when an ID is not in a valid form.
+var ErrInvalidID = errors.New("ID is not in its proper form")
+
+// ErrorResponse is the form used for API responses from failures in the API.
+type ErrorResponse struct {
+	Error  string `json:"error"`
+	Fields string `json:"fields,omitempty"`
+}
+
+// RequestError is used to pass an error during the request through the
+// application with web specific context.
+type RequestError struct {
+	Err    error
+	Status int
+	Fields error
+}
+
+// NewRequestError wraps a provided error with an HTTP status code. This
+// function should be used when handlers encounter expected errors.
+func NewRequestError(err error, status int) error {
+	return &RequestError{err, status, nil}
+}
+
+// Error implements the error interface. It uses the default message of the
+// wrapped error. This is what will be shown in the services' logs.
+func (err *RequestError) Error() string {
+	return err.Err.Error()
+}
+
 // FieldError is used to indicate an error with a specific request field.
 type FieldError struct {
 	Field string `json:"field"`
@@ -60,6 +91,19 @@ func (fe FieldErrors) Error() string {
 		return err.Error()
 	}
 	return string(d)
+}
+
+// GenerateID generate a unique id for entities.
+func GenerateID() string {
+	return uuid.New().String()
+}
+
+// CheckID validates that the format of an id is valid.
+func CheckID(id string) error {
+	if _, err := uuid.Parse(id); err != nil {
+		return ErrInvalidID
+	}
+	return nil
 }
 
 // Check validates the provided model against it's declared tags.

@@ -8,6 +8,7 @@ import (
 
 	"github.com/ardanlabs/service/business/auth"
 	"github.com/ardanlabs/service/business/data/product"
+	"github.com/ardanlabs/service/business/validate"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/trace"
@@ -29,11 +30,11 @@ func (pg productGroup) query(ctx context.Context, w http.ResponseWriter, r *http
 	params := web.Params(r)
 	pageNumber, err := strconv.Atoi(params["page"])
 	if err != nil {
-		return web.NewRequestError(fmt.Errorf("invalid page format: %s", params["page"]), http.StatusBadRequest)
+		return validate.NewRequestError(fmt.Errorf("invalid page format: %s", params["page"]), http.StatusBadRequest)
 	}
 	rowsPerPage, err := strconv.Atoi(params["rows"])
 	if err != nil {
-		return web.NewRequestError(fmt.Errorf("invalid rows format: %s", params["rows"]), http.StatusBadRequest)
+		return validate.NewRequestError(fmt.Errorf("invalid rows format: %s", params["rows"]), http.StatusBadRequest)
 	}
 
 	products, err := pg.product.Query(ctx, v.TraceID, pageNumber, rowsPerPage)
@@ -58,9 +59,9 @@ func (pg productGroup) queryByID(ctx context.Context, w http.ResponseWriter, r *
 	if err != nil {
 		switch errors.Cause(err) {
 		case product.ErrInvalidID:
-			return web.NewRequestError(err, http.StatusBadRequest)
+			return validate.NewRequestError(err, http.StatusBadRequest)
 		case product.ErrNotFound:
-			return web.NewRequestError(err, http.StatusNotFound)
+			return validate.NewRequestError(err, http.StatusNotFound)
 		default:
 			return errors.Wrapf(err, "ID: %s", params["id"])
 		}
@@ -119,11 +120,11 @@ func (pg productGroup) update(ctx context.Context, w http.ResponseWriter, r *htt
 	if err := pg.product.Update(ctx, v.TraceID, claims, params["id"], upd, v.Now); err != nil {
 		switch errors.Cause(err) {
 		case product.ErrInvalidID:
-			return web.NewRequestError(err, http.StatusBadRequest)
+			return validate.NewRequestError(err, http.StatusBadRequest)
 		case product.ErrNotFound:
-			return web.NewRequestError(err, http.StatusNotFound)
+			return validate.NewRequestError(err, http.StatusNotFound)
 		case product.ErrForbidden:
-			return web.NewRequestError(err, http.StatusForbidden)
+			return validate.NewRequestError(err, http.StatusForbidden)
 		default:
 			return errors.Wrapf(err, "ID: %s  User: %+v", params["id"], &upd)
 		}
@@ -150,7 +151,7 @@ func (pg productGroup) delete(ctx context.Context, w http.ResponseWriter, r *htt
 	if err := pg.product.Delete(ctx, v.TraceID, claims, params["id"]); err != nil {
 		switch errors.Cause(err) {
 		case product.ErrInvalidID:
-			return web.NewRequestError(err, http.StatusBadRequest)
+			return validate.NewRequestError(err, http.StatusBadRequest)
 		default:
 			return errors.Wrapf(err, "ID: %s", params["id"])
 		}

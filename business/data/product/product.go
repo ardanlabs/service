@@ -8,9 +8,8 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/auth"
+	"github.com/ardanlabs/service/business/validate"
 	"github.com/ardanlabs/service/foundation/database"
-	"github.com/ardanlabs/service/foundation/validate"
-	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/trace"
@@ -52,7 +51,7 @@ func (p Product) Create(ctx context.Context, traceID string, claims auth.Claims,
 	}
 
 	prd := Info{
-		ID:          uuid.New().String(),
+		ID:          validate.GenerateID(),
 		Name:        np.Name,
 		Cost:        np.Cost,
 		Quantity:    np.Quantity,
@@ -136,7 +135,7 @@ func (p Product) Delete(ctx context.Context, traceID string, claims auth.Claims,
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.product.delete")
 	defer span.End()
 
-	if _, err := uuid.Parse(productID); err != nil {
+	if err := validate.CheckID(productID); err != nil {
 		return ErrInvalidID
 	}
 
@@ -200,7 +199,7 @@ func (p Product) QueryByID(ctx context.Context, traceID string, productID string
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.product.querybyid")
 	defer span.End()
 
-	if _, err := uuid.Parse(productID); err != nil {
+	if err := validate.CheckID(productID); err != nil {
 		return Info{}, ErrInvalidID
 	}
 
