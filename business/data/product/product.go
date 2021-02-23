@@ -9,6 +9,7 @@ import (
 
 	"github.com/ardanlabs/service/business/auth"
 	"github.com/ardanlabs/service/foundation/database"
+	"github.com/ardanlabs/service/foundation/validate"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
@@ -46,6 +47,10 @@ func (p Product) Create(ctx context.Context, traceID string, claims auth.Claims,
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.product.create")
 	defer span.End()
 
+	if err := validate.Check(np); err != nil {
+		return Info{}, errors.Wrap(err, "vaidating data")
+	}
+
 	prd := Info{
 		ID:          uuid.New().String(),
 		Name:        np.Name,
@@ -78,6 +83,10 @@ func (p Product) Create(ctx context.Context, traceID string, claims auth.Claims,
 func (p Product) Update(ctx context.Context, traceID string, claims auth.Claims, productID string, up UpdateProduct, now time.Time) error {
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.product.update")
 	defer span.End()
+
+	if err := validate.Check(up); err != nil {
+		return errors.Wrap(err, "vaidating data")
+	}
 
 	prd, err := p.QueryByID(ctx, traceID, productID)
 	if err != nil {

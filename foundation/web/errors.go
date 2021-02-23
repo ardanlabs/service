@@ -4,16 +4,10 @@ import (
 	"github.com/pkg/errors"
 )
 
-// FieldError is used to indicate an error with a specific request field.
-type FieldError struct {
-	Field string `json:"field"`
-	Error string `json:"error"`
-}
-
 // ErrorResponse is the form used for API responses from failures in the API.
 type ErrorResponse struct {
-	Error  string       `json:"error"`
-	Fields []FieldError `json:"fields,omitempty"`
+	Error  string `json:"error"`
+	Fields string `json:"fields,omitempty"`
 }
 
 // Error is used to pass an error during the request through the
@@ -21,7 +15,7 @@ type ErrorResponse struct {
 type Error struct {
 	Err    error
 	Status int
-	Fields []FieldError
+	Fields error
 }
 
 // NewRequestError wraps a provided error with an HTTP status code. This
