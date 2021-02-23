@@ -56,8 +56,10 @@ func RespondError(ctx context.Context, w http.ResponseWriter, err error) error {
 	// a specific status code and error to return.
 	if webErr, ok := errors.Cause(err).(*Error); ok {
 		er := ErrorResponse{
-			Error:  webErr.Err.Error(),
-			Fields: webErr.Fields,
+			Error: webErr.Err.Error(),
+		}
+		if webErr.Fields != nil {
+			er.Fields = webErr.Fields.Error()
 		}
 		if err := Respond(ctx, w, er, webErr.Status); err != nil {
 			return err

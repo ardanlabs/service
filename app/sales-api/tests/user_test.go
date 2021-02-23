@@ -13,6 +13,7 @@ import (
 	"github.com/ardanlabs/service/business/auth"
 	"github.com/ardanlabs/service/business/data/user"
 	"github.com/ardanlabs/service/business/tests"
+	"github.com/ardanlabs/service/foundation/validate"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
@@ -135,19 +136,20 @@ func (ut *UserTests) postUser400(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to unmarshal the response to an error type.", tests.Success, testID)
 
+			fields := validate.FieldErrors{
+				{Field: "name", Error: "name is a required field"},
+				{Field: "email", Error: "email is a required field"},
+				{Field: "roles", Error: "roles is a required field"},
+				{Field: "password", Error: "password is a required field"},
+			}
 			exp := web.ErrorResponse{
-				Error: "field validation error",
-				Fields: []web.FieldError{
-					{Field: "name", Error: "name is a required field"},
-					{Field: "email", Error: "email is a required field"},
-					{Field: "roles", Error: "roles is a required field"},
-					{Field: "password", Error: "password is a required field"},
-				},
+				Error:  "data validation error",
+				Fields: fields.Error(),
 			}
 
 			// We can't rely on the order of the field errors so they have to be
 			// sorted. Tell the cmp package how to sort them.
-			sorter := cmpopts.SortSlices(func(a, b web.FieldError) bool {
+			sorter := cmpopts.SortSlices(func(a, b validate.FieldError) bool {
 				return a.Field < b.Field
 			})
 

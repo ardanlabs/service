@@ -9,6 +9,7 @@ import (
 
 	"github.com/ardanlabs/service/business/auth"
 	"github.com/ardanlabs/service/foundation/database"
+	"github.com/ardanlabs/service/foundation/validate"
 	"github.com/dgrijalva/jwt-go/v4"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
@@ -51,6 +52,10 @@ func (u User) Create(ctx context.Context, traceID string, nu NewUser, now time.T
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.user.create")
 	defer span.End()
 
+	if err := validate.Check(nu); err != nil {
+		return Info{}, errors.Wrap(err, "vaidating data")
+	}
+
 	hash, err := bcrypt.GenerateFromPassword([]byte(nu.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return Info{}, errors.Wrap(err, "generating password hash")
@@ -87,6 +92,10 @@ func (u User) Create(ctx context.Context, traceID string, nu NewUser, now time.T
 func (u User) Update(ctx context.Context, traceID string, claims auth.Claims, userID string, uu UpdateUser, now time.Time) error {
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.user.update")
 	defer span.End()
+
+	if err := validate.Check(uu); err != nil {
+		return errors.Wrap(err, "vaidating data")
+	}
 
 	usr, err := u.QueryByID(ctx, traceID, claims, userID)
 	if err != nil {
