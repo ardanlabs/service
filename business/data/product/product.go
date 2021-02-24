@@ -47,7 +47,7 @@ func (p Product) Create(ctx context.Context, traceID string, claims auth.Claims,
 	defer span.End()
 
 	if err := validate.Check(np); err != nil {
-		return Info{}, errors.Wrap(err, "vaidating data")
+		return Info{}, errors.Wrap(err, "validating data")
 	}
 
 	prd := Info{
@@ -84,7 +84,7 @@ func (p Product) Update(ctx context.Context, traceID string, claims auth.Claims,
 	defer span.End()
 
 	if err := validate.Check(up); err != nil {
-		return errors.Wrap(err, "vaidating data")
+		return errors.Wrap(err, "validating data")
 	}
 
 	prd, err := p.QueryByID(ctx, traceID, productID)

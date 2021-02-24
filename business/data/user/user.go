@@ -52,7 +52,7 @@ func (u User) Create(ctx context.Context, traceID string, nu NewUser, now time.T
 	defer span.End()
 
 	if err := validate.Check(nu); err != nil {
-		return Info{}, errors.Wrap(err, "vaidating data")
+		return Info{}, errors.Wrap(err, "validating data")
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(nu.Password), bcrypt.DefaultCost)
@@ -93,7 +93,7 @@ func (u User) Update(ctx context.Context, traceID string, claims auth.Claims, us
 	defer span.End()
 
 	if err := validate.Check(uu); err != nil {
-		return errors.Wrap(err, "vaidating data")
+		return errors.Wrap(err, "validating data")
 	}
 
 	usr, err := u.QueryByID(ctx, traceID, claims, userID)
