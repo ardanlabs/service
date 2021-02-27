@@ -13,15 +13,59 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-//go:embed schema.sql
-var sql string
+var (
+	//go:embed sql/schema.sql
+	schemaDoc string
+
+	//go:embed sql/seed.sql
+	seedDoc string
+
+	//go:embed sql/delete.sql
+	deleteDoc string
+)
 
 // Migrate attempts to bring the schema for db up to date with the migrations
 // defined in this package.
 func Migrate(db *sqlx.DB) error {
 	driver := darwin.NewGenericDriver(db.DB, darwin.PostgresDialect{})
-	d := darwin.New(driver, parseMigrations(sql), nil)
+	d := darwin.New(driver, parseMigrations(schemaDoc), nil)
 	return d.Migrate()
+}
+
+// Seed runs the set of seed-data queries against db. The queries are ran in a
+// transaction and rolled back if any fail.
+func Seed(db *sqlx.DB) error {
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+
+	if _, err := tx.Exec(seedDoc); err != nil {
+		if err := tx.Rollback(); err != nil {
+			return err
+		}
+		return err
+	}
+
+	return tx.Commit()
+}
+
+// DeleteAll runs the set of Drop-table queries against db. The queries are ran in a
+// transaction and rolled back if any fail.
+func DeleteAll(db *sqlx.DB) error {
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+
+	if _, err := tx.Exec(deleteDoc); err != nil {
+		if err := tx.Rollback(); err != nil {
+			return err
+		}
+		return err
+	}
+
+	return tx.Commit()
 }
 
 func parseMigrations(s string) []darwin.Migration {
