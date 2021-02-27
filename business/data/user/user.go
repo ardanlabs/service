@@ -92,6 +92,9 @@ func (u User) Update(ctx context.Context, traceID string, claims auth.Claims, us
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.user.update")
 	defer span.End()
 
+	if err := validate.CheckID(userID); err != nil {
+		return ErrInvalidID
+	}
 	if err := validate.Check(uu); err != nil {
 		return errors.Wrap(err, "validating data")
 	}
@@ -242,6 +245,11 @@ func (u User) QueryByID(ctx context.Context, traceID string, claims auth.Claims,
 func (u User) QueryByEmail(ctx context.Context, traceID string, claims auth.Claims, email string) (Info, error) {
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.user.querybyemail")
 	defer span.End()
+
+	// Add Email Validate function in validate
+	// if err := validate.Email(email); err != nil {
+	// 	return Info{}, ErrInvalidEmail
+	// }
 
 	const q = `
 	SELECT

@@ -83,6 +83,9 @@ func (p Product) Update(ctx context.Context, traceID string, claims auth.Claims,
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.product.update")
 	defer span.End()
 
+	if err := validate.CheckID(productID); err != nil {
+		return ErrInvalidID
+	}
 	if err := validate.Check(up); err != nil {
 		return errors.Wrap(err, "validating data")
 	}
