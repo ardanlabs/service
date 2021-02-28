@@ -10,8 +10,8 @@ import (
 
 	"github.com/ardanlabs/service/business/auth"
 	"github.com/ardanlabs/service/business/data/user"
-	"github.com/ardanlabs/service/business/keystore"
 	"github.com/ardanlabs/service/foundation/database"
+	"github.com/ardanlabs/service/foundation/keystore"
 	"github.com/dgrijalva/jwt-go/v4"
 	"github.com/pkg/errors"
 )

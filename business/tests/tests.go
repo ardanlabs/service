@@ -13,8 +13,8 @@ import (
 	"github.com/ardanlabs/service/business/auth"
 	"github.com/ardanlabs/service/business/data/schema"
 	"github.com/ardanlabs/service/business/data/user"
-	"github.com/ardanlabs/service/business/keystore"
 	"github.com/ardanlabs/service/foundation/database"
+	"github.com/ardanlabs/service/foundation/keystore"
 	"github.com/jmoiron/sqlx"
 )
 
