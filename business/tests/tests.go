@@ -130,7 +130,7 @@ func NewIntegration(t *testing.T) *Test {
 	}
 
 	// Build an authenticator using this private key and id for the key store.
-	auth, err := auth.New("RS256", keystore.New(map[string]*rsa.PrivateKey{keyID: privateKey}))
+	auth, err := auth.New("RS256", keystore.NewMap(map[string]*rsa.PrivateKey{keyID: privateKey}))
 	if err != nil {
 		t.Fatal(err)
 	}

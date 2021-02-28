@@ -117,7 +117,7 @@ func run(log *log.Logger) error {
 
 	// Construct a key store based on the key files stored in
 	// the specified directory.
-	ks, err := keystore.Read(os.DirFS(cfg.Auth.KeysFolder))
+	ks, err := keystore.NewFS(os.DirFS(cfg.Auth.KeysFolder))
 	if err != nil {
 		return errors.Wrap(err, "reading keys")
 	}

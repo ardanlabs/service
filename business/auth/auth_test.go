@@ -30,7 +30,7 @@ func TestAuth(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to create a private key.", success, testID)
 
-			a, err := auth.New("RS256", keystore.New(map[string]*rsa.PrivateKey{keyID: privateKey}))
+			a, err := auth.New("RS256", keystore.NewMap(map[string]*rsa.PrivateKey{keyID: privateKey}))
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to create an authenticator: %v", failed, testID, err)
 			}
