@@ -1,4 +1,4 @@
-package keystore
+package keystore_test
 
 import (
 	_ "embed" // Embed all sql documents
@@ -6,6 +6,8 @@ import (
 
 	"testing"
 	"testing/fstest"
+
+	"github.com/ardanlabs/service/foundation/keystore"
 )
 
 // Success and failure markers.
@@ -18,7 +20,7 @@ const (
 var keyDoc []byte
 
 func TestRead(t *testing.T) {
-	t.Log("Given the need to parse a directory file private key files.")
+	t.Log("Given the need to parse a directory of private key files.")
 	{
 		fileName := "54bb2165-71e1-41a6-af3e-7da4a0e1e2c1.pem"
 		keyID := strings.TrimRight(fileName, ".pem")
@@ -28,7 +30,7 @@ func TestRead(t *testing.T) {
 		testID := 0
 		t.Logf("\tTest %d:\tWhen handling a directory of %d file(s).", testID, len(fsys))
 		{
-			ks, err := Read(fsys)
+			ks, err := keystore.NewFS(fsys)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to construct key store: %v", failed, testID, err)
 			}

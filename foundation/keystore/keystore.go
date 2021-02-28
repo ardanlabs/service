@@ -21,17 +21,17 @@ type KeyStore struct {
 	store map[string]*rsa.PrivateKey
 }
 
-// New is given a pre-configured KeyStore as a starting point.
-func New(store map[string]*rsa.PrivateKey) *KeyStore {
+// NewMap is given a pre-configured KeyStore as a starting point.
+func NewMap(store map[string]*rsa.PrivateKey) *KeyStore {
 	return &KeyStore{
 		store: store,
 	}
 }
 
-// Read is given a file system rooted inside of a directory that should
+// NewFS is given a file system rooted inside of a directory that should
 // contain private keys files where each file is named for the unique kid
 // for that key. Example: 54bb2165-71e1-41a6-af3e-7da4a0e1e2c1.pem
-func Read(fsys fs.FS) (*KeyStore, error) {
+func NewFS(fsys fs.FS) (*KeyStore, error) {
 	ks := KeyStore{
 		store: make(map[string]*rsa.PrivateKey),
 	}
