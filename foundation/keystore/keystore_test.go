@@ -2,8 +2,8 @@ package keystore_test
 
 import (
 	_ "embed" // Embed all sql documents
-	"strings"
 
+	"strings"
 	"testing"
 	"testing/fstest"
 
