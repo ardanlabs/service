@@ -115,9 +115,9 @@ func run(log *log.Logger) error {
 
 	log.Println("main: Started: Initializing authentication support")
 
-	// Read the directory that contains the private keys will we use and
-	// construct a keystore for use with Auth.
-	ks, err := keystore.Read(cfg.Auth.KeysFolder, keystore.ReadDirFS{}, keystore.FS{})
+	// Construct a key store based on the key files stored in
+	// the specified directory.
+	ks, err := keystore.Read(os.DirFS(cfg.Auth.KeysFolder))
 	if err != nil {
 		return errors.Wrap(err, "reading keys")
 	}
