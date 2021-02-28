@@ -1,5 +1,7 @@
 .circleci/
-zarf/
+zarf/compose/
+zarf/docker/
+zarf/k8s/
 .dockerignore
 .gitgnore
 CONTRIBUTORS

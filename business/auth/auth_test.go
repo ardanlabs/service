@@ -3,11 +3,11 @@ package auth_test
 import (
 	"crypto/rand"
 	"crypto/rsa"
-	"fmt"
 	"testing"
 	"time"
 
 	"github.com/ardanlabs/service/business/auth"
+	"github.com/ardanlabs/service/business/keystore"
 	"github.com/dgrijalva/jwt-go/v4"
 )
 
@@ -23,24 +23,14 @@ func TestAuth(t *testing.T) {
 		testID := 0
 		t.Logf("\tTest %d:\tWhen handling a single user.", testID)
 		{
+			const keyID = "54bb2165-71e1-41a6-af3e-7da4a0e1e2c1"
 			privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to create a private key: %v", failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to create a private key.", success, testID)
 
-			// The key id we are stating represents the public key in the
-			// public key store.
-			const keyID = "54bb2165-71e1-41a6-af3e-7da4a0e1e2c1"
-			lookup := func(kid string) (*rsa.PublicKey, error) {
-				switch kid {
-				case keyID:
-					return &privateKey.PublicKey, nil
-				}
-				return nil, fmt.Errorf("no public key found for the specified kid: %s", kid)
-			}
-
-			a, err := auth.New("RS256", lookup, auth.Keys{keyID: privateKey})
+			a, err := auth.New("RS256", keystore.New(map[string]*rsa.PrivateKey{keyID: privateKey}))
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to create an authenticator: %v", failed, testID, err)
 			}

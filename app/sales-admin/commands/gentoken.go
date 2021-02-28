@@ -10,6 +10,7 @@ import (
 
 	"github.com/ardanlabs/service/business/auth"
 	"github.com/ardanlabs/service/business/data/user"
+	"github.com/ardanlabs/service/business/keystore"
 	"github.com/ardanlabs/service/foundation/database"
 	"github.com/dgrijalva/jwt-go/v4"
 	"github.com/pkg/errors"
@@ -58,25 +59,17 @@ func GenToken(traceID string, log *log.Logger, cfg database.Config, id string, p
 	}
 
 	// In a production system, a key id (KID) is used to retrieve the correct
-	// public key to parse a JWT for auth and claims. A key lookup function is
-	// provided to perform the task of retrieving a KID for a given public key.
-	// In this code, I am writing a lookup function that will return the public
-	// key for the private key provided with an arbitary KID.
+	// public key to parse a JWT for auth and claims. A key store is provided
+	// to the auth package for storage and lookup purpose. This id will be
+	// assigned to the private key just constructed.
 	keyID := "54bb2165-71e1-41a6-af3e-7da4a0e1e2c1"
-	lookup := func(kid string) (*rsa.PublicKey, error) {
-		switch kid {
-		case keyID:
-			return &privateKey.PublicKey, nil
-		}
-		return nil, fmt.Errorf("no public key found for the specified kid: %s", kid)
-	}
 
 	// An authenticator maintains the state required to handle JWT processing.
 	// It requires the private key for generating tokens. The KID for access
 	// to the corresponding public key, the algorithms to use (RS256), and the
 	// key lookup function to perform the actual retrieve of the KID to public
 	// key lookup.
-	a, err := auth.New(algorithm, lookup, auth.Keys{keyID: privateKey})
+	a, err := auth.New(algorithm, keystore.New(map[string]*rsa.PrivateKey{keyID: privateKey}))
 	if err != nil {
 		return errors.Wrap(err, "constructing auth")
 	}

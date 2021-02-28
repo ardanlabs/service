@@ -2,8 +2,7 @@
 package schema
 
 import (
-	// Used to embed schema.sql into the sql variable.
-	_ "embed"
+	_ "embed" // Embed all sql documents
 
 	"bufio"
 	"strconv"
@@ -86,14 +85,14 @@ func parseMigrations(s string) []darwin.Migration {
 			mig = darwin.Migration{}
 			script = ""
 
-			f, err := strconv.ParseFloat(strings.Trim(v[11:], " "), 64)
+			f, err := strconv.ParseFloat(strings.TrimSpace(v[11:]), 64)
 			if err != nil {
 				return nil
 			}
 			mig.Version = f
 
 		case len(v) >= 5 && (v[:6] == "-- des" || v[:5] == "--des"):
-			mig.Description = strings.Trim(v[15:], " ")
+			mig.Description = strings.TrimSpace(v[15:])
 
 		default:
 			script += v + "\n"

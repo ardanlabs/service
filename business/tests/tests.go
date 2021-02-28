@@ -5,7 +5,6 @@ import (
 	"context"
 	"crypto/rand"
 	"crypto/rsa"
-	"fmt"
 	"log"
 	"os"
 	"testing"
@@ -14,6 +13,7 @@ import (
 	"github.com/ardanlabs/service/business/auth"
 	"github.com/ardanlabs/service/business/data/schema"
 	"github.com/ardanlabs/service/business/data/user"
+	"github.com/ardanlabs/service/business/keystore"
 	"github.com/ardanlabs/service/foundation/database"
 	"github.com/jmoiron/sqlx"
 )
@@ -123,23 +123,14 @@ func NewIntegration(t *testing.T) *Test {
 	}
 
 	// Create RSA keys to enable authentication in our service.
+	keyID := "4754d86b-7a6d-4df5-9c65-224741361492"
 	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	// Build an authenticator using this key lookup function to retrieve
-	// the corresponding public key.
-	kidID := "4754d86b-7a6d-4df5-9c65-224741361492"
-	lookup := func(kid string) (*rsa.PublicKey, error) {
-		switch kid {
-		case kidID:
-			return &privateKey.PublicKey, nil
-		}
-		return nil, fmt.Errorf("no public key found for the specified kid: %s", kid)
-	}
-
-	auth, err := auth.New("RS256", lookup, auth.Keys{kidID: privateKey})
+	// Build an authenticator using this private key and id for the key store.
+	auth, err := auth.New("RS256", keystore.New(map[string]*rsa.PrivateKey{keyID: privateKey}))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -149,7 +140,7 @@ func NewIntegration(t *testing.T) *Test {
 		DB:       db,
 		Log:      log,
 		Auth:     auth,
-		KID:      kidID,
+		KID:      keyID,
 		t:        t,
 		Teardown: teardown,
 	}

@@ -32,7 +32,7 @@ RUN go build -ldflags "-X main.build=${VCS_REF}"
 FROM alpine:3.13
 ARG BUILD_DATE
 ARG VCS_REF
-COPY --from=build_sales-api /service/private.pem /service/private.pem
+COPY --from=build_sales-api /service/zarf/keys/. /service/zarf/keys/.
 COPY --from=build_sales-api /service/app/sales-admin/sales-admin /service/admin
 COPY --from=build_sales-api /service/app/sales-api/sales-api /service/sales-api
 WORKDIR /service

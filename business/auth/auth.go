@@ -3,7 +3,6 @@ package auth
 
 import (
 	"crypto/rsa"
-	"sync"
 
 	"github.com/dgrijalva/jwt-go/v4"
 	"github.com/pkg/errors"
@@ -39,38 +38,27 @@ func (c Claims) Authorized(roles ...string) bool {
 	return false
 }
 
-// Keys represents an in memory store of keys.
-type Keys map[string]*rsa.PrivateKey
-
-// PublicKeyLookup defines the signature of a function to lookup public keys.
-//
-// In a production system, a key id (KID) is used to retrieve the correct
-// public key to parse a JWT for auth and claims. A key lookup function is
-// provided to perform the task of retrieving a KID for a given public key.
-//
-// A key lookup function is required for creating an Authenticator.
-//
-// * Private keys should be rotated. During the transition period, tokens
-// signed with the old and new keys can coexist by looking up the correct
-// public key by KID.
-//
-// * KID to public key resolution is usually accomplished via a public JWKS
-// endpoint. See https://auth0.com/docs/jwks for more details.
-type PublicKeyLookup func(kid string) (*rsa.PublicKey, error)
+// KeyStorer declares a method set of behavior for any key store that
+// can be used by the auth package.
+type KeyStorer interface {
+	Add(privateKey *rsa.PrivateKey, kid string)
+	Remove(kid string)
+	LookupPrivate(kid string) (*rsa.PrivateKey, error)
+	LookupPublic(kid string) (*rsa.PublicKey, error)
+}
 
 // Auth is used to authenticate clients. It can generate a token for a
 // set of user claims and recreate the claims by parsing the token.
 type Auth struct {
-	mu        sync.RWMutex
 	algorithm string
 	method    jwt.SigningMethod
 	keyFunc   func(t *jwt.Token) (interface{}, error)
 	parser    *jwt.Parser
-	keys      Keys
+	keyStore  KeyStorer
 }
 
 // New creates an *Authenticator for use.
-func New(algorithm string, lookup PublicKeyLookup, keys Keys) (*Auth, error) {
+func New(algorithm string, keyStore KeyStorer) (*Auth, error) {
 	method := jwt.GetSigningMethod(algorithm)
 	if method == nil {
 		return nil, errors.Errorf("unknown algorithm %v", algorithm)
@@ -85,7 +73,7 @@ func New(algorithm string, lookup PublicKeyLookup, keys Keys) (*Auth, error) {
 		if !ok {
 			return nil, errors.New("user token key id (kid) must be string")
 		}
-		return lookup(kidID)
+		return keyStore.LookupPublic(kidID)
 	}
 
 	// Create the token parser to use. The algorithm used to sign the JWT must be
@@ -98,24 +86,10 @@ func New(algorithm string, lookup PublicKeyLookup, keys Keys) (*Auth, error) {
 		method:    method,
 		keyFunc:   keyFunc,
 		parser:    parser,
-		keys:      keys,
+		keyStore:  keyStore,
 	}
 
 	return &a, nil
-}
-
-// AddKey adds a private key and combination kid id to our local store.
-func (a *Auth) AddKey(privateKey *rsa.PrivateKey, kid string) {
-	a.mu.Lock()
-	defer a.mu.Unlock()
-	a.keys[kid] = privateKey
-}
-
-// RemoveKey removes a private key and combination kid id to our local store.
-func (a *Auth) RemoveKey(kid string) {
-	a.mu.Lock()
-	defer a.mu.Unlock()
-	delete(a.keys, kid)
 }
 
 // GenerateToken generates a signed JWT token string representing the user Claims.
@@ -123,16 +97,10 @@ func (a *Auth) GenerateToken(kid string, claims Claims) (string, error) {
 	token := jwt.NewWithClaims(a.method, claims)
 	token.Header["kid"] = kid
 
-	var privateKey *rsa.PrivateKey
-	a.mu.RLock()
-	{
-		var ok bool
-		privateKey, ok = a.keys[kid]
-		if !ok {
-			return "", errors.New("kid lookup failed")
-		}
+	privateKey, err := a.keyStore.LookupPrivate(kid)
+	if err != nil {
+		return "", errors.New("kid lookup failed")
 	}
-	a.mu.RUnlock()
 
 	str, err := token.SignedString(privateKey)
 	if err != nil {

@@ -1,14 +1,13 @@
 package main
 
 import (
+	"expvar"           // Register the vars handler
+	_ "net/http/pprof" // Register the pprof handler
+
 	"context"
-	"crypto/rsa"
-	"expvar" // Register the expvar handlers
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
-	_ "net/http/pprof" // Register the pprof handlers
 	"os"
 	"os/signal"
 	"syscall"
@@ -17,8 +16,8 @@ import (
 	"github.com/ardanlabs/conf"
 	"github.com/ardanlabs/service/app/sales-api/handlers"
 	"github.com/ardanlabs/service/business/auth"
+	"github.com/ardanlabs/service/business/keystore"
 	"github.com/ardanlabs/service/foundation/database"
-	"github.com/dgrijalva/jwt-go/v4"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/trace/zipkin"
@@ -58,17 +57,16 @@ func run(log *log.Logger) error {
 			WriteTimeout    time.Duration `conf:"default:5s"`
 			ShutdownTimeout time.Duration `conf:"default:5s"`
 		}
-		Auth struct {
-			KeyID          string `conf:"default:54bb2165-71e1-41a6-af3e-7da4a0e1e2c1"`
-			PrivateKeyFile string `conf:"default:./private.pem"`
-			Algorithm      string `conf:"default:RS256"`
-		}
 		DB struct {
 			User       string `conf:"default:postgres"`
 			Password   string `conf:"default:postgres,noprint"`
 			Host       string `conf:"default:db"`
 			Name       string `conf:"default:postgres"`
 			DisableTLS bool   `conf:"default:true"`
+		}
+		Auth struct {
+			KeysFolder string `conf:"default:zarf/keys/"`
+			Algorithm  string `conf:"default:RS256"`
 		}
 		Zipkin struct {
 			ReporterURI string  `conf:"default:http://zipkin:9411/api/v2/spans"`
@@ -102,7 +100,6 @@ func run(log *log.Logger) error {
 	// =========================================================================
 	// App Starting
 
-	// Print the build version for our logs. Also expose it under /debug/vars.
 	expvar.NewString("build").Set(build)
 	log.Printf("main: Started: Application initializing: version %q", build)
 	defer log.Println("main: Completed")
@@ -118,25 +115,14 @@ func run(log *log.Logger) error {
 
 	log.Println("main: Started: Initializing authentication support")
 
-	privatePEM, err := ioutil.ReadFile(cfg.Auth.PrivateKeyFile)
+	// Read the directory that contains the private keys will we use and
+	// construct a keystore for use with Auth.
+	ks, err := keystore.Read(cfg.Auth.KeysFolder, keystore.ReadDirFS{}, keystore.FS{})
 	if err != nil {
-		return errors.Wrap(err, "reading auth private key")
+		return errors.Wrap(err, "reading keys")
 	}
 
-	privateKey, err := jwt.ParseRSAPrivateKeyFromPEM(privatePEM)
-	if err != nil {
-		return errors.Wrap(err, "parsing auth private key")
-	}
-
-	lookup := func(kid string) (*rsa.PublicKey, error) {
-		switch kid {
-		case cfg.Auth.KeyID:
-			return &privateKey.PublicKey, nil
-		}
-		return nil, fmt.Errorf("no public key found for the specified kid: %s", kid)
-	}
-
-	auth, err := auth.New(cfg.Auth.Algorithm, lookup, auth.Keys{cfg.Auth.KeyID: privateKey})
+	auth, err := auth.New(cfg.Auth.Algorithm, ks)
 	if err != nil {
 		return errors.Wrap(err, "constructing auth")
 	}
