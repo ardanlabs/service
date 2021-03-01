@@ -41,8 +41,6 @@ func (c Claims) Authorized(roles ...string) bool {
 // KeyStorer declares a method set of behavior for any key store that
 // can be used by the auth package.
 type KeyStorer interface {
-	Add(privateKey *rsa.PrivateKey, kid string)
-	Remove(kid string)
 	LookupPrivate(kid string) (*rsa.PrivateKey, error)
 	LookupPublic(kid string) (*rsa.PublicKey, error)
 }
