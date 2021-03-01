@@ -21,16 +21,24 @@ type KeyStore struct {
 	store map[string]*rsa.PrivateKey
 }
 
-// NewMap is given a pre-configured KeyStore as a starting point.
+// New constructs an empty KeyStore ready for use.
+func New() *KeyStore {
+	return &KeyStore{
+		store: make(map[string]*rsa.PrivateKey),
+	}
+}
+
+// NewMap constructs a KeyStore with an initial set of keys.
 func NewMap(store map[string]*rsa.PrivateKey) *KeyStore {
 	return &KeyStore{
 		store: store,
 	}
 }
 
-// NewFS is given a file system rooted inside of a directory that should
-// contain private keys files where each file is named for the unique kid
-// for that key. Example: 54bb2165-71e1-41a6-af3e-7da4a0e1e2c1.pem
+// NewFS constructs a KeyStore based on a set of PEM files rooted inside
+// of a directory. The name of each PEM file will be used as the key id.
+// Example: keystore.NewFS(os.DirFS("/zarf/keys/"))
+// Example: /zarf/keys/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1.pem
 func NewFS(fsys fs.FS) (*KeyStore, error) {
 	ks := KeyStore{
 		store: make(map[string]*rsa.PrivateKey),
