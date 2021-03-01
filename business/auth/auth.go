@@ -49,10 +49,10 @@ type KeyLookup interface {
 // set of user claims and recreate the claims by parsing the token.
 type Auth struct {
 	algorithm string
+	keyLookup KeyLookup
 	method    jwt.SigningMethod
 	keyFunc   func(t *jwt.Token) (interface{}, error)
 	parser    *jwt.Parser
-	keyLookup KeyLookup
 }
 
 // New creates an Auth to support authentication/authorization.
@@ -81,10 +81,10 @@ func New(algorithm string, keyLookup KeyLookup) (*Auth, error) {
 
 	a := Auth{
 		algorithm: algorithm,
+		keyLookup: keyLookup,
 		method:    method,
 		keyFunc:   keyFunc,
 		parser:    parser,
-		keyLookup: keyLookup,
 	}
 
 	return &a, nil
