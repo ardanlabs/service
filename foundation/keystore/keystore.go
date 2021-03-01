@@ -97,8 +97,9 @@ func (ks *KeyStore) Remove(kid string) {
 	delete(ks.store, kid)
 }
 
-// LookupPrivate searches the key store for a given kid.
-func (ks *KeyStore) LookupPrivate(kid string) (*rsa.PrivateKey, error) {
+// PrivateKey searches the key store for a given kid and returns
+// the private key.
+func (ks *KeyStore) PrivateKey(kid string) (*rsa.PrivateKey, error) {
 	ks.mu.Lock()
 	defer ks.mu.Unlock()
 	privateKey, found := ks.store[kid]
@@ -108,8 +109,9 @@ func (ks *KeyStore) LookupPrivate(kid string) (*rsa.PrivateKey, error) {
 	return privateKey, nil
 }
 
-// LookupPublic searches the key store for a given kid.
-func (ks *KeyStore) LookupPublic(kid string) (*rsa.PublicKey, error) {
+// PublicKey searches the key store for a given kid and returns
+// the public key.
+func (ks *KeyStore) PublicKey(kid string) (*rsa.PublicKey, error) {
 	ks.mu.Lock()
 	defer ks.mu.Unlock()
 	privateKey, found := ks.store[kid]

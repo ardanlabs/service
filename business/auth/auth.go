@@ -38,11 +38,11 @@ func (c Claims) Authorized(roles ...string) bool {
 	return false
 }
 
-// KeyStorer declares a method set of behavior for any key store that
-// can be used by the auth package.
-type KeyStorer interface {
-	LookupPrivate(kid string) (*rsa.PrivateKey, error)
-	LookupPublic(kid string) (*rsa.PublicKey, error)
+// KeyLookup declares a method set of behavior for looking up
+// private and public keys for JWT use.
+type KeyLookup interface {
+	PrivateKey(kid string) (*rsa.PrivateKey, error)
+	PublicKey(kid string) (*rsa.PublicKey, error)
 }
 
 // Auth is used to authenticate clients. It can generate a token for a
@@ -52,11 +52,11 @@ type Auth struct {
 	method    jwt.SigningMethod
 	keyFunc   func(t *jwt.Token) (interface{}, error)
 	parser    *jwt.Parser
-	keyStore  KeyStorer
+	keyLookup KeyLookup
 }
 
-// New creates an *Authenticator for use.
-func New(algorithm string, keyStore KeyStorer) (*Auth, error) {
+// New creates an Auth to support authentication/authorization.
+func New(algorithm string, keyLookup KeyLookup) (*Auth, error) {
 	method := jwt.GetSigningMethod(algorithm)
 	if method == nil {
 		return nil, errors.Errorf("unknown algorithm %v", algorithm)
@@ -71,7 +71,7 @@ func New(algorithm string, keyStore KeyStorer) (*Auth, error) {
 		if !ok {
 			return nil, errors.New("user token key id (kid) must be string")
 		}
-		return keyStore.LookupPublic(kidID)
+		return keyLookup.PublicKey(kidID)
 	}
 
 	// Create the token parser to use. The algorithm used to sign the JWT must be
@@ -84,7 +84,7 @@ func New(algorithm string, keyStore KeyStorer) (*Auth, error) {
 		method:    method,
 		keyFunc:   keyFunc,
 		parser:    parser,
-		keyStore:  keyStore,
+		keyLookup: keyLookup,
 	}
 
 	return &a, nil
@@ -95,7 +95,7 @@ func (a *Auth) GenerateToken(kid string, claims Claims) (string, error) {
 	token := jwt.NewWithClaims(a.method, claims)
 	token.Header["kid"] = kid
 
-	privateKey, err := a.keyStore.LookupPrivate(kid)
+	privateKey, err := a.keyLookup.PrivateKey(kid)
 	if err != nil {
 		return "", errors.New("kid lookup failed")
 	}
