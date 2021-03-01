@@ -102,8 +102,8 @@ func (ks *KeyStore) Remove(kid string) {
 // PrivateKey searches the key store for a given kid and returns
 // the private key.
 func (ks *KeyStore) PrivateKey(kid string) (*rsa.PrivateKey, error) {
-	ks.mu.Lock()
-	defer ks.mu.Unlock()
+	ks.mu.RLock()
+	defer ks.mu.RUnlock()
 
 	privateKey, found := ks.store[kid]
 	if !found {
@@ -115,8 +115,8 @@ func (ks *KeyStore) PrivateKey(kid string) (*rsa.PrivateKey, error) {
 // PublicKey searches the key store for a given kid and returns
 // the public key.
 func (ks *KeyStore) PublicKey(kid string) (*rsa.PublicKey, error) {
-	ks.mu.Lock()
-	defer ks.mu.Unlock()
+	ks.mu.RLock()
+	defer ks.mu.RUnlock()
 
 	privateKey, found := ks.store[kid]
 	if !found {
