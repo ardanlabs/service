@@ -53,7 +53,7 @@ func NewFS(fsys fs.FS) (*KeyStore, error) {
 			return nil
 		}
 
-		if path.Ext(dirEntry.Name()) != ".pem" {
+		if path.Ext(fileName) != ".pem" {
 			return nil
 		}
 
