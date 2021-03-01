@@ -87,6 +87,7 @@ func NewFS(fsys fs.FS) (*KeyStore, error) {
 func (ks *KeyStore) Add(privateKey *rsa.PrivateKey, kid string) {
 	ks.mu.Lock()
 	defer ks.mu.Unlock()
+
 	ks.store[kid] = privateKey
 }
 
@@ -94,6 +95,7 @@ func (ks *KeyStore) Add(privateKey *rsa.PrivateKey, kid string) {
 func (ks *KeyStore) Remove(kid string) {
 	ks.mu.Lock()
 	defer ks.mu.Unlock()
+
 	delete(ks.store, kid)
 }
 
@@ -102,6 +104,7 @@ func (ks *KeyStore) Remove(kid string) {
 func (ks *KeyStore) PrivateKey(kid string) (*rsa.PrivateKey, error) {
 	ks.mu.Lock()
 	defer ks.mu.Unlock()
+
 	privateKey, found := ks.store[kid]
 	if !found {
 		return nil, errors.New("kid lookup failed")
@@ -114,6 +117,7 @@ func (ks *KeyStore) PrivateKey(kid string) (*rsa.PrivateKey, error) {
 func (ks *KeyStore) PublicKey(kid string) (*rsa.PublicKey, error) {
 	ks.mu.Lock()
 	defer ks.mu.Unlock()
+
 	privateKey, found := ks.store[kid]
 	if !found {
 		return nil, errors.New("kid lookup failed")
