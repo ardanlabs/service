@@ -59,10 +59,8 @@ func GenToken(traceID string, log *log.Logger, cfg database.Config, id string, p
 	}
 
 	// An authenticator maintains the state required to handle JWT processing.
-	// It requires the private key for generating tokens. The KID for access
-	// to the corresponding public key, the algorithms to use (RS256), and the
-	// key lookup function to perform the actual retrieve of the KID to public
-	// key lookup.
+	// It requires a keystore to lookup private and public keys based on a
+	// key id. There is a keystore implementation in the project.
 	a, err := auth.New(algorithm, keystore.NewMap(map[string]*rsa.PrivateKey{id: privateKey}))
 	if err != nil {
 		return errors.Wrap(err, "constructing auth")
