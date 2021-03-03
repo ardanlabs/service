@@ -134,6 +134,9 @@ deps-upgrade:
 deps-cleancache:
 	go clean -modcache
 
+list:
+	go list -mod=mod all
+
 # ==============================================================================
 # Docker support
 
