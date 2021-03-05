@@ -3,7 +3,6 @@ package user
 
 import (
 	"context"
-	"database/sql"
 	"log"
 	"time"
 
@@ -74,13 +73,13 @@ func (u User) Create(ctx context.Context, traceID string, nu NewUser, now time.T
 	INSERT INTO users
 		(user_id, name, email, password_hash, roles, date_created, date_updated)
 	VALUES
-		($1, $2, $3, $4, $5, $6, $7)`
+		(:user_id, :name, :email, :password_hash, :roles, :date_created, :date_updated)`
 
 	u.log.Printf("%s: %s: %s", traceID, "user.Create",
-		database.Log(q, usr.ID, usr.Name, usr.Email, usr.PasswordHash, usr.Roles, usr.DateCreated, usr.DateUpdated),
+		database.Log(q, usr),
 	)
 
-	if _, err = u.db.ExecContext(ctx, q, usr.ID, usr.Name, usr.Email, usr.PasswordHash, usr.Roles, usr.DateCreated, usr.DateUpdated); err != nil {
+	if _, err := u.db.NamedExecContext(ctx, q, usr); err != nil {
 		return Info{}, errors.Wrap(err, "inserting user")
 	}
 
@@ -126,20 +125,20 @@ func (u User) Update(ctx context.Context, traceID string, claims auth.Claims, us
 	UPDATE
 		users
 	SET 
-		"name" = $2,
-		"email" = $3,
-		"roles" = $4,
-		"password_hash" = $5,
-		"date_updated" = $6
+		"name" = :name,
+		"email" = :email,
+		"roles" = :roles,
+		"password_hash" = :password_hash,
+		"date_updated" = :date_updated
 	WHERE
-		user_id = $1`
+		user_id = :user_id`
 
 	u.log.Printf("%s: %s: %s", traceID, "user.Update",
-		database.Log(q, usr.ID, usr.Name, usr.Email, usr.Roles, usr.PasswordHash, usr.DateCreated, usr.DateUpdated),
+		database.Log(q, usr),
 	)
 
-	if _, err = u.db.ExecContext(ctx, q, userID, usr.Name, usr.Email, usr.Roles, usr.PasswordHash, usr.DateUpdated); err != nil {
-		return errors.Wrap(err, "updating user")
+	if _, err := u.db.NamedExecContext(ctx, q, usr); err != nil {
+		return errors.Wrapf(err, "updating user %s", usr.ID)
 	}
 
 	return nil
@@ -159,18 +158,24 @@ func (u User) Delete(ctx context.Context, traceID string, claims auth.Claims, us
 		return ErrForbidden
 	}
 
+	data := struct {
+		UserID string `db:"user_id"`
+	}{
+		UserID: userID,
+	}
+
 	const q = `
 	DELETE FROM
 		users
 	WHERE
-		user_id = $1`
+		user_id = :user_id`
 
 	u.log.Printf("%s: %s: %s", traceID, "user.Delete",
-		database.Log(q, userID),
+		database.Log(q, data),
 	)
 
-	if _, err := u.db.ExecContext(ctx, q, userID); err != nil {
-		return errors.Wrapf(err, "deleting user %s", userID)
+	if _, err := u.db.NamedExecContext(ctx, q, data); err != nil {
+		return errors.Wrapf(err, "deleting user %s", data.UserID)
 	}
 
 	return nil
@@ -181,6 +186,14 @@ func (u User) Query(ctx context.Context, traceID string, pageNumber int, rowsPer
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.user.query")
 	defer span.End()
 
+	data := struct {
+		Offset      int `db:"offset"`
+		RowsPerPage int `db:"rows_per_page"`
+	}{
+		Offset:      (pageNumber - 1) * rowsPerPage,
+		RowsPerPage: rowsPerPage,
+	}
+
 	const q = `
 	SELECT
 		*
@@ -188,16 +201,17 @@ func (u User) Query(ctx context.Context, traceID string, pageNumber int, rowsPer
 		users
 	ORDER BY
 		user_id
-	OFFSET $1 ROWS FETCH NEXT $2 ROWS ONLY`
-
-	offset := (pageNumber - 1) * rowsPerPage
+	OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY`
 
 	u.log.Printf("%s: %s: %s", traceID, "user.Query",
-		database.Log(q, offset, rowsPerPage),
+		database.Log(q, data),
 	)
 
-	users := []Info{}
-	if err := u.db.SelectContext(ctx, &users, q, offset, rowsPerPage); err != nil {
+	var users []Info
+	if err := database.NamedQuerySlice(ctx, u.db, q, data, &users); err != nil {
+		if err == database.ErrNotFound {
+			return nil, ErrNotFound
+		}
 		return nil, errors.Wrap(err, "selecting users")
 	}
 
@@ -218,24 +232,30 @@ func (u User) QueryByID(ctx context.Context, traceID string, claims auth.Claims,
 		return Info{}, ErrForbidden
 	}
 
+	data := struct {
+		UserID string `db:"user_id"`
+	}{
+		UserID: userID,
+	}
+
 	const q = `
 	SELECT
 		*
 	FROM
 		users
 	WHERE 
-		user_id = $1`
+		user_id = :user_id`
 
 	u.log.Printf("%s: %s: %s", traceID, "user.QueryByID",
-		database.Log(q, userID),
+		database.Log(q, data),
 	)
 
 	var usr Info
-	if err := u.db.GetContext(ctx, &usr, q, userID); err != nil {
-		if err == sql.ErrNoRows {
+	if err := database.NamedQueryStruct(ctx, u.db, q, data, &usr); err != nil {
+		if err == database.ErrNotFound {
 			return Info{}, ErrNotFound
 		}
-		return Info{}, errors.Wrapf(err, "selecting user %q", userID)
+		return Info{}, errors.Wrapf(err, "selecting user %q", data.UserID)
 	}
 
 	return usr, nil
@@ -251,21 +271,27 @@ func (u User) QueryByEmail(ctx context.Context, traceID string, claims auth.Clai
 	// 	return Info{}, ErrInvalidEmail
 	// }
 
+	data := struct {
+		Email string `db:"email"`
+	}{
+		Email: email,
+	}
+
 	const q = `
 	SELECT
 		*
 	FROM
 		users
 	WHERE
-		email = $1`
+		email = :email`
 
 	u.log.Printf("%s: %s: %s", traceID, "user.QueryByEmail",
-		database.Log(q, email),
+		database.Log(q, data),
 	)
 
 	var usr Info
-	if err := u.db.GetContext(ctx, &usr, q, email); err != nil {
-		if err == sql.ErrNoRows {
+	if err := database.NamedQueryStruct(ctx, u.db, q, data, &usr); err != nil {
+		if err == database.ErrNotFound {
 			return Info{}, ErrNotFound
 		}
 		return Info{}, errors.Wrapf(err, "selecting user %q", email)
@@ -286,28 +312,30 @@ func (u User) Authenticate(ctx context.Context, traceID string, now time.Time, e
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.user.authenticate")
 	defer span.End()
 
+	data := struct {
+		Email string `db:"email"`
+	}{
+		Email: email,
+	}
+
 	const q = `
 	SELECT
 		*
 	FROM
 		users
 	WHERE
-		email = $1`
+		email = :email`
 
 	u.log.Printf("%s: %s: %s", traceID, "user.Authenticate",
-		database.Log(q, email),
+		database.Log(q, data),
 	)
 
 	var usr Info
-	if err := u.db.GetContext(ctx, &usr, q, email); err != nil {
-
-		// Normally we would return ErrNotFound in this scenario but we do not want
-		// to leak to an unauthenticated user which emails are in the system.
-		if err == sql.ErrNoRows {
-			return auth.Claims{}, ErrAuthenticationFailure
+	if err := database.NamedQueryStruct(ctx, u.db, q, data, &usr); err != nil {
+		if err == database.ErrNotFound {
+			return auth.Claims{}, ErrNotFound
 		}
-
-		return auth.Claims{}, errors.Wrap(err, "selecting single user")
+		return auth.Claims{}, errors.Wrapf(err, "selecting user %q", email)
 	}
 
 	// Compare the provided password with the saved hash. Use the bcrypt

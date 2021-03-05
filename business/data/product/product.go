@@ -3,7 +3,6 @@ package product
 
 import (
 	"context"
-	"database/sql"
 	"log"
 	"time"
 
@@ -64,13 +63,13 @@ func (p Product) Create(ctx context.Context, traceID string, claims auth.Claims,
 	INSERT INTO products
 		(product_id, user_id, name, cost, quantity, date_created, date_updated)
 	VALUES
-		($1, $2, $3, $4, $5, $6, $7)`
+		(:product_id, :user_id, :name, :cost, :quantity, :date_created, :date_updated)`
 
 	p.log.Printf("%s: %s: %s", traceID, "product.Create",
-		database.Log(q, prd.ID, prd.UserID, prd.Name, prd.Cost, prd.Quantity, prd.DateCreated, prd.DateUpdated),
+		database.Log(q, prd),
 	)
 
-	if _, err := p.db.ExecContext(ctx, q, prd.ID, prd.UserID, prd.Name, prd.Cost, prd.Quantity, prd.DateCreated, prd.DateUpdated); err != nil {
+	if _, err := p.db.NamedExecContext(ctx, q, prd); err != nil {
 		return Info{}, errors.Wrap(err, "inserting product")
 	}
 
@@ -115,19 +114,19 @@ func (p Product) Update(ctx context.Context, traceID string, claims auth.Claims,
 	UPDATE
 		products
 	SET
-		"name" = $2,
-		"cost" = $3,
-		"quantity" = $4,
-		"date_updated" = $5
+		"name" = :name,
+		"cost" = :cost,
+		"quantity" = :quantity,
+		"date_updated" = :date_updated
 	WHERE
-		product_id = $1`
+		product_id = :product_id`
 
 	p.log.Printf("%s: %s: %s", traceID, "product.Update",
-		database.Log(q, productID, prd.Name, prd.Cost, prd.Quantity, prd.DateUpdated),
+		database.Log(q, prd),
 	)
 
-	if _, err = p.db.ExecContext(ctx, q, productID, prd.Name, prd.Cost, prd.Quantity, prd.DateUpdated); err != nil {
-		return errors.Wrap(err, "updating product")
+	if _, err := p.db.NamedExecContext(ctx, q, prd); err != nil {
+		return errors.Wrapf(err, "updating product %s", prd.ID)
 	}
 
 	return nil
@@ -147,18 +146,24 @@ func (p Product) Delete(ctx context.Context, traceID string, claims auth.Claims,
 		return ErrForbidden
 	}
 
+	data := struct {
+		ProductID string `db:"product_id"`
+	}{
+		ProductID: productID,
+	}
+
 	const q = `
 	DELETE FROM
 		products
 	WHERE
-		product_id = $1`
+		product_id = :product_id`
 
 	p.log.Printf("%s: %s: %s", traceID, "product.Delete",
-		database.Log(q, productID),
+		database.Log(q, data),
 	)
 
-	if _, err := p.db.ExecContext(ctx, q, productID); err != nil {
-		return errors.Wrapf(err, "deleting product %s", productID)
+	if _, err := p.db.NamedExecContext(ctx, q, data); err != nil {
+		return errors.Wrapf(err, "deleting product %s", data.ProductID)
 	}
 
 	return nil
@@ -168,6 +173,14 @@ func (p Product) Delete(ctx context.Context, traceID string, claims auth.Claims,
 func (p Product) Query(ctx context.Context, traceID string, pageNumber int, rowsPerPage int) ([]Info, error) {
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.product.query")
 	defer span.End()
+
+	data := struct {
+		Offset      int `db:"offset"`
+		RowsPerPage int `db:"rows_per_page"`
+	}{
+		Offset:      (pageNumber - 1) * rowsPerPage,
+		RowsPerPage: rowsPerPage,
+	}
 
 	const q = `
 	SELECT
@@ -182,15 +195,17 @@ func (p Product) Query(ctx context.Context, traceID string, pageNumber int, rows
 		p.product_id
 	ORDER BY
 		user_id
-	OFFSET $1 ROWS FETCH NEXT $2 ROWS ONLY`
-	offset := (pageNumber - 1) * rowsPerPage
+	OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY`
 
 	p.log.Printf("%s: %s: %s", traceID, "product.Query",
-		database.Log(q, offset, rowsPerPage),
+		database.Log(q, data),
 	)
 
-	products := []Info{}
-	if err := p.db.SelectContext(ctx, &products, q, offset, rowsPerPage); err != nil {
+	var products []Info
+	if err := database.NamedQuerySlice(ctx, p.db, q, data, &products); err != nil {
+		if err == database.ErrNotFound {
+			return nil, ErrNotFound
+		}
 		return nil, errors.Wrap(err, "selecting products")
 	}
 
@@ -206,6 +221,12 @@ func (p Product) QueryByID(ctx context.Context, traceID string, productID string
 		return Info{}, ErrInvalidID
 	}
 
+	data := struct {
+		ProductID string `db:"product_id"`
+	}{
+		ProductID: productID,
+	}
+
 	const q = `
 	SELECT
 		p.*,
@@ -216,20 +237,20 @@ func (p Product) QueryByID(ctx context.Context, traceID string, productID string
 	LEFT JOIN
 		sales AS s ON p.product_id = s.product_id
 	WHERE
-		p.product_id = $1
+		p.product_id = :product_id
 	GROUP BY
 		p.product_id`
 
 	p.log.Printf("%s: %s: %s", traceID, "product.QueryByID",
-		database.Log(q, productID),
+		database.Log(q, data),
 	)
 
 	var prd Info
-	if err := p.db.GetContext(ctx, &prd, q, productID); err != nil {
-		if err == sql.ErrNoRows {
+	if err := database.NamedQueryStruct(ctx, p.db, q, data, &prd); err != nil {
+		if err == database.ErrNotFound {
 			return Info{}, ErrNotFound
 		}
-		return Info{}, errors.Wrap(err, "selecting single product")
+		return Info{}, errors.Wrapf(err, "selecting user %q", data.ProductID)
 	}
 
 	return prd, nil
