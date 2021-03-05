@@ -2,6 +2,8 @@
 package database
 
 import (
+	_ "github.com/lib/pq" // Initialize the database driver.
+
 	"context"
 	"errors"
 	"fmt"
@@ -10,7 +12,6 @@ import (
 	"strings"
 
 	"github.com/jmoiron/sqlx"
-	_ "github.com/lib/pq" // The database driver in use.
 	"go.opentelemetry.io/otel/trace"
 )
 

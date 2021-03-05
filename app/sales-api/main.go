@@ -1,8 +1,8 @@
 package main
 
 import (
-	"expvar"           // Register the vars handler
-	_ "net/http/pprof" // Register the pprof handler
+	"expvar"           // Register the vars handler.
+	_ "net/http/pprof" // Register the pprof handler.
 
 	"context"
 	"fmt"
