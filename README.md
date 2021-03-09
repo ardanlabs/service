@@ -8,11 +8,11 @@ info@ardanlabs.com
 ## Ultimate Service Video
 
 If you are watching the Ultimate Service video on the ArdanLabs [education](https://education.ardanlabs.com/) site,
-please use this version of the repo.
+please use this branch in the repo.
 
-https://github.com/ardanlabs/service/tree/32c75246b11b871ca7aaf07eebb2b1ccef6ee81c
+https://github.com/ardanlabs/service/tree/class
 
-This version represents the code that is explained. I will be going back into
+This branch represents the code that is explained. I will be going back into
 the studio in March, 2021 to re-record the video for all the changes in the
 past year.
 
