@@ -2,10 +2,10 @@
 
 [![CircleCI](https://circleci.com/gh/ardanlabs/service.svg?style=svg)](https://circleci.com/gh/ardanlabs/service)
 
-Copyright 2018, 2019, 2020, Ardan Labs  
+Copyright 2018, 2019, 2020, 2021, Ardan Labs  
 info@ardanlabs.com
 
-## Ultimate Service Video
+## Ultimate Service 2.0 Video
 
 If you are watching the Ultimate Service video on the ArdanLabs [education](https://education.ardanlabs.com/) site,
 please use this branch in the repo.
@@ -15,6 +15,12 @@ https://github.com/ardanlabs/service/tree/class
 This branch represents the code that is explained. I will be going back into
 the studio in March, 2021 to re-record the video for all the changes in the
 past year.
+
+## Ultimate Service 2.1 Live Classes
+
+This class teaches how to build production-level services in Go leveraging the power of Kubernetes. From the beginning, you will pair program with the instructor walking through the design philosophies and guidelines for building services in Go. With each new feature that is added to the service, you will learn how to deploy to and manage the Kubernetes environment used to run the service.
+
+[Course Outline](https://github.com/ardanlabs/service/wiki/course-outline) | [Class Schedule](https://www.eventbrite.com/o/ardan-labs-7092394651)
 
 ## Licensing
 
