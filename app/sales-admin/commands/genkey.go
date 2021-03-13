@@ -49,7 +49,7 @@ func GenKey() error {
 	if err != nil {
 		return errors.Wrap(err, "creating public file")
 	}
-	defer privateFile.Close()
+	defer publicFile.Close()
 
 	// Construct a PEM block for the public key.
 	publicBlock := pem.Block{
