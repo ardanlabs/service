@@ -64,6 +64,9 @@ logs:
 kind-up:
 	kind create cluster --image kindest/node:v1.20.2 --name ardan-starter-cluster --config zarf/k8s/dev/kind-config.yaml
 
+kind-up-m1:
+	kind create cluster --image rossgeorgiev/kind-node-arm64 --name ardan-starter-cluster --config zarf/k8s/dev/kind-config.yaml
+
 kind-down:
 	kind delete cluster --name ardan-starter-cluster
 
