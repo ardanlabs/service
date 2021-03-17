@@ -240,6 +240,8 @@ func run(log *log.Logger) error {
 			api.Close()
 			return errors.Wrap(err, "could not stop server gracefully")
 		}
+
+		log.Printf("main: %v: Completed shutdown", sig)
 	}
 
 	return nil
