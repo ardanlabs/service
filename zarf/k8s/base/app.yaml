@@ -13,6 +13,7 @@ spec:
     spec:
       dnsPolicy: ClusterFirstWithHostNet
       hostNetwork: true
+      terminationGracePeriodSeconds: 60
       containers:
       - name: zipkin
         image: openzipkin/zipkin:2.23
