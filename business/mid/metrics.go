@@ -33,14 +33,14 @@ func Metrics() web.Middleware {
 			ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.mid.metrics")
 			defer span.End()
 
+			// Call the next handler.
+			err := handler(ctx, w, r)
+
 			// Don't count anything on /debug routes towards metrics.
 			// Call the next handler to continue processing.
 			if strings.HasPrefix(r.URL.Path, "/debug") {
-				return handler(ctx, w, r)
+				return err
 			}
-
-			// Call the next handler.
-			err := handler(ctx, w, r)
 
 			// Increment the request counter.
 			m.req.Add(1)
