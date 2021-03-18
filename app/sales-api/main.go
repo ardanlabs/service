@@ -57,16 +57,16 @@ func run(log *log.Logger) error {
 			WriteTimeout    time.Duration `conf:"default:5s"`
 			ShutdownTimeout time.Duration `conf:"default:5s"`
 		}
+		Auth struct {
+			KeysFolder string `conf:"default:zarf/keys/"`
+			Algorithm  string `conf:"default:RS256"`
+		}
 		DB struct {
 			User       string `conf:"default:postgres"`
 			Password   string `conf:"default:postgres,noprint"`
 			Host       string `conf:"default:db"`
 			Name       string `conf:"default:postgres"`
 			DisableTLS bool   `conf:"default:true"`
-		}
-		Auth struct {
-			KeysFolder string `conf:"default:zarf/keys/"`
-			Algorithm  string `conf:"default:RS256"`
 		}
 		Zipkin struct {
 			ReporterURI string  `conf:"default:http://zipkin:9411/api/v2/spans"`

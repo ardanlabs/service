@@ -37,26 +37,6 @@ github.com/google/go-cmp/cmp/internal/value
 # github.com/google/uuid v1.2.0
 ## explicit
 github.com/google/uuid
-# github.com/jackc/chunkreader/v2 v2.0.1
-github.com/jackc/chunkreader/v2
-# github.com/jackc/pgconn v1.8.0
-github.com/jackc/pgconn
-github.com/jackc/pgconn/internal/ctxwatch
-github.com/jackc/pgconn/stmtcache
-# github.com/jackc/pgio v1.0.0
-github.com/jackc/pgio
-# github.com/jackc/pgpassfile v1.0.0
-github.com/jackc/pgpassfile
-# github.com/jackc/pgproto3/v2 v2.0.6
-github.com/jackc/pgproto3/v2
-# github.com/jackc/pgservicefile v0.0.0-20200714003250-2b9c44734f2b
-github.com/jackc/pgservicefile
-# github.com/jackc/pgtype v1.6.2
-github.com/jackc/pgtype
-# github.com/jackc/pgx/v4 v4.10.1
-## explicit
-github.com/jackc/pgx/v4
-github.com/jackc/pgx/v4/internal/sanitize
 # github.com/jmoiron/sqlx v1.3.1
 ## explicit
 github.com/jmoiron/sqlx
@@ -114,24 +94,10 @@ go.opentelemetry.io/otel/trace
 ## explicit
 golang.org/x/crypto/bcrypt
 golang.org/x/crypto/blowfish
-golang.org/x/crypto/pbkdf2
 golang.org/x/crypto/sha3
 # golang.org/x/sys v0.0.0-20200223170610-d5e6a3e2c0ae
+## explicit
 golang.org/x/sys/cpu
-# golang.org/x/text v0.3.3
-golang.org/x/text/cases
-golang.org/x/text/internal
-golang.org/x/text/internal/language
-golang.org/x/text/internal/language/compact
-golang.org/x/text/internal/tag
-golang.org/x/text/language
-golang.org/x/text/runes
-golang.org/x/text/secure/bidirule
-golang.org/x/text/secure/precis
-golang.org/x/text/transform
-golang.org/x/text/unicode/bidi
-golang.org/x/text/unicode/norm
-golang.org/x/text/width
 # golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
 ## explicit
 golang.org/x/xerrors

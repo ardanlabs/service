@@ -13,7 +13,6 @@ require (
 	github.com/go-playground/validator/v10 v10.4.1
 	github.com/google/go-cmp v0.5.4
 	github.com/google/uuid v1.2.0
-	github.com/jackc/pgx/v4 v4.10.1
 	github.com/jmoiron/sqlx v1.3.1
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/lib/pq v1.9.0
@@ -24,6 +23,7 @@ require (
 	go.opentelemetry.io/otel/sdk v0.17.0
 	go.opentelemetry.io/otel/trace v0.17.0
 	golang.org/x/crypto v0.0.0-20210218145215-b8e89b74b9df
+	golang.org/x/sys v0.0.0-20200223170610-d5e6a3e2c0ae // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )
