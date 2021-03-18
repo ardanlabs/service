@@ -13,6 +13,7 @@ require (
 	github.com/go-playground/validator/v10 v10.4.1
 	github.com/google/go-cmp v0.5.4
 	github.com/google/uuid v1.2.0
+	github.com/jackc/pgx/v4 v4.10.1
 	github.com/jmoiron/sqlx v1.3.1
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/lib/pq v1.9.0
