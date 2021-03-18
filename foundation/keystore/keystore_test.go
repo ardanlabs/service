@@ -39,7 +39,6 @@ func TestRead(t *testing.T) {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to validate the key: %v", failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to validate the key.", success, testID)
-
 		}
 	}
 }
