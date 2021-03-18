@@ -1,11 +1,8 @@
 package keystore_test
 
 import (
-	_ "embed" // Embed all sql documents
-
-	"strings"
+	"embed" // Embed key documents
 	"testing"
-	"testing/fstest"
 
 	"github.com/ardanlabs/service/foundation/keystore"
 )
@@ -16,26 +13,22 @@ const (
 	failed  = "\u2717"
 )
 
-//go:embed test.pem
-var keyDoc []byte
+//go:embed *.pem
+var keyDocs embed.FS
 
 func TestRead(t *testing.T) {
 	t.Log("Given the need to parse a directory of private key files.")
 	{
-		fileName := "54bb2165-71e1-41a6-af3e-7da4a0e1e2c1.pem"
-		keyID := strings.TrimRight(fileName, ".pem")
-		fsys := fstest.MapFS{}
-		fsys[fileName] = &fstest.MapFile{Data: keyDoc}
-
 		testID := 0
-		t.Logf("\tTest %d:\tWhen handling a directory of %d file(s).", testID, len(fsys))
+		t.Logf("\tTest %d:\tWhen handling a directory of keyfile(s).", testID)
 		{
-			ks, err := keystore.NewFS(fsys)
+			ks, err := keystore.NewFS(keyDocs)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to construct key store: %v", failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to construct key store.", success, testID)
 
+			const keyID = "test"
 			pk, err := ks.PrivateKey(keyID)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to find key in store: %v", failed, testID, err)
@@ -46,6 +39,7 @@ func TestRead(t *testing.T) {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to validate the key: %v", failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to validate the key.", success, testID)
+
 		}
 	}
 }
