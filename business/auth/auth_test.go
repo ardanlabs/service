@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/auth"
-	"github.com/ardanlabs/service/foundation/keystore"
 	"github.com/dgrijalva/jwt-go/v4"
 )
 
@@ -30,7 +29,7 @@ func TestAuth(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to create a private key.", success, testID)
 
-			a, err := auth.New("RS256", keystore.NewMap(map[string]*rsa.PrivateKey{keyID: privateKey}))
+			a, err := auth.New("RS256", &keyStore{pk: privateKey})
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to create an authenticator: %v", failed, testID, err)
 			}
@@ -73,4 +72,18 @@ func TestAuth(t *testing.T) {
 			t.Logf("\t%s\tTest %d:\tShould have the expected roles.", success, testID)
 		}
 	}
+}
+
+// =============================================================================
+
+type keyStore struct {
+	pk *rsa.PrivateKey
+}
+
+func (ks *keyStore) PrivateKey(kid string) (*rsa.PrivateKey, error) {
+	return ks.pk, nil
+}
+
+func (ks *keyStore) PublicKey(kid string) (*rsa.PublicKey, error) {
+	return &ks.pk.PublicKey, nil
 }
