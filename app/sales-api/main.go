@@ -20,8 +20,11 @@ import (
 	"github.com/ardanlabs/service/foundation/keystore"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/trace/zipkin"
+	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/semconv"
 )
 
 /*
@@ -170,6 +173,12 @@ func run(log *log.Logger) error {
 			trace.WithMaxExportBatchSize(trace.DefaultMaxExportBatchSize),
 			trace.WithBatchTimeout(trace.DefaultBatchTimeout),
 			trace.WithMaxExportBatchSize(trace.DefaultMaxExportBatchSize),
+		),
+		trace.WithResource(
+			resource.NewWithAttributes(
+				semconv.ServiceNameKey.String(cfg.Zipkin.ServiceName),
+				attribute.String("exporter", "zipkin"),
+			),
 		),
 	)
 
