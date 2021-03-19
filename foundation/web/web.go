@@ -122,7 +122,7 @@ func (a *App) handle(debug bool, method string, path string, handler Handler, mw
 		// Set the context with the required values to
 		// process the request.
 		v := Values{
-			TraceID: span.SpanContext().TraceID.String(),
+			TraceID: span.SpanContext().TraceID().String(),
 			Now:     time.Now(),
 		}
 		ctx = context.WithValue(ctx, KeyValues, &v)

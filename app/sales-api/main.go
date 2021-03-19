@@ -158,7 +158,6 @@ func run(log *log.Logger) error {
 
 	exporter, err := zipkin.NewRawExporter(
 		cfg.Zipkin.ReporterURI,
-		cfg.Zipkin.ServiceName,
 		zipkin.WithLogger(log),
 	)
 	if err != nil {
@@ -166,7 +165,7 @@ func run(log *log.Logger) error {
 	}
 
 	tp := trace.NewTracerProvider(
-		trace.WithConfig(trace.Config{DefaultSampler: trace.TraceIDRatioBased(cfg.Zipkin.Probability)}),
+		trace.WithSampler(trace.TraceIDRatioBased(cfg.Zipkin.Probability)),
 		trace.WithBatcher(exporter,
 			trace.WithMaxExportBatchSize(trace.DefaultMaxExportBatchSize),
 			trace.WithBatchTimeout(trace.DefaultBatchTimeout),

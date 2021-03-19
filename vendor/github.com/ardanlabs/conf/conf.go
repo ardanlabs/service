@@ -3,6 +3,7 @@ package conf
 import (
 	"errors"
 	"fmt"
+	"net/url"
 	"reflect"
 	"strings"
 )
@@ -162,13 +163,32 @@ func String(v interface{}) (string, error) {
 
 	var s strings.Builder
 	for i, fld := range fields {
-		if !fld.Options.Noprint {
-			s.WriteString(flagUsage(fld))
-			s.WriteString("=")
-			s.WriteString(fmt.Sprintf("%v", fld.Field.Interface()))
-			if i < len(fields)-1 {
-				s.WriteString("\n")
+		if fld.Options.Noprint {
+			continue
+		}
+
+		s.WriteString(flagUsage(fld))
+		s.WriteString("=")
+		v := fmt.Sprintf("%v", fld.Field.Interface())
+
+		switch {
+		case fld.Options.Mask:
+			if u, err := url.Parse(v); err == nil {
+				userPass := u.User.String()
+				if userPass != "" {
+					v = strings.Replace(v, userPass, "xxxxxx:xxxxxx", 1)
+					s.WriteString(v)
+					break
+				}
 			}
+			s.WriteString("xxxxxx")
+
+		default:
+			s.WriteString(v)
+		}
+
+		if i < len(fields)-1 {
+			s.WriteString("\n")
 		}
 	}
 

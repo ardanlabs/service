@@ -32,6 +32,7 @@ type FieldOptions struct {
 	ShortFlagChar rune
 	Noprint       bool
 	Required      bool
+	Mask          bool
 }
 
 // extractFields uses reflection to examine the struct and generate the keys.
@@ -156,6 +157,8 @@ func parseTag(tagStr string) (FieldOptions, error) {
 				f.Noprint = true
 			case "required":
 				f.Required = true
+			case "mask":
+				f.Mask = true
 			}
 		case 2:
 			tagPropVal := strings.TrimSpace(vals[1])

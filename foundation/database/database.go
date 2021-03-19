@@ -51,6 +51,21 @@ func Open(cfg Config) (*sqlx.DB, error) {
 	return sqlx.Open("postgres", u.String())
 }
 
+// StatusCheck returns nil if it can successfully talk to the database. It
+// returns a non-nil error otherwise.
+func StatusCheck(ctx context.Context, db *sqlx.DB) error {
+	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "foundation.database.statuscheck")
+	defer span.End()
+
+	// Run a simple query to determine connectivity. The db has a "Ping" method
+	// but it can false-positive when it was previously able to talk to the
+	// database but the database has since gone away. Running this query forces a
+	// round trip to the database.
+	const q = `SELECT true`
+	var tmp bool
+	return db.QueryRowContext(ctx, q).Scan(&tmp)
+}
+
 // NamedQuerySlice is a helper function for executing queries that return a
 // collection of data to be unmarshaled into a slice.
 func NamedQuerySlice(ctx context.Context, db *sqlx.DB, query string, data interface{}, dest interface{}) error {
@@ -98,21 +113,6 @@ func NamedQueryStruct(ctx context.Context, db *sqlx.DB, query string, data inter
 	}
 
 	return nil
-}
-
-// StatusCheck returns nil if it can successfully talk to the database. It
-// returns a non-nil error otherwise.
-func StatusCheck(ctx context.Context, db *sqlx.DB) error {
-	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "foundation.database.statuscheck")
-	defer span.End()
-
-	// Run a simple query to determine connectivity. The db has a "Ping" method
-	// but it can false-positive when it was previously able to talk to the
-	// database but the database has since gone away. Running this query forces a
-	// round trip to the database.
-	const q = `SELECT true`
-	var tmp bool
-	return db.QueryRowContext(ctx, q).Scan(&tmp)
 }
 
 // Log provides a pretty print version of the query and parameters.

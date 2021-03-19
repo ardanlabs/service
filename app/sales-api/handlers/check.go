@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/ardanlabs/service/foundation/database"
 	"github.com/ardanlabs/service/foundation/web"
@@ -22,6 +23,9 @@ type checkGroup struct {
 func (cg checkGroup) readiness(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "handlers.check.readiness")
 	defer span.End()
+
+	ctx, cancel := context.WithTimeout(ctx, time.Second)
+	defer cancel()
 
 	status := "ok"
 	statusCode := http.StatusOK
