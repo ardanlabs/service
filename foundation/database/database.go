@@ -2,8 +2,8 @@
 package database
 
 import (
-	//_ "github.com/jackc/pgx/v4/stdlib" // Initialize the database driver.
-	_ "github.com/lib/pq"
+	_ "github.com/jackc/pgx/v4/stdlib" // Initialize the database driver.
+	//_ "github.com/lib/pq"
 
 	"context"
 	"errors"
@@ -49,7 +49,7 @@ func Open(cfg Config) (*sqlx.DB, error) {
 		RawQuery: q.Encode(),
 	}
 
-	return sqlx.Open("postgres", u.String())
+	return sqlx.Open("pgx", u.String())
 }
 
 // NamedQuerySlice is a helper function for executing queries that return a
