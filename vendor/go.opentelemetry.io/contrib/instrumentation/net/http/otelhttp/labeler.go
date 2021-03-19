@@ -18,29 +18,29 @@ import (
 	"context"
 	"sync"
 
-	"go.opentelemetry.io/otel/label"
+	"go.opentelemetry.io/otel/attribute"
 )
 
-// Labeler is used to allow instrumented HTTP handlers to add custom labels to
+// Labeler is used to allow instrumented HTTP handlers to add custom attributes to
 // the metrics recorded by the net/http instrumentation.
 type Labeler struct {
-	mu     sync.Mutex
-	labels []label.KeyValue
+	mu         sync.Mutex
+	attributes []attribute.KeyValue
 }
 
-// Add labels to a Labeler.
-func (l *Labeler) Add(ls ...label.KeyValue) {
+// Add attributes to a Labeler.
+func (l *Labeler) Add(ls ...attribute.KeyValue) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	l.labels = append(l.labels, ls...)
+	l.attributes = append(l.attributes, ls...)
 }
 
-// Labels returns a copy of the labels added to the Labeler.
-func (l *Labeler) Get() []label.KeyValue {
+// Labels returns a copy of the attributes added to the Labeler.
+func (l *Labeler) Get() []attribute.KeyValue {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	ret := make([]label.KeyValue, len(l.labels))
-	copy(ret, l.labels)
+	ret := make([]attribute.KeyValue, len(l.attributes))
+	copy(ret, l.attributes)
 	return ret
 }
 
@@ -55,7 +55,7 @@ func injectLabeler(ctx context.Context, l *Labeler) context.Context {
 // LabelerFromContext retrieves a Labeler instance from the provided context if
 // one is available.  If no Labeler was found in the provided context a new, empty
 // Labeler is returned and the second return value is false.  In this case it is
-// safe to use the Labeler but any labels added to it will not be used.
+// safe to use the Labeler but any attributes added to it will not be used.
 func LabelerFromContext(ctx context.Context) (*Labeler, bool) {
 	l, ok := ctx.Value(lablelerContextKey).(*Labeler)
 	if !ok {

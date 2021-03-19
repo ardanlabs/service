@@ -22,7 +22,7 @@ import (
 	"github.com/felixge/httpsnoop"
 
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/label"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/semconv"
@@ -34,7 +34,7 @@ var _ http.Handler = &Handler{}
 // Handler is http middleware that corresponds to the http.Handler interface and
 // is designed to wrap a http.Mux (or equivalent), while individual routes on
 // the mux are wrapped with WithRouteTag. A Handler will add various attributes
-// to the span using the label.Keys defined in this package.
+// to the span using the attribute.Keys defined in this package.
 type Handler struct {
 	operation string
 	handler   http.Handler
@@ -127,7 +127,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		trace.WithAttributes(semconv.HTTPServerAttributesFromHTTPRequest(h.operation, "", r)...),
 	}, h.spanStartOptions...) // start with the configured options
 
-	ctx := h.propagators.Extract(r.Context(), r.Header)
+	ctx := h.propagators.Extract(r.Context(), propagation.HeaderCarrier(r.Header))
 	ctx, span := h.tracer.Start(ctx, h.spanNameFormatter(h.operation, r), opts...)
 	defer span.End()
 
@@ -181,37 +181,37 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	setAfterServeAttributes(span, bw.read, rww.written, rww.statusCode, bw.err, rww.err)
 
 	// Add metrics
-	labels := append(labeler.Get(), semconv.HTTPServerMetricAttributesFromHTTPRequest(h.operation, r)...)
-	h.counters[RequestContentLength].Add(ctx, bw.read, labels...)
-	h.counters[ResponseContentLength].Add(ctx, rww.written, labels...)
+	attributes := append(labeler.Get(), semconv.HTTPServerMetricAttributesFromHTTPRequest(h.operation, r)...)
+	h.counters[RequestContentLength].Add(ctx, bw.read, attributes...)
+	h.counters[ResponseContentLength].Add(ctx, rww.written, attributes...)
 
 	elapsedTime := time.Since(requestStartTime).Microseconds()
 
-	h.valueRecorders[ServerLatency].Record(ctx, elapsedTime, labels...)
+	h.valueRecorders[ServerLatency].Record(ctx, elapsedTime, attributes...)
 }
 
 func setAfterServeAttributes(span trace.Span, read, wrote int64, statusCode int, rerr, werr error) {
-	labels := []label.KeyValue{}
+	attributes := []attribute.KeyValue{}
 
 	// TODO: Consider adding an event after each read and write, possibly as an
 	// option (defaulting to off), so as to not create needlessly verbose spans.
 	if read > 0 {
-		labels = append(labels, ReadBytesKey.Int64(read))
+		attributes = append(attributes, ReadBytesKey.Int64(read))
 	}
 	if rerr != nil && rerr != io.EOF {
-		labels = append(labels, ReadErrorKey.String(rerr.Error()))
+		attributes = append(attributes, ReadErrorKey.String(rerr.Error()))
 	}
 	if wrote > 0 {
-		labels = append(labels, WroteBytesKey.Int64(wrote))
+		attributes = append(attributes, WroteBytesKey.Int64(wrote))
 	}
 	if statusCode > 0 {
-		labels = append(labels, semconv.HTTPAttributesFromHTTPStatusCode(statusCode)...)
+		attributes = append(attributes, semconv.HTTPAttributesFromHTTPStatusCode(statusCode)...)
 		span.SetStatus(semconv.SpanStatusFromHTTPStatusCode(statusCode))
 	}
 	if werr != nil && werr != io.EOF {
-		labels = append(labels, WriteErrorKey.String(werr.Error()))
+		attributes = append(attributes, WriteErrorKey.String(werr.Error()))
 	}
-	span.SetAttributes(labels...)
+	span.SetAttributes(attributes...)
 }
 
 // WithRouteTag annotates a span with the provided route name using the

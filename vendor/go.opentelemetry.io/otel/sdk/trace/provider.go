@@ -65,11 +65,15 @@ func NewTracerProvider(opts ...TracerProviderOption) *TracerProvider {
 		namedTracer: make(map[instrumentation.Library]*tracer),
 	}
 	tp.config.Store(&Config{
-		DefaultSampler:       ParentBased(AlwaysSample()),
-		IDGenerator:          defaultIDGenerator(),
-		MaxAttributesPerSpan: DefaultMaxAttributesPerSpan,
-		MaxEventsPerSpan:     DefaultMaxEventsPerSpan,
-		MaxLinksPerSpan:      DefaultMaxLinksPerSpan,
+		DefaultSampler: ParentBased(AlwaysSample()),
+		IDGenerator:    defaultIDGenerator(),
+		SpanLimits: SpanLimits{
+			AttributeCountLimit:         DefaultAttributeCountLimit,
+			EventCountLimit:             DefaultEventCountLimit,
+			LinkCountLimit:              DefaultLinkCountLimit,
+			AttributePerEventCountLimit: DefaultAttributePerEventCountLimit,
+			AttributePerLinkCountLimit:  DefaultAttributePerLinkCountLimit,
+		},
 	})
 
 	for _, sp := range o.processors {
@@ -126,17 +130,17 @@ func (p *TracerProvider) RegisterSpanProcessor(s SpanProcessor) {
 func (p *TracerProvider) UnregisterSpanProcessor(s SpanProcessor) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	new := spanProcessorStates{}
+	spss := spanProcessorStates{}
 	old, ok := p.spanProcessors.Load().(spanProcessorStates)
 	if !ok || len(old) == 0 {
 		return
 	}
-	new = append(new, old...)
+	spss = append(spss, old...)
 
 	// stop the span processor if it is started and remove it from the list
 	var stopOnce *spanProcessorState
 	var idx int
-	for i, sps := range new {
+	for i, sps := range spss {
 		if sps.sp == s {
 			stopOnce = sps
 			idx = i
@@ -149,13 +153,13 @@ func (p *TracerProvider) UnregisterSpanProcessor(s SpanProcessor) {
 			}
 		})
 	}
-	if len(new) > 1 {
-		copy(new[idx:], new[idx+1:])
+	if len(spss) > 1 {
+		copy(spss[idx:], spss[idx+1:])
 	}
-	new[len(new)-1] = nil
-	new = new[:len(new)-1]
+	spss[len(spss)-1] = nil
+	spss = spss[:len(spss)-1]
 
-	p.spanProcessors.Store(new)
+	p.spanProcessors.Store(spss)
 }
 
 // ApplyConfig changes the configuration of the provider.
@@ -170,17 +174,24 @@ func (p *TracerProvider) ApplyConfig(cfg Config) {
 	if cfg.IDGenerator != nil {
 		c.IDGenerator = cfg.IDGenerator
 	}
-	if cfg.MaxEventsPerSpan > 0 {
-		c.MaxEventsPerSpan = cfg.MaxEventsPerSpan
+	if cfg.SpanLimits.EventCountLimit > 0 {
+		c.SpanLimits.EventCountLimit = cfg.SpanLimits.EventCountLimit
 	}
-	if cfg.MaxAttributesPerSpan > 0 {
-		c.MaxAttributesPerSpan = cfg.MaxAttributesPerSpan
+	if cfg.SpanLimits.AttributeCountLimit > 0 {
+		c.SpanLimits.AttributeCountLimit = cfg.SpanLimits.AttributeCountLimit
 	}
-	if cfg.MaxLinksPerSpan > 0 {
-		c.MaxLinksPerSpan = cfg.MaxLinksPerSpan
+	if cfg.SpanLimits.LinkCountLimit > 0 {
+		c.SpanLimits.LinkCountLimit = cfg.SpanLimits.LinkCountLimit
 	}
-	if cfg.Resource != nil {
-		c.Resource = cfg.Resource
+	if cfg.SpanLimits.AttributePerEventCountLimit > 0 {
+		c.SpanLimits.AttributePerEventCountLimit = cfg.SpanLimits.AttributePerEventCountLimit
+	}
+	if cfg.SpanLimits.AttributePerLinkCountLimit > 0 {
+		c.SpanLimits.AttributePerLinkCountLimit = cfg.SpanLimits.AttributePerLinkCountLimit
+	}
+	c.Resource = cfg.Resource
+	if c.Resource == nil {
+		c.Resource = resource.Default()
 	}
 	p.config.Store(&c)
 }

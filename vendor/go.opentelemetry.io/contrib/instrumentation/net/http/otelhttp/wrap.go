@@ -91,6 +91,6 @@ func (w *respWriterWrapper) WriteHeader(statusCode int) {
 	}
 	w.wroteHeader = true
 	w.statusCode = statusCode
-	w.props.Inject(w.ctx, w.Header())
+	w.props.Inject(w.ctx, propagation.HeaderCarrier(w.Header()))
 	w.ResponseWriter.WriteHeader(statusCode)
 }
