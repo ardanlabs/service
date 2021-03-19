@@ -72,14 +72,14 @@ func NamedQuerySlice(ctx context.Context, db *sqlx.DB, query string, data interf
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "foundation.database.namedqueryslice")
 	defer span.End()
 
-	rows, err := db.NamedQueryContext(ctx, query, data)
-	if err != nil {
-		return err
-	}
-
 	val := reflect.ValueOf(dest)
 	if val.Kind() != reflect.Ptr || val.Elem().Kind() != reflect.Slice {
 		return errors.New("must provide a pointer to a slice")
+	}
+
+	rows, err := db.NamedQueryContext(ctx, query, data)
+	if err != nil {
+		return err
 	}
 
 	slice := val.Elem()
