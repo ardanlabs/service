@@ -14,6 +14,7 @@ import (
 	"github.com/ardanlabs/service/business/data/schema"
 	"github.com/ardanlabs/service/business/data/user"
 	"github.com/ardanlabs/service/foundation/database"
+	"github.com/ardanlabs/service/foundation/docker"
 	"github.com/ardanlabs/service/foundation/keystore"
 	"github.com/jmoiron/sqlx"
 )
@@ -37,7 +38,7 @@ var (
 // required table structure but the database is otherwise empty. It returns
 // the database to use as well as a function to call at the end of the test.
 func NewUnit(t *testing.T) (*log.Logger, *sqlx.DB, func()) {
-	c := startContainer(t, dbImage, dbPort, dbArgs...)
+	c := docker.StartContainer(t, dbImage, dbPort, dbArgs...)
 
 	db, err := database.Open(database.Config{
 		User:       "postgres",
@@ -52,26 +53,16 @@ func NewUnit(t *testing.T) (*log.Logger, *sqlx.DB, func()) {
 
 	t.Log("Waiting for database to be ready ...")
 
-	// Wait for the database to be ready. Wait 100ms longer between each attempt.
-	// Do not try more than 20 times.
-	var pingError error
-	maxAttempts := 20
-	for attempts := 1; attempts <= maxAttempts; attempts++ {
-		pingError = db.Ping()
-		if pingError == nil {
-			break
-		}
-		time.Sleep(time.Duration(attempts) * 100 * time.Millisecond)
-	}
-
-	if pingError != nil {
-		dumpContainerLogs(t, c.ID)
-		stopContainer(t, c.ID)
-		t.Fatalf("Database never ready: %v", pingError)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := database.StatusCheck(ctx, db); err != nil {
+		docker.DumpContainerLogs(t, c.ID)
+		docker.StopContainer(t, c.ID)
+		t.Fatalf("Database never ready: %v", err)
 	}
 
 	if err := schema.Migrate(db); err != nil {
-		stopContainer(t, c.ID)
+		docker.StopContainer(t, c.ID)
 		t.Fatalf("Migrating error: %s", err)
 	}
 
@@ -80,26 +71,12 @@ func NewUnit(t *testing.T) (*log.Logger, *sqlx.DB, func()) {
 	teardown := func() {
 		t.Helper()
 		db.Close()
-		stopContainer(t, c.ID)
+		docker.StopContainer(t, c.ID)
 	}
 
 	log := log.New(os.Stdout, "TEST : ", log.LstdFlags|log.Lmicroseconds|log.Lshortfile)
 
 	return log, db, teardown
-}
-
-// StringPointer is a helper to get a *string from a string. It is in the tests
-// package because we normally don't want to deal with pointers to basic types
-// but it's useful in some tests.
-func StringPointer(s string) *string {
-	return &s
-}
-
-// IntPointer is a helper to get a *int from a int. It is in the tests package
-// because we normally don't want to deal with pointers to basic types but it's
-// useful in some tests.
-func IntPointer(i int) *int {
-	return &i
 }
 
 // Test owns state for running and shutting down tests.
@@ -164,4 +141,18 @@ func (test *Test) Token(email, pass string) string {
 	}
 
 	return token
+}
+
+// StringPointer is a helper to get a *string from a string. It is in the tests
+// package because we normally don't want to deal with pointers to basic types
+// but it's useful in some tests.
+func StringPointer(s string) *string {
+	return &s
+}
+
+// IntPointer is a helper to get a *int from a int. It is in the tests package
+// because we normally don't want to deal with pointers to basic types but it's
+// useful in some tests.
+func IntPointer(i int) *int {
+	return &i
 }
