@@ -1,9 +1,8 @@
 package schema
 
 import (
-	_ "embed"
-
 	"bytes"
+	_ "embed" // Calls init function.
 	"fmt"
 	"strings"
 	"testing"

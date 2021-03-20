@@ -2,9 +2,8 @@
 package schema
 
 import (
-	_ "embed" // Embed all sql documents
-
 	"bufio"
+	_ "embed" // Calls init function.
 	"strconv"
 	"strings"
 

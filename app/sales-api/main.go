@@ -1,13 +1,12 @@
 package main
 
 import (
-	"expvar"           // Register the vars handler.
-	_ "net/http/pprof" // Register the pprof handler.
-
 	"context"
+	"expvar" // Calls init function.
 	"fmt"
 	"log"
 	"net/http"
+	_ "net/http/pprof" // Calls init function.
 	"os"
 	"os/signal"
 	"syscall"

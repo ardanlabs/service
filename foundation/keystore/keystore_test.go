@@ -1,7 +1,7 @@
 package keystore_test
 
 import (
-	"embed" // Embed key documents
+	"embed" // Calls init function.
 	"testing"
 
 	"github.com/ardanlabs/service/foundation/keystore"
