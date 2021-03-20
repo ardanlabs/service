@@ -15,8 +15,8 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
+// Set of error variables for CRUD operations.
 var (
-	// ErrNotFound is used when a query is performed with no data.
 	ErrNotFound = errors.New("not found")
 )
 
