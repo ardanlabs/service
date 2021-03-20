@@ -31,8 +31,8 @@ func API(build string, shutdown chan os.Signal, log *log.Logger, a *auth.Auth, d
 
 	// Register user management and authentication endpoints.
 	ug := userGroup{
-		user: user.New(log, db),
-		auth: a,
+		store: user.NewStore(log, db),
+		auth:  a,
 	}
 	app.Handle(http.MethodGet, "/v1/users/:page/:rows", ug.query, mid.Authenticate(a), mid.Authorize(auth.RoleAdmin))
 	app.Handle(http.MethodGet, "/v1/users/token/:kid", ug.token)
@@ -43,7 +43,7 @@ func API(build string, shutdown chan os.Signal, log *log.Logger, a *auth.Auth, d
 
 	// Register product and sale endpoints.
 	pg := productGroup{
-		product: product.New(log, db),
+		store: product.NewStore(log, db),
 	}
 	app.Handle(http.MethodGet, "/v1/products/:page/:rows", pg.query, mid.Authenticate(a))
 	app.Handle(http.MethodGet, "/v1/products/:id", pg.queryByID, mid.Authenticate(a))

@@ -25,15 +25,15 @@ var (
 	ErrForbidden = errors.New("attempted action is not allowed")
 )
 
-// Product manages the set of API's for product access.
-type Product struct {
+// Store manages the set of API's for product access.
+type Store struct {
 	log *log.Logger
 	db  *sqlx.DB
 }
 
-// New constructs a Product for api access.
-func New(log *log.Logger, db *sqlx.DB) Product {
-	return Product{
+// NewStore constructs a product store for api access.
+func NewStore(log *log.Logger, db *sqlx.DB) Store {
+	return Store{
 		log: log,
 		db:  db,
 	}
@@ -41,15 +41,15 @@ func New(log *log.Logger, db *sqlx.DB) Product {
 
 // Create adds a Product to the database. It returns the created Product with
 // fields like ID and DateCreated populated.
-func (p Product) Create(ctx context.Context, traceID string, claims auth.Claims, np NewProduct, now time.Time) (Info, error) {
+func (s Store) Create(ctx context.Context, traceID string, claims auth.Claims, np NewProduct, now time.Time) (Product, error) {
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.product.create")
 	defer span.End()
 
 	if err := validate.Check(np); err != nil {
-		return Info{}, errors.Wrap(err, "validating data")
+		return Product{}, errors.Wrap(err, "validating data")
 	}
 
-	prd := Info{
+	prd := Product{
 		ID:          validate.GenerateID(),
 		Name:        np.Name,
 		Cost:        np.Cost,
@@ -65,12 +65,12 @@ func (p Product) Create(ctx context.Context, traceID string, claims auth.Claims,
 	VALUES
 		(:product_id, :user_id, :name, :cost, :quantity, :date_created, :date_updated)`
 
-	p.log.Printf("%s: %s: %s", traceID, "product.Create",
+	s.log.Printf("%s: %s: %s", traceID, "product.Create",
 		database.Log(q, prd),
 	)
 
-	if _, err := p.db.NamedExecContext(ctx, q, prd); err != nil {
-		return Info{}, errors.Wrap(err, "inserting product")
+	if _, err := s.db.NamedExecContext(ctx, q, prd); err != nil {
+		return Product{}, errors.Wrap(err, "inserting product")
 	}
 
 	return prd, nil
@@ -78,7 +78,7 @@ func (p Product) Create(ctx context.Context, traceID string, claims auth.Claims,
 
 // Update modifies data about a Product. It will error if the specified ID is
 // invalid or does not reference an existing Product.
-func (p Product) Update(ctx context.Context, traceID string, claims auth.Claims, productID string, up UpdateProduct, now time.Time) error {
+func (s Store) Update(ctx context.Context, traceID string, claims auth.Claims, productID string, up UpdateProduct, now time.Time) error {
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.product.update")
 	defer span.End()
 
@@ -89,7 +89,7 @@ func (p Product) Update(ctx context.Context, traceID string, claims auth.Claims,
 		return errors.Wrap(err, "validating data")
 	}
 
-	prd, err := p.QueryByID(ctx, traceID, productID)
+	prd, err := s.QueryByID(ctx, traceID, productID)
 	if err != nil {
 		return errors.Wrap(err, "updating product")
 	}
@@ -121,11 +121,11 @@ func (p Product) Update(ctx context.Context, traceID string, claims auth.Claims,
 	WHERE
 		product_id = :product_id`
 
-	p.log.Printf("%s: %s: %s", traceID, "product.Update",
+	s.log.Printf("%s: %s: %s", traceID, "product.Update",
 		database.Log(q, prd),
 	)
 
-	if _, err := p.db.NamedExecContext(ctx, q, prd); err != nil {
+	if _, err := s.db.NamedExecContext(ctx, q, prd); err != nil {
 		return errors.Wrapf(err, "updating product %s", prd.ID)
 	}
 
@@ -133,7 +133,7 @@ func (p Product) Update(ctx context.Context, traceID string, claims auth.Claims,
 }
 
 // Delete removes the product identified by a given ID.
-func (p Product) Delete(ctx context.Context, traceID string, claims auth.Claims, productID string) error {
+func (s Store) Delete(ctx context.Context, traceID string, claims auth.Claims, productID string) error {
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.product.delete")
 	defer span.End()
 
@@ -158,11 +158,11 @@ func (p Product) Delete(ctx context.Context, traceID string, claims auth.Claims,
 	WHERE
 		product_id = :product_id`
 
-	p.log.Printf("%s: %s: %s", traceID, "product.Delete",
+	s.log.Printf("%s: %s: %s", traceID, "product.Delete",
 		database.Log(q, data),
 	)
 
-	if _, err := p.db.NamedExecContext(ctx, q, data); err != nil {
+	if _, err := s.db.NamedExecContext(ctx, q, data); err != nil {
 		return errors.Wrapf(err, "deleting product %s", data.ProductID)
 	}
 
@@ -170,7 +170,7 @@ func (p Product) Delete(ctx context.Context, traceID string, claims auth.Claims,
 }
 
 // Query gets all Products from the database.
-func (p Product) Query(ctx context.Context, traceID string, pageNumber int, rowsPerPage int) ([]Info, error) {
+func (s Store) Query(ctx context.Context, traceID string, pageNumber int, rowsPerPage int) ([]Product, error) {
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.product.query")
 	defer span.End()
 
@@ -197,12 +197,12 @@ func (p Product) Query(ctx context.Context, traceID string, pageNumber int, rows
 		user_id
 	OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY`
 
-	p.log.Printf("%s: %s: %s", traceID, "product.Query",
+	s.log.Printf("%s: %s: %s", traceID, "product.Query",
 		database.Log(q, data),
 	)
 
-	var products []Info
-	if err := database.NamedQuerySlice(ctx, p.db, q, data, &products); err != nil {
+	var products []Product
+	if err := database.NamedQuerySlice(ctx, s.db, q, data, &products); err != nil {
 		if err == database.ErrNotFound {
 			return nil, ErrNotFound
 		}
@@ -213,12 +213,12 @@ func (p Product) Query(ctx context.Context, traceID string, pageNumber int, rows
 }
 
 // QueryByID finds the product identified by a given ID.
-func (p Product) QueryByID(ctx context.Context, traceID string, productID string) (Info, error) {
+func (s Store) QueryByID(ctx context.Context, traceID string, productID string) (Product, error) {
 	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.product.querybyid")
 	defer span.End()
 
 	if err := validate.CheckID(productID); err != nil {
-		return Info{}, ErrInvalidID
+		return Product{}, ErrInvalidID
 	}
 
 	data := struct {
@@ -241,16 +241,16 @@ func (p Product) QueryByID(ctx context.Context, traceID string, productID string
 	GROUP BY
 		p.product_id`
 
-	p.log.Printf("%s: %s: %s", traceID, "product.QueryByID",
+	s.log.Printf("%s: %s: %s", traceID, "product.QueryByID",
 		database.Log(q, data),
 	)
 
-	var prd Info
-	if err := database.NamedQueryStruct(ctx, p.db, q, data, &prd); err != nil {
+	var prd Product
+	if err := database.NamedQueryStruct(ctx, s.db, q, data, &prd); err != nil {
 		if err == database.ErrNotFound {
-			return Info{}, ErrNotFound
+			return Product{}, ErrNotFound
 		}
-		return Info{}, errors.Wrapf(err, "selecting user %q", data.ProductID)
+		return Product{}, errors.Wrapf(err, "selecting user %q", data.ProductID)
 	}
 
 	return prd, nil

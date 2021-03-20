@@ -33,7 +33,7 @@ func GenToken(traceID string, log *log.Logger, cfg database.Config, id string, p
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	u := user.New(log, db)
+	store := user.NewStore(log, db)
 
 	// The call to retrieve a user requires an Admin role by the caller.
 	claims := auth.Claims{
@@ -43,7 +43,7 @@ func GenToken(traceID string, log *log.Logger, cfg database.Config, id string, p
 		Roles: []string{auth.RoleAdmin},
 	}
 
-	usr, err := u.QueryByID(ctx, traceID, claims, id)
+	usr, err := store.QueryByID(ctx, traceID, claims, id)
 	if err != nil {
 		return errors.Wrap(err, "retrieve user")
 	}

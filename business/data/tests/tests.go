@@ -152,8 +152,8 @@ func NewIntegration(t *testing.T) *Test {
 func (test *Test) Token(email, pass string) string {
 	test.t.Log("Generating token for test ...")
 
-	u := user.New(test.Log, test.DB)
-	claims, err := u.Authenticate(context.Background(), test.TraceID, time.Now(), email, pass)
+	store := user.NewStore(test.Log, test.DB)
+	claims, err := store.Authenticate(context.Background(), test.TraceID, time.Now(), email, pass)
 	if err != nil {
 		test.t.Fatal(err)
 	}

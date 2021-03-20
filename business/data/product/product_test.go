@@ -17,7 +17,7 @@ func TestProduct(t *testing.T) {
 	log, db, teardown := tests.NewUnit(t)
 	t.Cleanup(teardown)
 
-	p := product.New(log, db)
+	store := product.NewStore(log, db)
 
 	t.Log("Given the need to work with Product records.")
 	{
@@ -44,13 +44,13 @@ func TestProduct(t *testing.T) {
 				Quantity: 55,
 			}
 
-			prd, err := p.Create(ctx, traceID, claims, np, now)
+			prd, err := store.Create(ctx, traceID, claims, np, now)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to create a product : %s.", tests.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to create a product.", tests.Success, testID)
 
-			saved, err := p.QueryByID(ctx, traceID, prd.ID)
+			saved, err := store.QueryByID(ctx, traceID, prd.ID)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve product by ID: %s.", tests.Failed, testID, err)
 			}
@@ -68,12 +68,12 @@ func TestProduct(t *testing.T) {
 			}
 			updatedTime := time.Date(2019, time.January, 1, 1, 1, 1, 0, time.UTC)
 
-			if err := p.Update(ctx, traceID, claims, prd.ID, upd, updatedTime); err != nil {
+			if err := store.Update(ctx, traceID, claims, prd.ID, upd, updatedTime); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to update product : %s.", tests.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to update product.", tests.Success, testID)
 
-			products, err := p.Query(ctx, traceID, 1, 1)
+			products, err := store.Query(ctx, traceID, 1, 1)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve updated product : %s.", tests.Failed, testID, err)
 			}
@@ -96,12 +96,12 @@ func TestProduct(t *testing.T) {
 				Name: tests.StringPointer("Graphic Novels"),
 			}
 
-			if err := p.Update(ctx, traceID, claims, prd.ID, upd, updatedTime); err != nil {
+			if err := store.Update(ctx, traceID, claims, prd.ID, upd, updatedTime); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to update just some fields of product : %s.", tests.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to update just some fields of product.", tests.Success, testID)
 
-			saved, err = p.QueryByID(ctx, traceID, prd.ID)
+			saved, err = store.QueryByID(ctx, traceID, prd.ID)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve updated product : %s.", tests.Failed, testID, err)
 			}
@@ -113,12 +113,12 @@ func TestProduct(t *testing.T) {
 				t.Logf("\t%s\tTest %d:\tShould be able to see updated Name field.", tests.Success, testID)
 			}
 
-			if err := p.Delete(ctx, traceID, claims, prd.ID); err != nil {
+			if err := store.Delete(ctx, traceID, claims, prd.ID); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to delete product : %s.", tests.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to delete product.", tests.Success, testID)
 
-			_, err = p.QueryByID(ctx, traceID, prd.ID)
+			_, err = store.QueryByID(ctx, traceID, prd.ID)
 			if errors.Cause(err) != product.ErrNotFound {
 				t.Fatalf("\t%s\tTest %d:\tShould NOT be able to retrieve deleted product : %s.", tests.Failed, testID, err)
 			}

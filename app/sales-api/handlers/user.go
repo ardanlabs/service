@@ -15,8 +15,8 @@ import (
 )
 
 type userGroup struct {
-	user user.User
-	auth *auth.Auth
+	store user.Store
+	auth  *auth.Auth
 }
 
 func (ug userGroup) query(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
@@ -38,7 +38,7 @@ func (ug userGroup) query(ctx context.Context, w http.ResponseWriter, r *http.Re
 		return validate.NewRequestError(fmt.Errorf("invalid rows format: %s", params["rows"]), http.StatusBadRequest)
 	}
 
-	users, err := ug.user.Query(ctx, v.TraceID, pageNumber, rowsPerPage)
+	users, err := ug.store.Query(ctx, v.TraceID, pageNumber, rowsPerPage)
 	if err != nil {
 		return errors.Wrap(err, "unable to query for users")
 	}
@@ -61,7 +61,7 @@ func (ug userGroup) queryByID(ctx context.Context, w http.ResponseWriter, r *htt
 	}
 
 	params := web.Params(r)
-	usr, err := ug.user.QueryByID(ctx, v.TraceID, claims, params["id"])
+	usr, err := ug.store.QueryByID(ctx, v.TraceID, claims, params["id"])
 	if err != nil {
 		switch errors.Cause(err) {
 		case user.ErrInvalidID:
@@ -92,7 +92,7 @@ func (ug userGroup) create(ctx context.Context, w http.ResponseWriter, r *http.R
 		return errors.Wrap(err, "unable to decode payload")
 	}
 
-	usr, err := ug.user.Create(ctx, v.TraceID, nu, v.Now)
+	usr, err := ug.store.Create(ctx, v.TraceID, nu, v.Now)
 	if err != nil {
 		return errors.Wrapf(err, "User: %+v", &usr)
 	}
@@ -120,7 +120,7 @@ func (ug userGroup) update(ctx context.Context, w http.ResponseWriter, r *http.R
 	}
 
 	params := web.Params(r)
-	err := ug.user.Update(ctx, v.TraceID, claims, params["id"], upd, v.Now)
+	err := ug.store.Update(ctx, v.TraceID, claims, params["id"], upd, v.Now)
 	if err != nil {
 		switch errors.Cause(err) {
 		case user.ErrInvalidID:
@@ -152,7 +152,7 @@ func (ug userGroup) delete(ctx context.Context, w http.ResponseWriter, r *http.R
 	}
 
 	params := web.Params(r)
-	err := ug.user.Delete(ctx, v.TraceID, claims, params["id"])
+	err := ug.store.Delete(ctx, v.TraceID, claims, params["id"])
 	if err != nil {
 		switch errors.Cause(err) {
 		case user.ErrInvalidID:
@@ -184,7 +184,7 @@ func (ug userGroup) token(ctx context.Context, w http.ResponseWriter, r *http.Re
 		return validate.NewRequestError(err, http.StatusUnauthorized)
 	}
 
-	claims, err := ug.user.Authenticate(ctx, v.TraceID, v.Now, email, pass)
+	claims, err := ug.store.Authenticate(ctx, v.TraceID, v.Now, email, pass)
 	if err != nil {
 		switch errors.Cause(err) {
 		case user.ErrAuthenticationFailure:

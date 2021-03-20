@@ -15,7 +15,7 @@ import (
 )
 
 type productGroup struct {
-	product product.Product
+	store product.Store
 }
 
 func (pg productGroup) query(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
@@ -37,7 +37,7 @@ func (pg productGroup) query(ctx context.Context, w http.ResponseWriter, r *http
 		return validate.NewRequestError(fmt.Errorf("invalid rows format: %s", params["rows"]), http.StatusBadRequest)
 	}
 
-	products, err := pg.product.Query(ctx, v.TraceID, pageNumber, rowsPerPage)
+	products, err := pg.store.Query(ctx, v.TraceID, pageNumber, rowsPerPage)
 	if err != nil {
 		return err
 	}
@@ -55,7 +55,7 @@ func (pg productGroup) queryByID(ctx context.Context, w http.ResponseWriter, r *
 	}
 
 	params := web.Params(r)
-	prod, err := pg.product.QueryByID(ctx, v.TraceID, params["id"])
+	prod, err := pg.store.QueryByID(ctx, v.TraceID, params["id"])
 	if err != nil {
 		switch errors.Cause(err) {
 		case product.ErrInvalidID:
@@ -89,7 +89,7 @@ func (pg productGroup) create(ctx context.Context, w http.ResponseWriter, r *htt
 		return errors.Wrapf(err, "unable to decode payload")
 	}
 
-	prod, err := pg.product.Create(ctx, v.TraceID, claims, np, v.Now)
+	prod, err := pg.store.Create(ctx, v.TraceID, claims, np, v.Now)
 	if err != nil {
 		return errors.Wrapf(err, "creating new product: %+v", np)
 	}
@@ -117,7 +117,7 @@ func (pg productGroup) update(ctx context.Context, w http.ResponseWriter, r *htt
 	}
 
 	params := web.Params(r)
-	if err := pg.product.Update(ctx, v.TraceID, claims, params["id"], upd, v.Now); err != nil {
+	if err := pg.store.Update(ctx, v.TraceID, claims, params["id"], upd, v.Now); err != nil {
 		switch errors.Cause(err) {
 		case product.ErrInvalidID:
 			return validate.NewRequestError(err, http.StatusBadRequest)
@@ -148,7 +148,7 @@ func (pg productGroup) delete(ctx context.Context, w http.ResponseWriter, r *htt
 	}
 
 	params := web.Params(r)
-	if err := pg.product.Delete(ctx, v.TraceID, claims, params["id"]); err != nil {
+	if err := pg.store.Delete(ctx, v.TraceID, claims, params["id"]); err != nil {
 		switch errors.Cause(err) {
 		case product.ErrInvalidID:
 			return validate.NewRequestError(err, http.StatusBadRequest)
