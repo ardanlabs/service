@@ -98,9 +98,10 @@ func run(log *log.Logger) error {
 		}
 
 	case "useradd":
-		email := cfg.Args.Num(1)
-		password := cfg.Args.Num(2)
-		if err := commands.UserAdd(traceID, log, dbConfig, email, password); err != nil {
+		name := cfg.Args.Num(1)
+		email := cfg.Args.Num(2)
+		password := cfg.Args.Num(3)
+		if err := commands.UserAdd(traceID, log, dbConfig, name, email, password); err != nil {
 			return errors.Wrap(err, "adding user")
 		}
 
