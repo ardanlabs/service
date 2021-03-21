@@ -30,28 +30,32 @@ type UserTests struct {
 
 // TestUsers is the entry point for testing user management functions.
 func TestUsers(t *testing.T) {
-	test := tests.NewIntegration(t)
-	t.Cleanup(test.Teardown)
+	for name, tc := range tests.Databases {
+		t.Run(name, func(t *testing.T) {
+			test := tests.NewIntegration(t, &tc)
+			t.Cleanup(test.Teardown)
 
-	shutdown := make(chan os.Signal, 1)
-	tests := UserTests{
-		app:        handlers.API("develop", shutdown, test.Log, test.Auth, test.DB),
-		kid:        test.KID,
-		userToken:  test.Token("user@example.com", "gophers"),
-		adminToken: test.Token("admin@example.com", "gophers"),
+			shutdown := make(chan os.Signal, 1)
+			tests := UserTests{
+				app:        handlers.API("develop", shutdown, test.Log, test.Auth, test.DB),
+				kid:        test.KID,
+				userToken:  test.Token("user@example.com", "gophers"),
+				adminToken: test.Token("admin@example.com", "gophers"),
+			}
+
+			t.Run("getToken401", tests.getToken401)
+			t.Run("getToken200", tests.getToken200)
+			t.Run("postUser400", tests.postUser400)
+			t.Run("postUser401", tests.postUser401)
+			t.Run("postUser403", tests.postUser403)
+			t.Run("getUser400", tests.getUser400)
+			t.Run("getUser403", tests.getUser403)
+			t.Run("getUser404", tests.getUser404)
+			t.Run("deleteUserNotFound", tests.deleteUserNotFound)
+			t.Run("putUser404", tests.putUser404)
+			t.Run("crudUsers", tests.crudUser)
+		})
 	}
-
-	t.Run("getToken401", tests.getToken401)
-	t.Run("getToken200", tests.getToken200)
-	t.Run("postUser400", tests.postUser400)
-	t.Run("postUser401", tests.postUser401)
-	t.Run("postUser403", tests.postUser403)
-	t.Run("getUser400", tests.getUser400)
-	t.Run("getUser403", tests.getUser403)
-	t.Run("getUser404", tests.getUser404)
-	t.Run("deleteUserNotFound", tests.deleteUserNotFound)
-	t.Run("putUser404", tests.putUser404)
-	t.Run("crudUsers", tests.crudUser)
 }
 
 // getToken401 ensures an unknown user can't generate a token.

@@ -32,22 +32,26 @@ type ProductTests struct {
 // subtest needs a fresh instance of the application it can make it or it
 // should be its own Test* function.
 func TestProducts(t *testing.T) {
-	test := tests.NewIntegration(t)
-	t.Cleanup(test.Teardown)
+	for name, tc := range tests.Databases {
+		t.Run(name, func(t *testing.T) {
+			test := tests.NewIntegration(t, &tc)
+			t.Cleanup(test.Teardown)
 
-	shutdown := make(chan os.Signal, 1)
-	tests := ProductTests{
-		app:       handlers.API("develop", shutdown, test.Log, test.Auth, test.DB),
-		userToken: test.Token("admin@example.com", "gophers"),
+			shutdown := make(chan os.Signal, 1)
+			tests := ProductTests{
+				app:       handlers.API("develop", shutdown, test.Log, test.Auth, test.DB),
+				userToken: test.Token("admin@example.com", "gophers"),
+			}
+
+			t.Run("postProduct400", tests.postProduct400)
+			t.Run("postProduct401", tests.postProduct401)
+			t.Run("getProduct404", tests.getProduct404)
+			t.Run("getProduct400", tests.getProduct400)
+			t.Run("deleteProductNotFound", tests.deleteProductNotFound)
+			t.Run("putProduct404", tests.putProduct404)
+			t.Run("crudProducts", tests.crudProduct)
+		})
 	}
-
-	t.Run("postProduct400", tests.postProduct400)
-	t.Run("postProduct401", tests.postProduct401)
-	t.Run("getProduct404", tests.getProduct404)
-	t.Run("getProduct400", tests.getProduct400)
-	t.Run("deleteProductNotFound", tests.deleteProductNotFound)
-	t.Run("putProduct404", tests.putProduct404)
-	t.Run("crudProducts", tests.crudProduct)
 }
 
 // postProduct400 validates a product can't be created with the endpoint
