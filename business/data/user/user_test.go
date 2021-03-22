@@ -123,7 +123,10 @@ func TestUserPaging(t *testing.T) {
 	log, db, teardown := tests.NewUnit(t)
 	t.Cleanup(teardown)
 
-	schema.Seed(db)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	schema.Seed(ctx, db)
 
 	store := user.NewStore(log, db)
 

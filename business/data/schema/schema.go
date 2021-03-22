@@ -3,12 +3,15 @@ package schema
 
 import (
 	"bufio"
+	"context"
 	_ "embed" // Calls init function.
 	"strconv"
 	"strings"
 
+	"github.com/ardanlabs/service/foundation/database"
 	"github.com/dimiro1/darwin"
 	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
 )
 
 var (
@@ -24,7 +27,11 @@ var (
 
 // Migrate attempts to bring the schema for db up to date with the migrations
 // defined in this package.
-func Migrate(db *sqlx.DB) error {
+func Migrate(ctx context.Context, db *sqlx.DB) error {
+	if err := database.StatusCheck(ctx, db); err != nil {
+		return errors.Wrap(err, "status check database")
+	}
+
 	driver := darwin.NewGenericDriver(db.DB, darwin.PostgresDialect{})
 	d := darwin.New(driver, parseMigrations(schemaDoc), nil)
 	return d.Migrate()
@@ -32,7 +39,11 @@ func Migrate(db *sqlx.DB) error {
 
 // Seed runs the set of seed-data queries against db. The queries are ran in a
 // transaction and rolled back if any fail.
-func Seed(db *sqlx.DB) error {
+func Seed(ctx context.Context, db *sqlx.DB) error {
+	if err := database.StatusCheck(ctx, db); err != nil {
+		return errors.Wrap(err, "status check database")
+	}
+
 	tx, err := db.Begin()
 	if err != nil {
 		return err

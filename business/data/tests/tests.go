@@ -55,13 +55,9 @@ func NewUnit(t *testing.T) (*log.Logger, *sqlx.DB, func()) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	if err := database.StatusCheck(ctx, db); err != nil {
-		docker.DumpContainerLogs(t, c.ID)
-		docker.StopContainer(t, c.ID)
-		t.Fatalf("Database never ready: %v", err)
-	}
 
-	if err := schema.Migrate(db); err != nil {
+	if err := schema.Migrate(ctx, db); err != nil {
+		docker.DumpContainerLogs(t, c.ID)
 		docker.StopContainer(t, c.ID)
 		t.Fatalf("Migrating error: %s", err)
 	}
@@ -95,7 +91,10 @@ type Test struct {
 func NewIntegration(t *testing.T) *Test {
 	log, db, teardown := NewUnit(t)
 
-	if err := schema.Seed(db); err != nil {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	if err := schema.Seed(ctx, db); err != nil {
 		t.Fatal(err)
 	}
 
