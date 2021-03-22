@@ -14,8 +14,14 @@ import (
 	"github.com/pkg/errors"
 )
 
+var dbc = tests.DBContainer{
+	Image: "postgres:13-alpine",
+	Port:  "5432",
+	Args:  []string{"-e", "POSTGRES_PASSWORD=postgres"},
+}
+
 func TestUser(t *testing.T) {
-	log, db, teardown := tests.NewUnit(t)
+	log, db, teardown := tests.NewUnit(t, dbc)
 	t.Cleanup(teardown)
 
 	store := user.NewStore(log, db)
@@ -120,7 +126,7 @@ func TestUser(t *testing.T) {
 }
 
 func TestUserPaging(t *testing.T) {
-	log, db, teardown := tests.NewUnit(t)
+	log, db, teardown := tests.NewUnit(t, dbc)
 	t.Cleanup(teardown)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -171,7 +177,7 @@ func TestUserPaging(t *testing.T) {
 }
 
 func TestAuthenticate(t *testing.T) {
-	log, db, teardown := tests.NewUnit(t)
+	log, db, teardown := tests.NewUnit(t, dbc)
 	t.Cleanup(teardown)
 
 	store := user.NewStore(log, db)

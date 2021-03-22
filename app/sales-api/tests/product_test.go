@@ -32,7 +32,14 @@ type ProductTests struct {
 // subtest needs a fresh instance of the application it can make it or it
 // should be its own Test* function.
 func TestProducts(t *testing.T) {
-	test := tests.NewIntegration(t)
+	test := tests.NewIntegration(
+		t,
+		tests.DBContainer{
+			Image: "postgres:13-alpine",
+			Port:  "5432",
+			Args:  []string{"-e", "POSTGRES_PASSWORD=postgres"},
+		},
+	)
 	t.Cleanup(test.Teardown)
 
 	shutdown := make(chan os.Signal, 1)

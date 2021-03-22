@@ -13,8 +13,14 @@ import (
 	"github.com/pkg/errors"
 )
 
+var dbc = tests.DBContainer{
+	Image: "postgres:13-alpine",
+	Port:  "5432",
+	Args:  []string{"-e", "POSTGRES_PASSWORD=postgres"},
+}
+
 func TestProduct(t *testing.T) {
-	log, db, teardown := tests.NewUnit(t)
+	log, db, teardown := tests.NewUnit(t, dbc)
 	t.Cleanup(teardown)
 
 	store := product.NewStore(log, db)

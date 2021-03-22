@@ -25,20 +25,18 @@ const (
 	Failed  = "\u2717"
 )
 
-// Configuration for running tests.
-var (
-	dbImage = "postgres:13-alpine"
-	dbPort  = "5432"
-	dbArgs  = []string{"-e", "POSTGRES_PASSWORD=postgres"}
-	AdminID = "5cf37266-3473-4006-984f-9325122678b7"
-	UserID  = "45b5fbd3-755f-4379-8f07-a58d4a30fa2f"
-)
+// DBContainer provides configuration for a container to run.
+type DBContainer struct {
+	Image string
+	Port  string
+	Args  []string
+}
 
 // NewUnit creates a test database inside a Docker container. It creates the
 // required table structure but the database is otherwise empty. It returns
 // the database to use as well as a function to call at the end of the test.
-func NewUnit(t *testing.T) (*log.Logger, *sqlx.DB, func()) {
-	c := docker.StartContainer(t, dbImage, dbPort, dbArgs...)
+func NewUnit(t *testing.T, dbc DBContainer) (*log.Logger, *sqlx.DB, func()) {
+	c := docker.StartContainer(t, dbc.Image, dbc.Port, dbc.Args...)
 
 	db, err := database.Open(database.Config{
 		User:       "postgres",
@@ -88,8 +86,8 @@ type Test struct {
 }
 
 // NewIntegration creates a database, seeds it, constructs an authenticator.
-func NewIntegration(t *testing.T) *Test {
-	log, db, teardown := NewUnit(t)
+func NewIntegration(t *testing.T, dbc DBContainer) *Test {
+	log, db, teardown := NewUnit(t, dbc)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()

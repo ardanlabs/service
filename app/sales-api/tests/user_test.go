@@ -30,7 +30,14 @@ type UserTests struct {
 
 // TestUsers is the entry point for testing user management functions.
 func TestUsers(t *testing.T) {
-	test := tests.NewIntegration(t)
+	test := tests.NewIntegration(
+		t,
+		tests.DBContainer{
+			Image: "postgres:13-alpine",
+			Port:  "5432",
+			Args:  []string{"-e", "POSTGRES_PASSWORD=postgres"},
+		},
+	)
 	t.Cleanup(test.Teardown)
 
 	shutdown := make(chan os.Signal, 1)
@@ -253,7 +260,8 @@ func (ut *UserTests) getUser403(t *testing.T) {
 		testID := 0
 		t.Logf("\tTest %d:\tWhen fetching the admin user as a regular data.", testID)
 		{
-			r := httptest.NewRequest(http.MethodGet, "/v1/users/"+tests.AdminID, nil)
+			const adminID = "5cf37266-3473-4006-984f-9325122678b7"
+			r := httptest.NewRequest(http.MethodGet, "/v1/users/"+adminID, nil)
 			w := httptest.NewRecorder()
 
 			r.Header.Set("Authorization", "Bearer "+ut.userToken)
@@ -277,8 +285,8 @@ func (ut *UserTests) getUser403(t *testing.T) {
 		testID = 1
 		t.Logf("\tTest %d:\tWhen fetching the user as themselves.", testID)
 		{
-
-			r := httptest.NewRequest(http.MethodGet, "/v1/users/"+tests.UserID, nil)
+			const userID = "45b5fbd3-755f-4379-8f07-a58d4a30fa2f"
+			r := httptest.NewRequest(http.MethodGet, "/v1/users/"+userID, nil)
 			w := httptest.NewRecorder()
 
 			r.Header.Set("Authorization", "Bearer "+ut.userToken)
