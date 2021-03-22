@@ -1,7 +1,9 @@
 package commands
 
 import (
+	"context"
 	"fmt"
+	"time"
 
 	"github.com/ardanlabs/service/business/data/schema"
 	"github.com/ardanlabs/service/foundation/database"
@@ -15,6 +17,12 @@ func Seed(cfg database.Config) error {
 		return errors.Wrap(err, "connect database")
 	}
 	defer db.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := database.StatusCheck(ctx, db); err != nil {
+		return errors.Wrap(err, "status check database")
+	}
 
 	if err := schema.Seed(db); err != nil {
 		return errors.Wrap(err, "seed database")
