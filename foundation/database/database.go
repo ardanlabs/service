@@ -59,8 +59,7 @@ func StatusCheck(ctx context.Context, db *sqlx.DB) error {
 
 	// First check we can ping the database.
 	var pingError error
-	maxAttempts := 20
-	for attempts := 1; attempts <= maxAttempts; attempts++ {
+	for attempts := 1; ; attempts++ {
 		pingError = db.Ping()
 		if pingError == nil {
 			break

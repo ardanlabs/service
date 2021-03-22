@@ -68,7 +68,10 @@ func Authorize(roles ...string) web.Middleware {
 			// If the context is missing this value return failure.
 			claims, ok := ctx.Value(auth.Key).(auth.Claims)
 			if !ok {
-				return errors.New("claims missing from context")
+				return validate.NewRequestError(
+					fmt.Errorf("you are not authorized for that action: no claims"),
+					http.StatusForbidden,
+				)
 			}
 
 			if !claims.Authorized(roles...) {
