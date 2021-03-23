@@ -14,13 +14,6 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-// Set of error variables for CRUD operations.
-var (
-	ErrNotFound  = errors.New("not found")
-	ErrInvalidID = errors.New("ID is not in its proper form")
-	ErrForbidden = errors.New("attempted action is not allowed")
-)
-
 // Store manages the set of API's for product access.
 type Store struct {
 	log *log.Logger
@@ -79,7 +72,7 @@ func (s Store) Update(ctx context.Context, traceID string, claims auth.Claims, p
 	defer span.End()
 
 	if err := validate.CheckID(productID); err != nil {
-		return ErrInvalidID
+		return database.ErrInvalidID
 	}
 	if err := validate.Check(up); err != nil {
 		return errors.Wrap(err, "validating data")
@@ -92,7 +85,7 @@ func (s Store) Update(ctx context.Context, traceID string, claims auth.Claims, p
 
 	// If you are not an admin and looking to retrieve someone elses product.
 	if !claims.Authorized(auth.RoleAdmin) && prd.UserID != claims.Subject {
-		return ErrForbidden
+		return database.ErrForbidden
 	}
 
 	if up.Name != nil {
@@ -134,12 +127,12 @@ func (s Store) Delete(ctx context.Context, traceID string, claims auth.Claims, p
 	defer span.End()
 
 	if err := validate.CheckID(productID); err != nil {
-		return ErrInvalidID
+		return database.ErrInvalidID
 	}
 
 	// If you are not an admin.
 	if !claims.Authorized(auth.RoleAdmin) {
-		return ErrForbidden
+		return database.ErrForbidden
 	}
 
 	data := struct {
@@ -200,7 +193,7 @@ func (s Store) Query(ctx context.Context, traceID string, pageNumber int, rowsPe
 	var products []Product
 	if err := database.NamedQuerySlice(ctx, s.db, q, data, &products); err != nil {
 		if err == database.ErrNotFound {
-			return nil, ErrNotFound
+			return nil, database.ErrNotFound
 		}
 		return nil, errors.Wrap(err, "selecting products")
 	}
@@ -214,7 +207,7 @@ func (s Store) QueryByID(ctx context.Context, traceID string, productID string) 
 	defer span.End()
 
 	if err := validate.CheckID(productID); err != nil {
-		return Product{}, ErrInvalidID
+		return Product{}, database.ErrInvalidID
 	}
 
 	data := struct {
@@ -244,7 +237,7 @@ func (s Store) QueryByID(ctx context.Context, traceID string, productID string) 
 	var prd Product
 	if err := database.NamedQueryStruct(ctx, s.db, q, data, &prd); err != nil {
 		if err == database.ErrNotFound {
-			return Product{}, ErrNotFound
+			return Product{}, database.ErrNotFound
 		}
 		return Product{}, errors.Wrapf(err, "selecting user %q", data.ProductID)
 	}

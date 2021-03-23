@@ -9,6 +9,7 @@ import (
 	"github.com/ardanlabs/service/business/data/schema"
 	"github.com/ardanlabs/service/business/data/tests"
 	"github.com/ardanlabs/service/business/data/user"
+	"github.com/ardanlabs/service/foundation/database"
 	"github.com/dgrijalva/jwt-go/v4"
 	"github.com/google/go-cmp/cmp"
 	"github.com/pkg/errors"
@@ -117,7 +118,7 @@ func TestUser(t *testing.T) {
 			t.Logf("\t%s\tTest %d:\tShould be able to delete user.", tests.Success, testID)
 
 			_, err = store.QueryByID(ctx, traceID, claims, usr.ID)
-			if errors.Cause(err) != user.ErrNotFound {
+			if errors.Cause(err) != database.ErrNotFound {
 				t.Fatalf("\t%s\tTest %d:\tShould NOT be able to retrieve user : %s.", tests.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould NOT be able to retrieve user.", tests.Success, testID)

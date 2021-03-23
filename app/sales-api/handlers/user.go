@@ -9,6 +9,7 @@ import (
 	"github.com/ardanlabs/service/business/auth"
 	"github.com/ardanlabs/service/business/data/user"
 	"github.com/ardanlabs/service/business/validate"
+	"github.com/ardanlabs/service/foundation/database"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/trace"
@@ -64,11 +65,11 @@ func (ug userGroup) queryByID(ctx context.Context, w http.ResponseWriter, r *htt
 	usr, err := ug.store.QueryByID(ctx, v.TraceID, claims, params["id"])
 	if err != nil {
 		switch errors.Cause(err) {
-		case user.ErrInvalidID:
+		case database.ErrInvalidID:
 			return validate.NewRequestError(err, http.StatusBadRequest)
-		case user.ErrNotFound:
+		case database.ErrNotFound:
 			return validate.NewRequestError(err, http.StatusNotFound)
-		case user.ErrForbidden:
+		case database.ErrForbidden:
 			return validate.NewRequestError(err, http.StatusForbidden)
 		default:
 			return errors.Wrapf(err, "ID: %s", params["id"])
@@ -123,11 +124,11 @@ func (ug userGroup) update(ctx context.Context, w http.ResponseWriter, r *http.R
 	err := ug.store.Update(ctx, v.TraceID, claims, params["id"], upd, v.Now)
 	if err != nil {
 		switch errors.Cause(err) {
-		case user.ErrInvalidID:
+		case database.ErrInvalidID:
 			return validate.NewRequestError(err, http.StatusBadRequest)
-		case user.ErrNotFound:
+		case database.ErrNotFound:
 			return validate.NewRequestError(err, http.StatusNotFound)
-		case user.ErrForbidden:
+		case database.ErrForbidden:
 			return validate.NewRequestError(err, http.StatusForbidden)
 		default:
 			return errors.Wrapf(err, "ID: %s  User: %+v", params["id"], &upd)
@@ -155,11 +156,11 @@ func (ug userGroup) delete(ctx context.Context, w http.ResponseWriter, r *http.R
 	err := ug.store.Delete(ctx, v.TraceID, claims, params["id"])
 	if err != nil {
 		switch errors.Cause(err) {
-		case user.ErrInvalidID:
+		case database.ErrInvalidID:
 			return validate.NewRequestError(err, http.StatusBadRequest)
-		case user.ErrNotFound:
+		case database.ErrNotFound:
 			return validate.NewRequestError(err, http.StatusNotFound)
-		case user.ErrForbidden:
+		case database.ErrForbidden:
 			return validate.NewRequestError(err, http.StatusForbidden)
 		default:
 			return errors.Wrapf(err, "ID: %s", params["id"])
@@ -187,7 +188,7 @@ func (ug userGroup) token(ctx context.Context, w http.ResponseWriter, r *http.Re
 	claims, err := ug.store.Authenticate(ctx, v.TraceID, v.Now, email, pass)
 	if err != nil {
 		switch errors.Cause(err) {
-		case user.ErrAuthenticationFailure:
+		case database.ErrAuthenticationFailure:
 			return validate.NewRequestError(err, http.StatusUnauthorized)
 		default:
 			return errors.Wrap(err, "authenticating")

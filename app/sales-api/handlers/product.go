@@ -9,6 +9,7 @@ import (
 	"github.com/ardanlabs/service/business/auth"
 	"github.com/ardanlabs/service/business/data/product"
 	"github.com/ardanlabs/service/business/validate"
+	"github.com/ardanlabs/service/foundation/database"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/trace"
@@ -58,9 +59,9 @@ func (pg productGroup) queryByID(ctx context.Context, w http.ResponseWriter, r *
 	prod, err := pg.store.QueryByID(ctx, v.TraceID, params["id"])
 	if err != nil {
 		switch errors.Cause(err) {
-		case product.ErrInvalidID:
+		case database.ErrInvalidID:
 			return validate.NewRequestError(err, http.StatusBadRequest)
-		case product.ErrNotFound:
+		case database.ErrNotFound:
 			return validate.NewRequestError(err, http.StatusNotFound)
 		default:
 			return errors.Wrapf(err, "ID: %s", params["id"])
@@ -119,11 +120,11 @@ func (pg productGroup) update(ctx context.Context, w http.ResponseWriter, r *htt
 	params := web.Params(r)
 	if err := pg.store.Update(ctx, v.TraceID, claims, params["id"], upd, v.Now); err != nil {
 		switch errors.Cause(err) {
-		case product.ErrInvalidID:
+		case database.ErrInvalidID:
 			return validate.NewRequestError(err, http.StatusBadRequest)
-		case product.ErrNotFound:
+		case database.ErrNotFound:
 			return validate.NewRequestError(err, http.StatusNotFound)
-		case product.ErrForbidden:
+		case database.ErrForbidden:
 			return validate.NewRequestError(err, http.StatusForbidden)
 		default:
 			return errors.Wrapf(err, "ID: %s  User: %+v", params["id"], &upd)
@@ -150,7 +151,7 @@ func (pg productGroup) delete(ctx context.Context, w http.ResponseWriter, r *htt
 	params := web.Params(r)
 	if err := pg.store.Delete(ctx, v.TraceID, claims, params["id"]); err != nil {
 		switch errors.Cause(err) {
-		case product.ErrInvalidID:
+		case database.ErrInvalidID:
 			return validate.NewRequestError(err, http.StatusBadRequest)
 		default:
 			return errors.Wrapf(err, "ID: %s", params["id"])

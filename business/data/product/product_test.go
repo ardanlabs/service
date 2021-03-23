@@ -8,6 +8,7 @@ import (
 	"github.com/ardanlabs/service/business/auth"
 	"github.com/ardanlabs/service/business/data/product"
 	"github.com/ardanlabs/service/business/data/tests"
+	"github.com/ardanlabs/service/foundation/database"
 	"github.com/dgrijalva/jwt-go/v4"
 	"github.com/google/go-cmp/cmp"
 	"github.com/pkg/errors"
@@ -125,7 +126,7 @@ func TestProduct(t *testing.T) {
 			t.Logf("\t%s\tTest %d:\tShould be able to delete product.", tests.Success, testID)
 
 			_, err = store.QueryByID(ctx, traceID, prd.ID)
-			if errors.Cause(err) != product.ErrNotFound {
+			if errors.Cause(err) != database.ErrNotFound {
 				t.Fatalf("\t%s\tTest %d:\tShould NOT be able to retrieve deleted product : %s.", tests.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould NOT be able to retrieve deleted product.", tests.Success, testID)
