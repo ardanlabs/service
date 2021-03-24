@@ -32,8 +32,12 @@ func Migrate(ctx context.Context, db *sqlx.DB) error {
 		return errors.Wrap(err, "status check database")
 	}
 
-	driver := darwin.NewGenericDriver(db.DB, darwin.PostgresDialect{})
-	d := darwin.New(driver, parseMigrations(schemaDoc), nil)
+	driver, err := darwin.NewGenericDriver(db.DB, darwin.PostgresDialect{})
+	if err != nil {
+		return errors.Wrap(err, "construct darwin driver")
+	}
+
+	d := darwin.New(driver, parseMigrations(schemaDoc))
 	return d.Migrate()
 }
 
