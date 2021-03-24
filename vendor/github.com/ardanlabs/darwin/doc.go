@@ -14,7 +14,35 @@ https://flywaydb.org/documentation/faq#downgrade
 https://flywaydb.org/documentation/faq#rollback
 https://flywaydb.org/documentation/faq#hot-fixes
 
-Example Usage:
+Given this file:
+	-- Version: 1.1
+	-- Description: Create table users
+	CREATE TABLE users (
+		user_id       UUID,
+		name          TEXT,
+		email         TEXT UNIQUE,
+		roles         TEXT[],
+		password_hash TEXT,
+		date_created  TIMESTAMP,
+		date_updated  TIMESTAMP,
+
+		PRIMARY KEY (user_id)
+	);
+
+	-- Version: 1.2
+	-- Description: Create table products
+	CREATE TABLE products (
+		product_id   UUID,
+		name         TEXT,
+		cost         INT,
+		quantity     INT,
+		date_created TIMESTAMP,
+		date_updated TIMESTAMP,
+
+		PRIMARY KEY (product_id)
+	);
+
+You can write this code:
 
 	package main
 
@@ -27,22 +55,8 @@ Example Usage:
 	)
 
 	var (
-		migrations = []darwin.Migration{
-			{
-				Version:     1,
-				Description: "Creating table posts",
-				Script: `CREATE TABLE posts (
-							id INT 		auto_increment,
-							title 		VARCHAR(255),
-							PRIMARY KEY (id)
-						) ENGINE=InnoDB CHARACTER SET=utf8;`,
-			},
-			{
-				Version:     2,
-				Description: "Adding column body",
-				Script:      "ALTER TABLE posts ADD body TEXT AFTER title;",
-			},
-		}
+		//go:embed sql/schema.sql
+		schemaDoc string
 	)
 
 	func main() {
@@ -51,12 +65,12 @@ Example Usage:
 			log.Fatal(err)
 		}
 
-		driver, err := darwin.NewGenericDriver(database, darwin.MySQLDialect{})
+		driver, err := darwin.NewGenericDriver(db.DB, darwin.PostgresDialect{})
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 
-		d := darwin.New(driver, migrations)
+		d := darwin.New(driver, darwin.ParseMigrations(schemaDoc))
 		if err := d.Migrate(); err != nil {
 			log.Println(err)
 		}

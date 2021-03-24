@@ -6,8 +6,8 @@ github.com/Shopify/sarama v1.19.0/go.mod h1:FVkBWblsNy7DGZRfXLU0O9RCGt5g3g3yEuWX
 github.com/Shopify/toxiproxy v2.1.4+incompatible/go.mod h1:OXgGpZ6Cli1/URJOF1DMxUHB2q5Ap20/P/eIdh4G0pI=
 github.com/ardanlabs/conf v1.3.5 h1:P/1riLKmh42IgbC8nXlTRm4dEmxj1ACCZcbZhSxzF9I=
 github.com/ardanlabs/conf v1.3.5/go.mod h1:ILsMo9dMqYzCxDjDXTiwMI0IgxOJd0MOiucbQY2wlJw=
-github.com/ardanlabs/darwin v1.1.0 h1:tSNc0hFhY+T/zGvRvUWwB/zZp1Pz3+B338ybMqSWuhE=
-github.com/ardanlabs/darwin v1.1.0/go.mod h1:Y3MRjtKnFnamCJ42PmZZPpojM7aDqlHVEHcs1TnHy3A=
+github.com/ardanlabs/darwin v1.2.0 h1:+IipsU5ASmh1oD+/sWbAeIDeXS4a/14gEZiTkOy+IVc=
+github.com/ardanlabs/darwin v1.2.0/go.mod h1:Y3MRjtKnFnamCJ42PmZZPpojM7aDqlHVEHcs1TnHy3A=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
 github.com/cncf/udpa/go v0.0.0-20191209042840-269d4d468f6f/go.mod h1:M8M6+tZqaGXZJjfX53e64911xZQV5JYwmTeXPW+k8Sc=
