@@ -1,9 +1,12 @@
 package darwin
 
 import (
+	"bufio"
 	"crypto/md5"
 	"fmt"
 	"sort"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -89,6 +92,46 @@ func New(driver Driver, migrations []Migration) Darwin {
 		driver:     driver,
 		migrations: migrations,
 	}
+}
+
+// ParseMigrations takes a string that represents a text formatted set
+// of migrations and parse them for use.
+func ParseMigrations(s string) []Migration {
+	var migs []Migration
+
+	scanner := bufio.NewScanner(strings.NewReader(s))
+	scanner.Split(bufio.ScanLines)
+
+	var mig Migration
+	var script string
+	for scanner.Scan() {
+		v := strings.ToLower(scanner.Text())
+		switch {
+		case len(v) >= 5 && (v[:6] == "-- ver" || v[:5] == "--ver"):
+			mig.Script = script
+			migs = append(migs, mig)
+
+			mig = Migration{}
+			script = ""
+
+			f, err := strconv.ParseFloat(strings.TrimSpace(v[11:]), 64)
+			if err != nil {
+				return nil
+			}
+			mig.Version = f
+
+		case len(v) >= 5 && (v[:6] == "-- des" || v[:5] == "--des"):
+			mig.Description = strings.TrimSpace(v[15:])
+
+		default:
+			script += v + "\n"
+		}
+	}
+
+	mig.Script = script
+	migs = append(migs, mig)
+
+	return migs[1:]
 }
 
 // DuplicateMigrationVersionError is used to report when the migration list has

@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ardanlabs/service/business/auth"
+	"github.com/ardanlabs/service/business/sys/auth"
 	"github.com/dgrijalva/jwt-go/v4"
 )
 

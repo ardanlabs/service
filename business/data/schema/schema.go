@@ -2,11 +2,8 @@
 package schema
 
 import (
-	"bufio"
 	"context"
 	_ "embed" // Calls init function.
-	"strconv"
-	"strings"
 
 	"github.com/ardanlabs/darwin"
 	"github.com/ardanlabs/service/foundation/database"
@@ -37,7 +34,7 @@ func Migrate(ctx context.Context, db *sqlx.DB) error {
 		return errors.Wrap(err, "construct darwin driver")
 	}
 
-	d := darwin.New(driver, parseMigrations(schemaDoc))
+	d := darwin.New(driver, darwin.ParseMigrations(schemaDoc))
 	return d.Migrate()
 }
 
@@ -79,42 +76,4 @@ func DeleteAll(db *sqlx.DB) error {
 	}
 
 	return tx.Commit()
-}
-
-func parseMigrations(s string) []darwin.Migration {
-	var migs []darwin.Migration
-
-	scanner := bufio.NewScanner(strings.NewReader(s))
-	scanner.Split(bufio.ScanLines)
-
-	var mig darwin.Migration
-	var script string
-	for scanner.Scan() {
-		v := strings.ToLower(scanner.Text())
-		switch {
-		case len(v) >= 5 && (v[:6] == "-- ver" || v[:5] == "--ver"):
-			mig.Script = script
-			migs = append(migs, mig)
-
-			mig = darwin.Migration{}
-			script = ""
-
-			f, err := strconv.ParseFloat(strings.TrimSpace(v[11:]), 64)
-			if err != nil {
-				return nil
-			}
-			mig.Version = f
-
-		case len(v) >= 5 && (v[:6] == "-- des" || v[:5] == "--des"):
-			mig.Description = strings.TrimSpace(v[15:])
-
-		default:
-			script += v + "\n"
-		}
-	}
-
-	mig.Script = script
-	migs = append(migs, mig)
-
-	return migs[1:]
 }

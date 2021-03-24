@@ -14,7 +14,7 @@ import (
 
 	"github.com/ardanlabs/conf"
 	"github.com/ardanlabs/service/app/sales-api/handlers"
-	"github.com/ardanlabs/service/business/auth"
+	"github.com/ardanlabs/service/business/sys/auth"
 	"github.com/ardanlabs/service/foundation/database"
 	"github.com/ardanlabs/service/foundation/keystore"
 	"github.com/pkg/errors"

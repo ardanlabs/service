@@ -6,8 +6,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/ardanlabs/service/business/auth"
 	"github.com/ardanlabs/service/business/data/user"
+	"github.com/ardanlabs/service/business/sys/auth"
 	"github.com/ardanlabs/service/foundation/database"
 	"github.com/pkg/errors"
 )
