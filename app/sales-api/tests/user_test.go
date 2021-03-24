@@ -10,10 +10,10 @@ import (
 	"testing"
 
 	"github.com/ardanlabs/service/app/sales-api/handlers"
-	"github.com/ardanlabs/service/business/auth"
 	"github.com/ardanlabs/service/business/data/tests"
 	"github.com/ardanlabs/service/business/data/user"
-	"github.com/ardanlabs/service/business/validate"
+	"github.com/ardanlabs/service/business/sys/auth"
+	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 )

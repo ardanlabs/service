@@ -6,8 +6,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/ardanlabs/service/business/auth"
-	"github.com/ardanlabs/service/business/validate"
+	"github.com/ardanlabs/service/business/sys/auth"
+	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/ardanlabs/service/foundation/database"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"

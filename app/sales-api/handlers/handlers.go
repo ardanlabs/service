@@ -7,10 +7,10 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/ardanlabs/service/business/auth" // Import is removed in final PR
+	"github.com/ardanlabs/service/business/app/mid"
 	"github.com/ardanlabs/service/business/data/product"
 	"github.com/ardanlabs/service/business/data/user"
-	"github.com/ardanlabs/service/business/mid"
+	"github.com/ardanlabs/service/business/sys/auth" // Import is removed in final PR
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/jmoiron/sqlx"
 )
