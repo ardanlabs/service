@@ -65,11 +65,13 @@ func run(log *log.Logger) error {
 			Algorithm  string `conf:"default:RS256"`
 		}
 		DB struct {
-			User       string `conf:"default:postgres"`
-			Password   string `conf:"default:postgres,mask"`
-			Host       string `conf:"default:db"`
-			Name       string `conf:"default:postgres"`
-			DisableTLS bool   `conf:"default:true"`
+			User         string `conf:"default:postgres"`
+			Password     string `conf:"default:postgres,mask"`
+			Host         string `conf:"default:db"`
+			Name         string `conf:"default:postgres"`
+			MaxIdleConns int    `conf:"default:0"`
+			MaxOpenConns int    `conf:"default:0"`
+			DisableTLS   bool   `conf:"default:true"`
 		}
 		Zipkin struct {
 			ReporterURI string  `conf:"default:http://zipkin:9411/api/v2/spans"`
@@ -136,11 +138,13 @@ func run(log *log.Logger) error {
 	log.Println("main: Initializing database support")
 
 	db, err := database.Open(database.Config{
-		User:       cfg.DB.User,
-		Password:   cfg.DB.Password,
-		Host:       cfg.DB.Host,
-		Name:       cfg.DB.Name,
-		DisableTLS: cfg.DB.DisableTLS,
+		User:         cfg.DB.User,
+		Password:     cfg.DB.Password,
+		Host:         cfg.DB.Host,
+		Name:         cfg.DB.Name,
+		MaxIdleConns: cfg.DB.MaxIdleConns,
+		MaxOpenConns: cfg.DB.MaxOpenConns,
+		DisableTLS:   cfg.DB.DisableTLS,
 	})
 	if err != nil {
 		return errors.Wrap(err, "connecting to db")
