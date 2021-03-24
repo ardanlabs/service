@@ -3,20 +3,37 @@
 package handlers
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"os"
 
 	"github.com/ardanlabs/service/business/data/product"
 	"github.com/ardanlabs/service/business/data/user"
-	"github.com/ardanlabs/service/business/sys/auth" // Import is removed in final PR
+	"github.com/ardanlabs/service/business/sys/auth"
 	"github.com/ardanlabs/service/business/web/mid"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/jmoiron/sqlx"
 )
 
+// Options represent optional parameters.
+type Options struct {
+	corsOrigin string
+}
+
+// WithCORS provides configuration options for CORS.
+func WithCORS(origin string) func(opts *Options) {
+	return func(opts *Options) {
+		opts.corsOrigin = origin
+	}
+}
+
 // API constructs an http.Handler with all application routes defined.
-func API(build string, shutdown chan os.Signal, log *log.Logger, a *auth.Auth, db *sqlx.DB) http.Handler {
+func API(build string, shutdown chan os.Signal, log *log.Logger, a *auth.Auth, db *sqlx.DB, options ...func(opts *Options)) http.Handler {
+	var opts Options
+	for _, option := range options {
+		option(&opts)
+	}
 
 	// Construct the web.App which holds all routes as well as common Middleware.
 	app := web.NewApp(shutdown, mid.Logger(log), mid.Errors(log), mid.Metrics(), mid.Panics(log))
@@ -50,6 +67,16 @@ func API(build string, shutdown chan os.Signal, log *log.Logger, a *auth.Auth, d
 	app.Handle(http.MethodPost, "/v1/products", pg.create, mid.Authenticate(a))
 	app.Handle(http.MethodPut, "/v1/products/:id", pg.update, mid.Authenticate(a))
 	app.Handle(http.MethodDelete, "/v1/products/:id", pg.delete, mid.Authenticate(a))
+
+	// Accept CORS 'OPTIONS' preflight requests if config has been provided.
+	// Don't forget to apply the CORS middleware to the routes that need it.
+	// Example Config: `conf:"default:https://MY_DOMAIN.COM"`
+	if opts.corsOrigin != "" {
+		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+			return nil
+		}
+		app.Handle(http.MethodOptions, "/*", h)
+	}
 
 	return app
 }
