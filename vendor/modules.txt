@@ -1,7 +1,7 @@
 # github.com/ardanlabs/conf v1.3.5
 ## explicit
 github.com/ardanlabs/conf
-# github.com/ardanlabs/darwin v1.0.0
+# github.com/ardanlabs/darwin v1.1.0
 ## explicit
 github.com/ardanlabs/darwin
 # github.com/dgrijalva/jwt-go/v4 v4.0.0-preview1

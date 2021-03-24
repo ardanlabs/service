@@ -2,25 +2,33 @@ package darwin
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"time"
 )
 
-// MigrationRecord is the entry in schema table
+// Dialect is used to support multiple databases by returning proper SQL.
+type Dialect interface {
+	CreateTableSQL() string
+	InsertSQL() string
+	AllSQL() string
+}
+
+// Driver is a database driver abstraction.
+type Driver interface {
+	Create() error
+	Insert(e MigrationRecord) error
+	All() ([]MigrationRecord, error)
+	Exec(string) (time.Duration, error)
+}
+
+// MigrationRecord is the entry in schema table.
 type MigrationRecord struct {
 	Version       float64
 	Description   string
 	Checksum      string
 	AppliedAt     time.Time
 	ExecutionTime time.Duration
-}
-
-// Driver a database driver abstraction
-type Driver interface {
-	Create() error
-	Insert(e MigrationRecord) error
-	All() ([]MigrationRecord, error)
-	Exec(string) (time.Duration, error)
 }
 
 // GenericDriver is the default Driver, it can be configured to any database.
@@ -30,33 +38,30 @@ type GenericDriver struct {
 }
 
 // NewGenericDriver creates a new GenericDriver configured with db and dialect.
-// Panic if db or dialect is nil
-func NewGenericDriver(db *sql.DB, dialect Dialect) *GenericDriver {
+func NewGenericDriver(db *sql.DB, dialect Dialect) (*GenericDriver, error) {
 	if db == nil {
-		panic("darwin: sql.DB is nil")
+		return nil, errors.New("darwin: sql.DB is nil")
 	}
 
 	if dialect == nil {
-		panic("darwin: dialect is nil")
+		return nil, errors.New("darwin: sql.DB is nil")
 	}
 
-	return &GenericDriver{DB: db, Dialect: dialect}
+	return &GenericDriver{DB: db, Dialect: dialect}, nil
 }
 
-// Create create the table darwin_migrations if necessary
+// Create create the table darwin_migrations if necessary.
 func (m *GenericDriver) Create() error {
-	err := transaction(m.DB, func(tx *sql.Tx) error {
+	f := func(tx *sql.Tx) error {
 		_, err := tx.Exec(m.Dialect.CreateTableSQL())
 		return err
-	})
-
-	return err
+	}
+	return transaction(m.DB, f)
 }
 
-// Insert insert a migration entry into database
+// Insert insert a migration entry into database.
 func (m *GenericDriver) Insert(e MigrationRecord) error {
-
-	err := transaction(m.DB, func(tx *sql.Tx) error {
+	f := func(tx *sql.Tx) error {
 		_, err := tx.Exec(m.Dialect.InsertSQL(),
 			e.Version,
 			e.Description,
@@ -65,21 +70,18 @@ func (m *GenericDriver) Insert(e MigrationRecord) error {
 			e.ExecutionTime,
 		)
 		return err
-	})
-
-	return err
+	}
+	return transaction(m.DB, f)
 }
 
-// All returns all migrations applied
+// All returns all migrations applied.
 func (m *GenericDriver) All() ([]MigrationRecord, error) {
-	entries := []MigrationRecord{}
-
 	rows, err := m.DB.Query(m.Dialect.AllSQL())
-
 	if err != nil {
 		return []MigrationRecord{}, err
 	}
 
+	var entries []MigrationRecord
 	for rows.Next() {
 		var (
 			version       float64
@@ -113,28 +115,26 @@ func (m *GenericDriver) All() ([]MigrationRecord, error) {
 	return entries, nil
 }
 
-// Exec execute sql scripts into database
+// Exec execute sql scripts into database.
 func (m *GenericDriver) Exec(script string) (time.Duration, error) {
 	start := time.Now()
 
-	err := transaction(m.DB, func(tx *sql.Tx) error {
+	f := func(tx *sql.Tx) error {
 		_, err := tx.Exec(script)
 		return err
-	})
+	}
 
-	return time.Since(start), err
+	return time.Since(start), transaction(m.DB, f)
 }
 
-// transaction is a utility function to execute the SQL inside a transaction
-// Panic if db is nil
+// transaction is a utility function to execute the SQL inside a transaction.
 // see: http://stackoverflow.com/a/23502629
 func transaction(db *sql.DB, f func(*sql.Tx) error) (err error) {
 	if db == nil {
-		panic("darwin: sql.DB is nil")
+		return errors.New("darwin: sql.DB is nil")
 	}
 
 	tx, err := db.Begin()
-
 	if err != nil {
 		return
 	}

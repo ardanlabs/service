@@ -1,9 +1,9 @@
 package darwin
 
-// PostgresDialect a Dialect configured for PostgreSQL
+// PostgresDialect a Dialect configured for PostgreSQL.
 type PostgresDialect struct{}
 
-// CreateTableSQL returns the SQL to create the schema table
+// CreateTableSQL returns the SQL to create the schema table.
 func (p PostgresDialect) CreateTableSQL() string {
 	return `CREATE TABLE IF NOT EXISTS darwin_migrations
                 (
@@ -18,7 +18,7 @@ func (p PostgresDialect) CreateTableSQL() string {
                 );`
 }
 
-// InsertSQL returns the SQL to insert a new migration in the schema table
+// InsertSQL returns the SQL to insert a new migration in the schema table.
 func (p PostgresDialect) InsertSQL() string {
 	return `INSERT INTO darwin_migrations
                 (
@@ -31,7 +31,7 @@ func (p PostgresDialect) InsertSQL() string {
             VALUES ($1, $2, $3, $4, $5);`
 }
 
-// AllSQL returns a SQL to get all entries in the table
+// AllSQL returns a SQL to get all entries in the table.
 func (p PostgresDialect) AllSQL() string {
 	return `SELECT 
                 version,

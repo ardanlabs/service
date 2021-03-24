@@ -1,9 +1,9 @@
 package darwin
 
-// MySQLDialect a Dialect configured for MySQL
+// MySQLDialect a Dialect configured for MySQL.
 type MySQLDialect struct{}
 
-// CreateTableSQL returns the SQL to create the schema table
+// CreateTableSQL returns the SQL to create the schema table.
 func (m MySQLDialect) CreateTableSQL() string {
 	return `CREATE TABLE IF NOT EXISTS darwin_migrations
                 (
@@ -18,7 +18,7 @@ func (m MySQLDialect) CreateTableSQL() string {
                 ) ENGINE=InnoDB CHARACTER SET=utf8;`
 }
 
-// InsertSQL returns the SQL to insert a new migration in the schema table
+// InsertSQL returns the SQL to insert a new migration in the schema table.
 func (m MySQLDialect) InsertSQL() string {
 	return `INSERT INTO darwin_migrations
                 (
@@ -31,7 +31,7 @@ func (m MySQLDialect) InsertSQL() string {
             VALUES (?, ?, ?, ?, ?);`
 }
 
-// AllSQL returns a SQL to get all entries in the table
+// AllSQL returns a SQL to get all entries in the table.
 func (m MySQLDialect) AllSQL() string {
 	return `SELECT 
                 version,

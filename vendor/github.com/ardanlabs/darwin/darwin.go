@@ -4,24 +4,29 @@ import (
 	"crypto/md5"
 	"fmt"
 	"sort"
-	"sync"
 	"time"
 )
 
-// Status is a migration status value
-type Status int
-
 const (
-	// Ignored means that the migrations was not appied to the database
+
+	// Ignored means that the migrations was not appied to the database.
 	Ignored Status = iota
-	// Applied means that the migrations was successfully applied to the database
+
+	// Applied means that the migrations was successfully applied to the database.
 	Applied
-	// Pending means that the migrations is a new migration and it is waiting to be applied to the database
+
+	// Pending means that the migrations is a new migration and it is waiting
+	// to be applied to the database.
 	Pending
-	// Error means that the migration could not be applied to the database
+
+	// Error means that the migration could not be applied to the database.
 	Error
 )
 
+// Status is a migration status value.
+type Status int
+
+// String implements the Stringer interface.
 func (s Status) String() string {
 	switch s {
 	case Ignored:
@@ -37,9 +42,6 @@ func (s Status) String() string {
 	}
 }
 
-// A global mutex
-var mutex = &sync.Mutex{}
-
 // Migration represents a database migrations.
 type Migration struct {
 	Version     float64
@@ -47,7 +49,7 @@ type Migration struct {
 	Script      string
 }
 
-// Checksum calculate the Script md5
+// Checksum calculate the Script md5.
 func (m Migration) Checksum() string {
 	return fmt.Sprintf("%x", md5.Sum([]byte(m.Script)))
 }
@@ -60,38 +62,37 @@ type MigrationInfo struct {
 	Migration Migration
 }
 
-// Darwin is a helper struct to access the Validate and migration functions
+// Darwin is a helper struct to access the Validate and migration functions.
 type Darwin struct {
 	driver     Driver
 	migrations []Migration
-	infoChan   chan MigrationInfo
 }
 
-// Validate if the database migrations are applied and consistent
+// Validate if the database migrations are applied and consistent.
 func (d Darwin) Validate() error {
 	return Validate(d.driver, d.migrations)
 }
 
-// Migrate executes the missing migrations in database
+// Migrate executes the missing migrations in database.
 func (d Darwin) Migrate() error {
-	return Migrate(d.driver, d.migrations, d.infoChan)
+	return Migrate(d.driver, d.migrations)
 }
 
-// Info returns the status of all migrations
+// Info returns the status of all migrations.
 func (d Darwin) Info() ([]MigrationInfo, error) {
 	return Info(d.driver, d.migrations)
 }
 
 // New returns a new Darwin struct
-func New(driver Driver, migrations []Migration, infoChan chan MigrationInfo) Darwin {
+func New(driver Driver, migrations []Migration) Darwin {
 	return Darwin{
 		driver:     driver,
 		migrations: migrations,
-		infoChan:   infoChan,
 	}
 }
 
-// DuplicateMigrationVersionError is used to report when the migration list has duplicated entries
+// DuplicateMigrationVersionError is used to report when the migration list has
+// duplicated entries.
 type DuplicateMigrationVersionError struct {
 	Version float64
 }
@@ -100,7 +101,8 @@ func (d DuplicateMigrationVersionError) Error() string {
 	return fmt.Sprintf("Multiple migrations have the version number %f.", d.Version)
 }
 
-// IllegalMigrationVersionError is used to report when the migration has an illegal Version number
+// IllegalMigrationVersionError is used to report when the migration has an
+// illegal Version number.
 type IllegalMigrationVersionError struct {
 	Version float64
 }
@@ -109,7 +111,8 @@ func (i IllegalMigrationVersionError) Error() string {
 	return fmt.Sprintf("Illegal migration version number %f.", i.Version)
 }
 
-// RemovedMigrationError is used to report when a migration is removed from the list
+// RemovedMigrationError is used to report when a migration is removed from
+// the list.
 type RemovedMigrationError struct {
 	Version float64
 }
@@ -118,7 +121,7 @@ func (r RemovedMigrationError) Error() string {
 	return fmt.Sprintf("Migration %f was removed", r.Version)
 }
 
-// InvalidChecksumError is used to report when a migration was modified
+// InvalidChecksumError is used to report when a migration was modified.
 type InvalidChecksumError struct {
 	Version float64
 }
@@ -127,7 +130,7 @@ func (i InvalidChecksumError) Error() string {
 	return fmt.Sprintf("Invalid cheksum for migration %f", i.Version)
 }
 
-// Validate if the database migrations are applied and consistent
+// Validate if the database migrations are applied and consistent.
 func Validate(d Driver, migrations []Migration) error {
 	sort.Sort(byMigrationVersion(migrations))
 
@@ -156,7 +159,7 @@ func Validate(d Driver, migrations []Migration) error {
 	return nil
 }
 
-// Info returns the status of all migrations
+// Info returns the status of all migrations.
 func Info(d Driver, migrations []Migration) ([]MigrationInfo, error) {
 	info := []MigrationInfo{}
 	records, err := d.All()
@@ -181,12 +184,12 @@ func Info(d Driver, migrations []Migration) ([]MigrationInfo, error) {
 func getStatus(inDatabase []MigrationRecord, migration Migration) Status {
 	last := inDatabase[0]
 
-	// Check Pending
+	// Check if pending.
 	if migration.Version > last.Version {
 		return Pending
 	}
 
-	// Check Ignored
+	// Check if ignored.
 	found := false
 
 	for _, record := range inDatabase {
@@ -203,10 +206,7 @@ func getStatus(inDatabase []MigrationRecord, migration Migration) Status {
 }
 
 // Migrate executes the missing migrations in database.
-func Migrate(d Driver, migrations []Migration, infoChan chan MigrationInfo) error {
-	mutex.Lock()
-	defer mutex.Unlock()
-
+func Migrate(d Driver, migrations []Migration) error {
 	err := d.Create()
 
 	if err != nil {
@@ -229,7 +229,6 @@ func Migrate(d Driver, migrations []Migration, infoChan chan MigrationInfo) erro
 		dur, err := d.Exec(migration.Script)
 
 		if err != nil {
-			notify(err, migration, infoChan)
 			return err
 		}
 
@@ -241,8 +240,6 @@ func Migrate(d Driver, migrations []Migration, infoChan chan MigrationInfo) erro
 			ExecutionTime: dur,
 		})
 
-		notify(err, migration, infoChan)
-
 		if err != nil {
 			return err
 		}
@@ -250,27 +247,6 @@ func Migrate(d Driver, migrations []Migration, infoChan chan MigrationInfo) erro
 	}
 
 	return nil
-}
-
-func notify(err error, migration Migration, infoChan chan MigrationInfo) {
-	status := Pending
-
-	if err != nil {
-		status = Error
-	} else {
-		status = Applied
-	}
-
-	// Send the migration over the infoChan
-	// The listener could print in the Stdout a message about the applied migration
-	if infoChan != nil {
-		infoChan <- MigrationInfo{
-			Status:    status,
-			Error:     err,
-			Migration: migration,
-		}
-	}
-
 }
 
 func wasRemovedMigration(applied []MigrationRecord, migrations []Migration) (float64, bool) {
@@ -342,27 +318,26 @@ func planMigration(d Driver, migrations []Migration) ([]Migration, error) {
 		return []Migration{}, err
 	}
 
-	// Apply all migrations
+	// Apply all migrations.
 	if len(records) == 0 {
 		return migrations, nil
 	}
 
-	// Which migrations needs to be applied
+	// Which migrations needs to be applied.
 	planned := []Migration{}
 
-	// Make sure the order is correct
-	// Do not trust the driver.
+	// Make sure the order is correct. Do not trust the driver.
 	sort.Sort(sort.Reverse(byMigrationRecordVersion(records)))
 	last := records[0]
 
-	// Apply all migrations that are greater than the last migration
+	// Apply all migrations that are greater than the last migration.
 	for _, migration := range migrations {
 		if migration.Version > last.Version {
 			planned = append(planned, migration)
 		}
 	}
 
-	// Make sure the order is correct
+	// Make sure the order is correct.
 	sort.Sort(byMigrationVersion(planned))
 
 	return planned, nil

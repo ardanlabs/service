@@ -1,9 +1,9 @@
 package darwin
 
-// SqliteDialect a Dialect configured for Sqlite3
+// SqliteDialect a Dialect configured for Sqlite3.
 type SqliteDialect struct{}
 
-// CreateTableSQL returns the SQL to create the schema table
+// CreateTableSQL returns the SQL to create the schema table.
 func (s SqliteDialect) CreateTableSQL() string {
 	return `CREATE TABLE IF NOT EXISTS darwin_migrations
                 (
@@ -17,7 +17,7 @@ func (s SqliteDialect) CreateTableSQL() string {
                 );`
 }
 
-// InsertSQL returns the SQL to insert a new migration in the schema table
+// InsertSQL returns the SQL to insert a new migration in the schema table.
 func (s SqliteDialect) InsertSQL() string {
 	return `INSERT INTO darwin_migrations
                 (
@@ -30,7 +30,7 @@ func (s SqliteDialect) InsertSQL() string {
             VALUES (?, ?, ?, ?, ?);`
 }
 
-// AllSQL returns a SQL to get all entries in the table
+// AllSQL returns a SQL to get all entries in the table.
 func (s SqliteDialect) AllSQL() string {
 	return `SELECT 
                 version,
