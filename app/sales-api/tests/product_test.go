@@ -42,9 +42,11 @@ func TestProducts(t *testing.T) {
 	)
 	t.Cleanup(test.Teardown)
 
+	corsOrigin := ""
+
 	shutdown := make(chan os.Signal, 1)
 	tests := ProductTests{
-		app:       handlers.API("develop", shutdown, test.Log, test.Auth, test.DB),
+		app:       handlers.API("develop", shutdown, test.Log, test.Auth, test.DB, corsOrigin),
 		userToken: test.Token("admin@example.com", "gophers"),
 	}
 

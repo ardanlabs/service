@@ -40,9 +40,11 @@ func TestUsers(t *testing.T) {
 	)
 	t.Cleanup(test.Teardown)
 
+	corsOrigin := ""
+
 	shutdown := make(chan os.Signal, 1)
 	tests := UserTests{
-		app:        handlers.API("develop", shutdown, test.Log, test.Auth, test.DB),
+		app:        handlers.API("develop", shutdown, test.Log, test.Auth, test.DB, corsOrigin),
 		kid:        test.KID,
 		userToken:  test.Token("user@example.com", "gophers"),
 		adminToken: test.Token("admin@example.com", "gophers"),
