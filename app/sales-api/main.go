@@ -28,6 +28,7 @@ import (
 
 /*
 Need to figure out timeouts for http service.
+Consider the use of Uber/Zap for logging.
 You might want to reset your DB_HOST env var during test tear down.
 Service should start even without a DB running yet.
 symbols in profiles: https://github.com/golang/go/issues/23376 / https://github.com/google/pprof/pull/366
