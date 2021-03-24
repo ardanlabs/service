@@ -1,17 +1,15 @@
-# github.com/DATA-DOG/go-sqlmock v1.5.0
-## explicit
 # github.com/ardanlabs/conf v1.3.5
 ## explicit
 github.com/ardanlabs/conf
+# github.com/ardanlabs/darwin v1.0.0
+## explicit
+github.com/ardanlabs/darwin
 # github.com/dgrijalva/jwt-go/v4 v4.0.0-preview1
 ## explicit
 github.com/dgrijalva/jwt-go/v4
 # github.com/dimfeld/httptreemux/v5 v5.2.2
 ## explicit
 github.com/dimfeld/httptreemux/v5
-# github.com/dimiro1/darwin v0.0.0-20191008194338-370f81775d3b
-## explicit
-github.com/dimiro1/darwin
 # github.com/felixge/httpsnoop v1.0.1
 github.com/felixge/httpsnoop
 # github.com/go-playground/locales v0.13.0

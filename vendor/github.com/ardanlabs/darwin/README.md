@@ -1,8 +1,8 @@
-[![Build Status](https://travis-ci.org/dimiro1/darwin.svg?branch=master)](https://travis-ci.org/dimiro1/darwin)
-[![Go Report Card](https://goreportcard.com/badge/github.com/dimiro1/darwin)](https://goreportcard.com/report/github.com/dimiro1/darwin)
-[![GoDoc](https://godoc.org/github.com/dimiro1/darwin?status.svg)](https://godoc.org/github.com/dimiro1/darwin)
+[![Build Status](https://travis-ci.org/GuiaBolso/darwin.svg?branch=master)](https://travis-ci.org/GuiaBolso/darwin)
+[![Go Report Card](https://goreportcard.com/badge/github.com/GuiaBolso/darwin)](https://goreportcard.com/report/github.com/GuiaBolso/darwin)
+[![GoDoc](https://godoc.org/github.com/GuiaBolso/darwin?status.svg)](https://godoc.org/github.com/GuiaBolso/darwin)
 
-Try browsing [the code on Sourcegraph](https://sourcegraph.com/github.com/dimiro1/darwin)!
+Try browsing [the code on Sourcegraph](https://sourcegraph.com/github.com/GuiaBolso/darwin)!
 
 # Darwin
 
@@ -17,7 +17,7 @@ import (
 	"database/sql"
 	"log"
 
-	"github.com/dimiro1/darwin"
+	"github.com/GuiaBolso/darwin"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -60,29 +60,29 @@ func main() {
 
 # Questions
 
-Q. Why there is no command line utility?
+Q. Why there is not a command line utility?
 
 A. The purpose of this library is just be a library.
 
 Q. How can I read migrations from file system?
 
-A. You can use the standard library for reading and build the migration list.
+A. You can read with the standard library and build the migration list.
 
 Q. Can I put more than one statement in the same Script migration?
 
-A. I do not recommend it. Put one database change per migration, and if some migration fail, you know exactly what statement caused the error. Also only postgres handles rollback in DDL transactions correctly. 
+A. I do not recommend. Put one database change per migration, if some migration fail, you exactly what statement caused the error. Also only postgres correctly handle rollback in DDL transactions. 
 
-To be less annoying you can organize your migrations using semver, like `1.0`, `1.1`, `1.2` and so on.
+To be less annoying you can organize your migrations like? 1.0, 1.1, 1.2 and so on.
 
-Q. Why there is no downgrade migrations?
+Q. Why does not exists downgrade migrations?
 
 A. Please read https://flywaydb.org/documentation/faq#downgrade
 
-Q. Does Darwin performs a roll back if migration fails?
+Q. Does Darwin perform a roll back if a migration fails?
 
 A. Please read https://flywaydb.org/documentation/faq#rollback
 
-Q. What is the best strategy to deal with hot fixes?
+Q. What is the best strategy for dealing with hot fixes?
 
 A. Plese read https://flywaydb.org/documentation/faq#hot-fixes
 

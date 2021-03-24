@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/ardanlabs/darwin"
 	"github.com/ardanlabs/service/foundation/database"
-	"github.com/dimiro1/darwin"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 )
