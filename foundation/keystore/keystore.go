@@ -72,7 +72,7 @@ func NewFS(fsys fs.FS) (*KeyStore, error) {
 			return errors.Wrap(err, "parsing auth private key")
 		}
 
-		ks.store[strings.TrimRight(dirEntry.Name(), ".pem")] = privateKey
+		ks.store[strings.TrimSuffix(dirEntry.Name(), ".pem")] = privateKey
 		return nil
 	}
 
