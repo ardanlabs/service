@@ -13,10 +13,10 @@ please use this branch in the repo.
 https://github.com/ardanlabs/service/tree/class
 
 This branch represents the code that is explained. I will be going back into
-the studio in March, 2021 to re-record the video for all the changes in the
+the studio in April, 2021 to re-record the video for all the changes in the
 past year.
 
-## Ultimate Service 2.1 Live Classes
+## Ultimate Service 3.0 Live Classes
 
 This class teaches how to build production-level services in Go leveraging the power of Kubernetes. From the beginning, you will pair program with the instructor walking through the design philosophies and guidelines for building services in Go. With each new feature that is added to the service, you will learn how to deploy to and manage the Kubernetes environment used to run the service.
 
