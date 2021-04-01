@@ -21,7 +21,7 @@ func Authenticate(a *auth.Auth) web.Middleware {
 
 		// Create the handler that will be attached in the middleware chain.
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-			ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.mid.authenticate")
+			ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.web.mid.authenticate")
 			defer span.End()
 
 			// Expecting: bearer <token>
@@ -62,7 +62,7 @@ func Authorize(roles ...string) web.Middleware {
 
 		// Create the handler that will be attached in the middleware chain.
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-			ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.mid.authorize")
+			ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.web.mid.authorize")
 			defer span.End()
 
 			// If the context is missing this value return failure.
