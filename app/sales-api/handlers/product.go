@@ -28,14 +28,15 @@ func (pg productGroup) query(ctx context.Context, w http.ResponseWriter, r *http
 		return web.NewShutdownError("web value missing from context")
 	}
 
-	params := web.Params(r)
-	pageNumber, err := strconv.Atoi(params["page"])
+	page := web.Param(r, "page")
+	pageNumber, err := strconv.Atoi(page)
 	if err != nil {
-		return validate.NewRequestError(fmt.Errorf("invalid page format: %s", params["page"]), http.StatusBadRequest)
+		return validate.NewRequestError(fmt.Errorf("invalid page format: %s", page), http.StatusBadRequest)
 	}
-	rowsPerPage, err := strconv.Atoi(params["rows"])
+	rows := web.Param(r, "rows")
+	rowsPerPage, err := strconv.Atoi(rows)
 	if err != nil {
-		return validate.NewRequestError(fmt.Errorf("invalid rows format: %s", params["rows"]), http.StatusBadRequest)
+		return validate.NewRequestError(fmt.Errorf("invalid rows format: %s", rows), http.StatusBadRequest)
 	}
 
 	products, err := pg.store.Query(ctx, v.TraceID, pageNumber, rowsPerPage)
@@ -55,8 +56,8 @@ func (pg productGroup) queryByID(ctx context.Context, w http.ResponseWriter, r *
 		return web.NewShutdownError("web value missing from context")
 	}
 
-	params := web.Params(r)
-	prod, err := pg.store.QueryByID(ctx, v.TraceID, params["id"])
+	id := web.Param(r, "id")
+	prod, err := pg.store.QueryByID(ctx, v.TraceID, id)
 	if err != nil {
 		switch errors.Cause(err) {
 		case database.ErrInvalidID:
@@ -64,7 +65,7 @@ func (pg productGroup) queryByID(ctx context.Context, w http.ResponseWriter, r *
 		case database.ErrNotFound:
 			return validate.NewRequestError(err, http.StatusNotFound)
 		default:
-			return errors.Wrapf(err, "ID: %s", params["id"])
+			return errors.Wrapf(err, "ID: %s", id)
 		}
 	}
 
@@ -117,8 +118,8 @@ func (pg productGroup) update(ctx context.Context, w http.ResponseWriter, r *htt
 		return errors.Wrapf(err, "unable to decode payload")
 	}
 
-	params := web.Params(r)
-	if err := pg.store.Update(ctx, v.TraceID, claims, params["id"], upd, v.Now); err != nil {
+	id := web.Param(r, "id")
+	if err := pg.store.Update(ctx, v.TraceID, claims, id, upd, v.Now); err != nil {
 		switch errors.Cause(err) {
 		case database.ErrInvalidID:
 			return validate.NewRequestError(err, http.StatusBadRequest)
@@ -127,7 +128,7 @@ func (pg productGroup) update(ctx context.Context, w http.ResponseWriter, r *htt
 		case database.ErrForbidden:
 			return validate.NewRequestError(err, http.StatusForbidden)
 		default:
-			return errors.Wrapf(err, "ID: %s  User: %+v", params["id"], &upd)
+			return errors.Wrapf(err, "ID: %s  User: %+v", id, &upd)
 		}
 	}
 
@@ -148,13 +149,13 @@ func (pg productGroup) delete(ctx context.Context, w http.ResponseWriter, r *htt
 		return errors.New("claims missing from context")
 	}
 
-	params := web.Params(r)
-	if err := pg.store.Delete(ctx, v.TraceID, claims, params["id"]); err != nil {
+	id := web.Param(r, "id")
+	if err := pg.store.Delete(ctx, v.TraceID, claims, id); err != nil {
 		switch errors.Cause(err) {
 		case database.ErrInvalidID:
 			return validate.NewRequestError(err, http.StatusBadRequest)
 		default:
-			return errors.Wrapf(err, "ID: %s", params["id"])
+			return errors.Wrapf(err, "ID: %s", id)
 		}
 	}
 

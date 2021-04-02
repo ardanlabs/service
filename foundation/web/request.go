@@ -7,9 +7,10 @@ import (
 	"github.com/dimfeld/httptreemux/v5"
 )
 
-// Params returns the web call parameters from the request.
-func Params(r *http.Request) map[string]string {
-	return httptreemux.ContextParams(r.Context())
+// Param returns the web call parameters from the request.
+func Param(r *http.Request, key string) string {
+	m := httptreemux.ContextParams(r.Context())
+	return m[key]
 }
 
 // Decode reads the body of an HTTP request looking for a JSON document. The
