@@ -55,32 +55,47 @@ func (cg *ContextGroup) NewGroup(path string) *ContextGroup {
 	return cg.NewContextGroup(path)
 }
 
+func (cg *ContextGroup) wrapHandler(path string, handler HandlerFunc) HandlerFunc {
+	if len(cg.group.stack) > 0 {
+		handler = handlerWithMiddlewares(handler, cg.group.stack)
+	}
+
+	//add the context data after adding all middleware
+	fullPath := cg.group.path + path
+	return func(writer http.ResponseWriter, request *http.Request, m map[string]string) {
+		routeData := &contextData{
+			route:  fullPath,
+			params: m,
+		}
+		request = request.WithContext(AddRouteDataToContext(request.Context(), routeData))
+		handler(writer, request, m)
+	}
+}
+
 // Handle allows handling HTTP requests via an http.HandlerFunc, as opposed to an httptreemux.HandlerFunc.
 // Any parameters from the request URL are stored in a map[string]string in the request's context.
 func (cg *ContextGroup) Handle(method, path string, handler http.HandlerFunc) {
-	fullPath := cg.group.path + path
-	cg.group.Handle(method, path, func(w http.ResponseWriter, r *http.Request, params map[string]string) {
-		routeData := &contextData{
-			route:  fullPath,
-			params: params,
-		}
-		r = r.WithContext(AddRouteDataToContext(r.Context(), routeData))
+	cg.group.mux.mutex.Lock()
+	defer cg.group.mux.mutex.Unlock()
+
+	wrapped := cg.wrapHandler(path, func(w http.ResponseWriter, r *http.Request, params map[string]string) {
 		handler(w, r)
 	})
+
+	cg.group.addFullStackHandler(method, path, wrapped)
 }
 
 // Handler allows handling HTTP requests via an http.Handler interface, as opposed to an httptreemux.HandlerFunc.
 // Any parameters from the request URL are stored in a map[string]string in the request's context.
 func (cg *ContextGroup) Handler(method, path string, handler http.Handler) {
-	fullPath := cg.group.path + path
-	cg.group.Handle(method, path, func(w http.ResponseWriter, r *http.Request, params map[string]string) {
-		routeData := &contextData{
-			route:  fullPath,
-			params: params,
-		}
-		r = r.WithContext(AddRouteDataToContext(r.Context(), routeData))
+	cg.group.mux.mutex.Lock()
+	defer cg.group.mux.mutex.Unlock()
+
+	wrapped := cg.wrapHandler(path, func(w http.ResponseWriter, r *http.Request, params map[string]string) {
 		handler.ServeHTTP(w, r)
 	})
+
+	cg.group.addFullStackHandler(method, path, wrapped)
 }
 
 // GET is convenience method for handling GET requests on a context group.

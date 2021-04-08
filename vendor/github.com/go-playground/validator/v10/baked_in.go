@@ -18,6 +18,7 @@ import (
 	"unicode/utf8"
 
 	"golang.org/x/crypto/sha3"
+	"golang.org/x/text/language"
 
 	urn "github.com/leodido/go-urn"
 )
@@ -188,6 +189,7 @@ var (
 		"iso3166_1_alpha2":        isIso3166Alpha2,
 		"iso3166_1_alpha3":        isIso3166Alpha3,
 		"iso3166_1_alpha_numeric": isIso3166AlphaNumeric,
+		"bcp47_language_tag":      isBCP47LanguageTag,
 	}
 )
 
@@ -790,6 +792,9 @@ func isNeField(fl FieldLevel) bool {
 
 	case reflect.Slice, reflect.Map, reflect.Array:
 		return int64(field.Len()) != int64(currentField.Len())
+
+	case reflect.Bool:
+		return field.Bool() != currentField.Bool()
 
 	case reflect.Struct:
 
@@ -1544,7 +1549,7 @@ func requiredWithout(fl FieldLevel) bool {
 	return true
 }
 
-// RequiredWithoutAll is the validation function
+// ExcludedWithoutAll is the validation function
 // The field under validation must not be present or is empty when all of the other specified fields are not present.
 func excludedWithoutAll(fl FieldLevel) bool {
 	params := parseOneOfParam2(fl.Param())
@@ -2282,4 +2287,16 @@ func isIso3166AlphaNumeric(fl FieldLevel) bool {
 		panic(fmt.Sprintf("Bad field type %T", field.Interface()))
 	}
 	return iso3166_1_alpha_numeric[code]
+}
+
+// isBCP47LanguageTag is the validation function for validating if the current field's value is a valid BCP 47 language tag, as parsed by language.Parse
+func isBCP47LanguageTag(fl FieldLevel) bool {
+	field := fl.Field()
+
+	if field.Kind() == reflect.String {
+		_, err := language.Parse(field.String())
+		return err == nil
+	}
+
+	panic(fmt.Sprintf("Bad field type %T", field.Interface()))
 }
