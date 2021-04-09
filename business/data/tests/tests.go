@@ -2,9 +2,12 @@
 package tests
 
 import (
+	"bytes"
 	"context"
 	"crypto/rand"
 	"crypto/rsa"
+	"fmt"
+	"io"
 	"log"
 	"os"
 	"testing"
@@ -36,6 +39,10 @@ type DBContainer struct {
 // required table structure but the database is otherwise empty. It returns
 // the database to use as well as a function to call at the end of the test.
 func NewUnit(t *testing.T, dbc DBContainer) (*log.Logger, *sqlx.DB, func()) {
+	r, w, _ := os.Pipe()
+	old := os.Stdout
+	os.Stdout = w
+
 	c := docker.StartContainer(t, dbc.Image, dbc.Port, dbc.Args...)
 
 	db, err := database.Open(database.Config{
@@ -66,6 +73,14 @@ func NewUnit(t *testing.T, dbc DBContainer) (*log.Logger, *sqlx.DB, func()) {
 		t.Helper()
 		db.Close()
 		docker.StopContainer(t, c.ID)
+
+		w.Close()
+		var buf bytes.Buffer
+		io.Copy(&buf, r)
+		os.Stdout = old
+		fmt.Println("******************** LOGS ********************")
+		fmt.Print(buf.String())
+		fmt.Println("******************** LOGS ********************")
 	}
 
 	log := log.New(os.Stdout, "TEST : ", log.LstdFlags|log.Lmicroseconds|log.Lshortfile)

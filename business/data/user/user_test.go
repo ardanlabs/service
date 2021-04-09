@@ -126,7 +126,7 @@ func TestUser(t *testing.T) {
 	}
 }
 
-func TestUserPaging(t *testing.T) {
+func TestPagingUser(t *testing.T) {
 	log, db, teardown := tests.NewUnit(t, dbc)
 	t.Cleanup(teardown)
 
