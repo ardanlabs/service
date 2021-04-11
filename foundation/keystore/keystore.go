@@ -61,6 +61,7 @@ func NewFS(fsys fs.FS) (*KeyStore, error) {
 		if err != nil {
 			return errors.Wrap(err, "open key file")
 		}
+		defer file.Close()
 
 		// limit PEM file size to 1 megabyte. This should be reasonable for
 		// almost any PEM file and prevents shenanegans like linking the file
