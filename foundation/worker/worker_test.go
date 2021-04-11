@@ -15,6 +15,8 @@ const (
 	failed  = "\u2717"
 )
 
+var traceID = "00000000-0000-0000-0000-000000000000"
+
 func TestWorker(t *testing.T) {
 	t.Log("Given the need to start work and wait for it to complete.")
 	{
@@ -22,7 +24,7 @@ func TestWorker(t *testing.T) {
 		t.Logf("\tTest %d:\tWhen handling multiple jobs", testID)
 		{
 			// Define a work function that waits to be canceled.
-			work := func(ctx context.Context, data interface{}) {
+			work := func(ctx context.Context, workKey string, data interface{}) {
 				t := data.(*testing.T)
 				t.Logf("\t\t%s\tTest %d:\tGoroutine running.", success, testID)
 				<-ctx.Done()
@@ -42,7 +44,7 @@ func TestWorker(t *testing.T) {
 			for key := range jobs {
 				ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 				defer cancel()
-				if _, err := w.Start(ctx, key, t); err != nil {
+				if _, err := w.Start(ctx, traceID, key, t); err != nil {
 					t.Fatalf("\t\t%s\tTest %d:\tShould be able to execute work: %v", failed, testID, err)
 				}
 				t.Logf("\t\t%s\tTest %d:\tShould be able to execute work.", success, testID)
@@ -85,7 +87,7 @@ func TestCancelWorker(t *testing.T) {
 			wg.Add(4)
 
 			// Define a work function that waits to be canceled.
-			work := func(ctx context.Context, data interface{}) {
+			work := func(ctx context.Context, workKey string, data interface{}) {
 				wg.Done()
 				t := data.(*testing.T)
 				t.Logf("\t\t%s\tTest %d:\tGoroutine running.", success, testID)
@@ -106,7 +108,7 @@ func TestCancelWorker(t *testing.T) {
 			for key := range jobs {
 				ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 				defer cancel()
-				if _, err := w.Start(ctx, key, t); err != nil {
+				if _, err := w.Start(ctx, traceID, key, t); err != nil {
 					t.Fatalf("\t%s\tTest %d:\tShould be able to execute work: %v", failed, testID, err)
 				}
 				t.Logf("\t%s\tTest %d:\tShould be able to execute work.", success, testID)
@@ -137,7 +139,7 @@ func TestStopWorker(t *testing.T) {
 			wg.Add(4)
 
 			// Define a work function that waits to be canceled.
-			work := func(ctx context.Context, data interface{}) {
+			work := func(ctx context.Context, workKey string, data interface{}) {
 				wg.Done()
 				t := data.(*testing.T)
 				t.Logf("\t%s\tTest %d:\tGoroutine running.", success, testID)
@@ -160,7 +162,7 @@ func TestStopWorker(t *testing.T) {
 			for key := range jobs {
 				ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 				defer cancel()
-				work, err := w.Start(ctx, key, t)
+				work, err := w.Start(ctx, traceID, key, t)
 				if err != nil {
 					t.Fatalf("\t%s\tTest %d:\tShould be able to execute work: %v", failed, testID, err)
 				}
