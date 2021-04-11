@@ -4,8 +4,9 @@ import (
 	"context"
 	"crypto/rsa"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
+	"os"
 	"time"
 
 	"github.com/ardanlabs/service/business/data/user"
@@ -48,7 +49,15 @@ func GenToken(traceID string, log *log.Logger, cfg database.Config, id string, p
 		return errors.Wrap(err, "retrieve user")
 	}
 
-	privatePEM, err := ioutil.ReadFile(privateKeyFile)
+	// limit PEM file size to 1 megabyte. This should be reasonable for
+	// almost any PEM file and prevents shenanegans like linking the file
+	// to /dev/random or something like that.
+	pkf, err := os.Open(privateKeyFile)
+	if err != nil {
+		return errors.Wrap(err, "opening PEM private key file")
+	}
+	defer pkf.Close()
+	privatePEM, err := io.ReadAll(io.LimitReader(pkf, 1024*1024))
 	if err != nil {
 		return errors.Wrap(err, "reading PEM private key file")
 	}
