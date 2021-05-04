@@ -1,4 +1,4 @@
-# github.com/ardanlabs/conf v1.3.6
+# github.com/ardanlabs/conf v1.4.0
 ## explicit
 github.com/ardanlabs/conf
 # github.com/ardanlabs/darwin v1.2.0
@@ -10,7 +10,8 @@ github.com/dgrijalva/jwt-go/v4
 # github.com/dimfeld/httptreemux/v5 v5.3.0
 ## explicit
 github.com/dimfeld/httptreemux/v5
-# github.com/felixge/httpsnoop v1.0.1
+# github.com/felixge/httpsnoop v1.0.2
+## explicit
 github.com/felixge/httpsnoop
 # github.com/go-playground/locales v0.13.0
 ## explicit
@@ -42,7 +43,7 @@ github.com/jmoiron/sqlx/reflectx
 # github.com/leodido/go-urn v1.2.1
 ## explicit
 github.com/leodido/go-urn
-# github.com/lib/pq v1.10.0
+# github.com/lib/pq v1.10.1
 ## explicit
 github.com/lib/pq
 github.com/lib/pq/oid
@@ -52,12 +53,12 @@ github.com/openzipkin/zipkin-go/model
 # github.com/pkg/errors v0.9.1
 ## explicit
 github.com/pkg/errors
-# go.opentelemetry.io/contrib v0.19.0
+# go.opentelemetry.io/contrib v0.20.0
 go.opentelemetry.io/contrib
-# go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.19.0
+# go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.20.0
 ## explicit
 go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp
-# go.opentelemetry.io/otel v0.19.0
+# go.opentelemetry.io/otel v0.20.0
 ## explicit
 go.opentelemetry.io/otel
 go.opentelemetry.io/otel/attribute
@@ -66,34 +67,32 @@ go.opentelemetry.io/otel/internal
 go.opentelemetry.io/otel/internal/baggage
 go.opentelemetry.io/otel/internal/global
 go.opentelemetry.io/otel/internal/trace/noop
-go.opentelemetry.io/otel/internal/trace/parent
 go.opentelemetry.io/otel/propagation
 go.opentelemetry.io/otel/semconv
 go.opentelemetry.io/otel/unit
-# go.opentelemetry.io/otel/exporters/trace/zipkin v0.19.0
+# go.opentelemetry.io/otel/exporters/trace/zipkin v0.20.0
 ## explicit
 go.opentelemetry.io/otel/exporters/trace/zipkin
-# go.opentelemetry.io/otel/metric v0.19.0
+# go.opentelemetry.io/otel/metric v0.20.0
 go.opentelemetry.io/otel/metric
 go.opentelemetry.io/otel/metric/global
 go.opentelemetry.io/otel/metric/number
 go.opentelemetry.io/otel/metric/registry
-# go.opentelemetry.io/otel/sdk v0.19.0
+# go.opentelemetry.io/otel/sdk v0.20.0
 ## explicit
-go.opentelemetry.io/otel/sdk/export/trace
 go.opentelemetry.io/otel/sdk/instrumentation
 go.opentelemetry.io/otel/sdk/internal
 go.opentelemetry.io/otel/sdk/resource
 go.opentelemetry.io/otel/sdk/trace
-# go.opentelemetry.io/otel/trace v0.19.0
+# go.opentelemetry.io/otel/trace v0.20.0
 ## explicit
 go.opentelemetry.io/otel/trace
-# golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2
+# golang.org/x/crypto v0.0.0-20210503195802-e9a32991a82e
 ## explicit
 golang.org/x/crypto/bcrypt
 golang.org/x/crypto/blowfish
 golang.org/x/crypto/sha3
-# golang.org/x/sys v0.0.0-20210403161142-5e06dd20ab57
+# golang.org/x/sys v0.0.0-20210503173754-0981d6026fa6
 ## explicit
 golang.org/x/sys/cpu
 # golang.org/x/text v0.3.6

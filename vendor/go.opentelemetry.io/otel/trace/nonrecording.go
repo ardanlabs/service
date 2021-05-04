@@ -12,9 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package otel // import "go.opentelemetry.io/otel"
+package trace // import "go.opentelemetry.io/otel/trace"
 
-// Version is the current release version of OpenTelemetry in use.
-func Version() string {
-	return "0.20.0"
+// nonRecordingSpan is a minimal implementation of a Span that wraps a
+// SpanContext. It performs no operations other than to return the wrapped
+// SpanContext.
+type nonRecordingSpan struct {
+	noopSpan
+
+	sc SpanContext
 }
+
+// SpanContext returns the wrapped SpanContext.
+func (s nonRecordingSpan) SpanContext() SpanContext { return s.sc }

@@ -116,8 +116,24 @@ const (
 	// `proc/[pid]/cmdline`. On Windows, can be set to the result of
 	// `GetCommandLineW`.
 	ProcessCommandLineKey = attribute.Key("process.command_line")
+	// All the command arguments (including the command/executable itself)
+	// as received by the process. On Linux-based systems (and some other
+	// Unixoid systems supporting procfs), can be set according to the list
+	// of null-delimited strings extracted from `proc/[pid]/cmdline`. For
+	// libc-based executables, this would be the full argv vector passed to
+	// `main`.
+	ProcessCommandArgsKey = attribute.Key("process.command_args")
 	// The username of the user that owns the process.
 	ProcessOwnerKey = attribute.Key("process.owner")
+	// The name of the runtime of this process. For compiled native
+	// binaries, this SHOULD be the name of the compiler.
+	ProcessRuntimeNameKey = attribute.Key("process.runtime.name")
+	// The version of the runtime of this process, as returned by the
+	// runtime without modification.
+	ProcessRuntimeVersionKey = attribute.Key("process.runtime.version")
+	// An additional description about the runtime of the process, for
+	// example a specific vendor customization of the runtime environment.
+	ProcessRuntimeDescriptionKey = attribute.Key("process.runtime.description")
 )
 
 // Semantic conventions for Kubernetes resource attribute keys.
@@ -127,6 +143,12 @@ const (
 	// set to any meaningful value within the environment. For example,
 	// GKE clusters have a name which can be used for this attribute.
 	K8SClusterNameKey = attribute.Key("k8s.cluster.name")
+
+	// The name of the Node.
+	K8SNodeNameKey = attribute.Key("k8s.node.name")
+
+	// The UID of the Node.
+	K8SNodeUIDKey = attribute.Key("k8s.node.uid")
 
 	// The name of the namespace that the pod is running in.
 	K8SNamespaceNameKey = attribute.Key("k8s.namespace.name")
@@ -175,6 +197,14 @@ const (
 
 	// The name of the CronJob.
 	K8SCronJobNameKey = attribute.Key("k8s.cronjob.name")
+)
+
+// Semantic conventions for OS resource attribute keys.
+const (
+	// The operating system type.
+	OSTypeKey = attribute.Key("os.type")
+	// Human readable (not intended to be parsed) OS version information.
+	OSDescriptionKey = attribute.Key("os.description")
 )
 
 // Semantic conventions for host resource attribute keys.

@@ -2,7 +2,7 @@
 
 [![CircleCI](https://circleci.com/gh/ardanlabs/conf.svg?style=svg)](https://circleci.com/gh/ardanlabs/conf)
 
-Copyright 2018, 2019, 2020, Ardan Labs  
+Copyright 2018, 2019, 2020, 2021, Ardan Labs  
 info@ardanlabs.com
 
 ## Licensing

@@ -8,6 +8,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.20.0] - 2021-04-23
+
+### Changed
+
+- The `go.opentelemetry.io/contrib/instrumentation/go.mongodb.org/mongo-driver/mongo/otelmongo` instrumentation now accepts a `WithCommandAttributeDisabled`, 
+   so the caller can specify whether to opt-out of tracing the mongo command. (#712)
+- Upgrade to v0.20.0 of `go.opentelemetry.io/otel`. (#758)
+- The B3 and Jaeger propagators now store their debug or deferred state in the context.Context instead of the SpanContext. (#758)
+
 ## [0.19.0] - 2021-03-19
 
 ### Changed
@@ -290,7 +299,8 @@ First official tagged release of `contrib` repository.
 - Prefix support for dogstatsd (#34)
 - Update Go Runtime package to use batch observer (#44)
 
-[Unreleased]: https://github.com/open-telemetry/opentelemetry-go-contrib/compare/v0.19.0...HEAD
+[Unreleased]: https://github.com/open-telemetry/opentelemetry-go-contrib/compare/v0.20.0...HEAD
+[0.20.0]: https://github.com/open-telemetry/opentelemetry-go-contrib/releases/tag/v0.20.0
 [0.19.0]: https://github.com/open-telemetry/opentelemetry-go-contrib/releases/tag/v0.19.0
 [0.18.0]: https://github.com/open-telemetry/opentelemetry-go-contrib/releases/tag/v0.18.0
 [0.17.0]: https://github.com/open-telemetry/opentelemetry-go-contrib/releases/tag/v0.17.0
