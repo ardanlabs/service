@@ -96,13 +96,19 @@ func extractIPPort(t *testing.T, doc []map[string]interface{}, port string) (str
 	if !exists {
 		t.Fatal("could not get network ports/tcp list settings")
 	}
-	if len(list) != 1 {
-		t.Fatal("could not get network ports/tcp list settings")
-	}
-	data, exists := list[0].(map[string]interface{})
-	if !exists {
-		t.Fatal("could not get network ports/tcp list data")
+
+	var hostIP string
+	var hostPort string
+	for _, l := range list {
+		data, exists := l.(map[string]interface{})
+		if !exists {
+			t.Fatal("could not get network ports/tcp list data")
+		}
+		hostIP = data["HostIp"].(string)
+		if hostIP != "::" {
+			hostPort = data["HostPort"].(string)
+		}
 	}
 
-	return data["HostIp"].(string), data["HostPort"].(string)
+	return hostIP, hostPort
 }
