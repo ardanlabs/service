@@ -88,7 +88,7 @@ metadata:
   name: sales-api
 spec:
   selector:
-    service: sales-api
+    app: sales-api
   ports:
   - name: zipkin
     port: 9411
