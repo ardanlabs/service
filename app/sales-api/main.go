@@ -27,6 +27,7 @@ import (
 )
 
 /*
+Startup Prob for K8s
 Need to figure out timeouts for http service.
 Consider the use of Uber/Zap for logging.
 You might want to reset your DB_HOST env var during test tear down.
