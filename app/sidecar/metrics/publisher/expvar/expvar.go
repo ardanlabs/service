@@ -9,18 +9,19 @@ import (
 	"time"
 
 	"github.com/dimfeld/httptreemux/v5"
+	"go.uber.org/zap"
 )
 
 // Expvar provide our basic publishing.
 type Expvar struct {
-	log    *log.Logger
+	log    *zap.Logger
 	server http.Server
 	data   map[string]interface{}
 	mu     sync.Mutex
 }
 
 // New starts a service for consuming the raw expvar stats.
-func New(log *log.Logger, host string, route string, readTimeout, writeTimeout time.Duration) *Expvar {
+func New(log *zap.Logger, host string, route string, readTimeout, writeTimeout time.Duration) *Expvar {
 	mux := httptreemux.New()
 	exp := Expvar{
 		log: log,
@@ -36,9 +37,9 @@ func New(log *log.Logger, host string, route string, readTimeout, writeTimeout t
 	mux.Handle("GET", route, exp.handler)
 
 	go func() {
-		log.Println("expvar : API Listening", host)
+		log.Info("expvar: API Listening", zap.String("host", host))
 		if err := exp.server.ListenAndServe(); err != nil {
-			log.Println("expvar : ERROR :", err)
+			log.Error("ERROR", zap.Error(err))
 		}
 	}()
 
@@ -47,8 +48,8 @@ func New(log *log.Logger, host string, route string, readTimeout, writeTimeout t
 
 // Stop shuts down the service.
 func (exp *Expvar) Stop(shutdownTimeout time.Duration) {
-	exp.log.Println("expvar : Start shutdown...")
-	defer exp.log.Println("expvar : Completed")
+	exp.log.Info("expvar: Start shutdown...")
+	defer exp.log.Info("expvar: Completed")
 
 	// Create context for Shutdown call.
 	ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
@@ -56,9 +57,9 @@ func (exp *Expvar) Stop(shutdownTimeout time.Duration) {
 
 	// Asking listener to shutdown and load shed.
 	if err := exp.server.Shutdown(ctx); err != nil {
-		exp.log.Printf("expvar : Graceful shutdown did not complete in %v : %v", shutdownTimeout, err)
+		exp.log.Error("ERROR: Graceful shutdown did not complete", zap.Error(err), zap.Duration("shutdownTimeout", shutdownTimeout))
 		if err := exp.server.Close(); err != nil {
-			exp.log.Fatalf("expvar : Could not stop http server: %v", err)
+			exp.log.Error("ERROR: Could not stop http server", zap.Error(err))
 		}
 	}
 }
@@ -85,7 +86,7 @@ func (exp *Expvar) handler(w http.ResponseWriter, r *http.Request, params map[st
 	exp.mu.Unlock()
 
 	if err := json.NewEncoder(w).Encode(data); err != nil {
-		exp.log.Println("expvar : ERROR :", err)
+		exp.log.Error("ERROR", zap.Error(err))
 	}
 
 	log.Printf("expvar : (%d) : %s %s -> %s",

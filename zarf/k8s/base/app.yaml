@@ -1,3 +1,14 @@
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: cpu-quota
+spec:
+  hard: # Docker needs to be configured at these minimums.
+    limits.cpu: "4000m"   # Up to 4 full cores
+    requests.cpu: "4000m" # Up to 4 full cores
+    #limits.memory: 4Gi
+    #requests.memory: 2Gi
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -17,11 +28,21 @@ spec:
       containers:
       - name: zipkin
         image: openzipkin/zipkin:2.23
+        resources:
+          limits:
+            cpu: "500m" # Up to 1/2 full core
+          requests:
+            cpu: "250m" # Use 1/4 full core
         ports:
         - name: zipkin
           containerPort: 9411
       - name: app
         image: sales-api-amd64:1.0
+        resources:
+          limits:
+            cpu: "2000m" # Up to 2 full cores
+          requests:
+            cpu: "1000m" # Use 1 full cores
         env:
         - name: SALES_DB_HOST
           valueFrom:
@@ -74,6 +95,11 @@ spec:
           failureThreshold: 2
       - name: metrics
         image: metrics-amd64:1.0
+        resources:
+          limits:
+            cpu: "500m" # Up to 1/2 full core
+          requests:
+            cpu: "250m" # Use 1/4 full core
         env:
         - name: METRICS_COLLECT_FROM
           valueFrom:

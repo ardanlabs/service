@@ -24,7 +24,7 @@ import (
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/semconv"
-	_ "go.uber.org/automaxprocs"
+	"go.uber.org/automaxprocs/maxprocs"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -42,6 +42,14 @@ func main() {
 	log := logger()
 	defer log.Sync()
 
+	// Make sure the program is using the correct
+	// number of threads if a CPU quota is set.
+	if _, err := maxprocs.Set(); err != nil {
+		log.Error("startup", zap.Error(err))
+		os.Exit(1)
+	}
+	log.Info("startup", zap.Int("GOMAXPROCS", runtime.GOMAXPROCS(0)))
+
 	// Perform the startup and shutdown sequence.
 	if err := run(log); err != nil {
 		log.Error("startup", zap.Error(err))
@@ -56,6 +64,9 @@ func logger() *zap.Logger {
 	config.OutputPaths = []string{"stdout"}
 	config.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
 	config.DisableStacktrace = true
+	config.InitialFields = map[string]interface{}{
+		"service": "SALES-API",
+	}
 
 	log, err := config.Build()
 	if err != nil {
@@ -66,7 +77,6 @@ func logger() *zap.Logger {
 }
 
 func run(log *zap.Logger) error {
-	log.Info("startup", zap.Int("GOMAXPROCS", runtime.GOMAXPROCS(0)))
 
 	// =========================================================================
 	// Configuration
@@ -126,8 +136,8 @@ func run(log *zap.Logger) error {
 	// App Starting
 
 	expvar.NewString("build").Set(build)
-	log.Info("startup", zap.String("status", "started"), zap.String("version", build))
-	defer log.Info("shutdown", zap.String("status", "completed"))
+	log.Info("startup", zap.String("version", build))
+	defer log.Info("shutdown complete")
 
 	out, err := conf.String(&cfg)
 	if err != nil {

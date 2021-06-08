@@ -18,6 +18,11 @@ spec:
       containers:
       - name: postgres
         image: postgres:13-alpine
+        resources:
+          limits:
+            cpu: "1000m" # Up to 1 full core
+          requests:
+            cpu: "1000m" # Use 1 full core
         imagePullPolicy: Always
         env:
         - name: POSTGRES_PASSWORD
