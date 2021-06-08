@@ -2,19 +2,19 @@ package mid
 
 import (
 	"context"
-	"log"
 	"net/http"
 
 	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/trace"
+	"go.uber.org/zap"
 )
 
 // Errors handles errors coming out of the call chain. It detects normal
 // application errors which are used to respond to the client in a uniform way.
 // Unexpected errors (status >= 500) are logged.
-func Errors(log *log.Logger) web.Middleware {
+func Errors(log *zap.Logger) web.Middleware {
 
 	// This is the actual middleware function to be executed.
 	m := func(handler web.Handler) web.Handler {
@@ -35,7 +35,10 @@ func Errors(log *log.Logger) web.Middleware {
 			if err := handler(ctx, w, r); err != nil {
 
 				// Log the error.
-				log.Printf("%s: ERROR: %v", v.TraceID, err)
+				log.Error("ERROR",
+					zap.String("traceid", v.TraceID),
+					zap.Error(err),
+				)
 
 				// Build out the error response.
 				var er validate.ErrorResponse

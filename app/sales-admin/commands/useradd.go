@@ -3,17 +3,17 @@ package commands
 import (
 	"context"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/ardanlabs/service/business/data/user"
 	"github.com/ardanlabs/service/business/sys/auth"
 	"github.com/ardanlabs/service/foundation/database"
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
 )
 
 // UserAdd adds new users into the database.
-func UserAdd(traceID string, log *log.Logger, cfg database.Config, name, email, password string) error {
+func UserAdd(traceID string, log *zap.Logger, cfg database.Config, name, email, password string) error {
 	if name == "" || email == "" || password == "" {
 		fmt.Println("help: useradd <name> <email> <password>")
 		return ErrHelp

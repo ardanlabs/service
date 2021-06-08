@@ -87,12 +87,31 @@ go.opentelemetry.io/otel/sdk/trace
 # go.opentelemetry.io/otel/trace v0.20.0
 ## explicit
 go.opentelemetry.io/otel/trace
+# go.uber.org/atomic v1.7.0
+go.uber.org/atomic
+# go.uber.org/automaxprocs v1.4.0
+## explicit
+go.uber.org/automaxprocs
+go.uber.org/automaxprocs/internal/cgroups
+go.uber.org/automaxprocs/internal/runtime
+go.uber.org/automaxprocs/maxprocs
+# go.uber.org/multierr v1.7.0
+## explicit
+go.uber.org/multierr
+# go.uber.org/zap v1.17.0
+## explicit
+go.uber.org/zap
+go.uber.org/zap/buffer
+go.uber.org/zap/internal/bufferpool
+go.uber.org/zap/internal/color
+go.uber.org/zap/internal/exit
+go.uber.org/zap/zapcore
 # golang.org/x/crypto v0.0.0-20210513164829-c07d793c2f9a
 ## explicit
 golang.org/x/crypto/bcrypt
 golang.org/x/crypto/blowfish
 golang.org/x/crypto/sha3
-# golang.org/x/sys v0.0.0-20210601080250-7ecdf8ef093b
+# golang.org/x/sys v0.0.0-20210608053332-aa57babbf139
 ## explicit
 golang.org/x/sys/cpu
 # golang.org/x/text v0.3.6
@@ -105,5 +124,3 @@ golang.org/x/text/language
 ## explicit
 golang.org/x/xerrors
 golang.org/x/xerrors/internal
-# gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
-## explicit

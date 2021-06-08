@@ -2,17 +2,17 @@ package mid
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"time"
 
 	"github.com/ardanlabs/service/foundation/web"
 	"go.opentelemetry.io/otel/trace"
+	"go.uber.org/zap"
 )
 
 // Logger writes some information about the request to the logs in the
 // format: TraceID : (200) GET /foo -> IP ADDR (latency)
-func Logger(log *log.Logger) web.Middleware {
+func Logger(log *zap.Logger) web.Middleware {
 
 	// This is the actual middleware function to be executed.
 	m := func(handler web.Handler) web.Handler {
@@ -29,18 +29,23 @@ func Logger(log *log.Logger) web.Middleware {
 				return web.NewShutdownError("web value missing from context")
 			}
 
-			log.Printf("%s: started: %s %s -> %s",
-				v.TraceID,
-				r.Method, r.URL.Path, r.RemoteAddr,
+			log.Info("started",
+				zap.String("traceid", v.TraceID),
+				zap.String("method", r.Method),
+				zap.String("path", r.URL.Path),
+				zap.String("remoteaddr", r.RemoteAddr),
 			)
 
 			// Call the next handler.
 			err := handler(ctx, w, r)
 
-			log.Printf("%s: completed: %s %s -> %s (%d) (%s)",
-				v.TraceID,
-				r.Method, r.URL.Path, r.RemoteAddr,
-				v.StatusCode, time.Since(v.Now),
+			log.Info("completed",
+				zap.String("traceid", v.TraceID),
+				zap.String("method", r.Method),
+				zap.String("path", r.URL.Path),
+				zap.String("remoteaddr", r.RemoteAddr),
+				zap.Int("remoteaddr", v.StatusCode),
+				zap.Duration("since", time.Since(v.Now)),
 			)
 
 			// Return the error so it can be handled further up the chain.

@@ -54,20 +54,24 @@ spec:
           containerPort: 3000
         - name: app-debug
           containerPort: 4000
-        readinessProbe:
+        readinessProbe: # readiness probes mark the service available to accept traffic.
           httpGet:
             path: /debug/readiness
-            port: 4000
-          initialDelaySeconds: 30
-          periodSeconds: 15
-          timeoutSeconds: 5
-        livenessProbe:
-          httpGet:
-            path: /debug/liveness
             port: 4000
           initialDelaySeconds: 15
           periodSeconds: 15
           timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 2
+        livenessProbe: # liveness probes mark the service alive or dead (to be restarted).
+          httpGet:
+            path: /debug/liveness
+            port: 4000
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 2
       - name: metrics
         image: metrics-amd64:1.0
         env:

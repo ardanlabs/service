@@ -3,7 +3,6 @@ package commands
 import (
 	"context"
 	"encoding/json"
-	"log"
 	"os"
 	"strconv"
 	"time"
@@ -11,10 +10,11 @@ import (
 	"github.com/ardanlabs/service/business/data/user"
 	"github.com/ardanlabs/service/foundation/database"
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
 )
 
 // Users retrieves all users from the database.
-func Users(traceID string, log *log.Logger, cfg database.Config, pageNumber string, rowsPerPage string) error {
+func Users(traceID string, log *zap.Logger, cfg database.Config, pageNumber string, rowsPerPage string) error {
 	db, err := database.Open(cfg)
 	if err != nil {
 		return errors.Wrap(err, "connect database")

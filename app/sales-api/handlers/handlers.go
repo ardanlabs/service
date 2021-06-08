@@ -4,7 +4,6 @@ package handlers
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"os"
 
@@ -14,6 +13,7 @@ import (
 	"github.com/ardanlabs/service/business/web/mid"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/jmoiron/sqlx"
+	"go.uber.org/zap"
 )
 
 // Options represent optional parameters.
@@ -29,7 +29,7 @@ func WithCORS(origin string) func(opts *Options) {
 }
 
 // API constructs an http.Handler with all application routes defined.
-func API(build string, shutdown chan os.Signal, log *log.Logger, a *auth.Auth, db *sqlx.DB, options ...func(opts *Options)) http.Handler {
+func API(build string, shutdown chan os.Signal, log *zap.Logger, a *auth.Auth, db *sqlx.DB, options ...func(opts *Options)) http.Handler {
 	var opts Options
 	for _, option := range options {
 		option(&opts)

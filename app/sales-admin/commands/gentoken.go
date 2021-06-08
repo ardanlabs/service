@@ -5,7 +5,6 @@ import (
 	"crypto/rsa"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"time"
 
@@ -15,10 +14,11 @@ import (
 	"github.com/ardanlabs/service/foundation/keystore"
 	"github.com/dgrijalva/jwt-go/v4"
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
 )
 
 // GenToken generates a JWT for the specified user.
-func GenToken(traceID string, log *log.Logger, cfg database.Config, id string, privateKeyFile string, algorithm string) error {
+func GenToken(traceID string, log *zap.Logger, cfg database.Config, id string, privateKeyFile string, algorithm string) error {
 	if id == "" || privateKeyFile == "" || algorithm == "" {
 		fmt.Println("help: gentoken <id> <private_key_file> <algorithm>")
 		fmt.Println("algorithm: RS256, HS256")

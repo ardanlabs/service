@@ -3,7 +3,6 @@ package product
 
 import (
 	"context"
-	"log"
 	"time"
 
 	"github.com/ardanlabs/service/business/sys/auth"
@@ -12,16 +11,17 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/trace"
+	"go.uber.org/zap"
 )
 
 // Store manages the set of API's for product access.
 type Store struct {
-	log *log.Logger
+	log *zap.Logger
 	db  *sqlx.DB
 }
 
 // NewStore constructs a product store for api access.
-func NewStore(log *log.Logger, db *sqlx.DB) Store {
+func NewStore(log *zap.Logger, db *sqlx.DB) Store {
 	return Store{
 		log: log,
 		db:  db,
@@ -54,8 +54,9 @@ func (s Store) Create(ctx context.Context, traceID string, claims auth.Claims, n
 	VALUES
 		(:product_id, :user_id, :name, :cost, :quantity, :date_created, :date_updated)`
 
-	s.log.Printf("%s: %s: %s", traceID, "product.Create",
-		database.Log(q, prd),
+	s.log.Info("product.Create",
+		zap.String("traceid", traceID),
+		zap.String("query", database.Log(q, prd)),
 	)
 
 	if _, err := s.db.NamedExecContext(ctx, q, prd); err != nil {
@@ -110,8 +111,9 @@ func (s Store) Update(ctx context.Context, traceID string, claims auth.Claims, p
 	WHERE
 		product_id = :product_id`
 
-	s.log.Printf("%s: %s: %s", traceID, "product.Update",
-		database.Log(q, prd),
+	s.log.Info("product.Update",
+		zap.String("traceid", traceID),
+		zap.String("query", database.Log(q, prd)),
 	)
 
 	if _, err := s.db.NamedExecContext(ctx, q, prd); err != nil {
@@ -147,8 +149,9 @@ func (s Store) Delete(ctx context.Context, traceID string, claims auth.Claims, p
 	WHERE
 		product_id = :product_id`
 
-	s.log.Printf("%s: %s: %s", traceID, "product.Delete",
-		database.Log(q, data),
+	s.log.Info("product.Delete",
+		zap.String("traceid", traceID),
+		zap.String("query", database.Log(q, data)),
 	)
 
 	if _, err := s.db.NamedExecContext(ctx, q, data); err != nil {
@@ -186,8 +189,9 @@ func (s Store) Query(ctx context.Context, traceID string, pageNumber int, rowsPe
 		user_id
 	OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY`
 
-	s.log.Printf("%s: %s: %s", traceID, "product.Query",
-		database.Log(q, data),
+	s.log.Info("product.Query",
+		zap.String("traceid", traceID),
+		zap.String("query", database.Log(q, data)),
 	)
 
 	var products []Product
@@ -230,8 +234,9 @@ func (s Store) QueryByID(ctx context.Context, traceID string, productID string) 
 	GROUP BY
 		p.product_id`
 
-	s.log.Printf("%s: %s: %s", traceID, "product.QueryByID",
-		database.Log(q, data),
+	s.log.Info("product.QueryByID",
+		zap.String("traceid", traceID),
+		zap.String("query", database.Log(q, data)),
 	)
 
 	var prd Product

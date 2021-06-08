@@ -166,5 +166,5 @@ func Log(query string, args ...interface{}) string {
 	query = strings.Replace(query, "\t", "", -1)
 	query = strings.Replace(query, "\n", " ", -1)
 
-	return fmt.Sprintf("[%s]\n", strings.Trim(query, " "))
+	return fmt.Sprintf("%s\n", strings.Trim(query, " "))
 }

@@ -4,30 +4,49 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/ardanlabs/conf"
 	"github.com/ardanlabs/service/app/sales-admin/commands"
 	"github.com/ardanlabs/service/foundation/database"
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 // build is the git version of this program. It is set using build flags in the makefile.
 var build = "develop"
 
 func main() {
-	log := log.New(os.Stdout, "ADMIN : ", log.LstdFlags|log.Lmicroseconds|log.Lshortfile)
+	// Construct the application logger.
+	log := logger()
+	defer log.Sync()
 
 	if err := run(log); err != nil {
 		if errors.Cause(err) != commands.ErrHelp {
-			log.Printf("error: %s", err)
+			log.Error("", zap.Error(err))
 		}
 		os.Exit(1)
 	}
 }
 
-func run(log *log.Logger) error {
+func logger() *zap.Logger {
+
+	// Change the defaults to write to stdout and readable timestamps.
+	config := zap.NewProductionConfig()
+	config.OutputPaths = []string{"stdout"}
+	config.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
+	config.DisableStacktrace = true
+
+	log, err := config.Build()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	return log
+}
+
+func run(log *zap.Logger) error {
 
 	// =========================================================================
 	// Configuration
@@ -71,7 +90,7 @@ func run(log *log.Logger) error {
 	if err != nil {
 		return errors.Wrap(err, "generating config for output")
 	}
-	log.Printf("main: Config :\n%v\n", out)
+	log.Info("startup", zap.Any("config", out))
 
 	// =========================================================================
 	// Commands

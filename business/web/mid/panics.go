@@ -2,18 +2,17 @@ package mid
 
 import (
 	"context"
-	"log"
 	"net/http"
-	"runtime/debug"
 
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/trace"
+	"go.uber.org/zap"
 )
 
 // Panics recovers from panics and converts the panic to an error so it is
 // reported in Metrics and handled in Errors.
-func Panics(log *log.Logger) web.Middleware {
+func Panics(log *zap.Logger) web.Middleware {
 
 	// This is the actual middleware function to be executed.
 	m := func(handler web.Handler) web.Handler {
@@ -36,8 +35,10 @@ func Panics(log *log.Logger) web.Middleware {
 				if r := recover(); r != nil {
 					err = errors.Errorf("panic: %v", r)
 
-					// Log the Go stack trace for this panic'd goroutine.
-					log.Printf("%s: PANIC:\n%s", v.TraceID, debug.Stack())
+					// Log the error.
+					log.Error("PANIC stopped",
+						zap.String("traceid", v.TraceID),
+					)
 				}
 			}()
 

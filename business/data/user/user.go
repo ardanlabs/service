@@ -3,7 +3,6 @@ package user
 
 import (
 	"context"
-	"log"
 	"time"
 
 	"github.com/ardanlabs/service/business/sys/auth"
@@ -13,17 +12,18 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/trace"
+	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 )
 
 // Store manages the set of API's for user access.
 type Store struct {
-	log *log.Logger
+	log *zap.Logger
 	db  *sqlx.DB
 }
 
 // NewStore constructs a user store for api access.
-func NewStore(log *log.Logger, db *sqlx.DB) Store {
+func NewStore(log *zap.Logger, db *sqlx.DB) Store {
 	return Store{
 		log: log,
 		db:  db,
@@ -60,8 +60,9 @@ func (s Store) Create(ctx context.Context, traceID string, nu NewUser, now time.
 	VALUES
 		(:user_id, :name, :email, :password_hash, :roles, :date_created, :date_updated)`
 
-	s.log.Printf("%s: %s: %s", traceID, "user.Create",
-		database.Log(q, usr),
+	s.log.Info("user.Create",
+		zap.String("traceid", traceID),
+		zap.String("query", database.Log(q, usr)),
 	)
 
 	if _, err := s.db.NamedExecContext(ctx, q, usr); err != nil {
@@ -118,8 +119,9 @@ func (s Store) Update(ctx context.Context, traceID string, claims auth.Claims, u
 	WHERE
 		user_id = :user_id`
 
-	s.log.Printf("%s: %s: %s", traceID, "user.Update",
-		database.Log(q, usr),
+	s.log.Info("user.Update",
+		zap.String("traceid", traceID),
+		zap.String("query", database.Log(q, usr)),
 	)
 
 	if _, err := s.db.NamedExecContext(ctx, q, usr); err != nil {
@@ -155,8 +157,9 @@ func (s Store) Delete(ctx context.Context, traceID string, claims auth.Claims, u
 	WHERE
 		user_id = :user_id`
 
-	s.log.Printf("%s: %s: %s", traceID, "user.Delete",
-		database.Log(q, data),
+	s.log.Info("user.Delete",
+		zap.String("traceid", traceID),
+		zap.String("query", database.Log(q, data)),
 	)
 
 	if _, err := s.db.NamedExecContext(ctx, q, data); err != nil {
@@ -188,8 +191,9 @@ func (s Store) Query(ctx context.Context, traceID string, pageNumber int, rowsPe
 		user_id
 	OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY`
 
-	s.log.Printf("%s: %s: %s", traceID, "user.Query",
-		database.Log(q, data),
+	s.log.Info("user.Query",
+		zap.String("traceid", traceID),
+		zap.String("query", database.Log(q, data)),
 	)
 
 	var users []User
@@ -231,8 +235,9 @@ func (s Store) QueryByID(ctx context.Context, traceID string, claims auth.Claims
 	WHERE 
 		user_id = :user_id`
 
-	s.log.Printf("%s: %s: %s", traceID, "user.QueryByID",
-		database.Log(q, data),
+	s.log.Info("user.QueryByID",
+		zap.String("traceid", traceID),
+		zap.String("query", database.Log(q, data)),
 	)
 
 	var usr User
@@ -270,8 +275,9 @@ func (s Store) QueryByEmail(ctx context.Context, traceID string, claims auth.Cla
 	WHERE
 		email = :email`
 
-	s.log.Printf("%s: %s: %s", traceID, "user.QueryByEmail",
-		database.Log(q, data),
+	s.log.Info("user.QueryByEmail",
+		zap.String("traceid", traceID),
+		zap.String("query", database.Log(q, data)),
 	)
 
 	var usr User
@@ -311,8 +317,9 @@ func (s Store) Authenticate(ctx context.Context, traceID string, now time.Time, 
 	WHERE
 		email = :email`
 
-	s.log.Printf("%s: %s: %s", traceID, "user.Authenticate",
-		database.Log(q, data),
+	s.log.Info("user.Authenticate",
+		zap.String("traceid", traceID),
+		zap.String("query", database.Log(q, data)),
 	)
 
 	var usr User

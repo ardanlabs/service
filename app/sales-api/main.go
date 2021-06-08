@@ -4,11 +4,11 @@ import (
 	"context"
 	"expvar" // Calls init function.
 	"fmt"
-	"log"
 	"net/http"
 	_ "net/http/pprof" // Calls init function.
 	"os"
 	"os/signal"
+	"runtime"
 	"syscall"
 	"time"
 
@@ -24,30 +24,49 @@ import (
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/semconv"
+	_ "go.uber.org/automaxprocs"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 /*
-Startup Prob for K8s
 Need to figure out timeouts for http service.
-Consider the use of Uber/Zap for logging.
-You might want to reset your DB_HOST env var during test tear down.
-Service should start even without a DB running yet.
-symbols in profiles: https://github.com/golang/go/issues/23376 / https://github.com/google/pprof/pull/366
 */
 
 // build is the git version of this program. It is set using build flags in the makefile.
 var build = "develop"
 
 func main() {
-	log := log.New(os.Stdout, "SALES : ", log.LstdFlags|log.Lmicroseconds|log.Lshortfile)
 
+	// Construct the application logger.
+	log := logger()
+	defer log.Sync()
+
+	// Perform the startup and shutdown sequence.
 	if err := run(log); err != nil {
-		log.Println("main: error:", err)
+		log.Error("startup", zap.Error(err))
 		os.Exit(1)
 	}
 }
 
-func run(log *log.Logger) error {
+func logger() *zap.Logger {
+
+	// Change the defaults to write to stdout and readable timestamps.
+	config := zap.NewProductionConfig()
+	config.OutputPaths = []string{"stdout"}
+	config.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
+	config.DisableStacktrace = true
+
+	log, err := config.Build()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	return log
+}
+
+func run(log *zap.Logger) error {
+	log.Info("startup", zap.Int("GOMAXPROCS", runtime.GOMAXPROCS(0)))
 
 	// =========================================================================
 	// Configuration
@@ -107,19 +126,21 @@ func run(log *log.Logger) error {
 	// App Starting
 
 	expvar.NewString("build").Set(build)
-	log.Printf("main: Started: Application initializing: version %q", build)
-	defer log.Println("main: Completed")
+	log.Info("startup", zap.String("status", "started"), zap.String("version", build))
+	defer log.Info("shutdown", zap.String("status", "completed"))
 
 	out, err := conf.String(&cfg)
 	if err != nil {
 		return errors.Wrap(err, "generating config for output")
 	}
-	log.Printf("main: Config:\n%v\n", out)
+	log.Info("***** CONFIG START *****")
+	log.Info("startup", zap.Any("config", out))
+	log.Info("***** CONFIG END   *****")
 
 	// =========================================================================
 	// Initialize authentication support
 
-	log.Println("main: Started: Initializing authentication support")
+	log.Info("startup", zap.String("status", "initializing authentication support"))
 
 	// Construct a key store based on the key files stored in
 	// the specified directory.
@@ -136,7 +157,7 @@ func run(log *log.Logger) error {
 	// =========================================================================
 	// Start Database
 
-	log.Println("main: Initializing database support")
+	log.Info("startup", zap.String("status", "initializing database support"), zap.String("host", cfg.DB.Host))
 
 	db, err := database.Open(database.Config{
 		User:         cfg.DB.User,
@@ -151,7 +172,7 @@ func run(log *log.Logger) error {
 		return errors.Wrap(err, "connecting to db")
 	}
 	defer func() {
-		log.Printf("main: Database Stopping: %s", cfg.DB.Host)
+		log.Info("shutdown", zap.String("status", "stopping database support"), zap.String("host", cfg.DB.Host))
 		db.Close()
 	}()
 
@@ -162,11 +183,11 @@ func run(log *log.Logger) error {
 	// compatible with your project. Please review the documentation for
 	// opentelemetry.
 
-	log.Println("main: Initializing OT/Zipkin tracing support")
+	log.Info("startup", zap.String("status", "initializing OT/Zipkin tracing support"))
 
 	exporter, err := zipkin.NewRawExporter(
 		cfg.Zipkin.ReporterURI,
-		zipkin.WithLogger(log),
+		// zipkin.WithLogger(zap.NewStdLog(log)),
 	)
 	if err != nil {
 		return errors.Wrap(err, "creating new exporter")
@@ -197,19 +218,19 @@ func run(log *log.Logger) error {
 	//
 	// Not concerned with shutting this down when the application is shutdown.
 
-	log.Println("main: Initializing debugging support")
+	log.Info("startup", zap.String("status", "initializing debugging support"))
 
 	go func() {
-		log.Printf("main: Debug Listening %s", cfg.Web.DebugHost)
+		log.Info("startup", zap.String("status", "debug router started"), zap.String("host", cfg.Web.DebugHost))
 		if err := http.ListenAndServe(cfg.Web.DebugHost, http.DefaultServeMux); err != nil {
-			log.Printf("main: Debug Listener closed: %v", err)
+			log.Error("shutdown", zap.String("status", "debug router closed"), zap.String("host", cfg.Web.DebugHost), zap.Error(err))
 		}
 	}()
 
 	// =========================================================================
 	// Start API Service
 
-	log.Println("main: Initializing API support")
+	log.Info("startup", zap.String("status", "initializing API support"))
 
 	// Make a channel to listen for an interrupt or terminate signal from the OS.
 	// Use a buffered channel because the signal package requires it.
@@ -229,7 +250,7 @@ func run(log *log.Logger) error {
 
 	// Start the service listening for requests.
 	go func() {
-		log.Printf("main: API listening on %s", api.Addr)
+		log.Info("startup", zap.String("status", "api router started"), zap.String("host", api.Addr))
 		serverErrors <- api.ListenAndServe()
 	}()
 
@@ -242,7 +263,8 @@ func run(log *log.Logger) error {
 		return errors.Wrap(err, "server error")
 
 	case sig := <-shutdown:
-		log.Printf("main: %v: Start shutdown", sig)
+		log.Info("shutdown", zap.String("status", "shutdown started"), zap.Any("signal", sig))
+		defer log.Info("shutdown", zap.String("status", "shutdown complete"), zap.Any("signal", sig))
 
 		// Give outstanding requests a deadline for completion.
 		ctx, cancel := context.WithTimeout(context.Background(), cfg.Web.ShutdownTimeout)
@@ -253,8 +275,6 @@ func run(log *log.Logger) error {
 			api.Close()
 			return errors.Wrap(err, "could not stop server gracefully")
 		}
-
-		log.Printf("main: %v: Completed shutdown", sig)
 	}
 
 	return nil
