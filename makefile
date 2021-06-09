@@ -72,7 +72,7 @@ kind-metrics: metrics
 	kubectl delete pods -lapp=sales-api
 
 kind-logs:
-	kubectl logs -lapp=sales-api --all-containers=true -f --tail=100
+	kubectl logs -lapp=sales-api --all-containers=true -f --tail=100 | go run app/logfmt/main.go
 
 kind-status:
 	kubectl get nodes
