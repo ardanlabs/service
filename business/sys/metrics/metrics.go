@@ -27,7 +27,7 @@ var (
 // safe to be accessed concurrently. No extra abstraction is required.
 type Metrics struct {
 	Goroutines *expvar.Int
-	Requets    *expvar.Int
+	Requests   *expvar.Int
 	Errors     *expvar.Int
 	Panics     *expvar.Int
 }
@@ -40,7 +40,7 @@ func New() *Metrics {
 	if m == nil {
 		m = &Metrics{
 			Goroutines: expvar.NewInt("goroutines"),
-			Requets:    expvar.NewInt("requests"),
+			Requests:   expvar.NewInt("requests"),
 			Errors:     expvar.NewInt("errors"),
 			Panics:     expvar.NewInt("panics"),
 		}

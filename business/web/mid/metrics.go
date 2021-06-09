@@ -39,7 +39,7 @@ func Metrics(data *metrics.Metrics) web.Middleware {
 			}
 
 			// Increment the request counter.
-			data.Requets.Add(1)
+			data.Requests.Add(1)
 
 			// Increment if there is an error flowing through the request.
 			if err != nil {
@@ -47,7 +47,7 @@ func Metrics(data *metrics.Metrics) web.Middleware {
 			}
 
 			// Update the count for the number of active goroutines every 100 requests.
-			if data.Requets.Value()%100 == 0 {
+			if data.Requests.Value()%100 == 0 {
 				data.Goroutines.Set(int64(runtime.NumGoroutine()))
 			}
 
