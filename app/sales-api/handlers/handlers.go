@@ -10,6 +10,7 @@ import (
 	"github.com/ardanlabs/service/business/data/product"
 	"github.com/ardanlabs/service/business/data/user"
 	"github.com/ardanlabs/service/business/sys/auth"
+	"github.com/ardanlabs/service/business/sys/metrics"
 	"github.com/ardanlabs/service/business/web/mid"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/jmoiron/sqlx"
@@ -29,14 +30,14 @@ func WithCORS(origin string) func(opts *Options) {
 }
 
 // API constructs an http.Handler with all application routes defined.
-func API(build string, shutdown chan os.Signal, log *zap.SugaredLogger, a *auth.Auth, db *sqlx.DB, options ...func(opts *Options)) http.Handler {
+func API(build string, shutdown chan os.Signal, log *zap.SugaredLogger, metrics *metrics.Metrics, a *auth.Auth, db *sqlx.DB, options ...func(opts *Options)) http.Handler {
 	var opts Options
 	for _, option := range options {
 		option(&opts)
 	}
 
 	// Construct the web.App which holds all routes as well as common Middleware.
-	app := web.NewApp(shutdown, mid.Logger(log), mid.Errors(log), mid.Metrics(), mid.Panics())
+	app := web.NewApp(shutdown, mid.Logger(log), mid.Errors(log), mid.Metrics(metrics), mid.Panics())
 
 	// Register debug check endpoints.
 	cg := checkGroup{

@@ -12,6 +12,7 @@ import (
 	"github.com/ardanlabs/service/app/sales-api/handlers"
 	"github.com/ardanlabs/service/business/data/product"
 	"github.com/ardanlabs/service/business/data/tests"
+	"github.com/ardanlabs/service/business/sys/metrics"
 	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
@@ -44,7 +45,7 @@ func TestProducts(t *testing.T) {
 
 	shutdown := make(chan os.Signal, 1)
 	tests := ProductTests{
-		app:       handlers.API("develop", shutdown, test.Log, test.Auth, test.DB),
+		app:       handlers.API("develop", shutdown, test.Log, metrics.New(), test.Auth, test.DB),
 		userToken: test.Token("admin@example.com", "gophers"),
 	}
 

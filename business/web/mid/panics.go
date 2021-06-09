@@ -3,7 +3,9 @@ package mid
 import (
 	"context"
 	"net/http"
+	"strings"
 
+	"github.com/ardanlabs/service/business/sys/metrics"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/trace"
@@ -24,8 +26,15 @@ func Panics() web.Middleware {
 			// Defer a function to recover from a panic and set the err return
 			// variable after the fact.
 			defer func() {
-				if r := recover(); r != nil {
-					err = errors.Errorf("PANIC: %v", r)
+				if rec := recover(); rec != nil {
+					err = errors.Errorf("PANIC: %v", rec)
+
+					// Don't count anything on /debug routes towards metrics.
+					if !strings.HasPrefix(r.URL.Path, "/debug") {
+						if v, ok := ctx.Value(metrics.Key).(*metrics.Metrics); ok {
+							v.Panics.Add(1)
+						}
+					}
 				}
 			}()
 

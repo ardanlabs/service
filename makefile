@@ -13,7 +13,7 @@ export PROJECT = ardan-starter-kit
 # For testing load on the service.
 # hey -m GET -c 100 -n 10000 -H "Authorization: Bearer ${TOKEN}" http://localhost:3000/v1/users/1/2
 # zipkin: http://localhost:9411
-# expvarmon -ports=":4000" -vars="build,requests,goroutines,errors,mem:memstats.Alloc"
+# expvarmon -ports=":4000" -vars="build,requests,goroutines,errors,panics,mem:memstats.Alloc"
 
 # Used to install expvarmon program for metrics dashboard.
 # go install github.com/divan/expvarmon@latest

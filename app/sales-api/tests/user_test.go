@@ -13,6 +13,7 @@ import (
 	"github.com/ardanlabs/service/business/data/tests"
 	"github.com/ardanlabs/service/business/data/user"
 	"github.com/ardanlabs/service/business/sys/auth"
+	"github.com/ardanlabs/service/business/sys/metrics"
 	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
@@ -42,7 +43,7 @@ func TestUsers(t *testing.T) {
 
 	shutdown := make(chan os.Signal, 1)
 	tests := UserTests{
-		app:        handlers.API("develop", shutdown, test.Log, test.Auth, test.DB),
+		app:        handlers.API("develop", shutdown, test.Log, metrics.New(), test.Auth, test.DB),
 		kid:        test.KID,
 		userToken:  test.Token("user@example.com", "gophers"),
 		adminToken: test.Token("admin@example.com", "gophers"),

@@ -2,28 +2,19 @@ package mid
 
 import (
 	"context"
-	"expvar"
 	"net/http"
 	"runtime"
 	"strings"
 
+	"github.com/ardanlabs/service/business/sys/metrics"
 	"github.com/ardanlabs/service/foundation/web"
 	"go.opentelemetry.io/otel/trace"
 )
 
-// m contains the global program counters for the application.
-var m = struct {
-	gr  *expvar.Int
-	req *expvar.Int
-	err *expvar.Int
-}{
-	gr:  expvar.NewInt("goroutines"),
-	req: expvar.NewInt("requests"),
-	err: expvar.NewInt("errors"),
-}
+// =============================================================================
 
 // Metrics updates program counters.
-func Metrics() web.Middleware {
+func Metrics(data *metrics.Metrics) web.Middleware {
 
 	// This is the actual middleware function to be executed.
 	m := func(handler web.Handler) web.Handler {
@@ -33,8 +24,13 @@ func Metrics() web.Middleware {
 			ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.web.mid.metrics")
 			defer span.End()
 
+			// Add the metrics value for metric gathering.
+			ctx = context.WithValue(ctx, metrics.Key, data)
+
 			// Call the next handler.
 			err := handler(ctx, w, r)
+
+			// Handle updating the metrics that can be handled here.
 
 			// Don't count anything on /debug routes towards metrics.
 			// Call the next handler to continue processing.
@@ -43,16 +39,16 @@ func Metrics() web.Middleware {
 			}
 
 			// Increment the request counter.
-			m.req.Add(1)
+			data.Requets.Add(1)
 
-			// Update the count for the number of active goroutines every 100 requests.
-			if m.req.Value()%100 == 0 {
-				m.gr.Set(int64(runtime.NumGoroutine()))
+			// Increment if there is an error flowing through the request.
+			if err != nil {
+				data.Errors.Add(1)
 			}
 
-			// Increment the errors counter if an error occurred on this request.
-			if err != nil {
-				m.err.Add(1)
+			// Update the count for the number of active goroutines every 100 requests.
+			if data.Requets.Value()%100 == 0 {
+				data.Goroutines.Set(int64(runtime.NumGoroutine()))
 			}
 
 			// Return the error so it can be handled further up the chain.
