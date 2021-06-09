@@ -2,6 +2,7 @@
 package metrics
 
 import (
+	"context"
 	"expvar"
 	"sync"
 )
@@ -46,4 +47,13 @@ func New() *Metrics {
 		}
 	}
 	return m
+}
+
+// =============================================================================
+
+// AddPanics increments the panics metric by 1.
+func AddPanics(ctx context.Context) {
+	if v, ok := ctx.Value(Key).(*Metrics); ok {
+		v.Panics.Add(1)
+	}
 }

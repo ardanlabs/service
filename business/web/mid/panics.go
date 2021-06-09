@@ -31,9 +31,7 @@ func Panics() web.Middleware {
 
 					// Don't count anything on /debug routes towards metrics.
 					if !strings.HasPrefix(r.URL.Path, "/debug") {
-						if v, ok := ctx.Value(metrics.Key).(*metrics.Metrics); ok {
-							v.Panics.Add(1)
-						}
+						metrics.AddPanics(ctx)
 					}
 				}
 			}()
