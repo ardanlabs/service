@@ -45,20 +45,6 @@ metrics:
 		.
 
 # ==============================================================================
-# Running from within docker compose
-
-run: up seed
-
-up:
-	docker-compose -f zarf/compose/compose.yaml -f zarf/compose/compose-config.yaml up --detach --remove-orphans
-
-down:
-	docker-compose -f zarf/compose/compose.yaml down --remove-orphans
-
-logs:
-	docker-compose -f zarf/compose/compose.yaml logs -f
-
-# ==============================================================================
 # Running from within k8s/dev
 
 kind-up:
