@@ -17,6 +17,7 @@ import (
 	"github.com/ardanlabs/service/business/sys/auth"
 	"github.com/ardanlabs/service/foundation/database"
 	"github.com/ardanlabs/service/foundation/keystore"
+	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -26,7 +27,6 @@ import (
 	"go.opentelemetry.io/otel/semconv"
 	"go.uber.org/automaxprocs/maxprocs"
 	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 )
 
 /*
@@ -39,44 +39,25 @@ var build = "develop"
 func main() {
 
 	// Construct the application logger.
-	log := logger()
+	log := logger.New("SALES-API")
 	defer log.Sync()
 
 	// Make sure the program is using the correct
 	// number of threads if a CPU quota is set.
 	if _, err := maxprocs.Set(); err != nil {
-		log.Error("startup", zap.Error(err))
+		log.Errorw("startup", zap.Error(err))
 		os.Exit(1)
 	}
-	log.Info("startup", zap.Int("GOMAXPROCS", runtime.GOMAXPROCS(0)))
+	log.Infow("startup", "GOMAXPROCS", runtime.GOMAXPROCS(0))
 
 	// Perform the startup and shutdown sequence.
 	if err := run(log); err != nil {
-		log.Error("startup", zap.Error(err))
+		log.Errorw("startup", "ERROR", err)
 		os.Exit(1)
 	}
 }
 
-func logger() *zap.Logger {
-
-	// Change the defaults to write to stdout and readable timestamps.
-	config := zap.NewProductionConfig()
-	config.OutputPaths = []string{"stdout"}
-	config.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
-	config.DisableStacktrace = true
-	config.InitialFields = map[string]interface{}{
-		"service": "SALES-API",
-	}
-
-	log, err := config.Build()
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	return log
-}
-
-func run(log *zap.Logger) error {
+func run(log *zap.SugaredLogger) error {
 
 	// =========================================================================
 	// Configuration
@@ -136,21 +117,19 @@ func run(log *zap.Logger) error {
 	// App Starting
 
 	expvar.NewString("build").Set(build)
-	log.Info("startup", zap.String("version", build))
-	defer log.Info("shutdown complete")
+	log.Infow("starting service", "version", build)
+	defer log.Infow("shutdown complete")
 
 	out, err := conf.String(&cfg)
 	if err != nil {
 		return errors.Wrap(err, "generating config for output")
 	}
-	log.Info("***** CONFIG START *****")
-	log.Info("startup", zap.Any("config", out))
-	log.Info("***** CONFIG END   *****")
+	log.Infow("startup", "config", out)
 
 	// =========================================================================
 	// Initialize authentication support
 
-	log.Info("startup", zap.String("status", "initializing authentication support"))
+	log.Infow("startup", "status", "initializing authentication support")
 
 	// Construct a key store based on the key files stored in
 	// the specified directory.
@@ -167,7 +146,7 @@ func run(log *zap.Logger) error {
 	// =========================================================================
 	// Start Database
 
-	log.Info("startup", zap.String("status", "initializing database support"), zap.String("host", cfg.DB.Host))
+	log.Infow("startup", "status", "initializing database support", "host", cfg.DB.Host)
 
 	db, err := database.Open(database.Config{
 		User:         cfg.DB.User,
@@ -182,7 +161,7 @@ func run(log *zap.Logger) error {
 		return errors.Wrap(err, "connecting to db")
 	}
 	defer func() {
-		log.Info("shutdown", zap.String("status", "stopping database support"), zap.String("host", cfg.DB.Host))
+		log.Infow("shutdown", "status", "stopping database support", "host", cfg.DB.Host)
 		db.Close()
 	}()
 
@@ -193,7 +172,7 @@ func run(log *zap.Logger) error {
 	// compatible with your project. Please review the documentation for
 	// opentelemetry.
 
-	log.Info("startup", zap.String("status", "initializing OT/Zipkin tracing support"))
+	log.Infow("startup", "status", "initializing OT/Zipkin tracing support")
 
 	exporter, err := zipkin.NewRawExporter(
 		cfg.Zipkin.ReporterURI,
@@ -228,19 +207,19 @@ func run(log *zap.Logger) error {
 	//
 	// Not concerned with shutting this down when the application is shutdown.
 
-	log.Info("startup", zap.String("status", "initializing debugging support"))
+	log.Infow("startup", "status", "initializing debugging support")
 
 	go func() {
-		log.Info("startup", zap.String("status", "debug router started"), zap.String("host", cfg.Web.DebugHost))
+		log.Infow("startup", "status", "debug router started", "host", cfg.Web.DebugHost)
 		if err := http.ListenAndServe(cfg.Web.DebugHost, http.DefaultServeMux); err != nil {
-			log.Error("shutdown", zap.String("status", "debug router closed"), zap.String("host", cfg.Web.DebugHost), zap.Error(err))
+			log.Errorw("shutdown", "status", "debug router closed", "host", cfg.Web.DebugHost, "ERROR", err)
 		}
 	}()
 
 	// =========================================================================
 	// Start API Service
 
-	log.Info("startup", zap.String("status", "initializing API support"))
+	log.Infow("startup", "status", "initializing API support")
 
 	// Make a channel to listen for an interrupt or terminate signal from the OS.
 	// Use a buffered channel because the signal package requires it.
@@ -260,7 +239,7 @@ func run(log *zap.Logger) error {
 
 	// Start the service listening for requests.
 	go func() {
-		log.Info("startup", zap.String("status", "api router started"), zap.String("host", api.Addr))
+		log.Infow("startup", "status", "api router started", "host", api.Addr)
 		serverErrors <- api.ListenAndServe()
 	}()
 
@@ -273,8 +252,8 @@ func run(log *zap.Logger) error {
 		return errors.Wrap(err, "server error")
 
 	case sig := <-shutdown:
-		log.Info("shutdown", zap.String("status", "shutdown started"), zap.Any("signal", sig))
-		defer log.Info("shutdown", zap.String("status", "shutdown complete"), zap.Any("signal", sig))
+		log.Infow("shutdown", "status", "shutdown started", "signal", sig)
+		defer log.Infow("shutdown", "status", "shutdown complete", "signal", sig)
 
 		// Give outstanding requests a deadline for completion.
 		ctx, cancel := context.WithTimeout(context.Background(), cfg.Web.ShutdownTimeout)

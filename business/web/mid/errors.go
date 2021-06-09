@@ -14,7 +14,7 @@ import (
 // Errors handles errors coming out of the call chain. It detects normal
 // application errors which are used to respond to the client in a uniform way.
 // Unexpected errors (status >= 500) are logged.
-func Errors(log *zap.Logger) web.Middleware {
+func Errors(log *zap.SugaredLogger) web.Middleware {
 
 	// This is the actual middleware function to be executed.
 	m := func(handler web.Handler) web.Handler {
@@ -35,10 +35,7 @@ func Errors(log *zap.Logger) web.Middleware {
 			if err := handler(ctx, w, r); err != nil {
 
 				// Log the error.
-				log.Error("ERROR",
-					zap.String("traceid", v.TraceID),
-					zap.Error(err),
-				)
+				log.Errorw("ERROR", "traceid", v.TraceID, "ERROR", err)
 
 				// Build out the error response.
 				var er validate.ErrorResponse

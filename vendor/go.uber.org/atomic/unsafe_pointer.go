@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Uber Technologies, Inc.
+// Copyright (c) 2021 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,16 +18,41 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-// Package automaxprocs automatically sets GOMAXPROCS to match the Linux
-// container CPU quota, if any.
-package automaxprocs // import "go.uber.org/automaxprocs"
+package atomic
 
 import (
-	"log"
-
-	"go.uber.org/automaxprocs/maxprocs"
+	"sync/atomic"
+	"unsafe"
 )
 
-func init() {
-	maxprocs.Set(maxprocs.Logger(log.Printf))
+// UnsafePointer is an atomic wrapper around unsafe.Pointer.
+type UnsafePointer struct {
+	_ nocmp // disallow non-atomic comparison
+
+	v unsafe.Pointer
+}
+
+// NewUnsafePointer creates a new UnsafePointer.
+func NewUnsafePointer(p unsafe.Pointer) *UnsafePointer {
+	return &UnsafePointer{v: p}
+}
+
+// Load atomically loads the wrapped value.
+func (p *UnsafePointer) Load() unsafe.Pointer {
+	return atomic.LoadPointer(&p.v)
+}
+
+// Store atomically stores the passed value.
+func (p *UnsafePointer) Store(q unsafe.Pointer) {
+	atomic.StorePointer(&p.v, q)
+}
+
+// Swap atomically swaps the wrapped unsafe.Pointer and returns the old value.
+func (p *UnsafePointer) Swap(q unsafe.Pointer) unsafe.Pointer {
+	return atomic.SwapPointer(&p.v, q)
+}
+
+// CAS is an atomic compare-and-swap.
+func (p *UnsafePointer) CAS(old, new unsafe.Pointer) bool {
+	return atomic.CompareAndSwapPointer(&p.v, old, new)
 }

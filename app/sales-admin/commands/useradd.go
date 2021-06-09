@@ -13,7 +13,7 @@ import (
 )
 
 // UserAdd adds new users into the database.
-func UserAdd(traceID string, log *zap.Logger, cfg database.Config, name, email, password string) error {
+func UserAdd(traceID string, log *zap.SugaredLogger, cfg database.Config, name, email, password string) error {
 	if name == "" || email == "" || password == "" {
 		fmt.Println("help: useradd <name> <email> <password>")
 		return ErrHelp

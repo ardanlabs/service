@@ -18,7 +18,7 @@ import (
 )
 
 // GenToken generates a JWT for the specified user.
-func GenToken(traceID string, log *zap.Logger, cfg database.Config, id string, privateKeyFile string, algorithm string) error {
+func GenToken(traceID string, log *zap.SugaredLogger, cfg database.Config, id string, privateKeyFile string, algorithm string) error {
 	if id == "" || privateKeyFile == "" || algorithm == "" {
 		fmt.Println("help: gentoken <id> <private_key_file> <algorithm>")
 		fmt.Println("algorithm: RS256, HS256")

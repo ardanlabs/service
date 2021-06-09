@@ -18,9 +18,9 @@ import (
 	"github.com/ardanlabs/service/foundation/database"
 	"github.com/ardanlabs/service/foundation/docker"
 	"github.com/ardanlabs/service/foundation/keystore"
+	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 )
 
 // Success and failure markers.
@@ -39,7 +39,7 @@ type DBContainer struct {
 // NewUnit creates a test database inside a Docker container. It creates the
 // required table structure but the database is otherwise empty. It returns
 // the database to use as well as a function to call at the end of the test.
-func NewUnit(t *testing.T, dbc DBContainer) (*zap.Logger, *sqlx.DB, func()) {
+func NewUnit(t *testing.T, dbc DBContainer) (*zap.SugaredLogger, *sqlx.DB, func()) {
 	r, w, _ := os.Pipe()
 	old := os.Stdout
 	os.Stdout = w
@@ -68,14 +68,7 @@ func NewUnit(t *testing.T, dbc DBContainer) (*zap.Logger, *sqlx.DB, func()) {
 		t.Fatalf("Migrating error: %s", err)
 	}
 
-	config := zap.NewProductionConfig()
-	config.OutputPaths = []string{"stdout"}
-	config.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
-	config.DisableStacktrace = true
-	log, err := config.Build()
-	if err != nil {
-		t.Fatalf("Creating logger error: %s", err)
-	}
+	log := logger.New("TEST")
 
 	// teardown is the function that should be invoked when the caller is done
 	// with the database.
@@ -102,7 +95,7 @@ func NewUnit(t *testing.T, dbc DBContainer) (*zap.Logger, *sqlx.DB, func()) {
 type Test struct {
 	TraceID  string
 	DB       *sqlx.DB
-	Log      *zap.Logger
+	Log      *zap.SugaredLogger
 	Auth     *auth.Auth
 	KID      string
 	Teardown func()

@@ -18,12 +18,12 @@ import (
 
 // Store manages the set of API's for user access.
 type Store struct {
-	log *zap.Logger
+	log *zap.SugaredLogger
 	db  *sqlx.DB
 }
 
 // NewStore constructs a user store for api access.
-func NewStore(log *zap.Logger, db *sqlx.DB) Store {
+func NewStore(log *zap.SugaredLogger, db *sqlx.DB) Store {
 	return Store{
 		log: log,
 		db:  db,
@@ -60,10 +60,7 @@ func (s Store) Create(ctx context.Context, traceID string, nu NewUser, now time.
 	VALUES
 		(:user_id, :name, :email, :password_hash, :roles, :date_created, :date_updated)`
 
-	s.log.Info("user.Create",
-		zap.String("traceid", traceID),
-		zap.String("query", database.Log(q, usr)),
-	)
+	s.log.Infow("user.Create", "traceid", traceID, "query", database.Log(q, usr))
 
 	if _, err := s.db.NamedExecContext(ctx, q, usr); err != nil {
 		return User{}, errors.Wrap(err, "inserting user")
@@ -119,10 +116,7 @@ func (s Store) Update(ctx context.Context, traceID string, claims auth.Claims, u
 	WHERE
 		user_id = :user_id`
 
-	s.log.Info("user.Update",
-		zap.String("traceid", traceID),
-		zap.String("query", database.Log(q, usr)),
-	)
+	s.log.Infow("user.Update", "traceid", traceID, "query", database.Log(q, usr))
 
 	if _, err := s.db.NamedExecContext(ctx, q, usr); err != nil {
 		return errors.Wrapf(err, "updating user %s", usr.ID)
@@ -157,10 +151,7 @@ func (s Store) Delete(ctx context.Context, traceID string, claims auth.Claims, u
 	WHERE
 		user_id = :user_id`
 
-	s.log.Info("user.Delete",
-		zap.String("traceid", traceID),
-		zap.String("query", database.Log(q, data)),
-	)
+	s.log.Infow("user.Delete", "traceid", traceID, "query", database.Log(q, data))
 
 	if _, err := s.db.NamedExecContext(ctx, q, data); err != nil {
 		return errors.Wrapf(err, "deleting user %s", data.UserID)
@@ -191,10 +182,7 @@ func (s Store) Query(ctx context.Context, traceID string, pageNumber int, rowsPe
 		user_id
 	OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY`
 
-	s.log.Info("user.Query",
-		zap.String("traceid", traceID),
-		zap.String("query", database.Log(q, data)),
-	)
+	s.log.Infow("user.Query", "traceid", traceID, "query", database.Log(q, data))
 
 	var users []User
 	if err := database.NamedQuerySlice(ctx, s.db, q, data, &users); err != nil {
@@ -235,10 +223,7 @@ func (s Store) QueryByID(ctx context.Context, traceID string, claims auth.Claims
 	WHERE 
 		user_id = :user_id`
 
-	s.log.Info("user.QueryByID",
-		zap.String("traceid", traceID),
-		zap.String("query", database.Log(q, data)),
-	)
+	s.log.Infow("user.QueryByID", "traceid", traceID, "query", database.Log(q, data))
 
 	var usr User
 	if err := database.NamedQueryStruct(ctx, s.db, q, data, &usr); err != nil {
@@ -275,10 +260,7 @@ func (s Store) QueryByEmail(ctx context.Context, traceID string, claims auth.Cla
 	WHERE
 		email = :email`
 
-	s.log.Info("user.QueryByEmail",
-		zap.String("traceid", traceID),
-		zap.String("query", database.Log(q, data)),
-	)
+	s.log.Infow("user.QueryByEmail", "traceid", traceID, "query", database.Log(q, data))
 
 	var usr User
 	if err := database.NamedQueryStruct(ctx, s.db, q, data, &usr); err != nil {
@@ -317,10 +299,7 @@ func (s Store) Authenticate(ctx context.Context, traceID string, now time.Time, 
 	WHERE
 		email = :email`
 
-	s.log.Info("user.Authenticate",
-		zap.String("traceid", traceID),
-		zap.String("query", database.Log(q, data)),
-	)
+	s.log.Infow("user.Authenticate", "traceid", traceID, "query", database.Log(q, data))
 
 	var usr User
 	if err := database.NamedQueryStruct(ctx, s.db, q, data, &usr); err != nil {

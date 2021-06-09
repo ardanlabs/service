@@ -14,10 +14,10 @@ import (
 	"github.com/ardanlabs/service/app/sidecar/metrics/collector"
 	"github.com/ardanlabs/service/app/sidecar/metrics/publisher"
 	"github.com/ardanlabs/service/app/sidecar/metrics/publisher/expvar"
+	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/pkg/errors"
 	"go.uber.org/automaxprocs/maxprocs"
 	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 )
 
 // build is the git version of this program. It is set using build flags in the makefile.
@@ -26,43 +26,24 @@ var build = "develop"
 func main() {
 
 	// Construct the application logger.
-	log := logger()
+	log := logger.New("METRICS")
 	defer log.Sync()
 
 	// Make sure the program is using the correct
 	// number of threads if a CPU quota is set.
 	if _, err := maxprocs.Set(); err != nil {
-		log.Error("startup", zap.Error(err))
+		log.Errorw("startup", zap.Error(err))
 		os.Exit(1)
 	}
-	log.Info("startup", zap.Int("GOMAXPROCS", runtime.GOMAXPROCS(0)))
+	log.Infow("startup", "GOMAXPROCS", runtime.GOMAXPROCS(0))
 
 	if err := run(log); err != nil {
-		log.Error("startup", zap.Error(err))
+		log.Errorw("startup", "ERROR", err)
 		os.Exit(1)
 	}
 }
 
-func logger() *zap.Logger {
-
-	// Change the defaults to write to stdout and readable timestamps.
-	config := zap.NewProductionConfig()
-	config.OutputPaths = []string{"stdout"}
-	config.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
-	config.DisableStacktrace = true
-	config.InitialFields = map[string]interface{}{
-		"service": "METRICS",
-	}
-
-	log, err := config.Build()
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	return log
-}
-
-func run(log *zap.Logger) error {
+func run(log *zap.SugaredLogger) error {
 
 	// =========================================================================
 	// Configuration
@@ -117,9 +98,7 @@ func run(log *zap.Logger) error {
 	if err != nil {
 		return errors.Wrap(err, "generating config for output")
 	}
-	log.Info("***** CONFIG START *****")
-	log.Info("startup", zap.Any("config", out))
-	log.Info("***** CONFIG END   *****")
+	log.Infow("startup", "config", out)
 
 	// =========================================================================
 	// Start Debug Service. Not concerned with shutting this down when the
@@ -128,9 +107,9 @@ func run(log *zap.Logger) error {
 	// /debug/pprof - Added to the default mux by the net/http/pprof package.
 
 	go func() {
-		log.Info("startup", zap.String("status", "debug router started"), zap.String("host", cfg.Web.DebugHost))
+		log.Infow("startup", "status", "debug router started", "host", cfg.Web.DebugHost)
 		if err := http.ListenAndServe(cfg.Web.DebugHost, http.DefaultServeMux); err != nil {
-			log.Error("shutdown", zap.String("status", "debug router closed"), zap.String("host", cfg.Web.DebugHost), zap.Error(err))
+			log.Errorw("shutdown", "status", "debug router closed", "host", cfg.Web.DebugHost, "ERROR", err)
 		}
 	}()
 
@@ -169,8 +148,8 @@ func run(log *zap.Logger) error {
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
 	<-shutdown
 
-	log.Info("shutdown", zap.String("status", "shutdown started"))
-	defer log.Info("shutdown", zap.String("status", "shutdown complete"))
+	log.Infow("shutdown", "status", "shutdown started")
+	defer log.Infow("shutdown", "status", "shutdown complete")
 
 	return nil
 }

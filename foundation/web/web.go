@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/dimfeld/httptreemux/v5"
+	"github.com/google/uuid"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -119,10 +120,18 @@ func (a *App) handle(debug bool, method string, path string, handler Handler, mw
 		ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, r.URL.Path)
 		defer span.End()
 
+		// Capture the trace id from the span if one exists. This could
+		// come from over the wire. If this is a debug route, there won't
+		// be a trace id, so generate one with uuid.
+		traceID := span.SpanContext().TraceID().String()
+		if traceID[:4] == "0000" {
+			traceID = uuid.New().String()
+		}
+
 		// Set the context with the required values to
 		// process the request.
 		v := Values{
-			TraceID: span.SpanContext().TraceID().String(),
+			TraceID: traceID,
 			Now:     time.Now(),
 		}
 		ctx = context.WithValue(ctx, KeyValues, &v)

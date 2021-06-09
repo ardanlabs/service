@@ -87,11 +87,11 @@ go.opentelemetry.io/otel/sdk/trace
 # go.opentelemetry.io/otel/trace v0.20.0
 ## explicit
 go.opentelemetry.io/otel/trace
-# go.uber.org/atomic v1.7.0
+# go.uber.org/atomic v1.8.0
+## explicit
 go.uber.org/atomic
 # go.uber.org/automaxprocs v1.4.0
 ## explicit
-go.uber.org/automaxprocs
 go.uber.org/automaxprocs/internal/cgroups
 go.uber.org/automaxprocs/internal/runtime
 go.uber.org/automaxprocs/maxprocs

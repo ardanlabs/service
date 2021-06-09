@@ -12,7 +12,7 @@ import (
 
 // Logger writes some information about the request to the logs in the
 // format: TraceID : (200) GET /foo -> IP ADDR (latency)
-func Logger(log *zap.Logger) web.Middleware {
+func Logger(log *zap.SugaredLogger) web.Middleware {
 
 	// This is the actual middleware function to be executed.
 	m := func(handler web.Handler) web.Handler {
@@ -29,24 +29,14 @@ func Logger(log *zap.Logger) web.Middleware {
 				return web.NewShutdownError("web value missing from context")
 			}
 
-			log.Info("started",
-				zap.String("traceid", v.TraceID),
-				zap.String("method", r.Method),
-				zap.String("path", r.URL.Path),
-				zap.String("remoteaddr", r.RemoteAddr),
-			)
+			log.Infow("request started", "traceid", v.TraceID, "method", r.Method, "path", r.URL.Path,
+				"remoteaddr", r.RemoteAddr)
 
 			// Call the next handler.
 			err := handler(ctx, w, r)
 
-			log.Info("completed",
-				zap.String("traceid", v.TraceID),
-				zap.String("method", r.Method),
-				zap.String("path", r.URL.Path),
-				zap.String("remoteaddr", r.RemoteAddr),
-				zap.Int("remoteaddr", v.StatusCode),
-				zap.Duration("since", time.Since(v.Now)),
-			)
+			log.Infow("request completed", "traceid", v.TraceID, "method", r.Method, "path", r.URL.Path,
+				"remoteaddr", r.RemoteAddr, "remoteaddr", v.StatusCode, "since", time.Since(v.Now))
 
 			// Return the error so it can be handled further up the chain.
 			return err

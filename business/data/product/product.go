@@ -16,12 +16,12 @@ import (
 
 // Store manages the set of API's for product access.
 type Store struct {
-	log *zap.Logger
+	log *zap.SugaredLogger
 	db  *sqlx.DB
 }
 
 // NewStore constructs a product store for api access.
-func NewStore(log *zap.Logger, db *sqlx.DB) Store {
+func NewStore(log *zap.SugaredLogger, db *sqlx.DB) Store {
 	return Store{
 		log: log,
 		db:  db,
@@ -54,10 +54,7 @@ func (s Store) Create(ctx context.Context, traceID string, claims auth.Claims, n
 	VALUES
 		(:product_id, :user_id, :name, :cost, :quantity, :date_created, :date_updated)`
 
-	s.log.Info("product.Create",
-		zap.String("traceid", traceID),
-		zap.String("query", database.Log(q, prd)),
-	)
+	s.log.Infow("product.Create", "traceid", traceID, "query", database.Log(q, prd))
 
 	if _, err := s.db.NamedExecContext(ctx, q, prd); err != nil {
 		return Product{}, errors.Wrap(err, "inserting product")
@@ -111,10 +108,7 @@ func (s Store) Update(ctx context.Context, traceID string, claims auth.Claims, p
 	WHERE
 		product_id = :product_id`
 
-	s.log.Info("product.Update",
-		zap.String("traceid", traceID),
-		zap.String("query", database.Log(q, prd)),
-	)
+	s.log.Infow("product.Update", "traceid", traceID, "query", database.Log(q, prd))
 
 	if _, err := s.db.NamedExecContext(ctx, q, prd); err != nil {
 		return errors.Wrapf(err, "updating product %s", prd.ID)
@@ -149,10 +143,7 @@ func (s Store) Delete(ctx context.Context, traceID string, claims auth.Claims, p
 	WHERE
 		product_id = :product_id`
 
-	s.log.Info("product.Delete",
-		zap.String("traceid", traceID),
-		zap.String("query", database.Log(q, data)),
-	)
+	s.log.Infow("product.Delete", "traceid", traceID, "query", database.Log(q, data))
 
 	if _, err := s.db.NamedExecContext(ctx, q, data); err != nil {
 		return errors.Wrapf(err, "deleting product %s", data.ProductID)
@@ -189,10 +180,7 @@ func (s Store) Query(ctx context.Context, traceID string, pageNumber int, rowsPe
 		user_id
 	OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY`
 
-	s.log.Info("product.Query",
-		zap.String("traceid", traceID),
-		zap.String("query", database.Log(q, data)),
-	)
+	s.log.Infow("product.Query", "traceid", traceID, "query", database.Log(q, data))
 
 	var products []Product
 	if err := database.NamedQuerySlice(ctx, s.db, q, data, &products); err != nil {
@@ -234,10 +222,7 @@ func (s Store) QueryByID(ctx context.Context, traceID string, productID string) 
 	GROUP BY
 		p.product_id`
 
-	s.log.Info("product.QueryByID",
-		zap.String("traceid", traceID),
-		zap.String("query", database.Log(q, data)),
-	)
+	s.log.Infow("product.QueryByID", "traceid", traceID, "query", database.Log(q, data))
 
 	var prd Product
 	if err := database.NamedQueryStruct(ctx, s.db, q, data, &prd); err != nil {
