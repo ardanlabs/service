@@ -19,13 +19,14 @@ func init() {
 func main() {
 	flag.Parse()
 	scanner := bufio.NewScanner(os.Stdin)
-	fmt.Print("\u001b[32m")
 	for scanner.Scan() {
 		s := scanner.Text()
 		m := make(map[string]interface{})
 		err := json.Unmarshal([]byte(s), &m)
 		if err != nil {
-			fmt.Println(s)
+			if service == "" {
+				fmt.Println(s)
+			}
 			continue
 		}
 		if service != "" && m["service"] != service {
