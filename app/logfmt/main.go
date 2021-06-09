@@ -4,19 +4,31 @@ package main
 import (
 	"bufio"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"log"
 	"os"
 )
 
+var service string
+
+func init() {
+	flag.StringVar(&service, "service", "", "filter which service to see")
+}
+
 func main() {
+	flag.Parse()
 	scanner := bufio.NewScanner(os.Stdin)
+	fmt.Print("\u001b[32m")
 	for scanner.Scan() {
 		s := scanner.Text()
 		m := make(map[string]interface{})
 		err := json.Unmarshal([]byte(s), &m)
 		if err != nil {
 			fmt.Println(s)
+			continue
+		}
+		if service != "" && m["service"] != service {
 			continue
 		}
 		b, err := json.MarshalIndent(m, "", "    ")

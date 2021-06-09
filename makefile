@@ -74,6 +74,9 @@ kind-metrics: metrics
 kind-logs:
 	kubectl logs -lapp=sales-api --all-containers=true -f --tail=100 | go run app/logfmt/main.go
 
+kind-logs-sales:
+	kubectl logs -lapp=sales-api --all-containers=true -f --tail=100 | go run app/logfmt/main.go -service=SALES-API
+
 kind-status:
 	kubectl get nodes
 	kubectl get pods --watch
