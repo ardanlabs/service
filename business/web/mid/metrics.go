@@ -8,7 +8,6 @@ import (
 
 	"github.com/ardanlabs/service/business/sys/metrics"
 	"github.com/ardanlabs/service/foundation/web"
-	"go.opentelemetry.io/otel/trace"
 )
 
 // =============================================================================
@@ -21,8 +20,6 @@ func Metrics(data *metrics.Metrics) web.Middleware {
 
 		// Create the handler that will be attached in the middleware chain.
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-			ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.web.mid.metrics")
-			defer span.End()
 
 			// Add the metrics value for metric gathering.
 			ctx = context.WithValue(ctx, metrics.Key, data)

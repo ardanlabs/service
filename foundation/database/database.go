@@ -12,7 +12,6 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq" // Calls init function.
-	"go.opentelemetry.io/otel/trace"
 )
 
 // Set of error variables for CRUD operations.
@@ -66,8 +65,6 @@ func Open(cfg Config) (*sqlx.DB, error) {
 // StatusCheck returns nil if it can successfully talk to the database. It
 // returns a non-nil error otherwise.
 func StatusCheck(ctx context.Context, db *sqlx.DB) error {
-	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "foundation.database.statuscheck")
-	defer span.End()
 
 	// First check we can ping the database.
 	var pingError error
@@ -97,9 +94,6 @@ func StatusCheck(ctx context.Context, db *sqlx.DB) error {
 // NamedQuerySlice is a helper function for executing queries that return a
 // collection of data to be unmarshaled into a slice.
 func NamedQuerySlice(ctx context.Context, db *sqlx.DB, query string, data interface{}, dest interface{}) error {
-	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "foundation.database.namedqueryslice")
-	defer span.End()
-
 	val := reflect.ValueOf(dest)
 	if val.Kind() != reflect.Ptr || val.Elem().Kind() != reflect.Slice {
 		return errors.New("must provide a pointer to a slice")
@@ -125,9 +119,6 @@ func NamedQuerySlice(ctx context.Context, db *sqlx.DB, query string, data interf
 // NamedQueryStruct is a helper function for executing queries that return a
 // single value to be unmarshalled into a struct type.
 func NamedQueryStruct(ctx context.Context, db *sqlx.DB, query string, data interface{}, dest interface{}) error {
-	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "foundation.database.namedquerystruct")
-	defer span.End()
-
 	rows, err := db.NamedQueryContext(ctx, query, data)
 	if err != nil {
 		return err

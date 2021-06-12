@@ -7,7 +7,6 @@ import (
 	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/pkg/errors"
-	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 )
 
@@ -21,8 +20,6 @@ func Errors(log *zap.SugaredLogger) web.Middleware {
 
 		// Create the handler that will be attached in the middleware chain.
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-			ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.web.mid.errors")
-			defer span.End()
 
 			// If the context is missing this value, request the service
 			// to be shutdown gracefully.

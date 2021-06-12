@@ -8,7 +8,6 @@ import (
 	"github.com/ardanlabs/service/business/sys/metrics"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/pkg/errors"
-	"go.opentelemetry.io/otel/trace"
 )
 
 // Panics recovers from panics and converts the panic to an error so it is
@@ -20,8 +19,6 @@ func Panics() web.Middleware {
 
 		// Create the handler that will be attached in the middleware chain.
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) (err error) {
-			ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.web.mid.panics")
-			defer span.End()
 
 			// Defer a function to recover from a panic and set the err return
 			// variable after the fact.
