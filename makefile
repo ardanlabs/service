@@ -65,27 +65,27 @@ kind-services:
 
 kind-update: sales
 	kind load docker-image sales-api-amd64:1.0 --name ardan-starter-cluster
-	kubectl delete pods -lapp=sales-api
+	kubectl delete pods -lapp=sales
 
 kind-metrics: metrics
 	kind load docker-image metrics-amd64:1.0 --name ardan-starter-cluster
-	kubectl delete pods -lapp=sales-api
+	kubectl delete pods -lapp=sales
 
 kind-logs:
-	kubectl logs -lapp=sales-api --all-containers=true -f --tail=100 | go run app/logfmt/main.go
+	kubectl logs -lapp=sales --all-containers=true -f --tail=100 | go run app/logfmt/main.go
 
 kind-logs-sales:
-	kubectl logs -lapp=sales-api --all-containers=true -f --tail=100 | go run app/logfmt/main.go -service=SALES-API | jq
+	kubectl logs -lapp=sales --all-containers=true -f --tail=100 | go run app/logfmt/main.go -service=SALES-API | jq
 
 kind-status:
 	kubectl get nodes
 	kubectl get pods --watch
 
 kind-status-full:
-	kubectl describe pod -lapp=sales-api
+	kubectl describe pod -lapp=sales
 
 kind-shell:
-	kubectl exec -it $(shell kubectl get pods | grep sales-api | cut -c1-26) --container app -- /bin/sh
+	kubectl exec -it $(shell kubectl get pods | grep app | cut -c1-26) --container app -- /bin/sh
 
 kind-database:
 	# ./admin --db-disable-tls=1 migrate

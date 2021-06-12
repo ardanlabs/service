@@ -12,15 +12,17 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: sales-api
+  name: sales-pod # Base POD name
 spec:
   selector:
     matchLabels:
-      app: sales-api
+      app: sales # Selector for POD name search.
+  replicas: 1
+  strategy: {}
   template:
     metadata:
       labels:
-        app: sales-api
+        app: sales
     spec:
       dnsPolicy: ClusterFirstWithHostNet
       hostNetwork: true
@@ -36,7 +38,7 @@ spec:
         ports:
         - name: zipkin
           containerPort: 9411
-      - name: app
+      - name: sales-api
         image: sales-api-amd64:1.0
         resources:
           limits:
@@ -71,9 +73,9 @@ spec:
             fieldRef:
               fieldPath: spec.nodeName
         ports:
-        - name: app
+        - name: sales-api
           containerPort: 3000
-        - name: app-debug
+        - name: sales-api-debug
           containerPort: 4000
         readinessProbe: # readiness probes mark the service available to accept traffic.
           httpGet:
@@ -115,20 +117,21 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: sales-api
+  name: sales-pod
 spec:
+  type: ClusterIP
   selector:
-    app: sales-api
+    app: sales
   ports:
   - name: zipkin
     port: 9411
     targetPort: zipkin
-  - name: app
+  - name: sales-api
     port: 3000
-    targetPort: app
-  - name: app-debug
+    targetPort: sales-api
+  - name: sales-api-debug
     port: 4000
-    targetPort: app-debug
+    targetPort: sales-api-debug
   - name: metrics
     port: 3001
     targetPort: metrics

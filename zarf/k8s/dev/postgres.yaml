@@ -1,17 +1,17 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: postgres
+  name: database-pod
 spec:
   selector:
     matchLabels:
-      app: postgres
+      app: database
   replicas: 1
   strategy: {}
   template:
     metadata:
       labels:
-        app: postgres
+        app: database
     spec:
       dnsPolicy: ClusterFirstWithHostNet
       hostNetwork: true
@@ -57,13 +57,12 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: postgres
-  labels:
-    name: postgres
+  name: database-pod
 spec:
+  type: ClusterIP
+  selector:
+    name: database
   ports:
     - name: postgres
       port: 5432
       targetPort: postgres
-  selector:
-    name: postgres
