@@ -57,11 +57,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: database-pod
+  name: database-service
 spec:
   type: ClusterIP
   selector:
-    name: database
+    app: database
   ports:
     - name: postgres
       port: 5432

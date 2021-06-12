@@ -117,7 +117,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: sales-pod
+  name: sales-service
 spec:
   type: ClusterIP
   selector:

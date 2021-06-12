@@ -65,24 +65,33 @@ kind-services:
 
 kind-update: sales
 	kind load docker-image sales-api-amd64:1.0 --name ardan-starter-cluster
-	kubectl delete pods -lapp=sales
+	kubectl delete pods -l app=sales
 
 kind-metrics: metrics
 	kind load docker-image metrics-amd64:1.0 --name ardan-starter-cluster
-	kubectl delete pods -lapp=sales
+	kubectl delete pods -l app=sales
 
 kind-logs:
-	kubectl logs -lapp=sales --all-containers=true -f --tail=100 | go run app/logfmt/main.go
+	kubectl logs -l app=sales --all-containers=true -f --tail=100 | go run app/logfmt/main.go
 
 kind-logs-sales:
-	kubectl logs -lapp=sales --all-containers=true -f --tail=100 | go run app/logfmt/main.go -service=SALES-API | jq
+	kubectl logs -l app=sales --all-containers=true -f --tail=100 | go run app/logfmt/main.go -service=SALES-API | jq
 
 kind-status:
-	kubectl get nodes
-	kubectl get pods --watch
+	kubectl get nodes -o wide
+	kubectl get svc -o wide
+	kubectl get pods -o wide --watch
 
 kind-status-full:
-	kubectl describe pod -lapp=sales
+	kubectl describe nodes
+	kubectl describe svc
+	kubectl describe pod -l app=sales
+
+kind-events:
+	kubectl get ev --sort-by metadata.creationTimestamp
+
+kind-events-warn:
+	kubectl get ev --field-selector type=Warning --sort-by metadata.creationTimestamp
 
 kind-shell:
 	kubectl exec -it $(shell kubectl get pods | grep app | cut -c1-26) --container app -- /bin/sh
