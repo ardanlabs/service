@@ -74,8 +74,7 @@ dev-services-delete:
 dev-update: all dev-load dev-services
 	kubectl delete pods -l app=sales
 
-# NEED TO FIGURE THIS OUT.
-# BUG WITH KIND SETTING imagePullPolicy to Always
+# NEED TO FIGURE OUT HOW TO ROLL THE NEXT VERSION WITHOUT A DELETE PODS
 dev-update-rolling: all dev-load dev-services
 
 dev-logs:
