@@ -26,12 +26,14 @@ export PROJECT = ardan-starter-kit
 # ==============================================================================
 # Building containers
 
+VERSION := $(shell git rev-parse --short HEAD)
+
 all: sales metrics
 
 sales:
 	docker build \
 		-f zarf/docker/dockerfile.sales-api \
-		-t sales-api-amd64:1.0 \
+		-t sales-api-amd64:$(VERSION) \
 		--build-arg VCS_REF=`git rev-parse HEAD` \
 		--build-arg BUILD_DATE=`date -u +”%Y-%m-%dT%H:%M:%SZ”` \
 		.
@@ -39,7 +41,7 @@ sales:
 metrics:
 	docker build \
 		-f zarf/docker/dockerfile.metrics \
-		-t metrics-amd64:1.0 \
+		-t metrics-amd64:$(VERSION) \
 		--build-arg VCS_REF=`git rev-parse HEAD` \
 		--build-arg BUILD_DATE=`date -u +”%Y-%m-%dT%H:%M:%SZ”` \
 		.
@@ -57,10 +59,12 @@ dev-down:
 	kind delete cluster --name ardan-starter-cluster
 
 dev-load:
-	kind load docker-image sales-api-amd64:1.0 --name ardan-starter-cluster
-	kind load docker-image metrics-amd64:1.0 --name ardan-starter-cluster
+	kind load docker-image sales-api-amd64:$(VERSION) --name ardan-starter-cluster
+	kind load docker-image metrics-amd64:$(VERSION) --name ardan-starter-cluster
 
 dev-services:
+	cd zarf/k8s/dev; kustomize edit set image sales-api-image=sales-api-amd64:$(VERSION)
+	cd zarf/k8s/dev; kustomize edit set image metrics-image=metrics-amd64:$(VERSION)
 	kustomize build zarf/k8s/dev | kubectl apply -f -
 
 dev-update: sales

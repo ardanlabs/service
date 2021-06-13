@@ -5,3 +5,13 @@ resources:
   - ../base
 patches:
   - ./stg-patch.yaml
+images:
+- name: openzipkin
+  newName: openzipkin/zipkin
+  newTag: "2.23"
+- name: sales-api-image
+  newName: gcr.io/ardan-starter-kit/sales-api-amd64
+  newTag: "1.0"
+- name: metrics-image
+  newName: gcr.io/ardan-starter-kit/metrics-amd64
+  newTag: "1.0"

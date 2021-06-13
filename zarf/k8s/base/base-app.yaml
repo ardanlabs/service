@@ -16,12 +16,12 @@ spec:
       terminationGracePeriodSeconds: 60
       containers:
       - name: zipkin
-        image: openzipkin/zipkin:2.23
+        image: openzipkin
         ports:
         - name: zipkin
           containerPort: 9411
       - name: sales-api
-        image: sales-api-amd64:1.0
+        image: sales-api-image
         ports:
         - name: sales-api
           containerPort: 3000
@@ -73,7 +73,7 @@ spec:
             fieldRef:
               fieldPath: spec.nodeName
       - name: metrics
-        image: metrics-amd64:1.0
+        image: metrics-image
         ports:
         - name: metrics
           containerPort: 3001
