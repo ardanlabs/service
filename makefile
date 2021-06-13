@@ -117,7 +117,7 @@ seed: migrate
 
 test:
 	go test ./... -count=1
-	staticcheck ./...
+	staticcheck -checks=all ./...
 
 # ==============================================================================
 # Modules support

@@ -23,7 +23,7 @@ jobs:
               wget -O staticcheck.tgz https://github.com/dominikh/go-tools/releases/download/2021.1/staticcheck_linux_amd64.tar.gz
               sudo tar -xzf staticcheck.tgz
               ./staticcheck/staticcheck --version
-              ./staticcheck/staticcheck ./...
+              ./staticcheck/staticcheck -checks=all ./...
       - run:
           name: Download the DB image
           command: |

@@ -1,4 +1,4 @@
-// Package collector is a simple collector for the sales-api service.
+// Package collector is a simple collector for
 package collector
 
 import (

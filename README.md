@@ -1,6 +1,7 @@
 # Ultimate Service
 
-[![CircleCI](https://circleci.com/gh/ardanlabs/service.svg?style=svg)](https://circleci.com/gh/ardanlabs/service)
+[![CircleCI](https://circleci.com/gh/ardanlabs/service.svg?style=svg)](https://circleci.com/gh/ardanlabs/service) 
+[![Go Report Card](https://goreportcard.com/badge/github.com/ardanlabs/service)](https://goreportcard.com/report/github.com/ardanlabs/service)
 
 Copyright 2018, 2019, 2020, 2021, Ardan Labs  
 info@ardanlabs.com
