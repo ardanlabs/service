@@ -26,7 +26,8 @@ export PROJECT = ardan-starter-kit
 # ==============================================================================
 # Building containers
 
-VERSION := $(shell git rev-parse --short HEAD)
+# $(shell git rev-parse --short HEAD)
+VERSION := 1.0
 
 all: sales metrics
 
@@ -34,7 +35,7 @@ sales:
 	docker build \
 		-f zarf/docker/dockerfile.sales-api \
 		-t sales-api-amd64:$(VERSION) \
-		--build-arg VCS_REF=`git rev-parse HEAD` \
+		--build-arg VCS_REF=$(VERSION) \
 		--build-arg BUILD_DATE=`date -u +”%Y-%m-%dT%H:%M:%SZ”` \
 		.
 
@@ -42,7 +43,7 @@ metrics:
 	docker build \
 		-f zarf/docker/dockerfile.metrics \
 		-t metrics-amd64:$(VERSION) \
-		--build-arg VCS_REF=`git rev-parse HEAD` \
+		--build-arg VCS_REF=$(VERSION) \
 		--build-arg BUILD_DATE=`date -u +”%Y-%m-%dT%H:%M:%SZ”` \
 		.
 
@@ -67,13 +68,15 @@ dev-services:
 	cd zarf/k8s/dev; kustomize edit set image metrics-image=metrics-amd64:$(VERSION)
 	kustomize build zarf/k8s/dev | kubectl apply -f -
 
-dev-update: sales
-	kind load docker-image sales-api-amd64:1.0 --name ardan-starter-cluster
+dev-services-delete:
+	kustomize build zarf/k8s/dev | kubectl delete -f -
+
+dev-update: all dev-load dev-services
 	kubectl delete pods -l app=sales
 
-dev-metrics: metrics
-	kind load docker-image metrics-amd64:1.0 --name ardan-starter-cluster
-	kubectl delete pods -l app=sales
+# NEED TO FIGURE THIS OUT.
+# BUG WITH KIND SETTING imagePullPolicy to Always
+dev-update-rolling: all dev-load dev-services
 
 dev-logs:
 	kubectl logs -l app=sales --all-containers=true -f --tail=100 | go run app/logfmt/main.go
@@ -103,9 +106,6 @@ dev-shell:
 dev-database:
 	# ./admin --db-disable-tls=1 migrate
 	# ./admin --db-disable-tls=1 seed
-
-dev-delete:
-	kustomize build zarf/k8s/dev | kubectl delete -f -
 
 # ==============================================================================
 # Administration
@@ -186,10 +186,10 @@ stg-cluster:
 	gcloud compute instances list
 
 stg-upload:
-	docker tag sales-api-amd64:1.0 gcr.io/$(PROJECT)/sales-api-amd64:1.0
-	docker tag metrics-amd64:1.0 gcr.io/$(PROJECT)/metrics-amd64:1.0
-	docker push gcr.io/$(PROJECT)/sales-api-amd64:1.0
-	docker push gcr.io/$(PROJECT)/metrics-amd64:1.0
+	docker tag sales-api-amd64:1.0 gcr.io/$(PROJECT)/sales-api-amd64:$(VERSION)
+	docker tag metrics-amd64:1.0 gcr.io/$(PROJECT)/metrics-amd64:$(VERSION)
+	docker push gcr.io/$(PROJECT)/sales-api-amd64:$(VERSION)
+	docker push gcr.io/$(PROJECT)/metrics-amd64:$(VERSION)
 
 stg-database:
 	# Create User/Password
@@ -239,10 +239,10 @@ stg-delete-all: stg-delete
 	kustomize build zarf/k8s/dev | kubectl delete -f -
 	gcloud container clusters delete $(CLUSTER)
 	gcloud projects delete sales-api
-	gcloud container images delete gcr.io/$(PROJECT)/sales-api-amd64:1.0 --force-delete-tags
-	gcloud container images delete gcr.io/$(PROJECT)/metrics-amd64:1.0 --force-delete-tags
-	docker image remove gcr.io/sales-api/sales-api-amd64:1.0
-	docker image remove gcr.io/sales-api/metrics-amd64:1.0
+	gcloud container images delete gcr.io/$(PROJECT)/sales-api-amd64:$(VERSION) --force-delete-tags
+	gcloud container images delete gcr.io/$(PROJECT)/metrics-amd64:$(VERSION) --force-delete-tags
+	docker image remove gcr.io/sales-api/sales-api-amd64:$(VERSION)
+	docker image remove gcr.io/sales-api/metrics-amd64:$(VERSION)
 
 #===============================================================================
 # GKE Installation
