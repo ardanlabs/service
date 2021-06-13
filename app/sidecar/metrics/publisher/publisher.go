@@ -1,3 +1,4 @@
+// Package publisher manages the publishing of metrics.
 package publisher
 
 import (

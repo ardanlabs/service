@@ -1,3 +1,4 @@
+// Package expvar manages the publishing of metrics to stdout.
 package expvar
 
 import (

@@ -15,7 +15,7 @@ const Key ctxKey = 1
 
 // =============================================================================
 
-// The expvar variables can only be initalized once. Tests will make
+// The expvar variables can only be initialized once. Tests will make
 // a call to New several times.
 var (
 	m  *Metrics

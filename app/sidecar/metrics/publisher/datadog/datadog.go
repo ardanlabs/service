@@ -1,3 +1,4 @@
+// Package datadog provides support for publishing metrics to DD.
 package datadog
 
 import (

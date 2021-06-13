@@ -1,3 +1,4 @@
+// Package collector is a simple collector for the sales-api service.
 package collector
 
 import (
@@ -44,6 +45,7 @@ func New(host string) (*Expvar, error) {
 	return &exp, nil
 }
 
+// Collect captures metrics on the host configure to this endpoint.
 func (exp *Expvar) Collect() (map[string]interface{}, error) {
 	req, err := http.NewRequest("GET", exp.host, nil)
 	if err != nil {

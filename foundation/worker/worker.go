@@ -72,7 +72,7 @@ func (w *Worker) Start(ctx context.Context, traceID string, jobKey string, paylo
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
-	// Locate the job in the jobs registery.
+	// Locate the job in the jobs registry.
 	f, exists := w.registry[jobKey]
 	if !exists {
 		return "", fmt.Errorf("job %s is not registered", jobKey)
