@@ -4,6 +4,4 @@ resources:
   - ./stg-config.yaml
   - ../base
 patches:
-  - ./replicas-patch.yaml
-  - ./loadbalancer-patch.yaml
-  - ./images-patch.yaml
+  - ./stg-patch.yaml

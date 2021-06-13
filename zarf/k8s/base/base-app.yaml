@@ -1,14 +1,3 @@
-apiVersion: v1
-kind: ResourceQuota
-metadata:
-  name: cpu-quota
-spec:
-  hard: # Docker needs to be configured at these minimums.
-    limits.cpu: "4000m"   # Up to 4 full cores
-    requests.cpu: "4000m" # Up to 4 full cores
-    #limits.memory: 4Gi
-    #requests.memory: 2Gi
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -17,8 +6,6 @@ spec:
   selector:
     matchLabels:
       app: sales # Selector for POD name search.
-  replicas: 1
-  strategy: {}
   template:
     metadata:
       labels:
@@ -30,21 +17,34 @@ spec:
       containers:
       - name: zipkin
         image: openzipkin/zipkin:2.23
-        resources:
-          limits:
-            cpu: "500m" # Up to 1/2 full core
-          requests:
-            cpu: "250m" # Use 1/4 full core
         ports:
         - name: zipkin
           containerPort: 9411
       - name: sales-api
         image: sales-api-amd64:1.0
-        resources:
-          limits:
-            cpu: "2000m" # Up to 2 full cores
-          requests:
-            cpu: "1000m" # Use 1 full cores
+        ports:
+        - name: sales-api
+          containerPort: 3000
+        - name: sales-api-debug
+          containerPort: 4000
+        readinessProbe: # readiness probes mark the service available to accept traffic.
+          httpGet:
+            path: /debug/readiness
+            port: 4000
+          initialDelaySeconds: 15
+          periodSeconds: 15
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 2
+        livenessProbe: # liveness probes mark the service alive or dead (to be restarted).
+          httpGet:
+            path: /debug/liveness
+            port: 4000
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 2
         env:
         - name: SALES_DB_HOST
           valueFrom:
@@ -72,47 +72,19 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: spec.nodeName
-        ports:
-        - name: sales-api
-          containerPort: 3000
-        - name: sales-api-debug
-          containerPort: 4000
-        readinessProbe: # readiness probes mark the service available to accept traffic.
-          httpGet:
-            path: /debug/readiness
-            port: 4000
-          initialDelaySeconds: 15
-          periodSeconds: 15
-          timeoutSeconds: 5
-          successThreshold: 1
-          failureThreshold: 2
-        livenessProbe: # liveness probes mark the service alive or dead (to be restarted).
-          httpGet:
-            path: /debug/liveness
-            port: 4000
-          initialDelaySeconds: 30
-          periodSeconds: 30
-          timeoutSeconds: 5
-          successThreshold: 1
-          failureThreshold: 2
       - name: metrics
         image: metrics-amd64:1.0
-        resources:
-          limits:
-            cpu: "500m" # Up to 1/2 full core
-          requests:
-            cpu: "250m" # Use 1/4 full core
+        ports:
+        - name: metrics
+          containerPort: 3001
+        - name: metrics-debug
+          containerPort: 4001
         env:
         - name: METRICS_COLLECT_FROM
           valueFrom:
             configMapKeyRef:
               name: app-config
               key: collect_from
-        ports:
-        - name: metrics
-          containerPort: 3001
-        - name: metrics-debug
-          containerPort: 4001
 ---
 apiVersion: v1
 kind: Service

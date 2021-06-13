@@ -3,4 +3,7 @@ kind: Kustomization
 resources:
   - ./dev-config.yaml
   - ../base
-  - ./postgres.yaml
+  - ./dev-quotas.yaml
+  - ./dev-database.yaml
+patches:
+  - ./dev-patch.yaml

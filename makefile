@@ -47,60 +47,60 @@ metrics:
 # ==============================================================================
 # Running from within k8s/dev
 
-kind-up:
+dev-up:
 	kind create cluster --image kindest/node:v1.21.1 --name ardan-starter-cluster --config zarf/k8s/dev/kind-config.yaml
 
-kind-up-m1:
+dev-up-m1:
 	kind create cluster --image rossgeorgiev/kind-node-arm64 --name ardan-starter-cluster --config zarf/k8s/dev/kind-config.yaml
 
-kind-down:
+dev-down:
 	kind delete cluster --name ardan-starter-cluster
 
-kind-load:
+dev-load:
 	kind load docker-image sales-api-amd64:1.0 --name ardan-starter-cluster
 	kind load docker-image metrics-amd64:1.0 --name ardan-starter-cluster
 
-kind-services:
+dev-services:
 	kustomize build zarf/k8s/dev | kubectl apply -f -
 
-kind-update: sales
+dev-update: sales
 	kind load docker-image sales-api-amd64:1.0 --name ardan-starter-cluster
 	kubectl delete pods -l app=sales
 
-kind-metrics: metrics
+dev-metrics: metrics
 	kind load docker-image metrics-amd64:1.0 --name ardan-starter-cluster
 	kubectl delete pods -l app=sales
 
-kind-logs:
+dev-logs:
 	kubectl logs -l app=sales --all-containers=true -f --tail=100 | go run app/logfmt/main.go
 
-kind-logs-sales:
+dev-logs-sales:
 	kubectl logs -l app=sales --all-containers=true -f --tail=100 | go run app/logfmt/main.go -service=SALES-API | jq
 
-kind-status:
+dev-status:
 	kubectl get nodes -o wide
 	kubectl get svc -o wide
 	kubectl get pods -o wide --watch
 
-kind-status-full:
+dev-status-full:
 	kubectl describe nodes
 	kubectl describe svc
 	kubectl describe pod -l app=sales
 
-kind-events:
+dev-events:
 	kubectl get ev --sort-by metadata.creationTimestamp
 
-kind-events-warn:
+dev-events-warn:
 	kubectl get ev --field-selector type=Warning --sort-by metadata.creationTimestamp
 
-kind-shell:
+dev-shell:
 	kubectl exec -it $(shell kubectl get pods | grep app | cut -c1-26) --container app -- /bin/sh
 
-kind-database:
+dev-database:
 	# ./admin --db-disable-tls=1 migrate
 	# ./admin --db-disable-tls=1 seed
 
-kind-delete:
+dev-delete:
 	kustomize build zarf/k8s/dev | kubectl delete -f -
 
 # ==============================================================================
@@ -166,63 +166,73 @@ CLUSTER = ardan-starter-cluster
 DATABASE = ardan-starter-db
 ZONE = us-central1-b
 
-gcp-config:
+stg-config:
 	@echo Setting environment for $(PROJECT)
 	gcloud config set project $(PROJECT)
 	gcloud config set compute/zone $(ZONE)
 	gcloud auth configure-docker
 
-gcp-project:
+stg-project:
 	gcloud projects create $(PROJECT)
 	gcloud beta billing projects link $(PROJECT) --billing-account=$(ACCOUNT_ID)
 	gcloud services enable container.googleapis.com
 
-gcp-cluster:
+stg-cluster:
 	gcloud container clusters create $(CLUSTER) --enable-ip-alias --num-nodes=2 --machine-type=n1-standard-2
 	gcloud compute instances list
 
-gcp-upload:
+stg-upload:
 	docker tag sales-api-amd64:1.0 gcr.io/$(PROJECT)/sales-api-amd64:1.0
 	docker tag metrics-amd64:1.0 gcr.io/$(PROJECT)/metrics-amd64:1.0
 	docker push gcr.io/$(PROJECT)/sales-api-amd64:1.0
 	docker push gcr.io/$(PROJECT)/metrics-amd64:1.0
 
-gcp-database:
+stg-database:
 	# Create User/Password
 	gcloud beta sql instances create $(DATABASE) --database-version=POSTGRES_9_6 --no-backup --tier=db-f1-micro --zone=$(ZONE) --no-assign-ip --network=default
 	gcloud sql instances describe $(DATABASE)
 
-gcp-db-assign-ip:
+stg-db-assign-ip:
 	gcloud sql instances patch $(DATABASE) --authorized-networks=[$(PUBLIC-IP)/32]
 	gcloud sql instances describe $(DATABASE)
 
-gcp-db-private-ip:
+stg-db-private-ip:
 	# IMPORTANT: Make sure you run this command and get the private IP of the DB.
 	gcloud sql instances describe $(DATABASE)
 
-gcp-services:
-	# The zarf/k8s/stg/stg-config.yaml file needs the private IP of the database.
+stg-services:
 	kustomize build zarf/k8s/stg | kubectl apply -f -
-	# kubectl create -f deploy-sales-api.yaml
-	# kubectl expose -f expose-sales-api.yaml --type=LoadBalancer
 
-gcp-status:
+stg-status:
 	gcloud container clusters list
-	kubectl get nodes
-	kubectl get pods
-	kubectl get services sales-api
+	kubectl get nodes -o wide
+	kubectl get svc -o wide
+	kubectl get pods -o wide --watch
 
-gcp-logs:
-	kubectl logs -lapp=sales-api --all-containers=true -f
+stg-status-full:
+	kubectl describe nodes
+	kubectl describe svc
+	kubectl describe pod -l app=sales
 
-gcp-shell:
-	kubectl exec -it $(shell kubectl get pods | grep sales-api | cut -c1-26 | head -1) --container app -- /bin/sh
+stg-events:
+	kubectl get ev --sort-by metadata.creationTimestamp
+
+stg-events-warn:
+	kubectl get ev --field-selector type=Warning --sort-by metadata.creationTimestamp
+
+stg-logs:
+	kubectl logs -l app=sales --all-containers=true -f --tail=100 | go run app/logfmt/main.go
+
+stg-logs-sales:
+	kubectl logs -l app=sales --all-containers=true -f --tail=100 | go run app/logfmt/main.go -service=SALES-API | jq
+
+stg-shell:
+	kubectl exec -it $(shell kubectl get pods | grep sales | cut -c1-26 | head -1) --container app -- /bin/sh
 	# ./admin --db-disable-tls=1 migrate
 	# ./admin --db-disable-tls=1 seed
 
-gcp-delete:
-	kubectl delete services sales-api
-	kubectl delete deployment sales-api	
+stg-delete-all: stg-delete
+	kustomize build zarf/k8s/dev | kubectl delete -f -
 	gcloud container clusters delete $(CLUSTER)
 	gcloud projects delete sales-api
 	gcloud container images delete gcr.io/$(PROJECT)/sales-api-amd64:1.0 --force-delete-tags

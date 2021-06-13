@@ -1,18 +1,28 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: sales-api
+  name: sales-pod
+spec:
+  replicas: 1
+  strategy: {}
 spec:
   selector:
     matchLabels:
-      app: sales-api
+      app: sales
   template:
     metadata:
       labels:
-        app: sales-api
+        app: sales
     spec:
       containers:
       - name: app
         image: gcr.io/ardan-starter-kit/sales-api-amd64:1.0
       - name: metrics
         image: gcr.io/ardan-starter-kit/metrics-amd64:1.0
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sales-service
+spec:
+  type: LoadBalancer

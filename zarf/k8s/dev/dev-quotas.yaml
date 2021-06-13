@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: cpu-quota
+spec:
+  hard: # Docker needs to be configured at these minimums.
+    limits.cpu: "4000m"   # Up to 4 full cores
+    requests.cpu: "4000m" # Up to 4 full cores
+    #limits.memory: 4Gi
+    #requests.memory: 2Gi
