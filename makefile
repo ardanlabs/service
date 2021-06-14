@@ -212,7 +212,7 @@ gcp-db-private-ip:
 	gcloud sql instances describe $(DATABASE)
 
 gcp-services:
-	kustomize build zarf/k8s/stg | kubectl apply -f -
+	kustomize build zarf/k8s/gcp/sales-pod | kubectl apply -f -
 
 gcp-status:
 	gcloud container clusters list
@@ -243,7 +243,7 @@ gcp-shell:
 	# ./admin --db-disable-tls=1 seed
 
 gcp-delete-all: gcp-delete
-	kustomize build zarf/k8s/dev | kubectl delete -f -
+	kustomize build zarf/k8s/gcp/sales-pod | kubectl delete -f -
 	gcloud container clusters delete $(CLUSTER)
 	gcloud projects delete sales-api
 	gcloud container images delete gcr.io/$(PROJECT)/sales-api-amd64:$(VERSION) --force-delete-tags
