@@ -64,14 +64,19 @@ kind-load:
 	kind load docker-image metrics-amd64:$(VERSION) --name ardan-starter-cluster
 
 kind-services:
-	cd zarf/k8s/kind; kustomize edit set image sales-api-image=sales-api-amd64:$(VERSION)
-	cd zarf/k8s/kind; kustomize edit set image metrics-image=metrics-amd64:$(VERSION)
-	kustomize build zarf/k8s/kind | kubectl apply -f -
+	cd zarf/k8s/kind/sales-pod; kustomize edit set image sales-api-image=sales-api-amd64:$(VERSION)
+	cd zarf/k8s/kind/sales-pod; kustomize edit set image metrics-image=metrics-amd64:$(VERSION)
+	kustomize build zarf/k8s/kind/database-pod | kubectl apply -f -
+	kubectl wait --for=condition=Available deployment/database-pod
+	kustomize build zarf/k8s/kind/sales-pod | kubectl apply -f -
 
 kind-services-delete:
 	kustomize build zarf/k8s/kind | kubectl delete -f -
 
-kind-update: all kind-load kind-services
+kind-update: all kind-load
+	kubectl rollout restart deployment sales-pod
+
+kind-update-newversion: all kind-load kind-services
 
 kind-logs:
 	kubectl logs -l app=sales --all-containers=true -f --tail=100 | go run app/logfmt/main.go
@@ -95,8 +100,6 @@ kind-describe-deployment:
 kind-describe-replicaset:
 	kubectl get rs
 	kubectl describe rs -l app=sales
-
-# kubectl wait --for=conditon=Available deployment/database-pod
 
 kind-events:
 	kubectl get ev --sort-by metadata.creationTimestamp
