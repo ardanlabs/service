@@ -4,7 +4,8 @@ metadata:
   name: sales-pod
 spec:
   replicas: 1
-  strategy: {}
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: sales

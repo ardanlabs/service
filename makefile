@@ -72,10 +72,6 @@ kind-services-delete:
 	kustomize build zarf/k8s/kind | kubectl delete -f -
 
 kind-update: all kind-load kind-services
-	kubectl delete pods -l app=sales
-
-# NEED TO FIGURE OUT HOW TO ROLL THE NEXT VERSION WITHOUT A DELETE PODS
-kind-update-rolling: all kind-load kind-services
 
 kind-logs:
 	kubectl logs -l app=sales --all-containers=true -f --tail=100 | go run app/logfmt/main.go
@@ -88,10 +84,19 @@ kind-status:
 	kubectl get svc -o wide
 	kubectl get pods -o wide --watch
 
-kind-status-full:
+kind-describe:
 	kubectl describe nodes
 	kubectl describe svc
 	kubectl describe pod -l app=sales
+
+kind-describe-deployment:
+	kubectl describe deployment sales-pod
+
+kind-describe-replicaset:
+	kubectl get rs
+	kubectl describe rs -l app=sales
+
+# kubectl wait --for=conditon=Available deployment/database-pod
 
 kind-events:
 	kubectl get ev --sort-by metadata.creationTimestamp
