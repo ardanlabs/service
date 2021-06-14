@@ -13,3 +13,5 @@ nodes:
     hostPort: 4001
   - containerPort: 9411
     hostPort: 9411
+  - containerPort: 5432
+    hostPort: 5432

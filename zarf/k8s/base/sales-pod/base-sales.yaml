@@ -15,11 +15,13 @@ spec:
       hostNetwork: true
       terminationGracePeriodSeconds: 60
       containers:
+      # zipkin container configuration
       - name: zipkin
         image: openzipkin
         ports:
         - name: zipkin
           containerPort: 9411
+      # sales-api container configuration
       - name: sales-api
         image: sales-api-image
         ports:
@@ -51,11 +53,6 @@ spec:
             configMapKeyRef:
               name: app-config
               key: db_host
-        - name: SALES_ZIPKIN_REPORTER_URI
-          valueFrom:
-            configMapKeyRef:
-              name: app-config
-              key: zipkin_reporter_uri
         - name: KUBERNETES_NAMESPACE
           valueFrom:
             fieldRef:
@@ -72,6 +69,7 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: spec.nodeName
+      # metrics container configuration
       - name: metrics
         image: metrics-image
         ports:
@@ -79,12 +77,6 @@ spec:
           containerPort: 3001
         - name: metrics-debug
           containerPort: 4001
-        env:
-        - name: METRICS_COLLECT_FROM
-          valueFrom:
-            configMapKeyRef:
-              name: app-config
-              key: collect_from
 ---
 apiVersion: v1
 kind: Service

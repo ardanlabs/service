@@ -86,7 +86,7 @@ func run(log *zap.SugaredLogger) error {
 			DisableTLS   bool   `conf:"default:true"`
 		}
 		Zipkin struct {
-			ReporterURI string  `conf:"default:http://zipkin:9411/api/v2/spans"`
+			ReporterURI string  `conf:"default:http://localhost:9411/api/v2/spans"`
 			ServiceName string  `conf:"default:sales-api"`
 			Probability float64 `conf:"default:0.05"`
 		}
