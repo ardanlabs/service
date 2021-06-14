@@ -33,7 +33,7 @@ func Logger(log *zap.SugaredLogger) web.Middleware {
 			err := handler(ctx, w, r)
 
 			log.Infow("request completed", "traceid", v.TraceID, "method", r.Method, "path", r.URL.Path,
-				"remoteaddr", r.RemoteAddr, "remoteaddr", v.StatusCode, "since", time.Since(v.Now))
+				"remoteaddr", r.RemoteAddr, "statuscode", v.StatusCode, "since", time.Since(v.Now))
 
 			// Return the error so it can be handled further up the chain.
 			return err
