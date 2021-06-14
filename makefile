@@ -50,59 +50,59 @@ metrics:
 # ==============================================================================
 # Running from within k8s/dev
 
-dev-up:
+kind-up:
 	kind create cluster --image kindest/node:v1.21.1 --name ardan-starter-cluster --config zarf/k8s/dev/kind-config.yaml
 
-dev-up-m1:
+kind-up-m1:
 	kind create cluster --image rossgeorgiev/kind-node-arm64 --name ardan-starter-cluster --config zarf/k8s/dev/kind-config.yaml
 
-dev-down:
+kind-down:
 	kind delete cluster --name ardan-starter-cluster
 
-dev-load:
+kind-load:
 	kind load docker-image sales-api-amd64:$(VERSION) --name ardan-starter-cluster
 	kind load docker-image metrics-amd64:$(VERSION) --name ardan-starter-cluster
 
-dev-services:
+kind-services:
 	cd zarf/k8s/dev; kustomize edit set image sales-api-image=sales-api-amd64:$(VERSION)
 	cd zarf/k8s/dev; kustomize edit set image metrics-image=metrics-amd64:$(VERSION)
 	kustomize build zarf/k8s/dev | kubectl apply -f -
 
-dev-services-delete:
+kind-services-delete:
 	kustomize build zarf/k8s/dev | kubectl delete -f -
 
-dev-update: all dev-load dev-services
+kind-update: all kind-load kind-services
 	kubectl delete pods -l app=sales
 
 # NEED TO FIGURE OUT HOW TO ROLL THE NEXT VERSION WITHOUT A DELETE PODS
-dev-update-rolling: all dev-load dev-services
+kind-update-rolling: all kind-load kind-services
 
-dev-logs:
+kind-logs:
 	kubectl logs -l app=sales --all-containers=true -f --tail=100 | go run app/logfmt/main.go
 
-dev-logs-sales:
+kind-logs-sales:
 	kubectl logs -l app=sales --all-containers=true -f --tail=100 | go run app/logfmt/main.go -service=SALES-API | jq
 
-dev-status:
+kind-status:
 	kubectl get nodes -o wide
 	kubectl get svc -o wide
 	kubectl get pods -o wide --watch
 
-dev-status-full:
+kind-status-full:
 	kubectl describe nodes
 	kubectl describe svc
 	kubectl describe pod -l app=sales
 
-dev-events:
+kind-events:
 	kubectl get ev --sort-by metadata.creationTimestamp
 
-dev-events-warn:
+kind-events-warn:
 	kubectl get ev --field-selector type=Warning --sort-by metadata.creationTimestamp
 
-dev-shell:
+kind-shell:
 	kubectl exec -it $(shell kubectl get pods | grep app | cut -c1-26) --container app -- /bin/sh
 
-dev-database:
+kind-database:
 	# ./admin --db-disable-tls=1 migrate
 	# ./admin --db-disable-tls=1 seed
 
@@ -169,72 +169,72 @@ CLUSTER = ardan-starter-cluster
 DATABASE = ardan-starter-db
 ZONE = us-central1-b
 
-stg-config:
+gcp-config:
 	@echo Setting environment for $(PROJECT)
 	gcloud config set project $(PROJECT)
 	gcloud config set compute/zone $(ZONE)
 	gcloud auth configure-docker
 
-stg-project:
+gcp-project:
 	gcloud projects create $(PROJECT)
 	gcloud beta billing projects link $(PROJECT) --billing-account=$(ACCOUNT_ID)
 	gcloud services enable container.googleapis.com
 
-stg-cluster:
+gcp-cluster:
 	gcloud container clusters create $(CLUSTER) --enable-ip-alias --num-nodes=2 --machine-type=n1-standard-2
 	gcloud compute instances list
 
-stg-upload:
+gcp-upload:
 	docker tag sales-api-amd64:1.0 gcr.io/$(PROJECT)/sales-api-amd64:$(VERSION)
 	docker tag metrics-amd64:1.0 gcr.io/$(PROJECT)/metrics-amd64:$(VERSION)
 	docker push gcr.io/$(PROJECT)/sales-api-amd64:$(VERSION)
 	docker push gcr.io/$(PROJECT)/metrics-amd64:$(VERSION)
 
-stg-database:
+gcp-database:
 	# Create User/Password
 	gcloud beta sql instances create $(DATABASE) --database-version=POSTGRES_9_6 --no-backup --tier=db-f1-micro --zone=$(ZONE) --no-assign-ip --network=default
 	gcloud sql instances describe $(DATABASE)
 
-stg-db-assign-ip:
+gcp-db-assign-ip:
 	gcloud sql instances patch $(DATABASE) --authorized-networks=[$(PUBLIC-IP)/32]
 	gcloud sql instances describe $(DATABASE)
 
-stg-db-private-ip:
+gcp-db-private-ip:
 	# IMPORTANT: Make sure you run this command and get the private IP of the DB.
 	gcloud sql instances describe $(DATABASE)
 
-stg-services:
+gcp-services:
 	kustomize build zarf/k8s/stg | kubectl apply -f -
 
-stg-status:
+gcp-status:
 	gcloud container clusters list
 	kubectl get nodes -o wide
 	kubectl get svc -o wide
 	kubectl get pods -o wide --watch
 
-stg-status-full:
+gcp-status-full:
 	kubectl describe nodes
 	kubectl describe svc
 	kubectl describe pod -l app=sales
 
-stg-events:
+gcp-events:
 	kubectl get ev --sort-by metadata.creationTimestamp
 
-stg-events-warn:
+gcp-events-warn:
 	kubectl get ev --field-selector type=Warning --sort-by metadata.creationTimestamp
 
-stg-logs:
+gcp-logs:
 	kubectl logs -l app=sales --all-containers=true -f --tail=100 | go run app/logfmt/main.go
 
-stg-logs-sales:
+gcp-logs-sales:
 	kubectl logs -l app=sales --all-containers=true -f --tail=100 | go run app/logfmt/main.go -service=SALES-API | jq
 
-stg-shell:
+gcp-shell:
 	kubectl exec -it $(shell kubectl get pods | grep sales | cut -c1-26 | head -1) --container app -- /bin/sh
 	# ./admin --db-disable-tls=1 migrate
 	# ./admin --db-disable-tls=1 seed
 
-stg-delete-all: stg-delete
+gcp-delete-all: gcp-delete
 	kustomize build zarf/k8s/dev | kubectl delete -f -
 	gcloud container clusters delete $(CLUSTER)
 	gcloud projects delete sales-api
