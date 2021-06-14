@@ -51,10 +51,10 @@ metrics:
 # Running from within k8s/dev
 
 kind-up:
-	kind create cluster --image kindest/node:v1.21.1 --name ardan-starter-cluster --config zarf/k8s/dev/kind-config.yaml
+	kind create cluster --image kindest/node:v1.21.1 --name ardan-starter-cluster --config zarf/k8s/kind/kind-config.yaml
 
 kind-up-m1:
-	kind create cluster --image rossgeorgiev/kind-node-arm64 --name ardan-starter-cluster --config zarf/k8s/dev/kind-config.yaml
+	kind create cluster --image rossgeorgiev/kind-node-arm64 --name ardan-starter-cluster --config zarf/k8s/kind/kind-config.yaml
 
 kind-down:
 	kind delete cluster --name ardan-starter-cluster
@@ -64,12 +64,12 @@ kind-load:
 	kind load docker-image metrics-amd64:$(VERSION) --name ardan-starter-cluster
 
 kind-services:
-	cd zarf/k8s/dev; kustomize edit set image sales-api-image=sales-api-amd64:$(VERSION)
-	cd zarf/k8s/dev; kustomize edit set image metrics-image=metrics-amd64:$(VERSION)
-	kustomize build zarf/k8s/dev | kubectl apply -f -
+	cd zarf/k8s/kind; kustomize edit set image sales-api-image=sales-api-amd64:$(VERSION)
+	cd zarf/k8s/kind; kustomize edit set image metrics-image=metrics-amd64:$(VERSION)
+	kustomize build zarf/k8s/kind | kubectl apply -f -
 
 kind-services-delete:
-	kustomize build zarf/k8s/dev | kubectl delete -f -
+	kustomize build zarf/k8s/kind | kubectl delete -f -
 
 kind-update: all kind-load kind-services
 	kubectl delete pods -l app=sales
