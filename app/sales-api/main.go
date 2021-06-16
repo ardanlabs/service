@@ -5,7 +5,6 @@ import (
 	"expvar" // Calls init function.
 	"fmt"
 	"net/http"
-	_ "net/http/pprof" // Calls init function.
 	"os"
 	"os/signal"
 	"runtime"
@@ -202,17 +201,18 @@ func run(log *zap.SugaredLogger) error {
 
 	// =========================================================================
 	// Start Debug Service
-	//
-	// /debug/pprof - Added to the default mux by importing the net/http/pprof package.
-	// /debug/vars - Added to the default mux by importing the expvar package.
-	//
-	// Not concerned with shutting this down when the application is shutdown.
 
-	log.Infow("startup", "status", "initializing debugging support")
+	log.Infow("startup", "status", "debug router started", "host", cfg.Web.DebugHost)
 
+	// The Debug function returns a mux to listen and serve on for all the debug
+	// related endpoints. This include the standard library endpoints.
+
+	debugMux := handlers.Debug(cfg.Web.DebugHost, build, log, db)
+
+	// Start the service listening for debug requests.
+	// Not concerned with shutting this down with load shedding.
 	go func() {
-		log.Infow("startup", "status", "debug router started", "host", cfg.Web.DebugHost)
-		if err := http.ListenAndServe(cfg.Web.DebugHost, http.DefaultServeMux); err != nil {
+		if err := http.ListenAndServe(cfg.Web.DebugHost, debugMux); err != nil {
 			log.Errorw("shutdown", "status", "debug router closed", "host", cfg.Web.DebugHost, "ERROR", err)
 		}
 	}()
@@ -227,9 +227,11 @@ func run(log *zap.SugaredLogger) error {
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
 
+	apiMux := handlers.API(build, shutdown, log, metrics.New(), auth, db)
+
 	api := http.Server{
 		Addr:         cfg.Web.APIHost,
-		Handler:      handlers.API(build, shutdown, log, metrics.New(), auth, db),
+		Handler:      apiMux,
 		ReadTimeout:  cfg.Web.ReadTimeout,
 		WriteTimeout: cfg.Web.WriteTimeout,
 	}
@@ -238,7 +240,7 @@ func run(log *zap.SugaredLogger) error {
 	// buffered channel so the goroutine can exit if we don't collect this error.
 	serverErrors := make(chan error, 1)
 
-	// Start the service listening for requests.
+	// Start the service listening for api requests.
 	go func() {
 		log.Infow("startup", "status", "api router started", "host", api.Addr)
 		serverErrors <- api.ListenAndServe()

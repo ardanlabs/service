@@ -4,7 +4,9 @@ package handlers
 
 import (
 	"context"
+	"expvar"
 	"net/http"
+	"net/http/pprof"
 	"os"
 
 	"github.com/ardanlabs/service/business/data/product"
@@ -29,6 +31,32 @@ func WithCORS(origin string) func(opts *Options) {
 	}
 }
 
+// Debug registers all the debug routes for the service bypassing the use
+// of the DefaultServerMux. Using the DefaultServerMux would be a security risk
+// since a dependency could inject a handler into our service without us knowing it.
+func Debug(host string, build string, log *zap.SugaredLogger, db *sqlx.DB) http.Handler {
+	mux := http.NewServeMux()
+
+	// Register all the standard library debug endpoints.
+	mux.HandleFunc("/debug/pprof/", pprof.Index)
+	mux.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+	mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
+	mux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+	mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
+	mux.Handle("/debug/vars", expvar.Handler())
+
+	// Register debug check endpoints.
+	cg := checkGroup{
+		build: build,
+		log:   log,
+		db:    db,
+	}
+	mux.HandleFunc("/debug/readiness", cg.readiness)
+	mux.HandleFunc("/debug/liveness", cg.liveness)
+
+	return mux
+}
+
 // API constructs an http.Handler with all application routes defined.
 func API(build string, shutdown chan os.Signal, log *zap.SugaredLogger, metrics *metrics.Metrics, a *auth.Auth, db *sqlx.DB, options ...func(opts *Options)) http.Handler {
 	var opts Options
@@ -38,14 +66,6 @@ func API(build string, shutdown chan os.Signal, log *zap.SugaredLogger, metrics 
 
 	// Construct the web.App which holds all routes as well as common Middleware.
 	app := web.NewApp(shutdown, mid.Logger(log), mid.Errors(log), mid.Metrics(metrics), mid.Panics())
-
-	// Register debug check endpoints.
-	cg := checkGroup{
-		build: build,
-		db:    db,
-	}
-	app.HandleDebug(http.MethodGet, "/readiness", cg.readiness)
-	app.HandleDebug(http.MethodGet, "/liveness", cg.liveness)
 
 	// Register user management and authentication endpoints.
 	ug := userGroup{

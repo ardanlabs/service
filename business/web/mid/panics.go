@@ -3,7 +3,6 @@ package mid
 import (
 	"context"
 	"net/http"
-	"strings"
 
 	"github.com/ardanlabs/service/business/sys/metrics"
 	"github.com/ardanlabs/service/foundation/web"
@@ -25,11 +24,7 @@ func Panics() web.Middleware {
 			defer func() {
 				if rec := recover(); rec != nil {
 					err = errors.Errorf("PANIC: %v", rec)
-
-					// Don't count anything on /debug routes towards metrics.
-					if !strings.HasPrefix(r.URL.Path, "/debug") {
-						metrics.AddPanics(ctx)
-					}
+					metrics.AddPanics(ctx)
 				}
 			}()
 

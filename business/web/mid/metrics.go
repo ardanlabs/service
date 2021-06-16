@@ -4,7 +4,6 @@ import (
 	"context"
 	"net/http"
 	"runtime"
-	"strings"
 
 	"github.com/ardanlabs/service/business/sys/metrics"
 	"github.com/ardanlabs/service/foundation/web"
@@ -28,12 +27,6 @@ func Metrics(data *metrics.Metrics) web.Middleware {
 			err := handler(ctx, w, r)
 
 			// Handle updating the metrics that can be handled here.
-
-			// Don't count anything on /debug routes towards metrics.
-			// Call the next handler to continue processing.
-			if strings.HasPrefix(r.URL.Path, "/debug") {
-				return err
-			}
 
 			// Increment the request counter.
 			data.Requests.Add(1)

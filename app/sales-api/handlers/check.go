@@ -2,29 +2,27 @@ package handlers
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"os"
 	"time"
 
 	"github.com/ardanlabs/service/foundation/database"
-	"github.com/ardanlabs/service/foundation/web"
 	"github.com/jmoiron/sqlx"
-	"go.opentelemetry.io/otel/trace"
+	"go.uber.org/zap"
 )
 
 type checkGroup struct {
 	build string
+	log   *zap.SugaredLogger
 	db    *sqlx.DB
 }
 
 // readiness checks if the database is ready and if not will return a 500 status.
 // Do not respond by just returning an error because further up in the call
 // stack it will interpret that as a non-trusted error.
-func (cg checkGroup) readiness(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "handlers.check.readiness")
-	defer span.End()
-
-	ctx, cancel := context.WithTimeout(ctx, time.Second)
+func (cg checkGroup) readiness(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), time.Second)
 	defer cancel()
 
 	status := "ok"
@@ -34,29 +32,30 @@ func (cg checkGroup) readiness(ctx context.Context, w http.ResponseWriter, r *ht
 		statusCode = http.StatusInternalServerError
 	}
 
-	health := struct {
+	data := struct {
 		Status string `json:"status"`
 	}{
 		Status: status,
 	}
 
-	return web.Respond(ctx, w, health, statusCode)
+	if err := response(w, statusCode, data); err != nil {
+		cg.log.Errorw("readiness", "ERROR", err)
+	}
+
+	cg.log.Infow("readiness", "statusCode", statusCode, "method", r.Method, "path", r.URL.Path, "remoteaddr", r.RemoteAddr)
 }
 
 // liveness returns simple status info if the service is alive. If the
 // app is deployed to a Kubernetes cluster, it will also return pod, node, and
 // namespace details via the Downward API. The Kubernetes environment variables
 // need to be set within your Pod/Deployment manifest.
-func (cg checkGroup) liveness(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "handlers.check.liveness")
-	defer span.End()
-
+func (cg checkGroup) liveness(w http.ResponseWriter, r *http.Request) {
 	host, err := os.Hostname()
 	if err != nil {
 		host = "unavailable"
 	}
 
-	info := struct {
+	data := struct {
 		Status    string `json:"status,omitempty"`
 		Build     string `json:"build,omitempty"`
 		Host      string `json:"host,omitempty"`
@@ -74,5 +73,32 @@ func (cg checkGroup) liveness(ctx context.Context, w http.ResponseWriter, r *htt
 		Namespace: os.Getenv("KUBERNETES_NAMESPACE"),
 	}
 
-	return web.Respond(ctx, w, info, http.StatusOK)
+	statusCode := http.StatusOK
+	if err := response(w, statusCode, data); err != nil {
+		cg.log.Errorw("liveness", "ERROR", err)
+	}
+
+	cg.log.Infow("liveness", "statusCode", statusCode, "method", r.Method, "path", r.URL.Path, "remoteaddr", r.RemoteAddr)
+}
+
+func response(w http.ResponseWriter, statusCode int, data interface{}) error {
+
+	// Convert the response value to JSON.
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+
+	// Set the content type and headers once we know marshaling has succeeded.
+	w.Header().Set("Content-Type", "application/json")
+
+	// Write the status code to the response.
+	w.WriteHeader(statusCode)
+
+	// Send the result back to the client.
+	if _, err := w.Write(jsonData); err != nil {
+		return err
+	}
+
+	return nil
 }
