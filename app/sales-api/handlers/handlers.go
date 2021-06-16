@@ -31,11 +31,11 @@ func WithCORS(origin string) func(opts *Options) {
 	}
 }
 
-// DebugStandardLibrary registers all the debug routes from the standard library
+// DebugStandardLibraryMux registers all the debug routes from the standard library
 // into a new mux bypassing the use of the DefaultServerMux. Using the
 // DefaultServerMux would be a security risk since a dependency could inject a
 // handler into our service without us knowing it.
-func DebugStandardLibrary() *http.ServeMux {
+func DebugStandardLibraryMux() *http.ServeMux {
 	mux := http.NewServeMux()
 
 	// Register all the standard library debug endpoints.
@@ -49,12 +49,12 @@ func DebugStandardLibrary() *http.ServeMux {
 	return mux
 }
 
-// Debug registers all the debug standard library routes and then custom
+// DebugMux registers all the debug standard library routes and then custom
 // debug application routes for the service. This bypassing the use of the
 // DefaultServerMux. Using the DefaultServerMux would be a security risk since
 // a dependency could inject a handler into our service without us knowing it.
-func Debug(build string, log *zap.SugaredLogger, db *sqlx.DB) http.Handler {
-	mux := DebugStandardLibrary()
+func DebugMux(build string, log *zap.SugaredLogger, db *sqlx.DB) http.Handler {
+	mux := DebugStandardLibraryMux()
 
 	// Register debug check endpoints.
 	cg := checkGroup{
@@ -68,8 +68,8 @@ func Debug(build string, log *zap.SugaredLogger, db *sqlx.DB) http.Handler {
 	return mux
 }
 
-// API constructs an http.Handler with all application routes defined.
-func API(build string, shutdown chan os.Signal, log *zap.SugaredLogger, metrics *metrics.Metrics, a *auth.Auth, db *sqlx.DB, options ...func(opts *Options)) http.Handler {
+// APIMux constructs an http.Handler with all application routes defined.
+func APIMux(build string, shutdown chan os.Signal, log *zap.SugaredLogger, metrics *metrics.Metrics, a *auth.Auth, db *sqlx.DB, options ...func(opts *Options)) http.Handler {
 	var opts Options
 	for _, option := range options {
 		option(&opts)
