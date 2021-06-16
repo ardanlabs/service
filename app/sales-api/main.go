@@ -207,7 +207,7 @@ func run(log *zap.SugaredLogger) error {
 	// The Debug function returns a mux to listen and serve on for all the debug
 	// related endpoints. This include the standard library endpoints.
 
-	debugMux := handlers.Debug(cfg.Web.DebugHost, build, log, db)
+	debugMux := handlers.Debug(build, log, db)
 
 	// Start the service listening for debug requests.
 	// Not concerned with shutting this down with load shedding.

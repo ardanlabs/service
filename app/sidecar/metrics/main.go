@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/conf"
+	"github.com/ardanlabs/service/app/sales-api/handlers"
 	"github.com/ardanlabs/service/app/sidecar/metrics/collector"
 	"github.com/ardanlabs/service/app/sidecar/metrics/publisher"
 	"github.com/ardanlabs/service/app/sidecar/metrics/publisher/expvar"
@@ -101,14 +102,19 @@ func run(log *zap.SugaredLogger) error {
 	log.Infow("startup", "config", out)
 
 	// =========================================================================
-	// Start Debug Service. Not concerned with shutting this down when the
-	// application is being shutdown.
-	//
-	// /debug/pprof - Added to the default mux by the net/http/pprof package.
+	// Start Debug Service
 
+	log.Infow("startup", "status", "debug router started", "host", cfg.Web.DebugHost)
+
+	// The Debug function returns a mux to listen and serve on for all the debug
+	// related endpoints. This include the standard library endpoints.
+
+	debugMux := handlers.DebugStandardLibrary()
+
+	// Start the service listening for debug requests.
+	// Not concerned with shutting this down with load shedding.
 	go func() {
-		log.Infow("startup", "status", "debug router started", "host", cfg.Web.DebugHost)
-		if err := http.ListenAndServe(cfg.Web.DebugHost, http.DefaultServeMux); err != nil {
+		if err := http.ListenAndServe(cfg.Web.DebugHost, debugMux); err != nil {
 			log.Errorw("shutdown", "status", "debug router closed", "host", cfg.Web.DebugHost, "ERROR", err)
 		}
 	}()
