@@ -62,14 +62,15 @@ func run(log *zap.SugaredLogger) error {
 	// =========================================================================
 	// Configuration
 
-	var cfg struct {
+	cfg := struct {
 		conf.Version
 		Web struct {
 			APIHost         string        `conf:"default:0.0.0.0:3000"`
 			DebugHost       string        `conf:"default:0.0.0.0:4000"`
 			ReadTimeout     time.Duration `conf:"default:5s"`
-			WriteTimeout    time.Duration `conf:"default:5s"`
-			ShutdownTimeout time.Duration `conf:"default:5s"`
+			WriteTimeout    time.Duration `conf:"default:10s"`
+			IdleTimeout     time.Duration `conf:"default:120s"`
+			ShutdownTimeout time.Duration `conf:"default:20s"`
 		}
 		Auth struct {
 			KeysFolder string `conf:"default:zarf/keys/"`
@@ -89,9 +90,12 @@ func run(log *zap.SugaredLogger) error {
 			ServiceName string  `conf:"default:sales-api"`
 			Probability float64 `conf:"default:0.05"`
 		}
+	}{
+		Version: conf.Version{
+			SVN:  build,
+			Desc: "copyright information here",
+		},
 	}
-	cfg.Version.SVN = build
-	cfg.Version.Desc = "copyright information here"
 
 	if err := conf.Parse(os.Args[1:], "SALES", &cfg); err != nil {
 		switch err {
@@ -234,6 +238,8 @@ func run(log *zap.SugaredLogger) error {
 		Handler:      apiMux,
 		ReadTimeout:  cfg.Web.ReadTimeout,
 		WriteTimeout: cfg.Web.WriteTimeout,
+		IdleTimeout:  cfg.Web.IdleTimeout,
+		ErrorLog:     zap.NewStdLog(log.Desugar()),
 	}
 
 	// Make a channel to listen for errors coming from the listener. Use a

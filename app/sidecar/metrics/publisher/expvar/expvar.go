@@ -22,16 +22,17 @@ type Expvar struct {
 }
 
 // New starts a service for consuming the raw expvar stats.
-func New(log *zap.SugaredLogger, host string, route string, readTimeout, writeTimeout time.Duration) *Expvar {
+func New(log *zap.SugaredLogger, host string, route string, readTimeout, writeTimeout time.Duration, idleTimeout time.Duration) *Expvar {
 	mux := httptreemux.New()
 	exp := Expvar{
 		log: log,
 		server: http.Server{
-			Addr:           host,
-			Handler:        mux,
-			ReadTimeout:    readTimeout,
-			WriteTimeout:   writeTimeout,
-			MaxHeaderBytes: 1 << 20,
+			Addr:         host,
+			Handler:      mux,
+			ReadTimeout:  readTimeout,
+			WriteTimeout: writeTimeout,
+			IdleTimeout:  idleTimeout,
+			ErrorLog:     zap.NewStdLog(log.Desugar()),
 		},
 	}
 

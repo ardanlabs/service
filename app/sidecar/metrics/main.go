@@ -49,19 +49,17 @@ func run(log *zap.SugaredLogger) error {
 	// =========================================================================
 	// Configuration
 
-	var cfg struct {
+	cfg := struct {
 		conf.Version
 		Web struct {
-			DebugHost       string        `conf:"default:0.0.0.0:4001"`
-			ReadTimeout     time.Duration `conf:"default:5s"`
-			WriteTimeout    time.Duration `conf:"default:5s"`
-			ShutdownTimeout time.Duration `conf:"default:5s"`
+			DebugHost string `conf:"default:0.0.0.0:4001"`
 		}
 		Expvar struct {
 			Host            string        `conf:"default:0.0.0.0:3001"`
 			Route           string        `conf:"default:/metrics"`
 			ReadTimeout     time.Duration `conf:"default:5s"`
-			WriteTimeout    time.Duration `conf:"default:5s"`
+			WriteTimeout    time.Duration `conf:"default:10s"`
+			IdleTimeout     time.Duration `conf:"default:120s"`
 			ShutdownTimeout time.Duration `conf:"default:5s"`
 		}
 		Collect struct {
@@ -71,9 +69,12 @@ func run(log *zap.SugaredLogger) error {
 			To       string        `conf:"default:console"`
 			Interval time.Duration `conf:"default:5s"`
 		}
+	}{
+		Version: conf.Version{
+			SVN:  build,
+			Desc: "copyright information here",
+		},
 	}
-	cfg.Version.SVN = build
-	cfg.Version.Desc = "copyright information here"
 
 	if err := conf.Parse(os.Args[1:], "METRICS", &cfg); err != nil {
 		switch err {
@@ -122,7 +123,7 @@ func run(log *zap.SugaredLogger) error {
 	// =========================================================================
 	// Start expvar Service
 
-	exp := expvar.New(log, cfg.Expvar.Host, cfg.Expvar.Route, cfg.Expvar.ReadTimeout, cfg.Expvar.WriteTimeout)
+	exp := expvar.New(log, cfg.Expvar.Host, cfg.Expvar.Route, cfg.Expvar.ReadTimeout, cfg.Expvar.WriteTimeout, cfg.Expvar.IdleTimeout)
 	defer exp.Stop(cfg.Expvar.ShutdownTimeout)
 
 	// =========================================================================
