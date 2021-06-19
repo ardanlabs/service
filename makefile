@@ -18,7 +18,7 @@ export PROJECT = ardan-starter-kit
 # Used to install expvarmon program for metrics dashboard.
 # go install github.com/divan/expvarmon@latest
 
-# // To generate a private/public key PEM file.
+# To generate a private/public key PEM file.
 # openssl genpkey -algorithm RSA -out private.pem -pkeyopt rsa_keygen_bits:2048
 # openssl rsa -pubout -in private.pem -out public.pem
 # ./sales-admin genkey
@@ -49,19 +49,24 @@ metrics:
 
 # ==============================================================================
 # Running from within k8s/dev
+KIND_CLUSTER := ardan-starter-cluster
 
+# Upgrade to latest Kind (>=v0.11): e.g. brew upgrade kind
+# For full Kind v0.11 release notes: https://github.com/kubernetes-sigs/kind/releases/tag/v0.11.0
+# Kind release used for our project: https://github.com/kubernetes-sigs/kind/releases/tag/v0.11.1
+# The image used below was copied by the above link and supports both amd64 and arm64.
 kind-up:
-	kind create cluster --image kindest/node:v1.21.1 --name ardan-starter-cluster --config zarf/k8s/kind/kind-config.yaml
-
-kind-up-m1:
-	kind create cluster --image rossgeorgiev/kind-node-arm64 --name ardan-starter-cluster --config zarf/k8s/kind/kind-config.yaml
+	kind create cluster \
+		--image kindest/node:v1.21.1@sha256:69860bda5563ac81e3c0057d654b5253219618a22ec3a346306239bba8cfa1a6 \
+		--name $(KIND_CLUSTER) \
+		--config zarf/k8s/kind/kind-config.yaml
 
 kind-down:
-	kind delete cluster --name ardan-starter-cluster
+	kind delete cluster --name $(KIND_CLUSTER)
 
 kind-load:
-	kind load docker-image sales-api-amd64:$(VERSION) --name ardan-starter-cluster
-	kind load docker-image metrics-amd64:$(VERSION) --name ardan-starter-cluster
+	kind load docker-image sales-api-amd64:$(VERSION) --name $(KIND_CLUSTER)
+	kind load docker-image metrics-amd64:$(VERSION) --name $(KIND_CLUSTER)
 
 kind-services:
 	cd zarf/k8s/kind/sales-pod; kustomize edit set image sales-api-image=sales-api-amd64:$(VERSION)
@@ -157,17 +162,14 @@ list:
 # ==============================================================================
 # Docker support
 
-FILES := $(shell docker ps -aq)
+docker-down:
+	docker rm -f $(shell docker ps -aq)
 
-down-local:
-	docker stop $(FILES)
-	docker rm $(FILES)
-
-clean:
+docker-clean:
 	docker system prune -f	
 
-logs-local:
-	docker logs -f $(FILES)
+docker-kind-logs:
+	docker logs -f $(KIND_CLUSTER)-control-plane
 
 # ==============================================================================
 # GCP
