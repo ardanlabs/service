@@ -95,7 +95,7 @@ func (s Store) Update(ctx context.Context, traceID string, claims auth.Claims, p
 	if up.Quantity != nil {
 		prd.Quantity = *up.Quantity
 	}
-	prd.DateUpdated = now
+	prd.DateUpdated = now.UTC()
 
 	const q = `
 	UPDATE

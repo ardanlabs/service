@@ -102,7 +102,7 @@ func (s Store) Update(ctx context.Context, traceID string, claims auth.Claims, u
 		}
 		usr.PasswordHash = pw
 	}
-	usr.DateUpdated = now
+	usr.DateUpdated = now.UTC()
 
 	const q = `
 	UPDATE
