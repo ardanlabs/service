@@ -36,7 +36,7 @@ sales:
 		-f zarf/docker/dockerfile.sales-api \
 		-t sales-api-amd64:$(VERSION) \
 		--build-arg VCS_REF=$(VERSION) \
-		--build-arg BUILD_DATE=`date -u +”%Y-%m-%dT%H:%M:%SZ”` \
+		--build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
 		.
 
 metrics:
@@ -44,7 +44,7 @@ metrics:
 		-f zarf/docker/dockerfile.metrics \
 		-t metrics-amd64:$(VERSION) \
 		--build-arg VCS_REF=$(VERSION) \
-		--build-arg BUILD_DATE=`date -u +”%Y-%m-%dT%H:%M:%SZ”` \
+		--build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
 		.
 
 # ==============================================================================
