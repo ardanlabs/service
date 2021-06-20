@@ -79,7 +79,7 @@ func (w *Worker) Start(ctx context.Context, traceID string, jobKey string, paylo
 	}
 
 	// Need a unique key for this work.
-	workKey := uuid.New().String()
+	workKey := uuid.NewString()
 
 	// Create a cancel function and keep it for stop/shutdown purposes.
 	ctx, cancel := context.WithCancel(ctx)

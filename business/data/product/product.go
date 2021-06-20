@@ -44,8 +44,8 @@ func (s Store) Create(ctx context.Context, traceID string, claims auth.Claims, n
 		Cost:        np.Cost,
 		Quantity:    np.Quantity,
 		UserID:      claims.Subject,
-		DateCreated: now.UTC(),
-		DateUpdated: now.UTC(),
+		DateCreated: now,
+		DateUpdated: now,
 	}
 
 	const q = `

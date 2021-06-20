@@ -67,7 +67,7 @@ func Check(val interface{}) error {
 
 // GenerateID generate a unique id for entities.
 func GenerateID() string {
-	return uuid.New().String()
+	return uuid.NewString()
 }
 
 // CheckID validates that the format of an id is valid.

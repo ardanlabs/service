@@ -50,8 +50,8 @@ func (s Store) Create(ctx context.Context, traceID string, nu NewUser, now time.
 		Email:        nu.Email,
 		PasswordHash: hash,
 		Roles:        nu.Roles,
-		DateCreated:  now.UTC(),
-		DateUpdated:  now.UTC(),
+		DateCreated:  now,
+		DateUpdated:  now,
 	}
 
 	const q = `
