@@ -74,11 +74,16 @@ kind-services:
 	cd zarf/k8s/kind/sales-pod; kustomize edit set image sales-api-image=sales-api-amd64:$(VERSION)
 	cd zarf/k8s/kind/sales-pod; kustomize edit set image metrics-image=metrics-amd64:$(VERSION)
 	kustomize build zarf/k8s/kind/database-pod | kubectl apply -f -
-	kubectl wait --timeout=120s --for=condition=Available deployment/database-pod
+	kubectl wait --namespace=database-system --timeout=120s --for=condition=Available deployment/database-pod
 	kustomize build zarf/k8s/kind/sales-pod | kubectl apply -f -
+	kubectl config set-context --current --namespace=sales-system
 
 kind-services-delete:
-	kustomize build zarf/k8s/kind | kubectl delete -f -
+	kustomize build zarf/k8s/kind/sales-pod | kubectl delete -f -
+	kustomize build zarf/k8s/kind/database-pod | kubectl delete -f -
+
+kind-context-sales:
+	kubectl config set-context --current --namespace=sales-system
 
 kind-update: all kind-load
 	kubectl rollout restart deployment sales-pod
@@ -94,7 +99,7 @@ kind-logs-sales:
 kind-status:
 	kubectl get nodes -o wide
 	kubectl get svc -o wide
-	kubectl get pods -o wide --watch
+	kubectl get pods -o wide --watch --all-namespaces
 
 kind-describe:
 	kubectl describe nodes
