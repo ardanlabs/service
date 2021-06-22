@@ -12,24 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package noop provides noop tracing implementations for tracer and span.
-package noop
+package semconv
 
-import (
-	"context"
-
-	"go.opentelemetry.io/otel/trace"
-)
-
-var (
-	// Tracer is a noop tracer that starts noop spans.
-	Tracer trace.Tracer
-
-	// Span is a noop Span.
-	Span trace.Span
-)
-
-func init() {
-	Tracer = trace.NewNoopTracerProvider().Tracer("")
-	_, Span = Tracer.Start(context.Background(), "")
-}
+// SchemaURL is the schema URL that matches the version of the semantic conventions
+// that this package defines. Semconv packages starting from v1.4.0 must declare
+// non-empty schema URL in the form https://opentelemetry.io/schemas/<version>
+const SchemaURL = "https://opentelemetry.io/schemas/v1.4.0"

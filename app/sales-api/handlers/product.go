@@ -12,7 +12,7 @@ import (
 	"github.com/ardanlabs/service/foundation/database"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/pkg/errors"
-	"go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel"
 )
 
 type productGroup struct {
@@ -20,7 +20,7 @@ type productGroup struct {
 }
 
 func (pg productGroup) query(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "handlers.productGroup.query")
+	ctx, span := otel.GetTracerProvider().Tracer("").Start(ctx, "handlers.productGroup.query")
 	defer span.End()
 
 	v, ok := ctx.Value(web.KeyValues).(*web.Values)
@@ -48,7 +48,7 @@ func (pg productGroup) query(ctx context.Context, w http.ResponseWriter, r *http
 }
 
 func (pg productGroup) queryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "handlers.productGroup.queryByID")
+	ctx, span := otel.GetTracerProvider().Tracer("").Start(ctx, "handlers.productGroup.queryByID")
 	defer span.End()
 
 	v, ok := ctx.Value(web.KeyValues).(*web.Values)
@@ -73,7 +73,7 @@ func (pg productGroup) queryByID(ctx context.Context, w http.ResponseWriter, r *
 }
 
 func (pg productGroup) create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "handlers.productGroup.create")
+	ctx, span := otel.GetTracerProvider().Tracer("").Start(ctx, "handlers.productGroup.create")
 	defer span.End()
 
 	v, ok := ctx.Value(web.KeyValues).(*web.Values)
@@ -100,7 +100,7 @@ func (pg productGroup) create(ctx context.Context, w http.ResponseWriter, r *htt
 }
 
 func (pg productGroup) update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "handlers.productGroup.update")
+	ctx, span := otel.GetTracerProvider().Tracer("").Start(ctx, "handlers.productGroup.update")
 	defer span.End()
 
 	v, ok := ctx.Value(web.KeyValues).(*web.Values)
@@ -136,7 +136,7 @@ func (pg productGroup) update(ctx context.Context, w http.ResponseWriter, r *htt
 }
 
 func (pg productGroup) delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "handlers.productGroup.delete")
+	ctx, span := otel.GetTracerProvider().Tracer("").Start(ctx, "handlers.productGroup.delete")
 	defer span.End()
 
 	v, ok := ctx.Value(web.KeyValues).(*web.Values)

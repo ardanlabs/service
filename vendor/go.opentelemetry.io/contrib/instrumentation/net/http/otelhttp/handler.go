@@ -25,7 +25,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/propagation"
-	"go.opentelemetry.io/otel/semconv"
+	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -42,7 +42,7 @@ type Handler struct {
 	tracer            trace.Tracer
 	meter             metric.Meter
 	propagators       propagation.TextMapPropagator
-	spanStartOptions  []trace.SpanOption
+	spanStartOptions  []trace.SpanStartOption
 	readEvent         bool
 	writeEvent        bool
 	filters           []Filter
@@ -121,7 +121,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	opts := append([]trace.SpanOption{
+	opts := append([]trace.SpanStartOption{
 		trace.WithAttributes(semconv.NetAttributesFromHTTPRequest("tcp", r)...),
 		trace.WithAttributes(semconv.EndUserAttributesFromHTTPRequest(r)...),
 		trace.WithAttributes(semconv.HTTPServerAttributesFromHTTPRequest(h.operation, "", r)...),

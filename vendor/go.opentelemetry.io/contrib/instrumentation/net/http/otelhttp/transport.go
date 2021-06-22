@@ -20,7 +20,7 @@ import (
 	"net/http"
 
 	"go.opentelemetry.io/otel/propagation"
-	"go.opentelemetry.io/otel/semconv"
+	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -31,7 +31,7 @@ type Transport struct {
 
 	tracer            trace.Tracer
 	propagators       propagation.TextMapPropagator
-	spanStartOptions  []trace.SpanOption
+	spanStartOptions  []trace.SpanStartOption
 	filters           []Filter
 	spanNameFormatter func(string, *http.Request) string
 }
@@ -72,7 +72,7 @@ func (t *Transport) applyConfig(c *config) {
 }
 
 func defaultTransportFormatter(_ string, r *http.Request) string {
-	return r.Method
+	return "HTTP " + r.Method
 }
 
 // RoundTrip creates a Span and propagates its context via the provided request's headers
@@ -86,7 +86,7 @@ func (t *Transport) RoundTrip(r *http.Request) (*http.Response, error) {
 		}
 	}
 
-	opts := append([]trace.SpanOption{}, t.spanStartOptions...) // start with the configured options
+	opts := append([]trace.SpanStartOption{}, t.spanStartOptions...) // start with the configured options
 
 	ctx, span := t.tracer.Start(r.Context(), t.spanNameFormatter("", r), opts...)
 

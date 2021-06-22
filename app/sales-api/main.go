@@ -21,10 +21,10 @@ import (
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/exporters/trace/zipkin"
+	"go.opentelemetry.io/otel/exporters/zipkin"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
-	"go.opentelemetry.io/otel/semconv"
+	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 	"go.uber.org/automaxprocs/maxprocs"
 	"go.uber.org/zap"
 )
@@ -178,7 +178,7 @@ func run(log *zap.SugaredLogger) error {
 
 	log.Infow("startup", "status", "initializing OT/Zipkin tracing support")
 
-	exporter, err := zipkin.NewRawExporter(
+	exporter, err := zipkin.New(
 		cfg.Zipkin.ReporterURI,
 		// zipkin.WithLogger(zap.NewStdLog(log)),
 	)
@@ -195,6 +195,7 @@ func run(log *zap.SugaredLogger) error {
 		),
 		trace.WithResource(
 			resource.NewWithAttributes(
+				semconv.SchemaURL,
 				semconv.ServiceNameKey.String(cfg.Zipkin.ServiceName),
 				attribute.String("exporter", "zipkin"),
 			),
@@ -202,6 +203,7 @@ func run(log *zap.SugaredLogger) error {
 	)
 
 	otel.SetTracerProvider(tp)
+	defer tp.Shutdown(context.Background())
 
 	// =========================================================================
 	// Start Debug Service

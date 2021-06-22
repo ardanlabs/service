@@ -10,7 +10,7 @@ import (
 	"github.com/ardanlabs/service/foundation/database"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
-	"go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel"
 	"go.uber.org/zap"
 )
 
@@ -31,7 +31,7 @@ func NewStore(log *zap.SugaredLogger, db *sqlx.DB) Store {
 // Create adds a Product to the database. It returns the created Product with
 // fields like ID and DateCreated populated.
 func (s Store) Create(ctx context.Context, traceID string, claims auth.Claims, np NewProduct, now time.Time) (Product, error) {
-	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.product.create")
+	ctx, span := otel.GetTracerProvider().Tracer("").Start(ctx, "business.data.product.create")
 	defer span.End()
 
 	if err := validate.Check(np); err != nil {
@@ -66,7 +66,7 @@ func (s Store) Create(ctx context.Context, traceID string, claims auth.Claims, n
 // Update modifies data about a Product. It will error if the specified ID is
 // invalid or does not reference an existing Product.
 func (s Store) Update(ctx context.Context, traceID string, claims auth.Claims, productID string, up UpdateProduct, now time.Time) error {
-	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.product.update")
+	ctx, span := otel.GetTracerProvider().Tracer("").Start(ctx, "business.data.product.update")
 	defer span.End()
 
 	if err := validate.CheckID(productID); err != nil {
@@ -119,7 +119,7 @@ func (s Store) Update(ctx context.Context, traceID string, claims auth.Claims, p
 
 // Delete removes the product identified by a given ID.
 func (s Store) Delete(ctx context.Context, traceID string, claims auth.Claims, productID string) error {
-	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.product.delete")
+	ctx, span := otel.GetTracerProvider().Tracer("").Start(ctx, "business.data.product.delete")
 	defer span.End()
 
 	if err := validate.CheckID(productID); err != nil {
@@ -154,7 +154,7 @@ func (s Store) Delete(ctx context.Context, traceID string, claims auth.Claims, p
 
 // Query gets all Products from the database.
 func (s Store) Query(ctx context.Context, traceID string, pageNumber int, rowsPerPage int) ([]Product, error) {
-	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.product.query")
+	ctx, span := otel.GetTracerProvider().Tracer("").Start(ctx, "business.data.product.query")
 	defer span.End()
 
 	data := struct {
@@ -195,7 +195,7 @@ func (s Store) Query(ctx context.Context, traceID string, pageNumber int, rowsPe
 
 // QueryByID finds the product identified by a given ID.
 func (s Store) QueryByID(ctx context.Context, traceID string, productID string) (Product, error) {
-	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "business.data.product.querybyid")
+	ctx, span := otel.GetTracerProvider().Tracer("").Start(ctx, "business.data.product.querybyid")
 	defer span.End()
 
 	if err := validate.CheckID(productID); err != nil {

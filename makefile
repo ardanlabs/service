@@ -49,12 +49,14 @@ metrics:
 
 # ==============================================================================
 # Running from within k8s/dev
+
 KIND_CLUSTER := ardan-starter-cluster
 
 # Upgrade to latest Kind (>=v0.11): e.g. brew upgrade kind
 # For full Kind v0.11 release notes: https://github.com/kubernetes-sigs/kind/releases/tag/v0.11.0
 # Kind release used for our project: https://github.com/kubernetes-sigs/kind/releases/tag/v0.11.1
 # The image used below was copied by the above link and supports both amd64 and arm64.
+
 kind-up:
 	kind create cluster \
 		--image kindest/node:v1.21.1@sha256:69860bda5563ac81e3c0057d654b5253219618a22ec3a346306239bba8cfa1a6 \
@@ -175,9 +177,9 @@ docker-kind-logs:
 # GCP
 
 export PROJECT = ardan-starter-kit
-CLUSTER = ardan-starter-cluster
-DATABASE = ardan-starter-db
-ZONE = us-central1-b
+CLUSTER := ardan-starter-cluster
+DATABASE := ardan-starter-db
+ZONE := us-central1-b
 
 gcp-config:
 	@echo Setting environment for $(PROJECT)

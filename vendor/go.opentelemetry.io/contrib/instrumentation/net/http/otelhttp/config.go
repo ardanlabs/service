@@ -35,7 +35,7 @@ type config struct {
 	Tracer            trace.Tracer
 	Meter             metric.Meter
 	Propagators       propagation.TextMapPropagator
-	SpanStartOptions  []trace.SpanOption
+	SpanStartOptions  []trace.SpanStartOption
 	ReadEvent         bool
 	WriteEvent        bool
 	Filters           []Filter
@@ -116,7 +116,7 @@ func WithPropagators(ps propagation.TextMapPropagator) Option {
 
 // WithSpanOptions configures an additional set of
 // trace.SpanOptions, which are applied to each new span.
-func WithSpanOptions(opts ...trace.SpanOption) Option {
+func WithSpanOptions(opts ...trace.SpanStartOption) Option {
 	return OptionFunc(func(c *config) {
 		c.SpanStartOptions = append(c.SpanStartOptions, opts...)
 	})

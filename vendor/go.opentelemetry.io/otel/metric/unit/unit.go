@@ -12,9 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package zipkin contains an OpenTelemetry tracing exporter for Zipkin.
-//
-// This package is currently in a pre-GA phase. Backwards incompatible changes
-// may be introduced in subsequent minor version releases as we work to track
-// the evolving OpenTelemetry specification and user feedback.
-package zipkin // import "go.opentelemetry.io/otel/exporters/trace/zipkin"
+package unit // import "go.opentelemetry.io/otel/metric/unit"
+
+type Unit string
+
+// Units defined by OpenTelemetry.
+const (
+	Dimensionless Unit = "1"
+	Bytes         Unit = "By"
+	Milliseconds  Unit = "ms"
+)

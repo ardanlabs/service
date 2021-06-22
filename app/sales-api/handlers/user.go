@@ -12,7 +12,7 @@ import (
 	"github.com/ardanlabs/service/foundation/database"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/pkg/errors"
-	"go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel"
 )
 
 type userGroup struct {
@@ -21,7 +21,7 @@ type userGroup struct {
 }
 
 func (ug userGroup) query(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "handlers.userGroup.query")
+	ctx, span := otel.GetTracerProvider().Tracer("").Start(ctx, "handlers.userGroup.query")
 	defer span.End()
 
 	v, ok := ctx.Value(web.KeyValues).(*web.Values)
@@ -49,7 +49,7 @@ func (ug userGroup) query(ctx context.Context, w http.ResponseWriter, r *http.Re
 }
 
 func (ug userGroup) queryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "handlers.userGroup.queryByID")
+	ctx, span := otel.GetTracerProvider().Tracer("").Start(ctx, "handlers.userGroup.queryByID")
 	defer span.End()
 
 	v, ok := ctx.Value(web.KeyValues).(*web.Values)
@@ -81,7 +81,7 @@ func (ug userGroup) queryByID(ctx context.Context, w http.ResponseWriter, r *htt
 }
 
 func (ug userGroup) create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "handlers.userGroup.create")
+	ctx, span := otel.GetTracerProvider().Tracer("").Start(ctx, "handlers.userGroup.create")
 	defer span.End()
 
 	v, ok := ctx.Value(web.KeyValues).(*web.Values)
@@ -103,7 +103,7 @@ func (ug userGroup) create(ctx context.Context, w http.ResponseWriter, r *http.R
 }
 
 func (ug userGroup) update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "handlers.userGroup.update")
+	ctx, span := otel.GetTracerProvider().Tracer("").Start(ctx, "handlers.userGroup.update")
 	defer span.End()
 
 	v, ok := ctx.Value(web.KeyValues).(*web.Values)
@@ -140,7 +140,7 @@ func (ug userGroup) update(ctx context.Context, w http.ResponseWriter, r *http.R
 }
 
 func (ug userGroup) delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "handlers.userGroup.delete")
+	ctx, span := otel.GetTracerProvider().Tracer("").Start(ctx, "handlers.userGroup.delete")
 	defer span.End()
 
 	v, ok := ctx.Value(web.KeyValues).(*web.Values)
@@ -172,7 +172,7 @@ func (ug userGroup) delete(ctx context.Context, w http.ResponseWriter, r *http.R
 }
 
 func (ug userGroup) token(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "handlers.userGroup.token")
+	ctx, span := otel.GetTracerProvider().Tracer("").Start(ctx, "handlers.userGroup.token")
 	defer span.End()
 
 	v, ok := ctx.Value(web.KeyValues).(*web.Values)

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package semconv // import "go.opentelemetry.io/otel/semconv"
+package semconv // import "go.opentelemetry.io/otel/semconv/v1.4.0"
 
 import (
 	"fmt"
@@ -23,6 +23,12 @@ import (
 
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
+)
+
+// HTTP scheme attributes.
+var (
+	HTTPSchemeHTTP  = HTTPSchemeKey.String("http")
+	HTTPSchemeHTTPS = HTTPSchemeKey.String("https")
 )
 
 // NetAttributesFromHTTPRequest generates attributes of the net
@@ -140,7 +146,15 @@ func HTTPClientAttributesFromHTTPRequest(request *http.Request) []attribute.KeyV
 		attrs = append(attrs, HTTPMethodKey.String(http.MethodGet))
 	}
 
+	// remove any username/password info that may be in the URL
+	// before adding it to the attributes
+	userinfo := request.URL.User
+	request.URL.User = nil
+
 	attrs = append(attrs, HTTPURLKey.String(request.URL.String()))
+
+	// restore any username/password info that was removed
+	request.URL.User = userinfo
 
 	return append(attrs, httpCommonAttributesFromHTTPRequest(request)...)
 }
