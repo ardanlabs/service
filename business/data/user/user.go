@@ -11,8 +11,6 @@ import (
 	"github.com/dgrijalva/jwt-go/v4"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/attribute"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -58,14 +56,7 @@ func (s Store) Create(ctx context.Context, traceID string, nu NewUser, now time.
 	VALUES
 		(:user_id, :name, :email, :password_hash, :roles, :date_created, :date_updated)`
 
-	query := database.Log(q, usr)
-	s.log.Infow("user.Create", "traceid", traceID, "query", query)
-
-	ctx, span := otel.GetTracerProvider().Tracer("").Start(ctx, "business.data.user.create")
-	span.SetAttributes(attribute.String("query", query))
-	defer span.End()
-
-	if _, err := s.db.NamedExecContext(ctx, q, usr); err != nil {
+	if err := database.NamedExecContext(ctx, s.log, s.db, traceID, q, usr); err != nil {
 		return User{}, errors.Wrap(err, "inserting user")
 	}
 
@@ -116,14 +107,7 @@ func (s Store) Update(ctx context.Context, traceID string, claims auth.Claims, u
 	WHERE
 		user_id = :user_id`
 
-	query := database.Log(q, usr)
-	s.log.Infow("user.Update", "traceid", traceID, "query", query)
-
-	ctx, span := otel.GetTracerProvider().Tracer("").Start(ctx, "business.data.user.update")
-	span.SetAttributes(attribute.String("query", query))
-	defer span.End()
-
-	if _, err := s.db.NamedExecContext(ctx, q, usr); err != nil {
+	if err := database.NamedExecContext(ctx, s.log, s.db, traceID, q, usr); err != nil {
 		return errors.Wrapf(err, "updating user %s", usr.ID)
 	}
 
@@ -153,14 +137,7 @@ func (s Store) Delete(ctx context.Context, traceID string, claims auth.Claims, u
 	WHERE
 		user_id = :user_id`
 
-	query := database.Log(q, data)
-	s.log.Infow("user.Delete", "traceid", traceID, "query", query)
-
-	ctx, span := otel.GetTracerProvider().Tracer("").Start(ctx, "business.data.user.delete")
-	span.SetAttributes(attribute.String("query", query))
-	defer span.End()
-
-	if _, err := s.db.NamedExecContext(ctx, q, data); err != nil {
+	if err := database.NamedExecContext(ctx, s.log, s.db, traceID, q, data); err != nil {
 		return errors.Wrapf(err, "deleting user %s", data.UserID)
 	}
 
@@ -186,15 +163,8 @@ func (s Store) Query(ctx context.Context, traceID string, pageNumber int, rowsPe
 		user_id
 	OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY`
 
-	query := database.Log(q, data)
-	s.log.Infow("user.Query", "traceid", traceID, "query", query)
-
-	ctx, span := otel.GetTracerProvider().Tracer("").Start(ctx, "business.data.user.query")
-	span.SetAttributes(attribute.String("query", query))
-	defer span.End()
-
 	var users []User
-	if err := database.NamedQuerySlice(ctx, s.db, q, data, &users); err != nil {
+	if err := database.NamedQuerySlice(ctx, s.log, s.db, traceID, q, data, &users); err != nil {
 		if err == database.ErrNotFound {
 			return nil, database.ErrNotFound
 		}
@@ -229,15 +199,8 @@ func (s Store) QueryByID(ctx context.Context, traceID string, claims auth.Claims
 	WHERE 
 		user_id = :user_id`
 
-	query := database.Log(q, data)
-	s.log.Infow("user.QueryByID", "traceid", traceID, "query", query)
-
-	ctx, span := otel.GetTracerProvider().Tracer("").Start(ctx, "business.data.user.querybyid")
-	span.SetAttributes(attribute.String("query", query))
-	defer span.End()
-
 	var usr User
-	if err := database.NamedQueryStruct(ctx, s.db, q, data, &usr); err != nil {
+	if err := database.NamedQueryStruct(ctx, s.log, s.db, traceID, q, data, &usr); err != nil {
 		if err == database.ErrNotFound {
 			return User{}, database.ErrNotFound
 		}
@@ -269,15 +232,8 @@ func (s Store) QueryByEmail(ctx context.Context, traceID string, claims auth.Cla
 	WHERE
 		email = :email`
 
-	query := database.Log(q, data)
-	s.log.Infow("user.QueryByEmail", "traceid", traceID, "query", query)
-
-	ctx, span := otel.GetTracerProvider().Tracer("").Start(ctx, "business.data.user.querybyemail")
-	span.SetAttributes(attribute.String("query", query))
-	defer span.End()
-
 	var usr User
-	if err := database.NamedQueryStruct(ctx, s.db, q, data, &usr); err != nil {
+	if err := database.NamedQueryStruct(ctx, s.log, s.db, traceID, q, data, &usr); err != nil {
 		if err == database.ErrNotFound {
 			return User{}, database.ErrNotFound
 		}
@@ -310,15 +266,8 @@ func (s Store) Authenticate(ctx context.Context, traceID string, now time.Time, 
 	WHERE
 		email = :email`
 
-	query := database.Log(q, data)
-	s.log.Infow("user.Authenticate", "traceid", traceID, "query", query)
-
-	ctx, span := otel.GetTracerProvider().Tracer("").Start(ctx, "business.data.user.authenticate")
-	span.SetAttributes(attribute.String("query", query))
-	defer span.End()
-
 	var usr User
-	if err := database.NamedQueryStruct(ctx, s.db, q, data, &usr); err != nil {
+	if err := database.NamedQueryStruct(ctx, s.log, s.db, traceID, q, data, &usr); err != nil {
 		if err == database.ErrNotFound {
 			return auth.Claims{}, database.ErrNotFound
 		}
