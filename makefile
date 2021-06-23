@@ -62,28 +62,25 @@ kind-up:
 		--image kindest/node:v1.21.1@sha256:69860bda5563ac81e3c0057d654b5253219618a22ec3a346306239bba8cfa1a6 \
 		--name $(KIND_CLUSTER) \
 		--config zarf/k8s/kind/kind-config.yaml
+	kubectl config set-context --current --namespace=sales-system
 
 kind-down:
 	kind delete cluster --name $(KIND_CLUSTER)
 
 kind-load:
+	cd zarf/k8s/kind/sales-pod; kustomize edit set image sales-api-image=sales-api-amd64:$(VERSION)
+	cd zarf/k8s/kind/sales-pod; kustomize edit set image metrics-image=metrics-amd64:$(VERSION)
 	kind load docker-image sales-api-amd64:$(VERSION) --name $(KIND_CLUSTER)
 	kind load docker-image metrics-amd64:$(VERSION) --name $(KIND_CLUSTER)
 
 kind-services:
-	cd zarf/k8s/kind/sales-pod; kustomize edit set image sales-api-image=sales-api-amd64:$(VERSION)
-	cd zarf/k8s/kind/sales-pod; kustomize edit set image metrics-image=metrics-amd64:$(VERSION)
 	kustomize build zarf/k8s/kind/database-pod | kubectl apply -f -
 	kubectl wait --namespace=database-system --timeout=120s --for=condition=Available deployment/database-pod
 	kustomize build zarf/k8s/kind/sales-pod | kubectl apply -f -
-	kubectl config set-context --current --namespace=sales-system
 
 kind-services-delete:
 	kustomize build zarf/k8s/kind/sales-pod | kubectl delete -f -
 	kustomize build zarf/k8s/kind/database-pod | kubectl delete -f -
-
-kind-context-sales:
-	kubectl config set-context --current --namespace=sales-system
 
 kind-update: all kind-load
 	kubectl rollout restart deployment sales-pod
@@ -118,6 +115,9 @@ kind-events:
 
 kind-events-warn:
 	kubectl get ev --field-selector type=Warning --sort-by metadata.creationTimestamp
+
+kind-context-sales:
+	kubectl config set-context --current --namespace=sales-system
 
 kind-shell:
 	kubectl exec -it $(shell kubectl get pods | grep app | cut -c1-26) --container app -- /bin/sh
