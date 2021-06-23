@@ -68,37 +68,52 @@ func DebugMux(build string, log *zap.SugaredLogger, db *sqlx.DB) http.Handler {
 	return mux
 }
 
+// APIMuxConfig contains all the mandatory systems required by handlers.
+type APIMuxConfig struct {
+	Shutdown chan os.Signal
+	Log      *zap.SugaredLogger
+	Metrics  *metrics.Metrics
+	Auth     *auth.Auth
+	DB       *sqlx.DB
+}
+
 // APIMux constructs an http.Handler with all application routes defined.
-func APIMux(build string, shutdown chan os.Signal, log *zap.SugaredLogger, metrics *metrics.Metrics, a *auth.Auth, db *sqlx.DB, options ...func(opts *Options)) http.Handler {
+func APIMux(cfg APIMuxConfig, options ...func(opts *Options)) http.Handler {
 	var opts Options
 	for _, option := range options {
 		option(&opts)
 	}
 
 	// Construct the web.App which holds all routes as well as common Middleware.
-	app := web.NewApp(shutdown, mid.Logger(log), mid.Errors(log), mid.Metrics(metrics), mid.Panics())
+	app := web.NewApp(
+		cfg.Shutdown,
+		mid.Logger(cfg.Log),
+		mid.Errors(cfg.Log),
+		mid.Metrics(cfg.Metrics),
+		mid.Panics(),
+	)
 
 	// Register user management and authentication endpoints.
 	ug := userGroup{
-		store: user.NewStore(log, db),
-		auth:  a,
+		store: user.NewStore(cfg.Log, cfg.DB),
+		auth:  cfg.Auth,
 	}
-	app.Handle(http.MethodGet, "/v1/users/:page/:rows", ug.query, mid.Authenticate(a), mid.Authorize(auth.RoleAdmin))
+	app.Handle(http.MethodGet, "/v1/users/:page/:rows", ug.query, mid.Authenticate(cfg.Auth), mid.Authorize(auth.RoleAdmin))
 	app.Handle(http.MethodGet, "/v1/users/token/:kid", ug.token)
-	app.Handle(http.MethodGet, "/v1/users/:id", ug.queryByID, mid.Authenticate(a))
-	app.Handle(http.MethodPost, "/v1/users", ug.create, mid.Authenticate(a), mid.Authorize(auth.RoleAdmin))
-	app.Handle(http.MethodPut, "/v1/users/:id", ug.update, mid.Authenticate(a), mid.Authorize(auth.RoleAdmin))
-	app.Handle(http.MethodDelete, "/v1/users/:id", ug.delete, mid.Authenticate(a), mid.Authorize(auth.RoleAdmin))
+	app.Handle(http.MethodGet, "/v1/users/:id", ug.queryByID, mid.Authenticate(cfg.Auth))
+	app.Handle(http.MethodPost, "/v1/users", ug.create, mid.Authenticate(cfg.Auth), mid.Authorize(auth.RoleAdmin))
+	app.Handle(http.MethodPut, "/v1/users/:id", ug.update, mid.Authenticate(cfg.Auth), mid.Authorize(auth.RoleAdmin))
+	app.Handle(http.MethodDelete, "/v1/users/:id", ug.delete, mid.Authenticate(cfg.Auth), mid.Authorize(auth.RoleAdmin))
 
 	// Register product and sale endpoints.
 	pg := productGroup{
-		store: product.NewStore(log, db),
+		store: product.NewStore(cfg.Log, cfg.DB),
 	}
-	app.Handle(http.MethodGet, "/v1/products/:page/:rows", pg.query, mid.Authenticate(a))
-	app.Handle(http.MethodGet, "/v1/products/:id", pg.queryByID, mid.Authenticate(a))
-	app.Handle(http.MethodPost, "/v1/products", pg.create, mid.Authenticate(a))
-	app.Handle(http.MethodPut, "/v1/products/:id", pg.update, mid.Authenticate(a))
-	app.Handle(http.MethodDelete, "/v1/products/:id", pg.delete, mid.Authenticate(a))
+	app.Handle(http.MethodGet, "/v1/products/:page/:rows", pg.query, mid.Authenticate(cfg.Auth))
+	app.Handle(http.MethodGet, "/v1/products/:id", pg.queryByID, mid.Authenticate(cfg.Auth))
+	app.Handle(http.MethodPost, "/v1/products", pg.create, mid.Authenticate(cfg.Auth))
+	app.Handle(http.MethodPut, "/v1/products/:id", pg.update, mid.Authenticate(cfg.Auth))
+	app.Handle(http.MethodDelete, "/v1/products/:id", pg.delete, mid.Authenticate(cfg.Auth))
 
 	// Accept CORS 'OPTIONS' preflight requests if config has been provided.
 	// Don't forget to apply the CORS middleware to the routes that need it.

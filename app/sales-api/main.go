@@ -186,7 +186,7 @@ func run(log *zap.SugaredLogger) error {
 		return errors.Wrap(err, "creating new exporter")
 	}
 
-	tp := trace.NewTracerProvider(
+	traceProvider := trace.NewTracerProvider(
 		trace.WithSampler(trace.TraceIDRatioBased(cfg.Zipkin.Probability)),
 		trace.WithBatcher(exporter,
 			trace.WithMaxExportBatchSize(trace.DefaultMaxExportBatchSize),
@@ -202,8 +202,9 @@ func run(log *zap.SugaredLogger) error {
 		),
 	)
 
-	otel.SetTracerProvider(tp)
-	defer tp.Shutdown(context.Background())
+	// I can only get this working properly using the singleton :(
+	otel.SetTracerProvider(traceProvider)
+	defer traceProvider.Shutdown(context.Background())
 
 	// =========================================================================
 	// Start Debug Service
@@ -213,6 +214,7 @@ func run(log *zap.SugaredLogger) error {
 	// The Debug function returns a mux to listen and serve on for all the debug
 	// related endpoints. This include the standard library endpoints.
 
+	// Construct the mux for the debug calls.
 	debugMux := handlers.DebugMux(build, log, db)
 
 	// Start the service listening for debug requests.
@@ -233,8 +235,16 @@ func run(log *zap.SugaredLogger) error {
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
 
-	apiMux := handlers.APIMux(build, shutdown, log, metrics.New(), auth, db)
+	// Construct the mux for the API calls.
+	apiMux := handlers.APIMux(handlers.APIMuxConfig{
+		Shutdown: shutdown,
+		Log:      log,
+		Metrics:  metrics.New(),
+		Auth:     auth,
+		DB:       db,
+	})
 
+	// Construct a server to service the requests against the mux.
 	api := http.Server{
 		Addr:         cfg.Web.APIHost,
 		Handler:      apiMux,

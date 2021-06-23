@@ -11,6 +11,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	"go.uber.org/zap"
 )
 
@@ -31,9 +32,6 @@ func NewStore(log *zap.SugaredLogger, db *sqlx.DB) Store {
 // Create adds a Product to the database. It returns the created Product with
 // fields like ID and DateCreated populated.
 func (s Store) Create(ctx context.Context, traceID string, claims auth.Claims, np NewProduct, now time.Time) (Product, error) {
-	ctx, span := otel.GetTracerProvider().Tracer("").Start(ctx, "business.data.product.create")
-	defer span.End()
-
 	if err := validate.Check(np); err != nil {
 		return Product{}, errors.Wrap(err, "validating data")
 	}
@@ -54,7 +52,12 @@ func (s Store) Create(ctx context.Context, traceID string, claims auth.Claims, n
 	VALUES
 		(:product_id, :user_id, :name, :cost, :quantity, :date_created, :date_updated)`
 
-	s.log.Infow("product.Create", "traceid", traceID, "query", database.Log(q, prd))
+	query := database.Log(q, prd)
+	ctx, span := otel.GetTracerProvider().Tracer("").Start(ctx, "business.data.product.create")
+	span.SetAttributes(attribute.String("query", query))
+	defer span.End()
+
+	s.log.Infow("product.Create", "traceid", traceID, "query", query)
 
 	if _, err := s.db.NamedExecContext(ctx, q, prd); err != nil {
 		return Product{}, errors.Wrap(err, "inserting product")
@@ -66,9 +69,6 @@ func (s Store) Create(ctx context.Context, traceID string, claims auth.Claims, n
 // Update modifies data about a Product. It will error if the specified ID is
 // invalid or does not reference an existing Product.
 func (s Store) Update(ctx context.Context, traceID string, claims auth.Claims, productID string, up UpdateProduct, now time.Time) error {
-	ctx, span := otel.GetTracerProvider().Tracer("").Start(ctx, "business.data.product.update")
-	defer span.End()
-
 	if err := validate.CheckID(productID); err != nil {
 		return database.ErrInvalidID
 	}
@@ -108,7 +108,12 @@ func (s Store) Update(ctx context.Context, traceID string, claims auth.Claims, p
 	WHERE
 		product_id = :product_id`
 
-	s.log.Infow("product.Update", "traceid", traceID, "query", database.Log(q, prd))
+	query := database.Log(q, prd)
+	ctx, span := otel.GetTracerProvider().Tracer("").Start(ctx, "business.data.product.update")
+	span.SetAttributes(attribute.String("query", query))
+	defer span.End()
+
+	s.log.Infow("product.Update", "traceid", traceID, "query", query)
 
 	if _, err := s.db.NamedExecContext(ctx, q, prd); err != nil {
 		return errors.Wrapf(err, "updating product %s", prd.ID)
@@ -119,9 +124,6 @@ func (s Store) Update(ctx context.Context, traceID string, claims auth.Claims, p
 
 // Delete removes the product identified by a given ID.
 func (s Store) Delete(ctx context.Context, traceID string, claims auth.Claims, productID string) error {
-	ctx, span := otel.GetTracerProvider().Tracer("").Start(ctx, "business.data.product.delete")
-	defer span.End()
-
 	if err := validate.CheckID(productID); err != nil {
 		return database.ErrInvalidID
 	}
@@ -143,7 +145,12 @@ func (s Store) Delete(ctx context.Context, traceID string, claims auth.Claims, p
 	WHERE
 		product_id = :product_id`
 
-	s.log.Infow("product.Delete", "traceid", traceID, "query", database.Log(q, data))
+	query := database.Log(q, data)
+	ctx, span := otel.GetTracerProvider().Tracer("").Start(ctx, "business.data.product.delete")
+	span.SetAttributes(attribute.String("query", query))
+	defer span.End()
+
+	s.log.Infow("product.Delete", "traceid", traceID, "query", query)
 
 	if _, err := s.db.NamedExecContext(ctx, q, data); err != nil {
 		return errors.Wrapf(err, "deleting product %s", data.ProductID)
@@ -154,9 +161,6 @@ func (s Store) Delete(ctx context.Context, traceID string, claims auth.Claims, p
 
 // Query gets all Products from the database.
 func (s Store) Query(ctx context.Context, traceID string, pageNumber int, rowsPerPage int) ([]Product, error) {
-	ctx, span := otel.GetTracerProvider().Tracer("").Start(ctx, "business.data.product.query")
-	defer span.End()
-
 	data := struct {
 		Offset      int `db:"offset"`
 		RowsPerPage int `db:"rows_per_page"`
@@ -180,7 +184,12 @@ func (s Store) Query(ctx context.Context, traceID string, pageNumber int, rowsPe
 		user_id
 	OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY`
 
-	s.log.Infow("product.Query", "traceid", traceID, "query", database.Log(q, data))
+	query := database.Log(q, data)
+	ctx, span := otel.GetTracerProvider().Tracer("").Start(ctx, "business.data.product.query")
+	span.SetAttributes(attribute.String("query", query))
+	defer span.End()
+
+	s.log.Infow("product.Query", "traceid", traceID, "query", query)
 
 	var products []Product
 	if err := database.NamedQuerySlice(ctx, s.db, q, data, &products); err != nil {
@@ -195,9 +204,6 @@ func (s Store) Query(ctx context.Context, traceID string, pageNumber int, rowsPe
 
 // QueryByID finds the product identified by a given ID.
 func (s Store) QueryByID(ctx context.Context, traceID string, productID string) (Product, error) {
-	ctx, span := otel.GetTracerProvider().Tracer("").Start(ctx, "business.data.product.querybyid")
-	defer span.End()
-
 	if err := validate.CheckID(productID); err != nil {
 		return Product{}, database.ErrInvalidID
 	}
@@ -222,7 +228,12 @@ func (s Store) QueryByID(ctx context.Context, traceID string, productID string) 
 	GROUP BY
 		p.product_id`
 
-	s.log.Infow("product.QueryByID", "traceid", traceID, "query", database.Log(q, data))
+	query := database.Log(q, data)
+	ctx, span := otel.GetTracerProvider().Tracer("").Start(ctx, "business.data.product.querybyid")
+	span.SetAttributes(attribute.String("query", query))
+	defer span.End()
+
+	s.log.Infow("product.QueryByID", "traceid", traceID, "query", query)
 
 	var prd Product
 	if err := database.NamedQueryStruct(ctx, s.db, q, data, &prd); err != nil {

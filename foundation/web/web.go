@@ -10,7 +10,7 @@ import (
 
 	"github.com/dimfeld/httptreemux/v5"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
-	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // ctxKey represents the type of value for the context key.
@@ -87,10 +87,12 @@ func (a *App) Handle(method string, path string, handler Handler, mw ...Middlewa
 	// The function to execute for each request.
 	h := func(w http.ResponseWriter, r *http.Request) {
 
-		// Start or expand a distributed trace.
+		// Pull the context from the request and
+		// use it as a separate parameter.
 		ctx := r.Context()
-		ctx, span := otel.GetTracerProvider().Tracer("").Start(ctx, r.URL.Path)
-		defer span.End()
+
+		// Capture the parent request span from the context.
+		span := trace.SpanFromContext(ctx)
 
 		// Set the context with the required values to
 		// process the request.
