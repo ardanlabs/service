@@ -59,11 +59,11 @@ func (s Store) Create(ctx context.Context, traceID string, nu NewUser, now time.
 		(:user_id, :name, :email, :password_hash, :roles, :date_created, :date_updated)`
 
 	query := database.Log(q, usr)
+	s.log.Infow("user.Create", "traceid", traceID, "query", query)
+
 	ctx, span := otel.GetTracerProvider().Tracer("").Start(ctx, "business.data.user.create")
 	span.SetAttributes(attribute.String("query", query))
 	defer span.End()
-
-	s.log.Infow("user.Create", "traceid", traceID, "query", query)
 
 	if _, err := s.db.NamedExecContext(ctx, q, usr); err != nil {
 		return User{}, errors.Wrap(err, "inserting user")
@@ -117,11 +117,11 @@ func (s Store) Update(ctx context.Context, traceID string, claims auth.Claims, u
 		user_id = :user_id`
 
 	query := database.Log(q, usr)
+	s.log.Infow("user.Update", "traceid", traceID, "query", query)
+
 	ctx, span := otel.GetTracerProvider().Tracer("").Start(ctx, "business.data.user.update")
 	span.SetAttributes(attribute.String("query", query))
 	defer span.End()
-
-	s.log.Infow("user.Update", "traceid", traceID, "query", query)
 
 	if _, err := s.db.NamedExecContext(ctx, q, usr); err != nil {
 		return errors.Wrapf(err, "updating user %s", usr.ID)
@@ -154,11 +154,11 @@ func (s Store) Delete(ctx context.Context, traceID string, claims auth.Claims, u
 		user_id = :user_id`
 
 	query := database.Log(q, data)
+	s.log.Infow("user.Delete", "traceid", traceID, "query", query)
+
 	ctx, span := otel.GetTracerProvider().Tracer("").Start(ctx, "business.data.user.delete")
 	span.SetAttributes(attribute.String("query", query))
 	defer span.End()
-
-	s.log.Infow("user.Delete", "traceid", traceID, "query", query)
 
 	if _, err := s.db.NamedExecContext(ctx, q, data); err != nil {
 		return errors.Wrapf(err, "deleting user %s", data.UserID)
@@ -187,11 +187,11 @@ func (s Store) Query(ctx context.Context, traceID string, pageNumber int, rowsPe
 	OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY`
 
 	query := database.Log(q, data)
+	s.log.Infow("user.Query", "traceid", traceID, "query", query)
+
 	ctx, span := otel.GetTracerProvider().Tracer("").Start(ctx, "business.data.user.query")
 	span.SetAttributes(attribute.String("query", query))
 	defer span.End()
-
-	s.log.Infow("user.Query", "traceid", traceID, "query", query)
 
 	var users []User
 	if err := database.NamedQuerySlice(ctx, s.db, q, data, &users); err != nil {
@@ -230,11 +230,11 @@ func (s Store) QueryByID(ctx context.Context, traceID string, claims auth.Claims
 		user_id = :user_id`
 
 	query := database.Log(q, data)
+	s.log.Infow("user.QueryByID", "traceid", traceID, "query", query)
+
 	ctx, span := otel.GetTracerProvider().Tracer("").Start(ctx, "business.data.user.querybyid")
 	span.SetAttributes(attribute.String("query", query))
 	defer span.End()
-
-	s.log.Infow("user.QueryByID", "traceid", traceID, "query", query)
 
 	var usr User
 	if err := database.NamedQueryStruct(ctx, s.db, q, data, &usr); err != nil {
@@ -270,11 +270,11 @@ func (s Store) QueryByEmail(ctx context.Context, traceID string, claims auth.Cla
 		email = :email`
 
 	query := database.Log(q, data)
+	s.log.Infow("user.QueryByEmail", "traceid", traceID, "query", query)
+
 	ctx, span := otel.GetTracerProvider().Tracer("").Start(ctx, "business.data.user.querybyemail")
 	span.SetAttributes(attribute.String("query", query))
 	defer span.End()
-
-	s.log.Infow("user.QueryByEmail", "traceid", traceID, "query", query)
 
 	var usr User
 	if err := database.NamedQueryStruct(ctx, s.db, q, data, &usr); err != nil {
@@ -311,11 +311,11 @@ func (s Store) Authenticate(ctx context.Context, traceID string, now time.Time, 
 		email = :email`
 
 	query := database.Log(q, data)
+	s.log.Infow("user.Authenticate", "traceid", traceID, "query", query)
+
 	ctx, span := otel.GetTracerProvider().Tracer("").Start(ctx, "business.data.user.authenticate")
 	span.SetAttributes(attribute.String("query", query))
 	defer span.End()
-
-	s.log.Infow("user.Authenticate", "traceid", traceID, "query", query)
 
 	var usr User
 	if err := database.NamedQueryStruct(ctx, s.db, q, data, &usr); err != nil {

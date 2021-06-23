@@ -53,11 +53,11 @@ func (s Store) Create(ctx context.Context, traceID string, claims auth.Claims, n
 		(:product_id, :user_id, :name, :cost, :quantity, :date_created, :date_updated)`
 
 	query := database.Log(q, prd)
+	s.log.Infow("product.Create", "traceid", traceID, "query", query)
+
 	ctx, span := otel.GetTracerProvider().Tracer("").Start(ctx, "business.data.product.create")
 	span.SetAttributes(attribute.String("query", query))
 	defer span.End()
-
-	s.log.Infow("product.Create", "traceid", traceID, "query", query)
 
 	if _, err := s.db.NamedExecContext(ctx, q, prd); err != nil {
 		return Product{}, errors.Wrap(err, "inserting product")
@@ -109,11 +109,11 @@ func (s Store) Update(ctx context.Context, traceID string, claims auth.Claims, p
 		product_id = :product_id`
 
 	query := database.Log(q, prd)
+	s.log.Infow("product.Update", "traceid", traceID, "query", query)
+
 	ctx, span := otel.GetTracerProvider().Tracer("").Start(ctx, "business.data.product.update")
 	span.SetAttributes(attribute.String("query", query))
 	defer span.End()
-
-	s.log.Infow("product.Update", "traceid", traceID, "query", query)
 
 	if _, err := s.db.NamedExecContext(ctx, q, prd); err != nil {
 		return errors.Wrapf(err, "updating product %s", prd.ID)
@@ -146,11 +146,11 @@ func (s Store) Delete(ctx context.Context, traceID string, claims auth.Claims, p
 		product_id = :product_id`
 
 	query := database.Log(q, data)
+	s.log.Infow("product.Delete", "traceid", traceID, "query", query)
+
 	ctx, span := otel.GetTracerProvider().Tracer("").Start(ctx, "business.data.product.delete")
 	span.SetAttributes(attribute.String("query", query))
 	defer span.End()
-
-	s.log.Infow("product.Delete", "traceid", traceID, "query", query)
 
 	if _, err := s.db.NamedExecContext(ctx, q, data); err != nil {
 		return errors.Wrapf(err, "deleting product %s", data.ProductID)
@@ -185,11 +185,11 @@ func (s Store) Query(ctx context.Context, traceID string, pageNumber int, rowsPe
 	OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY`
 
 	query := database.Log(q, data)
+	s.log.Infow("product.Query", "traceid", traceID, "query", query)
+
 	ctx, span := otel.GetTracerProvider().Tracer("").Start(ctx, "business.data.product.query")
 	span.SetAttributes(attribute.String("query", query))
 	defer span.End()
-
-	s.log.Infow("product.Query", "traceid", traceID, "query", query)
 
 	var products []Product
 	if err := database.NamedQuerySlice(ctx, s.db, q, data, &products); err != nil {
@@ -229,11 +229,11 @@ func (s Store) QueryByID(ctx context.Context, traceID string, productID string) 
 		p.product_id`
 
 	query := database.Log(q, data)
+	s.log.Infow("product.QueryByID", "traceid", traceID, "query", query)
+
 	ctx, span := otel.GetTracerProvider().Tracer("").Start(ctx, "business.data.product.querybyid")
 	span.SetAttributes(attribute.String("query", query))
 	defer span.End()
-
-	s.log.Infow("product.QueryByID", "traceid", traceID, "query", query)
 
 	var prd Product
 	if err := database.NamedQueryStruct(ctx, s.db, q, data, &prd); err != nil {
