@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/ardanlabs/conf"
 	"github.com/ardanlabs/service/app/sales-admin/commands"
+	"github.com/ardanlabs/service/business/config"
 	"github.com/ardanlabs/service/foundation/database"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/pkg/errors"
@@ -35,47 +35,10 @@ func run(log *zap.SugaredLogger) error {
 
 	// =========================================================================
 	// Configuration
-
-	var cfg struct {
-		conf.Version
-		Args conf.Args
-		DB   struct {
-			User       string `conf:"default:postgres"`
-			Password   string `conf:"default:postgres,mask"`
-			Host       string `conf:"default:0.0.0.0"`
-			Name       string `conf:"default:postgres"`
-			DisableTLS bool   `conf:"default:true"`
-		}
-	}
-	cfg.Version.SVN = build
-	cfg.Version.Desc = "copyright information here"
-
-	const prefix = "SALES"
-	if err := conf.Parse(os.Args[1:], prefix, &cfg); err != nil {
-		switch err {
-		case conf.ErrHelpWanted:
-			usage, err := conf.Usage(prefix, &cfg)
-			if err != nil {
-				return errors.Wrap(err, "generating config usage")
-			}
-			fmt.Println(usage)
-			return nil
-		case conf.ErrVersionWanted:
-			version, err := conf.VersionString(prefix, &cfg)
-			if err != nil {
-				return errors.Wrap(err, "generating config version")
-			}
-			fmt.Println(version)
-			return nil
-		}
-		return errors.Wrap(err, "parsing config")
-	}
-
-	out, err := conf.String(&cfg)
+	cfg, err := config.Configuration(log, build)
 	if err != nil {
-		return errors.Wrap(err, "generating config for output")
+		return err
 	}
-	log.Infow("startup", "config", out)
 
 	// =========================================================================
 	// Commands
