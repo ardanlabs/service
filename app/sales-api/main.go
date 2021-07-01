@@ -1,8 +1,6 @@
 package main
 
 import (
-	// Calls init function.
-
 	"os"
 	"runtime"
 
