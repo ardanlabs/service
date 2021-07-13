@@ -24,7 +24,7 @@ RUN go build -ldflags "-X main.build=${VCS_REF}"
 
 
 # Run the Go Binary in Alpine.
-FROM alpine:3.13
+FROM alpine:3.14
 ARG BUILD_DATE
 ARG VCS_REF
 COPY --from=build_metrics /service/app/sidecar/metrics/metrics /service/metrics
