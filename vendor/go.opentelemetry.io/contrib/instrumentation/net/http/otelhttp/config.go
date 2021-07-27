@@ -45,16 +45,14 @@ type config struct {
 	MeterProvider  metric.MeterProvider
 }
 
-// Option Interface used for setting *optional* config properties
+// Option interface used for setting optional config properties.
 type Option interface {
-	Apply(*config)
+	apply(*config)
 }
 
-// OptionFunc provides a convenience wrapper for simple Options
-// that can be represented as functions.
-type OptionFunc func(*config)
+type optionFunc func(*config)
 
-func (o OptionFunc) Apply(c *config) {
+func (o optionFunc) apply(c *config) {
 	o(c)
 }
 
@@ -66,7 +64,7 @@ func newConfig(opts ...Option) *config {
 		MeterProvider:  global.GetMeterProvider(),
 	}
 	for _, opt := range opts {
-		opt.Apply(c)
+		opt.apply(c)
 	}
 
 	c.Tracer = c.TracerProvider.Tracer(
@@ -84,7 +82,7 @@ func newConfig(opts ...Option) *config {
 // WithTracerProvider specifies a tracer provider to use for creating a tracer.
 // If none is specified, the global provider is used.
 func WithTracerProvider(provider trace.TracerProvider) Option {
-	return OptionFunc(func(cfg *config) {
+	return optionFunc(func(cfg *config) {
 		cfg.TracerProvider = provider
 	})
 }
@@ -92,7 +90,7 @@ func WithTracerProvider(provider trace.TracerProvider) Option {
 // WithMeterProvider specifies a meter provider to use for creating a meter.
 // If none is specified, the global provider is used.
 func WithMeterProvider(provider metric.MeterProvider) Option {
-	return OptionFunc(func(cfg *config) {
+	return optionFunc(func(cfg *config) {
 		cfg.MeterProvider = provider
 	})
 }
@@ -101,7 +99,7 @@ func WithMeterProvider(provider metric.MeterProvider) Option {
 // span context. If this option is not provided, then the association is a child
 // association instead of a link.
 func WithPublicEndpoint() Option {
-	return OptionFunc(func(c *config) {
+	return optionFunc(func(c *config) {
 		c.SpanStartOptions = append(c.SpanStartOptions, trace.WithNewRoot())
 	})
 }
@@ -109,7 +107,7 @@ func WithPublicEndpoint() Option {
 // WithPropagators configures specific propagators. If this
 // option isn't specified then
 func WithPropagators(ps propagation.TextMapPropagator) Option {
-	return OptionFunc(func(c *config) {
+	return optionFunc(func(c *config) {
 		c.Propagators = ps
 	})
 }
@@ -117,7 +115,7 @@ func WithPropagators(ps propagation.TextMapPropagator) Option {
 // WithSpanOptions configures an additional set of
 // trace.SpanOptions, which are applied to each new span.
 func WithSpanOptions(opts ...trace.SpanStartOption) Option {
-	return OptionFunc(func(c *config) {
+	return optionFunc(func(c *config) {
 		c.SpanStartOptions = append(c.SpanStartOptions, opts...)
 	})
 }
@@ -129,7 +127,7 @@ func WithSpanOptions(opts ...trace.SpanStartOption) Option {
 // Filters will be invoked for each processed request, it is advised to make them
 // simple and fast.
 func WithFilter(f Filter) Option {
-	return OptionFunc(func(c *config) {
+	return optionFunc(func(c *config) {
 		c.Filters = append(c.Filters, f)
 	})
 }
@@ -152,7 +150,7 @@ const (
 //     * WriteEvents: Record the number of bytes written after every http.ResponeWriter.Write
 //       using the WriteBytesKey
 func WithMessageEvents(events ...event) Option {
-	return OptionFunc(func(c *config) {
+	return optionFunc(func(c *config) {
 		for _, e := range events {
 			switch e {
 			case ReadEvents:
@@ -167,7 +165,7 @@ func WithMessageEvents(events ...event) Option {
 // WithSpanNameFormatter takes a function that will be called on every
 // request and the returned string will become the Span Name
 func WithSpanNameFormatter(f func(operation string, r *http.Request) string) Option {
-	return OptionFunc(func(c *config) {
+	return optionFunc(func(c *config) {
 		c.SpanNameFormatter = f
 	})
 }
