@@ -68,7 +68,10 @@ func NewUnit(t *testing.T, dbc DBContainer) (*zap.SugaredLogger, *sqlx.DB, func(
 		t.Fatalf("Migrating error: %s", err)
 	}
 
-	log := logger.New("TEST")
+	log, err := logger.New("TEST")
+	if err != nil {
+		t.Fatalf("logger error: %s", err)
+	}
 
 	// teardown is the function that should be invoked when the caller is done
 	// with the database.

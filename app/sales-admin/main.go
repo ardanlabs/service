@@ -20,7 +20,11 @@ var build = "develop"
 func main() {
 
 	// Construct the application logger.
-	log := logger.New("ADMIN")
+	log, err := logger.New("ADMIN")
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 	defer log.Sync()
 
 	if err := run(log); err != nil {

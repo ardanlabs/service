@@ -48,7 +48,7 @@ metrics:
 		.
 
 # ==============================================================================
-# Running from within k8s/dev
+# Running from within k8s/kind
 
 KIND_CLUSTER := ardan-starter-cluster
 

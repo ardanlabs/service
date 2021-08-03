@@ -39,16 +39,12 @@ var build = "develop"
 func main() {
 
 	// Construct the application logger.
-	log := logger.New("SALES-API")
-	defer log.Sync()
-
-	// Make sure the program is using the correct
-	// number of threads if a CPU quota is set.
-	if _, err := maxprocs.Set(); err != nil {
-		log.Errorw("startup", zap.Error(err))
+	log, err := logger.New("SALES-API")
+	if err != nil {
+		fmt.Println(err)
 		os.Exit(1)
 	}
-	log.Infow("startup", "GOMAXPROCS", runtime.GOMAXPROCS(0))
+	defer log.Sync()
 
 	// Perform the startup and shutdown sequence.
 	if err := run(log); err != nil {
@@ -58,6 +54,17 @@ func main() {
 }
 
 func run(log *zap.SugaredLogger) error {
+
+	// =========================================================================
+	// CPU Quota
+
+	// Make sure the program is using the correct
+	// number of threads if a CPU quota is set.
+	if _, err := maxprocs.Set(); err != nil {
+		log.Errorw("startup", zap.Error(err))
+		os.Exit(1)
+	}
+	log.Infow("startup", "GOMAXPROCS", runtime.GOMAXPROCS(0))
 
 	// =========================================================================
 	// Configuration
