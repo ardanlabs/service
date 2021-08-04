@@ -104,17 +104,18 @@ func run(log *zap.SugaredLogger) error {
 		},
 	}
 
-	if err := conf.Parse(os.Args[1:], "SALES", &cfg); err != nil {
+	const prefix = "SALES"
+	if err := conf.Parse(os.Args[1:], prefix, &cfg); err != nil {
 		switch err {
 		case conf.ErrHelpWanted:
-			usage, err := conf.Usage("SALES", &cfg)
+			usage, err := conf.Usage(prefix, &cfg)
 			if err != nil {
 				return errors.Wrap(err, "generating config usage")
 			}
 			fmt.Println(usage)
 			return nil
 		case conf.ErrVersionWanted:
-			version, err := conf.VersionString("SALES", &cfg)
+			version, err := conf.VersionString(prefix, &cfg)
 			if err != nil {
 				return errors.Wrap(err, "generating config version")
 			}

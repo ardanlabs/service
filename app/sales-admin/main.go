@@ -40,7 +40,7 @@ func run(log *zap.SugaredLogger) error {
 	// =========================================================================
 	// Configuration
 
-	var cfg struct {
+	cfg := struct {
 		conf.Version
 		Args conf.Args
 		DB   struct {
@@ -50,9 +50,12 @@ func run(log *zap.SugaredLogger) error {
 			Name       string `conf:"default:postgres"`
 			DisableTLS bool   `conf:"default:true"`
 		}
+	}{
+		Version: conf.Version{
+			SVN:  build,
+			Desc: "copyright information here",
+		},
 	}
-	cfg.Version.SVN = build
-	cfg.Version.Desc = "copyright information here"
 
 	const prefix = "SALES"
 	if err := conf.Parse(os.Args[1:], prefix, &cfg); err != nil {
