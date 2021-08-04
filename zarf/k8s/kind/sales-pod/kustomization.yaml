@@ -3,7 +3,6 @@ kind: Kustomization
 resources:
 - ./kind-sales-config.yaml
 - ../../base/sales-pod/
-- ./kind-sales-quotas.yaml
 patchesStrategicMerge:
 - ./kind-sales-patch.yaml
 images:
