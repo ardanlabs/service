@@ -15,8 +15,8 @@ const Key ctxKey = 1
 
 // =============================================================================
 
-// The expvar variables can only be initialized once. Tests will make
-// a call to New several times.
+// This maintains a single instance of the metrics used for reporting.
+// This is never accessed directly, it's just to maintain a single instance.
 var (
 	m  *Metrics
 	mu sync.Mutex
@@ -38,6 +38,8 @@ func New() *Metrics {
 	mu.Lock()
 	defer mu.Unlock()
 
+	// The expvar variables can only be initialized once.
+	// Tests will make a call to New several times.
 	if m == nil {
 		m = &Metrics{
 			Goroutines: expvar.NewInt("goroutines"),
