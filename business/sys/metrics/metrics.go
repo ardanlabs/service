@@ -7,16 +7,10 @@ import (
 	"sync"
 )
 
-// ctxKeyMetric represents the type of value for the context key.
-type ctxKey int
-
-// Key is how metric values are stored/retrieved.
-const Key ctxKey = 1
-
-// =============================================================================
-
-// This maintains a single instance of the metrics used for reporting.
-// This is never accessed directly, it's just to maintain a single instance.
+// This holds the single instance of the metrics value needed for
+// collecting metrics. This is never accessed directly, it's just
+// here to maintain the single instance in case the New function
+// is called more than once. This is possible with testing.
 var (
 	m  *Metrics
 	mu sync.Mutex
@@ -33,13 +27,15 @@ type Metrics struct {
 	Panics     *expvar.Int
 }
 
-// New constructs the metrics that will be tracked.
+// New constructs the metrics value that will be used to capture metrics.
+// The metrics value is stored in a package level variable incase this
+// function is called more than once. We don't want multiple instances.
 func New() *Metrics {
 	mu.Lock()
 	defer mu.Unlock()
 
-	// The expvar variables can only be initialized once.
-	// Tests will make a call to New several times.
+	// If the metrics value was not constructed yet, then
+	// perform the construction.
 	if m == nil {
 		m = &Metrics{
 			Goroutines: expvar.NewInt("goroutines"),
@@ -52,6 +48,26 @@ func New() *Metrics {
 }
 
 // =============================================================================
+
+// This code assumes that the metrics value constructed in main will be
+// present in each request. For this codebase, that is done by the
+// metrics middleware.
+
+// ctxKeyMetric represents the type of value for the context key.
+type ctxKey int
+
+// Key is how metric values are stored/retrieved.
+const Key ctxKey = 1
+
+// =============================================================================
+
+// Add more of these functions when a metric needs to be collected in
+// different parts of the codebase. This will keep this package the
+// central authority for metrics and metrics won't get lost.
+//
+// You could also pass the metrics value around the program as well.
+// Since this is for debugging, managing, and maintain the app, having
+// it in the context is fine.
 
 // AddPanics increments the panics metric by 1.
 func AddPanics(ctx context.Context) {
