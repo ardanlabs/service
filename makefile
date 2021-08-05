@@ -91,7 +91,7 @@ kind-logs:
 	kubectl logs -l app=sales --all-containers=true -f --tail=100 | go run app/logfmt/main.go
 
 kind-logs-sales:
-	kubectl logs -l app=sales --all-containers=true -f --tail=100 | go run app/logfmt/main.go -service=SALES-API | jq
+	kubectl logs -l app=sales --all-containers=true -f --tail=100 | go run app/logfmt/main.go -service=SALES-API
 
 kind-status:
 	kubectl get nodes -o wide
