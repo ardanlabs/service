@@ -23,7 +23,10 @@ func Panics() web.Middleware {
 			// variable after the fact.
 			defer func() {
 				if rec := recover(); rec != nil {
+
+					// Stack trace will be provided.
 					err = errors.Errorf("PANIC: %v", rec)
+
 					metrics.AddPanics(ctx)
 				}
 			}()
