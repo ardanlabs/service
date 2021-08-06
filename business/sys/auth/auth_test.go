@@ -39,7 +39,7 @@ func TestAuth(t *testing.T) {
 				StandardClaims: jwt.StandardClaims{
 					Issuer:    "service project",
 					Subject:   "5cf37266-3473-4006-984f-9325122678b7",
-					ExpiresAt: time.Now().Add(8760 * time.Hour).Unix(),
+					ExpiresAt: time.Now().Add(time.Hour).Unix(),
 					IssuedAt:  time.Now().UTC().Unix(),
 				},
 				Roles: []string{auth.RoleAdmin},
