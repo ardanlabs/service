@@ -52,8 +52,8 @@ func main() {
 		b.Reset()
 		b.WriteString(fmt.Sprintf("%s: %s: %s: %s: %s: %s: ",
 			m["service"],
-			m["level"],
 			m["ts"],
+			m["level"],
 			traceID,
 			m["caller"],
 			m["msg"],
@@ -63,7 +63,7 @@ func main() {
 		// added for the log.
 		for k, v := range m {
 			switch k {
-			case "traceid", "service", "level", "caller", "msg", "ts":
+			case "service", "ts", "level", "traceid", "caller", "msg":
 				continue
 			}
 
