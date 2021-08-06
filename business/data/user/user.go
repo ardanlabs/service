@@ -8,7 +8,7 @@ import (
 	"github.com/ardanlabs/service/business/sys/auth"
 	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/ardanlabs/service/foundation/database"
-	"github.com/dgrijalva/jwt-go/v4"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
@@ -286,8 +286,8 @@ func (s Store) Authenticate(ctx context.Context, traceID string, now time.Time, 
 		StandardClaims: jwt.StandardClaims{
 			Issuer:    "service project",
 			Subject:   usr.ID,
-			ExpiresAt: jwt.At(now.Add(time.Hour)),
-			IssuedAt:  jwt.At(now),
+			ExpiresAt: time.Now().Add(time.Hour).Unix(),
+			IssuedAt:  time.Now().UTC().Unix(),
 		},
 		Roles: usr.Roles,
 	}

@@ -4,10 +4,9 @@ import (
 	"crypto"
 	"crypto/rand"
 	"crypto/rsa"
-	"fmt"
 )
 
-// SigningMethodRSA implements the RSA family of signing methods signing methods
+// SigningMethodRSA implements the RSA family of signing methods.
 // Expects *rsa.PrivateKey for signing and *rsa.PublicKey for validation
 type SigningMethodRSA struct {
 	Name string
@@ -41,12 +40,11 @@ func init() {
 	})
 }
 
-// Alg implements the Alg method from SigningMethod
 func (m *SigningMethodRSA) Alg() string {
 	return m.Name
 }
 
-// Verify implements the Verify method from SigningMethod
+// Verify implements token verification for the SigningMethod
 // For this signing method, must be an *rsa.PublicKey structure.
 func (m *SigningMethodRSA) Verify(signingString, signature string, key interface{}) error {
 	var err error
@@ -60,16 +58,8 @@ func (m *SigningMethodRSA) Verify(signingString, signature string, key interface
 	var rsaKey *rsa.PublicKey
 	var ok bool
 
-	switch k := key.(type) {
-	case *rsa.PublicKey:
-		rsaKey = k
-	case crypto.Signer:
-		pub := k.Public()
-		if rsaKey, ok = pub.(*rsa.PublicKey); !ok {
-			return &InvalidKeyError{Message: fmt.Sprintf("signer returned unexpected public key type: %T", pub)}
-		}
-	default:
-		return NewInvalidKeyTypeError("*rsa.PublicKey or crypto.Signer", key)
+	if rsaKey, ok = key.(*rsa.PublicKey); !ok {
+		return ErrInvalidKeyType
 	}
 
 	// Create hasher
@@ -83,19 +73,15 @@ func (m *SigningMethodRSA) Verify(signingString, signature string, key interface
 	return rsa.VerifyPKCS1v15(rsaKey, m.Hash, hasher.Sum(nil), sig)
 }
 
-// Sign implements the Sign method from SigningMethod
+// Sign implements token signing for the SigningMethod
 // For this signing method, must be an *rsa.PrivateKey structure.
 func (m *SigningMethodRSA) Sign(signingString string, key interface{}) (string, error) {
-	var signer crypto.Signer
+	var rsaKey *rsa.PrivateKey
 	var ok bool
 
-	if signer, ok = key.(crypto.Signer); !ok {
-		return "", NewInvalidKeyTypeError("*rsa.PublicKey or crypto.Signer", key)
-	}
-
-	//sanity check that the signer is an rsa signer
-	if pub, ok := signer.Public().(*rsa.PublicKey); !ok {
-		return "", &InvalidKeyError{Message: fmt.Sprintf("signer returned unexpected public key type: %T", pub)}
+	// Validate type of key
+	if rsaKey, ok = key.(*rsa.PrivateKey); !ok {
+		return "", ErrInvalidKey
 	}
 
 	// Create the hasher
@@ -107,9 +93,9 @@ func (m *SigningMethodRSA) Sign(signingString string, key interface{}) (string, 
 	hasher.Write([]byte(signingString))
 
 	// Sign the string and return the encoded bytes
-	sigBytes, err := signer.Sign(rand.Reader, hasher.Sum(nil), m.Hash)
-	if err != nil {
+	if sigBytes, err := rsa.SignPKCS1v15(rand.Reader, rsaKey, m.Hash, hasher.Sum(nil)); err == nil {
+		return EncodeSegment(sigBytes), nil
+	} else {
 		return "", err
 	}
-	return EncodeSegment(sigBytes), nil
 }

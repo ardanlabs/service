@@ -10,7 +10,7 @@ import (
 	"github.com/ardanlabs/service/business/data/user"
 	"github.com/ardanlabs/service/business/sys/auth"
 	"github.com/ardanlabs/service/foundation/database"
-	"github.com/dgrijalva/jwt-go/v4"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/go-cmp/cmp"
 	"github.com/pkg/errors"
 )
@@ -54,8 +54,8 @@ func TestUser(t *testing.T) {
 				StandardClaims: jwt.StandardClaims{
 					Issuer:    "service project",
 					Subject:   usr.ID,
-					ExpiresAt: jwt.At(now.Add(time.Hour)),
-					IssuedAt:  jwt.At(now),
+					ExpiresAt: time.Now().Add(time.Hour).Unix(),
+					IssuedAt:  time.Now().UTC().Unix(),
 				},
 				Roles: []string{auth.RoleUser},
 			}
@@ -79,8 +79,8 @@ func TestUser(t *testing.T) {
 			claims = auth.Claims{
 				StandardClaims: jwt.StandardClaims{
 					Issuer:    "service project",
-					ExpiresAt: jwt.At(now.Add(time.Hour)),
-					IssuedAt:  jwt.At(now),
+					ExpiresAt: time.Now().Add(time.Hour).Unix(),
+					IssuedAt:  time.Now().UTC().Unix(),
 				},
 				Roles: []string{auth.RoleAdmin},
 			}
@@ -217,8 +217,8 @@ func TestAuthenticate(t *testing.T) {
 				StandardClaims: jwt.StandardClaims{
 					Issuer:    "service project",
 					Subject:   usr.ID,
-					ExpiresAt: jwt.At(now.Add(time.Hour)),
-					IssuedAt:  jwt.At(now),
+					ExpiresAt: time.Now().Add(time.Hour).Unix(),
+					IssuedAt:  time.Now().UTC().Unix(),
 				},
 			}
 

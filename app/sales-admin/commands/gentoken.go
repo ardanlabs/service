@@ -12,7 +12,7 @@ import (
 	"github.com/ardanlabs/service/business/sys/auth"
 	"github.com/ardanlabs/service/foundation/database"
 	"github.com/ardanlabs/service/foundation/keystore"
-	"github.com/dgrijalva/jwt-go/v4"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )
@@ -90,8 +90,8 @@ func GenToken(traceID string, log *zap.SugaredLogger, cfg database.Config, id st
 		StandardClaims: jwt.StandardClaims{
 			Issuer:    "service project",
 			Subject:   usr.ID,
-			ExpiresAt: jwt.At(time.Now().Add(8760 * time.Hour)),
-			IssuedAt:  jwt.Now(),
+			ExpiresAt: time.Now().Add(8760 * time.Hour).Unix(),
+			IssuedAt:  time.Now().UTC().Unix(),
 		},
 		Roles: usr.Roles,
 	}

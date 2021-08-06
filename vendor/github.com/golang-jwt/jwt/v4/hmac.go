@@ -6,7 +6,7 @@ import (
 	"errors"
 )
 
-// SigningMethodHMAC implements the HMAC-SHA family of signing methods
+// SigningMethodHMAC implements the HMAC-SHA family of signing methods.
 // Expects key type of []byte for both signing and validation
 type SigningMethodHMAC struct {
 	Name string
@@ -41,17 +41,16 @@ func init() {
 	})
 }
 
-// Alg implements SigningMethod
 func (m *SigningMethodHMAC) Alg() string {
 	return m.Name
 }
 
-// Verify the signature of HSXXX tokens.  Returns nil if the signature is valid.
+// Verify implements token verification for the SigningMethod. Returns nil if the signature is valid.
 func (m *SigningMethodHMAC) Verify(signingString, signature string, key interface{}) error {
 	// Verify the key is the right type
 	keyBytes, ok := key.([]byte)
 	if !ok {
-		return NewInvalidKeyTypeError("[]byte", key)
+		return ErrInvalidKeyType
 	}
 
 	// Decode signature, for comparison
@@ -78,20 +77,19 @@ func (m *SigningMethodHMAC) Verify(signingString, signature string, key interfac
 	return nil
 }
 
-// Sign implements the Sign method from SigningMethod
+// Sign implements token signing for the SigningMethod.
 // Key must be []byte
 func (m *SigningMethodHMAC) Sign(signingString string, key interface{}) (string, error) {
-	keyBytes, ok := key.([]byte)
-	if !ok {
-		return "", NewInvalidKeyTypeError("[]byte", key)
+	if keyBytes, ok := key.([]byte); ok {
+		if !m.Hash.Available() {
+			return "", ErrHashUnavailable
+		}
+
+		hasher := hmac.New(m.Hash.New, keyBytes)
+		hasher.Write([]byte(signingString))
+
+		return EncodeSegment(hasher.Sum(nil)), nil
 	}
 
-	if !m.Hash.Available() {
-		return "", ErrHashUnavailable
-	}
-
-	hasher := hmac.New(m.Hash.New, keyBytes)
-	hasher.Write([]byte(signingString))
-
-	return EncodeSegment(hasher.Sum(nil)), nil
+	return "", ErrInvalidKeyType
 }

@@ -4,7 +4,7 @@ package auth
 import (
 	"crypto/rsa"
 
-	"github.com/dgrijalva/jwt-go/v4"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/pkg/errors"
 )
 
@@ -52,7 +52,7 @@ type Auth struct {
 	keyLookup KeyLookup
 	method    jwt.SigningMethod
 	keyFunc   func(t *jwt.Token) (interface{}, error)
-	parser    *jwt.Parser
+	parser    jwt.Parser
 }
 
 // New creates an Auth to support authentication/authorization.
@@ -77,7 +77,9 @@ func New(algorithm string, keyLookup KeyLookup) (*Auth, error) {
 	// Create the token parser to use. The algorithm used to sign the JWT must be
 	// validated to avoid a critical vulnerability:
 	// https://auth0.com/blog/critical-vulnerabilities-in-json-web-token-libraries/
-	parser := jwt.NewParser(jwt.WithValidMethods([]string{algorithm}), jwt.WithAudience("student"))
+	parser := jwt.Parser{
+		ValidMethods: []string{"RS256"},
+	}
 
 	a := Auth{
 		algorithm: algorithm,

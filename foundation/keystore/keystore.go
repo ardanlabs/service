@@ -10,7 +10,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/dgrijalva/jwt-go/v4"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/pkg/errors"
 )
 
