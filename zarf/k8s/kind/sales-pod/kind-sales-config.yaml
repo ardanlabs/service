@@ -5,4 +5,3 @@ metadata:
   namespace: sales-system
 data:
   db_host: localhost
-  db_password: postgres
