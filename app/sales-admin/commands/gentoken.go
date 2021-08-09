@@ -2,12 +2,8 @@ package commands
 
 import (
 	"context"
-	"crypto/rsa"
 	"fmt"
-	"io"
 	"os"
-	"path"
-	"strings"
 	"time"
 
 	"github.com/ardanlabs/service/business/data/user"
@@ -20,10 +16,9 @@ import (
 )
 
 // GenToken generates a JWT for the specified user.
-func GenToken(traceID string, log *zap.SugaredLogger, cfg database.Config, userID string, privateKeyFile string, algorithm string) error {
-	if userID == "" || privateKeyFile == "" || algorithm == "" {
-		fmt.Println("help: gentoken <user_id> <private_key_file> <algorithm>")
-		fmt.Println("algorithm: RS256, HS256")
+func GenToken(traceID string, log *zap.SugaredLogger, cfg database.Config, userID string, kid string) error {
+	if userID == "" || kid == "" {
+		fmt.Println("help: gentoken <user_id> <kid>")
 		return ErrHelp
 	}
 
@@ -51,32 +46,17 @@ func GenToken(traceID string, log *zap.SugaredLogger, cfg database.Config, userI
 		return errors.Wrap(err, "retrieve user")
 	}
 
-	// limit PEM file size to 1 megabyte. This should be reasonable for
-	// almost any PEM file and prevents shenanigans like linking the file
-	// to /dev/random or something like that.
-	pkf, err := os.Open(privateKeyFile)
+	// Construct a key store based on the key files stored in
+	// the specified directory.
+	keysFolder := "zarf/keys/"
+	ks, err := keystore.NewFS(os.DirFS(keysFolder))
 	if err != nil {
-		return errors.Wrap(err, "opening PEM private key file")
-	}
-	defer pkf.Close()
-	privatePEM, err := io.ReadAll(io.LimitReader(pkf, 1024*1024))
-	if err != nil {
-		return errors.Wrap(err, "reading PEM private key file")
+		return errors.Wrap(err, "reading keys")
 	}
 
-	privateKey, err := jwt.ParseRSAPrivateKeyFromPEM(privatePEM)
-	if err != nil {
-		return errors.Wrap(err, "parsing PEM into private key")
-	}
-
-	// The KID for key lookup needs to be unique for this private
-	// key. So I will use the base file name.
-	kid := strings.TrimSuffix(path.Base(privateKeyFile), ".pem")
-
-	// An authenticator maintains the state required to handle JWT processing.
-	// It requires a keystore to lookup private and public keys based on a
-	// key id. There is a keystore implementation in the project.
-	a, err := auth.New(algorithm, keystore.NewMap(map[string]*rsa.PrivateKey{kid: privateKey}))
+	// Init the auth package.
+	algorithm := "RS256"
+	a, err := auth.New(algorithm, ks)
 	if err != nil {
 		return errors.Wrap(err, "constructing auth")
 	}
