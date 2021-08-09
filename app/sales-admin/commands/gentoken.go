@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
+	"strings"
 	"time"
 
 	"github.com/ardanlabs/service/business/data/user"
@@ -67,10 +69,13 @@ func GenToken(traceID string, log *zap.SugaredLogger, cfg database.Config, userI
 		return errors.Wrap(err, "parsing PEM into private key")
 	}
 
+	// The KID for key lookup needs to be unique for this private
+	// key. So I will use the base file name.
+	kid := strings.TrimSuffix(path.Base(privateKeyFile), ".pem")
+
 	// An authenticator maintains the state required to handle JWT processing.
 	// It requires a keystore to lookup private and public keys based on a
 	// key id. There is a keystore implementation in the project.
-	kid := "12345"
 	a, err := auth.New(algorithm, keystore.NewMap(map[string]*rsa.PrivateKey{kid: privateKey}))
 	if err != nil {
 		return errors.Wrap(err, "constructing auth")
