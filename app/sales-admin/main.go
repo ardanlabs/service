@@ -129,10 +129,10 @@ func run(log *zap.SugaredLogger) error {
 		}
 
 	case "gentoken":
-		id := cfg.Args.Num(1)
+		userID := cfg.Args.Num(1)
 		privateKeyFile := cfg.Args.Num(2)
 		algorithm := cfg.Args.Num(3)
-		if err := commands.GenToken(traceID, log, dbConfig, id, privateKeyFile, algorithm); err != nil {
+		if err := commands.GenToken(traceID, log, dbConfig, userID, privateKeyFile, algorithm); err != nil {
 			return errors.Wrap(err, "generating token")
 		}
 

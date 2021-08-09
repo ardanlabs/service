@@ -18,9 +18,9 @@ import (
 )
 
 // GenToken generates a JWT for the specified user.
-func GenToken(traceID string, log *zap.SugaredLogger, cfg database.Config, id string, privateKeyFile string, algorithm string) error {
-	if id == "" || privateKeyFile == "" || algorithm == "" {
-		fmt.Println("help: gentoken <id> <private_key_file> <algorithm>")
+func GenToken(traceID string, log *zap.SugaredLogger, cfg database.Config, userID string, privateKeyFile string, algorithm string) error {
+	if userID == "" || privateKeyFile == "" || algorithm == "" {
+		fmt.Println("help: gentoken <user_id> <private_key_file> <algorithm>")
 		fmt.Println("algorithm: RS256, HS256")
 		return ErrHelp
 	}
@@ -39,12 +39,12 @@ func GenToken(traceID string, log *zap.SugaredLogger, cfg database.Config, id st
 	// The call to retrieve a user requires an Admin role by the caller.
 	claims := auth.Claims{
 		StandardClaims: jwt.StandardClaims{
-			Subject: id,
+			Subject: userID,
 		},
 		Roles: []string{auth.RoleAdmin},
 	}
 
-	usr, err := store.QueryByID(ctx, traceID, claims, id)
+	usr, err := store.QueryByID(ctx, traceID, claims, userID)
 	if err != nil {
 		return errors.Wrap(err, "retrieve user")
 	}
@@ -70,7 +70,8 @@ func GenToken(traceID string, log *zap.SugaredLogger, cfg database.Config, id st
 	// An authenticator maintains the state required to handle JWT processing.
 	// It requires a keystore to lookup private and public keys based on a
 	// key id. There is a keystore implementation in the project.
-	a, err := auth.New(algorithm, keystore.NewMap(map[string]*rsa.PrivateKey{id: privateKey}))
+	kid := "12345"
+	a, err := auth.New(algorithm, keystore.NewMap(map[string]*rsa.PrivateKey{kid: privateKey}))
 	if err != nil {
 		return errors.Wrap(err, "constructing auth")
 	}
@@ -100,7 +101,7 @@ func GenToken(traceID string, log *zap.SugaredLogger, cfg database.Config, id st
 	// with need to be configured with the information found in the public key
 	// file to validate these claims. Dgraph does not support key rotate at
 	// this time.
-	token, err := a.GenerateToken(id, claims)
+	token, err := a.GenerateToken(kid, claims)
 	if err != nil {
 		return errors.Wrap(err, "generating token")
 	}
