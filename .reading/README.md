@@ -25,3 +25,6 @@ Occasionally we run into material that we feel is important. This is a section p
 [SLI, SLO, SLA](https://landing.google.com/sre/book/chapters/service-level-objectives.html) - Google  
 [SLIs, SLOs, SLAs, oh my!](https://www.youtube.com/watch?v=tEylFyxbDLE) - Liz Fong-Jones and Seth Vargo  
 
+### Authentication / Authorization
+
+[How to correctly use Basic Authentication in Go](https://www.alexedwards.net/blog/basic-authentication-in-go) - Alex Edwards  
