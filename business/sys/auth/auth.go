@@ -48,7 +48,7 @@ type KeyLookup interface {
 // Auth is used to authenticate clients. It can generate a token for a
 // set of user claims and recreate the claims by parsing the token.
 type Auth struct {
-	algorithm string
+	activeKID string
 	keyLookup KeyLookup
 	method    jwt.SigningMethod
 	keyFunc   func(t *jwt.Token) (interface{}, error)
@@ -56,10 +56,17 @@ type Auth struct {
 }
 
 // New creates an Auth to support authentication/authorization.
-func New(algorithm string, keyLookup KeyLookup) (*Auth, error) {
-	method := jwt.GetSigningMethod(algorithm)
+func New(activeKID string, keyLookup KeyLookup) (*Auth, error) {
+
+	// The activeKID represents the private key used to signed new tokens.
+	_, err := keyLookup.PrivateKey(activeKID)
+	if err != nil {
+		return nil, errors.Errorf("active KID does not exist in store")
+	}
+
+	method := jwt.GetSigningMethod("RS256")
 	if method == nil {
-		return nil, errors.Errorf("unknown algorithm %v", algorithm)
+		return nil, errors.Errorf("configuring algorithm RS256")
 	}
 
 	keyFunc := func(t *jwt.Token) (interface{}, error) {
@@ -82,7 +89,7 @@ func New(algorithm string, keyLookup KeyLookup) (*Auth, error) {
 	}
 
 	a := Auth{
-		algorithm: algorithm,
+		activeKID: activeKID,
 		keyLookup: keyLookup,
 		method:    method,
 		keyFunc:   keyFunc,
@@ -93,11 +100,11 @@ func New(algorithm string, keyLookup KeyLookup) (*Auth, error) {
 }
 
 // GenerateToken generates a signed JWT token string representing the user Claims.
-func (a *Auth) GenerateToken(kid string, claims Claims) (string, error) {
+func (a *Auth) GenerateToken(claims Claims) (string, error) {
 	token := jwt.NewWithClaims(a.method, claims)
-	token.Header["kid"] = kid
+	token.Header["kid"] = a.activeKID
 
-	privateKey, err := a.keyLookup.PrivateKey(kid)
+	privateKey, err := a.keyLookup.PrivateKey(a.activeKID)
 	if err != nil {
 		return "", errors.New("kid lookup failed")
 	}

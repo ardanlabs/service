@@ -55,8 +55,8 @@ func GenToken(traceID string, log *zap.SugaredLogger, cfg database.Config, userI
 	}
 
 	// Init the auth package.
-	algorithm := "RS256"
-	a, err := auth.New(algorithm, ks)
+	activeKID := "54bb2165-71e1-41a6-af3e-7da4a0e1e2c1"
+	a, err := auth.New(activeKID, ks)
 	if err != nil {
 		return errors.Wrap(err, "constructing auth")
 	}
@@ -86,7 +86,7 @@ func GenToken(traceID string, log *zap.SugaredLogger, cfg database.Config, userI
 	// with need to be configured with the information found in the public key
 	// file to validate these claims. Dgraph does not support key rotate at
 	// this time.
-	token, err := a.GenerateToken(kid, claims)
+	token, err := a.GenerateToken(claims)
 	if err != nil {
 		return errors.Wrap(err, "generating token")
 	}

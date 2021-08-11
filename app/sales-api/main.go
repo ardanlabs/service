@@ -81,7 +81,7 @@ func run(log *zap.SugaredLogger) error {
 		}
 		Auth struct {
 			KeysFolder string `conf:"default:zarf/keys/"`
-			Algorithm  string `conf:"default:RS256"`
+			ActiveKID  string `conf:"default:54bb2165-71e1-41a6-af3e-7da4a0e1e2c1"`
 		}
 		DB struct {
 			User         string `conf:"default:postgres"`
@@ -150,7 +150,7 @@ func run(log *zap.SugaredLogger) error {
 		return errors.Wrap(err, "reading keys")
 	}
 
-	auth, err := auth.New(cfg.Auth.Algorithm, ks)
+	auth, err := auth.New(cfg.Auth.ActiveKID, ks)
 	if err != nil {
 		return errors.Wrap(err, "constructing auth")
 	}

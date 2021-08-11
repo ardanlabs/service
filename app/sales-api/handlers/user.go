@@ -170,6 +170,8 @@ func (ug userGroup) token(ctx context.Context, w http.ResponseWriter, r *http.Re
 	claims, err := ug.store.Authenticate(ctx, v.TraceID, v.Now, email, pass)
 	if err != nil {
 		switch errors.Cause(err) {
+		case database.ErrNotFound:
+			return validate.NewRequestError(err, http.StatusNotFound)
 		case database.ErrAuthenticationFailure:
 			return validate.NewRequestError(err, http.StatusUnauthorized)
 		default:
@@ -177,11 +179,10 @@ func (ug userGroup) token(ctx context.Context, w http.ResponseWriter, r *http.Re
 		}
 	}
 
-	kid := web.Param(r, "kid")
 	var tkn struct {
 		Token string `json:"token"`
 	}
-	tkn.Token, err = ug.auth.GenerateToken(kid, claims)
+	tkn.Token, err = ug.auth.GenerateToken(claims)
 	if err != nil {
 		return errors.Wrap(err, "generating token")
 	}

@@ -24,7 +24,6 @@ import (
 // subtests are registered.
 type UserTests struct {
 	app        http.Handler
-	kid        string
 	userToken  string
 	adminToken string
 }
@@ -50,12 +49,11 @@ func TestUsers(t *testing.T) {
 			Auth:     test.Auth,
 			DB:       test.DB,
 		}),
-		kid:        test.KID,
 		userToken:  test.Token("user@example.com", "gophers"),
 		adminToken: test.Token("admin@example.com", "gophers"),
 	}
 
-	t.Run("getToken401", tests.getToken401)
+	t.Run("getToken404", tests.getToken404)
 	t.Run("getToken200", tests.getToken200)
 	t.Run("postUser400", tests.postUser400)
 	t.Run("postUser401", tests.postUser401)
@@ -69,7 +67,7 @@ func TestUsers(t *testing.T) {
 }
 
 // getToken401 ensures an unknown user can't generate a token.
-func (ut *UserTests) getToken401(t *testing.T) {
+func (ut *UserTests) getToken404(t *testing.T) {
 	r := httptest.NewRequest(http.MethodGet, "/v1/users/token", nil)
 	w := httptest.NewRecorder()
 
@@ -81,16 +79,16 @@ func (ut *UserTests) getToken401(t *testing.T) {
 		testID := 0
 		t.Logf("\tTest %d:\tWhen fetching a token with an unrecognized email.", testID)
 		{
-			if w.Code != http.StatusUnauthorized {
-				t.Fatalf("\t%s\tTest %d:\tShould receive a status code of 401 for the response : %v", tests.Failed, testID, w.Code)
+			if w.Code != http.StatusNotFound {
+				t.Fatalf("\t%s\tTest %d:\tShould receive a status code of 404 for the response : %v", tests.Failed, testID, w.Code)
 			}
-			t.Logf("\t%s\tTest %d:\tShould receive a status code of 401 for the response.", tests.Success, testID)
+			t.Logf("\t%s\tTest %d:\tShould receive a status code of 404 for the response.", tests.Success, testID)
 		}
 	}
 }
 
 func (ut *UserTests) getToken200(t *testing.T) {
-	r := httptest.NewRequest(http.MethodGet, "/v1/users/token/"+ut.kid, nil)
+	r := httptest.NewRequest(http.MethodGet, "/v1/users/token", nil)
 	w := httptest.NewRecorder()
 
 	r.SetBasicAuth("admin@example.com", "gophers")

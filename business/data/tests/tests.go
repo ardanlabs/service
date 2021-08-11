@@ -100,7 +100,6 @@ type Test struct {
 	DB       *sqlx.DB
 	Log      *zap.SugaredLogger
 	Auth     *auth.Auth
-	KID      string
 	Teardown func()
 
 	t *testing.T
@@ -125,7 +124,7 @@ func NewIntegration(t *testing.T, dbc DBContainer) *Test {
 	}
 
 	// Build an authenticator using this private key and id for the key store.
-	auth, err := auth.New("RS256", keystore.NewMap(map[string]*rsa.PrivateKey{keyID: privateKey}))
+	auth, err := auth.New(keyID, keystore.NewMap(map[string]*rsa.PrivateKey{keyID: privateKey}))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -135,7 +134,6 @@ func NewIntegration(t *testing.T, dbc DBContainer) *Test {
 		DB:       db,
 		Log:      log,
 		Auth:     auth,
-		KID:      keyID,
 		t:        t,
 		Teardown: teardown,
 	}
@@ -153,7 +151,7 @@ func (test *Test) Token(email, pass string) string {
 		test.t.Fatal(err)
 	}
 
-	token, err := test.Auth.GenerateToken(test.KID, claims)
+	token, err := test.Auth.GenerateToken(claims)
 	if err != nil {
 		test.t.Fatal(err)
 	}
