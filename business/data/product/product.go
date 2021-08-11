@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/sys/auth"
+	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/ardanlabs/service/business/sys/validate"
-	"github.com/ardanlabs/service/foundation/database"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"

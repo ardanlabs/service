@@ -8,7 +8,7 @@ import (
 	"github.com/ardanlabs/service/business/data/product"
 	"github.com/ardanlabs/service/business/data/tests"
 	"github.com/ardanlabs/service/business/sys/auth"
-	"github.com/ardanlabs/service/foundation/database"
+	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/go-cmp/cmp"
 	"github.com/pkg/errors"

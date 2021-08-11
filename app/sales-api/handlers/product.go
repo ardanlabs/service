@@ -8,8 +8,8 @@ import (
 
 	"github.com/ardanlabs/service/business/data/product"
 	"github.com/ardanlabs/service/business/sys/auth"
+	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/ardanlabs/service/business/sys/validate"
-	"github.com/ardanlabs/service/foundation/database"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/pkg/errors"
 )

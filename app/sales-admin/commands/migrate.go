@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/data/schema"
-	"github.com/ardanlabs/service/foundation/database"
+	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/pkg/errors"
 )
 

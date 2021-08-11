@@ -15,7 +15,7 @@ import (
 	"github.com/ardanlabs/service/business/data/schema"
 	"github.com/ardanlabs/service/business/data/user"
 	"github.com/ardanlabs/service/business/sys/auth"
-	"github.com/ardanlabs/service/foundation/database"
+	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/ardanlabs/service/foundation/docker"
 	"github.com/ardanlabs/service/foundation/keystore"
 	"github.com/ardanlabs/service/foundation/logger"
