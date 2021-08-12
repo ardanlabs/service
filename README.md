@@ -12,11 +12,11 @@ info@ardanlabs.com
 If you are watching the Ultimate Service video on the ArdanLabs [education](https://education.ardanlabs.com/) site,
 please use this branch in the repo.
 
+**_Note: I deleted this branch by accident on August 12th, 2021 and recreated it based on the last commit I found on the final day of filming. I am not 100% sure this commit is correct. If there are discrepancies, please let me know.**
+
 https://github.com/ardanlabs/service/tree/class
 
-This branch represents the code that is explained. I will be going back into
-the studio in April, 2021 to re-record the video for all the changes in the
-past year.
+This branch represents the code that is explained. We are in the process of providing Ultimate Service 3.0 now and should be available by October 2021.
 
 ## Ultimate Service 3.0 Live Classes
 
