@@ -95,8 +95,6 @@ func run(log *zap.SugaredLogger) error {
 		DisableTLS: cfg.DB.DisableTLS,
 	}
 
-	traceID := "00000000-0000-0000-0000-000000000000"
-
 	switch cfg.Args.Num(0) {
 	case "migrate":
 		if err := commands.Migrate(dbConfig); err != nil {
@@ -112,14 +110,14 @@ func run(log *zap.SugaredLogger) error {
 		name := cfg.Args.Num(1)
 		email := cfg.Args.Num(2)
 		password := cfg.Args.Num(3)
-		if err := commands.UserAdd(traceID, log, dbConfig, name, email, password); err != nil {
+		if err := commands.UserAdd(log, dbConfig, name, email, password); err != nil {
 			return errors.Wrap(err, "adding user")
 		}
 
 	case "users":
 		pageNumber := cfg.Args.Num(1)
 		rowsPerPage := cfg.Args.Num(2)
-		if err := commands.Users(traceID, log, dbConfig, pageNumber, rowsPerPage); err != nil {
+		if err := commands.Users(log, dbConfig, pageNumber, rowsPerPage); err != nil {
 			return errors.Wrap(err, "getting users")
 		}
 
@@ -131,7 +129,7 @@ func run(log *zap.SugaredLogger) error {
 	case "gentoken":
 		userID := cfg.Args.Num(1)
 		kid := cfg.Args.Num(2)
-		if err := commands.GenToken(traceID, log, dbConfig, userID, kid); err != nil {
+		if err := commands.GenToken(log, dbConfig, userID, kid); err != nil {
 			return errors.Wrap(err, "generating token")
 		}
 

@@ -3,6 +3,7 @@ package web
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"os"
 	"syscall"
@@ -16,14 +17,32 @@ import (
 // ctxKey represents the type of value for the context key.
 type ctxKey int
 
-// KeyValues is how request values are stored/retrieved.
-const KeyValues ctxKey = 1
+// key is how request values are stored/retrieved.
+const key ctxKey = 1
 
 // Values represent state for each request.
 type Values struct {
 	TraceID    string
 	Now        time.Time
 	StatusCode int
+}
+
+// GetValues returns the values from the context.
+func GetValues(ctx context.Context) (*Values, error) {
+	v, ok := ctx.Value(key).(*Values)
+	if !ok {
+		return nil, errors.New("web value missing from context")
+	}
+	return v, nil
+}
+
+// GetTraceID returns the trace id from the context.
+func GetTraceID(ctx context.Context) string {
+	v, ok := ctx.Value(key).(*Values)
+	if !ok {
+		return "00000000-0000-0000-0000-000000000000"
+	}
+	return v.TraceID
 }
 
 // A Handler is a type that handles an http request within our own little mini
@@ -100,7 +119,7 @@ func (a *App) Handle(method string, path string, handler Handler, mw ...Middlewa
 			TraceID: span.SpanContext().TraceID().String(),
 			Now:     time.Now(),
 		}
-		ctx = context.WithValue(ctx, KeyValues, &v)
+		ctx = context.WithValue(ctx, key, &v)
 
 		// Call the wrapped handler functions.
 		if err := handler(ctx, w, r); err != nil {

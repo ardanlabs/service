@@ -2,6 +2,7 @@
 package auth
 
 import (
+	"context"
 	"crypto/rsa"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -17,8 +18,8 @@ const (
 // ctxKey represents the type of value for the context key.
 type ctxKey int
 
-// Key is used to store/retrieve a Claims value from a context.Context.
-const Key ctxKey = 1
+// key is used to store/retrieve a Claims value from a context.Context.
+const key ctxKey = 1
 
 // Claims represents the authorization claims transmitted via a JWT.
 type Claims struct {
@@ -36,6 +37,20 @@ func (c Claims) Authorized(roles ...string) bool {
 		}
 	}
 	return false
+}
+
+// SetClaims stores the claims in the context.
+func SetClaims(ctx context.Context, claims Claims) context.Context {
+	return context.WithValue(ctx, key, claims)
+}
+
+// GetClaims returns the claims from the context.
+func GetClaims(ctx context.Context) (Claims, error) {
+	v, ok := ctx.Value(key).(Claims)
+	if !ok {
+		return Claims{}, errors.New("claim value missing from context")
+	}
+	return v, nil
 }
 
 // KeyLookup declares a method set of behavior for looking up

@@ -96,7 +96,6 @@ func NewUnit(t *testing.T, dbc DBContainer) (*zap.SugaredLogger, *sqlx.DB, func(
 
 // Test owns state for running and shutting down tests.
 type Test struct {
-	TraceID  string
 	DB       *sqlx.DB
 	Log      *zap.SugaredLogger
 	Auth     *auth.Auth
@@ -130,7 +129,6 @@ func NewIntegration(t *testing.T, dbc DBContainer) *Test {
 	}
 
 	test := Test{
-		TraceID:  "00000000-0000-0000-0000-000000000000",
 		DB:       db,
 		Log:      log,
 		Auth:     auth,
@@ -146,7 +144,7 @@ func (test *Test) Token(email, pass string) string {
 	test.t.Log("Generating token for test ...")
 
 	store := user.NewStore(test.Log, test.DB)
-	claims, err := store.Authenticate(context.Background(), test.TraceID, time.Now(), email, pass)
+	claims, err := store.Authenticate(context.Background(), time.Now(), email, pass)
 	if err != nil {
 		test.t.Fatal(err)
 	}

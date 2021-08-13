@@ -34,7 +34,6 @@ func TestUser(t *testing.T) {
 		{
 			ctx := context.Background()
 			now := time.Date(2018, time.October, 1, 0, 0, 0, 0, time.UTC)
-			traceID := "00000000-0000-0000-0000-000000000000"
 
 			nu := user.NewUser{
 				Name:            "Bill Kennedy",
@@ -44,7 +43,7 @@ func TestUser(t *testing.T) {
 				PasswordConfirm: "gophers",
 			}
 
-			usr, err := store.Create(ctx, traceID, nu, now)
+			usr, err := store.Create(ctx, nu, now)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to create user : %s.", tests.Failed, testID, err)
 			}
@@ -60,7 +59,7 @@ func TestUser(t *testing.T) {
 				Roles: []string{auth.RoleUser},
 			}
 
-			saved, err := store.QueryByID(ctx, traceID, claims, usr.ID)
+			saved, err := store.QueryByID(ctx, claims, usr.ID)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve user by ID: %s.", tests.Failed, testID, err)
 			}
@@ -85,12 +84,12 @@ func TestUser(t *testing.T) {
 				Roles: []string{auth.RoleAdmin},
 			}
 
-			if err := store.Update(ctx, traceID, claims, usr.ID, upd, now); err != nil {
+			if err := store.Update(ctx, claims, usr.ID, upd, now); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to update user : %s.", tests.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to update user.", tests.Success, testID)
 
-			saved, err = store.QueryByEmail(ctx, traceID, claims, *upd.Email)
+			saved, err = store.QueryByEmail(ctx, claims, *upd.Email)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve user by Email : %s.", tests.Failed, testID, err)
 			}
@@ -112,12 +111,12 @@ func TestUser(t *testing.T) {
 				t.Logf("\t%s\tTest %d:\tShould be able to see updates to Email.", tests.Success, testID)
 			}
 
-			if err := store.Delete(ctx, traceID, claims, usr.ID); err != nil {
+			if err := store.Delete(ctx, claims, usr.ID); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to delete user : %s.", tests.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to delete user.", tests.Success, testID)
 
-			_, err = store.QueryByID(ctx, traceID, claims, usr.ID)
+			_, err = store.QueryByID(ctx, claims, usr.ID)
 			if errors.Cause(err) != database.ErrNotFound {
 				t.Fatalf("\t%s\tTest %d:\tShould NOT be able to retrieve user : %s.", tests.Failed, testID, err)
 			}
@@ -143,9 +142,8 @@ func TestPagingUser(t *testing.T) {
 		t.Logf("\tTest %d:\tWhen paging through 2 users.", testID)
 		{
 			ctx := context.Background()
-			traceID := "00000000-0000-0000-0000-000000000000"
 
-			users1, err := store.Query(ctx, traceID, 1, 1)
+			users1, err := store.Query(ctx, 1, 1)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve users for page 1 : %s.", tests.Failed, testID, err)
 			}
@@ -156,7 +154,7 @@ func TestPagingUser(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould have a single user.", tests.Success, testID)
 
-			users2, err := store.Query(ctx, traceID, 2, 1)
+			users2, err := store.Query(ctx, 2, 1)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve users for page 2 : %s.", tests.Failed, testID, err)
 			}
@@ -190,7 +188,6 @@ func TestAuthenticate(t *testing.T) {
 		{
 			ctx := context.Background()
 			now := time.Date(2018, time.October, 1, 0, 0, 0, 0, time.UTC)
-			traceID := "00000000-0000-0000-0000-000000000000"
 
 			nu := user.NewUser{
 				Name:            "Anna Walker",
@@ -200,13 +197,13 @@ func TestAuthenticate(t *testing.T) {
 				PasswordConfirm: "goroutines",
 			}
 
-			usr, err := store.Create(ctx, traceID, nu, now)
+			usr, err := store.Create(ctx, nu, now)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to create user : %s.", tests.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to create user.", tests.Success, testID)
 
-			claims, err := store.Authenticate(ctx, traceID, now, "anna@ardanlabs.com", "goroutines")
+			claims, err := store.Authenticate(ctx, now, "anna@ardanlabs.com", "goroutines")
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to generate claims : %s.", tests.Failed, testID, err)
 			}

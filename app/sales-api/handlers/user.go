@@ -20,11 +20,6 @@ type userGroup struct {
 }
 
 func (ug userGroup) query(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	v, ok := ctx.Value(web.KeyValues).(*web.Values)
-	if !ok {
-		return web.NewShutdownError("web value missing from context")
-	}
-
 	page := web.Param(r, "page")
 	pageNumber, err := strconv.Atoi(page)
 	if err != nil {
@@ -36,7 +31,7 @@ func (ug userGroup) query(ctx context.Context, w http.ResponseWriter, r *http.Re
 		return validate.NewRequestError(fmt.Errorf("invalid rows format: %s", rows), http.StatusBadRequest)
 	}
 
-	users, err := ug.store.Query(ctx, v.TraceID, pageNumber, rowsPerPage)
+	users, err := ug.store.Query(ctx, pageNumber, rowsPerPage)
 	if err != nil {
 		return errors.Wrap(err, "unable to query for users")
 	}
@@ -45,18 +40,13 @@ func (ug userGroup) query(ctx context.Context, w http.ResponseWriter, r *http.Re
 }
 
 func (ug userGroup) queryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	v, ok := ctx.Value(web.KeyValues).(*web.Values)
-	if !ok {
-		return web.NewShutdownError("web value missing from context")
-	}
-
-	claims, ok := ctx.Value(auth.Key).(auth.Claims)
-	if !ok {
+	claims, err := auth.GetClaims(ctx)
+	if err != nil {
 		return errors.New("claims missing from context")
 	}
 
 	id := web.Param(r, "id")
-	usr, err := ug.store.QueryByID(ctx, v.TraceID, claims, id)
+	usr, err := ug.store.QueryByID(ctx, claims, id)
 	if err != nil {
 		switch errors.Cause(err) {
 		case database.ErrInvalidID:
@@ -74,8 +64,8 @@ func (ug userGroup) queryByID(ctx context.Context, w http.ResponseWriter, r *htt
 }
 
 func (ug userGroup) create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	v, ok := ctx.Value(web.KeyValues).(*web.Values)
-	if !ok {
+	v, err := web.GetValues(ctx)
+	if err != nil {
 		return web.NewShutdownError("web value missing from context")
 	}
 
@@ -84,7 +74,7 @@ func (ug userGroup) create(ctx context.Context, w http.ResponseWriter, r *http.R
 		return errors.Wrap(err, "unable to decode payload")
 	}
 
-	usr, err := ug.store.Create(ctx, v.TraceID, nu, v.Now)
+	usr, err := ug.store.Create(ctx, nu, v.Now)
 	if err != nil {
 		return errors.Wrapf(err, "User: %+v", &usr)
 	}
@@ -93,13 +83,13 @@ func (ug userGroup) create(ctx context.Context, w http.ResponseWriter, r *http.R
 }
 
 func (ug userGroup) update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	v, ok := ctx.Value(web.KeyValues).(*web.Values)
-	if !ok {
+	v, err := web.GetValues(ctx)
+	if err != nil {
 		return web.NewShutdownError("web value missing from context")
 	}
 
-	claims, ok := ctx.Value(auth.Key).(auth.Claims)
-	if !ok {
+	claims, err := auth.GetClaims(ctx)
+	if err != nil {
 		return errors.New("claims missing from context")
 	}
 
@@ -109,8 +99,7 @@ func (ug userGroup) update(ctx context.Context, w http.ResponseWriter, r *http.R
 	}
 
 	id := web.Param(r, "id")
-	err := ug.store.Update(ctx, v.TraceID, claims, id, upd, v.Now)
-	if err != nil {
+	if err := ug.store.Update(ctx, claims, id, upd, v.Now); err != nil {
 		switch errors.Cause(err) {
 		case database.ErrInvalidID:
 			return validate.NewRequestError(err, http.StatusBadRequest)
@@ -127,19 +116,13 @@ func (ug userGroup) update(ctx context.Context, w http.ResponseWriter, r *http.R
 }
 
 func (ug userGroup) delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	v, ok := ctx.Value(web.KeyValues).(*web.Values)
-	if !ok {
-		return web.NewShutdownError("web value missing from context")
-	}
-
-	claims, ok := ctx.Value(auth.Key).(auth.Claims)
-	if !ok {
+	claims, err := auth.GetClaims(ctx)
+	if err != nil {
 		return errors.New("claims missing from context")
 	}
 
 	id := web.Param(r, "id")
-	err := ug.store.Delete(ctx, v.TraceID, claims, id)
-	if err != nil {
+	if err := ug.store.Delete(ctx, claims, id); err != nil {
 		switch errors.Cause(err) {
 		case database.ErrInvalidID:
 			return validate.NewRequestError(err, http.StatusBadRequest)
@@ -156,8 +139,8 @@ func (ug userGroup) delete(ctx context.Context, w http.ResponseWriter, r *http.R
 }
 
 func (ug userGroup) token(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	v, ok := ctx.Value(web.KeyValues).(*web.Values)
-	if !ok {
+	v, err := web.GetValues(ctx)
+	if err != nil {
 		return web.NewShutdownError("web value missing from context")
 	}
 
@@ -167,7 +150,7 @@ func (ug userGroup) token(ctx context.Context, w http.ResponseWriter, r *http.Re
 		return validate.NewRequestError(err, http.StatusUnauthorized)
 	}
 
-	claims, err := ug.store.Authenticate(ctx, v.TraceID, v.Now, email, pass)
+	claims, err := ug.store.Authenticate(ctx, v.Now, email, pass)
 	if err != nil {
 		switch errors.Cause(err) {
 		case database.ErrNotFound:

@@ -30,7 +30,7 @@ func NewStore(log *zap.SugaredLogger, db *sqlx.DB) Store {
 }
 
 // Create inserts a new user into the database.
-func (s Store) Create(ctx context.Context, traceID string, nu NewUser, now time.Time) (User, error) {
+func (s Store) Create(ctx context.Context, nu NewUser, now time.Time) (User, error) {
 	if err := validate.Check(nu); err != nil {
 		return User{}, errors.Wrap(err, "validating data")
 	}
@@ -56,7 +56,7 @@ func (s Store) Create(ctx context.Context, traceID string, nu NewUser, now time.
 	VALUES
 		(:user_id, :name, :email, :password_hash, :roles, :date_created, :date_updated)`
 
-	if err := database.NamedExecContext(ctx, s.log, s.db, traceID, q, usr); err != nil {
+	if err := database.NamedExecContext(ctx, s.log, s.db, q, usr); err != nil {
 		return User{}, errors.Wrap(err, "inserting user")
 	}
 
@@ -64,7 +64,7 @@ func (s Store) Create(ctx context.Context, traceID string, nu NewUser, now time.
 }
 
 // Update replaces a user document in the database.
-func (s Store) Update(ctx context.Context, traceID string, claims auth.Claims, userID string, uu UpdateUser, now time.Time) error {
+func (s Store) Update(ctx context.Context, claims auth.Claims, userID string, uu UpdateUser, now time.Time) error {
 	if err := validate.CheckID(userID); err != nil {
 		return database.ErrInvalidID
 	}
@@ -72,7 +72,7 @@ func (s Store) Update(ctx context.Context, traceID string, claims auth.Claims, u
 		return errors.Wrap(err, "validating data")
 	}
 
-	usr, err := s.QueryByID(ctx, traceID, claims, userID)
+	usr, err := s.QueryByID(ctx, claims, userID)
 	if err != nil {
 		return errors.Wrap(err, "updating user")
 	}
@@ -107,7 +107,7 @@ func (s Store) Update(ctx context.Context, traceID string, claims auth.Claims, u
 	WHERE
 		user_id = :user_id`
 
-	if err := database.NamedExecContext(ctx, s.log, s.db, traceID, q, usr); err != nil {
+	if err := database.NamedExecContext(ctx, s.log, s.db, q, usr); err != nil {
 		return errors.Wrapf(err, "updating user %s", usr.ID)
 	}
 
@@ -115,7 +115,7 @@ func (s Store) Update(ctx context.Context, traceID string, claims auth.Claims, u
 }
 
 // Delete removes a user from the database.
-func (s Store) Delete(ctx context.Context, traceID string, claims auth.Claims, userID string) error {
+func (s Store) Delete(ctx context.Context, claims auth.Claims, userID string) error {
 	if err := validate.CheckID(userID); err != nil {
 		return database.ErrInvalidID
 	}
@@ -137,7 +137,7 @@ func (s Store) Delete(ctx context.Context, traceID string, claims auth.Claims, u
 	WHERE
 		user_id = :user_id`
 
-	if err := database.NamedExecContext(ctx, s.log, s.db, traceID, q, data); err != nil {
+	if err := database.NamedExecContext(ctx, s.log, s.db, q, data); err != nil {
 		return errors.Wrapf(err, "deleting user %s", data.UserID)
 	}
 
@@ -145,7 +145,7 @@ func (s Store) Delete(ctx context.Context, traceID string, claims auth.Claims, u
 }
 
 // Query retrieves a list of existing users from the database.
-func (s Store) Query(ctx context.Context, traceID string, pageNumber int, rowsPerPage int) ([]User, error) {
+func (s Store) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]User, error) {
 	data := struct {
 		Offset      int `db:"offset"`
 		RowsPerPage int `db:"rows_per_page"`
@@ -164,7 +164,7 @@ func (s Store) Query(ctx context.Context, traceID string, pageNumber int, rowsPe
 	OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY`
 
 	var users []User
-	if err := database.NamedQuerySlice(ctx, s.log, s.db, traceID, q, data, &users); err != nil {
+	if err := database.NamedQuerySlice(ctx, s.log, s.db, q, data, &users); err != nil {
 		if err == database.ErrNotFound {
 			return nil, database.ErrNotFound
 		}
@@ -175,7 +175,7 @@ func (s Store) Query(ctx context.Context, traceID string, pageNumber int, rowsPe
 }
 
 // QueryByID gets the specified user from the database.
-func (s Store) QueryByID(ctx context.Context, traceID string, claims auth.Claims, userID string) (User, error) {
+func (s Store) QueryByID(ctx context.Context, claims auth.Claims, userID string) (User, error) {
 	if err := validate.CheckID(userID); err != nil {
 		return User{}, database.ErrInvalidID
 	}
@@ -200,7 +200,7 @@ func (s Store) QueryByID(ctx context.Context, traceID string, claims auth.Claims
 		user_id = :user_id`
 
 	var usr User
-	if err := database.NamedQueryStruct(ctx, s.log, s.db, traceID, q, data, &usr); err != nil {
+	if err := database.NamedQueryStruct(ctx, s.log, s.db, q, data, &usr); err != nil {
 		if err == database.ErrNotFound {
 			return User{}, database.ErrNotFound
 		}
@@ -211,7 +211,7 @@ func (s Store) QueryByID(ctx context.Context, traceID string, claims auth.Claims
 }
 
 // QueryByEmail gets the specified user from the database by email.
-func (s Store) QueryByEmail(ctx context.Context, traceID string, claims auth.Claims, email string) (User, error) {
+func (s Store) QueryByEmail(ctx context.Context, claims auth.Claims, email string) (User, error) {
 
 	// Add Email Validate function in validate
 	// if err := validate.Email(email); err != nil {
@@ -233,7 +233,7 @@ func (s Store) QueryByEmail(ctx context.Context, traceID string, claims auth.Cla
 		email = :email`
 
 	var usr User
-	if err := database.NamedQueryStruct(ctx, s.log, s.db, traceID, q, data, &usr); err != nil {
+	if err := database.NamedQueryStruct(ctx, s.log, s.db, q, data, &usr); err != nil {
 		if err == database.ErrNotFound {
 			return User{}, database.ErrNotFound
 		}
@@ -251,7 +251,7 @@ func (s Store) QueryByEmail(ctx context.Context, traceID string, claims auth.Cla
 // Authenticate finds a user by their email and verifies their password. On
 // success it returns a Claims User representing this user. The claims can be
 // used to generate a token for future authentication.
-func (s Store) Authenticate(ctx context.Context, traceID string, now time.Time, email, password string) (auth.Claims, error) {
+func (s Store) Authenticate(ctx context.Context, now time.Time, email, password string) (auth.Claims, error) {
 	data := struct {
 		Email string `db:"email"`
 	}{
@@ -267,7 +267,7 @@ func (s Store) Authenticate(ctx context.Context, traceID string, now time.Time, 
 		email = :email`
 
 	var usr User
-	if err := database.NamedQueryStruct(ctx, s.log, s.db, traceID, q, data, &usr); err != nil {
+	if err := database.NamedQueryStruct(ctx, s.log, s.db, q, data, &usr); err != nil {
 		if err == database.ErrNotFound {
 			return auth.Claims{}, database.ErrNotFound
 		}

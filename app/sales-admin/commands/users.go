@@ -14,7 +14,7 @@ import (
 )
 
 // Users retrieves all users from the database.
-func Users(traceID string, log *zap.SugaredLogger, cfg database.Config, pageNumber string, rowsPerPage string) error {
+func Users(log *zap.SugaredLogger, cfg database.Config, pageNumber string, rowsPerPage string) error {
 	db, err := database.Open(cfg)
 	if err != nil {
 		return errors.Wrap(err, "connect database")
@@ -36,7 +36,7 @@ func Users(traceID string, log *zap.SugaredLogger, cfg database.Config, pageNumb
 
 	store := user.NewStore(log, db)
 
-	users, err := store.Query(ctx, traceID, page, rows)
+	users, err := store.Query(ctx, page, rows)
 	if err != nil {
 		return errors.Wrap(err, "retrieve users")
 	}

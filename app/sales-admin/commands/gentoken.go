@@ -16,7 +16,7 @@ import (
 )
 
 // GenToken generates a JWT for the specified user.
-func GenToken(traceID string, log *zap.SugaredLogger, cfg database.Config, userID string, kid string) error {
+func GenToken(log *zap.SugaredLogger, cfg database.Config, userID string, kid string) error {
 	if userID == "" || kid == "" {
 		fmt.Println("help: gentoken <user_id> <kid>")
 		return ErrHelp
@@ -41,7 +41,7 @@ func GenToken(traceID string, log *zap.SugaredLogger, cfg database.Config, userI
 		Roles: []string{auth.RoleAdmin},
 	}
 
-	usr, err := store.QueryByID(ctx, traceID, claims, userID)
+	usr, err := store.QueryByID(ctx, claims, userID)
 	if err != nil {
 		return errors.Wrap(err, "retrieve user")
 	}

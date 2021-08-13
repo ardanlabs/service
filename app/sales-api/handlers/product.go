@@ -19,11 +19,6 @@ type productGroup struct {
 }
 
 func (pg productGroup) query(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	v, ok := ctx.Value(web.KeyValues).(*web.Values)
-	if !ok {
-		return web.NewShutdownError("web value missing from context")
-	}
-
 	page := web.Param(r, "page")
 	pageNumber, err := strconv.Atoi(page)
 	if err != nil {
@@ -35,7 +30,7 @@ func (pg productGroup) query(ctx context.Context, w http.ResponseWriter, r *http
 		return validate.NewRequestError(fmt.Errorf("invalid rows format: %s", rows), http.StatusBadRequest)
 	}
 
-	products, err := pg.store.Query(ctx, v.TraceID, pageNumber, rowsPerPage)
+	products, err := pg.store.Query(ctx, pageNumber, rowsPerPage)
 	if err != nil {
 		return errors.Wrap(err, "unable to query for products")
 	}
@@ -44,13 +39,8 @@ func (pg productGroup) query(ctx context.Context, w http.ResponseWriter, r *http
 }
 
 func (pg productGroup) queryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	v, ok := ctx.Value(web.KeyValues).(*web.Values)
-	if !ok {
-		return web.NewShutdownError("web value missing from context")
-	}
-
 	id := web.Param(r, "id")
-	prod, err := pg.store.QueryByID(ctx, v.TraceID, id)
+	prod, err := pg.store.QueryByID(ctx, id)
 	if err != nil {
 		switch errors.Cause(err) {
 		case database.ErrInvalidID:
@@ -66,14 +56,14 @@ func (pg productGroup) queryByID(ctx context.Context, w http.ResponseWriter, r *
 }
 
 func (pg productGroup) create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	v, ok := ctx.Value(web.KeyValues).(*web.Values)
-	if !ok {
+	v, err := web.GetValues(ctx)
+	if err != nil {
 		return web.NewShutdownError("web value missing from context")
 	}
 
-	claims, ok := ctx.Value(auth.Key).(auth.Claims)
-	if !ok {
-		return web.NewShutdownError("claims missing from context")
+	claims, err := auth.GetClaims(ctx)
+	if err != nil {
+		return errors.New("claims missing from context")
 	}
 
 	var np product.NewProduct
@@ -81,7 +71,7 @@ func (pg productGroup) create(ctx context.Context, w http.ResponseWriter, r *htt
 		return errors.Wrapf(err, "unable to decode payload")
 	}
 
-	prod, err := pg.store.Create(ctx, v.TraceID, claims, np, v.Now)
+	prod, err := pg.store.Create(ctx, claims, np, v.Now)
 	if err != nil {
 		return errors.Wrapf(err, "creating new product: %+v", np)
 	}
@@ -90,14 +80,14 @@ func (pg productGroup) create(ctx context.Context, w http.ResponseWriter, r *htt
 }
 
 func (pg productGroup) update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	v, ok := ctx.Value(web.KeyValues).(*web.Values)
-	if !ok {
+	v, err := web.GetValues(ctx)
+	if err != nil {
 		return web.NewShutdownError("web value missing from context")
 	}
 
-	claims, ok := ctx.Value(auth.Key).(auth.Claims)
-	if !ok {
-		return web.NewShutdownError("claims missing from context")
+	claims, err := auth.GetClaims(ctx)
+	if err != nil {
+		return errors.New("claims missing from context")
 	}
 
 	var upd product.UpdateProduct
@@ -106,7 +96,7 @@ func (pg productGroup) update(ctx context.Context, w http.ResponseWriter, r *htt
 	}
 
 	id := web.Param(r, "id")
-	if err := pg.store.Update(ctx, v.TraceID, claims, id, upd, v.Now); err != nil {
+	if err := pg.store.Update(ctx, claims, id, upd, v.Now); err != nil {
 		switch errors.Cause(err) {
 		case database.ErrInvalidID:
 			return validate.NewRequestError(err, http.StatusBadRequest)
@@ -123,18 +113,13 @@ func (pg productGroup) update(ctx context.Context, w http.ResponseWriter, r *htt
 }
 
 func (pg productGroup) delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	v, ok := ctx.Value(web.KeyValues).(*web.Values)
-	if !ok {
-		return web.NewShutdownError("web value missing from context")
-	}
-
-	claims, ok := ctx.Value(auth.Key).(auth.Claims)
-	if !ok {
+	claims, err := auth.GetClaims(ctx)
+	if err != nil {
 		return errors.New("claims missing from context")
 	}
 
 	id := web.Param(r, "id")
-	if err := pg.store.Delete(ctx, v.TraceID, claims, id); err != nil {
+	if err := pg.store.Delete(ctx, claims, id); err != nil {
 		switch errors.Cause(err) {
 		case database.ErrInvalidID:
 			return validate.NewRequestError(err, http.StatusBadRequest)

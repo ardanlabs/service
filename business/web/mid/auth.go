@@ -38,7 +38,7 @@ func Authenticate(a *auth.Auth) web.Middleware {
 			}
 
 			// Add claims to the context so they can be retrieved later.
-			ctx = context.WithValue(ctx, auth.Key, claims)
+			ctx = auth.SetClaims(ctx, claims)
 
 			// Call the next handler.
 			return handler(ctx, w, r)
@@ -61,8 +61,8 @@ func Authorize(roles ...string) web.Middleware {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 
 			// If the context is missing this value return failure.
-			claims, ok := ctx.Value(auth.Key).(auth.Claims)
-			if !ok {
+			claims, err := auth.GetClaims(ctx)
+			if err != nil {
 				return validate.NewRequestError(
 					fmt.Errorf("you are not authorized for that action: no claims"),
 					http.StatusForbidden,

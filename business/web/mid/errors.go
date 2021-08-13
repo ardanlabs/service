@@ -23,8 +23,8 @@ func Errors(log *zap.SugaredLogger) web.Middleware {
 
 			// If the context is missing this value, request the service
 			// to be shutdown gracefully.
-			v, ok := ctx.Value(web.KeyValues).(*web.Values)
-			if !ok {
+			v, err := web.GetValues(ctx)
+			if err != nil {
 				return web.NewShutdownError("web value missing from context")
 			}
 
