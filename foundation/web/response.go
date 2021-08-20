@@ -16,11 +16,7 @@ func Respond(ctx context.Context, w http.ResponseWriter, data interface{}, statu
 	defer span.End()
 
 	// Set the status code for the request logger middleware.
-	// If the context is missing this value, don't set it and
-	// make sure a response is provided.
-	if v, err := GetValues(ctx); err == nil {
-		v.StatusCode = statusCode
-	}
+	SetStatusCode(ctx, statusCode)
 
 	// If there is nothing to marshal then set status code and return.
 	if statusCode == http.StatusNoContent {

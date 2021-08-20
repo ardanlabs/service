@@ -45,6 +45,16 @@ func GetTraceID(ctx context.Context) string {
 	return v.TraceID
 }
 
+// SetStatusCode sets the status code back into the context.
+func SetStatusCode(ctx context.Context, statusCode int) error {
+	v, ok := ctx.Value(key).(*Values)
+	if !ok {
+		return errors.New("web value missing from context")
+	}
+	v.StatusCode = statusCode
+	return nil
+}
+
 // A Handler is a type that handles an http request within our own little mini
 // framework.
 type Handler func(ctx context.Context, w http.ResponseWriter, r *http.Request) error
