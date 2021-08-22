@@ -17,7 +17,7 @@ import (
 func Users(log *zap.SugaredLogger, cfg database.Config, pageNumber string, rowsPerPage string) error {
 	db, err := database.Open(cfg)
 	if err != nil {
-		return errors.Wrap(err, "connect database")
+		return errors.Wrap(err, ":connect database")
 	}
 	defer db.Close()
 
@@ -26,19 +26,19 @@ func Users(log *zap.SugaredLogger, cfg database.Config, pageNumber string, rowsP
 
 	page, err := strconv.Atoi(pageNumber)
 	if err != nil {
-		return errors.Wrap(err, "converting page number")
+		return errors.Wrap(err, ":converting page number")
 	}
 
 	rows, err := strconv.Atoi(rowsPerPage)
 	if err != nil {
-		return errors.Wrap(err, "converting rows per page")
+		return errors.Wrap(err, ":converting rows per page")
 	}
 
 	store := user.NewStore(log, db)
 
 	users, err := store.Query(ctx, page, rows)
 	if err != nil {
-		return errors.Wrap(err, "retrieve users")
+		return errors.Wrap(err, ":retrieve users")
 	}
 
 	return json.NewEncoder(os.Stdout).Encode(users)

@@ -75,7 +75,7 @@ func (w *Worker) Start(ctx context.Context, traceID string, jobKey string, paylo
 	// Locate the job in the jobs registry.
 	f, exists := w.registry[jobKey]
 	if !exists {
-		return "", fmt.Errorf("job %s is not registered", jobKey)
+		return "", fmt.Errorf(":job[%s] is not registered", jobKey)
 	}
 
 	// Need a unique key for this work.
@@ -104,7 +104,7 @@ func (w *Worker) Stop(workKey string) error {
 	// Locate the work in the running list.
 	cancel, exists := w.running[workKey]
 	if !exists {
-		return fmt.Errorf("work %s is not running", workKey)
+		return fmt.Errorf(":work[%s] is not running", workKey)
 	}
 
 	// Call cancel to stop the work.

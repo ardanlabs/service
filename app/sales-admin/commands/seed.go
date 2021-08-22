@@ -14,7 +14,7 @@ import (
 func Seed(cfg database.Config) error {
 	db, err := database.Open(cfg)
 	if err != nil {
-		return errors.Wrap(err, "connect database")
+		return errors.Wrap(err, ":connect database")
 	}
 	defer db.Close()
 
@@ -22,7 +22,7 @@ func Seed(cfg database.Config) error {
 	defer cancel()
 
 	if err := schema.Seed(ctx, db); err != nil {
-		return errors.Wrap(err, "seed database")
+		return errors.Wrap(err, ":seed database")
 	}
 
 	fmt.Println("seed data complete")

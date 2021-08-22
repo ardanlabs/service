@@ -63,24 +63,24 @@ func run(log *zap.SugaredLogger) error {
 		case conf.ErrHelpWanted:
 			usage, err := conf.Usage(prefix, &cfg)
 			if err != nil {
-				return errors.Wrap(err, "generating config usage")
+				return errors.Wrap(err, ":generating config usage")
 			}
 			fmt.Println(usage)
 			return nil
 		case conf.ErrVersionWanted:
 			version, err := conf.VersionString(prefix, &cfg)
 			if err != nil {
-				return errors.Wrap(err, "generating config version")
+				return errors.Wrap(err, ":generating config version")
 			}
 			fmt.Println(version)
 			return nil
 		}
-		return errors.Wrap(err, "parsing config")
+		return errors.Wrap(err, ":parsing config")
 	}
 
 	out, err := conf.String(&cfg)
 	if err != nil {
-		return errors.Wrap(err, "generating config for output")
+		return errors.Wrap(err, ":generating config for output")
 	}
 	log.Infow("startup", "config", out)
 
@@ -98,12 +98,12 @@ func run(log *zap.SugaredLogger) error {
 	switch cfg.Args.Num(0) {
 	case "migrate":
 		if err := commands.Migrate(dbConfig); err != nil {
-			return errors.Wrap(err, "migrating database")
+			return errors.Wrap(err, ":migrating database")
 		}
 
 	case "seed":
 		if err := commands.Seed(dbConfig); err != nil {
-			return errors.Wrap(err, "seeding database")
+			return errors.Wrap(err, ":seeding database")
 		}
 
 	case "useradd":
@@ -111,26 +111,26 @@ func run(log *zap.SugaredLogger) error {
 		email := cfg.Args.Num(2)
 		password := cfg.Args.Num(3)
 		if err := commands.UserAdd(log, dbConfig, name, email, password); err != nil {
-			return errors.Wrap(err, "adding user")
+			return errors.Wrap(err, ":adding user")
 		}
 
 	case "users":
 		pageNumber := cfg.Args.Num(1)
 		rowsPerPage := cfg.Args.Num(2)
 		if err := commands.Users(log, dbConfig, pageNumber, rowsPerPage); err != nil {
-			return errors.Wrap(err, "getting users")
+			return errors.Wrap(err, ":getting users")
 		}
 
 	case "genkey":
 		if err := commands.GenKey(); err != nil {
-			return errors.Wrap(err, "key generation")
+			return errors.Wrap(err, ":key generation")
 		}
 
 	case "gentoken":
 		userID := cfg.Args.Num(1)
 		kid := cfg.Args.Num(2)
 		if err := commands.GenToken(log, dbConfig, userID, kid); err != nil {
-			return errors.Wrap(err, "generating token")
+			return errors.Wrap(err, ":generating token")
 		}
 
 	default:

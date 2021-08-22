@@ -31,7 +31,7 @@ func NewStore(log *zap.SugaredLogger, db *sqlx.DB) Store {
 // fields like ID and DateCreated populated.
 func (s Store) Create(ctx context.Context, claims auth.Claims, np NewProduct, now time.Time) (Product, error) {
 	if err := validate.Check(np); err != nil {
-		return Product{}, errors.Wrap(err, "validating data")
+		return Product{}, errors.Wrap(err, ":validating data")
 	}
 
 	prd := Product{
@@ -51,7 +51,7 @@ func (s Store) Create(ctx context.Context, claims auth.Claims, np NewProduct, no
 		(:product_id, :user_id, :name, :cost, :quantity, :date_created, :date_updated)`
 
 	if err := database.NamedExecContext(ctx, s.log, s.db, q, prd); err != nil {
-		return Product{}, errors.Wrap(err, "inserting product")
+		return Product{}, errors.Wrap(err, ":inserting product")
 	}
 
 	return prd, nil
@@ -64,12 +64,12 @@ func (s Store) Update(ctx context.Context, claims auth.Claims, productID string,
 		return database.ErrInvalidID
 	}
 	if err := validate.Check(up); err != nil {
-		return errors.Wrap(err, "validating data")
+		return errors.Wrap(err, ":validating data")
 	}
 
 	prd, err := s.QueryByID(ctx, productID)
 	if err != nil {
-		return errors.Wrap(err, "updating product")
+		return errors.Wrap(err, ":updating product")
 	}
 
 	// If you are not an admin and looking to retrieve someone elses product.
@@ -100,7 +100,7 @@ func (s Store) Update(ctx context.Context, claims auth.Claims, productID string,
 		product_id = :product_id`
 
 	if err := database.NamedExecContext(ctx, s.log, s.db, q, prd); err != nil {
-		return errors.Wrapf(err, "updating product %s", prd.ID)
+		return errors.Wrapf(err, ":updating product ID[%s]", prd.ID)
 	}
 
 	return nil
@@ -130,7 +130,7 @@ func (s Store) Delete(ctx context.Context, claims auth.Claims, productID string)
 		product_id = :product_id`
 
 	if err := database.NamedExecContext(ctx, s.log, s.db, q, data); err != nil {
-		return errors.Wrapf(err, "deleting product %s", data.ProductID)
+		return errors.Wrapf(err, ":deleting product ID[%s]", data.ProductID)
 	}
 
 	return nil
@@ -166,7 +166,7 @@ func (s Store) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]Pr
 		if err == database.ErrNotFound {
 			return nil, database.ErrNotFound
 		}
-		return nil, errors.Wrap(err, "selecting products")
+		return nil, errors.Wrap(err, ":selecting products")
 	}
 
 	return products, nil
@@ -203,7 +203,7 @@ func (s Store) QueryByID(ctx context.Context, productID string) (Product, error)
 		if err == database.ErrNotFound {
 			return Product{}, database.ErrNotFound
 		}
-		return Product{}, errors.Wrapf(err, "selecting product %q", data.ProductID)
+		return Product{}, errors.Wrapf(err, ":selecting product ID[%q]", data.ProductID)
 	}
 
 	return prd, nil

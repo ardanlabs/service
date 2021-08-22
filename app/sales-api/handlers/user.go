@@ -23,17 +23,17 @@ func (ug userGroup) query(ctx context.Context, w http.ResponseWriter, r *http.Re
 	page := web.Param(r, "page")
 	pageNumber, err := strconv.Atoi(page)
 	if err != nil {
-		return validate.NewRequestError(fmt.Errorf("invalid page format: %s", page), http.StatusBadRequest)
+		return validate.NewRequestError(fmt.Errorf(":invalid page format page[%s]", page), http.StatusBadRequest)
 	}
 	rows := web.Param(r, "rows")
 	rowsPerPage, err := strconv.Atoi(rows)
 	if err != nil {
-		return validate.NewRequestError(fmt.Errorf("invalid rows format: %s", rows), http.StatusBadRequest)
+		return validate.NewRequestError(fmt.Errorf(":invalid rows format rows[%s]", rows), http.StatusBadRequest)
 	}
 
 	users, err := ug.store.Query(ctx, pageNumber, rowsPerPage)
 	if err != nil {
-		return errors.Wrap(err, "unable to query for users")
+		return errors.Wrap(err, ":unable to query for users")
 	}
 
 	return web.Respond(ctx, w, users, http.StatusOK)
@@ -42,7 +42,7 @@ func (ug userGroup) query(ctx context.Context, w http.ResponseWriter, r *http.Re
 func (ug userGroup) queryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	claims, err := auth.GetClaims(ctx)
 	if err != nil {
-		return errors.New("claims missing from context")
+		return errors.New(":claims missing from context")
 	}
 
 	id := web.Param(r, "id")
@@ -56,7 +56,7 @@ func (ug userGroup) queryByID(ctx context.Context, w http.ResponseWriter, r *htt
 		case database.ErrForbidden:
 			return validate.NewRequestError(err, http.StatusForbidden)
 		default:
-			return errors.Wrapf(err, "ID: %s", id)
+			return errors.Wrapf(err, ":ID[%s]", id)
 		}
 	}
 
@@ -66,17 +66,17 @@ func (ug userGroup) queryByID(ctx context.Context, w http.ResponseWriter, r *htt
 func (ug userGroup) create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	v, err := web.GetValues(ctx)
 	if err != nil {
-		return web.NewShutdownError("web value missing from context")
+		return web.NewShutdownError(":web value missing from context")
 	}
 
 	var nu user.NewUser
 	if err := web.Decode(r, &nu); err != nil {
-		return errors.Wrap(err, "unable to decode payload")
+		return errors.Wrap(err, ":unable to decode payload")
 	}
 
 	usr, err := ug.store.Create(ctx, nu, v.Now)
 	if err != nil {
-		return errors.Wrapf(err, "User: %+v", &usr)
+		return errors.Wrapf(err, ":User[%+v]", &usr)
 	}
 
 	return web.Respond(ctx, w, usr, http.StatusCreated)
@@ -85,17 +85,17 @@ func (ug userGroup) create(ctx context.Context, w http.ResponseWriter, r *http.R
 func (ug userGroup) update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	v, err := web.GetValues(ctx)
 	if err != nil {
-		return web.NewShutdownError("web value missing from context")
+		return web.NewShutdownError(":web value missing from context")
 	}
 
 	claims, err := auth.GetClaims(ctx)
 	if err != nil {
-		return errors.New("claims missing from context")
+		return errors.New(":claims missing from context")
 	}
 
 	var upd user.UpdateUser
 	if err := web.Decode(r, &upd); err != nil {
-		return errors.Wrap(err, "unable to decode payload")
+		return errors.Wrap(err, ":unable to decode payload")
 	}
 
 	id := web.Param(r, "id")
@@ -108,7 +108,7 @@ func (ug userGroup) update(ctx context.Context, w http.ResponseWriter, r *http.R
 		case database.ErrForbidden:
 			return validate.NewRequestError(err, http.StatusForbidden)
 		default:
-			return errors.Wrapf(err, "ID: %s  User: %+v", id, &upd)
+			return errors.Wrapf(err, ":ID[%s] User[%+v]", id, &upd)
 		}
 	}
 
@@ -118,7 +118,7 @@ func (ug userGroup) update(ctx context.Context, w http.ResponseWriter, r *http.R
 func (ug userGroup) delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	claims, err := auth.GetClaims(ctx)
 	if err != nil {
-		return errors.New("claims missing from context")
+		return errors.New(":claims missing from context")
 	}
 
 	id := web.Param(r, "id")
@@ -131,7 +131,7 @@ func (ug userGroup) delete(ctx context.Context, w http.ResponseWriter, r *http.R
 		case database.ErrForbidden:
 			return validate.NewRequestError(err, http.StatusForbidden)
 		default:
-			return errors.Wrapf(err, "ID: %s", id)
+			return errors.Wrapf(err, ":ID[%s]", id)
 		}
 	}
 
@@ -141,12 +141,12 @@ func (ug userGroup) delete(ctx context.Context, w http.ResponseWriter, r *http.R
 func (ug userGroup) token(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	v, err := web.GetValues(ctx)
 	if err != nil {
-		return web.NewShutdownError("web value missing from context")
+		return web.NewShutdownError(":web value missing from context")
 	}
 
 	email, pass, ok := r.BasicAuth()
 	if !ok {
-		err := errors.New("must provide email and password in Basic auth")
+		err := errors.New(":must provide email and password in Basic auth")
 		return validate.NewRequestError(err, http.StatusUnauthorized)
 	}
 
@@ -158,7 +158,7 @@ func (ug userGroup) token(ctx context.Context, w http.ResponseWriter, r *http.Re
 		case database.ErrAuthenticationFailure:
 			return validate.NewRequestError(err, http.StatusUnauthorized)
 		default:
-			return errors.Wrap(err, "authenticating")
+			return errors.Wrap(err, ":authenticating")
 		}
 	}
 
@@ -167,7 +167,7 @@ func (ug userGroup) token(ctx context.Context, w http.ResponseWriter, r *http.Re
 	}
 	tkn.Token, err = ug.auth.GenerateToken(claims)
 	if err != nil {
-		return errors.Wrap(err, "generating token")
+		return errors.Wrap(err, ":generating token")
 	}
 
 	return web.Respond(ctx, w, tkn, http.StatusOK)

@@ -31,22 +31,22 @@ func New(activeKID string, keyLookup KeyLookup) (*Auth, error) {
 	// The activeKID represents the private key used to signed new tokens.
 	_, err := keyLookup.PrivateKey(activeKID)
 	if err != nil {
-		return nil, errors.Errorf("active KID does not exist in store")
+		return nil, errors.Errorf(":active KID does not exist in store")
 	}
 
 	method := jwt.GetSigningMethod("RS256")
 	if method == nil {
-		return nil, errors.Errorf("configuring algorithm RS256")
+		return nil, errors.Errorf(":configuring algorithm RS256")
 	}
 
 	keyFunc := func(t *jwt.Token) (interface{}, error) {
 		kid, ok := t.Header["kid"]
 		if !ok {
-			return nil, errors.New("missing key id (kid) in token header")
+			return nil, errors.New(":missing key id (kid) in token header")
 		}
 		kidID, ok := kid.(string)
 		if !ok {
-			return nil, errors.New("user token key id (kid) must be string")
+			return nil, errors.New(":user token key id (kid) must be string")
 		}
 		return keyLookup.PublicKey(kidID)
 	}
@@ -76,12 +76,12 @@ func (a *Auth) GenerateToken(claims Claims) (string, error) {
 
 	privateKey, err := a.keyLookup.PrivateKey(a.activeKID)
 	if err != nil {
-		return "", errors.New("kid lookup failed")
+		return "", errors.New(":kid lookup failed")
 	}
 
 	str, err := token.SignedString(privateKey)
 	if err != nil {
-		return "", errors.Wrap(err, "signing token")
+		return "", errors.Wrap(err, ":signing token")
 	}
 
 	return str, nil
@@ -93,11 +93,11 @@ func (a *Auth) ValidateToken(tokenStr string) (Claims, error) {
 	var claims Claims
 	token, err := a.parser.ParseWithClaims(tokenStr, &claims, a.keyFunc)
 	if err != nil {
-		return Claims{}, errors.Wrap(err, "parsing token")
+		return Claims{}, errors.Wrap(err, ":parsing token")
 	}
 
 	if !token.Valid {
-		return Claims{}, errors.New("invalid token")
+		return Claims{}, errors.New(":invalid token")
 	}
 
 	return claims, nil

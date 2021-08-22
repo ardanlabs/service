@@ -24,7 +24,7 @@ func GenToken(log *zap.SugaredLogger, cfg database.Config, userID string, kid st
 
 	db, err := database.Open(cfg)
 	if err != nil {
-		return errors.Wrap(err, "connect database")
+		return errors.Wrap(err, ":connect database")
 	}
 	defer db.Close()
 
@@ -43,7 +43,7 @@ func GenToken(log *zap.SugaredLogger, cfg database.Config, userID string, kid st
 
 	usr, err := store.QueryByID(ctx, claims, userID)
 	if err != nil {
-		return errors.Wrap(err, "retrieve user")
+		return errors.Wrap(err, ":retrieve user")
 	}
 
 	// Construct a key store based on the key files stored in
@@ -51,14 +51,14 @@ func GenToken(log *zap.SugaredLogger, cfg database.Config, userID string, kid st
 	keysFolder := "zarf/keys/"
 	ks, err := keystore.NewFS(os.DirFS(keysFolder))
 	if err != nil {
-		return errors.Wrap(err, "reading keys")
+		return errors.Wrap(err, ":reading keys")
 	}
 
 	// Init the auth package.
 	activeKID := "54bb2165-71e1-41a6-af3e-7da4a0e1e2c1"
 	a, err := auth.New(activeKID, ks)
 	if err != nil {
-		return errors.Wrap(err, "constructing auth")
+		return errors.Wrap(err, ":constructing auth")
 	}
 
 	// Generating a token requires defining a set of claims. In this applications
@@ -88,7 +88,7 @@ func GenToken(log *zap.SugaredLogger, cfg database.Config, userID string, kid st
 	// this time.
 	token, err := a.GenerateToken(claims)
 	if err != nil {
-		return errors.Wrap(err, "generating token")
+		return errors.Wrap(err, ":generating token")
 	}
 
 	fmt.Printf("-----BEGIN TOKEN-----\n%s\n-----END TOKEN-----\n", token)

@@ -23,7 +23,7 @@ func GenKey() error {
 	// Create a file for the private key information in PEM form.
 	privateFile, err := os.Create("private.pem")
 	if err != nil {
-		return errors.Wrap(err, "creating private file")
+		return errors.Wrap(err, ":creating private file")
 	}
 	defer privateFile.Close()
 
@@ -35,19 +35,19 @@ func GenKey() error {
 
 	// Write the private key to the private key file.
 	if err := pem.Encode(privateFile, &privateBlock); err != nil {
-		return errors.Wrap(err, "encoding to private file")
+		return errors.Wrap(err, ":encoding to private file")
 	}
 
 	// Marshal the public key from the private key to PKIX.
 	asn1Bytes, err := x509.MarshalPKIXPublicKey(&privateKey.PublicKey)
 	if err != nil {
-		return errors.Wrap(err, "marshaling public key")
+		return errors.Wrap(err, ":marshaling public key")
 	}
 
 	// Create a file for the public key information in PEM form.
 	publicFile, err := os.Create("public.pem")
 	if err != nil {
-		return errors.Wrap(err, "creating public file")
+		return errors.Wrap(err, ":creating public file")
 	}
 	defer publicFile.Close()
 
@@ -59,7 +59,7 @@ func GenKey() error {
 
 	// Write the public key to the private key file.
 	if err := pem.Encode(publicFile, &publicBlock); err != nil {
-		return errors.Wrap(err, "encoding to public file")
+		return errors.Wrap(err, ":encoding to public file")
 	}
 
 	fmt.Println("private and public key files generated")

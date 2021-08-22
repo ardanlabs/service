@@ -110,19 +110,19 @@ func run(log *zap.SugaredLogger) error {
 		case conf.ErrHelpWanted:
 			usage, err := conf.Usage(prefix, &cfg)
 			if err != nil {
-				return errors.Wrap(err, "generating config usage")
+				return errors.Wrap(err, ":generating config usage")
 			}
 			fmt.Println(usage)
 			return nil
 		case conf.ErrVersionWanted:
 			version, err := conf.VersionString(prefix, &cfg)
 			if err != nil {
-				return errors.Wrap(err, "generating config version")
+				return errors.Wrap(err, ":generating config version")
 			}
 			fmt.Println(version)
 			return nil
 		}
-		return errors.Wrap(err, "parsing config")
+		return errors.Wrap(err, ":parsing config")
 	}
 
 	// =========================================================================
@@ -134,7 +134,7 @@ func run(log *zap.SugaredLogger) error {
 
 	out, err := conf.String(&cfg)
 	if err != nil {
-		return errors.Wrap(err, "generating config for output")
+		return errors.Wrap(err, ":generating config for output")
 	}
 	log.Infow("startup", "config", out)
 
@@ -147,12 +147,12 @@ func run(log *zap.SugaredLogger) error {
 	// the specified directory.
 	ks, err := keystore.NewFS(os.DirFS(cfg.Auth.KeysFolder))
 	if err != nil {
-		return errors.Wrap(err, "reading keys")
+		return errors.Wrap(err, ":reading keys")
 	}
 
 	auth, err := auth.New(cfg.Auth.ActiveKID, ks)
 	if err != nil {
-		return errors.Wrap(err, "constructing auth")
+		return errors.Wrap(err, ":constructing auth")
 	}
 
 	// =========================================================================
@@ -170,7 +170,7 @@ func run(log *zap.SugaredLogger) error {
 		DisableTLS:   cfg.DB.DisableTLS,
 	})
 	if err != nil {
-		return errors.Wrap(err, "connecting to db")
+		return errors.Wrap(err, ":connecting to db")
 	}
 	defer func() {
 		log.Infow("shutdown", "status", "stopping database support", "host", cfg.DB.Host)
@@ -191,7 +191,7 @@ func run(log *zap.SugaredLogger) error {
 		// zipkin.WithLogger(zap.NewStdLog(log)),
 	)
 	if err != nil {
-		return errors.Wrap(err, "creating new exporter")
+		return errors.Wrap(err, ":creating new exporter")
 	}
 
 	traceProvider := trace.NewTracerProvider(
@@ -278,7 +278,7 @@ func run(log *zap.SugaredLogger) error {
 	// Blocking main and waiting for shutdown.
 	select {
 	case err := <-serverErrors:
-		return errors.Wrap(err, "server error")
+		return errors.Wrap(err, ":server error")
 
 	case sig := <-shutdown:
 		log.Infow("shutdown", "status", "shutdown started", "signal", sig)
@@ -291,7 +291,7 @@ func run(log *zap.SugaredLogger) error {
 		// Asking listener to shutdown and shed load.
 		if err := api.Shutdown(ctx); err != nil {
 			api.Close()
-			return errors.Wrap(err, "could not stop server gracefully")
+			return errors.Wrap(err, ":could not stop server gracefully")
 		}
 	}
 

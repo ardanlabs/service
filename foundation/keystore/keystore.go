@@ -4,6 +4,8 @@ package keystore
 
 import (
 	"crypto/rsa"
+	"errors"
+	"fmt"
 	"io"
 	"io/fs"
 	"path"
@@ -11,7 +13,6 @@ import (
 	"sync"
 
 	"github.com/golang-jwt/jwt/v4"
-	"github.com/pkg/errors"
 )
 
 // KeyStore represents an in memory store implementation of the
@@ -46,7 +47,7 @@ func NewFS(fsys fs.FS) (*KeyStore, error) {
 
 	fn := func(fileName string, dirEntry fs.DirEntry, err error) error {
 		if err != nil {
-			return errors.Wrap(err, "walkdir failure")
+			return fmt.Errorf(":walkdir failure %w", err)
 		}
 
 		if dirEntry.IsDir() {
@@ -59,7 +60,7 @@ func NewFS(fsys fs.FS) (*KeyStore, error) {
 
 		file, err := fsys.Open(fileName)
 		if err != nil {
-			return errors.Wrap(err, "open key file")
+			return fmt.Errorf(":opening key file %w", err)
 		}
 		defer file.Close()
 
@@ -68,12 +69,12 @@ func NewFS(fsys fs.FS) (*KeyStore, error) {
 		// to /dev/random or something like that.
 		privatePEM, err := io.ReadAll(io.LimitReader(file, 1024*1024))
 		if err != nil {
-			return errors.Wrap(err, "reading auth private key")
+			return fmt.Errorf(":reading auth private key %w", err)
 		}
 
 		privateKey, err := jwt.ParseRSAPrivateKeyFromPEM(privatePEM)
 		if err != nil {
-			return errors.Wrap(err, "parsing auth private key")
+			return fmt.Errorf(":parsing auth private key %w", err)
 		}
 
 		ks.store[strings.TrimSuffix(dirEntry.Name(), ".pem")] = privateKey
@@ -81,7 +82,7 @@ func NewFS(fsys fs.FS) (*KeyStore, error) {
 	}
 
 	if err := fs.WalkDir(fsys, ".", fn); err != nil {
-		return nil, errors.Wrap(err, "walking directory")
+		return nil, fmt.Errorf(":walking directory %w", err)
 	}
 
 	return &ks, nil
@@ -111,7 +112,7 @@ func (ks *KeyStore) PrivateKey(kid string) (*rsa.PrivateKey, error) {
 
 	privateKey, found := ks.store[kid]
 	if !found {
-		return nil, errors.New("kid lookup failed")
+		return nil, errors.New(":kid lookup failed")
 	}
 	return privateKey, nil
 }
@@ -124,7 +125,7 @@ func (ks *KeyStore) PublicKey(kid string) (*rsa.PublicKey, error) {
 
 	privateKey, found := ks.store[kid]
 	if !found {
-		return nil, errors.New("kid lookup failed")
+		return nil, errors.New(":kid lookup failed")
 	}
 	return &privateKey.PublicKey, nil
 }

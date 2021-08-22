@@ -32,12 +32,12 @@ func NewStore(log *zap.SugaredLogger, db *sqlx.DB) Store {
 // Create inserts a new user into the database.
 func (s Store) Create(ctx context.Context, nu NewUser, now time.Time) (User, error) {
 	if err := validate.Check(nu); err != nil {
-		return User{}, errors.Wrap(err, "validating data")
+		return User{}, errors.Wrap(err, ":validating data")
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(nu.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return User{}, errors.Wrap(err, "generating password hash")
+		return User{}, errors.Wrap(err, ":generating password hash")
 	}
 
 	usr := User{
@@ -57,7 +57,7 @@ func (s Store) Create(ctx context.Context, nu NewUser, now time.Time) (User, err
 		(:user_id, :name, :email, :password_hash, :roles, :date_created, :date_updated)`
 
 	if err := database.NamedExecContext(ctx, s.log, s.db, q, usr); err != nil {
-		return User{}, errors.Wrap(err, "inserting user")
+		return User{}, errors.Wrap(err, ":inserting user")
 	}
 
 	return usr, nil
@@ -69,12 +69,12 @@ func (s Store) Update(ctx context.Context, claims auth.Claims, userID string, uu
 		return database.ErrInvalidID
 	}
 	if err := validate.Check(uu); err != nil {
-		return errors.Wrap(err, "validating data")
+		return errors.Wrap(err, ":validating data")
 	}
 
 	usr, err := s.QueryByID(ctx, claims, userID)
 	if err != nil {
-		return errors.Wrap(err, "updating user")
+		return errors.Wrap(err, ":updating user")
 	}
 
 	if uu.Name != nil {
@@ -89,7 +89,7 @@ func (s Store) Update(ctx context.Context, claims auth.Claims, userID string, uu
 	if uu.Password != nil {
 		pw, err := bcrypt.GenerateFromPassword([]byte(*uu.Password), bcrypt.DefaultCost)
 		if err != nil {
-			return errors.Wrap(err, "generating password hash")
+			return errors.Wrap(err, ":generating password hash")
 		}
 		usr.PasswordHash = pw
 	}
@@ -108,7 +108,7 @@ func (s Store) Update(ctx context.Context, claims auth.Claims, userID string, uu
 		user_id = :user_id`
 
 	if err := database.NamedExecContext(ctx, s.log, s.db, q, usr); err != nil {
-		return errors.Wrapf(err, "updating user %s", usr.ID)
+		return errors.Wrapf(err, ":updating user ID[%s]", usr.ID)
 	}
 
 	return nil
@@ -138,7 +138,7 @@ func (s Store) Delete(ctx context.Context, claims auth.Claims, userID string) er
 		user_id = :user_id`
 
 	if err := database.NamedExecContext(ctx, s.log, s.db, q, data); err != nil {
-		return errors.Wrapf(err, "deleting user %s", data.UserID)
+		return errors.Wrapf(err, ":deleting user ID[%s]", data.UserID)
 	}
 
 	return nil
@@ -168,7 +168,7 @@ func (s Store) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]Us
 		if err == database.ErrNotFound {
 			return nil, database.ErrNotFound
 		}
-		return nil, errors.Wrap(err, "selecting users")
+		return nil, errors.Wrap(err, ":selecting users")
 	}
 
 	return users, nil
@@ -204,7 +204,7 @@ func (s Store) QueryByID(ctx context.Context, claims auth.Claims, userID string)
 		if err == database.ErrNotFound {
 			return User{}, database.ErrNotFound
 		}
-		return User{}, errors.Wrapf(err, "selecting user %q", data.UserID)
+		return User{}, errors.Wrapf(err, ":selecting user ID[%q]", data.UserID)
 	}
 
 	return usr, nil
@@ -237,7 +237,7 @@ func (s Store) QueryByEmail(ctx context.Context, claims auth.Claims, email strin
 		if err == database.ErrNotFound {
 			return User{}, database.ErrNotFound
 		}
-		return User{}, errors.Wrapf(err, "selecting user %q", email)
+		return User{}, errors.Wrapf(err, ":selecting user email[%q]", email)
 	}
 
 	// If you are not an admin and looking to retrieve someone other than yourself.
@@ -271,7 +271,7 @@ func (s Store) Authenticate(ctx context.Context, now time.Time, email, password 
 		if err == database.ErrNotFound {
 			return auth.Claims{}, database.ErrNotFound
 		}
-		return auth.Claims{}, errors.Wrapf(err, "selecting user %q", email)
+		return auth.Claims{}, errors.Wrapf(err, ":selecting user email[%q]", email)
 	}
 
 	// Compare the provided password with the saved hash. Use the bcrypt

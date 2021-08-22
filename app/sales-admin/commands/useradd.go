@@ -21,7 +21,7 @@ func UserAdd(log *zap.SugaredLogger, cfg database.Config, name, email, password 
 
 	db, err := database.Open(cfg)
 	if err != nil {
-		return errors.Wrap(err, "connect database")
+		return errors.Wrap(err, ":connect database")
 	}
 	defer db.Close()
 
@@ -40,7 +40,7 @@ func UserAdd(log *zap.SugaredLogger, cfg database.Config, name, email, password 
 
 	usr, err := store.Create(ctx, nu, time.Now())
 	if err != nil {
-		return errors.Wrap(err, "create user")
+		return errors.Wrap(err, ":create user")
 	}
 
 	fmt.Println("user id:", usr.ID)

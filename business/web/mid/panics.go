@@ -25,7 +25,7 @@ func Panics() web.Middleware {
 				if rec := recover(); rec != nil {
 
 					// Stack trace will be provided.
-					err = errors.Errorf("PANIC: %v", rec)
+					err = errors.Errorf(":PANIC [%v]", rec)
 
 					// Updates the metrics stored in the context.
 					metrics.AddPanics(ctx)

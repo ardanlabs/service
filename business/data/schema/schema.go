@@ -26,12 +26,12 @@ var (
 // defined in this package.
 func Migrate(ctx context.Context, db *sqlx.DB) error {
 	if err := database.StatusCheck(ctx, db); err != nil {
-		return errors.Wrap(err, "status check database")
+		return errors.Wrap(err, ":status check database")
 	}
 
 	driver, err := darwin.NewGenericDriver(db.DB, darwin.PostgresDialect{})
 	if err != nil {
-		return errors.Wrap(err, "construct darwin driver")
+		return errors.Wrap(err, ":construct darwin driver")
 	}
 
 	d := darwin.New(driver, darwin.ParseMigrations(schemaDoc))
@@ -42,7 +42,7 @@ func Migrate(ctx context.Context, db *sqlx.DB) error {
 // transaction and rolled back if any fail.
 func Seed(ctx context.Context, db *sqlx.DB) error {
 	if err := database.StatusCheck(ctx, db); err != nil {
-		return errors.Wrap(err, "status check database")
+		return errors.Wrap(err, ":status check database")
 	}
 
 	tx, err := db.Begin()
