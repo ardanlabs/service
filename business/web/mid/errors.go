@@ -24,7 +24,7 @@ func Errors(log *zap.SugaredLogger) web.Middleware {
 			// to be shutdown gracefully.
 			v, err := web.GetValues(ctx)
 			if err != nil {
-				return web.NewShutdownError(":web value missing from context")
+				return web.NewShutdownError("web value missing from context")
 			}
 
 			// Run the next handler and catch any propagated error.

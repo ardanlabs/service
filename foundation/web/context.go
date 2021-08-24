@@ -23,7 +23,7 @@ type Values struct {
 func GetValues(ctx context.Context) (*Values, error) {
 	v, ok := ctx.Value(key).(*Values)
 	if !ok {
-		return nil, errors.New(":web value missing from context")
+		return nil, errors.New("web value missing from context")
 	}
 	return v, nil
 }
@@ -41,7 +41,7 @@ func GetTraceID(ctx context.Context) string {
 func SetStatusCode(ctx context.Context, statusCode int) error {
 	v, ok := ctx.Value(key).(*Values)
 	if !ok {
-		return errors.New(":web value missing from context")
+		return errors.New("web value missing from context")
 	}
 	v.StatusCode = statusCode
 	return nil

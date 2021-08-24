@@ -66,7 +66,7 @@ func (ug userGroup) queryByID(ctx context.Context, w http.ResponseWriter, r *htt
 func (ug userGroup) create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	v, err := web.GetValues(ctx)
 	if err != nil {
-		return web.NewShutdownError(":web value missing from context")
+		return web.NewShutdownError("web value missing from context")
 	}
 
 	var nu user.NewUser
@@ -85,12 +85,12 @@ func (ug userGroup) create(ctx context.Context, w http.ResponseWriter, r *http.R
 func (ug userGroup) update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	v, err := web.GetValues(ctx)
 	if err != nil {
-		return web.NewShutdownError(":web value missing from context")
+		return web.NewShutdownError("web value missing from context")
 	}
 
 	claims, err := auth.GetClaims(ctx)
 	if err != nil {
-		return errors.New(":claims missing from context")
+		return errors.New("claims missing from context")
 	}
 
 	var upd user.UpdateUser
@@ -141,12 +141,12 @@ func (ug userGroup) delete(ctx context.Context, w http.ResponseWriter, r *http.R
 func (ug userGroup) token(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	v, err := web.GetValues(ctx)
 	if err != nil {
-		return web.NewShutdownError(":web value missing from context")
+		return web.NewShutdownError("web value missing from context")
 	}
 
 	email, pass, ok := r.BasicAuth()
 	if !ok {
-		err := errors.New(":must provide email and password in Basic auth")
+		err := errors.New("must provide email and password in Basic auth")
 		return validate.NewRequestError(err, http.StatusUnauthorized)
 	}
 
