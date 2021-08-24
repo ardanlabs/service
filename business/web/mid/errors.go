@@ -6,7 +6,6 @@ import (
 
 	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/ardanlabs/service/foundation/web"
-	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )
 
@@ -37,7 +36,7 @@ func Errors(log *zap.SugaredLogger) web.Middleware {
 				// Build out the error response.
 				var er validate.ErrorResponse
 				var status int
-				switch act := errors.Cause(err).(type) {
+				switch act := validate.Cause(err).(type) {
 				case validate.FieldErrors:
 					er = validate.ErrorResponse{
 						Error:  "data validation error",

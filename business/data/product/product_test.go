@@ -2,6 +2,7 @@ package product_test
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -11,7 +12,6 @@ import (
 	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/go-cmp/cmp"
-	"github.com/pkg/errors"
 )
 
 var dbc = tests.DBContainer{
@@ -125,7 +125,7 @@ func TestProduct(t *testing.T) {
 			t.Logf("\t%s\tTest %d:\tShould be able to delete product.", tests.Success, testID)
 
 			_, err = store.QueryByID(ctx, prd.ID)
-			if errors.Cause(err) != database.ErrNotFound {
+			if !errors.Is(err, database.ErrNotFound) {
 				t.Fatalf("\t%s\tTest %d:\tShould NOT be able to retrieve deleted product : %s.", tests.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould NOT be able to retrieve deleted product.", tests.Success, testID)

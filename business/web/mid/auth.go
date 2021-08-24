@@ -2,6 +2,7 @@ package mid
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -9,7 +10,6 @@ import (
 	"github.com/ardanlabs/service/business/sys/auth"
 	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/ardanlabs/service/foundation/web"
-	"github.com/pkg/errors"
 )
 
 // Authenticate validates a JWT from the `Authorization` header.
@@ -27,7 +27,7 @@ func Authenticate(a *auth.Auth) web.Middleware {
 			// Parse the authorization header.
 			parts := strings.Split(authStr, " ")
 			if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
-				err := errors.New(":expected authorization header format, bearer <token>")
+				err := errors.New("expected authorization header format: bearer <token>")
 				return validate.NewRequestError(err, http.StatusUnauthorized)
 			}
 
@@ -64,14 +64,14 @@ func Authorize(roles ...string) web.Middleware {
 			claims, err := auth.GetClaims(ctx)
 			if err != nil {
 				return validate.NewRequestError(
-					fmt.Errorf(":you are not authorized for that action, no claims"),
+					fmt.Errorf("you are not authorized for that action, no claims"),
 					http.StatusForbidden,
 				)
 			}
 
 			if !claims.Authorized(roles...) {
 				return validate.NewRequestError(
-					fmt.Errorf(":you are not authorized for that action, claims[%v] roles[%v]", claims.Roles, roles),
+					fmt.Errorf("you are not authorized for that action, claims[%v] roles[%v]", claims.Roles, roles),
 					http.StatusForbidden,
 				)
 			}

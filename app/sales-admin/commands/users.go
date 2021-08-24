@@ -3,13 +3,13 @@ package commands
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"strconv"
 	"time"
 
 	"github.com/ardanlabs/service/business/data/user"
 	"github.com/ardanlabs/service/business/sys/database"
-	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )
 
@@ -17,7 +17,7 @@ import (
 func Users(log *zap.SugaredLogger, cfg database.Config, pageNumber string, rowsPerPage string) error {
 	db, err := database.Open(cfg)
 	if err != nil {
-		return errors.Wrap(err, ":connect database")
+		return fmt.Errorf("connect database: %w", err)
 	}
 	defer db.Close()
 
@@ -26,19 +26,19 @@ func Users(log *zap.SugaredLogger, cfg database.Config, pageNumber string, rowsP
 
 	page, err := strconv.Atoi(pageNumber)
 	if err != nil {
-		return errors.Wrap(err, ":converting page number")
+		return fmt.Errorf("converting page number: %w", err)
 	}
 
 	rows, err := strconv.Atoi(rowsPerPage)
 	if err != nil {
-		return errors.Wrap(err, ":converting rows per page")
+		return fmt.Errorf("converting rows per page: %w", err)
 	}
 
 	store := user.NewStore(log, db)
 
 	users, err := store.Query(ctx, page, rows)
 	if err != nil {
-		return errors.Wrap(err, ":retrieve users")
+		return fmt.Errorf("retrieve users: %w", err)
 	}
 
 	return json.NewEncoder(os.Stdout).Encode(users)

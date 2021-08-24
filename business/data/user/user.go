@@ -3,6 +3,7 @@ package user
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/ardanlabs/service/business/sys/auth"
@@ -10,7 +11,6 @@ import (
 	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/jmoiron/sqlx"
-	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -32,12 +32,12 @@ func NewStore(log *zap.SugaredLogger, db *sqlx.DB) Store {
 // Create inserts a new user into the database.
 func (s Store) Create(ctx context.Context, nu NewUser, now time.Time) (User, error) {
 	if err := validate.Check(nu); err != nil {
-		return User{}, errors.Wrap(err, ":validating data")
+		return User{}, fmt.Errorf("validating data: %w", err)
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(nu.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return User{}, errors.Wrap(err, ":generating password hash")
+		return User{}, fmt.Errorf("generating password hash: %w", err)
 	}
 
 	usr := User{
@@ -57,7 +57,7 @@ func (s Store) Create(ctx context.Context, nu NewUser, now time.Time) (User, err
 		(:user_id, :name, :email, :password_hash, :roles, :date_created, :date_updated)`
 
 	if err := database.NamedExecContext(ctx, s.log, s.db, q, usr); err != nil {
-		return User{}, errors.Wrap(err, ":inserting user")
+		return User{}, fmt.Errorf("inserting user: %w", err)
 	}
 
 	return usr, nil
@@ -69,12 +69,12 @@ func (s Store) Update(ctx context.Context, claims auth.Claims, userID string, uu
 		return database.ErrInvalidID
 	}
 	if err := validate.Check(uu); err != nil {
-		return errors.Wrap(err, ":validating data")
+		return fmt.Errorf("validating data: %w", err)
 	}
 
 	usr, err := s.QueryByID(ctx, claims, userID)
 	if err != nil {
-		return errors.Wrap(err, ":updating user")
+		return fmt.Errorf("updating user: %w", err)
 	}
 
 	if uu.Name != nil {
@@ -89,7 +89,7 @@ func (s Store) Update(ctx context.Context, claims auth.Claims, userID string, uu
 	if uu.Password != nil {
 		pw, err := bcrypt.GenerateFromPassword([]byte(*uu.Password), bcrypt.DefaultCost)
 		if err != nil {
-			return errors.Wrap(err, ":generating password hash")
+			return fmt.Errorf("generating password hash: %w", err)
 		}
 		usr.PasswordHash = pw
 	}
@@ -108,7 +108,7 @@ func (s Store) Update(ctx context.Context, claims auth.Claims, userID string, uu
 		user_id = :user_id`
 
 	if err := database.NamedExecContext(ctx, s.log, s.db, q, usr); err != nil {
-		return errors.Wrapf(err, ":updating user ID[%s]", usr.ID)
+		return fmt.Errorf("updating user[%s]: %w", usr.ID, err)
 	}
 
 	return nil
@@ -138,7 +138,7 @@ func (s Store) Delete(ctx context.Context, claims auth.Claims, userID string) er
 		user_id = :user_id`
 
 	if err := database.NamedExecContext(ctx, s.log, s.db, q, data); err != nil {
-		return errors.Wrapf(err, ":deleting user ID[%s]", data.UserID)
+		return fmt.Errorf("deleting user[%s]: %w", data.UserID, err)
 	}
 
 	return nil
@@ -168,7 +168,7 @@ func (s Store) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]Us
 		if err == database.ErrNotFound {
 			return nil, database.ErrNotFound
 		}
-		return nil, errors.Wrap(err, ":selecting users")
+		return nil, fmt.Errorf("selecting users: %w", err)
 	}
 
 	return users, nil
@@ -204,7 +204,7 @@ func (s Store) QueryByID(ctx context.Context, claims auth.Claims, userID string)
 		if err == database.ErrNotFound {
 			return User{}, database.ErrNotFound
 		}
-		return User{}, errors.Wrapf(err, ":selecting user ID[%q]", data.UserID)
+		return User{}, fmt.Errorf("selecting user[%q]: %w", data.UserID, err)
 	}
 
 	return usr, nil
@@ -237,7 +237,7 @@ func (s Store) QueryByEmail(ctx context.Context, claims auth.Claims, email strin
 		if err == database.ErrNotFound {
 			return User{}, database.ErrNotFound
 		}
-		return User{}, errors.Wrapf(err, ":selecting user email[%q]", email)
+		return User{}, fmt.Errorf("selecting user[%q]: %w", email, err)
 	}
 
 	// If you are not an admin and looking to retrieve someone other than yourself.
@@ -271,7 +271,7 @@ func (s Store) Authenticate(ctx context.Context, now time.Time, email, password 
 		if err == database.ErrNotFound {
 			return auth.Claims{}, database.ErrNotFound
 		}
-		return auth.Claims{}, errors.Wrapf(err, ":selecting user email[%q]", email)
+		return auth.Claims{}, fmt.Errorf("selecting user[%q]: %w", email, err)
 	}
 
 	// Compare the provided password with the saved hash. Use the bcrypt

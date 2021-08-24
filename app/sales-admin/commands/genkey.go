@@ -7,8 +7,6 @@ import (
 	"encoding/pem"
 	"fmt"
 	"os"
-
-	"github.com/pkg/errors"
 )
 
 // GenKey creates an x509 private/public key for auth tokens.
@@ -23,7 +21,7 @@ func GenKey() error {
 	// Create a file for the private key information in PEM form.
 	privateFile, err := os.Create("private.pem")
 	if err != nil {
-		return errors.Wrap(err, ":creating private file")
+		return fmt.Errorf("creating private file: %w", err)
 	}
 	defer privateFile.Close()
 
@@ -35,19 +33,19 @@ func GenKey() error {
 
 	// Write the private key to the private key file.
 	if err := pem.Encode(privateFile, &privateBlock); err != nil {
-		return errors.Wrap(err, ":encoding to private file")
+		return fmt.Errorf("encoding to private file: %w", err)
 	}
 
 	// Marshal the public key from the private key to PKIX.
 	asn1Bytes, err := x509.MarshalPKIXPublicKey(&privateKey.PublicKey)
 	if err != nil {
-		return errors.Wrap(err, ":marshaling public key")
+		return fmt.Errorf("marshaling public key: %w", err)
 	}
 
 	// Create a file for the public key information in PEM form.
 	publicFile, err := os.Create("public.pem")
 	if err != nil {
-		return errors.Wrap(err, ":creating public file")
+		return fmt.Errorf("creating public file: %w", err)
 	}
 	defer publicFile.Close()
 
@@ -59,7 +57,7 @@ func GenKey() error {
 
 	// Write the public key to the private key file.
 	if err := pem.Encode(publicFile, &publicBlock); err != nil {
-		return errors.Wrap(err, ":encoding to public file")
+		return fmt.Errorf("encoding to public file: %w", err)
 	}
 
 	fmt.Println("private and public key files generated")

@@ -2,12 +2,12 @@ package commands
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/ardanlabs/service/business/data/schema"
 	"github.com/ardanlabs/service/business/sys/database"
-	"github.com/pkg/errors"
 )
 
 // ErrHelp provides context that help was given.
@@ -17,7 +17,7 @@ var ErrHelp = errors.New("provided help")
 func Migrate(cfg database.Config) error {
 	db, err := database.Open(cfg)
 	if err != nil {
-		return errors.Wrap(err, ":connect database")
+		return fmt.Errorf("connect database: %w", err)
 	}
 	defer db.Close()
 
@@ -25,7 +25,7 @@ func Migrate(cfg database.Config) error {
 	defer cancel()
 
 	if err := schema.Migrate(ctx, db); err != nil {
-		return errors.Wrap(err, ":migrate database")
+		return fmt.Errorf("migrate database: %w", err)
 	}
 
 	fmt.Println("migrations complete")

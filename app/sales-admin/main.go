@@ -3,6 +3,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
@@ -10,7 +11,6 @@ import (
 	"github.com/ardanlabs/service/app/sales-admin/commands"
 	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/ardanlabs/service/foundation/logger"
-	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )
 
@@ -28,7 +28,7 @@ func main() {
 	defer log.Sync()
 
 	if err := run(log); err != nil {
-		if errors.Cause(err) != commands.ErrHelp {
+		if !errors.Is(err, commands.ErrHelp) {
 			log.Errorw("", zap.Error(err))
 		}
 		os.Exit(1)
@@ -63,24 +63,24 @@ func run(log *zap.SugaredLogger) error {
 		case conf.ErrHelpWanted:
 			usage, err := conf.Usage(prefix, &cfg)
 			if err != nil {
-				return errors.Wrap(err, ":generating config usage")
+				return fmt.Errorf("generating config usage: %w", err)
 			}
 			fmt.Println(usage)
 			return nil
 		case conf.ErrVersionWanted:
 			version, err := conf.VersionString(prefix, &cfg)
 			if err != nil {
-				return errors.Wrap(err, ":generating config version")
+				return fmt.Errorf("generating config version: %w", err)
 			}
 			fmt.Println(version)
 			return nil
 		}
-		return errors.Wrap(err, ":parsing config")
+		return fmt.Errorf("parsing config: %w", err)
 	}
 
 	out, err := conf.String(&cfg)
 	if err != nil {
-		return errors.Wrap(err, ":generating config for output")
+		return fmt.Errorf("generating config for output: %w", err)
 	}
 	log.Infow("startup", "config", out)
 
@@ -98,12 +98,12 @@ func run(log *zap.SugaredLogger) error {
 	switch cfg.Args.Num(0) {
 	case "migrate":
 		if err := commands.Migrate(dbConfig); err != nil {
-			return errors.Wrap(err, ":migrating database")
+			return fmt.Errorf("migrating database: %w", err)
 		}
 
 	case "seed":
 		if err := commands.Seed(dbConfig); err != nil {
-			return errors.Wrap(err, ":seeding database")
+			return fmt.Errorf("seeding database: %w", err)
 		}
 
 	case "useradd":
@@ -111,26 +111,26 @@ func run(log *zap.SugaredLogger) error {
 		email := cfg.Args.Num(2)
 		password := cfg.Args.Num(3)
 		if err := commands.UserAdd(log, dbConfig, name, email, password); err != nil {
-			return errors.Wrap(err, ":adding user")
+			return fmt.Errorf("adding user: %w", err)
 		}
 
 	case "users":
 		pageNumber := cfg.Args.Num(1)
 		rowsPerPage := cfg.Args.Num(2)
 		if err := commands.Users(log, dbConfig, pageNumber, rowsPerPage); err != nil {
-			return errors.Wrap(err, ":getting users")
+			return fmt.Errorf("getting users: %w", err)
 		}
 
 	case "genkey":
 		if err := commands.GenKey(); err != nil {
-			return errors.Wrap(err, ":key generation")
+			return fmt.Errorf("key generation: %w", err)
 		}
 
 	case "gentoken":
 		userID := cfg.Args.Num(1)
 		kid := cfg.Args.Num(2)
 		if err := commands.GenToken(log, dbConfig, userID, kid); err != nil {
-			return errors.Wrap(err, ":generating token")
+			return fmt.Errorf("generating token: %w", err)
 		}
 
 	default:

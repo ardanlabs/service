@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -11,7 +12,6 @@ import (
 	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/ardanlabs/service/foundation/web"
-	"github.com/pkg/errors"
 )
 
 type userGroup struct {
@@ -23,17 +23,17 @@ func (ug userGroup) query(ctx context.Context, w http.ResponseWriter, r *http.Re
 	page := web.Param(r, "page")
 	pageNumber, err := strconv.Atoi(page)
 	if err != nil {
-		return validate.NewRequestError(fmt.Errorf(":invalid page format page[%s]", page), http.StatusBadRequest)
+		return validate.NewRequestError(fmt.Errorf("invalid page format [%s]", page), http.StatusBadRequest)
 	}
 	rows := web.Param(r, "rows")
 	rowsPerPage, err := strconv.Atoi(rows)
 	if err != nil {
-		return validate.NewRequestError(fmt.Errorf(":invalid rows format rows[%s]", rows), http.StatusBadRequest)
+		return validate.NewRequestError(fmt.Errorf("invalid rows format [%s]", rows), http.StatusBadRequest)
 	}
 
 	users, err := ug.store.Query(ctx, pageNumber, rowsPerPage)
 	if err != nil {
-		return errors.Wrap(err, ":unable to query for users")
+		return fmt.Errorf("unable to query for users: %w", err)
 	}
 
 	return web.Respond(ctx, w, users, http.StatusOK)
@@ -42,13 +42,13 @@ func (ug userGroup) query(ctx context.Context, w http.ResponseWriter, r *http.Re
 func (ug userGroup) queryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	claims, err := auth.GetClaims(ctx)
 	if err != nil {
-		return errors.New(":claims missing from context")
+		return errors.New("claims missing from context")
 	}
 
 	id := web.Param(r, "id")
 	usr, err := ug.store.QueryByID(ctx, claims, id)
 	if err != nil {
-		switch errors.Cause(err) {
+		switch validate.Cause(err) {
 		case database.ErrInvalidID:
 			return validate.NewRequestError(err, http.StatusBadRequest)
 		case database.ErrNotFound:
@@ -56,7 +56,7 @@ func (ug userGroup) queryByID(ctx context.Context, w http.ResponseWriter, r *htt
 		case database.ErrForbidden:
 			return validate.NewRequestError(err, http.StatusForbidden)
 		default:
-			return errors.Wrapf(err, ":ID[%s]", id)
+			return fmt.Errorf("ID[%s]: %w", id, err)
 		}
 	}
 
@@ -71,12 +71,12 @@ func (ug userGroup) create(ctx context.Context, w http.ResponseWriter, r *http.R
 
 	var nu user.NewUser
 	if err := web.Decode(r, &nu); err != nil {
-		return errors.Wrap(err, ":unable to decode payload")
+		return fmt.Errorf("unable to decode payload: %w", err)
 	}
 
 	usr, err := ug.store.Create(ctx, nu, v.Now)
 	if err != nil {
-		return errors.Wrapf(err, ":User[%+v]", &usr)
+		return fmt.Errorf("user[%+v]: %w", &usr, err)
 	}
 
 	return web.Respond(ctx, w, usr, http.StatusCreated)
@@ -95,12 +95,12 @@ func (ug userGroup) update(ctx context.Context, w http.ResponseWriter, r *http.R
 
 	var upd user.UpdateUser
 	if err := web.Decode(r, &upd); err != nil {
-		return errors.Wrap(err, ":unable to decode payload")
+		return fmt.Errorf("unable to decode payload: %w", err)
 	}
 
 	id := web.Param(r, "id")
 	if err := ug.store.Update(ctx, claims, id, upd, v.Now); err != nil {
-		switch errors.Cause(err) {
+		switch validate.Cause(err) {
 		case database.ErrInvalidID:
 			return validate.NewRequestError(err, http.StatusBadRequest)
 		case database.ErrNotFound:
@@ -108,7 +108,7 @@ func (ug userGroup) update(ctx context.Context, w http.ResponseWriter, r *http.R
 		case database.ErrForbidden:
 			return validate.NewRequestError(err, http.StatusForbidden)
 		default:
-			return errors.Wrapf(err, ":ID[%s] User[%+v]", id, &upd)
+			return fmt.Errorf("ID[%s] User[%+v]: %w", id, &upd, err)
 		}
 	}
 
@@ -118,12 +118,12 @@ func (ug userGroup) update(ctx context.Context, w http.ResponseWriter, r *http.R
 func (ug userGroup) delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	claims, err := auth.GetClaims(ctx)
 	if err != nil {
-		return errors.New(":claims missing from context")
+		return errors.New("claims missing from context")
 	}
 
 	id := web.Param(r, "id")
 	if err := ug.store.Delete(ctx, claims, id); err != nil {
-		switch errors.Cause(err) {
+		switch validate.Cause(err) {
 		case database.ErrInvalidID:
 			return validate.NewRequestError(err, http.StatusBadRequest)
 		case database.ErrNotFound:
@@ -131,7 +131,7 @@ func (ug userGroup) delete(ctx context.Context, w http.ResponseWriter, r *http.R
 		case database.ErrForbidden:
 			return validate.NewRequestError(err, http.StatusForbidden)
 		default:
-			return errors.Wrapf(err, ":ID[%s]", id)
+			return fmt.Errorf("ID[%s]: %w", id, err)
 		}
 	}
 
@@ -152,13 +152,13 @@ func (ug userGroup) token(ctx context.Context, w http.ResponseWriter, r *http.Re
 
 	claims, err := ug.store.Authenticate(ctx, v.Now, email, pass)
 	if err != nil {
-		switch errors.Cause(err) {
+		switch validate.Cause(err) {
 		case database.ErrNotFound:
 			return validate.NewRequestError(err, http.StatusNotFound)
 		case database.ErrAuthenticationFailure:
 			return validate.NewRequestError(err, http.StatusUnauthorized)
 		default:
-			return errors.Wrap(err, ":authenticating")
+			return fmt.Errorf("authenticating: %w", err)
 		}
 	}
 
@@ -167,7 +167,7 @@ func (ug userGroup) token(ctx context.Context, w http.ResponseWriter, r *http.Re
 	}
 	tkn.Token, err = ug.auth.GenerateToken(claims)
 	if err != nil {
-		return errors.Wrap(err, ":generating token")
+		return fmt.Errorf("generating token: %w", err)
 	}
 
 	return web.Respond(ctx, w, tkn, http.StatusOK)

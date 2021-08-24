@@ -4,11 +4,11 @@ package schema
 import (
 	"context"
 	_ "embed" // Calls init function.
+	"fmt"
 
 	"github.com/ardanlabs/darwin"
 	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/jmoiron/sqlx"
-	"github.com/pkg/errors"
 )
 
 var (
@@ -26,12 +26,12 @@ var (
 // defined in this package.
 func Migrate(ctx context.Context, db *sqlx.DB) error {
 	if err := database.StatusCheck(ctx, db); err != nil {
-		return errors.Wrap(err, ":status check database")
+		return fmt.Errorf("status check database: %w", err)
 	}
 
 	driver, err := darwin.NewGenericDriver(db.DB, darwin.PostgresDialect{})
 	if err != nil {
-		return errors.Wrap(err, ":construct darwin driver")
+		return fmt.Errorf("construct darwin driver: %w", err)
 	}
 
 	d := darwin.New(driver, darwin.ParseMigrations(schemaDoc))
@@ -42,7 +42,7 @@ func Migrate(ctx context.Context, db *sqlx.DB) error {
 // transaction and rolled back if any fail.
 func Seed(ctx context.Context, db *sqlx.DB) error {
 	if err := database.StatusCheck(ctx, db); err != nil {
-		return errors.Wrap(err, ":status check database")
+		return fmt.Errorf("status check database: %w", err)
 	}
 
 	tx, err := db.Begin()

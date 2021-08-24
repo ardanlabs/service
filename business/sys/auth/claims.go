@@ -2,9 +2,9 @@ package auth
 
 import (
 	"context"
+	"errors"
 
 	"github.com/golang-jwt/jwt/v4"
-	"github.com/pkg/errors"
 )
 
 // These are the expected values for Claims.Roles.
@@ -46,7 +46,7 @@ func SetClaims(ctx context.Context, claims Claims) context.Context {
 func GetClaims(ctx context.Context) (Claims, error) {
 	v, ok := ctx.Value(key).(Claims)
 	if !ok {
-		return Claims{}, errors.New(":claim value missing from context")
+		return Claims{}, errors.New("claim value missing from context")
 	}
 	return v, nil
 }

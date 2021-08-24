@@ -51,3 +51,15 @@ func (fe FieldErrors) Error() string {
 	}
 	return string(d)
 }
+
+// Cause iterates through all the wrapped errors until the root
+// error value is reached.
+func Cause(err error) error {
+	root := err
+	for {
+		if err = errors.Unwrap(root); err == nil {
+			return root
+		}
+		root = err
+	}
+}

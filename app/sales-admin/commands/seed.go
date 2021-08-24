@@ -7,14 +7,13 @@ import (
 
 	"github.com/ardanlabs/service/business/data/schema"
 	"github.com/ardanlabs/service/business/sys/database"
-	"github.com/pkg/errors"
 )
 
 // Seed loads test data into the database.
 func Seed(cfg database.Config) error {
 	db, err := database.Open(cfg)
 	if err != nil {
-		return errors.Wrap(err, ":connect database")
+		return fmt.Errorf("connect database: %w", err)
 	}
 	defer db.Close()
 
@@ -22,7 +21,7 @@ func Seed(cfg database.Config) error {
 	defer cancel()
 
 	if err := schema.Seed(ctx, db); err != nil {
-		return errors.Wrap(err, ":seed database")
+		return fmt.Errorf("seed database: %w", err)
 	}
 
 	fmt.Println("seed data complete")

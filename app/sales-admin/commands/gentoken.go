@@ -11,7 +11,6 @@ import (
 	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/ardanlabs/service/foundation/keystore"
 	"github.com/golang-jwt/jwt/v4"
-	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )
 
@@ -24,7 +23,7 @@ func GenToken(log *zap.SugaredLogger, cfg database.Config, userID string, kid st
 
 	db, err := database.Open(cfg)
 	if err != nil {
-		return errors.Wrap(err, ":connect database")
+		return fmt.Errorf("connect database: %w", err)
 	}
 	defer db.Close()
 
@@ -43,7 +42,7 @@ func GenToken(log *zap.SugaredLogger, cfg database.Config, userID string, kid st
 
 	usr, err := store.QueryByID(ctx, claims, userID)
 	if err != nil {
-		return errors.Wrap(err, ":retrieve user")
+		return fmt.Errorf("retrieve user: %w", err)
 	}
 
 	// Construct a key store based on the key files stored in
@@ -51,14 +50,14 @@ func GenToken(log *zap.SugaredLogger, cfg database.Config, userID string, kid st
 	keysFolder := "zarf/keys/"
 	ks, err := keystore.NewFS(os.DirFS(keysFolder))
 	if err != nil {
-		return errors.Wrap(err, ":reading keys")
+		return fmt.Errorf("reading keys: %w", err)
 	}
 
 	// Init the auth package.
 	activeKID := "54bb2165-71e1-41a6-af3e-7da4a0e1e2c1"
 	a, err := auth.New(activeKID, ks)
 	if err != nil {
-		return errors.Wrap(err, ":constructing auth")
+		return fmt.Errorf("constructing auth: %w", err)
 	}
 
 	// Generating a token requires defining a set of claims. In this applications
@@ -88,7 +87,7 @@ func GenToken(log *zap.SugaredLogger, cfg database.Config, userID string, kid st
 	// this time.
 	token, err := a.GenerateToken(claims)
 	if err != nil {
-		return errors.Wrap(err, ":generating token")
+		return fmt.Errorf("generating token: %w", err)
 	}
 
 	fmt.Printf("-----BEGIN TOKEN-----\n%s\n-----END TOKEN-----\n", token)

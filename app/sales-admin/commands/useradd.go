@@ -8,7 +8,6 @@ import (
 	"github.com/ardanlabs/service/business/data/user"
 	"github.com/ardanlabs/service/business/sys/auth"
 	"github.com/ardanlabs/service/business/sys/database"
-	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )
 
@@ -21,7 +20,7 @@ func UserAdd(log *zap.SugaredLogger, cfg database.Config, name, email, password 
 
 	db, err := database.Open(cfg)
 	if err != nil {
-		return errors.Wrap(err, ":connect database")
+		return fmt.Errorf("connect database: %w", err)
 	}
 	defer db.Close()
 
@@ -40,7 +39,7 @@ func UserAdd(log *zap.SugaredLogger, cfg database.Config, name, email, password 
 
 	usr, err := store.Create(ctx, nu, time.Now())
 	if err != nil {
-		return errors.Wrap(err, ":create user")
+		return fmt.Errorf("create user: %w", err)
 	}
 
 	fmt.Println("user id:", usr.ID)
