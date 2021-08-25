@@ -1,8 +1,10 @@
 .circleci/
-zarf/docker/
-zarf/k8s/
+.git/
+.reading/
 .dockerignore
 .gitgnore
+zarf/docker/
+zarf/k8s/
 CONTRIBUTORS
 LICENSE
 makefile
