@@ -138,7 +138,7 @@ func NamedQuerySlice(ctx context.Context, log *zap.SugaredLogger, db *sqlx.DB, q
 // single value to be unmarshalled into a struct type.
 func NamedQueryStruct(ctx context.Context, log *zap.SugaredLogger, db *sqlx.DB, query string, data interface{}, dest interface{}) error {
 	q := queryString(query, data)
-	log.Infow("database.NamedQuerySlice", "traceid", web.GetTraceID(ctx), "query", q)
+	log.Infow("database.NamedQueryStruct", "traceid", web.GetTraceID(ctx), "query", q)
 
 	rows, err := db.NamedQueryContext(ctx, query, data)
 	if err != nil {
