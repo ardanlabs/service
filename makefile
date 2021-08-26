@@ -78,8 +78,6 @@ kind-load:
 	kind load docker-image sales-api-amd64:$(VERSION) --name $(KIND_CLUSTER)
 	kind load docker-image metrics-amd64:$(VERSION) --name $(KIND_CLUSTER)
 
-kind-services: kind-apply
-
 kind-apply:
 	kustomize build zarf/k8s/kind/database-pod | kubectl apply -f -
 	kubectl wait --namespace=database-system --timeout=120s --for=condition=Available deployment/database-pod
@@ -89,10 +87,12 @@ kind-services-delete:
 	kustomize build zarf/k8s/kind/sales-pod | kubectl delete -f -
 	kustomize build zarf/k8s/kind/database-pod | kubectl delete -f -
 
-kind-update: all kind-load
+kind-restart:
 	kubectl rollout restart deployment sales-pod
 
-kind-update-newversion: all kind-load kind-services
+kind-update: all kind-load kind-restart
+
+kind-update-apply: all kind-load kind-apply
 
 kind-logs:
 	kubectl logs -l app=sales --all-containers=true -f --tail=100 | go run app/logfmt/main.go
