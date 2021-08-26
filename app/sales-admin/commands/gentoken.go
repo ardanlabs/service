@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/ardanlabs/service/business/data/user"
+	"github.com/ardanlabs/service/business/data/store/user"
 	"github.com/ardanlabs/service/business/sys/auth"
 	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/ardanlabs/service/foundation/keystore"

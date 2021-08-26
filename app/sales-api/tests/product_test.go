@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"github.com/ardanlabs/service/app/sales-api/handlers"
-	"github.com/ardanlabs/service/business/data/product"
+	"github.com/ardanlabs/service/business/data/store/product"
 	"github.com/ardanlabs/service/business/data/tests"
 	"github.com/ardanlabs/service/business/sys/metrics"
 	"github.com/ardanlabs/service/business/sys/validate"
