@@ -37,7 +37,7 @@ func TestProduct(t *testing.T) {
 			claims := auth.Claims{
 				StandardClaims: jwt.StandardClaims{
 					Issuer:    "service project",
-					Subject:   "718ffbea-f4a1-4667-8ae3-b349da52675e",
+					Subject:   "5cf37266-3473-4006-984f-9325122678b7",
 					ExpiresAt: time.Now().Add(time.Hour).Unix(),
 					IssuedAt:  time.Now().UTC().Unix(),
 				},
@@ -48,6 +48,7 @@ func TestProduct(t *testing.T) {
 				Name:     "Comic Books",
 				Cost:     10,
 				Quantity: 55,
+				UserID:   "5cf37266-3473-4006-984f-9325122678b7",
 			}
 
 			prd, err := store.Create(ctx, claims, np, now)
@@ -79,7 +80,7 @@ func TestProduct(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to update product.", tests.Success, testID)
 
-			products, err := store.Query(ctx, 1, 1)
+			products, err := store.Query(ctx, 1, 3)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve updated product : %s.", tests.Failed, testID, err)
 			}
@@ -93,7 +94,13 @@ func TestProduct(t *testing.T) {
 			want.Quantity = *upd.Quantity
 			want.DateUpdated = updatedTime
 
-			if diff := cmp.Diff(want, products[0]); diff != "" {
+			var got product.Product
+			for _, p := range products {
+				if p.ID == want.ID {
+					got = p
+				}
+			}
+			if diff := cmp.Diff(want, got); diff != "" {
 				t.Fatalf("\t%s\tTest %d:\tShould get back the same product. Diff:\n%s", tests.Failed, testID, diff)
 			}
 			t.Logf("\t%s\tTest %d:\tShould get back the same product.", tests.Success, testID)

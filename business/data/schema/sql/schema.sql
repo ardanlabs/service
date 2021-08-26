@@ -19,26 +19,25 @@ CREATE TABLE products (
 	name         TEXT,
 	cost         INT,
 	quantity     INT,
+	user_id      UUID,
 	date_created TIMESTAMP,
 	date_updated TIMESTAMP,
 
-	PRIMARY KEY (product_id)
+	PRIMARY KEY (product_id),
+	FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
 
 -- Version: 1.3
 -- Description: Create table sales
 CREATE TABLE sales (
 	sale_id      UUID,
+	user_id      UUID,
 	product_id   UUID,
 	quantity     INT,
 	paid         INT,
 	date_created TIMESTAMP,
 
 	PRIMARY KEY (sale_id),
+	FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
 	FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE
 );
-
--- Version: 2.1
--- Description: Alter table products with user column"
-ALTER TABLE products
-	ADD COLUMN user_id UUID DEFAULT '00000000-0000-0000-0000-000000000000'

@@ -208,3 +208,40 @@ func (s Store) QueryByID(ctx context.Context, productID string) (Product, error)
 
 	return prd, nil
 }
+
+// QueryByUserID finds the product identified by a given User ID.
+func (s Store) QueryByUserID(ctx context.Context, userID string) ([]Product, error) {
+	if err := validate.CheckID(userID); err != nil {
+		return nil, database.ErrInvalidID
+	}
+
+	data := struct {
+		UserID string `db:"user_id"`
+	}{
+		UserID: userID,
+	}
+
+	const q = `
+	SELECT
+		p.*,
+		COALESCE(SUM(s.quantity), 0) AS sold,
+		COALESCE(SUM(s.paid), 0) AS revenue
+	FROM
+		products AS p
+	LEFT JOIN
+		sales AS s ON p.product_id = s.product_id
+	WHERE
+		p.user_id = :user_id
+	GROUP BY
+		p.product_id`
+
+	var products []Product
+	if err := database.NamedQuerySlice(ctx, s.log, s.db, q, data, &products); err != nil {
+		if err == database.ErrNotFound {
+			return nil, database.ErrNotFound
+		}
+		return nil, fmt.Errorf("selecting products: %w", err)
+	}
+
+	return products, nil
+}

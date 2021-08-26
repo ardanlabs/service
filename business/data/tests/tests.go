@@ -68,6 +68,12 @@ func NewUnit(t *testing.T, dbc DBContainer) (*zap.SugaredLogger, *sqlx.DB, func(
 		t.Fatalf("Migrating error: %s", err)
 	}
 
+	if err := schema.Seed(ctx, db); err != nil {
+		docker.DumpContainerLogs(t, c.ID)
+		docker.StopContainer(t, c.ID)
+		t.Fatalf("Seeding error: %s", err)
+	}
+
 	log, err := logger.New("TEST")
 	if err != nil {
 		t.Fatalf("logger error: %s", err)
@@ -107,13 +113,6 @@ type Test struct {
 // NewIntegration creates a database, seeds it, constructs an authenticator.
 func NewIntegration(t *testing.T, dbc DBContainer) *Test {
 	log, db, teardown := NewUnit(t, dbc)
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	if err := schema.Seed(ctx, db); err != nil {
-		t.Fatal(err)
-	}
 
 	// Create RSA keys to enable authentication in our service.
 	keyID := "4754d86b-7a6d-4df5-9c65-224741361492"

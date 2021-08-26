@@ -20,6 +20,7 @@ type NewProduct struct {
 	Name     string `json:"name" validate:"required"`
 	Cost     int    `json:"cost" validate:"required,gte=0"`
 	Quantity int    `json:"quantity" validate:"gte=1"`
+	UserID   string `db:"user_id" json:"user_id"`
 }
 
 // UpdateProduct defines what information may be provided to modify an
