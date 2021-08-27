@@ -1,5 +1,5 @@
-// Package reports provides an example of a business/service level API.
-package reports
+// Package report provides an example of a core business API.
+package report
 
 import (
 	"context"
@@ -12,28 +12,28 @@ import (
 	"go.uber.org/zap"
 )
 
-// Service manages the set of API's for payment functionality.
-type Service struct {
+// Report manages the set of API's for report functionality.
+type Report struct {
 	User    user.Store
 	Product product.Store
 }
 
-// NewService constructs a payment service for api access.
-func NewService(log *zap.SugaredLogger, db *sqlx.DB) Service {
-	return Service{
+// NewReport constructs a Report for api access.
+func NewReport(log *zap.SugaredLogger, db *sqlx.DB) Report {
+	return Report{
 		User:    user.NewStore(log, db),
 		Product: product.NewStore(log, db),
 	}
 }
 
 // UserProducts validates the user exists and returns products they have created.
-func (s Service) UserProducts(ctx context.Context, claims auth.Claims, userID string) ([]product.Product, error) {
-	user, err := s.User.QueryByID(ctx, claims, userID)
+func (r Report) UserProducts(ctx context.Context, claims auth.Claims, userID string) ([]product.Product, error) {
+	user, err := r.User.QueryByID(ctx, claims, userID)
 	if err != nil {
 		return nil, fmt.Errorf("query user UserID[%s]: %w", user, err)
 	}
 
-	products, err := s.Product.QueryByUserID(ctx, user.ID)
+	products, err := r.Product.QueryByUserID(ctx, user.ID)
 	if err != nil {
 		return nil, fmt.Errorf("query products UserID[%s]: %w", user, err)
 	}
