@@ -9,6 +9,9 @@ import (
 	"net/http/pprof"
 	"os"
 
+	"github.com/ardanlabs/service/app/sales-api/handlers/checkgrp"
+	"github.com/ardanlabs/service/app/sales-api/handlers/productgrp"
+	"github.com/ardanlabs/service/app/sales-api/handlers/usergrp"
 	"github.com/ardanlabs/service/business/data/store/product"
 	"github.com/ardanlabs/service/business/data/store/user"
 	"github.com/ardanlabs/service/business/sys/auth"
@@ -57,13 +60,13 @@ func DebugMux(build string, log *zap.SugaredLogger, db *sqlx.DB) http.Handler {
 	mux := DebugStandardLibraryMux()
 
 	// Register debug check endpoints.
-	cg := checkGroup{
-		build: build,
-		log:   log,
-		db:    db,
+	cgh := checkgrp.Handlers{
+		Build: build,
+		Log:   log,
+		DB:    db,
 	}
-	mux.HandleFunc("/debug/readiness", cg.readiness)
-	mux.HandleFunc("/debug/liveness", cg.liveness)
+	mux.HandleFunc("/debug/readiness", cgh.Readiness)
+	mux.HandleFunc("/debug/liveness", cgh.Liveness)
 
 	return mux
 }
@@ -94,26 +97,26 @@ func APIMux(cfg APIMuxConfig, options ...func(opts *Options)) http.Handler {
 	)
 
 	// Register user management and authentication endpoints.
-	ug := userGroup{
-		store: user.NewStore(cfg.Log, cfg.DB),
-		auth:  cfg.Auth,
+	ugh := usergrp.Handlers{
+		Store: user.NewStore(cfg.Log, cfg.DB),
+		Auth:  cfg.Auth,
 	}
-	app.Handle(http.MethodGet, "/v1/users/:page/:rows", ug.query, mid.Authenticate(cfg.Auth), mid.Authorize(auth.RoleAdmin))
-	app.Handle(http.MethodGet, "/v1/users/token", ug.token)
-	app.Handle(http.MethodGet, "/v1/users/:id", ug.queryByID, mid.Authenticate(cfg.Auth))
-	app.Handle(http.MethodPost, "/v1/users", ug.create, mid.Authenticate(cfg.Auth), mid.Authorize(auth.RoleAdmin))
-	app.Handle(http.MethodPut, "/v1/users/:id", ug.update, mid.Authenticate(cfg.Auth), mid.Authorize(auth.RoleAdmin))
-	app.Handle(http.MethodDelete, "/v1/users/:id", ug.delete, mid.Authenticate(cfg.Auth), mid.Authorize(auth.RoleAdmin))
+	app.Handle(http.MethodGet, "/v1/users/token", ugh.Token)
+	app.Handle(http.MethodGet, "/v1/users/:page/:rows", ugh.Query, mid.Authenticate(cfg.Auth), mid.Authorize(auth.RoleAdmin))
+	app.Handle(http.MethodGet, "/v1/users/:id", ugh.QueryByID, mid.Authenticate(cfg.Auth))
+	app.Handle(http.MethodPost, "/v1/users", ugh.Create, mid.Authenticate(cfg.Auth), mid.Authorize(auth.RoleAdmin))
+	app.Handle(http.MethodPut, "/v1/users/:id", ugh.Update, mid.Authenticate(cfg.Auth), mid.Authorize(auth.RoleAdmin))
+	app.Handle(http.MethodDelete, "/v1/users/:id", ugh.Delete, mid.Authenticate(cfg.Auth), mid.Authorize(auth.RoleAdmin))
 
 	// Register product and sale endpoints.
-	pg := productGroup{
-		store: product.NewStore(cfg.Log, cfg.DB),
+	pgh := productgrp.Handlers{
+		Store: product.NewStore(cfg.Log, cfg.DB),
 	}
-	app.Handle(http.MethodGet, "/v1/products/:page/:rows", pg.query, mid.Authenticate(cfg.Auth))
-	app.Handle(http.MethodGet, "/v1/products/:id", pg.queryByID, mid.Authenticate(cfg.Auth))
-	app.Handle(http.MethodPost, "/v1/products", pg.create, mid.Authenticate(cfg.Auth))
-	app.Handle(http.MethodPut, "/v1/products/:id", pg.update, mid.Authenticate(cfg.Auth))
-	app.Handle(http.MethodDelete, "/v1/products/:id", pg.delete, mid.Authenticate(cfg.Auth))
+	app.Handle(http.MethodGet, "/v1/products/:page/:rows", pgh.Query, mid.Authenticate(cfg.Auth))
+	app.Handle(http.MethodGet, "/v1/products/:id", pgh.QueryByID, mid.Authenticate(cfg.Auth))
+	app.Handle(http.MethodPost, "/v1/products", pgh.Create, mid.Authenticate(cfg.Auth))
+	app.Handle(http.MethodPut, "/v1/products/:id", pgh.Update, mid.Authenticate(cfg.Auth))
+	app.Handle(http.MethodDelete, "/v1/products/:id", pgh.Delete, mid.Authenticate(cfg.Auth))
 
 	// Accept CORS 'OPTIONS' preflight requests if config has been provided.
 	// Don't forget to apply the CORS middleware to the routes that need it.

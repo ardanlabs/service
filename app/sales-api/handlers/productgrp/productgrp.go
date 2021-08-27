@@ -1,4 +1,5 @@
-package handlers
+// Package productgrp maintains the group of handlers for product access.
+package productgrp
 
 import (
 	"context"
@@ -14,11 +15,13 @@ import (
 	"github.com/ardanlabs/service/foundation/web"
 )
 
-type productGroup struct {
-	store product.Store
+// Handlers manages the set of product enpoints.
+type Handlers struct {
+	Store product.Store
 }
 
-func (pg productGroup) query(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+// Query returns a list of products with paging.
+func (h Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	page := web.Param(r, "page")
 	pageNumber, err := strconv.Atoi(page)
 	if err != nil {
@@ -30,7 +33,7 @@ func (pg productGroup) query(ctx context.Context, w http.ResponseWriter, r *http
 		return validate.NewRequestError(fmt.Errorf("invalid rows format, rows[%s]", rows), http.StatusBadRequest)
 	}
 
-	products, err := pg.store.Query(ctx, pageNumber, rowsPerPage)
+	products, err := h.Store.Query(ctx, pageNumber, rowsPerPage)
 	if err != nil {
 		return fmt.Errorf("unable to query for products: %w", err)
 	}
@@ -38,9 +41,10 @@ func (pg productGroup) query(ctx context.Context, w http.ResponseWriter, r *http
 	return web.Respond(ctx, w, products, http.StatusOK)
 }
 
-func (pg productGroup) queryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+// QueryByID returns a product by its ID.
+func (h Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	id := web.Param(r, "id")
-	prod, err := pg.store.QueryByID(ctx, id)
+	prod, err := h.Store.QueryByID(ctx, id)
 	if err != nil {
 		switch validate.Cause(err) {
 		case database.ErrInvalidID:
@@ -55,7 +59,8 @@ func (pg productGroup) queryByID(ctx context.Context, w http.ResponseWriter, r *
 	return web.Respond(ctx, w, prod, http.StatusOK)
 }
 
-func (pg productGroup) create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+// Create adds a new product to the system.
+func (h Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	v, err := web.GetValues(ctx)
 	if err != nil {
 		return web.NewShutdownError("web value missing from context")
@@ -71,7 +76,7 @@ func (pg productGroup) create(ctx context.Context, w http.ResponseWriter, r *htt
 		return fmt.Errorf("unable to decode payload: %w", err)
 	}
 
-	prod, err := pg.store.Create(ctx, claims, np, v.Now)
+	prod, err := h.Store.Create(ctx, claims, np, v.Now)
 	if err != nil {
 		return fmt.Errorf("creating new product, np[%+v]: %w", np, err)
 	}
@@ -79,7 +84,8 @@ func (pg productGroup) create(ctx context.Context, w http.ResponseWriter, r *htt
 	return web.Respond(ctx, w, prod, http.StatusCreated)
 }
 
-func (pg productGroup) update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+// Update updates a product in the system.
+func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	v, err := web.GetValues(ctx)
 	if err != nil {
 		return web.NewShutdownError("web value missing from context")
@@ -96,7 +102,7 @@ func (pg productGroup) update(ctx context.Context, w http.ResponseWriter, r *htt
 	}
 
 	id := web.Param(r, "id")
-	if err := pg.store.Update(ctx, claims, id, upd, v.Now); err != nil {
+	if err := h.Store.Update(ctx, claims, id, upd, v.Now); err != nil {
 		switch validate.Cause(err) {
 		case database.ErrInvalidID:
 			return validate.NewRequestError(err, http.StatusBadRequest)
@@ -112,14 +118,15 @@ func (pg productGroup) update(ctx context.Context, w http.ResponseWriter, r *htt
 	return web.Respond(ctx, w, nil, http.StatusNoContent)
 }
 
-func (pg productGroup) delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+// Delete removes a product from the system.
+func (h Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	claims, err := auth.GetClaims(ctx)
 	if err != nil {
 		return errors.New("claims missing from context")
 	}
 
 	id := web.Param(r, "id")
-	if err := pg.store.Delete(ctx, claims, id); err != nil {
+	if err := h.Store.Delete(ctx, claims, id); err != nil {
 		switch validate.Cause(err) {
 		case database.ErrInvalidID:
 			return validate.NewRequestError(err, http.StatusBadRequest)
