@@ -12,14 +12,14 @@ import (
 	"go.uber.org/zap"
 )
 
-// Report manages the set of API's for report functionality.
+// Report manages the set apis for report functionality.
 type Report struct {
 	User    user.Store
 	Product product.Store
 }
 
-// NewReport constructs a Report for api access.
-func NewReport(log *zap.SugaredLogger, db *sqlx.DB) Report {
+// New constructs a Report for Report access.
+func New(log *zap.SugaredLogger, db *sqlx.DB) Report {
 	return Report{
 		User:    user.NewStore(log, db),
 		Product: product.NewStore(log, db),
