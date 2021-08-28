@@ -1,4 +1,4 @@
-# github.com/ardanlabs/conf v1.4.0
+# github.com/ardanlabs/conf v1.5.0
 ## explicit; go 1.13
 github.com/ardanlabs/conf
 # github.com/ardanlabs/darwin v1.2.0

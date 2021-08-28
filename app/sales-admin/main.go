@@ -58,7 +58,7 @@ func run(log *zap.SugaredLogger) error {
 	}
 
 	const prefix = "SALES"
-	info, err := parseConfig(prefix, &cfg)
+	info, err := conf.ParseOSArgs(prefix, &cfg)
 	if err != nil {
 		if errors.Is(err, conf.ErrHelpWanted) {
 			fmt.Println(info)
@@ -134,33 +134,4 @@ func run(log *zap.SugaredLogger) error {
 	}
 
 	return nil
-}
-
-// =============================================================================
-
-// parseConfig is a convience function to handle the logic for config
-// parsing and asking for usage/version information.
-func parseConfig(prefix string, cfg interface{}) (string, error) {
-	err := conf.Parse(os.Args[1:], prefix, cfg)
-	if err == nil {
-		return "", nil
-	}
-
-	switch err {
-	case conf.ErrHelpWanted:
-		usage, err := conf.Usage(prefix, cfg)
-		if err != nil {
-			return "", fmt.Errorf("generating config usage: %w", err)
-		}
-		return usage, conf.ErrHelpWanted
-
-	case conf.ErrVersionWanted:
-		version, err := conf.VersionString(prefix, cfg)
-		if err != nil {
-			return "", fmt.Errorf("generating config version: %w", err)
-		}
-		return version, conf.ErrHelpWanted
-	}
-
-	return "", fmt.Errorf("parsing config: %w", err)
 }

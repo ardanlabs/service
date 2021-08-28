@@ -104,10 +104,10 @@ func run(log *zap.SugaredLogger) error {
 	}
 
 	const prefix = "SALES"
-	info, err := parseConfig(prefix, &cfg)
+	help, err := conf.ParseOSArgs(prefix, &cfg)
 	if err != nil {
 		if errors.Is(err, conf.ErrHelpWanted) {
-			fmt.Println(info)
+			fmt.Println(help)
 			return nil
 		}
 		return fmt.Errorf("parsing config: %w", err)
@@ -266,33 +266,6 @@ func run(log *zap.SugaredLogger) error {
 }
 
 // =============================================================================
-
-// parseConfig is a convience function to handle the logic for config
-// parsing and asking for usage/version information.
-func parseConfig(prefix string, cfg interface{}) (string, error) {
-	err := conf.Parse(os.Args[1:], prefix, cfg)
-	if err == nil {
-		return "", nil
-	}
-
-	switch err {
-	case conf.ErrHelpWanted:
-		usage, err := conf.Usage(prefix, cfg)
-		if err != nil {
-			return "", fmt.Errorf("generating config usage: %w", err)
-		}
-		return usage, conf.ErrHelpWanted
-
-	case conf.ErrVersionWanted:
-		version, err := conf.VersionString(prefix, cfg)
-		if err != nil {
-			return "", fmt.Errorf("generating config version: %w", err)
-		}
-		return version, conf.ErrHelpWanted
-	}
-
-	return "", fmt.Errorf("parsing config: %w", err)
-}
 
 // startTracing configure open telemetery to be used with zipkin.
 func startTracing(serviceName string, reporterURI string, probability float64) (*trace.TracerProvider, error) {
