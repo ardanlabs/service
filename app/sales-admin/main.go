@@ -84,7 +84,13 @@ func run(log *zap.SugaredLogger) error {
 		DisableTLS: cfg.DB.DisableTLS,
 	}
 
-	switch cfg.Args.Num(0) {
+	return processCommands(cfg.Args, log, dbConfig)
+}
+
+// processCommands handles the execution of the commands specified on
+// the command line.
+func processCommands(args conf.Args, log *zap.SugaredLogger, dbConfig database.Config) error {
+	switch args.Num(0) {
 	case "migrate":
 		if err := commands.Migrate(dbConfig); err != nil {
 			return fmt.Errorf("migrating database: %w", err)
@@ -96,16 +102,16 @@ func run(log *zap.SugaredLogger) error {
 		}
 
 	case "useradd":
-		name := cfg.Args.Num(1)
-		email := cfg.Args.Num(2)
-		password := cfg.Args.Num(3)
+		name := args.Num(1)
+		email := args.Num(2)
+		password := args.Num(3)
 		if err := commands.UserAdd(log, dbConfig, name, email, password); err != nil {
 			return fmt.Errorf("adding user: %w", err)
 		}
 
 	case "users":
-		pageNumber := cfg.Args.Num(1)
-		rowsPerPage := cfg.Args.Num(2)
+		pageNumber := args.Num(1)
+		rowsPerPage := args.Num(2)
 		if err := commands.Users(log, dbConfig, pageNumber, rowsPerPage); err != nil {
 			return fmt.Errorf("getting users: %w", err)
 		}
@@ -116,8 +122,8 @@ func run(log *zap.SugaredLogger) error {
 		}
 
 	case "gentoken":
-		userID := cfg.Args.Num(1)
-		kid := cfg.Args.Num(2)
+		userID := args.Num(1)
+		kid := args.Num(2)
 		if err := commands.GenToken(log, dbConfig, userID, kid); err != nil {
 			return fmt.Errorf("generating token: %w", err)
 		}
