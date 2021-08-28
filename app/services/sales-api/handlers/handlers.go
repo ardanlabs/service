@@ -9,9 +9,9 @@ import (
 	"net/http/pprof"
 	"os"
 
-	"github.com/ardanlabs/service/app/sales-api/handlers/checkgrp"
-	"github.com/ardanlabs/service/app/sales-api/handlers/productgrp"
-	"github.com/ardanlabs/service/app/sales-api/handlers/usergrp"
+	"github.com/ardanlabs/service/app/services/sales-api/handlers/checkgrp"
+	"github.com/ardanlabs/service/app/services/sales-api/handlers/productgrp"
+	"github.com/ardanlabs/service/app/services/sales-api/handlers/usergrp"
 	"github.com/ardanlabs/service/business/data/store/product"
 	"github.com/ardanlabs/service/business/data/store/user"
 	"github.com/ardanlabs/service/business/sys/auth"

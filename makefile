@@ -1,7 +1,5 @@
 SHELL := /bin/bash
 
-export PROJECT = ardan-starter-kit
-
 # ==============================================================================
 # Testing running system
 
@@ -95,10 +93,10 @@ kind-update: all kind-load kind-restart
 kind-update-apply: all kind-load kind-apply
 
 kind-logs:
-	kubectl logs -l app=sales --all-containers=true -f --tail=100 | go run app/logfmt/main.go
+	kubectl logs -l app=sales --all-containers=true -f --tail=100 | go run app/tooling/logfmt/main.go
 
 kind-logs-sales:
-	kubectl logs -l app=sales --all-containers=true -f --tail=100 | go run app/logfmt/main.go -service=SALES-API
+	kubectl logs -l app=sales --all-containers=true -f --tail=100 | go run app/tooling/logfmt/main.go -service=SALES-API
 
 kind-status:
 	kubectl get nodes -o wide
@@ -140,10 +138,10 @@ kind-database:
 # Administration
 
 migrate:
-	go run app/sales-admin/main.go migrate
+	go run app/tooling/sales-admin/main.go migrate
 
 seed: migrate
-	go run app/sales-admin/main.go seed
+	go run app/tooling/sales-admin/main.go seed
 
 # ==============================================================================
 # Running tests within the local computer
@@ -251,10 +249,10 @@ gcp-events-warn:
 	kubectl get ev --field-selector type=Warning --sort-by metadata.creationTimestamp
 
 gcp-logs:
-	kubectl logs -l app=sales --all-containers=true -f --tail=100 | go run app/logfmt/main.go
+	kubectl logs -l app=sales --all-containers=true -f --tail=100 | go run app/tooling/logfmt/main.go
 
 gcp-logs-sales:
-	kubectl logs -l app=sales --all-containers=true -f --tail=100 | go run app/logfmt/main.go -service=SALES-API | jq
+	kubectl logs -l app=sales --all-containers=true -f --tail=100 | go run app/tooling/logfmt/main.go -service=SALES-API | jq
 
 gcp-shell:
 	kubectl exec -it $(shell kubectl get pods | grep sales | cut -c1-26 | head -1) --container app -- /bin/sh

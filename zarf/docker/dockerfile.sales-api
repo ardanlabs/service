@@ -14,14 +14,9 @@ ARG VCS_REF
 # Copy the source code into the container.
 COPY . /service
 
-# Build the admin tool so we can have it in the container. This should not change
-# often so do this first.
-WORKDIR /service/app/sales-admin
-RUN go build -ldflags "-X main.build=${VCS_REF}"
-
 # Build the service binary. We are doing this last since this will be different
 # every time we run through this process.
-WORKDIR /service/app/sales-api
+WORKDIR /service/app/services/sales-api
 RUN go build -ldflags "-X main.build=${VCS_REF}"
 
 
@@ -30,8 +25,7 @@ FROM alpine:3.14
 ARG BUILD_DATE
 ARG VCS_REF
 COPY --from=build_sales-api /service/zarf/keys/. /service/zarf/keys/.
-COPY --from=build_sales-api /service/app/sales-admin/sales-admin /service/admin
-COPY --from=build_sales-api /service/app/sales-api/sales-api /service/sales-api
+COPY --from=build_sales-api /service/app/services/sales-api/sales-api /service/sales-api
 WORKDIR /service
 CMD ["./sales-api"]
 

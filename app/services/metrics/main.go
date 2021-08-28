@@ -2,9 +2,10 @@ package main
 
 import (
 	"errors"
+	"expvar"
 	"fmt"
 	"net/http"
-	_ "net/http/pprof"
+	"net/http/pprof"
 	"os"
 	"os/signal"
 	"runtime"
@@ -12,10 +13,9 @@ import (
 	"time"
 
 	"github.com/ardanlabs/conf"
-	"github.com/ardanlabs/service/app/sales-api/handlers"
-	"github.com/ardanlabs/service/app/sidecar/metrics/collector"
-	"github.com/ardanlabs/service/app/sidecar/metrics/publisher"
-	"github.com/ardanlabs/service/app/sidecar/metrics/publisher/expvar"
+	"github.com/ardanlabs/service/app/services/metrics/collector"
+	"github.com/ardanlabs/service/app/services/metrics/publisher"
+	expvarsrv "github.com/ardanlabs/service/app/services/metrics/publisher/expvar"
 	"github.com/ardanlabs/service/foundation/logger"
 	"go.uber.org/automaxprocs/maxprocs"
 	"go.uber.org/zap"
@@ -113,12 +113,18 @@ func run(log *zap.SugaredLogger) error {
 	// The Debug function returns a mux to listen and serve on for all the debug
 	// related endpoints. This include the standard library endpoints.
 
-	debugMux := handlers.DebugStandardLibraryMux()
+	mux := http.NewServeMux()
+	mux.HandleFunc("/debug/pprof/", pprof.Index)
+	mux.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+	mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
+	mux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+	mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
+	mux.Handle("/debug/vars", expvar.Handler())
 
 	// Start the service listening for debug requests.
 	// Not concerned with shutting this down with load shedding.
 	go func() {
-		if err := http.ListenAndServe(cfg.Web.DebugHost, debugMux); err != nil {
+		if err := http.ListenAndServe(cfg.Web.DebugHost, mux); err != nil {
 			log.Errorw("shutdown", "status", "debug router closed", "host", cfg.Web.DebugHost, "ERROR", err)
 		}
 	}()
@@ -126,7 +132,7 @@ func run(log *zap.SugaredLogger) error {
 	// =========================================================================
 	// Start expvar Service
 
-	exp := expvar.New(log, cfg.Expvar.Host, cfg.Expvar.Route, cfg.Expvar.ReadTimeout, cfg.Expvar.WriteTimeout, cfg.Expvar.IdleTimeout)
+	exp := expvarsrv.New(log, cfg.Expvar.Host, cfg.Expvar.Route, cfg.Expvar.ReadTimeout, cfg.Expvar.WriteTimeout, cfg.Expvar.IdleTimeout)
 	defer exp.Stop(cfg.Expvar.ShutdownTimeout)
 
 	// =========================================================================

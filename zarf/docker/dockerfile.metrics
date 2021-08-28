@@ -19,7 +19,7 @@ COPY . /service
 
 # Build the service binary. We are doing this last since this will be different
 # every time we run through this process.
-WORKDIR /service/app/sidecar/metrics
+WORKDIR /service/app/services/metrics
 RUN go build -ldflags "-X main.build=${VCS_REF}"
 
 
@@ -27,7 +27,7 @@ RUN go build -ldflags "-X main.build=${VCS_REF}"
 FROM alpine:3.14
 ARG BUILD_DATE
 ARG VCS_REF
-COPY --from=build_metrics /service/app/sidecar/metrics/metrics /service/metrics
+COPY --from=build_metrics /service/app/services/metrics/metrics /service/metrics
 WORKDIR /service
 CMD ["./metrics"]
 

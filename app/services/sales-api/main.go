@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/conf"
-	"github.com/ardanlabs/service/app/sales-api/handlers"
+	"github.com/ardanlabs/service/app/services/sales-api/handlers"
 	"github.com/ardanlabs/service/business/sys/auth"
 	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/ardanlabs/service/business/sys/metrics"
