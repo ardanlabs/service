@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"expvar" // Calls init function.
 	"fmt"
 	"net/http"
@@ -55,13 +56,12 @@ func main() {
 func run(log *zap.SugaredLogger) error {
 
 	// =========================================================================
-	// CPU Quota
+	// GOMAXPROCS
 
-	// Make sure the program is using the correct
-	// number of threads if a CPU quota is set.
+	// Set the correct number of threads for the service
+	// based on what is available either by the machine or quotas.
 	if _, err := maxprocs.Set(); err != nil {
-		log.Errorw("startup", zap.Error(err))
-		os.Exit(1)
+		return fmt.Errorf("maxprocs: %w", err)
 	}
 	log.Infow("startup", "GOMAXPROCS", runtime.GOMAXPROCS(0))
 
@@ -104,21 +104,10 @@ func run(log *zap.SugaredLogger) error {
 	}
 
 	const prefix = "SALES"
-	if err := conf.Parse(os.Args[1:], prefix, &cfg); err != nil {
-		switch err {
-		case conf.ErrHelpWanted:
-			usage, err := conf.Usage(prefix, &cfg)
-			if err != nil {
-				return fmt.Errorf("generating config usage: %w", err)
-			}
-			fmt.Println(usage)
-			return nil
-		case conf.ErrVersionWanted:
-			version, err := conf.VersionString(prefix, &cfg)
-			if err != nil {
-				return fmt.Errorf("generating config version: %w", err)
-			}
-			fmt.Println(version)
+	info, err := parseConfig(prefix, &cfg)
+	if err != nil {
+		if errors.Is(err, conf.ErrHelpWanted) {
+			fmt.Println(info)
 			return nil
 		}
 		return fmt.Errorf("parsing config: %w", err)
@@ -127,7 +116,6 @@ func run(log *zap.SugaredLogger) error {
 	// =========================================================================
 	// App Starting
 
-	expvar.NewString("build").Set(build)
 	log.Infow("starting service", "version", build)
 	defer log.Infow("shutdown complete")
 
@@ -136,6 +124,8 @@ func run(log *zap.SugaredLogger) error {
 		return fmt.Errorf("generating config for output: %w", err)
 	}
 	log.Infow("startup", "config", out)
+
+	expvar.NewString("build").Set(build)
 
 	// =========================================================================
 	// Initialize authentication support
@@ -179,38 +169,16 @@ func run(log *zap.SugaredLogger) error {
 	// =========================================================================
 	// Start Tracing Support
 
-	// WARNING: The current Init settings are using defaults which may not be
-	// compatible with your project. Please review the documentation for
-	// opentelemetry.
-
 	log.Infow("startup", "status", "initializing OT/Zipkin tracing support")
 
-	exporter, err := zipkin.New(
+	traceProvider, err := startTracing(
+		cfg.Zipkin.ServiceName,
 		cfg.Zipkin.ReporterURI,
-		// zipkin.WithLogger(zap.NewStdLog(log)),
+		cfg.Zipkin.Probability,
 	)
 	if err != nil {
-		return fmt.Errorf("creating new exporter: %w", err)
+		return fmt.Errorf("starting tracing: %w", err)
 	}
-
-	traceProvider := trace.NewTracerProvider(
-		trace.WithSampler(trace.TraceIDRatioBased(cfg.Zipkin.Probability)),
-		trace.WithBatcher(exporter,
-			trace.WithMaxExportBatchSize(trace.DefaultMaxExportBatchSize),
-			trace.WithBatchTimeout(trace.DefaultBatchTimeout),
-			trace.WithMaxExportBatchSize(trace.DefaultMaxExportBatchSize),
-		),
-		trace.WithResource(
-			resource.NewWithAttributes(
-				semconv.SchemaURL,
-				semconv.ServiceNameKey.String(cfg.Zipkin.ServiceName),
-				attribute.String("exporter", "zipkin"),
-			),
-		),
-	)
-
-	// I can only get this working properly using the singleton :(
-	otel.SetTracerProvider(traceProvider)
 	defer traceProvider.Shutdown(context.Background())
 
 	// =========================================================================
@@ -295,4 +263,69 @@ func run(log *zap.SugaredLogger) error {
 	}
 
 	return nil
+}
+
+// =============================================================================
+
+// parseConfig is a convience function to handle the logic for config
+// parsing and asking for usage/version information.
+func parseConfig(prefix string, cfg interface{}) (string, error) {
+	err := conf.Parse(os.Args[1:], prefix, cfg)
+	if err == nil {
+		return "", nil
+	}
+
+	switch err {
+	case conf.ErrHelpWanted:
+		usage, err := conf.Usage(prefix, cfg)
+		if err != nil {
+			return "", fmt.Errorf("generating config usage: %w", err)
+		}
+		return usage, conf.ErrHelpWanted
+
+	case conf.ErrVersionWanted:
+		version, err := conf.VersionString(prefix, cfg)
+		if err != nil {
+			return "", fmt.Errorf("generating config version: %w", err)
+		}
+		return version, conf.ErrHelpWanted
+	}
+
+	return "", fmt.Errorf("parsing config: %w", err)
+}
+
+// startTracing configure open telemetery to be used with zipkin.
+func startTracing(serviceName string, reporterURI string, probability float64) (*trace.TracerProvider, error) {
+
+	// WARNING: The current settings are using defaults which may not be
+	// compatible with your project. Please review the documentation for
+	// opentelemetry.
+
+	exporter, err := zipkin.New(
+		reporterURI,
+		// zipkin.WithLogger(zap.NewStdLog(log)),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("creating new exporter: %w", err)
+	}
+
+	traceProvider := trace.NewTracerProvider(
+		trace.WithSampler(trace.TraceIDRatioBased(probability)),
+		trace.WithBatcher(exporter,
+			trace.WithMaxExportBatchSize(trace.DefaultMaxExportBatchSize),
+			trace.WithBatchTimeout(trace.DefaultBatchTimeout),
+			trace.WithMaxExportBatchSize(trace.DefaultMaxExportBatchSize),
+		),
+		trace.WithResource(
+			resource.NewWithAttributes(
+				semconv.SchemaURL,
+				semconv.ServiceNameKey.String(serviceName),
+				attribute.String("exporter", "zipkin"),
+			),
+		),
+	)
+
+	// I can only get this working properly using the singleton :(
+	otel.SetTracerProvider(traceProvider)
+	return traceProvider, nil
 }
