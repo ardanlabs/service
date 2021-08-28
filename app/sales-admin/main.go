@@ -58,10 +58,10 @@ func run(log *zap.SugaredLogger) error {
 	}
 
 	const prefix = "SALES"
-	info, err := conf.ParseOSArgs(prefix, &cfg)
+	help, err := conf.ParseOSArgs(prefix, &cfg)
 	if err != nil {
 		if errors.Is(err, conf.ErrHelpWanted) {
-			fmt.Println(info)
+			fmt.Println(help)
 			return nil
 		}
 		return fmt.Errorf("parsing config: %w", err)
