@@ -46,7 +46,7 @@ func run(log *zap.SugaredLogger) error {
 		DB   struct {
 			User       string `conf:"default:postgres"`
 			Password   string `conf:"default:postgres,mask"`
-			Host       string `conf:"default:0.0.0.0"`
+			Host       string `conf:"default:localhost"`
 			Name       string `conf:"default:postgres"`
 			DisableTLS bool   `conf:"default:true"`
 		}

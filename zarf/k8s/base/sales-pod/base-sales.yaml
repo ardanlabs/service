@@ -20,6 +20,14 @@ spec:
       dnsPolicy: ClusterFirstWithHostNet
       hostNetwork: true
       terminationGracePeriodSeconds: 60
+      initContainers:
+      # sales-api init container configuration
+      - name: init-migrate
+        image: sales-api-image
+        command: ['./sales-admin', 'migrate']
+      - name: init-seed
+        image: sales-api-image
+        command: ['./sales-admin', 'seed']
       containers:
       # zipkin container configuration
       - name: zipkin

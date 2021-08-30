@@ -14,7 +14,6 @@ import (
 
 	"github.com/ardanlabs/conf"
 	"github.com/ardanlabs/service/app/services/sales-api/handlers"
-	"github.com/ardanlabs/service/business/data/schema"
 	"github.com/ardanlabs/service/business/sys/auth"
 	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/ardanlabs/service/business/sys/metrics"
@@ -86,7 +85,7 @@ func run(log *zap.SugaredLogger) error {
 		DB struct {
 			User         string `conf:"default:postgres"`
 			Password     string `conf:"default:postgres,mask"`
-			Host         string `conf:"default:db"`
+			Host         string `conf:"default:localhost"`
 			Name         string `conf:"default:postgres"`
 			MaxIdleConns int    `conf:"default:0"`
 			MaxOpenConns int    `conf:"default:0"`
@@ -167,22 +166,6 @@ func run(log *zap.SugaredLogger) error {
 		log.Infow("shutdown", "status", "stopping database support", "host", cfg.DB.Host)
 		db.Close()
 	}()
-
-	// Migrate the database and seed it with initial data.
-	log.Infow("startup", "status", "migrating/seeding database", "host", cfg.DB.Host)
-
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
-	defer cancel()
-
-	err = schema.Migrate(ctx, db)
-	switch err {
-	case nil:
-		if err := schema.Seed(ctx, db); err != nil {
-			log.Infow("startup", "status", "seeding db", "ERROR", err)
-		}
-	default:
-		log.Infow("startup", "status", "migrating db", "ERROR", err)
-	}
 
 	// =========================================================================
 	// Start Tracing Support
