@@ -28,14 +28,13 @@ func New(log *zap.SugaredLogger, db *sqlx.DB) Report {
 
 // UserProducts validates the user exists and returns products they have created.
 func (r Report) UserProducts(ctx context.Context, claims auth.Claims, userID string) ([]product.Product, error) {
-	user, err := r.User.QueryByID(ctx, claims, userID)
-	if err != nil {
-		return nil, fmt.Errorf("query user UserID[%s]: %w", user.ID, err)
+	if _, err := r.User.QueryByID(ctx, claims, userID); err != nil {
+		return nil, fmt.Errorf("query user UserID[%s]: %w", userID, err)
 	}
 
-	products, err := r.Product.QueryByUserID(ctx, user.ID)
+	products, err := r.Product.QueryByUserID(ctx, userID)
 	if err != nil {
-		return nil, fmt.Errorf("query products UserID[%s]: %w", user.ID, err)
+		return nil, fmt.Errorf("query products UserID[%s]: %w", userID, err)
 	}
 
 	return products, nil
