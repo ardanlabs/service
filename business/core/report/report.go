@@ -30,12 +30,12 @@ func New(log *zap.SugaredLogger, db *sqlx.DB) Report {
 func (r Report) UserProducts(ctx context.Context, claims auth.Claims, userID string) ([]product.Product, error) {
 	user, err := r.User.QueryByID(ctx, claims, userID)
 	if err != nil {
-		return nil, fmt.Errorf("query user UserID[%s]: %w", user, err)
+		return nil, fmt.Errorf("query user UserID[%s]: %w", user.ID, err)
 	}
 
 	products, err := r.Product.QueryByUserID(ctx, user.ID)
 	if err != nil {
-		return nil, fmt.Errorf("query products UserID[%s]: %w", user, err)
+		return nil, fmt.Errorf("query products UserID[%s]: %w", user.ID, err)
 	}
 
 	return products, nil
