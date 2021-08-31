@@ -9,9 +9,9 @@ import (
 	"net/http/pprof"
 	"os"
 
-	"github.com/ardanlabs/service/app/services/sales-api/handlers/checkgrp"
-	"github.com/ardanlabs/service/app/services/sales-api/handlers/productgrp"
-	"github.com/ardanlabs/service/app/services/sales-api/handlers/usergrp"
+	"github.com/ardanlabs/service/app/services/sales-api/handlers/debug/checkgrp"
+	v1productgrp "github.com/ardanlabs/service/app/services/sales-api/handlers/v1/productgrp"
+	v1usergrp "github.com/ardanlabs/service/app/services/sales-api/handlers/v1/usergrp"
 	"github.com/ardanlabs/service/business/data/store/product"
 	"github.com/ardanlabs/service/business/data/store/user"
 	"github.com/ardanlabs/service/business/sys/auth"
@@ -96,28 +96,6 @@ func APIMux(cfg APIMuxConfig, options ...func(opts *Options)) http.Handler {
 		mid.Panics(),
 	)
 
-	// Register user management and authentication endpoints.
-	ugh := usergrp.Handlers{
-		Store: user.NewStore(cfg.Log, cfg.DB),
-		Auth:  cfg.Auth,
-	}
-	app.Handle(http.MethodGet, "/v1/users/token", ugh.Token)
-	app.Handle(http.MethodGet, "/v1/users/:page/:rows", ugh.Query, mid.Authenticate(cfg.Auth), mid.Authorize(auth.RoleAdmin))
-	app.Handle(http.MethodGet, "/v1/users/:id", ugh.QueryByID, mid.Authenticate(cfg.Auth))
-	app.Handle(http.MethodPost, "/v1/users", ugh.Create, mid.Authenticate(cfg.Auth), mid.Authorize(auth.RoleAdmin))
-	app.Handle(http.MethodPut, "/v1/users/:id", ugh.Update, mid.Authenticate(cfg.Auth), mid.Authorize(auth.RoleAdmin))
-	app.Handle(http.MethodDelete, "/v1/users/:id", ugh.Delete, mid.Authenticate(cfg.Auth), mid.Authorize(auth.RoleAdmin))
-
-	// Register product and sale endpoints.
-	pgh := productgrp.Handlers{
-		Store: product.NewStore(cfg.Log, cfg.DB),
-	}
-	app.Handle(http.MethodGet, "/v1/products/:page/:rows", pgh.Query, mid.Authenticate(cfg.Auth))
-	app.Handle(http.MethodGet, "/v1/products/:id", pgh.QueryByID, mid.Authenticate(cfg.Auth))
-	app.Handle(http.MethodPost, "/v1/products", pgh.Create, mid.Authenticate(cfg.Auth))
-	app.Handle(http.MethodPut, "/v1/products/:id", pgh.Update, mid.Authenticate(cfg.Auth))
-	app.Handle(http.MethodDelete, "/v1/products/:id", pgh.Delete, mid.Authenticate(cfg.Auth))
-
 	// Accept CORS 'OPTIONS' preflight requests if config has been provided.
 	// Don't forget to apply the CORS middleware to the routes that need it.
 	// Example Config: `conf:"default:https://MY_DOMAIN.COM"`
@@ -125,8 +103,38 @@ func APIMux(cfg APIMuxConfig, options ...func(opts *Options)) http.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 			return nil
 		}
-		app.Handle(http.MethodOptions, "/*", h)
+		app.Handle(http.MethodOptions, "", "/*", h)
 	}
 
+	// Load the routes for the different versions of the API.
+	v1(app, cfg)
+
 	return app
+}
+
+// v1 binds all the version 1 routes.
+func v1(app *web.App, cfg APIMuxConfig) {
+	const version = "v1"
+
+	// Register user management and authentication endpoints.
+	ugh := v1usergrp.Handlers{
+		Store: user.NewStore(cfg.Log, cfg.DB),
+		Auth:  cfg.Auth,
+	}
+	app.Handle(http.MethodGet, version, "/users/token", ugh.Token)
+	app.Handle(http.MethodGet, version, "/users/:page/:rows", ugh.Query, mid.Authenticate(cfg.Auth), mid.Authorize(auth.RoleAdmin))
+	app.Handle(http.MethodGet, version, "/users/:id", ugh.QueryByID, mid.Authenticate(cfg.Auth))
+	app.Handle(http.MethodPost, version, "/users", ugh.Create, mid.Authenticate(cfg.Auth), mid.Authorize(auth.RoleAdmin))
+	app.Handle(http.MethodPut, version, "/users/:id", ugh.Update, mid.Authenticate(cfg.Auth), mid.Authorize(auth.RoleAdmin))
+	app.Handle(http.MethodDelete, version, "/users/:id", ugh.Delete, mid.Authenticate(cfg.Auth), mid.Authorize(auth.RoleAdmin))
+
+	// Register product and sale endpoints.
+	pgh := v1productgrp.Handlers{
+		Store: product.NewStore(cfg.Log, cfg.DB),
+	}
+	app.Handle(http.MethodGet, version, "/products/:page/:rows", pgh.Query, mid.Authenticate(cfg.Auth))
+	app.Handle(http.MethodGet, version, "/products/:id", pgh.QueryByID, mid.Authenticate(cfg.Auth))
+	app.Handle(http.MethodPost, version, "/products", pgh.Create, mid.Authenticate(cfg.Auth))
+	app.Handle(http.MethodPut, version, "/products/:id", pgh.Update, mid.Authenticate(cfg.Auth))
+	app.Handle(http.MethodDelete, version, "/products/:id", pgh.Delete, mid.Authenticate(cfg.Auth))
 }
