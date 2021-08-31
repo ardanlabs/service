@@ -1,7 +1,8 @@
 # Binaries
-app/sales-admin/sales-admin
-app/sales-api/sales-api
-app/sidecar/metrics/metrics
+app/services/sales-api/sales-api
+app/services/metrics/metrics
+app/tooling/sales-admin/sales-admin
+app/tooling/sales-admin/logfmt
 
 # Mac
 .DS_Store
