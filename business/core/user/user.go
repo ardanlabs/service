@@ -20,7 +20,7 @@ type Core struct {
 	user user.Store
 }
 
-// NewCore constructs a core user for api access.
+// NewCore constructs a core for user api access.
 func NewCore(log *zap.SugaredLogger, db *sqlx.DB) Core {
 	return Core{
 		log:  log,

@@ -18,7 +18,7 @@ type Core struct {
 	Product product.Store
 }
 
-// NewCore constructs a Report for Report access.
+// NewCore constructs a core for report api access.
 func NewCore(log *zap.SugaredLogger, db *sqlx.DB) Core {
 	return Core{
 		User:    user.NewStore(log, db),

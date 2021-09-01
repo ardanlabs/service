@@ -20,7 +20,7 @@ type Core struct {
 	product product.Store
 }
 
-// NewCore constructs a core product for api access.
+// NewCore constructs a core for product api access.
 func NewCore(log *zap.SugaredLogger, db *sqlx.DB) Core {
 	return Core{
 		log:     log,
