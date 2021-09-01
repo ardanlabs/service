@@ -168,7 +168,7 @@ func (pt *ProductTests) getProduct400(t *testing.T) {
 			t.Logf("\t%s\tTest %d:\tShould receive a status code of 400 for the response.", tests.Success, testID)
 
 			got := w.Body.String()
-			exp := `{"error":"ID is not in its proper form"}`
+			exp := `{"error":"query: ID is not in its proper form"}`
 			if got != exp {
 				t.Logf("\t\tTest %d:\tGot : %v", testID, got)
 				t.Logf("\t\tTest %d:\tExp: %v", testID, exp)

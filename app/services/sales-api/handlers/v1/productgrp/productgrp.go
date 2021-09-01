@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strconv"
 
+	userProduct "github.com/ardanlabs/service/business/core/product"
 	"github.com/ardanlabs/service/business/data/store/product"
 	"github.com/ardanlabs/service/business/sys/auth"
 	"github.com/ardanlabs/service/business/sys/database"
@@ -17,7 +18,7 @@ import (
 
 // Handlers manages the set of product enpoints.
 type Handlers struct {
-	Store product.Store
+	Product userProduct.Core
 }
 
 // Query returns a list of products with paging.
@@ -33,7 +34,7 @@ func (h Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Requ
 		return validate.NewRequestError(fmt.Errorf("invalid rows format, rows[%s]", rows), http.StatusBadRequest)
 	}
 
-	products, err := h.Store.Query(ctx, pageNumber, rowsPerPage)
+	products, err := h.Product.Query(ctx, pageNumber, rowsPerPage)
 	if err != nil {
 		return fmt.Errorf("unable to query for products: %w", err)
 	}
@@ -44,7 +45,7 @@ func (h Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Requ
 // QueryByID returns a product by its ID.
 func (h Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	id := web.Param(r, "id")
-	prod, err := h.Store.QueryByID(ctx, id)
+	prod, err := h.Product.QueryByID(ctx, id)
 	if err != nil {
 		switch validate.Cause(err) {
 		case database.ErrInvalidID:
@@ -76,7 +77,7 @@ func (h Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Req
 		return fmt.Errorf("unable to decode payload: %w", err)
 	}
 
-	prod, err := h.Store.Create(ctx, claims, np, v.Now)
+	prod, err := h.Product.Create(ctx, claims, np, v.Now)
 	if err != nil {
 		return fmt.Errorf("creating new product, np[%+v]: %w", np, err)
 	}
@@ -102,7 +103,7 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 	}
 
 	id := web.Param(r, "id")
-	if err := h.Store.Update(ctx, claims, id, upd, v.Now); err != nil {
+	if err := h.Product.Update(ctx, claims, id, upd, v.Now); err != nil {
 		switch validate.Cause(err) {
 		case database.ErrInvalidID:
 			return validate.NewRequestError(err, http.StatusBadRequest)
@@ -126,7 +127,7 @@ func (h Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Req
 	}
 
 	id := web.Param(r, "id")
-	if err := h.Store.Delete(ctx, claims, id); err != nil {
+	if err := h.Product.Delete(ctx, claims, id); err != nil {
 		switch validate.Cause(err) {
 		case database.ErrInvalidID:
 			return validate.NewRequestError(err, http.StatusBadRequest)

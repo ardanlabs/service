@@ -12,27 +12,27 @@ import (
 	"go.uber.org/zap"
 )
 
-// Report manages the set apis for report functionality.
-type Report struct {
+// Core manages the set apis for report functionality.
+type Core struct {
 	User    user.Store
 	Product product.Store
 }
 
-// New constructs a Report for Report access.
-func New(log *zap.SugaredLogger, db *sqlx.DB) Report {
-	return Report{
+// NewCore constructs a Report for Report access.
+func NewCore(log *zap.SugaredLogger, db *sqlx.DB) Core {
+	return Core{
 		User:    user.NewStore(log, db),
 		Product: product.NewStore(log, db),
 	}
 }
 
 // UserProducts validates the user exists and returns products they have created.
-func (r Report) UserProducts(ctx context.Context, claims auth.Claims, userID string) ([]product.Product, error) {
-	if _, err := r.User.QueryByID(ctx, claims, userID); err != nil {
+func (c Core) UserProducts(ctx context.Context, claims auth.Claims, userID string) ([]product.Product, error) {
+	if _, err := c.User.QueryByID(ctx, claims, userID); err != nil {
 		return nil, fmt.Errorf("query user UserID[%s]: %w", userID, err)
 	}
 
-	products, err := r.Product.QueryByUserID(ctx, userID)
+	products, err := c.Product.QueryByUserID(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("query products UserID[%s]: %w", userID, err)
 	}

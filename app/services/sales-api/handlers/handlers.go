@@ -10,10 +10,10 @@ import (
 	"os"
 
 	"github.com/ardanlabs/service/app/services/sales-api/handlers/debug/checkgrp"
-	v1productgrp "github.com/ardanlabs/service/app/services/sales-api/handlers/v1/productgrp"
-	v1usergrp "github.com/ardanlabs/service/app/services/sales-api/handlers/v1/usergrp"
-	"github.com/ardanlabs/service/business/data/store/product"
-	"github.com/ardanlabs/service/business/data/store/user"
+	v1ProductGrp "github.com/ardanlabs/service/app/services/sales-api/handlers/v1/productgrp"
+	v1UserGrp "github.com/ardanlabs/service/app/services/sales-api/handlers/v1/usergrp"
+	productCore "github.com/ardanlabs/service/business/core/product"
+	userCore "github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/sys/auth"
 	"github.com/ardanlabs/service/business/sys/metrics"
 	"github.com/ardanlabs/service/business/web/mid"
@@ -117,9 +117,9 @@ func v1(app *web.App, cfg APIMuxConfig) {
 	const version = "v1"
 
 	// Register user management and authentication endpoints.
-	ugh := v1usergrp.Handlers{
-		Store: user.NewStore(cfg.Log, cfg.DB),
-		Auth:  cfg.Auth,
+	ugh := v1UserGrp.Handlers{
+		User: userCore.NewCore(cfg.Log, cfg.DB),
+		Auth: cfg.Auth,
 	}
 	app.Handle(http.MethodGet, version, "/users/token", ugh.Token)
 	app.Handle(http.MethodGet, version, "/users/:page/:rows", ugh.Query, mid.Authenticate(cfg.Auth), mid.Authorize(auth.RoleAdmin))
@@ -129,8 +129,8 @@ func v1(app *web.App, cfg APIMuxConfig) {
 	app.Handle(http.MethodDelete, version, "/users/:id", ugh.Delete, mid.Authenticate(cfg.Auth), mid.Authorize(auth.RoleAdmin))
 
 	// Register product and sale endpoints.
-	pgh := v1productgrp.Handlers{
-		Store: product.NewStore(cfg.Log, cfg.DB),
+	pgh := v1ProductGrp.Handlers{
+		Product: productCore.NewCore(cfg.Log, cfg.DB),
 	}
 	app.Handle(http.MethodGet, version, "/products/:page/:rows", pgh.Query, mid.Authenticate(cfg.Auth))
 	app.Handle(http.MethodGet, version, "/products/:id", pgh.QueryByID, mid.Authenticate(cfg.Auth))

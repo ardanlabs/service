@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strconv"
 
+	userCore "github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/data/store/user"
 	"github.com/ardanlabs/service/business/sys/auth"
 	"github.com/ardanlabs/service/business/sys/database"
@@ -17,8 +18,8 @@ import (
 
 // Handlers manages the set of user enpoints.
 type Handlers struct {
-	Store user.Store
-	Auth  *auth.Auth
+	User userCore.Core
+	Auth *auth.Auth
 }
 
 // Query returns a list of users with paging.
@@ -34,7 +35,7 @@ func (h Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Requ
 		return validate.NewRequestError(fmt.Errorf("invalid rows format [%s]", rows), http.StatusBadRequest)
 	}
 
-	users, err := h.Store.Query(ctx, pageNumber, rowsPerPage)
+	users, err := h.User.Query(ctx, pageNumber, rowsPerPage)
 	if err != nil {
 		return fmt.Errorf("unable to query for users: %w", err)
 	}
@@ -50,7 +51,7 @@ func (h Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http.
 	}
 
 	id := web.Param(r, "id")
-	usr, err := h.Store.QueryByID(ctx, claims, id)
+	usr, err := h.User.QueryByID(ctx, claims, id)
 	if err != nil {
 		switch validate.Cause(err) {
 		case database.ErrInvalidID:
@@ -79,7 +80,7 @@ func (h Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Req
 		return fmt.Errorf("unable to decode payload: %w", err)
 	}
 
-	usr, err := h.Store.Create(ctx, nu, v.Now)
+	usr, err := h.User.Create(ctx, nu, v.Now)
 	if err != nil {
 		return fmt.Errorf("user[%+v]: %w", &usr, err)
 	}
@@ -105,7 +106,7 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 	}
 
 	id := web.Param(r, "id")
-	if err := h.Store.Update(ctx, claims, id, upd, v.Now); err != nil {
+	if err := h.User.Update(ctx, claims, id, upd, v.Now); err != nil {
 		switch validate.Cause(err) {
 		case database.ErrInvalidID:
 			return validate.NewRequestError(err, http.StatusBadRequest)
@@ -129,7 +130,7 @@ func (h Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Req
 	}
 
 	id := web.Param(r, "id")
-	if err := h.Store.Delete(ctx, claims, id); err != nil {
+	if err := h.User.Delete(ctx, claims, id); err != nil {
 		switch validate.Cause(err) {
 		case database.ErrInvalidID:
 			return validate.NewRequestError(err, http.StatusBadRequest)
@@ -158,7 +159,7 @@ func (h Handlers) Token(ctx context.Context, w http.ResponseWriter, r *http.Requ
 		return validate.NewRequestError(err, http.StatusUnauthorized)
 	}
 
-	claims, err := h.Store.Authenticate(ctx, v.Now, email, pass)
+	claims, err := h.User.Authenticate(ctx, v.Now, email, pass)
 	if err != nil {
 		switch validate.Cause(err) {
 		case database.ErrNotFound:

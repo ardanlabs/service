@@ -247,7 +247,7 @@ func (ut *UserTests) getUser400(t *testing.T) {
 			t.Logf("\t%s\tTest %d:\tShould receive a status code of 400 for the response.", tests.Success, testID)
 
 			got := w.Body.String()
-			exp := `{"error":"ID is not in its proper form"}`
+			exp := `{"error":"query: ID is not in its proper form"}`
 			if got != exp {
 				t.Logf("\t\tTest %d:\tGot : %v", testID, got)
 				t.Logf("\t\tTest %d:\tExp: %v", testID, exp)
@@ -278,7 +278,7 @@ func (ut *UserTests) getUser403(t *testing.T) {
 			t.Logf("\t%s\tTest %d:\tShould receive a status code of 403 for the response.", tests.Success, testID)
 
 			recv := w.Body.String()
-			resp := `{"error":"attempted action is not allowed"}`
+			resp := `{"error":"query: attempted action is not allowed"}`
 			if resp != recv {
 				t.Log("Got :", recv)
 				t.Log("Want:", resp)
