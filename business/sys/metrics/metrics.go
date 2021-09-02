@@ -10,9 +10,7 @@ import (
 // collecting metrics. The expvar package is already based on a singleton
 // for the different metrics that are registered with the package so there
 // isn't much choice here.
-var (
-	m *Metrics
-)
+var m *Metrics
 
 // =============================================================================
 
