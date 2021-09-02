@@ -8,17 +8,18 @@ import (
 )
 
 // This holds the single instance of the metrics value needed for
-// collecting metrics. This support multiple initialization issue get
-// placing metrics into the context.
+// collecting metrics. The expvar package is already based on a singleton
+// for the different metrics that are registered with the package so there
+// isn't much choice here.
 var (
-	m  *Metrics
-	mu sync.Mutex
+	m    *Metrics
+	once sync.Once
 )
 
 // =============================================================================
 
 // Metrics represents the set of metrics we gather. These fields are
-// safe to be accessed concurrently. No extra abstraction is required.
+// safe to be accessed concurrently thanks to expvar. No extra abstraction is required.
 type Metrics struct {
 	Goroutines *expvar.Int
 	Requests   *expvar.Int
@@ -27,29 +28,23 @@ type Metrics struct {
 }
 
 // init constructs the metrics value that will be used to capture metrics.
-// The metrics value is stored in a package level variable incase this
-// function is called more than once. We don't want multiple instances.
+// The metrics value is stored in a package level variable since everything
+// inside of expvar is registered as a singleton. The use of once will make
+// sure this initialization only happens once.
 func init() {
-	mu.Lock()
-	defer mu.Unlock()
-
-	// If the metrics value was not constructed yet, then
-	// perform the construction.
-	if m == nil {
+	once.Do(func() {
 		m = &Metrics{
 			Goroutines: expvar.NewInt("goroutines"),
 			Requests:   expvar.NewInt("requests"),
 			Errors:     expvar.NewInt("errors"),
 			Panics:     expvar.NewInt("panics"),
 		}
-	}
+	})
 }
 
 // =============================================================================
 
-// This code assumes that the metrics value constructed in main will be
-// present in each request. For this codebase, that is done by the
-// metrics middleware.
+// Metrics will be supported through the context.
 
 // ctxKeyMetric represents the type of value for the context key.
 type ctxKey int
