@@ -4,7 +4,6 @@ package metrics
 import (
 	"context"
 	"expvar"
-	"sync"
 )
 
 // This holds the single instance of the metrics value needed for
@@ -12,8 +11,7 @@ import (
 // for the different metrics that are registered with the package so there
 // isn't much choice here.
 var (
-	m    *Metrics
-	once sync.Once
+	m *Metrics
 )
 
 // =============================================================================
@@ -32,14 +30,12 @@ type Metrics struct {
 // inside of expvar is registered as a singleton. The use of once will make
 // sure this initialization only happens once.
 func init() {
-	once.Do(func() {
-		m = &Metrics{
-			Goroutines: expvar.NewInt("goroutines"),
-			Requests:   expvar.NewInt("requests"),
-			Errors:     expvar.NewInt("errors"),
-			Panics:     expvar.NewInt("panics"),
-		}
-	})
+	m = &Metrics{
+		Goroutines: expvar.NewInt("goroutines"),
+		Requests:   expvar.NewInt("requests"),
+		Errors:     expvar.NewInt("errors"),
+		Panics:     expvar.NewInt("panics"),
+	}
 }
 
 // =============================================================================
