@@ -15,7 +15,6 @@ import (
 	productCore "github.com/ardanlabs/service/business/core/product"
 	userCore "github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/sys/auth"
-	"github.com/ardanlabs/service/business/sys/metrics"
 	"github.com/ardanlabs/service/business/web/mid"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/jmoiron/sqlx"
@@ -75,7 +74,6 @@ func DebugMux(build string, log *zap.SugaredLogger, db *sqlx.DB) http.Handler {
 type APIMuxConfig struct {
 	Shutdown chan os.Signal
 	Log      *zap.SugaredLogger
-	Metrics  *metrics.Metrics
 	Auth     *auth.Auth
 	DB       *sqlx.DB
 }
@@ -92,7 +90,7 @@ func APIMux(cfg APIMuxConfig, options ...func(opts *Options)) http.Handler {
 		cfg.Shutdown,
 		mid.Logger(cfg.Log),
 		mid.Errors(cfg.Log),
-		mid.Metrics(cfg.Metrics),
+		mid.Metrics(),
 		mid.Panics(),
 	)
 

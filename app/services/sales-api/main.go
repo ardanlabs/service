@@ -16,7 +16,6 @@ import (
 	"github.com/ardanlabs/service/app/services/sales-api/handlers"
 	"github.com/ardanlabs/service/business/sys/auth"
 	"github.com/ardanlabs/service/business/sys/database"
-	"github.com/ardanlabs/service/business/sys/metrics"
 	"github.com/ardanlabs/service/foundation/keystore"
 	"github.com/ardanlabs/service/foundation/logger"
 	"go.opentelemetry.io/otel"
@@ -215,7 +214,6 @@ func run(log *zap.SugaredLogger) error {
 	apiMux := handlers.APIMux(handlers.APIMuxConfig{
 		Shutdown: shutdown,
 		Log:      log,
-		Metrics:  metrics.New(),
 		Auth:     auth,
 		DB:       db,
 	})

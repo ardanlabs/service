@@ -12,7 +12,6 @@ import (
 	"github.com/ardanlabs/service/app/services/sales-api/handlers"
 	"github.com/ardanlabs/service/business/data/store/product"
 	"github.com/ardanlabs/service/business/data/tests"
-	"github.com/ardanlabs/service/business/sys/metrics"
 	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
@@ -48,7 +47,6 @@ func TestProducts(t *testing.T) {
 		app: handlers.APIMux(handlers.APIMuxConfig{
 			Shutdown: shutdown,
 			Log:      test.Log,
-			Metrics:  metrics.New(),
 			Auth:     test.Auth,
 			DB:       test.DB,
 		}),
