@@ -9,8 +9,6 @@ import (
 	"github.com/ardanlabs/service/foundation/web"
 )
 
-// =============================================================================
-
 // Metrics updates program counters.
 func Metrics(data *metrics.Metrics) web.Middleware {
 
