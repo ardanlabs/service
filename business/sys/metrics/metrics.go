@@ -10,17 +10,17 @@ import (
 // collecting metrics. The expvar package is already based on a singleton
 // for the different metrics that are registered with the package so there
 // isn't much choice here.
-var m *Metrics
+var m *metrics
 
 // =============================================================================
 
-// Metrics represents the set of metrics we gather. These fields are
+// metrics represents the set of metrics we gather. These fields are
 // safe to be accessed concurrently thanks to expvar. No extra abstraction is required.
-type Metrics struct {
-	Goroutines *expvar.Int
-	Requests   *expvar.Int
-	Errors     *expvar.Int
-	Panics     *expvar.Int
+type metrics struct {
+	goroutines *expvar.Int
+	requests   *expvar.Int
+	errors     *expvar.Int
+	panics     *expvar.Int
 }
 
 // init constructs the metrics value that will be used to capture metrics.
@@ -28,11 +28,11 @@ type Metrics struct {
 // inside of expvar is registered as a singleton. The use of once will make
 // sure this initialization only happens once.
 func init() {
-	m = &Metrics{
-		Goroutines: expvar.NewInt("goroutines"),
-		Requests:   expvar.NewInt("requests"),
-		Errors:     expvar.NewInt("errors"),
-		Panics:     expvar.NewInt("panics"),
+	m = &metrics{
+		goroutines: expvar.NewInt("goroutines"),
+		requests:   expvar.NewInt("requests"),
+		errors:     expvar.NewInt("errors"),
+		panics:     expvar.NewInt("panics"),
 	}
 }
 
@@ -59,30 +59,30 @@ func Set(ctx context.Context) context.Context {
 
 // AddGoroutines increments the goroutines metric by 1.
 func AddGoroutines(ctx context.Context) {
-	if v, ok := ctx.Value(key).(*Metrics); ok {
-		if v.Goroutines.Value()%100 == 0 {
-			v.Goroutines.Add(1)
+	if v, ok := ctx.Value(key).(*metrics); ok {
+		if v.requests.Value()%100 == 0 {
+			v.goroutines.Add(1)
 		}
 	}
 }
 
 // AddRequests increments the request metric by 1.
 func AddRequests(ctx context.Context) {
-	if v, ok := ctx.Value(key).(*Metrics); ok {
-		v.Requests.Add(1)
+	if v, ok := ctx.Value(key).(*metrics); ok {
+		v.requests.Add(1)
 	}
 }
 
 // AddErrors increments the errors metric by 1.
 func AddErrors(ctx context.Context) {
-	if v, ok := ctx.Value(key).(*Metrics); ok {
-		v.Errors.Add(1)
+	if v, ok := ctx.Value(key).(*metrics); ok {
+		v.errors.Add(1)
 	}
 }
 
 // AddPanics increments the panics metric by 1.
 func AddPanics(ctx context.Context) {
-	if v, ok := ctx.Value(key).(*Metrics); ok {
-		v.Panics.Add(1)
+	if v, ok := ctx.Value(key).(*metrics); ok {
+		v.panics.Add(1)
 	}
 }
