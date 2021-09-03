@@ -69,7 +69,7 @@ func (s Store) Update(ctx context.Context, claims auth.Claims, productID string,
 
 	prd, err := s.QueryByID(ctx, productID)
 	if err != nil {
-		return fmt.Errorf("updating product: %w", err)
+		return fmt.Errorf("updating product productID[%s]: %w", productID, err)
 	}
 
 	// If you are not an admin and looking to retrieve someone elses product.
@@ -100,7 +100,7 @@ func (s Store) Update(ctx context.Context, claims auth.Claims, productID string,
 		product_id = :product_id`
 
 	if err := database.NamedExecContext(ctx, s.log, s.db, q, prd); err != nil {
-		return fmt.Errorf("updating product ID[%s]: %w", prd.ID, err)
+		return fmt.Errorf("updating product productID[%s]: %w", productID, err)
 	}
 
 	return nil
@@ -130,7 +130,7 @@ func (s Store) Delete(ctx context.Context, claims auth.Claims, productID string)
 		product_id = :product_id`
 
 	if err := database.NamedExecContext(ctx, s.log, s.db, q, data); err != nil {
-		return fmt.Errorf("deleting product ID[%s]: %w", data.ProductID, err)
+		return fmt.Errorf("deleting product productID[%s]: %w", productID, err)
 	}
 
 	return nil
@@ -203,7 +203,7 @@ func (s Store) QueryByID(ctx context.Context, productID string) (Product, error)
 		if err == database.ErrNotFound {
 			return Product{}, database.ErrNotFound
 		}
-		return Product{}, fmt.Errorf("selecting product ID[%q]: %w", data.ProductID, err)
+		return Product{}, fmt.Errorf("selecting product productID[%q]: %w", productID, err)
 	}
 
 	return prd, nil
@@ -240,7 +240,7 @@ func (s Store) QueryByUserID(ctx context.Context, userID string) ([]Product, err
 		if err == database.ErrNotFound {
 			return nil, database.ErrNotFound
 		}
-		return nil, fmt.Errorf("selecting products: %w", err)
+		return nil, fmt.Errorf("selecting products userID[%s]: %w", userID, err)
 	}
 
 	return products, nil

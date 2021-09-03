@@ -74,7 +74,7 @@ func (s Store) Update(ctx context.Context, claims auth.Claims, userID string, uu
 
 	usr, err := s.QueryByID(ctx, claims, userID)
 	if err != nil {
-		return fmt.Errorf("updating user: %w", err)
+		return fmt.Errorf("updating user userID[%s]: %w", userID, err)
 	}
 
 	if uu.Name != nil {
@@ -108,7 +108,7 @@ func (s Store) Update(ctx context.Context, claims auth.Claims, userID string, uu
 		user_id = :user_id`
 
 	if err := database.NamedExecContext(ctx, s.log, s.db, q, usr); err != nil {
-		return fmt.Errorf("updating user[%s]: %w", usr.ID, err)
+		return fmt.Errorf("updating userID[%s]: %w", userID, err)
 	}
 
 	return nil
@@ -138,7 +138,7 @@ func (s Store) Delete(ctx context.Context, claims auth.Claims, userID string) er
 		user_id = :user_id`
 
 	if err := database.NamedExecContext(ctx, s.log, s.db, q, data); err != nil {
-		return fmt.Errorf("deleting user[%s]: %w", data.UserID, err)
+		return fmt.Errorf("deleting userID[%s]: %w", userID, err)
 	}
 
 	return nil
@@ -204,7 +204,7 @@ func (s Store) QueryByID(ctx context.Context, claims auth.Claims, userID string)
 		if err == database.ErrNotFound {
 			return User{}, database.ErrNotFound
 		}
-		return User{}, fmt.Errorf("selecting user[%q]: %w", data.UserID, err)
+		return User{}, fmt.Errorf("selecting userID[%q]: %w", userID, err)
 	}
 
 	return usr, nil
@@ -237,7 +237,7 @@ func (s Store) QueryByEmail(ctx context.Context, claims auth.Claims, email strin
 		if err == database.ErrNotFound {
 			return User{}, database.ErrNotFound
 		}
-		return User{}, fmt.Errorf("selecting user[%q]: %w", email, err)
+		return User{}, fmt.Errorf("selecting email[%q]: %w", email, err)
 	}
 
 	// If you are not an admin and looking to retrieve someone other than yourself.
