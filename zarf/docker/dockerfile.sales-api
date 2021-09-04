@@ -1,7 +1,7 @@
 # Build the Go Binary.
 FROM golang:1.17 as build_sales-api
 ENV CGO_ENABLED 0
-ARG VCS_REF
+ARG BUILD_REF
 
 # Create the service directory and the copy the module files first and then
 # download the dependencies. If this doesn't change, we won't need to do this
@@ -16,17 +16,17 @@ COPY . /service
 
 # Build the admin binary.
 WORKDIR /service/app/tooling/sales-admin
-RUN go build -ldflags "-X main.build=${VCS_REF}"
+RUN go build -ldflags "-X main.build=${BUILD_REF}"
 
 # Build the service binary.
 WORKDIR /service/app/services/sales-api
-RUN go build -ldflags "-X main.build=${VCS_REF}"
+RUN go build -ldflags "-X main.build=${BUILD_REF}"
 
 
 # Run the Go Binary in Alpine.
 FROM alpine:3.14
 ARG BUILD_DATE
-ARG VCS_REF
+ARG BUILD_REF
 COPY --from=build_sales-api /service/zarf/keys/. /service/zarf/keys/.
 COPY --from=build_sales-api /service/app/tooling/sales-admin/sales-admin /service/sales-admin
 COPY --from=build_sales-api /service/app/services/sales-api/sales-api /service/sales-api
@@ -37,5 +37,5 @@ LABEL org.opencontainers.image.created="${BUILD_DATE}" \
       org.opencontainers.image.title="sales-api" \
       org.opencontainers.image.authors="William Kennedy <bill@ardanlabs.com>" \
       org.opencontainers.image.source="https://github.com/ardanlabs/service/app/sales-api" \
-      org.opencontainers.image.revision="${VCS_REF}" \
+      org.opencontainers.image.revision="${BUILD_REF}" \
       org.opencontainers.image.vendor="Ardan Labs"
