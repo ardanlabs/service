@@ -6,6 +6,8 @@ It is compatible with the GNU extensions to the POSIX recommendations
 for command-line options. See
 http://www.gnu.org/software/libc/manual/html_node/Argument-Syntax.html
 
+Flags
+
 There are no hard bindings for this package. This package takes a struct
 value and parses it for both the environment and flags. It supports several tags
 to customize the flag options.
@@ -22,7 +24,9 @@ to customize the flag options.
 The field name and any parent struct name will be used for the long form of
 the command name unless the name is overridden.
 
-As an example, this config struct:
+Example Usage
+
+As an example, using this config struct:
 
 	type ip struct {
 		Name string `conf:"default:localhost,env:IP_NAME_VAR"`
@@ -41,7 +45,7 @@ As an example, this config struct:
 		Embed
 	}
 
-Would produce the following usage output:
+The following usage information would be output you can display.
 
 Usage: conf.test [options] [arguments]
 
@@ -58,13 +62,56 @@ OPTIONS
   --version/-v
   display version information
 
-The API is a single call to Parse
+Example Parsing
 
-	// Parse(args []string, namespace string, cfgStruct interface{}, sources ...Sourcer) error
+There is an API called Parse that can process a config struct with environment
+variable and command line flag overrides.
 
-	if err := conf.Parse(os.Args, "CRUD", &cfg); err != nil {
-		log.Fatalf("main : Parsing Config : %v", err)
+	const prefix = "APP"
+	var cfg config
+	help, err := conf.Parse(prefix, &cfg)
+	if err != nil {
+		if errors.Is(err, conf.ErrHelpWanted) {
+			fmt.Println(help)
+			return nil
+		}
+		return fmt.Errorf("parsing config: %w", err)
 	}
+
+There is also YAML support using the yaml package that is part of
+this modeule.
+
+	var yamlData = `
+	a: Easy!
+	b:
+		c: 2
+		d: [3, 4]
+	`
+
+	type config struct {
+		A string
+		B struct {
+			RenamedC int   `yaml:"c"`
+			D        []int `yaml:",flow"`
+		}
+		E string `conf:"default:postgres"`
+	}
+
+	const prefix = "APP"
+	var cfg config
+	help, err := conf.Parse(prefix, &cfg, yaml.With([]byte{yamlData}))
+	if err != nil {
+		if errors.Is(err, conf.ErrHelpWanted) {
+			fmt.Println(help)
+			return nil
+		}
+		return fmt.Errorf("parsing config: %w", err)
+	}
+
+There is a WithParse function that takes a slice of bytes containing the YAML
+or WithParseReader that takes any concrete value that knows how to Read.
+
+Command Line Args
 
 Additionally, if the config struct has a field of the slice type conf.Args
 then it will be populated with any remaining arguments from the command line
@@ -89,40 +136,36 @@ such as this:
 	arg1 := cfg.Args.Num(1) // "http"
 	arg2 := cfg.Args.Num(2) // "" empty string: not enough arguments
 
+Version Information
+
 You can add a version with a description by adding the Version type to
-your config type
-
-	type ConfExplicit struct {
-		Version conf.Version
-		Address string
-	}
-
-	type ConfImplicit struct {
-		conf.Version
-		Address string
-	}
-
-Then you can set these values at run time for display.
+your config type and set these values at run time for display.
 
 	cfg := struct {
-		Version conf.Version
+		conf.Version
+		Web struct {
+			APIHost         string        `conf:"default:0.0.0.0:3000"`
+			DebugHost       string        `conf:"default:0.0.0.0:4000"`
+			ReadTimeout     time.Duration `conf:"default:5s"`
+			WriteTimeout    time.Duration `conf:"default:10s"`
+			IdleTimeout     time.Duration `conf:"default:120s"`
+			ShutdownTimeout time.Duration `conf:"default:20s"`
+		}
 	}{
 		Version: conf.Version{
-			SVN:  "v1.0.0",
-			Desc: "Service Description",
+			Build: "v1.0.0",
+			Desc:  "Service Description",
 		},
 	}
 
-	if err := conf.Parse(os.Args[1:], "APP", &cfg); err != nil {
-		if err == conf.ErrVersionWanted {
-			version, err := conf.VersionString("APP", &cfg)
-			if err != nil {
-				return err
-			}
-			fmt.Println(version)
+	const prefix = "APP"
+	help, err := conf.Parse(prefix, &cfg)
+	if err != nil {
+		if errors.Is(err, conf.ErrHelpWanted) {
+			fmt.Println(help)
 			return nil
 		}
-		fmt.Println("parsing config", err)
+		return fmt.Errorf("parsing config: %w", err)
 	}
 */
 package conf

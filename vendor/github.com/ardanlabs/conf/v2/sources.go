@@ -7,6 +7,26 @@ import (
 	"strings"
 )
 
+var (
+	// ErrHelpWanted provides an indication help was requested.
+	ErrHelpWanted = errors.New("help wanted")
+
+	// errVersionWanted provides an indication version was requested.
+	errVersionWanted = errors.New("version wanted")
+)
+
+// sourcer provides the ability to source data from a configuration source.
+// Consider the use of lazy-loading for sourcing large datasets or systems.
+type sourcer interface {
+
+	// Source takes the field key and attempts to locate that key in its
+	// configuration data. Returns true if found with the value.
+	Source(fld Field) (string, bool)
+}
+
+// =============================================================================
+// Environment Variable Sourcer
+
 // env is a source for environmental variables.
 type env struct {
 	m map[string]string
@@ -55,12 +75,7 @@ func envUsage(namespace string, fld Field) string {
 }
 
 // =============================================================================
-
-// ErrHelpWanted provides an indication help was requested.
-var ErrHelpWanted = errors.New("help wanted")
-
-// ErrVersionWanted provides an indication version was requested.
-var ErrVersionWanted = errors.New("version wanted")
+// Command Line Flag Sourcer
 
 // flag is a source for command line arguments.
 type flag struct {
@@ -121,7 +136,7 @@ func newSourceFlag(args []string) (*flag, error) {
 			}
 
 			if name == "version" || name == "v" {
-				return nil, ErrVersionWanted
+				return nil, errVersionWanted
 			}
 
 			// If we don't have a value yet, it's possible the flag was not in the

@@ -12,7 +12,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/ardanlabs/conf"
+	"github.com/ardanlabs/conf/v2"
 	"github.com/ardanlabs/service/app/services/metrics/collector"
 	"github.com/ardanlabs/service/app/services/metrics/publisher"
 	expvarsrv "github.com/ardanlabs/service/app/services/metrics/publisher/expvar"
@@ -78,13 +78,13 @@ func run(log *zap.SugaredLogger) error {
 		}
 	}{
 		Version: conf.Version{
-			SVN:  build,
-			Desc: "copyright information here",
+			Build: build,
+			Desc:  "copyright information here",
 		},
 	}
 
 	const prefix = "METRICS"
-	help, err := conf.ParseOSArgs(prefix, &cfg)
+	help, err := conf.Parse(prefix, &cfg)
 	if err != nil {
 		if errors.Is(err, conf.ErrHelpWanted) {
 			fmt.Println(help)

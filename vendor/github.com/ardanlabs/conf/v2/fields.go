@@ -10,6 +10,21 @@ import (
 	"unicode"
 )
 
+// A FieldError occurs when an error occurs updating an individual field
+// in the provided struct value.
+type FieldError struct {
+	fieldName string
+	typeName  string
+	value     string
+	err       error
+}
+
+func (err *FieldError) Error() string {
+	return fmt.Sprintf("conf: error assigning to field %s: converting '%s' to type %s. details: %s", err.fieldName, err.value, err.typeName, err.err)
+}
+
+// =============================================================================
+
 // Field maintains information about a field in the configuration struct.
 type Field struct {
 	Name    string
@@ -240,7 +255,7 @@ func camelSplit(src string) []string {
 	return out
 }
 
-func processField(value string, field reflect.Value) error {
+func processField(settingDefault bool, value string, field reflect.Value) error {
 	typ := field.Type()
 
 	// Look for a Set method.
@@ -263,6 +278,12 @@ func processField(value string, field reflect.Value) error {
 			field.Set(reflect.New(typ))
 		}
 		field = field.Elem()
+	}
+
+	// We don't want a default value to override a
+	// proper setting.
+	if settingDefault && !field.IsZero() {
+		return nil
 	}
 
 	switch typ.Kind() {
@@ -307,7 +328,7 @@ func processField(value string, field reflect.Value) error {
 		vals := strings.Split(value, ";")
 		sl := reflect.MakeSlice(typ, len(vals), len(vals))
 		for i, val := range vals {
-			err := processField(val, sl.Index(i))
+			err := processField(false, val, sl.Index(i))
 			if err != nil {
 				return err
 			}
@@ -323,12 +344,12 @@ func processField(value string, field reflect.Value) error {
 					return fmt.Errorf("invalid map item: %q", pair)
 				}
 				k := reflect.New(typ.Key()).Elem()
-				err := processField(kvpair[0], k)
+				err := processField(false, kvpair[0], k)
 				if err != nil {
 					return err
 				}
 				v := reflect.New(typ.Elem()).Elem()
-				err = processField(kvpair[1], v)
+				err = processField(false, kvpair[1], v)
 				if err != nil {
 					return err
 				}

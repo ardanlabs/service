@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/ardanlabs/conf"
+	"github.com/ardanlabs/conf/v2"
 	"github.com/ardanlabs/service/app/tooling/sales-admin/commands"
 	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/ardanlabs/service/foundation/logger"
@@ -52,13 +52,13 @@ func run(log *zap.SugaredLogger) error {
 		}
 	}{
 		Version: conf.Version{
-			SVN:  build,
-			Desc: "copyright information here",
+			Build: build,
+			Desc:  "copyright information here",
 		},
 	}
 
 	const prefix = "SALES"
-	help, err := conf.ParseOSArgs(prefix, &cfg)
+	help, err := conf.Parse(prefix, &cfg)
 	if err != nil {
 		if errors.Is(err, conf.ErrHelpWanted) {
 			fmt.Println(help)

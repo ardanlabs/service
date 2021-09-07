@@ -9,7 +9,7 @@ import (
 	"text/tabwriter"
 )
 
-const versionKey = `SVN`
+const buildKey = `Build`
 const descKey = `Desc`
 
 func containsField(fields []Field, name string) bool {
@@ -34,7 +34,7 @@ func fmtUsage(namespace string, fields []Field) string {
 			Help:          "display this help message",
 		}})
 
-	if containsField(fields, versionKey) {
+	if containsField(fields, buildKey) {
 		fields = append(fields, Field{
 			Name:      "version",
 			BoolField: true,
@@ -61,7 +61,7 @@ func fmtUsage(namespace string, fields []Field) string {
 		}
 
 		// Do not display version fields SVN and Description
-		if fld.Name == versionKey || fld.Name == descKey {
+		if fld.Name == buildKey || fld.Name == descKey {
 			continue
 		}
 
