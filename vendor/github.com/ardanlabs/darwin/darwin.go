@@ -105,9 +105,10 @@ func ParseMigrations(s string) []Migration {
 	var mig Migration
 	var script string
 	for scanner.Scan() {
-		v := strings.ToLower(scanner.Text())
+		v := scanner.Text()
+		lower := strings.ToLower(v)
 		switch {
-		case len(v) >= 5 && (v[:6] == "-- ver" || v[:5] == "--ver"):
+		case len(v) >= 5 && (lower[:6] == "-- ver" || lower[:5] == "--ver"):
 			mig.Script = script
 			migs = append(migs, mig)
 
@@ -120,7 +121,7 @@ func ParseMigrations(s string) []Migration {
 			}
 			mig.Version = f
 
-		case len(v) >= 5 && (v[:6] == "-- des" || v[:5] == "--des"):
+		case len(v) >= 5 && (lower[:6] == "-- des" || lower[:5] == "--des"):
 			mig.Description = strings.TrimSpace(v[15:])
 
 		default:

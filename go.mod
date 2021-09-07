@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/ardanlabs/conf/v2 v2.1.1
-	github.com/ardanlabs/darwin v1.2.0
+	github.com/ardanlabs/darwin v1.3.0
 	github.com/dimfeld/httptreemux/v5 v5.3.0
 	github.com/go-playground/locales v0.14.0
 	github.com/go-playground/universal-translator v0.18.0
