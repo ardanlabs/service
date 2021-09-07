@@ -13,7 +13,7 @@ require (
 	github.com/google/go-cmp v0.5.6
 	github.com/google/uuid v1.3.0
 	github.com/jmoiron/sqlx v1.3.4
-	github.com/lib/pq v1.10.2
+	github.com/lib/pq v1.10.3
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.22.0
 	go.opentelemetry.io/otel v1.0.0-RC2
 	go.opentelemetry.io/otel/exporters/zipkin v1.0.0-RC2
