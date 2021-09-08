@@ -175,8 +175,8 @@ func queryString(query string, args ...interface{}) string {
 		query = strings.Replace(query, "?", value, 1)
 	}
 
-	query = strings.Replace(query, "\t", "", -1)
-	query = strings.Replace(query, "\n", " ", -1)
+	query = strings.ReplaceAll(query, "\t", "")
+	query = strings.ReplaceAll(query, "\n", " ")
 
 	return strings.Trim(query, " ")
 }
