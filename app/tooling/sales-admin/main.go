@@ -31,6 +31,7 @@ func main() {
 		if !errors.Is(err, commands.ErrHelp) {
 			log.Errorw("startup", "ERROR", err)
 		}
+		log.Sync()
 		os.Exit(1)
 	}
 }

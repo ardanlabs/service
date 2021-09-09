@@ -48,6 +48,7 @@ func main() {
 	// Perform the startup and shutdown sequence.
 	if err := run(log); err != nil {
 		log.Errorw("startup", "ERROR", err)
+		log.Sync()
 		os.Exit(1)
 	}
 }
