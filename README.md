@@ -7,22 +7,15 @@
 Copyright 2018, 2019, 2020, 2021, Ardan Labs  
 info@ardanlabs.com
 
-## Ultimate Service 2.0 Video
-
-If you are watching the Ultimate Service video on the ArdanLabs [education](https://education.ardanlabs.com/) site,
-please use this branch in the repo.
-
-**_Note: I deleted this branch by accident on August 12th, 2021 and recreated it based on the last commit I found on the final day of filming. I am not 100% sure this commit is correct. If there are discrepancies, please let me know.**
-
-https://github.com/ardanlabs/service/tree/class
-
-This branch represents the code that is explained. We are in the process of providing Ultimate Service 3.0 now and should be available by October 2021.
-
-## Ultimate Service 3.0 Live Classes
+## Ultimate Service 3.0 Classes
 
 This class teaches how to build production-level services in Go leveraging the power of Kubernetes. From the beginning, you will pair program with the instructor walking through the design philosophies and guidelines for building services in Go. With each new feature that is added to the service, you will learn how to deploy to and manage the Kubernetes environment used to run the service.
 
-[Course Outline](https://github.com/ardanlabs/service/wiki/course-outline) | [Class Schedule](https://www.eventbrite.com/o/ardan-labs-7092394651)
+[Wiki](https://github.com/ardanlabs/service/wiki) | [Course Outline](https://github.com/ardanlabs/service/wiki/course-outline) | [Class Schedule](https://www.eventbrite.com/o/ardan-labs-7092394651)
+
+If you are watching the Ultimate Service 3.0 video on the ArdanLabs [education](https://education.ardanlabs.com/) site, please use this branch of the repo.
+
+https://github.com/ardanlabs/service/tree/Service3.0
 
 ## Licensing
 
@@ -56,7 +49,7 @@ bill@ardanlabs.com
 
 * [Purchase Video](https://github.com/ardanlabs/gotraining#purchase-video)
 * [Experience](https://github.com/ardanlabs/gotraining#our-experience)
-* [Teachers](https://github.com/ardanlabs/gotraining#our-teachers)
+* [Teacher](https://github.com/ardanlabs/gotraining#our-teacher)
 * [More About Go](https://github.com/ardanlabs/gotraining#more-about-go)
 * [Minimal Qualified Student](https://github.com/ardanlabs/gotraining#minimal-qualified-student)
 * [Important Reading](https://github.com/ardanlabs/gotraining#important-reading)
