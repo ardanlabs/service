@@ -7,22 +7,13 @@
 Copyright 2018, 2019, 2020, 2021, Ardan Labs  
 info@ardanlabs.com
 
-## Ultimate Service 2.0 Video
-
-If you are watching the Ultimate Service video on the ArdanLabs [education](https://education.ardanlabs.com/) site,
-please use this branch in the repo.
-
-**_Note: I deleted this branch by accident on August 12th, 2021 and recreated it based on the last commit I found on the final day of filming. I am not 100% sure this commit is correct. If there are discrepancies, please let me know.**
-
-https://github.com/ardanlabs/service/tree/class
-
-This branch represents the code that is explained. We are in the process of providing Ultimate Service 3.0 now and should be available by October 2021.
-
-## Ultimate Service 3.0 Live Classes
+## Ultimate Service 3.0 Classes
 
 This class teaches how to build production-level services in Go leveraging the power of Kubernetes. From the beginning, you will pair program with the instructor walking through the design philosophies and guidelines for building services in Go. With each new feature that is added to the service, you will learn how to deploy to and manage the Kubernetes environment used to run the service.
 
-[Course Outline](https://github.com/ardanlabs/service/wiki/course-outline) | [Class Schedule](https://www.eventbrite.com/o/ardan-labs-7092394651)
+Learn more about the project:
+
+[Wiki](https://github.com/ardanlabs/service/wiki) | [Course Outline](https://github.com/ardanlabs/service/wiki/course-outline) | [Class Schedule](https://www.eventbrite.com/o/ardan-labs-7092394651)
 
 ## Licensing
 
@@ -40,12 +31,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ```
 
-## About The Project
-
-Please read the project wiki.
-
-https://github.com/ardanlabs/service/wiki
-
 ## Learn More
 
 **To learn about Corporate training events, options and special pricing please contact:**
@@ -54,15 +39,15 @@ William Kennedy
 ArdanLabs (www.ardanlabs.com)  
 bill@ardanlabs.com  
 
-* [Purchase Video](https://github.com/ardanlabs/gotraining#purchase-video)
-* [Experience](https://github.com/ardanlabs/gotraining#our-experience)
-* [Teachers](https://github.com/ardanlabs/gotraining#our-teachers)
-* [More About Go](https://github.com/ardanlabs/gotraining#more-about-go)
-* [Minimal Qualified Student](https://github.com/ardanlabs/gotraining#minimal-qualified-student)
-* [Important Reading](https://github.com/ardanlabs/gotraining#important-reading)
-* [Before You Come To Class](https://github.com/ardanlabs/gotraining#before-you-come-to-class)
-* [Starter Material](https://github.com/ardanlabs/gotraining#starter-material)
-* [Get The Training Material](https://github.com/ardanlabs/gotraining#go-get-the-training-material)
+* [Purchase Video](https://github.com/ardanlabs/service/tree/service3#purchase-video)
+* [Experience](https://github.com/ardanlabs/service/tree/service3#our-experience)
+* [Teacher](https://github.com/ardanlabs/service/tree/service3#our-teacher)
+* [More About Go](https://github.com/ardanlabs/service/tree/service3#more-about-go)
+* [Minimal Qualified Student](https://github.com/ardanlabs/service/tree/service3#minimal-qualified-student)
+* [Important Reading](https://github.com/ardanlabs/service/tree/service3#important-reading)
+* [Before You Come To Class](https://github.com/ardanlabs/service/tree/service3#before-you-come-to-class)
+* [Starter Material](https://github.com/ardanlabs/service/tree/service3#starter-material)
+* [Get The Training Material](https://github.com/ardanlabs/service/tree/service3#go-get-the-training-material)
 
 ## Purchase Video
 
@@ -76,7 +61,7 @@ We have taught Go to thousands of developers all around the world since 2014. Th
 
 Our classes are perfect for intermediate-level developers who have at least a few months to years of experience writing code in Go. Our classes provide a very deep knowledge of the programming langauge with a big push on language mechanics, design philosophies and guidelines. We focus on teaching how to write code with a priority on consistency, integrity, readability and simplicity. We cover a lot about “if performance matters” with a focus on mechanical sympathy, data oriented design, decoupling and writing/debugging production software.
 
-## Our Teachers
+## Our Teacher
 
 ### William Kennedy ([@goinggodotnet](https://twitter.com/goinggodotnet))  
 _William Kennedy is a managing partner at Ardan Labs in Miami, Florida. Ardan Labs is a high-performance development and training firm working with startups and fortune 500 companies. He is also a co-author of the book Go in Action, the author of the blog GoingGo.Net, and a founding member of GoBridge which is working to increase Go adoption through diversity._
