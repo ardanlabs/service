@@ -15,7 +15,7 @@ This class teaches how to build production-level services in Go leveraging the p
 
 If you are watching the Ultimate Service 3.0 video on the ArdanLabs [education](https://education.ardanlabs.com/) site, please use this branch of the repo.
 
-https://github.com/ardanlabs/service/tree/Service3.0
+https://github.com/ardanlabs/service/tree/service3
 
 ## Licensing
 
