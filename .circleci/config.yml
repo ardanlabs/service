@@ -20,7 +20,7 @@ jobs:
       - run:
           name: Run staticheck
           command: |
-              wget -O staticcheck.tgz https://github.com/dominikh/go-tools/releases/download/2021.1/staticcheck_linux_amd64.tar.gz
+              wget -O staticcheck.tgz https://github.com/dominikh/go-tools/releases/download/2021.1.1/staticcheck_linux_amd64.tar.gz
               sudo tar -xzf staticcheck.tgz
               ./staticcheck/staticcheck --version
               ./staticcheck/staticcheck -checks=all ./...
