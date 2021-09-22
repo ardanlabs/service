@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strconv"
 
-	userProduct "github.com/ardanlabs/service/business/core/product"
+	productCore "github.com/ardanlabs/service/business/core/product"
 	"github.com/ardanlabs/service/business/data/store/product"
 	"github.com/ardanlabs/service/business/sys/auth"
 	"github.com/ardanlabs/service/business/sys/database"
@@ -18,7 +18,7 @@ import (
 
 // Handlers manages the set of product enpoints.
 type Handlers struct {
-	Product userProduct.Core
+	Product productCore.Core
 }
 
 // Query returns a list of products with paging.
