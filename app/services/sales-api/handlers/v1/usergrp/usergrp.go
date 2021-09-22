@@ -13,6 +13,7 @@ import (
 	"github.com/ardanlabs/service/business/sys/auth"
 	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/ardanlabs/service/business/sys/validate"
+	webv1 "github.com/ardanlabs/service/business/web/v1"
 	"github.com/ardanlabs/service/foundation/web"
 )
 
@@ -27,12 +28,12 @@ func (h Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Requ
 	page := web.Param(r, "page")
 	pageNumber, err := strconv.Atoi(page)
 	if err != nil {
-		return validate.NewRequestError(fmt.Errorf("invalid page format [%s]", page), http.StatusBadRequest)
+		return webv1.NewRequestError(fmt.Errorf("invalid page format [%s]", page), http.StatusBadRequest)
 	}
 	rows := web.Param(r, "rows")
 	rowsPerPage, err := strconv.Atoi(rows)
 	if err != nil {
-		return validate.NewRequestError(fmt.Errorf("invalid rows format [%s]", rows), http.StatusBadRequest)
+		return webv1.NewRequestError(fmt.Errorf("invalid rows format [%s]", rows), http.StatusBadRequest)
 	}
 
 	users, err := h.User.Query(ctx, pageNumber, rowsPerPage)
@@ -55,11 +56,11 @@ func (h Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http.
 	if err != nil {
 		switch validate.Cause(err) {
 		case database.ErrInvalidID:
-			return validate.NewRequestError(err, http.StatusBadRequest)
+			return webv1.NewRequestError(err, http.StatusBadRequest)
 		case database.ErrNotFound:
-			return validate.NewRequestError(err, http.StatusNotFound)
+			return webv1.NewRequestError(err, http.StatusNotFound)
 		case database.ErrForbidden:
-			return validate.NewRequestError(err, http.StatusForbidden)
+			return webv1.NewRequestError(err, http.StatusForbidden)
 		default:
 			return fmt.Errorf("ID[%s]: %w", id, err)
 		}
@@ -109,11 +110,11 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 	if err := h.User.Update(ctx, claims, id, upd, v.Now); err != nil {
 		switch validate.Cause(err) {
 		case database.ErrInvalidID:
-			return validate.NewRequestError(err, http.StatusBadRequest)
+			return webv1.NewRequestError(err, http.StatusBadRequest)
 		case database.ErrNotFound:
-			return validate.NewRequestError(err, http.StatusNotFound)
+			return webv1.NewRequestError(err, http.StatusNotFound)
 		case database.ErrForbidden:
-			return validate.NewRequestError(err, http.StatusForbidden)
+			return webv1.NewRequestError(err, http.StatusForbidden)
 		default:
 			return fmt.Errorf("ID[%s] User[%+v]: %w", id, &upd, err)
 		}
@@ -133,11 +134,11 @@ func (h Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Req
 	if err := h.User.Delete(ctx, claims, id); err != nil {
 		switch validate.Cause(err) {
 		case database.ErrInvalidID:
-			return validate.NewRequestError(err, http.StatusBadRequest)
+			return webv1.NewRequestError(err, http.StatusBadRequest)
 		case database.ErrNotFound:
-			return validate.NewRequestError(err, http.StatusNotFound)
+			return webv1.NewRequestError(err, http.StatusNotFound)
 		case database.ErrForbidden:
-			return validate.NewRequestError(err, http.StatusForbidden)
+			return webv1.NewRequestError(err, http.StatusForbidden)
 		default:
 			return fmt.Errorf("ID[%s]: %w", id, err)
 		}
@@ -156,16 +157,16 @@ func (h Handlers) Token(ctx context.Context, w http.ResponseWriter, r *http.Requ
 	email, pass, ok := r.BasicAuth()
 	if !ok {
 		err := errors.New("must provide email and password in Basic auth")
-		return validate.NewRequestError(err, http.StatusUnauthorized)
+		return webv1.NewRequestError(err, http.StatusUnauthorized)
 	}
 
 	claims, err := h.User.Authenticate(ctx, v.Now, email, pass)
 	if err != nil {
 		switch validate.Cause(err) {
 		case database.ErrNotFound:
-			return validate.NewRequestError(err, http.StatusNotFound)
+			return webv1.NewRequestError(err, http.StatusNotFound)
 		case database.ErrAuthenticationFailure:
-			return validate.NewRequestError(err, http.StatusUnauthorized)
+			return webv1.NewRequestError(err, http.StatusUnauthorized)
 		default:
 			return fmt.Errorf("authenticating: %w", err)
 		}

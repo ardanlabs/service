@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/ardanlabs/service/business/sys/validate"
+	webv1 "github.com/ardanlabs/service/business/web/v1"
 	"github.com/ardanlabs/service/foundation/web"
 	"go.uber.org/zap"
 )
@@ -34,22 +35,22 @@ func Errors(log *zap.SugaredLogger) web.Middleware {
 				log.Errorw("ERROR", "traceid", v.TraceID, "ERROR", err)
 
 				// Build out the error response.
-				var er validate.ErrorResponse
+				var er webv1.ErrorResponse
 				var status int
 				switch act := validate.Cause(err).(type) {
 				case validate.FieldErrors:
-					er = validate.ErrorResponse{
+					er = webv1.ErrorResponse{
 						Error:  "data validation error",
 						Fields: act.Error(),
 					}
 					status = http.StatusBadRequest
-				case *validate.RequestError:
-					er = validate.ErrorResponse{
+				case *webv1.RequestError:
+					er = webv1.ErrorResponse{
 						Error: act.Error(),
 					}
 					status = act.Status
 				default:
-					er = validate.ErrorResponse{
+					er = webv1.ErrorResponse{
 						Error: http.StatusText(http.StatusInternalServerError),
 					}
 					status = http.StatusInternalServerError

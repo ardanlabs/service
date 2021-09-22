@@ -14,6 +14,7 @@ import (
 	"github.com/ardanlabs/service/business/data/tests"
 	"github.com/ardanlabs/service/business/sys/auth"
 	"github.com/ardanlabs/service/business/sys/validate"
+	webv1 "github.com/ardanlabs/service/business/web/v1"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 )
@@ -139,7 +140,7 @@ func (ut *UserTests) postUser400(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould receive a status code of 400 for the response.", tests.Success, testID)
 
-			var got validate.ErrorResponse
+			var got webv1.ErrorResponse
 			if err := json.NewDecoder(w.Body).Decode(&got); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to unmarshal the response to an error type : %v", tests.Failed, testID, err)
 			}
@@ -151,7 +152,7 @@ func (ut *UserTests) postUser400(t *testing.T) {
 				{Field: "roles", Error: "roles is a required field"},
 				{Field: "password", Error: "password is a required field"},
 			}
-			exp := validate.ErrorResponse{
+			exp := webv1.ErrorResponse{
 				Error:  "data validation error",
 				Fields: fields.Error(),
 			}

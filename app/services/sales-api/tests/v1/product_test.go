@@ -13,6 +13,7 @@ import (
 	"github.com/ardanlabs/service/business/data/store/product"
 	"github.com/ardanlabs/service/business/data/tests"
 	"github.com/ardanlabs/service/business/sys/validate"
+	webv1 "github.com/ardanlabs/service/business/web/v1"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 )
@@ -82,7 +83,7 @@ func (pt *ProductTests) postProduct400(t *testing.T) {
 			t.Logf("\t%s\tTest %d:\tShould receive a status code of 400 for the response.", tests.Success, testID)
 
 			// Inspect the response.
-			var got validate.ErrorResponse
+			var got webv1.ErrorResponse
 			if err := json.NewDecoder(w.Body).Decode(&got); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to unmarshal the response to an error type : %v", tests.Failed, testID, err)
 			}
@@ -93,7 +94,7 @@ func (pt *ProductTests) postProduct400(t *testing.T) {
 				{Field: "cost", Error: "cost is a required field"},
 				{Field: "quantity", Error: "quantity must be 1 or greater"},
 			}
-			exp := validate.ErrorResponse{
+			exp := webv1.ErrorResponse{
 				Error:  "data validation error",
 				Fields: fields.Error(),
 			}

@@ -15,7 +15,7 @@ import (
 	productCore "github.com/ardanlabs/service/business/core/product"
 	userCore "github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/sys/auth"
-	"github.com/ardanlabs/service/business/web/mid"
+	webv1 "github.com/ardanlabs/service/business/web/v1/mid"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
@@ -88,10 +88,10 @@ func APIMux(cfg APIMuxConfig, options ...func(opts *Options)) http.Handler {
 	// Construct the web.App which holds all routes as well as common Middleware.
 	app := web.NewApp(
 		cfg.Shutdown,
-		mid.Logger(cfg.Log),
-		mid.Errors(cfg.Log),
-		mid.Metrics(),
-		mid.Panics(),
+		webv1.Logger(cfg.Log),
+		webv1.Errors(cfg.Log),
+		webv1.Metrics(),
+		webv1.Panics(),
 	)
 
 	// Accept CORS 'OPTIONS' preflight requests if config has been provided.
@@ -120,19 +120,19 @@ func v1(app *web.App, cfg APIMuxConfig) {
 		Auth: cfg.Auth,
 	}
 	app.Handle(http.MethodGet, version, "/users/token", ugh.Token)
-	app.Handle(http.MethodGet, version, "/users/:page/:rows", ugh.Query, mid.Authenticate(cfg.Auth), mid.Authorize(auth.RoleAdmin))
-	app.Handle(http.MethodGet, version, "/users/:id", ugh.QueryByID, mid.Authenticate(cfg.Auth))
-	app.Handle(http.MethodPost, version, "/users", ugh.Create, mid.Authenticate(cfg.Auth), mid.Authorize(auth.RoleAdmin))
-	app.Handle(http.MethodPut, version, "/users/:id", ugh.Update, mid.Authenticate(cfg.Auth), mid.Authorize(auth.RoleAdmin))
-	app.Handle(http.MethodDelete, version, "/users/:id", ugh.Delete, mid.Authenticate(cfg.Auth), mid.Authorize(auth.RoleAdmin))
+	app.Handle(http.MethodGet, version, "/users/:page/:rows", ugh.Query, webv1.Authenticate(cfg.Auth), webv1.Authorize(auth.RoleAdmin))
+	app.Handle(http.MethodGet, version, "/users/:id", ugh.QueryByID, webv1.Authenticate(cfg.Auth))
+	app.Handle(http.MethodPost, version, "/users", ugh.Create, webv1.Authenticate(cfg.Auth), webv1.Authorize(auth.RoleAdmin))
+	app.Handle(http.MethodPut, version, "/users/:id", ugh.Update, webv1.Authenticate(cfg.Auth), webv1.Authorize(auth.RoleAdmin))
+	app.Handle(http.MethodDelete, version, "/users/:id", ugh.Delete, webv1.Authenticate(cfg.Auth), webv1.Authorize(auth.RoleAdmin))
 
 	// Register product and sale endpoints.
 	pgh := v1ProductGrp.Handlers{
 		Product: productCore.NewCore(cfg.Log, cfg.DB),
 	}
-	app.Handle(http.MethodGet, version, "/products/:page/:rows", pgh.Query, mid.Authenticate(cfg.Auth))
-	app.Handle(http.MethodGet, version, "/products/:id", pgh.QueryByID, mid.Authenticate(cfg.Auth))
-	app.Handle(http.MethodPost, version, "/products", pgh.Create, mid.Authenticate(cfg.Auth))
-	app.Handle(http.MethodPut, version, "/products/:id", pgh.Update, mid.Authenticate(cfg.Auth))
-	app.Handle(http.MethodDelete, version, "/products/:id", pgh.Delete, mid.Authenticate(cfg.Auth))
+	app.Handle(http.MethodGet, version, "/products/:page/:rows", pgh.Query, webv1.Authenticate(cfg.Auth))
+	app.Handle(http.MethodGet, version, "/products/:id", pgh.QueryByID, webv1.Authenticate(cfg.Auth))
+	app.Handle(http.MethodPost, version, "/products", pgh.Create, webv1.Authenticate(cfg.Auth))
+	app.Handle(http.MethodPut, version, "/products/:id", pgh.Update, webv1.Authenticate(cfg.Auth))
+	app.Handle(http.MethodDelete, version, "/products/:id", pgh.Delete, webv1.Authenticate(cfg.Auth))
 }
