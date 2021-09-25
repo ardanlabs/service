@@ -10,7 +10,8 @@ import (
 	"testing"
 
 	"github.com/ardanlabs/service/app/services/sales-api/handlers"
-	"github.com/ardanlabs/service/business/data/store/user"
+	"github.com/ardanlabs/service/business/core/user"
+	store "github.com/ardanlabs/service/business/data/store/user"
 	"github.com/ardanlabs/service/business/data/tests"
 	"github.com/ardanlabs/service/business/sys/auth"
 	"github.com/ardanlabs/service/business/sys/validate"
@@ -119,7 +120,7 @@ func (ut *UserTests) getToken200(t *testing.T) {
 // postUser400 validates a user can't be created with the endpoint
 // unless a valid user document is submitted.
 func (ut *UserTests) postUser400(t *testing.T) {
-	body, err := json.Marshal(&user.NewUser{})
+	body, err := json.Marshal(&store.NewUser{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -174,7 +175,7 @@ func (ut *UserTests) postUser400(t *testing.T) {
 // postUser403 validates a user can't be created unless the calling user is
 // an admin. Regular users can't do this.
 func (ut *UserTests) postUser403(t *testing.T) {
-	body, err := json.Marshal(&user.User{})
+	body, err := json.Marshal(&store.NewUser{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -246,7 +247,7 @@ func (ut *UserTests) getUser400(t *testing.T) {
 			t.Logf("\t%s\tTest %d:\tShould receive a status code of 400 for the response.", tests.Success, testID)
 
 			got := w.Body.String()
-			exp := `{"error":"query: ID is not in its proper form"}`
+			exp := `{"error":"ID is not in its proper form"}`
 			if got != exp {
 				t.Logf("\t\tTest %d:\tGot : %v", testID, got)
 				t.Logf("\t\tTest %d:\tExp: %v", testID, exp)
@@ -277,7 +278,7 @@ func (ut *UserTests) getUser403(t *testing.T) {
 			t.Logf("\t%s\tTest %d:\tShould receive a status code of 403 for the response.", tests.Success, testID)
 
 			recv := w.Body.String()
-			resp := `{"error":"query: attempted action is not allowed"}`
+			resp := `{"error":"attempted action is not allowed"}`
 			if resp != recv {
 				t.Log("Got :", recv)
 				t.Log("Want:", resp)
@@ -363,7 +364,7 @@ func (ut *UserTests) deleteUserNotFound(t *testing.T) {
 func (ut *UserTests) putUser404(t *testing.T) {
 	id := "3097c45e-780a-421b-9eae-43c2fda2bf14"
 
-	u := user.UpdateUser{
+	u := store.UpdateUser{
 		Name: tests.StringPointer("Doesn't Exist"),
 	}
 	body, err := json.Marshal(&u)
@@ -411,7 +412,7 @@ func (ut *UserTests) crudUser(t *testing.T) {
 
 // postUser201 validates a user can be created with the endpoint.
 func (ut *UserTests) postUser201(t *testing.T) user.User {
-	nu := user.NewUser{
+	nu := store.NewUser{
 		Name:            "Bill Kennedy",
 		Email:           "bill@ardanlabs.com",
 		Roles:           []string{auth.RoleAdmin},

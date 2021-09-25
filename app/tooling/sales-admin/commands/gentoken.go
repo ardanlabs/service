@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/ardanlabs/service/business/data/store/user"
+	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/sys/auth"
 	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/ardanlabs/service/foundation/keystore"
@@ -30,7 +30,7 @@ func GenToken(log *zap.SugaredLogger, cfg database.Config, userID string, kid st
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	store := user.NewStore(log, db)
+	user := user.NewCore(log, db)
 
 	// The call to retrieve a user requires an Admin role by the caller.
 	claims := auth.Claims{
@@ -40,7 +40,7 @@ func GenToken(log *zap.SugaredLogger, cfg database.Config, userID string, kid st
 		Roles: []string{auth.RoleAdmin},
 	}
 
-	usr, err := store.QueryByID(ctx, claims, userID)
+	usr, err := user.QueryByID(ctx, claims, userID)
 	if err != nil {
 		return fmt.Errorf("retrieve user: %w", err)
 	}

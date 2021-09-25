@@ -8,9 +8,7 @@ import (
 
 	"github.com/ardanlabs/service/business/data/store/product"
 	"github.com/ardanlabs/service/business/data/tests"
-	"github.com/ardanlabs/service/business/sys/auth"
 	"github.com/ardanlabs/service/business/sys/database"
-	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -34,16 +32,6 @@ func TestProduct(t *testing.T) {
 			ctx := context.Background()
 			now := time.Date(2019, time.January, 1, 0, 0, 0, 0, time.UTC)
 
-			claims := auth.Claims{
-				StandardClaims: jwt.StandardClaims{
-					Issuer:    "service project",
-					Subject:   "5cf37266-3473-4006-984f-9325122678b7",
-					ExpiresAt: time.Now().Add(time.Hour).Unix(),
-					IssuedAt:  time.Now().UTC().Unix(),
-				},
-				Roles: []string{auth.RoleAdmin, auth.RoleUser},
-			}
-
 			np := product.NewProduct{
 				Name:     "Comic Books",
 				Cost:     10,
@@ -51,7 +39,7 @@ func TestProduct(t *testing.T) {
 				UserID:   "5cf37266-3473-4006-984f-9325122678b7",
 			}
 
-			prd, err := store.Create(ctx, claims, np, now)
+			prd, err := store.Create(ctx, np, now)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to create a product : %s.", tests.Failed, testID, err)
 			}
@@ -75,7 +63,7 @@ func TestProduct(t *testing.T) {
 			}
 			updatedTime := time.Date(2019, time.January, 1, 1, 1, 1, 0, time.UTC)
 
-			if err := store.Update(ctx, claims, prd.ID, upd, updatedTime); err != nil {
+			if err := store.Update(ctx, prd.ID, upd, updatedTime); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to update product : %s.", tests.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to update product.", tests.Success, testID)
@@ -94,7 +82,7 @@ func TestProduct(t *testing.T) {
 			want.Quantity = *upd.Quantity
 			want.DateUpdated = updatedTime
 
-			var got product.Product
+			var got product.DBProduct
 			for _, p := range products {
 				if p.ID == want.ID {
 					got = p
@@ -109,7 +97,7 @@ func TestProduct(t *testing.T) {
 				Name: tests.StringPointer("Graphic Novels"),
 			}
 
-			if err := store.Update(ctx, claims, prd.ID, upd, updatedTime); err != nil {
+			if err := store.Update(ctx, prd.ID, upd, updatedTime); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to update just some fields of product : %s.", tests.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to update just some fields of product.", tests.Success, testID)
@@ -126,13 +114,13 @@ func TestProduct(t *testing.T) {
 				t.Logf("\t%s\tTest %d:\tShould be able to see updated Name field.", tests.Success, testID)
 			}
 
-			if err := store.Delete(ctx, claims, prd.ID); err != nil {
+			if err := store.Delete(ctx, prd.ID); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to delete product : %s.", tests.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to delete product.", tests.Success, testID)
 
 			_, err = store.QueryByID(ctx, prd.ID)
-			if !errors.Is(err, database.ErrNotFound) {
+			if !errors.Is(err, database.ErrDBNotFound) {
 				t.Fatalf("\t%s\tTest %d:\tShould NOT be able to retrieve deleted product : %s.", tests.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould NOT be able to retrieve deleted product.", tests.Success, testID)

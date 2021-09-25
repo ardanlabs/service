@@ -5,8 +5,11 @@ import (
 	"errors"
 )
 
-// ErrInvalidID occurs when an ID is not in a valid form.
-var ErrInvalidID = errors.New("ID is not in its proper form")
+// Set of error variables for CRUD operations.
+var (
+	ErrNotFound  = errors.New("not found")
+	ErrInvalidID = errors.New("ID is not in its proper form")
+)
 
 // FieldError is used to indicate an error with a specific request field.
 type FieldError struct {

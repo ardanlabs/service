@@ -8,127 +8,159 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ardanlabs/service/business/data/store/user"
+	store "github.com/ardanlabs/service/business/data/store/user"
 	"github.com/ardanlabs/service/business/sys/auth"
+	"github.com/ardanlabs/service/business/sys/validate"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // Core manages the set of API's for user access.
 type Core struct {
-	log  *zap.SugaredLogger
-	user user.Store
+	log   *zap.SugaredLogger
+	store store.Store
 }
 
 // NewCore constructs a core for user api access.
 func NewCore(log *zap.SugaredLogger, db *sqlx.DB) Core {
 	return Core{
-		log:  log,
-		user: user.NewStore(log, db),
+		log:   log,
+		store: store.NewStore(log, db),
 	}
 }
 
 // Create inserts a new user into the database.
-func (c Core) Create(ctx context.Context, nu user.NewUser, now time.Time) (user.User, error) {
-
-	// PERFORM PRE BUSINESS OPERATIONS
-
-	usr, err := c.user.Create(ctx, nu, now)
-	if err != nil {
-		return user.User{}, fmt.Errorf("create: %w", err)
+func (c Core) Create(ctx context.Context, nu store.NewUser, now time.Time) (User, error) {
+	if err := validate.Check(nu); err != nil {
+		return User{}, fmt.Errorf("validating data: %w", err)
 	}
 
-	// PERFORM POST BUSINESS OPERATIONS
+	dbUsr, err := c.store.Create(ctx, nu, now)
+	if err != nil {
+		return User{}, fmt.Errorf("create: %w", err)
+	}
 
-	return usr, nil
+	return toUser(dbUsr), nil
 }
 
 // Update replaces a user document in the database.
-func (c Core) Update(ctx context.Context, claims auth.Claims, userID string, uu user.UpdateUser, now time.Time) error {
-
-	// PERFORM PRE BUSINESS OPERATIONS
-
-	if err := c.user.Update(ctx, claims, userID, uu, now); err != nil {
-		return fmt.Errorf("udpate: %w", err)
+func (c Core) Update(ctx context.Context, claims auth.Claims, userID string, uu store.UpdateUser, now time.Time) error {
+	if err := validate.CheckID(userID); err != nil {
+		return validate.ErrInvalidID
 	}
 
-	// PERFORM POST BUSINESS OPERATIONS
+	if err := validate.Check(uu); err != nil {
+		return fmt.Errorf("validating data: %w", err)
+	}
+
+	// If you are not an admin and looking to retrieve someone other than yourself.
+	if !claims.Authorized(auth.RoleAdmin) && claims.Subject != userID {
+		return auth.ErrForbidden
+	}
+
+	if err := c.store.Update(ctx, userID, uu, now); err != nil {
+		return fmt.Errorf("udpate: %w", err)
+	}
 
 	return nil
 }
 
 // Delete removes a user from the database.
 func (c Core) Delete(ctx context.Context, claims auth.Claims, userID string) error {
-
-	// PERFORM PRE BUSINESS OPERATIONS
-
-	if err := c.user.Delete(ctx, claims, userID); err != nil {
-		return fmt.Errorf("delete: %w", err)
+	if err := validate.CheckID(userID); err != nil {
+		return validate.ErrInvalidID
 	}
 
-	// PERFORM POST BUSINESS OPERATIONS
+	// If you are not an admin and looking to delete someone other than yourself.
+	if !claims.Authorized(auth.RoleAdmin) && claims.Subject != userID {
+		return auth.ErrForbidden
+	}
+
+	if err := c.store.Delete(ctx, userID); err != nil {
+		return fmt.Errorf("delete: %w", err)
+	}
 
 	return nil
 }
 
 // Query retrieves a list of existing users from the database.
-func (c Core) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]user.User, error) {
-
-	// PERFORM PRE BUSINESS OPERATIONS
-
-	users, err := c.user.Query(ctx, pageNumber, rowsPerPage)
+func (c Core) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]User, error) {
+	dbUsers, err := c.store.Query(ctx, pageNumber, rowsPerPage)
 	if err != nil {
 		return nil, fmt.Errorf("query: %w", err)
 	}
 
-	// PERFORM POST BUSINESS OPERATIONS
-
-	return users, nil
+	return toUserSlice(dbUsers), nil
 }
 
 // QueryByID gets the specified user from the database.
-func (c Core) QueryByID(ctx context.Context, claims auth.Claims, userID string) (user.User, error) {
-
-	// PERFORM PRE BUSINESS OPERATIONS
-
-	usr, err := c.user.QueryByID(ctx, claims, userID)
-	if err != nil {
-		return user.User{}, fmt.Errorf("query: %w", err)
+func (c Core) QueryByID(ctx context.Context, claims auth.Claims, userID string) (User, error) {
+	if err := validate.CheckID(userID); err != nil {
+		return User{}, validate.ErrInvalidID
 	}
 
-	// PERFORM POST BUSINESS OPERATIONS
+	// If you are not an admin and looking to retrieve someone other than yourself.
+	if !claims.Authorized(auth.RoleAdmin) && claims.Subject != userID {
+		return User{}, auth.ErrForbidden
+	}
 
-	return usr, nil
+	dbUsr, err := c.store.QueryByID(ctx, userID)
+	if err != nil {
+		return User{}, fmt.Errorf("query: %w", err)
+	}
+
+	return toUser(dbUsr), nil
 }
 
 // QueryByEmail gets the specified user from the database by email.
-func (c Core) QueryByEmail(ctx context.Context, claims auth.Claims, email string) (user.User, error) {
+func (c Core) QueryByEmail(ctx context.Context, claims auth.Claims, email string) (User, error) {
 
-	// PERFORM PRE BUSINESS OPERATIONS
+	// Add Email Validate function in validate
+	// if err := validate.Email(email); err != nil {
+	// 	return User{}, ErrInvalidEmail
+	// }
 
-	usr, err := c.user.QueryByID(ctx, claims, email)
+	dbUsr, err := c.store.QueryByID(ctx, email)
 	if err != nil {
-		return user.User{}, fmt.Errorf("query: %w", err)
+		return User{}, fmt.Errorf("query: %w", err)
 	}
 
-	// PERFORM POST BUSINESS OPERATIONS
+	// If you are not an admin and looking to retrieve someone other than yourself.
+	if !claims.Authorized(auth.RoleAdmin) && claims.Subject != dbUsr.ID {
+		return User{}, auth.ErrForbidden
+	}
 
-	return usr, nil
+	return toUser(dbUsr), nil
 }
 
 // Authenticate finds a user by their email and verifies their password. On
 // success it returns a Claims User representing this user. The claims can be
 // used to generate a token for future authentication.
 func (c Core) Authenticate(ctx context.Context, now time.Time, email, password string) (auth.Claims, error) {
-
-	// PERFORM PRE BUSINESS OPERATIONS
-
-	claims, err := c.user.Authenticate(ctx, now, email, password)
+	dbUsr, err := c.store.QueryByEmail(ctx, email)
 	if err != nil {
 		return auth.Claims{}, fmt.Errorf("query: %w", err)
 	}
 
-	// PERFORM POST BUSINESS OPERATIONS
+	// Compare the provided password with the saved hash. Use the bcrypt
+	// comparison function so it is cryptographically secure.
+	if err := bcrypt.CompareHashAndPassword(dbUsr.PasswordHash, []byte(password)); err != nil {
+		return auth.Claims{}, auth.ErrAuthenticationFailure
+	}
+
+	// If we are this far the request is valid. Create some claims for the user
+	// and generate their token.
+	claims := auth.Claims{
+		StandardClaims: jwt.StandardClaims{
+			Issuer:    "service project",
+			Subject:   dbUsr.ID,
+			ExpiresAt: time.Now().Add(time.Hour).Unix(),
+			IssuedAt:  time.Now().UTC().Unix(),
+		},
+		Roles: dbUsr.Roles,
+	}
 
 	return claims, nil
 }

@@ -19,6 +19,7 @@ import (
 	"github.com/ardanlabs/service/foundation/docker"
 	"github.com/ardanlabs/service/foundation/keystore"
 	"github.com/ardanlabs/service/foundation/logger"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
 )
@@ -143,9 +144,19 @@ func (test *Test) Token(email, pass string) string {
 	test.t.Log("Generating token for test ...")
 
 	store := user.NewStore(test.Log, test.DB)
-	claims, err := store.Authenticate(context.Background(), time.Now(), email, pass)
+	dbUsr, err := store.QueryByEmail(context.Background(), email)
 	if err != nil {
-		test.t.Fatal(err)
+		return ""
+	}
+
+	claims := auth.Claims{
+		StandardClaims: jwt.StandardClaims{
+			Issuer:    "service project",
+			ExpiresAt: time.Now().Add(time.Hour).Unix(),
+			IssuedAt:  time.Now().UTC().Unix(),
+			Subject:   dbUsr.ID,
+		},
+		Roles: dbUsr.Roles,
 	}
 
 	token, err := test.Auth.GenerateToken(claims)

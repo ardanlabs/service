@@ -11,7 +11,6 @@ import (
 	productCore "github.com/ardanlabs/service/business/core/product"
 	"github.com/ardanlabs/service/business/data/store/product"
 	"github.com/ardanlabs/service/business/sys/auth"
-	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/ardanlabs/service/business/sys/validate"
 	webv1 "github.com/ardanlabs/service/business/web/v1"
 	"github.com/ardanlabs/service/foundation/web"
@@ -49,9 +48,9 @@ func (h Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http.
 	prod, err := h.Product.QueryByID(ctx, id)
 	if err != nil {
 		switch validate.Cause(err) {
-		case database.ErrInvalidID:
+		case validate.ErrInvalidID:
 			return webv1.NewRequestError(err, http.StatusBadRequest)
-		case database.ErrNotFound:
+		case validate.ErrNotFound:
 			return webv1.NewRequestError(err, http.StatusNotFound)
 		default:
 			return fmt.Errorf("ID[%s]: %w", id, err)
@@ -68,17 +67,12 @@ func (h Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Req
 		return web.NewShutdownError("web value missing from context")
 	}
 
-	claims, err := auth.GetClaims(ctx)
-	if err != nil {
-		return errors.New("claims missing from context")
-	}
-
 	var np product.NewProduct
 	if err := web.Decode(r, &np); err != nil {
 		return fmt.Errorf("unable to decode payload: %w", err)
 	}
 
-	prod, err := h.Product.Create(ctx, claims, np, v.Now)
+	prod, err := h.Product.Create(ctx, np, v.Now)
 	if err != nil {
 		return fmt.Errorf("creating new product, np[%+v]: %w", np, err)
 	}
@@ -106,11 +100,11 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 	id := web.Param(r, "id")
 	if err := h.Product.Update(ctx, claims, id, upd, v.Now); err != nil {
 		switch validate.Cause(err) {
-		case database.ErrInvalidID:
+		case validate.ErrInvalidID:
 			return webv1.NewRequestError(err, http.StatusBadRequest)
-		case database.ErrNotFound:
+		case validate.ErrNotFound:
 			return webv1.NewRequestError(err, http.StatusNotFound)
-		case database.ErrForbidden:
+		case auth.ErrForbidden:
 			return webv1.NewRequestError(err, http.StatusForbidden)
 		default:
 			return fmt.Errorf("ID[%s] User[%+v]: %w", id, &upd, err)
@@ -130,7 +124,7 @@ func (h Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Req
 	id := web.Param(r, "id")
 	if err := h.Product.Delete(ctx, claims, id); err != nil {
 		switch validate.Cause(err) {
-		case database.ErrInvalidID:
+		case validate.ErrInvalidID:
 			return webv1.NewRequestError(err, http.StatusBadRequest)
 		default:
 			return fmt.Errorf("ID[%s]: %w", id, err)

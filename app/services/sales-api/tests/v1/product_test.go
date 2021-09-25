@@ -10,7 +10,8 @@ import (
 	"testing"
 
 	"github.com/ardanlabs/service/app/services/sales-api/handlers"
-	"github.com/ardanlabs/service/business/data/store/product"
+	"github.com/ardanlabs/service/business/core/product"
+	store "github.com/ardanlabs/service/business/data/store/product"
 	"github.com/ardanlabs/service/business/data/tests"
 	"github.com/ardanlabs/service/business/sys/validate"
 	webv1 "github.com/ardanlabs/service/business/web/v1"
@@ -93,6 +94,7 @@ func (pt *ProductTests) postProduct400(t *testing.T) {
 				{Field: "name", Error: "name is a required field"},
 				{Field: "cost", Error: "cost is a required field"},
 				{Field: "quantity", Error: "quantity must be 1 or greater"},
+				{Field: "user_id", Error: "user_id is a required field"},
 			}
 			exp := webv1.ErrorResponse{
 				Error:  "data validation error",
@@ -116,7 +118,7 @@ func (pt *ProductTests) postProduct400(t *testing.T) {
 // postProduct401 validates a product can't be created with the endpoint
 // unless the user is authenticated
 func (pt *ProductTests) postProduct401(t *testing.T) {
-	np := product.NewProduct{
+	np := store.NewProduct{
 		Name:     "Comic Books",
 		Cost:     25,
 		Quantity: 60,
@@ -167,7 +169,7 @@ func (pt *ProductTests) getProduct400(t *testing.T) {
 			t.Logf("\t%s\tTest %d:\tShould receive a status code of 400 for the response.", tests.Success, testID)
 
 			got := w.Body.String()
-			exp := `{"error":"query: ID is not in its proper form"}`
+			exp := `{"error":"ID is not in its proper form"}`
 			if got != exp {
 				t.Logf("\t\tTest %d:\tGot : %v", testID, got)
 				t.Logf("\t\tTest %d:\tExp: %v", testID, exp)
@@ -237,7 +239,7 @@ func (pt *ProductTests) deleteProductNotFound(t *testing.T) {
 func (pt *ProductTests) putProduct404(t *testing.T) {
 	id := "9b468f90-1cf1-4377-b3fa-68b450d632a0"
 
-	up := product.UpdateProduct{
+	up := store.UpdateProduct{
 		Name: tests.StringPointer("Nonexistent"),
 	}
 	body, err := json.Marshal(&up)
@@ -284,10 +286,11 @@ func (pt *ProductTests) crudProduct(t *testing.T) {
 
 // postProduct201 validates a product can be created with the endpoint.
 func (pt *ProductTests) postProduct201(t *testing.T) product.Product {
-	np := product.NewProduct{
+	np := store.NewProduct{
 		Name:     "Comic Books",
 		Cost:     25,
 		Quantity: 60,
+		UserID:   "5cf37266-3473-4006-984f-9325122678b7",
 	}
 
 	body, err := json.Marshal(&np)

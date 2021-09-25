@@ -11,7 +11,6 @@ import (
 	"github.com/ardanlabs/service/business/data/tests"
 	"github.com/ardanlabs/service/business/sys/auth"
 	"github.com/ardanlabs/service/business/sys/database"
-	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -49,17 +48,7 @@ func TestUser(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to create user.", tests.Success, testID)
 
-			claims := auth.Claims{
-				StandardClaims: jwt.StandardClaims{
-					Issuer:    "service project",
-					Subject:   usr.ID,
-					ExpiresAt: time.Now().Add(time.Hour).Unix(),
-					IssuedAt:  time.Now().UTC().Unix(),
-				},
-				Roles: []string{auth.RoleUser},
-			}
-
-			saved, err := store.QueryByID(ctx, claims, usr.ID)
+			saved, err := store.QueryByID(ctx, usr.ID)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve user by ID: %s.", tests.Failed, testID, err)
 			}
@@ -75,21 +64,12 @@ func TestUser(t *testing.T) {
 				Email: tests.StringPointer("jacob@ardanlabs.com"),
 			}
 
-			claims = auth.Claims{
-				StandardClaims: jwt.StandardClaims{
-					Issuer:    "service project",
-					ExpiresAt: time.Now().Add(time.Hour).Unix(),
-					IssuedAt:  time.Now().UTC().Unix(),
-				},
-				Roles: []string{auth.RoleAdmin},
-			}
-
-			if err := store.Update(ctx, claims, usr.ID, upd, now); err != nil {
+			if err := store.Update(ctx, usr.ID, upd, now); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to update user : %s.", tests.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to update user.", tests.Success, testID)
 
-			saved, err = store.QueryByEmail(ctx, claims, *upd.Email)
+			saved, err = store.QueryByEmail(ctx, *upd.Email)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve user by Email : %s.", tests.Failed, testID, err)
 			}
@@ -111,13 +91,13 @@ func TestUser(t *testing.T) {
 				t.Logf("\t%s\tTest %d:\tShould be able to see updates to Email.", tests.Success, testID)
 			}
 
-			if err := store.Delete(ctx, claims, usr.ID); err != nil {
+			if err := store.Delete(ctx, usr.ID); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to delete user : %s.", tests.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to delete user.", tests.Success, testID)
 
-			_, err = store.QueryByID(ctx, claims, usr.ID)
-			if !errors.Is(err, database.ErrNotFound) {
+			_, err = store.QueryByID(ctx, usr.ID)
+			if !errors.Is(err, database.ErrDBNotFound) {
 				t.Fatalf("\t%s\tTest %d:\tShould NOT be able to retrieve user : %s.", tests.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould NOT be able to retrieve user.", tests.Success, testID)
@@ -171,58 +151,6 @@ func TestPagingUser(t *testing.T) {
 				t.Fatalf("\t%s\tTest %d:\tShould have different users : %s.", tests.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould have different users.", tests.Success, testID)
-		}
-	}
-}
-
-func TestAuthenticate(t *testing.T) {
-	log, db, teardown := tests.NewUnit(t, dbc)
-	t.Cleanup(teardown)
-
-	store := user.NewStore(log, db)
-
-	t.Log("Given the need to authenticate users")
-	{
-		testID := 0
-		t.Logf("\tTest %d:\tWhen handling a single User.", testID)
-		{
-			ctx := context.Background()
-			now := time.Date(2018, time.October, 1, 0, 0, 0, 0, time.UTC)
-
-			nu := user.NewUser{
-				Name:            "Anna Walker",
-				Email:           "anna@ardanlabs.com",
-				Roles:           []string{auth.RoleAdmin},
-				Password:        "goroutines",
-				PasswordConfirm: "goroutines",
-			}
-
-			usr, err := store.Create(ctx, nu, now)
-			if err != nil {
-				t.Fatalf("\t%s\tTest %d:\tShould be able to create user : %s.", tests.Failed, testID, err)
-			}
-			t.Logf("\t%s\tTest %d:\tShould be able to create user.", tests.Success, testID)
-
-			claims, err := store.Authenticate(ctx, now, "anna@ardanlabs.com", "goroutines")
-			if err != nil {
-				t.Fatalf("\t%s\tTest %d:\tShould be able to generate claims : %s.", tests.Failed, testID, err)
-			}
-			t.Logf("\t%s\tTest %d:\tShould be able to generate claims.", tests.Success, testID)
-
-			want := auth.Claims{
-				Roles: usr.Roles,
-				StandardClaims: jwt.StandardClaims{
-					Issuer:    "service project",
-					Subject:   usr.ID,
-					ExpiresAt: time.Now().Add(time.Hour).Unix(),
-					IssuedAt:  time.Now().UTC().Unix(),
-				},
-			}
-
-			if diff := cmp.Diff(want, claims); diff != "" {
-				t.Fatalf("\t%s\tTest %d:\tShould get back the expected claims. Diff:\n%s", tests.Failed, testID, diff)
-			}
-			t.Logf("\t%s\tTest %d:\tShould get back the expected claims.", tests.Success, testID)
 		}
 	}
 }

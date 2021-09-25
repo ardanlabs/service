@@ -5,8 +5,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/ardanlabs/service/business/data/store/product"
-	"github.com/ardanlabs/service/business/data/store/user"
+	"github.com/ardanlabs/service/business/core/product"
+	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/sys/auth"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
@@ -14,15 +14,15 @@ import (
 
 // Core manages the set apis for report functionality.
 type Core struct {
-	User    user.Store
-	Product product.Store
+	User    user.Core
+	Product product.Core
 }
 
 // NewCore constructs a core for report api access.
 func NewCore(log *zap.SugaredLogger, db *sqlx.DB) Core {
 	return Core{
-		User:    user.NewStore(log, db),
-		Product: product.NewStore(log, db),
+		User:    user.NewCore(log, db),
+		Product: product.NewCore(log, db),
 	}
 }
 

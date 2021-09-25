@@ -8,10 +8,9 @@ import (
 	"net/http"
 	"strconv"
 
-	userCore "github.com/ardanlabs/service/business/core/user"
-	"github.com/ardanlabs/service/business/data/store/user"
+	"github.com/ardanlabs/service/business/core/user"
+	store "github.com/ardanlabs/service/business/data/store/user"
 	"github.com/ardanlabs/service/business/sys/auth"
-	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/ardanlabs/service/business/sys/validate"
 	webv1 "github.com/ardanlabs/service/business/web/v1"
 	"github.com/ardanlabs/service/foundation/web"
@@ -19,7 +18,7 @@ import (
 
 // Handlers manages the set of user enpoints.
 type Handlers struct {
-	User userCore.Core
+	User user.Core
 	Auth *auth.Auth
 }
 
@@ -55,11 +54,11 @@ func (h Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http.
 	usr, err := h.User.QueryByID(ctx, claims, id)
 	if err != nil {
 		switch validate.Cause(err) {
-		case database.ErrInvalidID:
+		case validate.ErrInvalidID:
 			return webv1.NewRequestError(err, http.StatusBadRequest)
-		case database.ErrNotFound:
+		case validate.ErrNotFound:
 			return webv1.NewRequestError(err, http.StatusNotFound)
-		case database.ErrForbidden:
+		case auth.ErrForbidden:
 			return webv1.NewRequestError(err, http.StatusForbidden)
 		default:
 			return fmt.Errorf("ID[%s]: %w", id, err)
@@ -76,7 +75,7 @@ func (h Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Req
 		return web.NewShutdownError("web value missing from context")
 	}
 
-	var nu user.NewUser
+	var nu store.NewUser
 	if err := web.Decode(r, &nu); err != nil {
 		return fmt.Errorf("unable to decode payload: %w", err)
 	}
@@ -101,7 +100,7 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 		return errors.New("claims missing from context")
 	}
 
-	var upd user.UpdateUser
+	var upd store.UpdateUser
 	if err := web.Decode(r, &upd); err != nil {
 		return fmt.Errorf("unable to decode payload: %w", err)
 	}
@@ -109,11 +108,11 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 	id := web.Param(r, "id")
 	if err := h.User.Update(ctx, claims, id, upd, v.Now); err != nil {
 		switch validate.Cause(err) {
-		case database.ErrInvalidID:
+		case validate.ErrInvalidID:
 			return webv1.NewRequestError(err, http.StatusBadRequest)
-		case database.ErrNotFound:
+		case validate.ErrNotFound:
 			return webv1.NewRequestError(err, http.StatusNotFound)
-		case database.ErrForbidden:
+		case auth.ErrForbidden:
 			return webv1.NewRequestError(err, http.StatusForbidden)
 		default:
 			return fmt.Errorf("ID[%s] User[%+v]: %w", id, &upd, err)
@@ -133,11 +132,11 @@ func (h Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Req
 	id := web.Param(r, "id")
 	if err := h.User.Delete(ctx, claims, id); err != nil {
 		switch validate.Cause(err) {
-		case database.ErrInvalidID:
+		case validate.ErrInvalidID:
 			return webv1.NewRequestError(err, http.StatusBadRequest)
-		case database.ErrNotFound:
+		case validate.ErrNotFound:
 			return webv1.NewRequestError(err, http.StatusNotFound)
-		case database.ErrForbidden:
+		case auth.ErrForbidden:
 			return webv1.NewRequestError(err, http.StatusForbidden)
 		default:
 			return fmt.Errorf("ID[%s]: %w", id, err)
@@ -163,9 +162,9 @@ func (h Handlers) Token(ctx context.Context, w http.ResponseWriter, r *http.Requ
 	claims, err := h.User.Authenticate(ctx, v.Now, email, pass)
 	if err != nil {
 		switch validate.Cause(err) {
-		case database.ErrNotFound:
+		case validate.ErrNotFound:
 			return webv1.NewRequestError(err, http.StatusNotFound)
-		case database.ErrAuthenticationFailure:
+		case auth.ErrAuthenticationFailure:
 			return webv1.NewRequestError(err, http.StatusUnauthorized)
 		default:
 			return fmt.Errorf("authenticating: %w", err)
