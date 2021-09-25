@@ -122,7 +122,7 @@ func (c Core) QueryByEmail(ctx context.Context, claims auth.Claims, email string
 	// 	return User{}, ErrInvalidEmail
 	// }
 
-	dbUsr, err := c.store.QueryByID(ctx, email)
+	dbUsr, err := c.store.QueryByEmail(ctx, email)
 	if err != nil {
 		return User{}, fmt.Errorf("query: %w", err)
 	}
