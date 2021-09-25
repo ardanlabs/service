@@ -7,23 +7,23 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/core/user"
+	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/ardanlabs/service/business/data/schema"
 	store "github.com/ardanlabs/service/business/data/store/user"
-	"github.com/ardanlabs/service/business/data/tests"
 	"github.com/ardanlabs/service/business/sys/auth"
 	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/go-cmp/cmp"
 )
 
-var dbc = tests.DBContainer{
+var dbc = dbtest.DBContainer{
 	Image: "postgres:13-alpine",
 	Port:  "5432",
 	Args:  []string{"-e", "POSTGRES_PASSWORD=postgres"},
 }
 
 func TestUser(t *testing.T) {
-	log, db, teardown := tests.NewUnit(t, dbc)
+	log, db, teardown := dbtest.NewUnit(t, dbc)
 	t.Cleanup(teardown)
 
 	user := user.NewCore(log, db)
@@ -46,9 +46,9 @@ func TestUser(t *testing.T) {
 
 			usr, err := user.Create(ctx, nu, now)
 			if err != nil {
-				t.Fatalf("\t%s\tTest %d:\tShould be able to create user : %s.", tests.Failed, testID, err)
+				t.Fatalf("\t%s\tTest %d:\tShould be able to create user : %s.", dbtest.Failed, testID, err)
 			}
-			t.Logf("\t%s\tTest %d:\tShould be able to create user.", tests.Success, testID)
+			t.Logf("\t%s\tTest %d:\tShould be able to create user.", dbtest.Success, testID)
 
 			claims := auth.Claims{
 				StandardClaims: jwt.StandardClaims{
@@ -62,18 +62,18 @@ func TestUser(t *testing.T) {
 
 			saved, err := user.QueryByID(ctx, claims, usr.ID)
 			if err != nil {
-				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve user by ID: %s.", tests.Failed, testID, err)
+				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve user by ID: %s.", dbtest.Failed, testID, err)
 			}
-			t.Logf("\t%s\tTest %d:\tShould be able to retrieve user by ID.", tests.Success, testID)
+			t.Logf("\t%s\tTest %d:\tShould be able to retrieve user by ID.", dbtest.Success, testID)
 
 			if diff := cmp.Diff(usr, saved); diff != "" {
-				t.Fatalf("\t%s\tTest %d:\tShould get back the same user. Diff:\n%s", tests.Failed, testID, diff)
+				t.Fatalf("\t%s\tTest %d:\tShould get back the same user. Diff:\n%s", dbtest.Failed, testID, diff)
 			}
-			t.Logf("\t%s\tTest %d:\tShould get back the same user.", tests.Success, testID)
+			t.Logf("\t%s\tTest %d:\tShould get back the same user.", dbtest.Success, testID)
 
 			upd := store.UpdateUser{
-				Name:  tests.StringPointer("Jacob Walker"),
-				Email: tests.StringPointer("jacob@ardanlabs.com"),
+				Name:  dbtest.StringPointer("Jacob Walker"),
+				Email: dbtest.StringPointer("jacob@ardanlabs.com"),
 			}
 
 			claims = auth.Claims{
@@ -86,48 +86,48 @@ func TestUser(t *testing.T) {
 			}
 
 			if err := user.Update(ctx, claims, usr.ID, upd, now); err != nil {
-				t.Fatalf("\t%s\tTest %d:\tShould be able to update user : %s.", tests.Failed, testID, err)
+				t.Fatalf("\t%s\tTest %d:\tShould be able to update user : %s.", dbtest.Failed, testID, err)
 			}
-			t.Logf("\t%s\tTest %d:\tShould be able to update user.", tests.Success, testID)
+			t.Logf("\t%s\tTest %d:\tShould be able to update user.", dbtest.Success, testID)
 
 			saved, err = user.QueryByEmail(ctx, claims, *upd.Email)
 			if err != nil {
-				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve user by Email : %s.", tests.Failed, testID, err)
+				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve user by Email : %s.", dbtest.Failed, testID, err)
 			}
-			t.Logf("\t%s\tTest %d:\tShould be able to retrieve user by Email.", tests.Success, testID)
+			t.Logf("\t%s\tTest %d:\tShould be able to retrieve user by Email.", dbtest.Success, testID)
 
 			if saved.Name != *upd.Name {
-				t.Errorf("\t%s\tTest %d:\tShould be able to see updates to Name.", tests.Failed, testID)
+				t.Errorf("\t%s\tTest %d:\tShould be able to see updates to Name.", dbtest.Failed, testID)
 				t.Logf("\t\tTest %d:\tGot: %v", testID, saved.Name)
 				t.Logf("\t\tTest %d:\tExp: %v", testID, *upd.Name)
 			} else {
-				t.Logf("\t%s\tTest %d:\tShould be able to see updates to Name.", tests.Success, testID)
+				t.Logf("\t%s\tTest %d:\tShould be able to see updates to Name.", dbtest.Success, testID)
 			}
 
 			if saved.Email != *upd.Email {
-				t.Errorf("\t%s\tTest %d:\tShould be able to see updates to Email.", tests.Failed, testID)
+				t.Errorf("\t%s\tTest %d:\tShould be able to see updates to Email.", dbtest.Failed, testID)
 				t.Logf("\t\tTest %d:\tGot: %v", testID, saved.Email)
 				t.Logf("\t\tTest %d:\tExp: %v", testID, *upd.Email)
 			} else {
-				t.Logf("\t%s\tTest %d:\tShould be able to see updates to Email.", tests.Success, testID)
+				t.Logf("\t%s\tTest %d:\tShould be able to see updates to Email.", dbtest.Success, testID)
 			}
 
 			if err := user.Delete(ctx, claims, usr.ID); err != nil {
-				t.Fatalf("\t%s\tTest %d:\tShould be able to delete user : %s.", tests.Failed, testID, err)
+				t.Fatalf("\t%s\tTest %d:\tShould be able to delete user : %s.", dbtest.Failed, testID, err)
 			}
-			t.Logf("\t%s\tTest %d:\tShould be able to delete user.", tests.Success, testID)
+			t.Logf("\t%s\tTest %d:\tShould be able to delete user.", dbtest.Success, testID)
 
 			_, err = user.QueryByID(ctx, claims, usr.ID)
 			if !errors.Is(err, validate.ErrNotFound) {
-				t.Fatalf("\t%s\tTest %d:\tShould NOT be able to retrieve user : %s.", tests.Failed, testID, err)
+				t.Fatalf("\t%s\tTest %d:\tShould NOT be able to retrieve user : %s.", dbtest.Failed, testID, err)
 			}
-			t.Logf("\t%s\tTest %d:\tShould NOT be able to retrieve user.", tests.Success, testID)
+			t.Logf("\t%s\tTest %d:\tShould NOT be able to retrieve user.", dbtest.Success, testID)
 		}
 	}
 }
 
 func TestPagingUser(t *testing.T) {
-	log, db, teardown := tests.NewUnit(t, dbc)
+	log, db, teardown := dbtest.NewUnit(t, dbc)
 	t.Cleanup(teardown)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -146,32 +146,32 @@ func TestPagingUser(t *testing.T) {
 
 			users1, err := user.Query(ctx, 1, 1)
 			if err != nil {
-				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve users for page 1 : %s.", tests.Failed, testID, err)
+				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve users for page 1 : %s.", dbtest.Failed, testID, err)
 			}
-			t.Logf("\t%s\tTest %d:\tShould be able to retrieve users for page 1.", tests.Success, testID)
+			t.Logf("\t%s\tTest %d:\tShould be able to retrieve users for page 1.", dbtest.Success, testID)
 
 			if len(users1) != 1 {
-				t.Fatalf("\t%s\tTest %d:\tShould have a single user : %s.", tests.Failed, testID, err)
+				t.Fatalf("\t%s\tTest %d:\tShould have a single user : %s.", dbtest.Failed, testID, err)
 			}
-			t.Logf("\t%s\tTest %d:\tShould have a single user.", tests.Success, testID)
+			t.Logf("\t%s\tTest %d:\tShould have a single user.", dbtest.Success, testID)
 
 			users2, err := user.Query(ctx, 2, 1)
 			if err != nil {
-				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve users for page 2 : %s.", tests.Failed, testID, err)
+				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve users for page 2 : %s.", dbtest.Failed, testID, err)
 			}
-			t.Logf("\t%s\tTest %d:\tShould be able to retrieve users for page 2.", tests.Success, testID)
+			t.Logf("\t%s\tTest %d:\tShould be able to retrieve users for page 2.", dbtest.Success, testID)
 
 			if len(users2) != 1 {
-				t.Fatalf("\t%s\tTest %d:\tShould have a single user : %s.", tests.Failed, testID, err)
+				t.Fatalf("\t%s\tTest %d:\tShould have a single user : %s.", dbtest.Failed, testID, err)
 			}
-			t.Logf("\t%s\tTest %d:\tShould have a single user.", tests.Success, testID)
+			t.Logf("\t%s\tTest %d:\tShould have a single user.", dbtest.Success, testID)
 
 			if users1[0].ID == users2[0].ID {
 				t.Logf("\t\tTest %d:\tUser1: %v", testID, users1[0].ID)
 				t.Logf("\t\tTest %d:\tUser2: %v", testID, users2[0].ID)
-				t.Fatalf("\t%s\tTest %d:\tShould have different users : %s.", tests.Failed, testID, err)
+				t.Fatalf("\t%s\tTest %d:\tShould have different users : %s.", dbtest.Failed, testID, err)
 			}
-			t.Logf("\t%s\tTest %d:\tShould have different users.", tests.Success, testID)
+			t.Logf("\t%s\tTest %d:\tShould have different users.", dbtest.Success, testID)
 		}
 	}
 }

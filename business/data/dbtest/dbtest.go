@@ -1,5 +1,5 @@
-// Package tests contains supporting code for running tests.
-package tests
+// Package dbtest contains supporting code for running tests that hit the DB.
+package dbtest
 
 import (
 	"bytes"
