@@ -12,8 +12,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ardanlabs/service/business/data/schema"
-	"github.com/ardanlabs/service/business/data/store/dbuser"
+	"github.com/ardanlabs/service/business/data/dbschema"
+	"github.com/ardanlabs/service/business/data/dbuser"
 	"github.com/ardanlabs/service/business/sys/auth"
 	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/ardanlabs/service/foundation/docker"
@@ -63,13 +63,13 @@ func NewUnit(t *testing.T, dbc DBContainer) (*zap.SugaredLogger, *sqlx.DB, func(
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	if err := schema.Migrate(ctx, db); err != nil {
+	if err := dbschema.Migrate(ctx, db); err != nil {
 		docker.DumpContainerLogs(t, c.ID)
 		docker.StopContainer(t, c.ID)
 		t.Fatalf("Migrating error: %s", err)
 	}
 
-	if err := schema.Seed(ctx, db); err != nil {
+	if err := dbschema.Seed(ctx, db); err != nil {
 		docker.DumpContainerLogs(t, c.ID)
 		docker.StopContainer(t, c.ID)
 		t.Fatalf("Seeding error: %s", err)
@@ -143,8 +143,8 @@ func NewIntegration(t *testing.T, dbc DBContainer) *Test {
 func (test *Test) Token(email, pass string) string {
 	test.t.Log("Generating token for test ...")
 
-	store := dbuser.NewStore(test.Log, test.DB)
-	dbUsr, err := store.QueryByEmail(context.Background(), email)
+	data := dbuser.NewData(test.Log, test.DB)
+	dbUsr, err := data.QueryByEmail(context.Background(), email)
 	if err != nil {
 		return ""
 	}

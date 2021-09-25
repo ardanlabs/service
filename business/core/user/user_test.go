@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/core/user"
+	"github.com/ardanlabs/service/business/data/dbschema"
 	"github.com/ardanlabs/service/business/data/dbtest"
-	"github.com/ardanlabs/service/business/data/schema"
-	"github.com/ardanlabs/service/business/data/store/dbuser"
+	"github.com/ardanlabs/service/business/data/dbuser"
 	"github.com/ardanlabs/service/business/sys/auth"
 	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/golang-jwt/jwt/v4"
@@ -133,7 +133,7 @@ func TestPagingUser(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	schema.Seed(ctx, db)
+	dbschema.Seed(ctx, db)
 
 	user := user.NewCore(log, db)
 

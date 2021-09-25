@@ -11,8 +11,8 @@ import (
 
 	"github.com/ardanlabs/service/app/services/sales-api/handlers"
 	"github.com/ardanlabs/service/business/core/product"
+	"github.com/ardanlabs/service/business/data/dbproduct"
 	"github.com/ardanlabs/service/business/data/dbtest"
-	"github.com/ardanlabs/service/business/data/store/dbproduct"
 	"github.com/ardanlabs/service/business/sys/validate"
 	webv1 "github.com/ardanlabs/service/business/web/v1"
 	"github.com/google/go-cmp/cmp"

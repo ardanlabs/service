@@ -13,22 +13,22 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// Store manages the set of API's for user access.
-type Store struct {
+// Data manages the set of API's for user access.
+type Data struct {
 	log *zap.SugaredLogger
 	db  *sqlx.DB
 }
 
-// NewStore constructs a user store for api access.
-func NewStore(log *zap.SugaredLogger, db *sqlx.DB) Store {
-	return Store{
+// NewData constructs a data for api access.
+func NewData(log *zap.SugaredLogger, db *sqlx.DB) Data {
+	return Data{
 		log: log,
 		db:  db,
 	}
 }
 
 // Create inserts a new user into the database.
-func (s Store) Create(ctx context.Context, nu NewUser, now time.Time) (DBUser, error) {
+func (d Data) Create(ctx context.Context, nu NewUser, now time.Time) (DBUser, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(nu.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return DBUser{}, fmt.Errorf("generating password hash: %w", err)
@@ -50,7 +50,7 @@ func (s Store) Create(ctx context.Context, nu NewUser, now time.Time) (DBUser, e
 	VALUES
 		(:user_id, :name, :email, :password_hash, :roles, :date_created, :date_updated)`
 
-	if err := database.NamedExecContext(ctx, s.log, s.db, q, dbUsr); err != nil {
+	if err := database.NamedExecContext(ctx, d.log, d.db, q, dbUsr); err != nil {
 		return DBUser{}, fmt.Errorf("inserting user: %w", err)
 	}
 
@@ -58,8 +58,8 @@ func (s Store) Create(ctx context.Context, nu NewUser, now time.Time) (DBUser, e
 }
 
 // Update replaces a user document in the database.
-func (s Store) Update(ctx context.Context, userID string, uu UpdateUser, now time.Time) error {
-	dbUsr, err := s.QueryByID(ctx, userID)
+func (d Data) Update(ctx context.Context, userID string, uu UpdateUser, now time.Time) error {
+	dbUsr, err := d.QueryByID(ctx, userID)
 	if err != nil {
 		return fmt.Errorf("updating user userID[%s]: %w", userID, err)
 	}
@@ -94,7 +94,7 @@ func (s Store) Update(ctx context.Context, userID string, uu UpdateUser, now tim
 	WHERE
 		user_id = :user_id`
 
-	if err := database.NamedExecContext(ctx, s.log, s.db, q, dbUsr); err != nil {
+	if err := database.NamedExecContext(ctx, d.log, d.db, q, dbUsr); err != nil {
 		return fmt.Errorf("updating userID[%s]: %w", userID, err)
 	}
 
@@ -102,7 +102,7 @@ func (s Store) Update(ctx context.Context, userID string, uu UpdateUser, now tim
 }
 
 // Delete removes a user from the database.
-func (s Store) Delete(ctx context.Context, userID string) error {
+func (d Data) Delete(ctx context.Context, userID string) error {
 	data := struct {
 		UserID string `db:"user_id"`
 	}{
@@ -115,7 +115,7 @@ func (s Store) Delete(ctx context.Context, userID string) error {
 	WHERE
 		user_id = :user_id`
 
-	if err := database.NamedExecContext(ctx, s.log, s.db, q, data); err != nil {
+	if err := database.NamedExecContext(ctx, d.log, d.db, q, data); err != nil {
 		return fmt.Errorf("deleting userID[%s]: %w", userID, err)
 	}
 
@@ -123,7 +123,7 @@ func (s Store) Delete(ctx context.Context, userID string) error {
 }
 
 // Query retrieves a list of existing users from the database.
-func (s Store) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]DBUser, error) {
+func (d Data) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]DBUser, error) {
 	data := struct {
 		Offset      int `db:"offset"`
 		RowsPerPage int `db:"rows_per_page"`
@@ -142,7 +142,7 @@ func (s Store) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]DB
 	OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY`
 
 	var dbUsrs []DBUser
-	if err := database.NamedQuerySlice(ctx, s.log, s.db, q, data, &dbUsrs); err != nil {
+	if err := database.NamedQuerySlice(ctx, d.log, d.db, q, data, &dbUsrs); err != nil {
 		if err == database.ErrDBNotFound {
 			return nil, validate.ErrNotFound
 		}
@@ -153,7 +153,7 @@ func (s Store) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]DB
 }
 
 // QueryByID gets the specified user from the database.
-func (s Store) QueryByID(ctx context.Context, userID string) (DBUser, error) {
+func (d Data) QueryByID(ctx context.Context, userID string) (DBUser, error) {
 	data := struct {
 		UserID string `db:"user_id"`
 	}{
@@ -169,7 +169,7 @@ func (s Store) QueryByID(ctx context.Context, userID string) (DBUser, error) {
 		user_id = :user_id`
 
 	var dbUsr DBUser
-	if err := database.NamedQueryStruct(ctx, s.log, s.db, q, data, &dbUsr); err != nil {
+	if err := database.NamedQueryStruct(ctx, d.log, d.db, q, data, &dbUsr); err != nil {
 		if err == database.ErrDBNotFound {
 			return DBUser{}, validate.ErrNotFound
 		}
@@ -180,7 +180,7 @@ func (s Store) QueryByID(ctx context.Context, userID string) (DBUser, error) {
 }
 
 // QueryByEmail gets the specified user from the database by email.
-func (s Store) QueryByEmail(ctx context.Context, email string) (DBUser, error) {
+func (d Data) QueryByEmail(ctx context.Context, email string) (DBUser, error) {
 	data := struct {
 		Email string `db:"email"`
 	}{
@@ -196,7 +196,7 @@ func (s Store) QueryByEmail(ctx context.Context, email string) (DBUser, error) {
 		email = :email`
 
 	var dbUsr DBUser
-	if err := database.NamedQueryStruct(ctx, s.log, s.db, q, data, &dbUsr); err != nil {
+	if err := database.NamedQueryStruct(ctx, d.log, d.db, q, data, &dbUsr); err != nil {
 		if err == database.ErrDBNotFound {
 			return DBUser{}, validate.ErrNotFound
 		}

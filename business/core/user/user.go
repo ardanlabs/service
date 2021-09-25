@@ -1,5 +1,5 @@
 // Package user provides an example of a core business API. Right now these
-// calls are just wrapping the data/store layer. But at some point you will
+// calls are just wrapping the data/data layer. But at some point you will
 // want auditing or something that isn't specific to the data/store layer.
 package user
 
@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ardanlabs/service/business/data/store/dbuser"
+	"github.com/ardanlabs/service/business/data/dbuser"
 	"github.com/ardanlabs/service/business/sys/auth"
 	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/golang-jwt/jwt/v4"
@@ -19,15 +19,15 @@ import (
 
 // Core manages the set of API's for user access.
 type Core struct {
-	log   *zap.SugaredLogger
-	store dbuser.Store
+	log  *zap.SugaredLogger
+	data dbuser.Data
 }
 
 // NewCore constructs a core for user api access.
 func NewCore(log *zap.SugaredLogger, db *sqlx.DB) Core {
 	return Core{
-		log:   log,
-		store: dbuser.NewStore(log, db),
+		log:  log,
+		data: dbuser.NewData(log, db),
 	}
 }
 
@@ -37,7 +37,7 @@ func (c Core) Create(ctx context.Context, nu dbuser.NewUser, now time.Time) (Use
 		return User{}, fmt.Errorf("validating data: %w", err)
 	}
 
-	dbUsr, err := c.store.Create(ctx, nu, now)
+	dbUsr, err := c.data.Create(ctx, nu, now)
 	if err != nil {
 		return User{}, fmt.Errorf("create: %w", err)
 	}
@@ -60,7 +60,7 @@ func (c Core) Update(ctx context.Context, claims auth.Claims, userID string, uu 
 		return auth.ErrForbidden
 	}
 
-	if err := c.store.Update(ctx, userID, uu, now); err != nil {
+	if err := c.data.Update(ctx, userID, uu, now); err != nil {
 		return fmt.Errorf("udpate: %w", err)
 	}
 
@@ -78,7 +78,7 @@ func (c Core) Delete(ctx context.Context, claims auth.Claims, userID string) err
 		return auth.ErrForbidden
 	}
 
-	if err := c.store.Delete(ctx, userID); err != nil {
+	if err := c.data.Delete(ctx, userID); err != nil {
 		return fmt.Errorf("delete: %w", err)
 	}
 
@@ -87,7 +87,7 @@ func (c Core) Delete(ctx context.Context, claims auth.Claims, userID string) err
 
 // Query retrieves a list of existing users from the database.
 func (c Core) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]User, error) {
-	dbUsers, err := c.store.Query(ctx, pageNumber, rowsPerPage)
+	dbUsers, err := c.data.Query(ctx, pageNumber, rowsPerPage)
 	if err != nil {
 		return nil, fmt.Errorf("query: %w", err)
 	}
@@ -106,7 +106,7 @@ func (c Core) QueryByID(ctx context.Context, claims auth.Claims, userID string) 
 		return User{}, auth.ErrForbidden
 	}
 
-	dbUsr, err := c.store.QueryByID(ctx, userID)
+	dbUsr, err := c.data.QueryByID(ctx, userID)
 	if err != nil {
 		return User{}, fmt.Errorf("query: %w", err)
 	}
@@ -122,7 +122,7 @@ func (c Core) QueryByEmail(ctx context.Context, claims auth.Claims, email string
 	// 	return User{}, ErrInvalidEmail
 	// }
 
-	dbUsr, err := c.store.QueryByEmail(ctx, email)
+	dbUsr, err := c.data.QueryByEmail(ctx, email)
 	if err != nil {
 		return User{}, fmt.Errorf("query: %w", err)
 	}
@@ -139,7 +139,7 @@ func (c Core) QueryByEmail(ctx context.Context, claims auth.Claims, email string
 // success it returns a Claims User representing this user. The claims can be
 // used to generate a token for future authentication.
 func (c Core) Authenticate(ctx context.Context, now time.Time, email, password string) (auth.Claims, error) {
-	dbUsr, err := c.store.QueryByEmail(ctx, email)
+	dbUsr, err := c.data.QueryByEmail(ctx, email)
 	if err != nil {
 		return auth.Claims{}, fmt.Errorf("query: %w", err)
 	}

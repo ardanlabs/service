@@ -1,5 +1,5 @@
-// Package schema contains the database schema, migrations and seeding data.
-package schema
+// Package dbschema contains the database schema, migrations and seeding data.
+package dbschema
 
 import (
 	"context"

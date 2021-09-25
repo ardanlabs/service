@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ardanlabs/service/business/data/store/dbproduct"
+	"github.com/ardanlabs/service/business/data/dbproduct"
 	"github.com/ardanlabs/service/business/sys/auth"
 	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/jmoiron/sqlx"
@@ -17,15 +17,15 @@ import (
 
 // Core manages the set of API's for product access.
 type Core struct {
-	log   *zap.SugaredLogger
-	store dbproduct.Store
+	log  *zap.SugaredLogger
+	data dbproduct.Data
 }
 
 // NewCore constructs a core for product api access.
 func NewCore(log *zap.SugaredLogger, db *sqlx.DB) Core {
 	return Core{
-		log:   log,
-		store: dbproduct.NewStore(log, db),
+		log:  log,
+		data: dbproduct.NewData(log, db),
 	}
 }
 
@@ -36,7 +36,7 @@ func (c Core) Create(ctx context.Context, np dbproduct.NewProduct, now time.Time
 		return Product{}, fmt.Errorf("validating data: %w", err)
 	}
 
-	dbPrd, err := c.store.Create(ctx, np, now)
+	dbPrd, err := c.data.Create(ctx, np, now)
 	if err != nil {
 		return Product{}, fmt.Errorf("create: %w", err)
 	}
@@ -60,7 +60,7 @@ func (c Core) Update(ctx context.Context, claims auth.Claims, productID string, 
 		return auth.ErrForbidden
 	}
 
-	if err := c.store.Update(ctx, productID, up, now); err != nil {
+	if err := c.data.Update(ctx, productID, up, now); err != nil {
 		return fmt.Errorf("update: %w", err)
 	}
 
@@ -78,7 +78,7 @@ func (c Core) Delete(ctx context.Context, claims auth.Claims, productID string) 
 		return auth.ErrForbidden
 	}
 
-	if err := c.store.Delete(ctx, productID); err != nil {
+	if err := c.data.Delete(ctx, productID); err != nil {
 		return fmt.Errorf("delete: %w", err)
 	}
 
@@ -87,7 +87,7 @@ func (c Core) Delete(ctx context.Context, claims auth.Claims, productID string) 
 
 // Query gets all Products from the database.
 func (c Core) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]Product, error) {
-	dbPrds, err := c.store.Query(ctx, pageNumber, rowsPerPage)
+	dbPrds, err := c.data.Query(ctx, pageNumber, rowsPerPage)
 	if err != nil {
 		return nil, fmt.Errorf("query: %w", err)
 	}
@@ -101,7 +101,7 @@ func (c Core) QueryByID(ctx context.Context, productID string) (Product, error) 
 		return Product{}, validate.ErrInvalidID
 	}
 
-	dbPrd, err := c.store.QueryByID(ctx, productID)
+	dbPrd, err := c.data.QueryByID(ctx, productID)
 	if err != nil {
 		return Product{}, fmt.Errorf("query: %w", err)
 	}
@@ -115,7 +115,7 @@ func (c Core) QueryByUserID(ctx context.Context, userID string) ([]Product, erro
 		return nil, validate.ErrInvalidID
 	}
 
-	dbPrds, err := c.store.QueryByUserID(ctx, userID)
+	dbPrds, err := c.data.QueryByUserID(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("query: %w", err)
 	}

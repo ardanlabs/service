@@ -12,15 +12,15 @@ import (
 	"go.uber.org/zap"
 )
 
-// Store manages the set of API's for product access.
-type Store struct {
+// Data manages the set of API's for product access.
+type Data struct {
 	log *zap.SugaredLogger
 	db  *sqlx.DB
 }
 
-// NewStore constructs a product store for api access.
-func NewStore(log *zap.SugaredLogger, db *sqlx.DB) Store {
-	return Store{
+// NewData constructs a data for api access.
+func NewData(log *zap.SugaredLogger, db *sqlx.DB) Data {
+	return Data{
 		log: log,
 		db:  db,
 	}
@@ -28,7 +28,7 @@ func NewStore(log *zap.SugaredLogger, db *sqlx.DB) Store {
 
 // Create adds a Product to the database. It returns the created Product with
 // fields like ID and DateCreated populated.
-func (s Store) Create(ctx context.Context, np NewProduct, now time.Time) (DBProduct, error) {
+func (d Data) Create(ctx context.Context, np NewProduct, now time.Time) (DBProduct, error) {
 	dbPrd := DBProduct{
 		ID:          validate.GenerateID(),
 		Name:        np.Name,
@@ -45,7 +45,7 @@ func (s Store) Create(ctx context.Context, np NewProduct, now time.Time) (DBProd
 	VALUES
 		(:product_id, :user_id, :name, :cost, :quantity, :date_created, :date_updated)`
 
-	if err := database.NamedExecContext(ctx, s.log, s.db, q, dbPrd); err != nil {
+	if err := database.NamedExecContext(ctx, d.log, d.db, q, dbPrd); err != nil {
 		return DBProduct{}, fmt.Errorf("inserting product: %w", err)
 	}
 
@@ -54,8 +54,8 @@ func (s Store) Create(ctx context.Context, np NewProduct, now time.Time) (DBProd
 
 // Update modifies data about a Product. It will error if the specified ID is
 // invalid or does not reference an existing Product.
-func (s Store) Update(ctx context.Context, productID string, up UpdateProduct, now time.Time) error {
-	prd, err := s.QueryByID(ctx, productID)
+func (d Data) Update(ctx context.Context, productID string, up UpdateProduct, now time.Time) error {
+	prd, err := d.QueryByID(ctx, productID)
 	if err != nil {
 		return fmt.Errorf("updating product productID[%s]: %w", productID, err)
 	}
@@ -82,7 +82,7 @@ func (s Store) Update(ctx context.Context, productID string, up UpdateProduct, n
 	WHERE
 		product_id = :product_id`
 
-	if err := database.NamedExecContext(ctx, s.log, s.db, q, prd); err != nil {
+	if err := database.NamedExecContext(ctx, d.log, d.db, q, prd); err != nil {
 		return fmt.Errorf("updating product productID[%s]: %w", productID, err)
 	}
 
@@ -90,7 +90,7 @@ func (s Store) Update(ctx context.Context, productID string, up UpdateProduct, n
 }
 
 // Delete removes the product identified by a given ID.
-func (s Store) Delete(ctx context.Context, productID string) error {
+func (d Data) Delete(ctx context.Context, productID string) error {
 	if err := validate.CheckID(productID); err != nil {
 		return validate.ErrInvalidID
 	}
@@ -107,7 +107,7 @@ func (s Store) Delete(ctx context.Context, productID string) error {
 	WHERE
 		product_id = :product_id`
 
-	if err := database.NamedExecContext(ctx, s.log, s.db, q, data); err != nil {
+	if err := database.NamedExecContext(ctx, d.log, d.db, q, data); err != nil {
 		return fmt.Errorf("deleting product productID[%s]: %w", productID, err)
 	}
 
@@ -115,7 +115,7 @@ func (s Store) Delete(ctx context.Context, productID string) error {
 }
 
 // Query gets all Products from the database.
-func (s Store) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]DBProduct, error) {
+func (d Data) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]DBProduct, error) {
 	data := struct {
 		Offset      int `db:"offset"`
 		RowsPerPage int `db:"rows_per_page"`
@@ -140,7 +140,7 @@ func (s Store) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]DB
 	OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY`
 
 	var dbPrds []DBProduct
-	if err := database.NamedQuerySlice(ctx, s.log, s.db, q, data, &dbPrds); err != nil {
+	if err := database.NamedQuerySlice(ctx, d.log, d.db, q, data, &dbPrds); err != nil {
 		if err == database.ErrDBNotFound {
 			return nil, validate.ErrNotFound
 		}
@@ -151,7 +151,7 @@ func (s Store) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]DB
 }
 
 // QueryByID finds the product identified by a given ID.
-func (s Store) QueryByID(ctx context.Context, productID string) (DBProduct, error) {
+func (d Data) QueryByID(ctx context.Context, productID string) (DBProduct, error) {
 	data := struct {
 		ProductID string `db:"product_id"`
 	}{
@@ -173,7 +173,7 @@ func (s Store) QueryByID(ctx context.Context, productID string) (DBProduct, erro
 		p.product_id`
 
 	var dbPrd DBProduct
-	if err := database.NamedQueryStruct(ctx, s.log, s.db, q, data, &dbPrd); err != nil {
+	if err := database.NamedQueryStruct(ctx, d.log, d.db, q, data, &dbPrd); err != nil {
 		if err == database.ErrDBNotFound {
 			return DBProduct{}, validate.ErrNotFound
 		}
@@ -184,7 +184,7 @@ func (s Store) QueryByID(ctx context.Context, productID string) (DBProduct, erro
 }
 
 // QueryByUserID finds the product identified by a given User ID.
-func (s Store) QueryByUserID(ctx context.Context, userID string) ([]DBProduct, error) {
+func (d Data) QueryByUserID(ctx context.Context, userID string) ([]DBProduct, error) {
 	data := struct {
 		UserID string `db:"user_id"`
 	}{
@@ -206,7 +206,7 @@ func (s Store) QueryByUserID(ctx context.Context, userID string) ([]DBProduct, e
 		p.product_id`
 
 	var dbPrds []DBProduct
-	if err := database.NamedQuerySlice(ctx, s.log, s.db, q, data, &dbPrds); err != nil {
+	if err := database.NamedQuerySlice(ctx, d.log, d.db, q, data, &dbPrds); err != nil {
 		if err == database.ErrDBNotFound {
 			return nil, validate.ErrNotFound
 		}
