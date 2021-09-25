@@ -1,5 +1,5 @@
-// Package product contains product related CRUD functionality.
-package product
+// Package dbproduct contains product related CRUD functionality.
+package dbproduct
 
 import (
 	"context"

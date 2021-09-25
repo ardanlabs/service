@@ -9,7 +9,7 @@ import (
 	"strconv"
 
 	"github.com/ardanlabs/service/business/core/user"
-	store "github.com/ardanlabs/service/business/data/store/user"
+	"github.com/ardanlabs/service/business/data/store/dbuser"
 	"github.com/ardanlabs/service/business/sys/auth"
 	"github.com/ardanlabs/service/business/sys/validate"
 	webv1 "github.com/ardanlabs/service/business/web/v1"
@@ -75,7 +75,7 @@ func (h Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Req
 		return web.NewShutdownError("web value missing from context")
 	}
 
-	var nu store.NewUser
+	var nu dbuser.NewUser
 	if err := web.Decode(r, &nu); err != nil {
 		return fmt.Errorf("unable to decode payload: %w", err)
 	}
@@ -100,7 +100,7 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 		return errors.New("claims missing from context")
 	}
 
-	var upd store.UpdateUser
+	var upd dbuser.UpdateUser
 	if err := web.Decode(r, &upd); err != nil {
 		return fmt.Errorf("unable to decode payload: %w", err)
 	}

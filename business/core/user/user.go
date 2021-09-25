@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"time"
 
-	store "github.com/ardanlabs/service/business/data/store/user"
+	"github.com/ardanlabs/service/business/data/store/dbuser"
 	"github.com/ardanlabs/service/business/sys/auth"
 	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/golang-jwt/jwt/v4"
@@ -20,19 +20,19 @@ import (
 // Core manages the set of API's for user access.
 type Core struct {
 	log   *zap.SugaredLogger
-	store store.Store
+	store dbuser.Store
 }
 
 // NewCore constructs a core for user api access.
 func NewCore(log *zap.SugaredLogger, db *sqlx.DB) Core {
 	return Core{
 		log:   log,
-		store: store.NewStore(log, db),
+		store: dbuser.NewStore(log, db),
 	}
 }
 
 // Create inserts a new user into the database.
-func (c Core) Create(ctx context.Context, nu store.NewUser, now time.Time) (User, error) {
+func (c Core) Create(ctx context.Context, nu dbuser.NewUser, now time.Time) (User, error) {
 	if err := validate.Check(nu); err != nil {
 		return User{}, fmt.Errorf("validating data: %w", err)
 	}
@@ -46,7 +46,7 @@ func (c Core) Create(ctx context.Context, nu store.NewUser, now time.Time) (User
 }
 
 // Update replaces a user document in the database.
-func (c Core) Update(ctx context.Context, claims auth.Claims, userID string, uu store.UpdateUser, now time.Time) error {
+func (c Core) Update(ctx context.Context, claims auth.Claims, userID string, uu dbuser.UpdateUser, now time.Time) error {
 	if err := validate.CheckID(userID); err != nil {
 		return validate.ErrInvalidID
 	}

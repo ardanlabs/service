@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"time"
 
-	store "github.com/ardanlabs/service/business/data/store/product"
+	"github.com/ardanlabs/service/business/data/store/dbproduct"
 	"github.com/ardanlabs/service/business/sys/auth"
 	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/jmoiron/sqlx"
@@ -18,20 +18,20 @@ import (
 // Core manages the set of API's for product access.
 type Core struct {
 	log   *zap.SugaredLogger
-	store store.Store
+	store dbproduct.Store
 }
 
 // NewCore constructs a core for product api access.
 func NewCore(log *zap.SugaredLogger, db *sqlx.DB) Core {
 	return Core{
 		log:   log,
-		store: store.NewStore(log, db),
+		store: dbproduct.NewStore(log, db),
 	}
 }
 
 // Create adds a Product to the database. It returns the created Product with
 // fields like ID and DateCreated populated.
-func (c Core) Create(ctx context.Context, np store.NewProduct, now time.Time) (Product, error) {
+func (c Core) Create(ctx context.Context, np dbproduct.NewProduct, now time.Time) (Product, error) {
 	if err := validate.Check(np); err != nil {
 		return Product{}, fmt.Errorf("validating data: %w", err)
 	}
@@ -46,7 +46,7 @@ func (c Core) Create(ctx context.Context, np store.NewProduct, now time.Time) (P
 
 // Update modifies data about a Product. It will error if the specified ID is
 // invalid or does not reference an existing Product.
-func (c Core) Update(ctx context.Context, claims auth.Claims, productID string, up store.UpdateProduct, now time.Time) error {
+func (c Core) Update(ctx context.Context, claims auth.Claims, productID string, up dbproduct.UpdateProduct, now time.Time) error {
 	if err := validate.CheckID(productID); err != nil {
 		return validate.ErrInvalidID
 	}

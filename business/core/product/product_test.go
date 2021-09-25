@@ -8,7 +8,7 @@ import (
 
 	"github.com/ardanlabs/service/business/core/product"
 	"github.com/ardanlabs/service/business/data/dbtest"
-	store "github.com/ardanlabs/service/business/data/store/product"
+	"github.com/ardanlabs/service/business/data/store/dbproduct"
 	"github.com/ardanlabs/service/business/sys/auth"
 	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/golang-jwt/jwt/v4"
@@ -45,7 +45,7 @@ func TestProduct(t *testing.T) {
 				Roles: []string{auth.RoleAdmin, auth.RoleUser},
 			}
 
-			np := store.NewProduct{
+			np := dbproduct.NewProduct{
 				Name:     "Comic Books",
 				Cost:     10,
 				Quantity: 55,
@@ -69,7 +69,7 @@ func TestProduct(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould get back the same product.", dbtest.Success, testID)
 
-			upd := store.UpdateProduct{
+			upd := dbproduct.UpdateProduct{
 				Name:     dbtest.StringPointer("Comics"),
 				Cost:     dbtest.IntPointer(50),
 				Quantity: dbtest.IntPointer(40),
@@ -106,7 +106,7 @@ func TestProduct(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould get back the same product.", dbtest.Success, testID)
 
-			upd = store.UpdateProduct{
+			upd = dbproduct.UpdateProduct{
 				Name: dbtest.StringPointer("Graphic Novels"),
 			}
 

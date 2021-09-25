@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"strconv"
 
-	productCore "github.com/ardanlabs/service/business/core/product"
-	"github.com/ardanlabs/service/business/data/store/product"
+	"github.com/ardanlabs/service/business/core/product"
+	"github.com/ardanlabs/service/business/data/store/dbproduct"
 	"github.com/ardanlabs/service/business/sys/auth"
 	"github.com/ardanlabs/service/business/sys/validate"
 	webv1 "github.com/ardanlabs/service/business/web/v1"
@@ -18,7 +18,7 @@ import (
 
 // Handlers manages the set of product enpoints.
 type Handlers struct {
-	Product productCore.Core
+	Product product.Core
 }
 
 // Query returns a list of products with paging.
@@ -67,7 +67,7 @@ func (h Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Req
 		return web.NewShutdownError("web value missing from context")
 	}
 
-	var np product.NewProduct
+	var np dbproduct.NewProduct
 	if err := web.Decode(r, &np); err != nil {
 		return fmt.Errorf("unable to decode payload: %w", err)
 	}
@@ -92,7 +92,7 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 		return errors.New("claims missing from context")
 	}
 
-	var upd product.UpdateProduct
+	var upd dbproduct.UpdateProduct
 	if err := web.Decode(r, &upd); err != nil {
 		return fmt.Errorf("unable to decode payload: %w", err)
 	}

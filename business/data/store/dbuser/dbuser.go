@@ -1,5 +1,5 @@
-// Package user contains user related CRUD functionality.
-package user
+// Package dbuser contains user related CRUD functionality.
+package dbuser
 
 import (
 	"context"

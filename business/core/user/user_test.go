@@ -9,7 +9,7 @@ import (
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/ardanlabs/service/business/data/schema"
-	store "github.com/ardanlabs/service/business/data/store/user"
+	"github.com/ardanlabs/service/business/data/store/dbuser"
 	"github.com/ardanlabs/service/business/sys/auth"
 	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/golang-jwt/jwt/v4"
@@ -36,7 +36,7 @@ func TestUser(t *testing.T) {
 			ctx := context.Background()
 			now := time.Date(2018, time.October, 1, 0, 0, 0, 0, time.UTC)
 
-			nu := store.NewUser{
+			nu := dbuser.NewUser{
 				Name:            "Bill Kennedy",
 				Email:           "bill@ardanlabs.com",
 				Roles:           []string{auth.RoleAdmin},
@@ -71,7 +71,7 @@ func TestUser(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould get back the same user.", dbtest.Success, testID)
 
-			upd := store.UpdateUser{
+			upd := dbuser.UpdateUser{
 				Name:  dbtest.StringPointer("Jacob Walker"),
 				Email: dbtest.StringPointer("jacob@ardanlabs.com"),
 			}

@@ -12,7 +12,7 @@ import (
 	"github.com/ardanlabs/service/app/services/sales-api/handlers"
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/data/dbtest"
-	store "github.com/ardanlabs/service/business/data/store/user"
+	"github.com/ardanlabs/service/business/data/store/dbuser"
 	"github.com/ardanlabs/service/business/sys/auth"
 	"github.com/ardanlabs/service/business/sys/validate"
 	webv1 "github.com/ardanlabs/service/business/web/v1"
@@ -120,7 +120,7 @@ func (ut *UserTests) getToken200(t *testing.T) {
 // postUser400 validates a user can't be created with the endpoint
 // unless a valid user document is submitted.
 func (ut *UserTests) postUser400(t *testing.T) {
-	body, err := json.Marshal(&store.NewUser{})
+	body, err := json.Marshal(&dbuser.NewUser{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -175,7 +175,7 @@ func (ut *UserTests) postUser400(t *testing.T) {
 // postUser403 validates a user can't be created unless the calling user is
 // an admin. Regular users can't do this.
 func (ut *UserTests) postUser403(t *testing.T) {
-	body, err := json.Marshal(&store.NewUser{})
+	body, err := json.Marshal(&dbuser.NewUser{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -364,7 +364,7 @@ func (ut *UserTests) deleteUserNotFound(t *testing.T) {
 func (ut *UserTests) putUser404(t *testing.T) {
 	id := "3097c45e-780a-421b-9eae-43c2fda2bf14"
 
-	u := store.UpdateUser{
+	u := dbuser.UpdateUser{
 		Name: dbtest.StringPointer("Doesn't Exist"),
 	}
 	body, err := json.Marshal(&u)
@@ -412,7 +412,7 @@ func (ut *UserTests) crudUser(t *testing.T) {
 
 // postUser201 validates a user can be created with the endpoint.
 func (ut *UserTests) postUser201(t *testing.T) user.User {
-	nu := store.NewUser{
+	nu := dbuser.NewUser{
 		Name:            "Bill Kennedy",
 		Email:           "bill@ardanlabs.com",
 		Roles:           []string{auth.RoleAdmin},
