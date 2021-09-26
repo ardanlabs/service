@@ -1,4 +1,5 @@
-// Package report provides an example of a core business API.
+// Package report provides an example of a business package that brings
+// together multiple core business packages.
 package report
 
 import (
