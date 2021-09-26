@@ -32,12 +32,12 @@ func NewCore(log *zap.SugaredLogger, db *sqlx.DB) Core {
 }
 
 // Create inserts a new user into the database.
-func (c Core) Create(ctx context.Context, nu dbuser.NewUser, now time.Time) (User, error) {
+func (c Core) Create(ctx context.Context, nu NewUser, now time.Time) (User, error) {
 	if err := validate.Check(nu); err != nil {
 		return User{}, fmt.Errorf("validating data: %w", err)
 	}
 
-	dbUsr, err := c.data.Create(ctx, nu, now)
+	dbUsr, err := c.data.Create(ctx, toDBNewUser(nu), now)
 	if err != nil {
 		return User{}, fmt.Errorf("create: %w", err)
 	}
@@ -46,7 +46,7 @@ func (c Core) Create(ctx context.Context, nu dbuser.NewUser, now time.Time) (Use
 }
 
 // Update replaces a user document in the database.
-func (c Core) Update(ctx context.Context, claims auth.Claims, userID string, uu dbuser.UpdateUser, now time.Time) error {
+func (c Core) Update(ctx context.Context, claims auth.Claims, userID string, uu UpdateUser, now time.Time) error {
 	if err := validate.CheckID(userID); err != nil {
 		return validate.ErrInvalidID
 	}
@@ -60,7 +60,7 @@ func (c Core) Update(ctx context.Context, claims auth.Claims, userID string, uu 
 		return auth.ErrForbidden
 	}
 
-	if err := c.data.Update(ctx, userID, uu, now); err != nil {
+	if err := c.data.Update(ctx, userID, toDBUpdateUser(uu), now); err != nil {
 		return fmt.Errorf("udpate: %w", err)
 	}
 

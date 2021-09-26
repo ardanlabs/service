@@ -31,12 +31,12 @@ func NewCore(log *zap.SugaredLogger, db *sqlx.DB) Core {
 
 // Create adds a Product to the database. It returns the created Product with
 // fields like ID and DateCreated populated.
-func (c Core) Create(ctx context.Context, np dbproduct.NewProduct, now time.Time) (Product, error) {
+func (c Core) Create(ctx context.Context, np NewProduct, now time.Time) (Product, error) {
 	if err := validate.Check(np); err != nil {
 		return Product{}, fmt.Errorf("validating data: %w", err)
 	}
 
-	dbPrd, err := c.data.Create(ctx, np, now)
+	dbPrd, err := c.data.Create(ctx, toDBNewProduct(np), now)
 	if err != nil {
 		return Product{}, fmt.Errorf("create: %w", err)
 	}
@@ -46,7 +46,7 @@ func (c Core) Create(ctx context.Context, np dbproduct.NewProduct, now time.Time
 
 // Update modifies data about a Product. It will error if the specified ID is
 // invalid or does not reference an existing Product.
-func (c Core) Update(ctx context.Context, claims auth.Claims, productID string, up dbproduct.UpdateProduct, now time.Time) error {
+func (c Core) Update(ctx context.Context, claims auth.Claims, productID string, up UpdateProduct, now time.Time) error {
 	if err := validate.CheckID(productID); err != nil {
 		return validate.ErrInvalidID
 	}
@@ -60,7 +60,7 @@ func (c Core) Update(ctx context.Context, claims auth.Claims, productID string, 
 		return auth.ErrForbidden
 	}
 
-	if err := c.data.Update(ctx, productID, up, now); err != nil {
+	if err := c.data.Update(ctx, productID, toDBUpdateProduct(up), now); err != nil {
 		return fmt.Errorf("update: %w", err)
 	}
 

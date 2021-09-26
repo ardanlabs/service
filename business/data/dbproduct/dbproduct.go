@@ -28,7 +28,7 @@ func NewData(log *zap.SugaredLogger, db *sqlx.DB) Data {
 
 // Create adds a Product to the database. It returns the created Product with
 // fields like ID and DateCreated populated.
-func (d Data) Create(ctx context.Context, np NewProduct, now time.Time) (DBProduct, error) {
+func (d Data) Create(ctx context.Context, np DBNewProduct, now time.Time) (DBProduct, error) {
 	dbPrd := DBProduct{
 		ID:          validate.GenerateID(),
 		Name:        np.Name,
@@ -54,7 +54,7 @@ func (d Data) Create(ctx context.Context, np NewProduct, now time.Time) (DBProdu
 
 // Update modifies data about a Product. It will error if the specified ID is
 // invalid or does not reference an existing Product.
-func (d Data) Update(ctx context.Context, productID string, up UpdateProduct, now time.Time) error {
+func (d Data) Update(ctx context.Context, productID string, up DBUpdateProduct, now time.Time) error {
 	prd, err := d.QueryByID(ctx, productID)
 	if err != nil {
 		return fmt.Errorf("updating product productID[%s]: %w", productID, err)

@@ -20,6 +20,26 @@ type Product struct {
 	DateUpdated time.Time `json:"date_updated"` // When the product record was last modified.
 }
 
+// NewProduct is what we require from clients when adding a Product.
+type NewProduct struct {
+	Name     string `json:"name" validate:"required"`
+	Cost     int    `json:"cost" validate:"required,gte=0"`
+	Quantity int    `json:"quantity" validate:"gte=1"`
+	UserID   string `json:"user_id" validate:"required"`
+}
+
+// UpdateProduct defines what information may be provided to modify an
+// existing Product. All fields are optional so clients can send just the
+// fields they want changed. It uses pointer fields so we can differentiate
+// between a field that was not provided and a field that was provided as
+// explicitly blank. Normally we do not want to use pointers to basic types but
+// we make exceptions around marshalling/unmarshalling.
+type UpdateProduct struct {
+	Name     *string `json:"name"`
+	Cost     *int    `json:"cost" validate:"omitempty,gte=0"`
+	Quantity *int    `json:"quantity" validate:"omitempty,gte=1"`
+}
+
 // =============================================================================
 
 func toProduct(dbPrd dbproduct.DBProduct) Product {
@@ -33,4 +53,14 @@ func toProductSlice(dbPrds []dbproduct.DBProduct) []Product {
 		prds[i] = toProduct(dbPrd)
 	}
 	return prds
+}
+
+func toDBNewProduct(np NewProduct) dbproduct.DBNewProduct {
+	dbnp := (*dbproduct.DBNewProduct)(unsafe.Pointer(&np))
+	return *dbnp
+}
+
+func toDBUpdateProduct(up UpdateProduct) dbproduct.DBUpdateProduct {
+	dbup := (*dbproduct.DBUpdateProduct)(unsafe.Pointer(&up))
+	return *dbup
 }

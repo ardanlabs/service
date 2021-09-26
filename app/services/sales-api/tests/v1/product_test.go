@@ -11,7 +11,6 @@ import (
 
 	"github.com/ardanlabs/service/app/services/sales-api/handlers"
 	"github.com/ardanlabs/service/business/core/product"
-	"github.com/ardanlabs/service/business/data/dbproduct"
 	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/ardanlabs/service/business/sys/validate"
 	webv1 "github.com/ardanlabs/service/business/web/v1"
@@ -118,7 +117,7 @@ func (pt *ProductTests) postProduct400(t *testing.T) {
 // postProduct401 validates a product can't be created with the endpoint
 // unless the user is authenticated
 func (pt *ProductTests) postProduct401(t *testing.T) {
-	np := dbproduct.NewProduct{
+	np := product.NewProduct{
 		Name:     "Comic Books",
 		Cost:     25,
 		Quantity: 60,
@@ -239,7 +238,7 @@ func (pt *ProductTests) deleteProductNotFound(t *testing.T) {
 func (pt *ProductTests) putProduct404(t *testing.T) {
 	id := "9b468f90-1cf1-4377-b3fa-68b450d632a0"
 
-	up := dbproduct.UpdateProduct{
+	up := product.UpdateProduct{
 		Name: dbtest.StringPointer("Nonexistent"),
 	}
 	body, err := json.Marshal(&up)
@@ -286,7 +285,7 @@ func (pt *ProductTests) crudProduct(t *testing.T) {
 
 // postProduct201 validates a product can be created with the endpoint.
 func (pt *ProductTests) postProduct201(t *testing.T) product.Product {
-	np := dbproduct.NewProduct{
+	np := product.NewProduct{
 		Name:     "Comic Books",
 		Cost:     25,
 		Quantity: 60,

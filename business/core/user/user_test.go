@@ -9,7 +9,6 @@ import (
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/data/dbschema"
 	"github.com/ardanlabs/service/business/data/dbtest"
-	"github.com/ardanlabs/service/business/data/dbuser"
 	"github.com/ardanlabs/service/business/sys/auth"
 	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/golang-jwt/jwt/v4"
@@ -26,7 +25,7 @@ func TestUser(t *testing.T) {
 	log, db, teardown := dbtest.NewUnit(t, dbc)
 	t.Cleanup(teardown)
 
-	user := user.NewCore(log, db)
+	core := user.NewCore(log, db)
 
 	t.Log("Given the need to work with User records.")
 	{
@@ -36,7 +35,7 @@ func TestUser(t *testing.T) {
 			ctx := context.Background()
 			now := time.Date(2018, time.October, 1, 0, 0, 0, 0, time.UTC)
 
-			nu := dbuser.NewUser{
+			nu := user.NewUser{
 				Name:            "Bill Kennedy",
 				Email:           "bill@ardanlabs.com",
 				Roles:           []string{auth.RoleAdmin},
@@ -44,7 +43,7 @@ func TestUser(t *testing.T) {
 				PasswordConfirm: "gophers",
 			}
 
-			usr, err := user.Create(ctx, nu, now)
+			usr, err := core.Create(ctx, nu, now)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to create user : %s.", dbtest.Failed, testID, err)
 			}
@@ -60,7 +59,7 @@ func TestUser(t *testing.T) {
 				Roles: []string{auth.RoleUser},
 			}
 
-			saved, err := user.QueryByID(ctx, claims, usr.ID)
+			saved, err := core.QueryByID(ctx, claims, usr.ID)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve user by ID: %s.", dbtest.Failed, testID, err)
 			}
@@ -71,7 +70,7 @@ func TestUser(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould get back the same user.", dbtest.Success, testID)
 
-			upd := dbuser.UpdateUser{
+			upd := user.UpdateUser{
 				Name:  dbtest.StringPointer("Jacob Walker"),
 				Email: dbtest.StringPointer("jacob@ardanlabs.com"),
 			}
@@ -85,12 +84,12 @@ func TestUser(t *testing.T) {
 				Roles: []string{auth.RoleAdmin},
 			}
 
-			if err := user.Update(ctx, claims, usr.ID, upd, now); err != nil {
+			if err := core.Update(ctx, claims, usr.ID, upd, now); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to update user : %s.", dbtest.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to update user.", dbtest.Success, testID)
 
-			saved, err = user.QueryByEmail(ctx, claims, *upd.Email)
+			saved, err = core.QueryByEmail(ctx, claims, *upd.Email)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve user by Email : %s.", dbtest.Failed, testID, err)
 			}
@@ -112,12 +111,12 @@ func TestUser(t *testing.T) {
 				t.Logf("\t%s\tTest %d:\tShould be able to see updates to Email.", dbtest.Success, testID)
 			}
 
-			if err := user.Delete(ctx, claims, usr.ID); err != nil {
+			if err := core.Delete(ctx, claims, usr.ID); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to delete user : %s.", dbtest.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to delete user.", dbtest.Success, testID)
 
-			_, err = user.QueryByID(ctx, claims, usr.ID)
+			_, err = core.QueryByID(ctx, claims, usr.ID)
 			if !errors.Is(err, validate.ErrNotFound) {
 				t.Fatalf("\t%s\tTest %d:\tShould NOT be able to retrieve user : %s.", dbtest.Failed, testID, err)
 			}

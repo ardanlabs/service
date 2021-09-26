@@ -28,7 +28,7 @@ func NewData(log *zap.SugaredLogger, db *sqlx.DB) Data {
 }
 
 // Create inserts a new user into the database.
-func (d Data) Create(ctx context.Context, nu NewUser, now time.Time) (DBUser, error) {
+func (d Data) Create(ctx context.Context, nu DBNewUser, now time.Time) (DBUser, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(nu.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return DBUser{}, fmt.Errorf("generating password hash: %w", err)
@@ -58,7 +58,7 @@ func (d Data) Create(ctx context.Context, nu NewUser, now time.Time) (DBUser, er
 }
 
 // Update replaces a user document in the database.
-func (d Data) Update(ctx context.Context, userID string, uu UpdateUser, now time.Time) error {
+func (d Data) Update(ctx context.Context, userID string, uu DBUpdateUser, now time.Time) error {
 	dbUsr, err := d.QueryByID(ctx, userID)
 	if err != nil {
 		return fmt.Errorf("updating user userID[%s]: %w", userID, err)
