@@ -12,10 +12,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ardanlabs/service/business/data/dbschema"
-	"github.com/ardanlabs/service/business/data/dbuser"
 	"github.com/ardanlabs/service/business/sys/auth"
-	"github.com/ardanlabs/service/business/sys/database"
+	"github.com/ardanlabs/service/data/database"
+	"github.com/ardanlabs/service/data/dbschema"
+	"github.com/ardanlabs/service/data/dbuser"
 	"github.com/ardanlabs/service/foundation/docker"
 	"github.com/ardanlabs/service/foundation/keystore"
 	"github.com/ardanlabs/service/foundation/logger"

@@ -9,10 +9,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ardanlabs/service/business/data/dbproduct"
 	"github.com/ardanlabs/service/business/sys/auth"
-	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/ardanlabs/service/business/sys/validate"
+	"github.com/ardanlabs/service/data/database"
+	"github.com/ardanlabs/service/data/dbproduct"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
 )

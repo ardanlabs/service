@@ -4,7 +4,7 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/ardanlabs/service/business/data/dbproduct"
+	"github.com/ardanlabs/service/data/dbproduct"
 )
 
 // Product represents an individual product.

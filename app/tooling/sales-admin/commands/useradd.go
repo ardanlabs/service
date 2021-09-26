@@ -7,7 +7,7 @@ import (
 
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/sys/auth"
-	"github.com/ardanlabs/service/business/sys/database"
+	"github.com/ardanlabs/service/data/database"
 	"go.uber.org/zap"
 )
 

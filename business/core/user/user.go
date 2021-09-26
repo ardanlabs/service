@@ -9,10 +9,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ardanlabs/service/business/data/dbuser"
 	"github.com/ardanlabs/service/business/sys/auth"
-	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/ardanlabs/service/business/sys/validate"
+	"github.com/ardanlabs/service/data/database"
+	"github.com/ardanlabs/service/data/dbuser"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
@@ -192,6 +192,9 @@ func (c Core) QueryByEmail(ctx context.Context, claims auth.Claims, email string
 func (c Core) Authenticate(ctx context.Context, now time.Time, email, password string) (auth.Claims, error) {
 	dbUsr, err := c.data.QueryByEmail(ctx, email)
 	if err != nil {
+		if errors.Is(err, database.ErrDBNotFound) {
+			return auth.Claims{}, validate.ErrNotFound
+		}
 		return auth.Claims{}, fmt.Errorf("query: %w", err)
 	}
 
