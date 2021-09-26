@@ -17,26 +17,3 @@ type DBUser struct {
 	DateCreated  time.Time      `db:"date_created"`
 	DateUpdated  time.Time      `db:"date_updated"`
 }
-
-// DBNewUser contains information needed to create a new User.
-type DBNewUser struct {
-	Name            string
-	Email           string
-	Roles           []string
-	Password        string
-	PasswordConfirm string
-}
-
-// DBUpdateUser defines what information may be provided to modify an existing
-// User. All fields are optional so clients can send just the fields they want
-// changed. It uses pointer fields so we can differentiate between a field that
-// was not provided and a field that was provided as explicitly blank. Normally
-// we do not want to use pointers to basic types but we make exceptions around
-// marshalling/unmarshalling.
-type DBUpdateUser struct {
-	Name            *string
-	Email           *string
-	Roles           []string
-	Password        *string
-	PasswordConfirm *string
-}

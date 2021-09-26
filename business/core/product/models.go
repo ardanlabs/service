@@ -54,13 +54,3 @@ func toProductSlice(dbPrds []dbproduct.DBProduct) []Product {
 	}
 	return prds
 }
-
-func toDBNewProduct(np NewProduct) dbproduct.DBNewProduct {
-	dbnp := (*dbproduct.DBNewProduct)(unsafe.Pointer(&np))
-	return *dbnp
-}
-
-func toDBUpdateProduct(up UpdateProduct) dbproduct.DBUpdateProduct {
-	dbup := (*dbproduct.DBUpdateProduct)(unsafe.Pointer(&up))
-	return *dbup
-}

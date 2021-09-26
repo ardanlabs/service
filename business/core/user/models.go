@@ -55,13 +55,3 @@ func toUserSlice(dbUsrs []dbuser.DBUser) []User {
 	}
 	return users
 }
-
-func toDBNewUser(nu NewUser) dbuser.DBNewUser {
-	dbnu := (*dbuser.DBNewUser)(unsafe.Pointer(&nu))
-	return *dbnu
-}
-
-func toDBUpdateUser(uu UpdateUser) dbuser.DBUpdateUser {
-	dbuu := (*dbuser.DBUpdateUser)(unsafe.Pointer(&uu))
-	return *dbuu
-}

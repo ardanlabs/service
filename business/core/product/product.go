@@ -5,11 +5,13 @@ package product
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/ardanlabs/service/business/data/dbproduct"
 	"github.com/ardanlabs/service/business/sys/auth"
+	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
@@ -36,8 +38,17 @@ func (c Core) Create(ctx context.Context, np NewProduct, now time.Time) (Product
 		return Product{}, fmt.Errorf("validating data: %w", err)
 	}
 
-	dbPrd, err := c.data.Create(ctx, toDBNewProduct(np), now)
-	if err != nil {
+	dbPrd := dbproduct.DBProduct{
+		ID:          validate.GenerateID(),
+		Name:        np.Name,
+		Cost:        np.Cost,
+		Quantity:    np.Quantity,
+		UserID:      np.UserID,
+		DateCreated: now,
+		DateUpdated: now,
+	}
+
+	if err := c.data.Create(ctx, dbPrd); err != nil {
 		return Product{}, fmt.Errorf("create: %w", err)
 	}
 
@@ -60,7 +71,26 @@ func (c Core) Update(ctx context.Context, claims auth.Claims, productID string, 
 		return auth.ErrForbidden
 	}
 
-	if err := c.data.Update(ctx, productID, toDBUpdateProduct(up), now); err != nil {
+	dbPrd, err := c.data.QueryByID(ctx, productID)
+	if err != nil {
+		if errors.Is(err, database.ErrDBNotFound) {
+			return validate.ErrNotFound
+		}
+		return fmt.Errorf("updating product productID[%s]: %w", productID, err)
+	}
+
+	if up.Name != nil {
+		dbPrd.Name = *up.Name
+	}
+	if up.Cost != nil {
+		dbPrd.Cost = *up.Cost
+	}
+	if up.Quantity != nil {
+		dbPrd.Quantity = *up.Quantity
+	}
+	dbPrd.DateUpdated = now
+
+	if err := c.data.Update(ctx, dbPrd); err != nil {
 		return fmt.Errorf("update: %w", err)
 	}
 
@@ -89,6 +119,9 @@ func (c Core) Delete(ctx context.Context, claims auth.Claims, productID string) 
 func (c Core) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]Product, error) {
 	dbPrds, err := c.data.Query(ctx, pageNumber, rowsPerPage)
 	if err != nil {
+		if errors.Is(err, database.ErrDBNotFound) {
+			return nil, validate.ErrNotFound
+		}
 		return nil, fmt.Errorf("query: %w", err)
 	}
 
@@ -103,6 +136,9 @@ func (c Core) QueryByID(ctx context.Context, productID string) (Product, error) 
 
 	dbPrd, err := c.data.QueryByID(ctx, productID)
 	if err != nil {
+		if errors.Is(err, database.ErrDBNotFound) {
+			return Product{}, validate.ErrNotFound
+		}
 		return Product{}, fmt.Errorf("query: %w", err)
 	}
 
@@ -117,6 +153,9 @@ func (c Core) QueryByUserID(ctx context.Context, userID string) ([]Product, erro
 
 	dbPrds, err := c.data.QueryByUserID(ctx, userID)
 	if err != nil {
+		if errors.Is(err, database.ErrDBNotFound) {
+			return nil, validate.ErrNotFound
+		}
 		return nil, fmt.Errorf("query: %w", err)
 	}
 

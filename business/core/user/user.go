@@ -5,11 +5,13 @@ package user
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/ardanlabs/service/business/data/dbuser"
 	"github.com/ardanlabs/service/business/sys/auth"
+	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/jmoiron/sqlx"
@@ -37,8 +39,22 @@ func (c Core) Create(ctx context.Context, nu NewUser, now time.Time) (User, erro
 		return User{}, fmt.Errorf("validating data: %w", err)
 	}
 
-	dbUsr, err := c.data.Create(ctx, toDBNewUser(nu), now)
+	hash, err := bcrypt.GenerateFromPassword([]byte(nu.Password), bcrypt.DefaultCost)
 	if err != nil {
+		return User{}, fmt.Errorf("generating password hash: %w", err)
+	}
+
+	dbUsr := dbuser.DBUser{
+		ID:           validate.GenerateID(),
+		Name:         nu.Name,
+		Email:        nu.Email,
+		PasswordHash: hash,
+		Roles:        nu.Roles,
+		DateCreated:  now,
+		DateUpdated:  now,
+	}
+
+	if err := c.data.Create(ctx, dbUsr); err != nil {
 		return User{}, fmt.Errorf("create: %w", err)
 	}
 
@@ -60,7 +76,33 @@ func (c Core) Update(ctx context.Context, claims auth.Claims, userID string, uu 
 		return auth.ErrForbidden
 	}
 
-	if err := c.data.Update(ctx, userID, toDBUpdateUser(uu), now); err != nil {
+	dbUsr, err := c.data.QueryByID(ctx, userID)
+	if err != nil {
+		if errors.Is(err, database.ErrDBNotFound) {
+			return validate.ErrNotFound
+		}
+		return fmt.Errorf("updating user userID[%s]: %w", userID, err)
+	}
+
+	if uu.Name != nil {
+		dbUsr.Name = *uu.Name
+	}
+	if uu.Email != nil {
+		dbUsr.Email = *uu.Email
+	}
+	if uu.Roles != nil {
+		dbUsr.Roles = uu.Roles
+	}
+	if uu.Password != nil {
+		pw, err := bcrypt.GenerateFromPassword([]byte(*uu.Password), bcrypt.DefaultCost)
+		if err != nil {
+			return fmt.Errorf("generating password hash: %w", err)
+		}
+		dbUsr.PasswordHash = pw
+	}
+	dbUsr.DateUpdated = now
+
+	if err := c.data.Update(ctx, dbUsr); err != nil {
 		return fmt.Errorf("udpate: %w", err)
 	}
 
@@ -89,6 +131,9 @@ func (c Core) Delete(ctx context.Context, claims auth.Claims, userID string) err
 func (c Core) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]User, error) {
 	dbUsers, err := c.data.Query(ctx, pageNumber, rowsPerPage)
 	if err != nil {
+		if errors.Is(err, database.ErrDBNotFound) {
+			return nil, validate.ErrNotFound
+		}
 		return nil, fmt.Errorf("query: %w", err)
 	}
 
@@ -108,6 +153,9 @@ func (c Core) QueryByID(ctx context.Context, claims auth.Claims, userID string) 
 
 	dbUsr, err := c.data.QueryByID(ctx, userID)
 	if err != nil {
+		if errors.Is(err, database.ErrDBNotFound) {
+			return User{}, validate.ErrNotFound
+		}
 		return User{}, fmt.Errorf("query: %w", err)
 	}
 
@@ -124,6 +172,9 @@ func (c Core) QueryByEmail(ctx context.Context, claims auth.Claims, email string
 
 	dbUsr, err := c.data.QueryByEmail(ctx, email)
 	if err != nil {
+		if errors.Is(err, database.ErrDBNotFound) {
+			return User{}, validate.ErrNotFound
+		}
 		return User{}, fmt.Errorf("query: %w", err)
 	}
 

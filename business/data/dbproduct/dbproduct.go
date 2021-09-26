@@ -4,10 +4,8 @@ package dbproduct
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/ardanlabs/service/business/sys/database"
-	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
 )
@@ -28,17 +26,7 @@ func NewData(log *zap.SugaredLogger, db *sqlx.DB) Data {
 
 // Create adds a Product to the database. It returns the created Product with
 // fields like ID and DateCreated populated.
-func (d Data) Create(ctx context.Context, np DBNewProduct, now time.Time) (DBProduct, error) {
-	dbPrd := DBProduct{
-		ID:          validate.GenerateID(),
-		Name:        np.Name,
-		Cost:        np.Cost,
-		Quantity:    np.Quantity,
-		UserID:      np.UserID,
-		DateCreated: now,
-		DateUpdated: now,
-	}
-
+func (d Data) Create(ctx context.Context, dbPrd DBProduct) error {
 	const q = `
 	INSERT INTO products
 		(product_id, user_id, name, cost, quantity, date_created, date_updated)
@@ -46,31 +34,15 @@ func (d Data) Create(ctx context.Context, np DBNewProduct, now time.Time) (DBPro
 		(:product_id, :user_id, :name, :cost, :quantity, :date_created, :date_updated)`
 
 	if err := database.NamedExecContext(ctx, d.log, d.db, q, dbPrd); err != nil {
-		return DBProduct{}, fmt.Errorf("inserting product: %w", err)
+		return fmt.Errorf("inserting product: %w", err)
 	}
 
-	return dbPrd, nil
+	return nil
 }
 
 // Update modifies data about a Product. It will error if the specified ID is
 // invalid or does not reference an existing Product.
-func (d Data) Update(ctx context.Context, productID string, up DBUpdateProduct, now time.Time) error {
-	prd, err := d.QueryByID(ctx, productID)
-	if err != nil {
-		return fmt.Errorf("updating product productID[%s]: %w", productID, err)
-	}
-
-	if up.Name != nil {
-		prd.Name = *up.Name
-	}
-	if up.Cost != nil {
-		prd.Cost = *up.Cost
-	}
-	if up.Quantity != nil {
-		prd.Quantity = *up.Quantity
-	}
-	prd.DateUpdated = now
-
+func (d Data) Update(ctx context.Context, dbPrd DBProduct) error {
 	const q = `
 	UPDATE
 		products
@@ -82,8 +54,8 @@ func (d Data) Update(ctx context.Context, productID string, up DBUpdateProduct, 
 	WHERE
 		product_id = :product_id`
 
-	if err := database.NamedExecContext(ctx, d.log, d.db, q, prd); err != nil {
-		return fmt.Errorf("updating product productID[%s]: %w", productID, err)
+	if err := database.NamedExecContext(ctx, d.log, d.db, q, dbPrd); err != nil {
+		return fmt.Errorf("updating product productID[%s]: %w", dbPrd.ID, err)
 	}
 
 	return nil
@@ -91,10 +63,6 @@ func (d Data) Update(ctx context.Context, productID string, up DBUpdateProduct, 
 
 // Delete removes the product identified by a given ID.
 func (d Data) Delete(ctx context.Context, productID string) error {
-	if err := validate.CheckID(productID); err != nil {
-		return validate.ErrInvalidID
-	}
-
 	data := struct {
 		ProductID string `db:"product_id"`
 	}{
@@ -141,9 +109,6 @@ func (d Data) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]DBP
 
 	var dbPrds []DBProduct
 	if err := database.NamedQuerySlice(ctx, d.log, d.db, q, data, &dbPrds); err != nil {
-		if err == database.ErrDBNotFound {
-			return nil, validate.ErrNotFound
-		}
 		return nil, fmt.Errorf("selecting products: %w", err)
 	}
 
@@ -174,9 +139,6 @@ func (d Data) QueryByID(ctx context.Context, productID string) (DBProduct, error
 
 	var dbPrd DBProduct
 	if err := database.NamedQueryStruct(ctx, d.log, d.db, q, data, &dbPrd); err != nil {
-		if err == database.ErrDBNotFound {
-			return DBProduct{}, validate.ErrNotFound
-		}
 		return DBProduct{}, fmt.Errorf("selecting product productID[%q]: %w", productID, err)
 	}
 
@@ -207,9 +169,6 @@ func (d Data) QueryByUserID(ctx context.Context, userID string) ([]DBProduct, er
 
 	var dbPrds []DBProduct
 	if err := database.NamedQuerySlice(ctx, d.log, d.db, q, data, &dbPrds); err != nil {
-		if err == database.ErrDBNotFound {
-			return nil, validate.ErrNotFound
-		}
 		return nil, fmt.Errorf("selecting products userID[%s]: %w", userID, err)
 	}
 

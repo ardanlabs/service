@@ -4,13 +4,10 @@ package dbuser
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/ardanlabs/service/business/sys/database"
-	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
-	"golang.org/x/crypto/bcrypt"
 )
 
 // Data manages the set of API's for user access.
@@ -28,22 +25,7 @@ func NewData(log *zap.SugaredLogger, db *sqlx.DB) Data {
 }
 
 // Create inserts a new user into the database.
-func (d Data) Create(ctx context.Context, nu DBNewUser, now time.Time) (DBUser, error) {
-	hash, err := bcrypt.GenerateFromPassword([]byte(nu.Password), bcrypt.DefaultCost)
-	if err != nil {
-		return DBUser{}, fmt.Errorf("generating password hash: %w", err)
-	}
-
-	dbUsr := DBUser{
-		ID:           validate.GenerateID(),
-		Name:         nu.Name,
-		Email:        nu.Email,
-		PasswordHash: hash,
-		Roles:        nu.Roles,
-		DateCreated:  now,
-		DateUpdated:  now,
-	}
-
+func (d Data) Create(ctx context.Context, dbUsr DBUser) error {
 	const q = `
 	INSERT INTO users
 		(user_id, name, email, password_hash, roles, date_created, date_updated)
@@ -51,37 +33,14 @@ func (d Data) Create(ctx context.Context, nu DBNewUser, now time.Time) (DBUser, 
 		(:user_id, :name, :email, :password_hash, :roles, :date_created, :date_updated)`
 
 	if err := database.NamedExecContext(ctx, d.log, d.db, q, dbUsr); err != nil {
-		return DBUser{}, fmt.Errorf("inserting user: %w", err)
+		return fmt.Errorf("inserting user: %w", err)
 	}
 
-	return dbUsr, nil
+	return nil
 }
 
 // Update replaces a user document in the database.
-func (d Data) Update(ctx context.Context, userID string, uu DBUpdateUser, now time.Time) error {
-	dbUsr, err := d.QueryByID(ctx, userID)
-	if err != nil {
-		return fmt.Errorf("updating user userID[%s]: %w", userID, err)
-	}
-
-	if uu.Name != nil {
-		dbUsr.Name = *uu.Name
-	}
-	if uu.Email != nil {
-		dbUsr.Email = *uu.Email
-	}
-	if uu.Roles != nil {
-		dbUsr.Roles = uu.Roles
-	}
-	if uu.Password != nil {
-		pw, err := bcrypt.GenerateFromPassword([]byte(*uu.Password), bcrypt.DefaultCost)
-		if err != nil {
-			return fmt.Errorf("generating password hash: %w", err)
-		}
-		dbUsr.PasswordHash = pw
-	}
-	dbUsr.DateUpdated = now
-
+func (d Data) Update(ctx context.Context, dbUsr DBUser) error {
 	const q = `
 	UPDATE
 		users
@@ -95,7 +54,7 @@ func (d Data) Update(ctx context.Context, userID string, uu DBUpdateUser, now ti
 		user_id = :user_id`
 
 	if err := database.NamedExecContext(ctx, d.log, d.db, q, dbUsr); err != nil {
-		return fmt.Errorf("updating userID[%s]: %w", userID, err)
+		return fmt.Errorf("updating userID[%s]: %w", dbUsr.ID, err)
 	}
 
 	return nil
@@ -143,9 +102,6 @@ func (d Data) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]DBU
 
 	var dbUsrs []DBUser
 	if err := database.NamedQuerySlice(ctx, d.log, d.db, q, data, &dbUsrs); err != nil {
-		if err == database.ErrDBNotFound {
-			return nil, validate.ErrNotFound
-		}
 		return nil, fmt.Errorf("selecting users: %w", err)
 	}
 
@@ -170,9 +126,6 @@ func (d Data) QueryByID(ctx context.Context, userID string) (DBUser, error) {
 
 	var dbUsr DBUser
 	if err := database.NamedQueryStruct(ctx, d.log, d.db, q, data, &dbUsr); err != nil {
-		if err == database.ErrDBNotFound {
-			return DBUser{}, validate.ErrNotFound
-		}
 		return DBUser{}, fmt.Errorf("selecting userID[%q]: %w", userID, err)
 	}
 
@@ -197,9 +150,6 @@ func (d Data) QueryByEmail(ctx context.Context, email string) (DBUser, error) {
 
 	var dbUsr DBUser
 	if err := database.NamedQueryStruct(ctx, d.log, d.db, q, data, &dbUsr); err != nil {
-		if err == database.ErrDBNotFound {
-			return DBUser{}, validate.ErrNotFound
-		}
 		return DBUser{}, fmt.Errorf("selecting email[%q]: %w", email, err)
 	}
 

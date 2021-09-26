@@ -14,23 +14,3 @@ type DBProduct struct {
 	DateCreated time.Time `db:"date_created"` // When the product was added.
 	DateUpdated time.Time `db:"date_updated"` // When the product record was last modified.
 }
-
-// DBNewProduct is what we require from clients when adding a Product.
-type DBNewProduct struct {
-	Name     string
-	Cost     int
-	Quantity int
-	UserID   string
-}
-
-// DBUpdateProduct defines what information may be provided to modify an
-// existing Product. All fields are optional so clients can send just the
-// fields they want changed. It uses pointer fields so we can differentiate
-// between a field that was not provided and a field that was provided as
-// explicitly blank. Normally we do not want to use pointers to basic types but
-// we make exceptions around marshalling/unmarshalling.
-type DBUpdateProduct struct {
-	Name     *string
-	Cost     *int
-	Quantity *int
-}
