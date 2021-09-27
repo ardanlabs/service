@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/core/product/dbproduct"
-	"github.com/ardanlabs/service/business/data/database"
 	"github.com/ardanlabs/service/business/sys/auth"
+	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"

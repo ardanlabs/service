@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ardanlabs/service/business/data/database"
 	"github.com/ardanlabs/service/business/data/dbschema"
+	"github.com/ardanlabs/service/business/sys/database"
 )
 
 // Seed loads test data into the database.

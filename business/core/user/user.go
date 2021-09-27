@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/core/user/dbuser"
-	"github.com/ardanlabs/service/business/data/database"
 	"github.com/ardanlabs/service/business/sys/auth"
+	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/jmoiron/sqlx"
