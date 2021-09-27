@@ -4,20 +4,8 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/lib/pq"
+	"github.com/ardanlabs/service/business/core/user/dbuser"
 )
-
-// dbUser represent the structure we need for moving data
-// between the app and the database.
-type dbUser struct {
-	ID           string         `db:"user_id"`
-	Name         string         `db:"name"`
-	Email        string         `db:"email"`
-	Roles        pq.StringArray `db:"roles"`
-	PasswordHash []byte         `db:"password_hash"`
-	DateCreated  time.Time      `db:"date_created"`
-	DateUpdated  time.Time      `db:"date_updated"`
-}
 
 // User represents an individual user.
 type User struct {
@@ -55,19 +43,14 @@ type UpdateUser struct {
 
 // =============================================================================
 
-func toDBUser(u User) dbUser {
-	pdb := (*dbUser)(unsafe.Pointer(&u))
-	return *pdb
-}
-
-func toUser(db dbUser) User {
-	pu := (*User)(unsafe.Pointer(&db))
+func toUser(dbUsr dbuser.DBUser) User {
+	pu := (*User)(unsafe.Pointer(&dbUsr))
 	return *pu
 }
 
-func toUserSlice(dbUsers []dbUser) []User {
-	users := make([]User, len(dbUsers))
-	for i, dbUsr := range dbUsers {
+func toUserSlice(dbUsrs []dbuser.DBUser) []User {
+	users := make([]User, len(dbUsrs))
+	for i, dbUsr := range dbUsrs {
 		users[i] = toUser(dbUsr)
 	}
 	return users

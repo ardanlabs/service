@@ -116,7 +116,7 @@ func v1(app *web.App, cfg APIMuxConfig) {
 
 	// Register user management and authentication endpoints.
 	ugh := v1UserGrp.Handlers{
-		User: userCore.NewCore(cfg.Log, cfg.DB),
+		Core: userCore.NewCore(cfg.Log, cfg.DB),
 		Auth: cfg.Auth,
 	}
 	app.Handle(http.MethodGet, version, "/users/token", ugh.Token)
@@ -128,7 +128,7 @@ func v1(app *web.App, cfg APIMuxConfig) {
 
 	// Register product and sale endpoints.
 	pgh := v1ProductGrp.Handlers{
-		Product: productCore.NewCore(cfg.Log, cfg.DB),
+		Core: productCore.NewCore(cfg.Log, cfg.DB),
 	}
 	app.Handle(http.MethodGet, version, "/products/:page/:rows", pgh.Query, webv1.Authenticate(cfg.Auth))
 	app.Handle(http.MethodGet, version, "/products/:id", pgh.QueryByID, webv1.Authenticate(cfg.Auth))

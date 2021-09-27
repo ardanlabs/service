@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/ardanlabs/service/business/data/store/user"
+	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/sys/auth"
 	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/ardanlabs/service/foundation/keystore"
@@ -30,17 +30,9 @@ func GenToken(log *zap.SugaredLogger, cfg database.Config, userID string, kid st
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	store := user.NewStore(log, db)
+	user := user.NewCore(log, db)
 
-	// The call to retrieve a user requires an Admin role by the caller.
-	claims := auth.Claims{
-		StandardClaims: jwt.StandardClaims{
-			Subject: userID,
-		},
-		Roles: []string{auth.RoleAdmin},
-	}
-
-	usr, err := store.QueryByID(ctx, claims, userID)
+	usr, err := user.QueryByID(ctx, userID)
 	if err != nil {
 		return fmt.Errorf("retrieve user: %w", err)
 	}
@@ -71,7 +63,7 @@ func GenToken(log *zap.SugaredLogger, cfg database.Config, userID string, kid st
 	// nbf (not before time): Time before which the JWT must not be accepted for processing
 	// iat (issued at time): Time at which the JWT was issued; can be used to determine age of the JWT
 	// jti (JWT ID): Unique identifier; can be used to prevent the JWT from being replayed (allows a token to be used only once)
-	claims = auth.Claims{
+	claims := auth.Claims{
 		StandardClaims: jwt.StandardClaims{
 			Issuer:    "service project",
 			Subject:   usr.ID,

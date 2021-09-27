@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ardanlabs/service/business/data/store/user"
+	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/sys/auth"
 	"github.com/ardanlabs/service/business/sys/database"
 	"go.uber.org/zap"
@@ -27,7 +27,7 @@ func UserAdd(log *zap.SugaredLogger, cfg database.Config, name, email, password 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	store := user.NewStore(log, db)
+	core := user.NewCore(log, db)
 
 	nu := user.NewUser{
 		Name:            name,
@@ -37,7 +37,7 @@ func UserAdd(log *zap.SugaredLogger, cfg database.Config, name, email, password 
 		Roles:           []string{auth.RoleAdmin, auth.RoleUser},
 	}
 
-	usr, err := store.Create(ctx, nu, time.Now())
+	usr, err := core.Create(ctx, nu, time.Now())
 	if err != nil {
 		return fmt.Errorf("create user: %w", err)
 	}
