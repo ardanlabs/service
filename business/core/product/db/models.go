@@ -1,9 +1,9 @@
-package dbproduct
+package db
 
 import "time"
 
-// DBProduct represents an individual product.
-type DBProduct struct {
+// Product represents an individual product.
+type Product struct {
 	ID          string    `db:"product_id"`   // Unique identifier.
 	Name        string    `db:"name"`         // Display name of the product.
 	Cost        int       `db:"cost"`         // Price for one item in cents.

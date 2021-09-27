@@ -1,5 +1,5 @@
-// Package dbuser contains user related CRUD functionality.
-package dbuser
+// Package db contains user related CRUD functionality.
+package db
 
 import (
 	"context"
@@ -12,27 +12,27 @@ import (
 
 // Store manages the set of API's for user access.
 type Store struct {
-	log *zap.SugaredLogger
-	db  *sqlx.DB
+	log    *zap.SugaredLogger
+	sqlxDB *sqlx.DB
 }
 
 // NewStore constructs a data for api access.
-func NewStore(log *zap.SugaredLogger, db *sqlx.DB) Store {
+func NewStore(log *zap.SugaredLogger, sqlxDB *sqlx.DB) Store {
 	return Store{
-		log: log,
-		db:  db,
+		log:    log,
+		sqlxDB: sqlxDB,
 	}
 }
 
 // Create inserts a new user into the database.
-func (s Store) Create(ctx context.Context, dbUsr DBUser) error {
+func (s Store) Create(ctx context.Context, usr User) error {
 	const q = `
 	INSERT INTO users
 		(user_id, name, email, password_hash, roles, date_created, date_updated)
 	VALUES
 		(:user_id, :name, :email, :password_hash, :roles, :date_created, :date_updated)`
 
-	if err := database.NamedExecContext(ctx, s.log, s.db, q, dbUsr); err != nil {
+	if err := database.NamedExecContext(ctx, s.log, s.sqlxDB, q, usr); err != nil {
 		return fmt.Errorf("inserting user: %w", err)
 	}
 
@@ -40,7 +40,7 @@ func (s Store) Create(ctx context.Context, dbUsr DBUser) error {
 }
 
 // Update replaces a user document in the database.
-func (s Store) Update(ctx context.Context, dbUsr DBUser) error {
+func (s Store) Update(ctx context.Context, usr User) error {
 	const q = `
 	UPDATE
 		users
@@ -53,8 +53,8 @@ func (s Store) Update(ctx context.Context, dbUsr DBUser) error {
 	WHERE
 		user_id = :user_id`
 
-	if err := database.NamedExecContext(ctx, s.log, s.db, q, dbUsr); err != nil {
-		return fmt.Errorf("updating userID[%s]: %w", dbUsr.ID, err)
+	if err := database.NamedExecContext(ctx, s.log, s.sqlxDB, q, usr); err != nil {
+		return fmt.Errorf("updating userID[%s]: %w", usr.ID, err)
 	}
 
 	return nil
@@ -74,7 +74,7 @@ func (s Store) Delete(ctx context.Context, userID string) error {
 	WHERE
 		user_id = :user_id`
 
-	if err := database.NamedExecContext(ctx, s.log, s.db, q, data); err != nil {
+	if err := database.NamedExecContext(ctx, s.log, s.sqlxDB, q, data); err != nil {
 		return fmt.Errorf("deleting userID[%s]: %w", userID, err)
 	}
 
@@ -82,7 +82,7 @@ func (s Store) Delete(ctx context.Context, userID string) error {
 }
 
 // Query retrieves a list of existing users from the database.
-func (s Store) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]DBUser, error) {
+func (s Store) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]User, error) {
 	data := struct {
 		Offset      int `db:"offset"`
 		RowsPerPage int `db:"rows_per_page"`
@@ -100,16 +100,16 @@ func (s Store) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]DB
 		user_id
 	OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY`
 
-	var dbUsrs []DBUser
-	if err := database.NamedQuerySlice(ctx, s.log, s.db, q, data, &dbUsrs); err != nil {
+	var usrs []User
+	if err := database.NamedQuerySlice(ctx, s.log, s.sqlxDB, q, data, &usrs); err != nil {
 		return nil, fmt.Errorf("selecting users: %w", err)
 	}
 
-	return dbUsrs, nil
+	return usrs, nil
 }
 
 // QueryByID gets the specified user from the database.
-func (s Store) QueryByID(ctx context.Context, userID string) (DBUser, error) {
+func (s Store) QueryByID(ctx context.Context, userID string) (User, error) {
 	data := struct {
 		UserID string `db:"user_id"`
 	}{
@@ -124,16 +124,16 @@ func (s Store) QueryByID(ctx context.Context, userID string) (DBUser, error) {
 	WHERE 
 		user_id = :user_id`
 
-	var dbUsr DBUser
-	if err := database.NamedQueryStruct(ctx, s.log, s.db, q, data, &dbUsr); err != nil {
-		return DBUser{}, fmt.Errorf("selecting userID[%q]: %w", userID, err)
+	var usr User
+	if err := database.NamedQueryStruct(ctx, s.log, s.sqlxDB, q, data, &usr); err != nil {
+		return User{}, fmt.Errorf("selecting userID[%q]: %w", userID, err)
 	}
 
-	return dbUsr, nil
+	return usr, nil
 }
 
 // QueryByEmail gets the specified user from the database by email.
-func (s Store) QueryByEmail(ctx context.Context, email string) (DBUser, error) {
+func (s Store) QueryByEmail(ctx context.Context, email string) (User, error) {
 	data := struct {
 		Email string `db:"email"`
 	}{
@@ -148,10 +148,10 @@ func (s Store) QueryByEmail(ctx context.Context, email string) (DBUser, error) {
 	WHERE
 		email = :email`
 
-	var dbUsr DBUser
-	if err := database.NamedQueryStruct(ctx, s.log, s.db, q, data, &dbUsr); err != nil {
-		return DBUser{}, fmt.Errorf("selecting email[%q]: %w", email, err)
+	var usr User
+	if err := database.NamedQueryStruct(ctx, s.log, s.sqlxDB, q, data, &usr); err != nil {
+		return User{}, fmt.Errorf("selecting email[%q]: %w", email, err)
 	}
 
-	return dbUsr, nil
+	return usr, nil
 }

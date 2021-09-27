@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ardanlabs/service/business/core/user/dbuser"
+	"github.com/ardanlabs/service/business/core/user/db"
 	"github.com/ardanlabs/service/business/sys/auth"
 	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/ardanlabs/service/business/sys/validate"
@@ -22,14 +22,14 @@ import (
 // Core manages the set of API's for user access.
 type Core struct {
 	log   *zap.SugaredLogger
-	store dbuser.Store
+	store db.Store
 }
 
 // NewCore constructs a core for user api access.
-func NewCore(log *zap.SugaredLogger, db *sqlx.DB) Core {
+func NewCore(log *zap.SugaredLogger, sqlxDB *sqlx.DB) Core {
 	return Core{
 		log:   log,
-		store: dbuser.NewStore(log, db),
+		store: db.NewStore(log, sqlxDB),
 	}
 }
 
@@ -44,7 +44,7 @@ func (c Core) Create(ctx context.Context, nu NewUser, now time.Time) (User, erro
 		return User{}, fmt.Errorf("generating password hash: %w", err)
 	}
 
-	dbUsr := dbuser.DBUser{
+	dbUsr := db.User{
 		ID:           validate.GenerateID(),
 		Name:         nu.Name,
 		Email:        nu.Email,

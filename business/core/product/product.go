@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ardanlabs/service/business/core/product/dbproduct"
+	"github.com/ardanlabs/service/business/core/product/db"
 	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/jmoiron/sqlx"
@@ -19,14 +19,14 @@ import (
 // Core manages the set of API's for product access.
 type Core struct {
 	log   *zap.SugaredLogger
-	store dbproduct.Store
+	store db.Store
 }
 
 // NewCore constructs a core for product api access.
-func NewCore(log *zap.SugaredLogger, db *sqlx.DB) Core {
+func NewCore(log *zap.SugaredLogger, sqlxDB *sqlx.DB) Core {
 	return Core{
 		log:   log,
-		store: dbproduct.NewStore(log, db),
+		store: db.NewStore(log, sqlxDB),
 	}
 }
 
@@ -37,7 +37,7 @@ func (c Core) Create(ctx context.Context, np NewProduct, now time.Time) (Product
 		return Product{}, fmt.Errorf("validating data: %w", err)
 	}
 
-	dbPrd := dbproduct.DBProduct{
+	dbPrd := db.Product{
 		ID:          validate.GenerateID(),
 		Name:        np.Name,
 		Cost:        np.Cost,

@@ -4,7 +4,7 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/ardanlabs/service/business/core/user/dbuser"
+	"github.com/ardanlabs/service/business/core/user/db"
 )
 
 // User represents an individual user.
@@ -43,12 +43,12 @@ type UpdateUser struct {
 
 // =============================================================================
 
-func toUser(dbUsr dbuser.DBUser) User {
+func toUser(dbUsr db.User) User {
 	pu := (*User)(unsafe.Pointer(&dbUsr))
 	return *pu
 }
 
-func toUserSlice(dbUsrs []dbuser.DBUser) []User {
+func toUserSlice(dbUsrs []db.User) []User {
 	users := make([]User, len(dbUsrs))
 	for i, dbUsr := range dbUsrs {
 		users[i] = toUser(dbUsr)

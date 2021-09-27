@@ -65,12 +65,12 @@ func Open(cfg Config) (*sqlx.DB, error) {
 
 // StatusCheck returns nil if it can successfully talk to the database. It
 // returns a non-nil error otherwise.
-func StatusCheck(ctx context.Context, db *sqlx.DB) error {
+func StatusCheck(ctx context.Context, sqlxDB *sqlx.DB) error {
 
 	// First check we can ping the database.
 	var pingError error
 	for attempts := 1; ; attempts++ {
-		pingError = db.Ping()
+		pingError = sqlxDB.Ping()
 		if pingError == nil {
 			break
 		}
@@ -89,12 +89,12 @@ func StatusCheck(ctx context.Context, db *sqlx.DB) error {
 	// round trip through the database.
 	const q = `SELECT true`
 	var tmp bool
-	return db.QueryRowContext(ctx, q).Scan(&tmp)
+	return sqlxDB.QueryRowContext(ctx, q).Scan(&tmp)
 }
 
 // NamedExecContext is a helper function to execute a CUD operation with
 // logging and tracing.
-func NamedExecContext(ctx context.Context, log *zap.SugaredLogger, db *sqlx.DB, query string, data interface{}) error {
+func NamedExecContext(ctx context.Context, log *zap.SugaredLogger, sqlxDB *sqlx.DB, query string, data interface{}) error {
 	q := queryString(query, data)
 	log.Infow("database.NamedExecContext", "traceid", web.GetTraceID(ctx), "query", q)
 
@@ -102,7 +102,7 @@ func NamedExecContext(ctx context.Context, log *zap.SugaredLogger, db *sqlx.DB, 
 	span.SetAttributes(attribute.String("query", q))
 	defer span.End()
 
-	if _, err := db.NamedExecContext(ctx, query, data); err != nil {
+	if _, err := sqlxDB.NamedExecContext(ctx, query, data); err != nil {
 		return err
 	}
 
@@ -111,7 +111,7 @@ func NamedExecContext(ctx context.Context, log *zap.SugaredLogger, db *sqlx.DB, 
 
 // NamedQuerySlice is a helper function for executing queries that return a
 // collection of data to be unmarshaled into a slice.
-func NamedQuerySlice(ctx context.Context, log *zap.SugaredLogger, db *sqlx.DB, query string, data interface{}, dest interface{}) error {
+func NamedQuerySlice(ctx context.Context, log *zap.SugaredLogger, sqlxDB *sqlx.DB, query string, data interface{}, dest interface{}) error {
 	q := queryString(query, data)
 	log.Infow("database.NamedQuerySlice", "traceid", web.GetTraceID(ctx), "query", q)
 
@@ -124,7 +124,7 @@ func NamedQuerySlice(ctx context.Context, log *zap.SugaredLogger, db *sqlx.DB, q
 		return errors.New("must provide a pointer to a slice")
 	}
 
-	rows, err := db.NamedQueryContext(ctx, query, data)
+	rows, err := sqlxDB.NamedQueryContext(ctx, query, data)
 	if err != nil {
 		return err
 	}
@@ -143,7 +143,7 @@ func NamedQuerySlice(ctx context.Context, log *zap.SugaredLogger, db *sqlx.DB, q
 
 // NamedQueryStruct is a helper function for executing queries that return a
 // single value to be unmarshalled into a struct type.
-func NamedQueryStruct(ctx context.Context, log *zap.SugaredLogger, db *sqlx.DB, query string, data interface{}, dest interface{}) error {
+func NamedQueryStruct(ctx context.Context, log *zap.SugaredLogger, sqlxDB *sqlx.DB, query string, data interface{}, dest interface{}) error {
 	q := queryString(query, data)
 	log.Infow("database.NamedQueryStruct", "traceid", web.GetTraceID(ctx), "query", q)
 
@@ -151,7 +151,7 @@ func NamedQueryStruct(ctx context.Context, log *zap.SugaredLogger, db *sqlx.DB, 
 	span.SetAttributes(attribute.String("query", q))
 	defer span.End()
 
-	rows, err := db.NamedQueryContext(ctx, query, data)
+	rows, err := sqlxDB.NamedQueryContext(ctx, query, data)
 	if err != nil {
 		return err
 	}

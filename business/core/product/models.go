@@ -4,7 +4,7 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/ardanlabs/service/business/core/product/dbproduct"
+	"github.com/ardanlabs/service/business/core/product/db"
 )
 
 // Product represents an individual product.
@@ -42,12 +42,12 @@ type UpdateProduct struct {
 
 // =============================================================================
 
-func toProduct(dbPrd dbproduct.DBProduct) Product {
+func toProduct(dbPrd db.Product) Product {
 	pu := (*Product)(unsafe.Pointer(&dbPrd))
 	return *pu
 }
 
-func toProductSlice(dbPrds []dbproduct.DBProduct) []Product {
+func toProductSlice(dbPrds []db.Product) []Product {
 	prds := make([]Product, len(dbPrds))
 	for i, dbPrd := range dbPrds {
 		prds[i] = toProduct(dbPrd)
