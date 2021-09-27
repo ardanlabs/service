@@ -7,7 +7,7 @@ import (
 	"fmt"
 
 	"github.com/ardanlabs/darwin"
-	"github.com/ardanlabs/service/data/database"
+	"github.com/ardanlabs/service/business/data/database"
 	"github.com/jmoiron/sqlx"
 )
 

@@ -12,10 +12,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ardanlabs/service/business/core/user/dbuser"
+	"github.com/ardanlabs/service/business/data/database"
+	"github.com/ardanlabs/service/business/data/dbschema"
 	"github.com/ardanlabs/service/business/sys/auth"
-	"github.com/ardanlabs/service/data/database"
-	"github.com/ardanlabs/service/data/dbschema"
-	"github.com/ardanlabs/service/data/dbuser"
 	"github.com/ardanlabs/service/foundation/docker"
 	"github.com/ardanlabs/service/foundation/keystore"
 	"github.com/ardanlabs/service/foundation/logger"
@@ -143,8 +143,8 @@ func NewIntegration(t *testing.T, dbc DBContainer) *Test {
 func (test *Test) Token(email, pass string) string {
 	test.t.Log("Generating token for test ...")
 
-	data := dbuser.NewData(test.Log, test.DB)
-	dbUsr, err := data.QueryByEmail(context.Background(), email)
+	store := dbuser.NewStore(test.Log, test.DB)
+	dbUsr, err := store.QueryByEmail(context.Background(), email)
 	if err != nil {
 		return ""
 	}

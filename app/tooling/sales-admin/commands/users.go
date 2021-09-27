@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/core/user"
-	"github.com/ardanlabs/service/data/database"
+	"github.com/ardanlabs/service/business/data/database"
 	"go.uber.org/zap"
 )
 
