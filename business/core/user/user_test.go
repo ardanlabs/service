@@ -11,7 +11,6 @@ import (
 	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/ardanlabs/service/business/sys/auth"
 	"github.com/ardanlabs/service/business/sys/validate"
-	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -49,17 +48,7 @@ func TestUser(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to create user.", dbtest.Success, testID)
 
-			claims := auth.Claims{
-				StandardClaims: jwt.StandardClaims{
-					Issuer:    "service project",
-					Subject:   usr.ID,
-					ExpiresAt: time.Now().Add(time.Hour).Unix(),
-					IssuedAt:  time.Now().UTC().Unix(),
-				},
-				Roles: []string{auth.RoleUser},
-			}
-
-			saved, err := core.QueryByID(ctx, claims, usr.ID)
+			saved, err := core.QueryByID(ctx, usr.ID)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve user by ID: %s.", dbtest.Failed, testID, err)
 			}
@@ -75,21 +64,12 @@ func TestUser(t *testing.T) {
 				Email: dbtest.StringPointer("jacob@ardanlabs.com"),
 			}
 
-			claims = auth.Claims{
-				StandardClaims: jwt.StandardClaims{
-					Issuer:    "service project",
-					ExpiresAt: time.Now().Add(time.Hour).Unix(),
-					IssuedAt:  time.Now().UTC().Unix(),
-				},
-				Roles: []string{auth.RoleAdmin},
-			}
-
-			if err := core.Update(ctx, claims, usr.ID, upd, now); err != nil {
+			if err := core.Update(ctx, usr.ID, upd, now); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to update user : %s.", dbtest.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to update user.", dbtest.Success, testID)
 
-			saved, err = core.QueryByEmail(ctx, claims, *upd.Email)
+			saved, err = core.QueryByEmail(ctx, *upd.Email)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve user by Email : %s.", dbtest.Failed, testID, err)
 			}
@@ -111,12 +91,12 @@ func TestUser(t *testing.T) {
 				t.Logf("\t%s\tTest %d:\tShould be able to see updates to Email.", dbtest.Success, testID)
 			}
 
-			if err := core.Delete(ctx, claims, usr.ID); err != nil {
+			if err := core.Delete(ctx, usr.ID); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to delete user : %s.", dbtest.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to delete user.", dbtest.Success, testID)
 
-			_, err = core.QueryByID(ctx, claims, usr.ID)
+			_, err = core.QueryByID(ctx, usr.ID)
 			if !errors.Is(err, validate.ErrNotFound) {
 				t.Fatalf("\t%s\tTest %d:\tShould NOT be able to retrieve user : %s.", dbtest.Failed, testID, err)
 			}

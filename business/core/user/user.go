@@ -62,18 +62,13 @@ func (c Core) Create(ctx context.Context, nu NewUser, now time.Time) (User, erro
 }
 
 // Update replaces a user document in the database.
-func (c Core) Update(ctx context.Context, claims auth.Claims, userID string, uu UpdateUser, now time.Time) error {
+func (c Core) Update(ctx context.Context, userID string, uu UpdateUser, now time.Time) error {
 	if err := validate.CheckID(userID); err != nil {
 		return validate.ErrInvalidID
 	}
 
 	if err := validate.Check(uu); err != nil {
 		return fmt.Errorf("validating data: %w", err)
-	}
-
-	// If you are not an admin and looking to retrieve someone other than yourself.
-	if !claims.Authorized(auth.RoleAdmin) && claims.Subject != userID {
-		return auth.ErrForbidden
 	}
 
 	dbUsr, err := c.store.QueryByID(ctx, userID)
@@ -110,14 +105,9 @@ func (c Core) Update(ctx context.Context, claims auth.Claims, userID string, uu 
 }
 
 // Delete removes a user from the database.
-func (c Core) Delete(ctx context.Context, claims auth.Claims, userID string) error {
+func (c Core) Delete(ctx context.Context, userID string) error {
 	if err := validate.CheckID(userID); err != nil {
 		return validate.ErrInvalidID
-	}
-
-	// If you are not an admin and looking to delete someone other than yourself.
-	if !claims.Authorized(auth.RoleAdmin) && claims.Subject != userID {
-		return auth.ErrForbidden
 	}
 
 	if err := c.store.Delete(ctx, userID); err != nil {
@@ -141,14 +131,9 @@ func (c Core) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]Use
 }
 
 // QueryByID gets the specified user from the database.
-func (c Core) QueryByID(ctx context.Context, claims auth.Claims, userID string) (User, error) {
+func (c Core) QueryByID(ctx context.Context, userID string) (User, error) {
 	if err := validate.CheckID(userID); err != nil {
 		return User{}, validate.ErrInvalidID
-	}
-
-	// If you are not an admin and looking to retrieve someone other than yourself.
-	if !claims.Authorized(auth.RoleAdmin) && claims.Subject != userID {
-		return User{}, auth.ErrForbidden
 	}
 
 	dbUsr, err := c.store.QueryByID(ctx, userID)
@@ -163,7 +148,7 @@ func (c Core) QueryByID(ctx context.Context, claims auth.Claims, userID string) 
 }
 
 // QueryByEmail gets the specified user from the database by email.
-func (c Core) QueryByEmail(ctx context.Context, claims auth.Claims, email string) (User, error) {
+func (c Core) QueryByEmail(ctx context.Context, email string) (User, error) {
 
 	// Add Email Validate function in validate
 	// if err := validate.Email(email); err != nil {
@@ -176,11 +161,6 @@ func (c Core) QueryByEmail(ctx context.Context, claims auth.Claims, email string
 			return User{}, validate.ErrNotFound
 		}
 		return User{}, fmt.Errorf("query: %w", err)
-	}
-
-	// If you are not an admin and looking to retrieve someone other than yourself.
-	if !claims.Authorized(auth.RoleAdmin) && claims.Subject != dbUsr.ID {
-		return User{}, auth.ErrForbidden
 	}
 
 	return toUser(dbUsr), nil

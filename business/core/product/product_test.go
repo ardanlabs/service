@@ -8,9 +8,7 @@ import (
 
 	"github.com/ardanlabs/service/business/core/product"
 	"github.com/ardanlabs/service/business/data/dbtest"
-	"github.com/ardanlabs/service/business/sys/auth"
 	"github.com/ardanlabs/service/business/sys/validate"
-	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -33,16 +31,6 @@ func TestProduct(t *testing.T) {
 		{
 			ctx := context.Background()
 			now := time.Date(2019, time.January, 1, 0, 0, 0, 0, time.UTC)
-
-			claims := auth.Claims{
-				StandardClaims: jwt.StandardClaims{
-					Issuer:    "service project",
-					Subject:   "5cf37266-3473-4006-984f-9325122678b7",
-					ExpiresAt: time.Now().Add(time.Hour).Unix(),
-					IssuedAt:  time.Now().UTC().Unix(),
-				},
-				Roles: []string{auth.RoleAdmin, auth.RoleUser},
-			}
 
 			np := product.NewProduct{
 				Name:     "Comic Books",
@@ -75,7 +63,7 @@ func TestProduct(t *testing.T) {
 			}
 			updatedTime := time.Date(2019, time.January, 1, 1, 1, 1, 0, time.UTC)
 
-			if err := core.Update(ctx, claims, prd.ID, upd, updatedTime); err != nil {
+			if err := core.Update(ctx, prd.ID, upd, updatedTime); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to update product : %s.", dbtest.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to update product.", dbtest.Success, testID)
@@ -109,7 +97,7 @@ func TestProduct(t *testing.T) {
 				Name: dbtest.StringPointer("Graphic Novels"),
 			}
 
-			if err := core.Update(ctx, claims, prd.ID, upd, updatedTime); err != nil {
+			if err := core.Update(ctx, prd.ID, upd, updatedTime); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to update just some fields of product : %s.", dbtest.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to update just some fields of product.", dbtest.Success, testID)
@@ -126,7 +114,7 @@ func TestProduct(t *testing.T) {
 				t.Logf("\t%s\tTest %d:\tShould be able to see updated Name field.", dbtest.Success, testID)
 			}
 
-			if err := core.Delete(ctx, claims, prd.ID); err != nil {
+			if err := core.Delete(ctx, prd.ID); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to delete product : %s.", dbtest.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to delete product.", dbtest.Success, testID)

@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/core/product/dbproduct"
-	"github.com/ardanlabs/service/business/sys/auth"
 	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/jmoiron/sqlx"
@@ -57,18 +56,13 @@ func (c Core) Create(ctx context.Context, np NewProduct, now time.Time) (Product
 
 // Update modifies data about a Product. It will error if the specified ID is
 // invalid or does not reference an existing Product.
-func (c Core) Update(ctx context.Context, claims auth.Claims, productID string, up UpdateProduct, now time.Time) error {
+func (c Core) Update(ctx context.Context, productID string, up UpdateProduct, now time.Time) error {
 	if err := validate.CheckID(productID); err != nil {
 		return validate.ErrInvalidID
 	}
 
 	if err := validate.Check(up); err != nil {
 		return fmt.Errorf("validating data: %w", err)
-	}
-
-	// If you are not an admin.
-	if !claims.Authorized(auth.RoleAdmin) {
-		return auth.ErrForbidden
 	}
 
 	dbPrd, err := c.store.QueryByID(ctx, productID)
@@ -98,14 +92,9 @@ func (c Core) Update(ctx context.Context, claims auth.Claims, productID string, 
 }
 
 // Delete removes the product identified by a given ID.
-func (c Core) Delete(ctx context.Context, claims auth.Claims, productID string) error {
+func (c Core) Delete(ctx context.Context, productID string) error {
 	if err := validate.CheckID(productID); err != nil {
 		return validate.ErrInvalidID
-	}
-
-	// If you are not an admin.
-	if !claims.Authorized(auth.RoleAdmin) {
-		return auth.ErrForbidden
 	}
 
 	if err := c.store.Delete(ctx, productID); err != nil {

@@ -3,7 +3,6 @@ package productgrp
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -47,18 +46,13 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 		return web.NewShutdownError("web value missing from context")
 	}
 
-	claims, err := auth.GetClaims(ctx)
-	if err != nil {
-		return errors.New("claims missing from context")
-	}
-
 	var upd product.UpdateProduct
 	if err := web.Decode(r, &upd); err != nil {
 		return fmt.Errorf("unable to decode payload: %w", err)
 	}
 
 	id := web.Param(r, "id")
-	if err := h.Core.Update(ctx, claims, id, upd, v.Now); err != nil {
+	if err := h.Core.Update(ctx, id, upd, v.Now); err != nil {
 		switch validate.Cause(err) {
 		case validate.ErrInvalidID:
 			return webv1.NewRequestError(err, http.StatusBadRequest)
@@ -76,13 +70,8 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 
 // Delete removes a product from the system.
 func (h Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	claims, err := auth.GetClaims(ctx)
-	if err != nil {
-		return errors.New("claims missing from context")
-	}
-
 	id := web.Param(r, "id")
-	if err := h.Core.Delete(ctx, claims, id); err != nil {
+	if err := h.Core.Delete(ctx, id); err != nil {
 		switch validate.Cause(err) {
 		case validate.ErrInvalidID:
 			return webv1.NewRequestError(err, http.StatusBadRequest)

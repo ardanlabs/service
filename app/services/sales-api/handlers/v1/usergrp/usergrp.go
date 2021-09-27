@@ -50,7 +50,7 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 
 	claims, err := auth.GetClaims(ctx)
 	if err != nil {
-		return errors.New("claims missing from context")
+		return webv1.NewRequestError(auth.ErrForbidden, http.StatusForbidden)
 	}
 
 	var upd user.UpdateUser
@@ -58,8 +58,14 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 		return fmt.Errorf("unable to decode payload: %w", err)
 	}
 
-	id := web.Param(r, "id")
-	if err := h.Core.Update(ctx, claims, id, upd, v.Now); err != nil {
+	userID := web.Param(r, "id")
+
+	// If you are not an admin and looking to retrieve someone other than yourself.
+	if !claims.Authorized(auth.RoleAdmin) && claims.Subject != userID {
+		return webv1.NewRequestError(auth.ErrForbidden, http.StatusForbidden)
+	}
+
+	if err := h.Core.Update(ctx, userID, upd, v.Now); err != nil {
 		switch validate.Cause(err) {
 		case validate.ErrInvalidID:
 			return webv1.NewRequestError(err, http.StatusBadRequest)
@@ -68,7 +74,7 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 		case auth.ErrForbidden:
 			return webv1.NewRequestError(err, http.StatusForbidden)
 		default:
-			return fmt.Errorf("ID[%s] User[%+v]: %w", id, &upd, err)
+			return fmt.Errorf("ID[%s] User[%+v]: %w", userID, &upd, err)
 		}
 	}
 
@@ -79,11 +85,17 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 func (h Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	claims, err := auth.GetClaims(ctx)
 	if err != nil {
-		return errors.New("claims missing from context")
+		return webv1.NewRequestError(auth.ErrForbidden, http.StatusForbidden)
 	}
 
-	id := web.Param(r, "id")
-	if err := h.Core.Delete(ctx, claims, id); err != nil {
+	userID := web.Param(r, "id")
+
+	// If you are not an admin and looking to delete someone other than yourself.
+	if !claims.Authorized(auth.RoleAdmin) && claims.Subject != userID {
+		return webv1.NewRequestError(auth.ErrForbidden, http.StatusForbidden)
+	}
+
+	if err := h.Core.Delete(ctx, userID); err != nil {
 		switch validate.Cause(err) {
 		case validate.ErrInvalidID:
 			return webv1.NewRequestError(err, http.StatusBadRequest)
@@ -92,7 +104,7 @@ func (h Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Req
 		case auth.ErrForbidden:
 			return webv1.NewRequestError(err, http.StatusForbidden)
 		default:
-			return fmt.Errorf("ID[%s]: %w", id, err)
+			return fmt.Errorf("ID[%s]: %w", userID, err)
 		}
 	}
 
@@ -124,11 +136,17 @@ func (h Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Requ
 func (h Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	claims, err := auth.GetClaims(ctx)
 	if err != nil {
-		return errors.New("claims missing from context")
+		return webv1.NewRequestError(auth.ErrForbidden, http.StatusForbidden)
 	}
 
-	id := web.Param(r, "id")
-	usr, err := h.Core.QueryByID(ctx, claims, id)
+	userID := web.Param(r, "id")
+
+	// If you are not an admin and looking to retrieve someone other than yourself.
+	if !claims.Authorized(auth.RoleAdmin) && claims.Subject != userID {
+		return webv1.NewRequestError(auth.ErrForbidden, http.StatusForbidden)
+	}
+
+	usr, err := h.Core.QueryByID(ctx, userID)
 	if err != nil {
 		switch validate.Cause(err) {
 		case validate.ErrInvalidID:
@@ -138,7 +156,7 @@ func (h Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http.
 		case auth.ErrForbidden:
 			return webv1.NewRequestError(err, http.StatusForbidden)
 		default:
-			return fmt.Errorf("ID[%s]: %w", id, err)
+			return fmt.Errorf("ID[%s]: %w", userID, err)
 		}
 	}
 
