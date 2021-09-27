@@ -21,14 +21,12 @@ import (
 
 // Core manages the set of API's for user access.
 type Core struct {
-	log   *zap.SugaredLogger
 	store db.Store
 }
 
 // NewCore constructs a core for user api access.
 func NewCore(log *zap.SugaredLogger, sqlxDB *sqlx.DB) Core {
 	return Core{
-		log:   log,
 		store: db.NewStore(log, sqlxDB),
 	}
 }
