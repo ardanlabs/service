@@ -20,45 +20,6 @@ type Handlers struct {
 	Core product.Core
 }
 
-// Query returns a list of products with paging.
-func (h Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	page := web.Param(r, "page")
-	pageNumber, err := strconv.Atoi(page)
-	if err != nil {
-		return webv1.NewRequestError(fmt.Errorf("invalid page format, page[%s]", page), http.StatusBadRequest)
-	}
-	rows := web.Param(r, "rows")
-	rowsPerPage, err := strconv.Atoi(rows)
-	if err != nil {
-		return webv1.NewRequestError(fmt.Errorf("invalid rows format, rows[%s]", rows), http.StatusBadRequest)
-	}
-
-	products, err := h.Core.Query(ctx, pageNumber, rowsPerPage)
-	if err != nil {
-		return fmt.Errorf("unable to query for products: %w", err)
-	}
-
-	return web.Respond(ctx, w, products, http.StatusOK)
-}
-
-// QueryByID returns a product by its ID.
-func (h Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	id := web.Param(r, "id")
-	prod, err := h.Core.QueryByID(ctx, id)
-	if err != nil {
-		switch validate.Cause(err) {
-		case validate.ErrInvalidID:
-			return webv1.NewRequestError(err, http.StatusBadRequest)
-		case validate.ErrNotFound:
-			return webv1.NewRequestError(err, http.StatusNotFound)
-		default:
-			return fmt.Errorf("ID[%s]: %w", id, err)
-		}
-	}
-
-	return web.Respond(ctx, w, prod, http.StatusOK)
-}
-
 // Create adds a new product to the system.
 func (h Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	v, err := web.GetValues(ctx)
@@ -131,4 +92,43 @@ func (h Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Req
 	}
 
 	return web.Respond(ctx, w, nil, http.StatusNoContent)
+}
+
+// Query returns a list of products with paging.
+func (h Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	page := web.Param(r, "page")
+	pageNumber, err := strconv.Atoi(page)
+	if err != nil {
+		return webv1.NewRequestError(fmt.Errorf("invalid page format, page[%s]", page), http.StatusBadRequest)
+	}
+	rows := web.Param(r, "rows")
+	rowsPerPage, err := strconv.Atoi(rows)
+	if err != nil {
+		return webv1.NewRequestError(fmt.Errorf("invalid rows format, rows[%s]", rows), http.StatusBadRequest)
+	}
+
+	products, err := h.Core.Query(ctx, pageNumber, rowsPerPage)
+	if err != nil {
+		return fmt.Errorf("unable to query for products: %w", err)
+	}
+
+	return web.Respond(ctx, w, products, http.StatusOK)
+}
+
+// QueryByID returns a product by its ID.
+func (h Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	id := web.Param(r, "id")
+	prod, err := h.Core.QueryByID(ctx, id)
+	if err != nil {
+		switch validate.Cause(err) {
+		case validate.ErrInvalidID:
+			return webv1.NewRequestError(err, http.StatusBadRequest)
+		case validate.ErrNotFound:
+			return webv1.NewRequestError(err, http.StatusNotFound)
+		default:
+			return fmt.Errorf("ID[%s]: %w", id, err)
+		}
+	}
+
+	return web.Respond(ctx, w, prod, http.StatusOK)
 }
