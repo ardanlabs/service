@@ -102,7 +102,7 @@ func StartServers(cfg Config) func() error {
 }
 
 func startDebugServer(cfg Config) {
-	cfg.Log.Infow("startup", "status", "debug v1 router started", "host", cfg.V1.DebugHost)
+	cfg.Log.Infow("startup", "status", "debug router started", "host", cfg.V1.DebugHost)
 
 	// The Debug function returns a mux to listen and serve on for all the debug
 	// related endpoints. This include the standard library endpoints.
@@ -114,13 +114,13 @@ func startDebugServer(cfg Config) {
 	// Not concerned with shutting this down with load shedding.
 	go func() {
 		if err := http.ListenAndServe(cfg.V1.DebugHost, debugMux); err != nil {
-			cfg.Log.Errorw("shutdown", "status", "debug v1 router closed", "host", cfg.V1.DebugHost, "ERROR", err)
+			cfg.Log.Errorw("shutdown", "status", "debug router closed", "host", cfg.V1.DebugHost, "ERROR", err)
 		}
 	}()
 }
 
 func startV1Server(cfg Config, shutdown chan os.Signal, serverErrors chan error) http.Server {
-	cfg.Log.Infow("startup", "status", "initializing API support")
+	cfg.Log.Infow("startup", "status", "initializing v1 API support")
 
 	// Construct the mux for the API calls.
 	apiMux := v1.APIMux(v1.APIMuxConfig{
