@@ -1,43 +1,159 @@
-// Package handlers contains the full set of handler functions and routes
-// supported by the web api.
+// Package handlers manages the different versions of the API.
 package handlers
 
 import (
 	"context"
 	"expvar"
+	"fmt"
 	"net/http"
 	"net/http/pprof"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/ardanlabs/service/app/services/sales-api/handlers/debug/checkgrp"
-	v1ProductGrp "github.com/ardanlabs/service/app/services/sales-api/handlers/v1/productgrp"
-	v1UserGrp "github.com/ardanlabs/service/app/services/sales-api/handlers/v1/usergrp"
-	"github.com/ardanlabs/service/business/core/product"
-	"github.com/ardanlabs/service/business/core/user"
+	v1 "github.com/ardanlabs/service/app/services/sales-api/handlers/v1"
 	"github.com/ardanlabs/service/business/sys/auth"
-	v1Web "github.com/ardanlabs/service/business/web/v1/mid"
-	"github.com/ardanlabs/service/foundation/web"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
+	"golang.org/x/sync/errgroup"
 )
 
-// Options represent optional parameters.
-type Options struct {
-	corsOrigin string
+// V1 asks for v1 related settings.
+type V1 struct {
+	APIHost   string
+	DebugHost string
 }
 
-// WithCORS provides configuration options for CORS.
-func WithCORS(origin string) func(opts *Options) {
-	return func(opts *Options) {
-		opts.corsOrigin = origin
+// Config helps to capture the necessary settings.
+type Config struct {
+	Build           string
+	Log             *zap.SugaredLogger
+	DB              *sqlx.DB
+	Auth            *auth.Auth
+	ReadTimeout     time.Duration
+	WriteTimeout    time.Duration
+	IdleTimeout     time.Duration
+	ShutdownTimeout time.Duration
+	V1              V1
+}
+
+// StartServers brings up the different versions of the services.
+func StartServers(cfg Config) func() error {
+
+	// Start the debug server.
+	startDebugServer(cfg)
+
+	// Make a channel to listen for an interrupt or terminate signal from the OS.
+	// Use a buffered channel because the signal package requires it.
+	shutdown := make(chan os.Signal, 1)
+	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
+
+	// Make a channel to listen for errors coming from the listener. Use a
+	// buffered channel so the goroutine can exit if we don't collect this error.
+	serverErrors := make(chan error, 1)
+
+	// Start the API servers.
+	var servers []http.Server
+	servers = append(servers, startV1Server(cfg, shutdown, serverErrors))
+
+	// This function blocks the caller and handles the shutdown sequence.
+	f := func() error {
+
+		// This is a blocking select.
+		select {
+		case err := <-serverErrors:
+			return fmt.Errorf("server error: %w", err)
+
+		case sig := <-shutdown:
+			cfg.Log.Infow("shutdown", "status", "shutdown started", "signal", sig)
+			defer cfg.Log.Infow("shutdown", "status", "shutdown complete", "signal", sig)
+
+			// Give outstanding requests a deadline for completion.
+			ctx, cancel := context.WithTimeout(context.Background(), cfg.ShutdownTimeout)
+			defer cancel()
+
+			g, ctx := errgroup.WithContext(ctx)
+
+			// Shutdown each server in parallel.
+			for _, server := range servers {
+				server := server
+				g.Go(func() error {
+					if err := server.Shutdown(ctx); err != nil {
+						server.Close()
+						return fmt.Errorf("could not stop server gracefully: %w", err)
+					}
+					return nil
+				})
+			}
+
+			// Wait for the G's to return an error. If one exists,
+			// pass it to the caller.
+			if err := g.Wait(); err != nil {
+				return err
+			}
+
+			return nil
+		}
 	}
+
+	return f
 }
 
-// DebugStandardLibraryMux registers all the debug routes from the standard library
+func startDebugServer(cfg Config) {
+	cfg.Log.Infow("startup", "status", "debug v1 router started", "host", cfg.V1.DebugHost)
+
+	// The Debug function returns a mux to listen and serve on for all the debug
+	// related endpoints. This include the standard library endpoints.
+
+	// Construct the mux for the debug calls.
+	debugMux := debugMux(cfg.Build, cfg.Log, cfg.DB)
+
+	// Start the service listening for debug requests.
+	// Not concerned with shutting this down with load shedding.
+	go func() {
+		if err := http.ListenAndServe(cfg.V1.DebugHost, debugMux); err != nil {
+			cfg.Log.Errorw("shutdown", "status", "debug v1 router closed", "host", cfg.V1.DebugHost, "ERROR", err)
+		}
+	}()
+}
+
+func startV1Server(cfg Config, shutdown chan os.Signal, serverErrors chan error) http.Server {
+	cfg.Log.Infow("startup", "status", "initializing API support")
+
+	// Construct the mux for the API calls.
+	apiMux := v1.APIMux(v1.APIMuxConfig{
+		Shutdown: shutdown,
+		Log:      cfg.Log,
+		Auth:     cfg.Auth,
+		DB:       cfg.DB,
+	})
+
+	// Construct a server to service the requests against the mux.
+	api := http.Server{
+		Addr:         cfg.V1.APIHost,
+		Handler:      apiMux,
+		ReadTimeout:  cfg.ReadTimeout,
+		WriteTimeout: cfg.WriteTimeout,
+		IdleTimeout:  cfg.IdleTimeout,
+		ErrorLog:     zap.NewStdLog(cfg.Log.Desugar()),
+	}
+
+	// Start the service listening for api requests.
+	go func() {
+		cfg.Log.Infow("startup", "status", "v1 api router started", "host", api.Addr)
+		serverErrors <- api.ListenAndServe()
+	}()
+
+	return api
+}
+
+// debugStandardLibraryMux registers all the debug routes from the standard library
 // into a new mux bypassing the use of the DefaultServerMux. Using the
 // DefaultServerMux would be a security risk since a dependency could inject a
 // handler into our service without us knowing it.
-func DebugStandardLibraryMux() *http.ServeMux {
+func debugStandardLibraryMux() *http.ServeMux {
 	mux := http.NewServeMux()
 
 	// Register all the standard library debug endpoints.
@@ -51,12 +167,12 @@ func DebugStandardLibraryMux() *http.ServeMux {
 	return mux
 }
 
-// DebugMux registers all the debug standard library routes and then custom
+// debugMux registers all the debug standard library routes and then custom
 // debug application routes for the service. This bypassing the use of the
 // DefaultServerMux. Using the DefaultServerMux would be a security risk since
 // a dependency could inject a handler into our service without us knowing it.
-func DebugMux(build string, log *zap.SugaredLogger, db *sqlx.DB) http.Handler {
-	mux := DebugStandardLibraryMux()
+func debugMux(build string, log *zap.SugaredLogger, db *sqlx.DB) http.Handler {
+	mux := debugStandardLibraryMux()
 
 	// Register debug check endpoints.
 	cgh := checkgrp.Handlers{
@@ -68,71 +184,4 @@ func DebugMux(build string, log *zap.SugaredLogger, db *sqlx.DB) http.Handler {
 	mux.HandleFunc("/debug/liveness", cgh.Liveness)
 
 	return mux
-}
-
-// APIMuxConfig contains all the mandatory systems required by handlers.
-type APIMuxConfig struct {
-	Shutdown chan os.Signal
-	Log      *zap.SugaredLogger
-	Auth     *auth.Auth
-	DB       *sqlx.DB
-}
-
-// APIMux constructs an http.Handler with all application routes defined.
-func APIMux(cfg APIMuxConfig, options ...func(opts *Options)) http.Handler {
-	var opts Options
-	for _, option := range options {
-		option(&opts)
-	}
-
-	// Construct the web.App which holds all routes as well as common Middleware.
-	app := web.NewApp(
-		cfg.Shutdown,
-		v1Web.Logger(cfg.Log),
-		v1Web.Errors(cfg.Log),
-		v1Web.Metrics(),
-		v1Web.Panics(),
-	)
-
-	// Accept CORS 'OPTIONS' preflight requests if config has been provided.
-	// Don't forget to apply the CORS middleware to the routes that need it.
-	// Example Config: `conf:"default:https://MY_DOMAIN.COM"`
-	if opts.corsOrigin != "" {
-		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-			return nil
-		}
-		app.Handle(http.MethodOptions, "", "/*", h)
-	}
-
-	// Load the routes for the different versions of the API.
-	v1(app, cfg)
-
-	return app
-}
-
-// v1 binds all the version 1 routes.
-func v1(app *web.App, cfg APIMuxConfig) {
-	const version = "v1"
-
-	// Register user management and authentication endpoints.
-	ugh := v1UserGrp.Handlers{
-		Core: user.NewCore(cfg.Log, cfg.DB),
-		Auth: cfg.Auth,
-	}
-	app.Handle(http.MethodGet, version, "/users/token", ugh.Token)
-	app.Handle(http.MethodGet, version, "/users/:page/:rows", ugh.Query, v1Web.Authenticate(cfg.Auth), v1Web.Authorize(auth.RoleAdmin))
-	app.Handle(http.MethodGet, version, "/users/:id", ugh.QueryByID, v1Web.Authenticate(cfg.Auth))
-	app.Handle(http.MethodPost, version, "/users", ugh.Create, v1Web.Authenticate(cfg.Auth), v1Web.Authorize(auth.RoleAdmin))
-	app.Handle(http.MethodPut, version, "/users/:id", ugh.Update, v1Web.Authenticate(cfg.Auth), v1Web.Authorize(auth.RoleAdmin))
-	app.Handle(http.MethodDelete, version, "/users/:id", ugh.Delete, v1Web.Authenticate(cfg.Auth), v1Web.Authorize(auth.RoleAdmin))
-
-	// Register product and sale endpoints.
-	pgh := v1ProductGrp.Handlers{
-		Core: product.NewCore(cfg.Log, cfg.DB),
-	}
-	app.Handle(http.MethodGet, version, "/products/:page/:rows", pgh.Query, v1Web.Authenticate(cfg.Auth))
-	app.Handle(http.MethodGet, version, "/products/:id", pgh.QueryByID, v1Web.Authenticate(cfg.Auth))
-	app.Handle(http.MethodPost, version, "/products", pgh.Create, v1Web.Authenticate(cfg.Auth))
-	app.Handle(http.MethodPut, version, "/products/:id", pgh.Update, v1Web.Authenticate(cfg.Auth))
-	app.Handle(http.MethodDelete, version, "/products/:id", pgh.Delete, v1Web.Authenticate(cfg.Auth))
 }
