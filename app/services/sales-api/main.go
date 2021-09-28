@@ -186,7 +186,7 @@ func run(log *zap.SugaredLogger) error {
 
 	log.Infow("startup", "status", "initializing API support")
 
-	// Capture required setttings to start the API services.
+	// Capture required setttings to start the different servers.
 	v1Cfg := handlers.Config{
 		Build:           build,
 		Log:             log,
