@@ -27,25 +27,28 @@ type Config struct {
 func Routes(app *web.App, cfg Config) {
 	const version = "v1"
 
+	authen := mid.Authenticate(cfg.Auth)
+	admin := mid.Authorize(auth.RoleAdmin)
+
 	// Register user management and authentication endpoints.
 	ugh := usergrp.Handlers{
 		Core: user.NewCore(cfg.Log, cfg.DB),
 		Auth: cfg.Auth,
 	}
 	app.Handle(http.MethodGet, version, "/users/token", ugh.Token)
-	app.Handle(http.MethodGet, version, "/users/:page/:rows", ugh.Query, mid.Authenticate(cfg.Auth), mid.Authorize(auth.RoleAdmin))
-	app.Handle(http.MethodGet, version, "/users/:id", ugh.QueryByID, mid.Authenticate(cfg.Auth))
-	app.Handle(http.MethodPost, version, "/users", ugh.Create, mid.Authenticate(cfg.Auth), mid.Authorize(auth.RoleAdmin))
-	app.Handle(http.MethodPut, version, "/users/:id", ugh.Update, mid.Authenticate(cfg.Auth), mid.Authorize(auth.RoleAdmin))
-	app.Handle(http.MethodDelete, version, "/users/:id", ugh.Delete, mid.Authenticate(cfg.Auth), mid.Authorize(auth.RoleAdmin))
+	app.Handle(http.MethodGet, version, "/users/:page/:rows", ugh.Query, authen, admin)
+	app.Handle(http.MethodGet, version, "/users/:id", ugh.QueryByID, authen)
+	app.Handle(http.MethodPost, version, "/users", ugh.Create, authen, admin)
+	app.Handle(http.MethodPut, version, "/users/:id", ugh.Update, authen, admin)
+	app.Handle(http.MethodDelete, version, "/users/:id", ugh.Delete, authen, admin)
 
 	// Register product and sale endpoints.
 	pgh := productgrp.Handlers{
 		Core: product.NewCore(cfg.Log, cfg.DB),
 	}
-	app.Handle(http.MethodGet, version, "/products/:page/:rows", pgh.Query, mid.Authenticate(cfg.Auth))
-	app.Handle(http.MethodGet, version, "/products/:id", pgh.QueryByID, mid.Authenticate(cfg.Auth))
-	app.Handle(http.MethodPost, version, "/products", pgh.Create, mid.Authenticate(cfg.Auth))
-	app.Handle(http.MethodPut, version, "/products/:id", pgh.Update, mid.Authenticate(cfg.Auth))
-	app.Handle(http.MethodDelete, version, "/products/:id", pgh.Delete, mid.Authenticate(cfg.Auth))
+	app.Handle(http.MethodGet, version, "/products/:page/:rows", pgh.Query, authen)
+	app.Handle(http.MethodGet, version, "/products/:id", pgh.QueryByID, authen)
+	app.Handle(http.MethodPost, version, "/products", pgh.Create, authen)
+	app.Handle(http.MethodPut, version, "/products/:id", pgh.Update, authen)
+	app.Handle(http.MethodDelete, version, "/products/:id", pgh.Delete, authen)
 }
