@@ -3,9 +3,7 @@
 package v1
 
 import (
-	"context"
 	"net/http"
-	"os"
 
 	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/productgrp"
 	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/usergrp"
@@ -18,60 +16,15 @@ import (
 	"go.uber.org/zap"
 )
 
-// Options represent optional parameters.
-type Options struct {
-	corsOrigin string
+// Config contains all the mandatory systems required by handlers.
+type Config struct {
+	Log  *zap.SugaredLogger
+	Auth *auth.Auth
+	DB   *sqlx.DB
 }
 
-// WithCORS provides configuration options for CORS.
-func WithCORS(origin string) func(opts *Options) {
-	return func(opts *Options) {
-		opts.corsOrigin = origin
-	}
-}
-
-// APIMuxConfig contains all the mandatory systems required by handlers.
-type APIMuxConfig struct {
-	Shutdown chan os.Signal
-	Log      *zap.SugaredLogger
-	Auth     *auth.Auth
-	DB       *sqlx.DB
-}
-
-// APIMux constructs an http.Handler with all application routes defined.
-func APIMux(cfg APIMuxConfig, options ...func(opts *Options)) http.Handler {
-	var opts Options
-	for _, option := range options {
-		option(&opts)
-	}
-
-	// Construct the web.App which holds all routes as well as common Middleware.
-	app := web.NewApp(
-		cfg.Shutdown,
-		mid.Logger(cfg.Log),
-		mid.Errors(cfg.Log),
-		mid.Metrics(),
-		mid.Panics(),
-	)
-
-	// Accept CORS 'OPTIONS' preflight requests if config has been provided.
-	// Don't forget to apply the CORS middleware to the routes that need it.
-	// Example Config: `conf:"default:https://MY_DOMAIN.COM"`
-	if opts.corsOrigin != "" {
-		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-			return nil
-		}
-		app.Handle(http.MethodOptions, "", "/*", h)
-	}
-
-	// Load the routes for the different versions of the API.
-	routes(app, cfg)
-
-	return app
-}
-
-// routes binds all the version 1 routes.
-func routes(app *web.App, cfg APIMuxConfig) {
+// Routes binds all the version 1 routes.
+func Routes(app *web.App, cfg Config) {
 	const version = "v1"
 
 	// Register user management and authentication endpoints.

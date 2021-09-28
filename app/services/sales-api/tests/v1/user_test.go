@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	v1 "github.com/ardanlabs/service/app/services/sales-api/handlers/v1"
+	"github.com/ardanlabs/service/app/services/sales-api/handlers"
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/ardanlabs/service/business/sys/auth"
@@ -42,7 +42,7 @@ func TestUsers(t *testing.T) {
 
 	shutdown := make(chan os.Signal, 1)
 	tests := UserTests{
-		app: v1.APIMux(v1.APIMuxConfig{
+		app: handlers.APIMux(handlers.APIMuxConfig{
 			Shutdown: shutdown,
 			Log:      test.Log,
 			Auth:     test.Auth,
