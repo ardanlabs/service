@@ -70,7 +70,7 @@ func APIMux(cfg APIMuxConfig, options ...func(opts *Options)) http.Handler {
 	return app
 }
 
-// handlers binds all the version 1 routes.
+// routes binds all the version 1 routes.
 func routes(app *web.App, cfg APIMuxConfig) {
 	const version = "v1"
 
