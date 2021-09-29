@@ -10,7 +10,6 @@ import (
 	"github.com/ardanlabs/service/business/data/dbschema"
 	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/ardanlabs/service/business/sys/auth"
-	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -97,7 +96,7 @@ func TestUser(t *testing.T) {
 			t.Logf("\t%s\tTest %d:\tShould be able to delete user.", dbtest.Success, testID)
 
 			_, err = core.QueryByID(ctx, usr.ID)
-			if !errors.Is(err, validate.ErrNotFound) {
+			if !errors.Is(err, user.ErrNotFound) {
 				t.Fatalf("\t%s\tTest %d:\tShould NOT be able to retrieve user : %s.", dbtest.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould NOT be able to retrieve user.", dbtest.Success, testID)

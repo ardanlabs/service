@@ -54,9 +54,9 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 	id := web.Param(r, "id")
 	if err := h.Core.Update(ctx, id, upd, v.Now); err != nil {
 		switch validate.Cause(err) {
-		case validate.ErrInvalidID:
+		case product.ErrInvalidID:
 			return v1Web.NewRequestError(err, http.StatusBadRequest)
-		case validate.ErrNotFound:
+		case product.ErrNotFound:
 			return v1Web.NewRequestError(err, http.StatusNotFound)
 		case auth.ErrForbidden:
 			return v1Web.NewRequestError(err, http.StatusForbidden)
@@ -73,7 +73,7 @@ func (h Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Req
 	id := web.Param(r, "id")
 	if err := h.Core.Delete(ctx, id); err != nil {
 		switch validate.Cause(err) {
-		case validate.ErrInvalidID:
+		case product.ErrInvalidID:
 			return v1Web.NewRequestError(err, http.StatusBadRequest)
 		default:
 			return fmt.Errorf("ID[%s]: %w", id, err)
@@ -110,9 +110,9 @@ func (h Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http.
 	prod, err := h.Core.QueryByID(ctx, id)
 	if err != nil {
 		switch validate.Cause(err) {
-		case validate.ErrInvalidID:
+		case product.ErrInvalidID:
 			return v1Web.NewRequestError(err, http.StatusBadRequest)
-		case validate.ErrNotFound:
+		case product.ErrNotFound:
 			return v1Web.NewRequestError(err, http.StatusNotFound)
 		default:
 			return fmt.Errorf("ID[%s]: %w", id, err)

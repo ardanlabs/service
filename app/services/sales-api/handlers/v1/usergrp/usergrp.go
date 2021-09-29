@@ -67,9 +67,9 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 
 	if err := h.Core.Update(ctx, userID, upd, v.Now); err != nil {
 		switch validate.Cause(err) {
-		case validate.ErrInvalidID:
+		case user.ErrInvalidID:
 			return v1Web.NewRequestError(err, http.StatusBadRequest)
-		case validate.ErrNotFound:
+		case user.ErrNotFound:
 			return v1Web.NewRequestError(err, http.StatusNotFound)
 		case auth.ErrForbidden:
 			return v1Web.NewRequestError(err, http.StatusForbidden)
@@ -97,9 +97,9 @@ func (h Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Req
 
 	if err := h.Core.Delete(ctx, userID); err != nil {
 		switch validate.Cause(err) {
-		case validate.ErrInvalidID:
+		case user.ErrInvalidID:
 			return v1Web.NewRequestError(err, http.StatusBadRequest)
-		case validate.ErrNotFound:
+		case user.ErrNotFound:
 			return v1Web.NewRequestError(err, http.StatusNotFound)
 		case auth.ErrForbidden:
 			return v1Web.NewRequestError(err, http.StatusForbidden)
@@ -149,9 +149,9 @@ func (h Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http.
 	usr, err := h.Core.QueryByID(ctx, userID)
 	if err != nil {
 		switch validate.Cause(err) {
-		case validate.ErrInvalidID:
+		case user.ErrInvalidID:
 			return v1Web.NewRequestError(err, http.StatusBadRequest)
-		case validate.ErrNotFound:
+		case user.ErrNotFound:
 			return v1Web.NewRequestError(err, http.StatusNotFound)
 		case auth.ErrForbidden:
 			return v1Web.NewRequestError(err, http.StatusForbidden)
@@ -179,7 +179,7 @@ func (h Handlers) Token(ctx context.Context, w http.ResponseWriter, r *http.Requ
 	claims, err := h.Core.Authenticate(ctx, v.Now, email, pass)
 	if err != nil {
 		switch validate.Cause(err) {
-		case validate.ErrNotFound:
+		case user.ErrNotFound:
 			return v1Web.NewRequestError(err, http.StatusNotFound)
 		case auth.ErrAuthenticationFailure:
 			return v1Web.NewRequestError(err, http.StatusUnauthorized)

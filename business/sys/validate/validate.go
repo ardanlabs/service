@@ -2,6 +2,7 @@
 package validate
 
 import (
+	"errors"
 	"reflect"
 	"strings"
 
@@ -73,7 +74,7 @@ func GenerateID() string {
 // CheckID validates that the format of an id is valid.
 func CheckID(id string) error {
 	if _, err := uuid.Parse(id); err != nil {
-		return ErrInvalidID
+		return errors.New("ID is not in its proper form")
 	}
 	return nil
 }

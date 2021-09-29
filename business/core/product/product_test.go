@@ -8,7 +8,6 @@ import (
 
 	"github.com/ardanlabs/service/business/core/product"
 	"github.com/ardanlabs/service/business/data/dbtest"
-	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -120,7 +119,7 @@ func TestProduct(t *testing.T) {
 			t.Logf("\t%s\tTest %d:\tShould be able to delete product.", dbtest.Success, testID)
 
 			_, err = core.QueryByID(ctx, prd.ID)
-			if !errors.Is(err, validate.ErrNotFound) {
+			if !errors.Is(err, product.ErrNotFound) {
 				t.Fatalf("\t%s\tTest %d:\tShould NOT be able to retrieve deleted product : %s.", dbtest.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould NOT be able to retrieve deleted product.", dbtest.Success, testID)

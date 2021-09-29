@@ -19,6 +19,12 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// Set of error variables for CRUD operations.
+var (
+	ErrNotFound  = errors.New("not found")
+	ErrInvalidID = errors.New("ID is not in its proper form")
+)
+
 // Core manages the set of API's for user access.
 type Core struct {
 	store db.Store
@@ -62,7 +68,7 @@ func (c Core) Create(ctx context.Context, nu NewUser, now time.Time) (User, erro
 // Update replaces a user document in the database.
 func (c Core) Update(ctx context.Context, userID string, uu UpdateUser, now time.Time) error {
 	if err := validate.CheckID(userID); err != nil {
-		return validate.ErrInvalidID
+		return ErrInvalidID
 	}
 
 	if err := validate.Check(uu); err != nil {
@@ -72,7 +78,7 @@ func (c Core) Update(ctx context.Context, userID string, uu UpdateUser, now time
 	dbUsr, err := c.store.QueryByID(ctx, userID)
 	if err != nil {
 		if errors.Is(err, database.ErrDBNotFound) {
-			return validate.ErrNotFound
+			return ErrNotFound
 		}
 		return fmt.Errorf("updating user userID[%s]: %w", userID, err)
 	}
@@ -105,7 +111,7 @@ func (c Core) Update(ctx context.Context, userID string, uu UpdateUser, now time
 // Delete removes a user from the database.
 func (c Core) Delete(ctx context.Context, userID string) error {
 	if err := validate.CheckID(userID); err != nil {
-		return validate.ErrInvalidID
+		return ErrInvalidID
 	}
 
 	if err := c.store.Delete(ctx, userID); err != nil {
@@ -120,7 +126,7 @@ func (c Core) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]Use
 	dbUsers, err := c.store.Query(ctx, pageNumber, rowsPerPage)
 	if err != nil {
 		if errors.Is(err, database.ErrDBNotFound) {
-			return nil, validate.ErrNotFound
+			return nil, ErrNotFound
 		}
 		return nil, fmt.Errorf("query: %w", err)
 	}
@@ -131,13 +137,13 @@ func (c Core) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]Use
 // QueryByID gets the specified user from the database.
 func (c Core) QueryByID(ctx context.Context, userID string) (User, error) {
 	if err := validate.CheckID(userID); err != nil {
-		return User{}, validate.ErrInvalidID
+		return User{}, ErrInvalidID
 	}
 
 	dbUsr, err := c.store.QueryByID(ctx, userID)
 	if err != nil {
 		if errors.Is(err, database.ErrDBNotFound) {
-			return User{}, validate.ErrNotFound
+			return User{}, ErrNotFound
 		}
 		return User{}, fmt.Errorf("query: %w", err)
 	}
@@ -156,7 +162,7 @@ func (c Core) QueryByEmail(ctx context.Context, email string) (User, error) {
 	dbUsr, err := c.store.QueryByEmail(ctx, email)
 	if err != nil {
 		if errors.Is(err, database.ErrDBNotFound) {
-			return User{}, validate.ErrNotFound
+			return User{}, ErrNotFound
 		}
 		return User{}, fmt.Errorf("query: %w", err)
 	}
@@ -171,7 +177,7 @@ func (c Core) Authenticate(ctx context.Context, now time.Time, email, password s
 	dbUsr, err := c.store.QueryByEmail(ctx, email)
 	if err != nil {
 		if errors.Is(err, database.ErrDBNotFound) {
-			return auth.Claims{}, validate.ErrNotFound
+			return auth.Claims{}, ErrNotFound
 		}
 		return auth.Claims{}, fmt.Errorf("query: %w", err)
 	}

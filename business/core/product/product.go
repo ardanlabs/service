@@ -16,6 +16,12 @@ import (
 	"go.uber.org/zap"
 )
 
+// Set of error variables for CRUD operations.
+var (
+	ErrNotFound  = errors.New("not found")
+	ErrInvalidID = errors.New("ID is not in its proper form")
+)
+
 // Core manages the set of API's for product access.
 type Core struct {
 	store db.Store
@@ -56,7 +62,7 @@ func (c Core) Create(ctx context.Context, np NewProduct, now time.Time) (Product
 // invalid or does not reference an existing Product.
 func (c Core) Update(ctx context.Context, productID string, up UpdateProduct, now time.Time) error {
 	if err := validate.CheckID(productID); err != nil {
-		return validate.ErrInvalidID
+		return ErrInvalidID
 	}
 
 	if err := validate.Check(up); err != nil {
@@ -66,7 +72,7 @@ func (c Core) Update(ctx context.Context, productID string, up UpdateProduct, no
 	dbPrd, err := c.store.QueryByID(ctx, productID)
 	if err != nil {
 		if errors.Is(err, database.ErrDBNotFound) {
-			return validate.ErrNotFound
+			return ErrNotFound
 		}
 		return fmt.Errorf("updating product productID[%s]: %w", productID, err)
 	}
@@ -92,7 +98,7 @@ func (c Core) Update(ctx context.Context, productID string, up UpdateProduct, no
 // Delete removes the product identified by a given ID.
 func (c Core) Delete(ctx context.Context, productID string) error {
 	if err := validate.CheckID(productID); err != nil {
-		return validate.ErrInvalidID
+		return ErrInvalidID
 	}
 
 	if err := c.store.Delete(ctx, productID); err != nil {
@@ -107,7 +113,7 @@ func (c Core) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]Pro
 	dbPrds, err := c.store.Query(ctx, pageNumber, rowsPerPage)
 	if err != nil {
 		if errors.Is(err, database.ErrDBNotFound) {
-			return nil, validate.ErrNotFound
+			return nil, ErrNotFound
 		}
 		return nil, fmt.Errorf("query: %w", err)
 	}
@@ -118,13 +124,13 @@ func (c Core) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]Pro
 // QueryByID finds the product identified by a given ID.
 func (c Core) QueryByID(ctx context.Context, productID string) (Product, error) {
 	if err := validate.CheckID(productID); err != nil {
-		return Product{}, validate.ErrInvalidID
+		return Product{}, ErrInvalidID
 	}
 
 	dbPrd, err := c.store.QueryByID(ctx, productID)
 	if err != nil {
 		if errors.Is(err, database.ErrDBNotFound) {
-			return Product{}, validate.ErrNotFound
+			return Product{}, ErrNotFound
 		}
 		return Product{}, fmt.Errorf("query: %w", err)
 	}
@@ -135,13 +141,13 @@ func (c Core) QueryByID(ctx context.Context, productID string) (Product, error) 
 // QueryByUserID finds the product identified by a given User ID.
 func (c Core) QueryByUserID(ctx context.Context, userID string) ([]Product, error) {
 	if err := validate.CheckID(userID); err != nil {
-		return nil, validate.ErrInvalidID
+		return nil, ErrInvalidID
 	}
 
 	dbPrds, err := c.store.QueryByUserID(ctx, userID)
 	if err != nil {
 		if errors.Is(err, database.ErrDBNotFound) {
-			return nil, validate.ErrNotFound
+			return nil, ErrNotFound
 		}
 		return nil, fmt.Errorf("query: %w", err)
 	}
