@@ -21,8 +21,9 @@ import (
 
 // Set of error variables for CRUD operations.
 var (
-	ErrNotFound  = errors.New("user not found")
-	ErrInvalidID = errors.New("ID is not in its proper form")
+	ErrNotFound              = errors.New("user not found")
+	ErrInvalidID             = errors.New("ID is not in its proper form")
+	ErrAuthenticationFailure = errors.New("authentication failed")
 )
 
 // Core manages the set of API's for user access.
@@ -185,7 +186,7 @@ func (c Core) Authenticate(ctx context.Context, now time.Time, email, password s
 	// Compare the provided password with the saved hash. Use the bcrypt
 	// comparison function so it is cryptographically secure.
 	if err := bcrypt.CompareHashAndPassword(dbUsr.PasswordHash, []byte(password)); err != nil {
-		return auth.Claims{}, auth.ErrAuthenticationFailure
+		return auth.Claims{}, ErrAuthenticationFailure
 	}
 
 	// If we are this far the request is valid. Create some claims for the user

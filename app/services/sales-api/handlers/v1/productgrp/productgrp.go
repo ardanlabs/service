@@ -3,20 +3,19 @@ package productgrp
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/ardanlabs/service/business/core/product"
-	"github.com/ardanlabs/service/business/sys/auth"
-	"github.com/ardanlabs/service/business/sys/validate"
 	v1Web "github.com/ardanlabs/service/business/web/v1"
 	"github.com/ardanlabs/service/foundation/web"
 )
 
 // Handlers manages the set of product enpoints.
 type Handlers struct {
-	Core product.Core
+	Product product.Core
 }
 
 // Create adds a new product to the system.
@@ -31,7 +30,7 @@ func (h Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Req
 		return fmt.Errorf("unable to decode payload: %w", err)
 	}
 
-	prod, err := h.Core.Create(ctx, np, v.Now)
+	prod, err := h.Product.Create(ctx, np, v.Now)
 	if err != nil {
 		return fmt.Errorf("creating new product, np[%+v]: %w", np, err)
 	}
@@ -52,14 +51,12 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 	}
 
 	id := web.Param(r, "id")
-	if err := h.Core.Update(ctx, id, upd, v.Now); err != nil {
-		switch validate.Cause(err) {
-		case product.ErrInvalidID:
+	if err := h.Product.Update(ctx, id, upd, v.Now); err != nil {
+		switch {
+		case errors.Is(err, product.ErrInvalidID):
 			return v1Web.NewRequestError(err, http.StatusBadRequest)
-		case product.ErrNotFound:
+		case errors.Is(err, product.ErrNotFound):
 			return v1Web.NewRequestError(err, http.StatusNotFound)
-		case auth.ErrForbidden:
-			return v1Web.NewRequestError(err, http.StatusForbidden)
 		default:
 			return fmt.Errorf("ID[%s] User[%+v]: %w", id, &upd, err)
 		}
@@ -71,9 +68,9 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 // Delete removes a product from the system.
 func (h Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	id := web.Param(r, "id")
-	if err := h.Core.Delete(ctx, id); err != nil {
-		switch validate.Cause(err) {
-		case product.ErrInvalidID:
+	if err := h.Product.Delete(ctx, id); err != nil {
+		switch {
+		case errors.Is(err, product.ErrInvalidID):
 			return v1Web.NewRequestError(err, http.StatusBadRequest)
 		default:
 			return fmt.Errorf("ID[%s]: %w", id, err)
@@ -96,7 +93,7 @@ func (h Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Requ
 		return v1Web.NewRequestError(fmt.Errorf("invalid rows format, rows[%s]", rows), http.StatusBadRequest)
 	}
 
-	products, err := h.Core.Query(ctx, pageNumber, rowsPerPage)
+	products, err := h.Product.Query(ctx, pageNumber, rowsPerPage)
 	if err != nil {
 		return fmt.Errorf("unable to query for products: %w", err)
 	}
@@ -107,12 +104,12 @@ func (h Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Requ
 // QueryByID returns a product by its ID.
 func (h Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	id := web.Param(r, "id")
-	prod, err := h.Core.QueryByID(ctx, id)
+	prod, err := h.Product.QueryByID(ctx, id)
 	if err != nil {
-		switch validate.Cause(err) {
-		case product.ErrInvalidID:
+		switch {
+		case errors.Is(err, product.ErrInvalidID):
 			return v1Web.NewRequestError(err, http.StatusBadRequest)
-		case product.ErrNotFound:
+		case errors.Is(err, product.ErrNotFound):
 			return v1Web.NewRequestError(err, http.StatusNotFound)
 		default:
 			return fmt.Errorf("ID[%s]: %w", id, err)

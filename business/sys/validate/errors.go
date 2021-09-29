@@ -23,14 +23,17 @@ func (fe FieldErrors) Error() string {
 	return string(d)
 }
 
-// Cause iterates through all the wrapped errors until the root
-// error value is reached.
-func Cause(err error) error {
-	root := err
-	for {
-		if err = errors.Unwrap(root); err == nil {
-			return root
-		}
-		root = err
+// AsFieldErrors checks if an error of type FieldErrors exists.
+func AsFieldErrors(err error) bool {
+	var fieldErrors FieldErrors
+	return errors.As(err, &fieldErrors)
+}
+
+// GetFieldErrors returns a copy of the FieldErrors pointer.
+func GetFieldErrors(err error) FieldErrors {
+	var fieldErrors FieldErrors
+	if !errors.As(err, &fieldErrors) {
+		return nil
 	}
+	return fieldErrors
 }

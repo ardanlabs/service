@@ -37,18 +37,22 @@ func Errors(log *zap.SugaredLogger) web.Middleware {
 				// Build out the error response.
 				var er v1Web.ErrorResponse
 				var status int
-				switch act := validate.Cause(err).(type) {
-				case validate.FieldErrors:
+				switch {
+				case validate.AsFieldErrors(err):
+					fieldErrors := validate.GetFieldErrors(err)
 					er = v1Web.ErrorResponse{
 						Error:  "data validation error",
-						Fields: act.Error(),
+						Fields: fieldErrors.Error(),
 					}
 					status = http.StatusBadRequest
-				case *v1Web.RequestError:
+
+				case v1Web.AsRequestError(err):
+					reqErr := v1Web.GetRequestError(err)
 					er = v1Web.ErrorResponse{
-						Error: act.Error(),
+						Error: reqErr.Error(),
 					}
-					status = act.Status
+					status = reqErr.Status
+
 				default:
 					er = v1Web.ErrorResponse{
 						Error: http.StatusText(http.StatusInternalServerError),

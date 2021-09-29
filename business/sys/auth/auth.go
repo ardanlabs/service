@@ -10,8 +10,7 @@ import (
 )
 
 var (
-	ErrAuthenticationFailure = errors.New("authentication failed")
-	ErrForbidden             = errors.New("attempted action is not allowed")
+	ErrForbidden = errors.New("attempted action is not allowed")
 )
 
 // KeyLookup declares a method set of behavior for looking up

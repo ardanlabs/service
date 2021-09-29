@@ -10,14 +10,13 @@ import (
 
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/sys/auth"
-	"github.com/ardanlabs/service/business/sys/validate"
 	v1Web "github.com/ardanlabs/service/business/web/v1"
 	"github.com/ardanlabs/service/foundation/web"
 )
 
 // Handlers manages the set of user enpoints.
 type Handlers struct {
-	Core user.Core
+	User user.Core
 	Auth *auth.Auth
 }
 
@@ -33,7 +32,7 @@ func (h Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Req
 		return fmt.Errorf("unable to decode payload: %w", err)
 	}
 
-	usr, err := h.Core.Create(ctx, nu, v.Now)
+	usr, err := h.User.Create(ctx, nu, v.Now)
 	if err != nil {
 		return fmt.Errorf("user[%+v]: %w", &usr, err)
 	}
@@ -65,14 +64,12 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 		return v1Web.NewRequestError(auth.ErrForbidden, http.StatusForbidden)
 	}
 
-	if err := h.Core.Update(ctx, userID, upd, v.Now); err != nil {
-		switch validate.Cause(err) {
-		case user.ErrInvalidID:
+	if err := h.User.Update(ctx, userID, upd, v.Now); err != nil {
+		switch {
+		case errors.Is(err, user.ErrInvalidID):
 			return v1Web.NewRequestError(err, http.StatusBadRequest)
-		case user.ErrNotFound:
+		case errors.Is(err, user.ErrNotFound):
 			return v1Web.NewRequestError(err, http.StatusNotFound)
-		case auth.ErrForbidden:
-			return v1Web.NewRequestError(err, http.StatusForbidden)
 		default:
 			return fmt.Errorf("ID[%s] User[%+v]: %w", userID, &upd, err)
 		}
@@ -95,14 +92,12 @@ func (h Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Req
 		return v1Web.NewRequestError(auth.ErrForbidden, http.StatusForbidden)
 	}
 
-	if err := h.Core.Delete(ctx, userID); err != nil {
-		switch validate.Cause(err) {
-		case user.ErrInvalidID:
+	if err := h.User.Delete(ctx, userID); err != nil {
+		switch {
+		case errors.Is(err, user.ErrInvalidID):
 			return v1Web.NewRequestError(err, http.StatusBadRequest)
-		case user.ErrNotFound:
+		case errors.Is(err, user.ErrNotFound):
 			return v1Web.NewRequestError(err, http.StatusNotFound)
-		case auth.ErrForbidden:
-			return v1Web.NewRequestError(err, http.StatusForbidden)
 		default:
 			return fmt.Errorf("ID[%s]: %w", userID, err)
 		}
@@ -124,7 +119,7 @@ func (h Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Requ
 		return v1Web.NewRequestError(fmt.Errorf("invalid rows format [%s]", rows), http.StatusBadRequest)
 	}
 
-	users, err := h.Core.Query(ctx, pageNumber, rowsPerPage)
+	users, err := h.User.Query(ctx, pageNumber, rowsPerPage)
 	if err != nil {
 		return fmt.Errorf("unable to query for users: %w", err)
 	}
@@ -146,15 +141,13 @@ func (h Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http.
 		return v1Web.NewRequestError(auth.ErrForbidden, http.StatusForbidden)
 	}
 
-	usr, err := h.Core.QueryByID(ctx, userID)
+	usr, err := h.User.QueryByID(ctx, userID)
 	if err != nil {
-		switch validate.Cause(err) {
-		case user.ErrInvalidID:
+		switch {
+		case errors.Is(err, user.ErrInvalidID):
 			return v1Web.NewRequestError(err, http.StatusBadRequest)
-		case user.ErrNotFound:
+		case errors.Is(err, user.ErrNotFound):
 			return v1Web.NewRequestError(err, http.StatusNotFound)
-		case auth.ErrForbidden:
-			return v1Web.NewRequestError(err, http.StatusForbidden)
 		default:
 			return fmt.Errorf("ID[%s]: %w", userID, err)
 		}
@@ -176,12 +169,12 @@ func (h Handlers) Token(ctx context.Context, w http.ResponseWriter, r *http.Requ
 		return v1Web.NewRequestError(err, http.StatusUnauthorized)
 	}
 
-	claims, err := h.Core.Authenticate(ctx, v.Now, email, pass)
+	claims, err := h.User.Authenticate(ctx, v.Now, email, pass)
 	if err != nil {
-		switch validate.Cause(err) {
-		case user.ErrNotFound:
+		switch {
+		case errors.Is(err, user.ErrNotFound):
 			return v1Web.NewRequestError(err, http.StatusNotFound)
-		case auth.ErrAuthenticationFailure:
+		case errors.Is(err, user.ErrAuthenticationFailure):
 			return v1Web.NewRequestError(err, http.StatusUnauthorized)
 		default:
 			return fmt.Errorf("authenticating: %w", err)
