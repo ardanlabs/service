@@ -21,7 +21,7 @@ import (
 
 // Set of error variables for CRUD operations.
 var (
-	ErrNotFound  = errors.New("not found")
+	ErrNotFound  = errors.New("user not found")
 	ErrInvalidID = errors.New("ID is not in its proper form")
 )
 
