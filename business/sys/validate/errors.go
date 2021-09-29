@@ -25,15 +25,15 @@ func (fe FieldErrors) Error() string {
 
 // IsFieldErrors checks if an error of type FieldErrors exists.
 func IsFieldErrors(err error) bool {
-	var fieldErrors FieldErrors
-	return errors.As(err, &fieldErrors)
+	var fe FieldErrors
+	return errors.As(err, &fe)
 }
 
 // GetFieldErrors returns a copy of the FieldErrors pointer.
 func GetFieldErrors(err error) FieldErrors {
-	var fieldErrors FieldErrors
-	if !errors.As(err, &fieldErrors) {
+	var fe FieldErrors
+	if !errors.As(err, &fe) {
 		return nil
 	}
-	return fieldErrors
+	return fe
 }
