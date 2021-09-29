@@ -28,8 +28,8 @@ func (err *RequestError) Error() string {
 	return err.Err.Error()
 }
 
-// AsRequestError checks if an error of type RequestError exists.
-func AsRequestError(err error) bool {
+// IsRequestError checks if an error of type RequestError exists.
+func IsRequestError(err error) bool {
 	var requestErrors *RequestError
 	return errors.As(err, &requestErrors)
 }

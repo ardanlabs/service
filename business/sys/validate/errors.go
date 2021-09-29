@@ -23,8 +23,8 @@ func (fe FieldErrors) Error() string {
 	return string(d)
 }
 
-// AsFieldErrors checks if an error of type FieldErrors exists.
-func AsFieldErrors(err error) bool {
+// IsFieldErrors checks if an error of type FieldErrors exists.
+func IsFieldErrors(err error) bool {
 	var fieldErrors FieldErrors
 	return errors.As(err, &fieldErrors)
 }
