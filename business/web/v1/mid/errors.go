@@ -42,7 +42,7 @@ func Errors(log *zap.SugaredLogger) web.Middleware {
 					fieldErrors := validate.GetFieldErrors(err)
 					er = v1Web.ErrorResponse{
 						Error:  "data validation error",
-						Fields: fieldErrors.Error(),
+						Fields: fieldErrors.Fields(),
 					}
 					status = http.StatusBadRequest
 

@@ -154,7 +154,7 @@ func (ut *UserTests) postUser400(t *testing.T) {
 			}
 			exp := v1Web.ErrorResponse{
 				Error:  "data validation error",
-				Fields: fields.Error(),
+				Fields: fields.Fields(),
 			}
 
 			// We can't rely on the order of the field errors so they have to be

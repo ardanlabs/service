@@ -23,6 +23,15 @@ func (fe FieldErrors) Error() string {
 	return string(d)
 }
 
+// Fields returns the fields that failed validation
+func (fe FieldErrors) Fields() map[string]string {
+	m := make(map[string]string)
+	for _, fld := range fe {
+		m[fld.Field] = fld.Error
+	}
+	return m
+}
+
 // IsFieldErrors checks if an error of type FieldErrors exists.
 func IsFieldErrors(err error) bool {
 	var fe FieldErrors
