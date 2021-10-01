@@ -138,7 +138,7 @@ func (c Core) QueryByID(ctx context.Context, productID string) (Product, error) 
 	return toProduct(dbPrd), nil
 }
 
-// QueryByUserID finds the product identified by a given User ID.
+// QueryByUserID finds the products identified by a given User ID.
 func (c Core) QueryByUserID(ctx context.Context, userID string) ([]Product, error) {
 	if err := validate.CheckID(userID); err != nil {
 		return nil, ErrInvalidID

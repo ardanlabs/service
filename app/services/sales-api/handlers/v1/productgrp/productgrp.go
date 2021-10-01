@@ -9,6 +9,7 @@ import (
 	"strconv"
 
 	"github.com/ardanlabs/service/business/core/product"
+	"github.com/ardanlabs/service/business/sys/auth"
 	v1Web "github.com/ardanlabs/service/business/web/v1"
 	"github.com/ardanlabs/service/foundation/web"
 )
@@ -45,12 +46,33 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 		return web.NewShutdownError("web value missing from context")
 	}
 
+	claims, err := auth.GetClaims(ctx)
+	if err != nil {
+		return v1Web.NewRequestError(auth.ErrForbidden, http.StatusForbidden)
+	}
+
 	var upd product.UpdateProduct
 	if err := web.Decode(r, &upd); err != nil {
 		return fmt.Errorf("unable to decode payload: %w", err)
 	}
 
 	id := web.Param(r, "id")
+
+	prd, err := h.Product.QueryByID(ctx, id)
+	if err != nil {
+		switch {
+		case errors.Is(err, product.ErrNotFound):
+			return v1Web.NewRequestError(err, http.StatusNotFound)
+		default:
+			return fmt.Errorf("querying product[%s]: %w", id, err)
+		}
+	}
+	
+	// If you are not an admin and looking to update a product you don't own.
+	if !claims.Authorized(auth.RoleAdmin) && prd.UserID != claims.Subject {
+		return v1Web.NewRequestError(auth.ErrForbidden, http.StatusForbidden)
+	}
+
 	if err := h.Product.Update(ctx, id, upd, v.Now); err != nil {
 		switch {
 		case errors.Is(err, product.ErrInvalidID):
@@ -67,7 +89,28 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 
 // Delete removes a product from the system.
 func (h Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	claims, err := auth.GetClaims(ctx)
+	if err != nil {
+		return v1Web.NewRequestError(auth.ErrForbidden, http.StatusForbidden)
+	}
+
 	id := web.Param(r, "id")
+
+	prd, err := h.Product.QueryByID(ctx, id)
+	if err != nil {
+		switch {
+		case errors.Is(err, product.ErrNotFound):
+			return v1Web.NewRequestError(err, http.StatusNoContent)
+		default:
+			return fmt.Errorf("querying product[%s]: %w", id, err)
+		}
+	}
+
+	// If you are not an admin and looking to delete a product you don't own.
+	if !claims.Authorized(auth.RoleAdmin) && prd.UserID != claims.Subject {
+		return v1Web.NewRequestError(auth.ErrForbidden, http.StatusForbidden)
+	}
+
 	if err := h.Product.Delete(ctx, id); err != nil {
 		switch {
 		case errors.Is(err, product.ErrInvalidID):

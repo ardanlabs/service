@@ -1,4 +1,4 @@
-//  Package v1 represents types used by the web application for v1.
+// Package v1 represents types used by the web application for v1.
 package v1
 
 import "errors"
