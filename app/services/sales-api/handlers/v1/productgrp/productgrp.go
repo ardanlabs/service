@@ -60,7 +60,12 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 
 	prd, err := h.Product.QueryByID(ctx, id)
 	if err != nil {
-		return fmt.Errorf("unable to find product[%s]: %w", id, err)
+		switch {
+		case errors.Is(err, product.ErrNotFound):
+			return v1Web.NewRequestError(err, http.StatusNotFound)
+		default:
+			return fmt.Errorf("querying product[%s]: %w", id, err)
+		}
 	}
 	
 	// If you are not an admin and looking to update a product you don't own.
@@ -93,7 +98,12 @@ func (h Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Req
 
 	prd, err := h.Product.QueryByID(ctx, id)
 	if err != nil {
-		return fmt.Errorf("unable to find product[%s]: %w", id, err)
+		switch {
+		case errors.Is(err, product.ErrNotFound):
+			return v1Web.NewRequestError(err, http.StatusNoContent)
+		default:
+			return fmt.Errorf("querying product[%s]: %w", id, err)
+		}
 	}
 
 	// If you are not an admin and looking to delete a product you don't own.
