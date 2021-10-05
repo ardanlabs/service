@@ -65,8 +65,8 @@ func GenToken(log *zap.SugaredLogger, cfg database.Config, userID string, kid st
 	// jti (JWT ID): Unique identifier; can be used to prevent the JWT from being replayed (allows a token to be used only once)
 	claims := auth.Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
-			Issuer:    "service project",
 			Subject:   usr.ID,
+			Issuer:    "service project",
 			ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(8760 * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
 		},

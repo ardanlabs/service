@@ -151,10 +151,10 @@ func (test *Test) Token(email, pass string) string {
 
 	claims := auth.Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
+			Subject:   dbUsr.ID,
 			Issuer:    "service project",
 			ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
-			Subject:   dbUsr.ID,
 		},
 		Roles: dbUsr.Roles,
 	}

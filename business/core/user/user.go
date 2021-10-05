@@ -193,8 +193,8 @@ func (c Core) Authenticate(ctx context.Context, now time.Time, email, password s
 	// and generate their token.
 	claims := auth.Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
-			Issuer:    "service project",
 			Subject:   dbUsr.ID,
+			Issuer:    "service project",
 			ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
 		},
