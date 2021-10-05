@@ -12,17 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package contrib contains common values used across all
-// instrumentation, exporter, and detector contributions.
-package contrib // import "go.opentelemetry.io/contrib"
+/*
+Package registry provides a non-standalone implementation of
+MeterProvider that adds uniqueness checking for instrument descriptors
+on top of other MeterProvider it wraps.
 
-// Version is the current release version of OpenTelemetry Contrib in use.
-func Version() string {
-	return "0.23.0"
-	// This string is updated by the pre_release.sh script during release
-}
-
-// SemVersion is the semantic version to be supplied to tracer/meter creation.
-func SemVersion() string {
-	return "semver:" + Version()
-}
+This package is currently in a pre-GA phase. Backwards incompatible changes
+may be introduced in subsequent minor version releases as we work to track the
+evolving OpenTelemetry specification and user feedback.
+*/
+package registry // import "go.opentelemetry.io/otel/internal/metric/registry"

@@ -150,10 +150,10 @@ func (test *Test) Token(email, pass string) string {
 	}
 
 	claims := auth.Claims{
-		StandardClaims: jwt.StandardClaims{
+		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    "service project",
-			ExpiresAt: time.Now().Add(time.Hour).Unix(),
-			IssuedAt:  time.Now().UTC().Unix(),
+			ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(time.Hour)),
+			IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
 			Subject:   dbUsr.ID,
 		},
 		Roles: dbUsr.Roles,

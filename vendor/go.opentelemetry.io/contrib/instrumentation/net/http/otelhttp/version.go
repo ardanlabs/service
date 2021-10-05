@@ -12,9 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// This package provides all of its functionality through its
-// submodules. The submodules in the exporters directory provide
-// implementations for trace and metric exporters for third-party
-// collectors, and submodules in the instrumentation directory provide the
-// instrumentation for the popular go libraries.
-package contrib
+package otelhttp
+
+// Version is the current release version of the otelhttp instrumentation.
+func Version() string {
+	return "0.24.0"
+	// This string is updated by the pre_release.sh script during release
+}
+
+// SemVersion is the semantic version to be supplied to tracer/meter creation.
+func SemVersion() string {
+	return "semver:" + Version()
+}

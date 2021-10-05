@@ -36,11 +36,11 @@ func TestAuth(t *testing.T) {
 			t.Logf("\t%s\tTest %d:\tShould be able to create an authenticator.", success, testID)
 
 			claims := auth.Claims{
-				StandardClaims: jwt.StandardClaims{
+				RegisteredClaims: jwt.RegisteredClaims{
 					Issuer:    "service project",
 					Subject:   "5cf37266-3473-4006-984f-9325122678b7",
-					ExpiresAt: time.Now().Add(time.Hour).Unix(),
-					IssuedAt:  time.Now().UTC().Unix(),
+					ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(time.Hour)),
+					IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
 				},
 				Roles: []string{auth.RoleAdmin},
 			}

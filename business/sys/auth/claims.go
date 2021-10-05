@@ -15,7 +15,7 @@ const (
 
 // Claims represents the authorization claims transmitted via a JWT.
 type Claims struct {
-	jwt.StandardClaims
+	jwt.RegisteredClaims
 	Roles []string `json:"roles"`
 }
 
