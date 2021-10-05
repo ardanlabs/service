@@ -23,7 +23,7 @@ spec:
       hostNetwork: true
       containers:
       - name: postgres
-        image: postgres:13-alpine
+        image: postgres:14-alpine
         resources:
           limits:
             cpu: "1000m" # Up to 1 full core

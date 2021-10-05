@@ -36,7 +36,7 @@ func TestProducts(t *testing.T) {
 	test := dbtest.NewIntegration(
 		t,
 		dbtest.DBContainer{
-			Image: "postgres:13-alpine",
+			Image: "postgres:14-alpine",
 			Port:  "5432",
 			Args:  []string{"-e", "POSTGRES_PASSWORD=postgres"},
 		},
