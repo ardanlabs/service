@@ -3,7 +3,6 @@ kind: Kustomization
 resources:
 - ./gcp-sales-config.yaml
 - ../../base/sales-pod/
-- ./gcp-sales-quotas.yaml
 patchesStrategicMerge:
 - ./gcp-sales-patch.yaml
 images:
