@@ -126,9 +126,6 @@ func (c Core) Delete(ctx context.Context, userID string) error {
 func (c Core) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]User, error) {
 	dbUsers, err := c.store.Query(ctx, pageNumber, rowsPerPage)
 	if err != nil {
-		if errors.Is(err, database.ErrDBNotFound) {
-			return nil, ErrNotFound
-		}
 		return nil, fmt.Errorf("query: %w", err)
 	}
 

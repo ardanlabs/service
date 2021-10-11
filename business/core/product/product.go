@@ -112,9 +112,6 @@ func (c Core) Delete(ctx context.Context, productID string) error {
 func (c Core) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]Product, error) {
 	dbPrds, err := c.store.Query(ctx, pageNumber, rowsPerPage)
 	if err != nil {
-		if errors.Is(err, database.ErrDBNotFound) {
-			return nil, ErrNotFound
-		}
 		return nil, fmt.Errorf("query: %w", err)
 	}
 
@@ -146,9 +143,6 @@ func (c Core) QueryByUserID(ctx context.Context, userID string) ([]Product, erro
 
 	dbPrds, err := c.store.QueryByUserID(ctx, userID)
 	if err != nil {
-		if errors.Is(err, database.ErrDBNotFound) {
-			return nil, ErrNotFound
-		}
 		return nil, fmt.Errorf("query: %w", err)
 	}
 
