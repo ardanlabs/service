@@ -2,13 +2,12 @@
 package dbtest
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"crypto/rand"
 	"crypto/rsa"
 	"fmt"
-	"io"
-	"os"
 	"testing"
 	"time"
 
@@ -18,10 +17,10 @@ import (
 	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/ardanlabs/service/foundation/docker"
 	"github.com/ardanlabs/service/foundation/keystore"
-	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 // Success and failure markers.
@@ -41,10 +40,6 @@ type DBContainer struct {
 // required table structure but the database is otherwise empty. It returns
 // the database to use as well as a function to call at the end of the test.
 func NewUnit(t *testing.T, dbc DBContainer) (*zap.SugaredLogger, *sqlx.DB, func()) {
-	r, w, _ := os.Pipe()
-	old := os.Stdout
-	os.Stdout = w
-
 	c := docker.StartContainer(t, dbc.Image, dbc.Port, dbc.Args...)
 
 	db, err := database.Open(database.Config{
@@ -75,10 +70,12 @@ func NewUnit(t *testing.T, dbc DBContainer) (*zap.SugaredLogger, *sqlx.DB, func(
 		t.Fatalf("Seeding error: %s", err)
 	}
 
-	log, err := logger.New("TEST")
-	if err != nil {
-		t.Fatalf("logger error: %s", err)
-	}
+	var buf bytes.Buffer
+	encoder := zapcore.NewConsoleEncoder(zap.NewDevelopmentEncoderConfig())
+	writer := bufio.NewWriter(&buf)
+	log := zap.New(
+		zapcore.NewCore(encoder, zapcore.AddSync(writer), zapcore.DebugLevel)).
+		Sugar()
 
 	// teardown is the function that should be invoked when the caller is done
 	// with the database.
@@ -89,10 +86,7 @@ func NewUnit(t *testing.T, dbc DBContainer) (*zap.SugaredLogger, *sqlx.DB, func(
 
 		log.Sync()
 
-		w.Close()
-		var buf bytes.Buffer
-		io.Copy(&buf, r)
-		os.Stdout = old
+		writer.Flush()
 		fmt.Println("******************** LOGS ********************")
 		fmt.Print(buf.String())
 		fmt.Println("******************** LOGS ********************")
