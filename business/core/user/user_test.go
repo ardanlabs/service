@@ -36,6 +36,8 @@ func TestMain(m *testing.M) {
 }
 
 func TestUser(t *testing.T) {
+	t.Parallel()
+
 	log, db, teardown := dbtest.NewUnit(t, c, "testuser")
 	t.Cleanup(teardown)
 
@@ -121,6 +123,8 @@ func TestUser(t *testing.T) {
 }
 
 func TestPagingUser(t *testing.T) {
+	t.Parallel()
+
 	log, db, teardown := dbtest.NewUnit(t, c, "testpaging")
 	t.Cleanup(teardown)
 

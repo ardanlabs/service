@@ -34,6 +34,8 @@ func TestMain(m *testing.M) {
 }
 
 func TestProduct(t *testing.T) {
+	t.Parallel()
+
 	log, db, teardown := dbtest.NewUnit(t, c, "testprod")
 	t.Cleanup(teardown)
 
