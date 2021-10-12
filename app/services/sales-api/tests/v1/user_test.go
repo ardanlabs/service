@@ -30,6 +30,8 @@ type UserTests struct {
 
 // TestUsers is the entry point for testing user management functions.
 func TestUsers(t *testing.T) {
+	t.Parallel()
+
 	test := dbtest.NewIntegration(t, c, "inttestusers")
 	t.Cleanup(test.Teardown)
 
