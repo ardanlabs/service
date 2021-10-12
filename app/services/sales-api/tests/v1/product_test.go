@@ -40,6 +40,7 @@ func TestProducts(t *testing.T) {
 			Port:  "5432",
 			Args:  []string{"-e", "POSTGRES_PASSWORD=postgres"},
 		},
+		"inttestprods",
 	)
 	t.Cleanup(test.Teardown)
 
