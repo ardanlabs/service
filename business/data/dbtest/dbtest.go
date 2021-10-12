@@ -139,12 +139,7 @@ type Test struct {
 }
 
 // NewIntegration creates a database, seeds it, constructs an authenticator.
-func NewIntegration(t *testing.T, dbc DBContainer, dbName string) *Test {
-	c, err := StartDB(dbc)
-	if err != nil {
-		t.Fatal(err)
-	}
-
+func NewIntegration(t *testing.T, c *docker.Container, dbName string) *Test {
 	log, db, teardown := NewUnit(t, c, dbName)
 
 	// Create RSA keys to enable authentication in our service.
@@ -160,17 +155,12 @@ func NewIntegration(t *testing.T, dbc DBContainer, dbName string) *Test {
 		t.Fatal(err)
 	}
 
-	cleanup := func() {
-		teardown()
-		StopDB(c)
-	}
-
 	test := Test{
 		DB:       db,
 		Log:      log,
 		Auth:     auth,
 		t:        t,
-		Teardown: cleanup,
+		Teardown: teardown,
 	}
 
 	return &test
