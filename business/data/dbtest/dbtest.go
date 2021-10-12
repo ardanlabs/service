@@ -29,16 +29,13 @@ const (
 	Failed  = "\u2717"
 )
 
-// DBContainer provides configuration for a container to run.
-type DBContainer struct {
-	Image string
-	Port  string
-	Args  []string
-}
-
 // StartDB starts a database instance.
-func StartDB(dbc DBContainer) (*docker.Container, error) {
-	return docker.StartContainer(dbc.Image, dbc.Port, dbc.Args...)
+func StartDB() (*docker.Container, error) {
+	image := "postgres:14-alpine"
+	port := "5432"
+	args := []string{"-e", "POSTGRES_PASSWORD=postgres"}
+
+	return docker.StartContainer(image, port, args...)
 }
 
 // StopDB stops a running database instance.
