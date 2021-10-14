@@ -68,7 +68,7 @@ func (c Core) Create(ctx context.Context, nu NewUser, now time.Time) (User, erro
 	}
 
 	if err := c.store.WithinTran(ctx, tran); err != nil {
-		return User{}, err
+		return User{}, fmt.Errorf("tran: %w", err)
 	}
 
 	return toUser(dbUsr), nil
