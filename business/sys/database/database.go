@@ -97,7 +97,7 @@ type Transactor interface {
 }
 
 // WithinTran runs passed function and do commit/rollback at the end.
-func WithinTran(ctx context.Context, log *zap.SugaredLogger, db Transactor, fn func(*sqlx.Tx) error) error {
+func WithinTran(ctx context.Context, log *zap.SugaredLogger, db Transactor, fn func(sqlx.ExtContext) error) error {
 	tx, err := db.Beginx()
 	if err != nil {
 		return err
