@@ -98,38 +98,43 @@ type Transactor interface {
 
 // WithinTran runs passed function and do commit/rollback at the end.
 func WithinTran(ctx context.Context, log *zap.SugaredLogger, db Transactor, fn func(sqlx.ExtContext) error) error {
+	traceID := web.GetTraceID(ctx)
+
+	// Begin the transaction.
+	log.Info("begin tran", "traceid", traceID)
 	tx, err := db.Beginx()
 	if err != nil {
-		return err
+		return fmt.Errorf("begin tran: %w", err)
 	}
 
 	// Mark to the defer function a rollback is required.
 	mustRollback := true
 
+	// Setup a defer function for rolling back the transaction. If
+	// mustRollback is true it means the call to fn failed and we
+	// need to rollback the transaction.
 	defer func() {
-
-		// We don't use recover to keep the panic going,
-		// instead we use a boolean flag `mustRollback`
-		// – true means we jumped here in a panic during the fn() execution.
 		if mustRollback {
-			log.Warn("rolling back DB transaction after a panic")
+			log.Info("rollback tran", "traceid", traceID)
 			if err := tx.Rollback(); err != nil {
-				log.Errorf("unable to rollback: %s", err)
+				log.Errorw("unable to rollback tran", "traceid", traceID, "ERROR", err)
 			}
 		}
 	}()
 
+	// Execute the code inside of the transaction. If the function
+	// fails, return the error and the defer function will rollback.
 	if err := fn(tx); err != nil {
-
-		// The defer will execute the rollback.
-		return err
+		return fmt.Errorf("exec tran: %w", err)
 	}
 
 	// Disarm the deferred rollback.
 	mustRollback = false
 
+	// Commit the transaction.
+	log.Info("commit tran", "traceid", traceID)
 	if err := tx.Commit(); err != nil {
-		return err
+		return fmt.Errorf("commit tran: %w", err)
 	}
 
 	return nil
