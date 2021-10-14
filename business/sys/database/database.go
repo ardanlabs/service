@@ -13,14 +13,13 @@ import (
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq" // Calls init function.
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/attribute"
 	"go.uber.org/zap"
 )
 
 // Set of error variables for CRUD operations.
 var (
-	ErrDBNotFound = errors.New("not found")
+	ErrDBNotFound        = errors.New("not found")
+	ErrDBDuplicatedEntry = errors.New("duplicated entry")
 )
 
 // Config is the required properties to use the database.
@@ -65,12 +64,12 @@ func Open(cfg Config) (*sqlx.DB, error) {
 
 // StatusCheck returns nil if it can successfully talk to the database. It
 // returns a non-nil error otherwise.
-func StatusCheck(ctx context.Context, sqlxDB *sqlx.DB) error {
+func StatusCheck(ctx context.Context, db *sqlx.DB) error {
 
 	// First check we can ping the database.
 	var pingError error
 	for attempts := 1; ; attempts++ {
-		pingError = sqlxDB.Ping()
+		pingError = db.Ping()
 		if pingError == nil {
 			break
 		}
@@ -89,20 +88,60 @@ func StatusCheck(ctx context.Context, sqlxDB *sqlx.DB) error {
 	// round trip through the database.
 	const q = `SELECT true`
 	var tmp bool
-	return sqlxDB.QueryRowContext(ctx, q).Scan(&tmp)
+	return db.QueryRowContext(ctx, q).Scan(&tmp)
+}
+
+// Transactor interface needed to begin transaction.
+type Transactor interface {
+	Beginx() (*sqlx.Tx, error)
+}
+
+// WithinTran runs passed function and do commit/rollback at the end.
+func WithinTran(ctx context.Context, log *zap.SugaredLogger, db Transactor, fn func(*sqlx.Tx) error) error {
+	tx, err := db.Beginx()
+	if err != nil {
+		return err
+	}
+
+	// Mark to the defer function a rollback is required.
+	mustRollback := true
+
+	defer func() {
+
+		// We don't use recover to keep the panic going,
+		// instead we use a boolean flag `mustRollback`
+		// – true means we jumped here in a panic during the fn() execution.
+		if mustRollback {
+			log.Warn("rolling back DB transaction after a panic")
+			if err := tx.Rollback(); err != nil {
+				log.Errorf("unable to rollback: %s", err)
+			}
+		}
+	}()
+
+	if err := fn(tx); err != nil {
+
+		// The defer will execute the rollback.
+		return err
+	}
+
+	// Disarm the deferred rollback.
+	mustRollback = false
+
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // NamedExecContext is a helper function to execute a CUD operation with
 // logging and tracing.
-func NamedExecContext(ctx context.Context, log *zap.SugaredLogger, sqlxDB *sqlx.DB, query string, data interface{}) error {
+func NamedExecContext(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext, query string, data interface{}) error {
 	q := queryString(query, data)
 	log.Infow("database.NamedExecContext", "traceid", web.GetTraceID(ctx), "query", q)
 
-	ctx, span := otel.GetTracerProvider().Tracer("").Start(ctx, "database.query")
-	span.SetAttributes(attribute.String("query", q))
-	defer span.End()
-
-	if _, err := sqlxDB.NamedExecContext(ctx, query, data); err != nil {
+	if _, err := sqlx.NamedExecContext(ctx, db, query, data); err != nil {
 		return err
 	}
 
@@ -111,20 +150,16 @@ func NamedExecContext(ctx context.Context, log *zap.SugaredLogger, sqlxDB *sqlx.
 
 // NamedQuerySlice is a helper function for executing queries that return a
 // collection of data to be unmarshaled into a slice.
-func NamedQuerySlice(ctx context.Context, log *zap.SugaredLogger, sqlxDB *sqlx.DB, query string, data interface{}, dest interface{}) error {
+func NamedQuerySlice(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext, query string, data interface{}, dest interface{}) error {
 	q := queryString(query, data)
 	log.Infow("database.NamedQuerySlice", "traceid", web.GetTraceID(ctx), "query", q)
-
-	ctx, span := otel.GetTracerProvider().Tracer("").Start(ctx, "database.query")
-	span.SetAttributes(attribute.String("query", q))
-	defer span.End()
 
 	val := reflect.ValueOf(dest)
 	if val.Kind() != reflect.Ptr || val.Elem().Kind() != reflect.Slice {
 		return errors.New("must provide a pointer to a slice")
 	}
 
-	rows, err := sqlxDB.NamedQueryContext(ctx, query, data)
+	rows, err := sqlx.NamedQueryContext(ctx, db, query, data)
 	if err != nil {
 		return err
 	}
@@ -143,15 +178,11 @@ func NamedQuerySlice(ctx context.Context, log *zap.SugaredLogger, sqlxDB *sqlx.D
 
 // NamedQueryStruct is a helper function for executing queries that return a
 // single value to be unmarshalled into a struct type.
-func NamedQueryStruct(ctx context.Context, log *zap.SugaredLogger, sqlxDB *sqlx.DB, query string, data interface{}, dest interface{}) error {
+func NamedQueryStruct(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext, query string, data interface{}, dest interface{}) error {
 	q := queryString(query, data)
 	log.Infow("database.NamedQueryStruct", "traceid", web.GetTraceID(ctx), "query", q)
 
-	ctx, span := otel.GetTracerProvider().Tracer("").Start(ctx, "database.query")
-	span.SetAttributes(attribute.String("query", q))
-	defer span.End()
-
-	rows, err := sqlxDB.NamedQueryContext(ctx, query, data)
+	rows, err := sqlx.NamedQueryContext(ctx, db, query, data)
 	if err != nil {
 		return err
 	}
