@@ -58,7 +58,7 @@ func Set(ctx context.Context) context.Context {
 // different parts of the codebase. This will keep this package the
 // central authority for metrics and metrics won't get lost.
 
-// AddGoroutines increments the goroutines metric by 1.
+// AddGoroutines refreshes the goroutine metric every 100 requests.
 func AddGoroutines(ctx context.Context) {
 	if v, ok := ctx.Value(key).(*metrics); ok {
 		if v.requests.Value()%100 == 0 {
