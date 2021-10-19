@@ -4,6 +4,7 @@ package metrics
 import (
 	"context"
 	"expvar"
+	"runtime"
 )
 
 // This holds the single instance of the metrics value needed for
@@ -61,7 +62,7 @@ func Set(ctx context.Context) context.Context {
 func AddGoroutines(ctx context.Context) {
 	if v, ok := ctx.Value(key).(*metrics); ok {
 		if v.requests.Value()%100 == 0 {
-			v.goroutines.Add(1)
+			v.goroutines.Set(int64(runtime.NumGoroutine()))
 		}
 	}
 }
