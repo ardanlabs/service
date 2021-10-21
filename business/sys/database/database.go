@@ -101,7 +101,7 @@ func WithinTran(ctx context.Context, log *zap.SugaredLogger, db Transactor, fn f
 	traceID := web.GetTraceID(ctx)
 
 	// Begin the transaction.
-	log.Info("begin tran", "traceid", traceID)
+	log.Infow("begin tran", "traceid", traceID)
 	tx, err := db.Beginx()
 	if err != nil {
 		return fmt.Errorf("begin tran: %w", err)
@@ -115,7 +115,7 @@ func WithinTran(ctx context.Context, log *zap.SugaredLogger, db Transactor, fn f
 	// need to rollback the transaction.
 	defer func() {
 		if mustRollback {
-			log.Info("rollback tran", "traceid", traceID)
+			log.Infow("rollback tran", "traceid", traceID)
 			if err := tx.Rollback(); err != nil {
 				log.Errorw("unable to rollback tran", "traceid", traceID, "ERROR", err)
 			}
@@ -132,7 +132,7 @@ func WithinTran(ctx context.Context, log *zap.SugaredLogger, db Transactor, fn f
 	mustRollback = false
 
 	// Commit the transaction.
-	log.Info("commit tran", "traceid", traceID)
+	log.Infow("commit tran", "traceid", traceID)
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("commit tran: %w", err)
 	}
