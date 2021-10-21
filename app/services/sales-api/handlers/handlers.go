@@ -60,7 +60,7 @@ func APIMux(cfg APIMuxConfig, options ...func(opts *Options)) http.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 			return nil
 		}
-		app.Handle(http.MethodOptions, "", "/*", h)
+		app.Handle(http.MethodOptions, "", "/*", h, mid.Cors(opts.corsOrigin))
 	}
 
 	// Load the v1 routes.
