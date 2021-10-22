@@ -29,6 +29,7 @@ func Routes(app *web.App, cfg Config) {
 
 	authen := mid.Authenticate(cfg.Auth)
 	admin := mid.Authorize(auth.RoleAdmin)
+	etch := mid.Etch(cfg.Log, cfg.DB)
 
 	// Register user management and authentication endpoints.
 	ugh := usergrp.Handlers{
@@ -47,7 +48,7 @@ func Routes(app *web.App, cfg Config) {
 		Product: product.NewCore(cfg.Log, cfg.DB),
 	}
 	app.Handle(http.MethodGet, version, "/products/:page/:rows", pgh.Query, authen)
-	app.Handle(http.MethodGet, version, "/products/:id", pgh.QueryByID, authen)
+	app.Handle(http.MethodGet, version, "/products/:id", pgh.QueryByID, etch, authen) // assuming this is important
 	app.Handle(http.MethodPost, version, "/products", pgh.Create, authen)
 	app.Handle(http.MethodPut, version, "/products/:id", pgh.Update, authen)
 	app.Handle(http.MethodDelete, version, "/products/:id", pgh.Delete, authen)

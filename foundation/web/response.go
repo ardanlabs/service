@@ -16,7 +16,9 @@ func Respond(ctx context.Context, w http.ResponseWriter, data interface{}, statu
 	defer span.End()
 
 	// Set the status code for the request logger middleware.
-	SetStatusCode(ctx, statusCode)
+	if err := SetStatusCode(ctx, statusCode); err != nil {
+		return err
+	}
 
 	// If there is nothing to marshal then set status code and return.
 	if statusCode == http.StatusNoContent {
@@ -27,6 +29,11 @@ func Respond(ctx context.Context, w http.ResponseWriter, data interface{}, statu
 	// Convert the response value to JSON.
 	jsonData, err := json.Marshal(data)
 	if err != nil {
+		return err
+	}
+
+	// Set the response body for the response etch middleware
+	if err := SetResponse(ctx, jsonData); err != nil {
 		return err
 	}
 
