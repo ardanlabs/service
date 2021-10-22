@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
 // The params argument contains the parameters parsed from wildcards and catch-alls in the URL.
@@ -124,6 +125,10 @@ func (t *TreeMux) lookup(w http.ResponseWriter, r *http.Request) (result LookupR
 		// RequestURI is not set so just grab URL.Path instead.
 		path = r.URL.Path
 		pathLen = len(path)
+	}
+	if t.CaseInsensitive {
+		path = strings.ToLower(path)
+		unescapedPath = strings.ToLower(unescapedPath)
 	}
 
 	trailingSlash := path[pathLen-1] == '/' && pathLen > 1

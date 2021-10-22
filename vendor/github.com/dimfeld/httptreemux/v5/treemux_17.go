@@ -82,6 +82,9 @@ type TreeMux struct {
 	// if you are going to add routes after the router has already begun serving requests. There is a potential
 	// performance penalty at high load.
 	SafeAddRoutesWhileRunning bool
+
+	// CaseInsensitive determines if routes should be treated as case-insensitive.
+	CaseInsensitive bool
 }
 
 func (t *TreeMux) setDefaultRequestContext(r *http.Request) *http.Request {
