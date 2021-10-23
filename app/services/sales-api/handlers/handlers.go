@@ -47,7 +47,7 @@ func APIMux(cfg APIMuxConfig, options ...func(opts *Options)) http.Handler {
 	// Construct the web.App which holds all routes as well as common Middleware.
 	app := web.NewApp(
 		cfg.Shutdown,
-		mid.Logger(cfg.Log),
+		mid.Logger(cfg.Log, cfg.DB),
 		mid.Errors(cfg.Log),
 		mid.Metrics(),
 		mid.Panics(),

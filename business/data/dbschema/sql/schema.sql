@@ -41,3 +41,14 @@ CREATE TABLE sales (
 	FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
 	FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE
 );
+
+-- Version 1.4
+-- Description: Create table responses
+CREATE TABLE IF NOT EXISTS responses (
+	id           UUID,
+	trace_id     TEXT      NOT NULL,
+	response     TEXT      NOT NULL,
+	date_created TIMESTAMP NOT NULL,
+
+	PRIMARY KEY (id)
+);
