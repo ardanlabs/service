@@ -45,14 +45,14 @@ func init() {
 func Check(val interface{}) error {
 	if err := validate.Struct(val); err != nil {
 
-		// Use a type assertion to get the real error value.
-		verrors, ok := err.(validator.ValidationErrors)
-		if !ok {
+		// Use errors.As to get the real error value.
+		var vErrors validator.ValidationErrors
+		if !errors.As(err, &vErrors) {
 			return err
 		}
 
 		var fields FieldErrors
-		for _, verror := range verrors {
+		for _, verror := range vErrors {
 			field := FieldError{
 				Field: verror.Field(),
 				Error: verror.Translate(translator),
