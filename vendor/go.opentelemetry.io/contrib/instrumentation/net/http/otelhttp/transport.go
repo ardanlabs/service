@@ -19,9 +19,10 @@ import (
 	"io"
 	"net/http"
 
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/propagation"
-	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
+	semconv "go.opentelemetry.io/otel/semconv/v1.7.0"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -87,9 +88,19 @@ func (t *Transport) RoundTrip(r *http.Request) (*http.Response, error) {
 		}
 	}
 
+	tracer := t.tracer
+
+	if tracer == nil {
+		if span := trace.SpanFromContext(r.Context()); span.SpanContext().IsValid() {
+			tracer = newTracer(span.TracerProvider())
+		} else {
+			tracer = newTracer(otel.GetTracerProvider())
+		}
+	}
+
 	opts := append([]trace.SpanStartOption{}, t.spanStartOptions...) // start with the configured options
 
-	ctx, span := t.tracer.Start(r.Context(), t.spanNameFormatter("", r), opts...)
+	ctx, span := tracer.Start(r.Context(), t.spanNameFormatter("", r), opts...)
 
 	r = r.WithContext(ctx)
 	span.SetAttributes(semconv.HTTPClientAttributesFromHTTPRequest(r)...)

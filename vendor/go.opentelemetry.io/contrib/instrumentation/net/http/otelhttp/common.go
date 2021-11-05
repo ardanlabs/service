@@ -18,6 +18,7 @@ import (
 	"net/http"
 
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // Attribute keys that can be added to a span.
@@ -39,3 +40,7 @@ const (
 // Filter is a predicate used to determine whether a given http.request should
 // be traced. A Filter must return true if the request should be traced.
 type Filter func(*http.Request) bool
+
+func newTracer(tp trace.TracerProvider) trace.Tracer {
+	return tp.Tracer(instrumentationName, trace.WithInstrumentationVersion(SemVersion()))
+}

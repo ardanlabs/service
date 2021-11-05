@@ -58,18 +58,18 @@ func (o optionFunc) apply(c *config) {
 // newConfig creates a new config struct and applies opts to it.
 func newConfig(opts ...Option) *config {
 	c := &config{
-		Propagators:    otel.GetTextMapPropagator(),
-		TracerProvider: otel.GetTracerProvider(),
-		MeterProvider:  global.GetMeterProvider(),
+		Propagators:   otel.GetTextMapPropagator(),
+		MeterProvider: global.GetMeterProvider(),
 	}
 	for _, opt := range opts {
 		opt.apply(c)
 	}
 
-	c.Tracer = c.TracerProvider.Tracer(
-		instrumentationName,
-		trace.WithInstrumentationVersion(SemVersion()),
-	)
+	// Tracer is only initialized if manually specified. Otherwise, can be passed with the tracing context.
+	if c.TracerProvider != nil {
+		c.Tracer = newTracer(c.TracerProvider)
+	}
+
 	c.Meter = c.MeterProvider.Meter(
 		instrumentationName,
 		metric.WithInstrumentationVersion(SemVersion()),
