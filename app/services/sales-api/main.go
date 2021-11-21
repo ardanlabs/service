@@ -77,6 +77,7 @@ func run(log *zap.SugaredLogger) error {
 			ShutdownTimeout time.Duration `conf:"default:20s"`
 			APIHost         string        `conf:"default:0.0.0.0:3000"`
 			DebugHost       string        `conf:"default:0.0.0.0:4000"`
+			CORSOrigin      string
 		}
 		Auth struct {
 			KeysFolder string `conf:"default:zarf/keys/"`
@@ -212,12 +213,14 @@ func run(log *zap.SugaredLogger) error {
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
 
 	// Construct the mux for the API calls.
-	apiMux := handlers.APIMux(handlers.APIMuxConfig{
-		Shutdown: shutdown,
-		Log:      log,
-		Auth:     auth,
-		DB:       db,
-	})
+	apiMux := handlers.APIMux(
+		handlers.APIMuxConfig{
+			Shutdown: shutdown,
+			Log:      log,
+			Auth:     auth,
+			DB:       db,
+		},
+		handlers.WithCORS(cfg.Web.CORSOrigin))
 
 	// Construct a server to service the requests against the mux.
 	api := http.Server{
