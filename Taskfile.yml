@@ -156,7 +156,11 @@ tasks:
     - kubectl config set-context --current --namespace=sales-system
 
   kind-shell:
-    - kubectl exec -it $(shell kubectl get pods | grep app | cut -c1-26) --container app -- /bin/sh
+    cmds:
+      - kubectl exec -it {{range $line := .CONTAINER_PODS | splitLines -}}{{if contains "sales" $line}}{{ $line | splitList " " | first }}{{end}}{{end}} --container app -- /bin/sh
+    vars:
+      CONTAINER_PODS:
+        sh: kubectl get pods
 
   # kind-database:
     # - ./admin --db-disable-tls=1 migrate
@@ -222,7 +226,6 @@ tasks:
 # ==============================================================================
 # GCP
 
-
   gcp-config:
     - echo "Setting environment for {{.GCP_PROJECT}}"
     - gcloud config set project {{.GCP_PROJECT}}
@@ -284,9 +287,13 @@ tasks:
     - kubectl logs -l app=sales --all-containers=true -f --tail=100 | go run app/tooling/logfmt/main.go -service=SALES-API | jq
 
   gcp-shell:
-    - kubectl exec -it $(shell kubectl get pods | grep sales | cut -c1-26 | head -1) --container app -- /bin/sh
-    # ./admin --db-disable-tls=1 migrate
-    # ./admin --db-disable-tls=1 seed
+    cmds:
+      - kubectl exec -it {{range $line := .CONTAINER_PODS | splitLines -}}{{if contains "sales" $line}}{{ $line | splitList " " | first }}{{end}}{{end}} --container app -- /bin/sh
+      # ./admin --db-disable-tls=1 migrate
+      # ./admin --db-disable-tls=1 seed
+    vars:
+      CONTAINER_PODS:
+        sh: kubectl get pods
 
   gcp-delete-all:
     - task: gcp-delete
