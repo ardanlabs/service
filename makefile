@@ -143,7 +143,7 @@ kind-context-sales:
 	kubectl config set-context --current --namespace=sales-system
 
 kind-shell:
-	kubectl exec -it $(shell kubectl get pods | grep app | cut -c1-26) --container app -- /bin/sh
+	kubectl exec -it $(shell kubectl get pods | grep sales | cut -c1-26) --container app -- /bin/sh
 
 kind-database:
 	# ./admin --db-disable-tls=1 migrate
