@@ -13,7 +13,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-// A Handler is a type that handles an http request within our own little mini
+// A Handler is a type that handles a http request within our own little mini
 // framework.
 type Handler func(ctx context.Context, w http.ResponseWriter, r *http.Request) error
 
@@ -34,7 +34,7 @@ func NewApp(shutdown chan os.Signal, mw ...Middleware) *App {
 	// the initial span and annotate it with information about the request/response.
 	//
 	// This is configured to use the W3C TraceContext standard to set the remote
-	// parent if an client request includes the appropriate headers.
+	// parent if a client request includes the appropriate headers.
 	// https://w3c.github.io/trace-context/
 
 	mux := httptreemux.NewContextMux()
@@ -47,7 +47,7 @@ func NewApp(shutdown chan os.Signal, mw ...Middleware) *App {
 	}
 }
 
-// SignalShutdown is used to gracefully shutdown the app when an integrity
+// SignalShutdown is used to gracefully shut down the app when an integrity
 // issue is identified.
 func (a *App) SignalShutdown() {
 	a.shutdown <- syscall.SIGTERM
@@ -56,7 +56,7 @@ func (a *App) SignalShutdown() {
 // ServeHTTP implements the http.Handler interface. It's the entry point for
 // all http traffic and allows the opentelemetry mux to run first to handle
 // tracing. The opentelemetry mux then calls the application mux to handle
-// application traffic. This was setup on line 44 in the NewApp function.
+// application traffic. This was set up on line 44 in the NewApp function.
 func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	a.otmux.ServeHTTP(w, r)
 }

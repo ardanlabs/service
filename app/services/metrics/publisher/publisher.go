@@ -67,7 +67,7 @@ func New(log *zap.SugaredLogger, collector Collector, interval time.Duration, pu
 	return &p, nil
 }
 
-// Stop is used to shutdown the goroutine collecting metrics.
+// Stop is used to shut down the goroutine collecting metrics.
 func (p *Publish) Stop() {
 	close(p.shutdown)
 	p.wg.Wait()

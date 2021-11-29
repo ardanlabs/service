@@ -16,7 +16,7 @@ import (
 )
 
 // KeyStore represents an in memory store implementation of the
-// KeyStorer interface for use with the auth package.
+// KeyStore interface for use with the auth package.
 type KeyStore struct {
 	mu    sync.RWMutex
 	store map[string]*rsa.PrivateKey

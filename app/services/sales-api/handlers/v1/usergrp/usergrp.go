@@ -14,7 +14,7 @@ import (
 	"github.com/ardanlabs/service/foundation/web"
 )
 
-// Handlers manages the set of user enpoints.
+// Handlers manages the set of user endpoints.
 type Handlers struct {
 	User user.Core
 	Auth *auth.Auth

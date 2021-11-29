@@ -2,7 +2,7 @@
 .git/
 .reading/
 .dockerignore
-.gitgnore
+.gitignore
 zarf/docker/
 zarf/k8s/
 CONTRIBUTORS

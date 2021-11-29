@@ -37,7 +37,7 @@ func Authenticate(a *auth.Auth) web.Middleware {
 				return v1Web.NewRequestError(err, http.StatusUnauthorized)
 			}
 
-			// Add claims to the context so they can be retrieved later.
+			// Add claims to the context, so they can be retrieved later.
 			ctx = auth.SetClaims(ctx, claims)
 
 			// Call the next handler.

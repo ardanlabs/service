@@ -488,7 +488,7 @@ func (ut *UserTests) getUser200(t *testing.T, id string) {
 	r.Header.Set("Authorization", "Bearer "+ut.adminToken)
 	ut.app.ServeHTTP(w, r)
 
-	t.Log("Given the need to validate getting a user that exsits.")
+	t.Log("Given the need to validate getting a user that exists.")
 	{
 		testID := 0
 		t.Logf("\tTest %d:\tWhen using the new user %s.", testID, id)

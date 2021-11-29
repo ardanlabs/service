@@ -287,7 +287,7 @@ gcp-delete-all: gcp-delete
 # GKE Installation
 #
 # Install the Google Cloud SDK. This contains the gcloud client needed to perform
-# some operatings
+# some operations
 # https://cloud.google.com/sdk/
 #
 # Installing the K8s kubectl client. 

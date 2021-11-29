@@ -22,7 +22,7 @@ var (
 	ErrInvalidID = errors.New("ID is not in its proper form")
 )
 
-// Core manages the set of API's for product access.
+// Core manages the set of APIs for product access.
 type Core struct {
 	store db.Store
 }

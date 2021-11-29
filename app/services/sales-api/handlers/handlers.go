@@ -37,7 +37,7 @@ type APIMuxConfig struct {
 	DB       *sqlx.DB
 }
 
-// APIMux constructs an http.Handler with all application routes defined.
+// APIMux constructs a http.Handler with all application routes defined.
 func APIMux(cfg APIMuxConfig, options ...func(opts *Options)) http.Handler {
 	var opts Options
 	for _, option := range options {
