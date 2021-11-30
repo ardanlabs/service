@@ -112,7 +112,7 @@ func run(log *zap.SugaredLogger) error {
 	log.Infow("startup", "status", "debug router started", "host", cfg.Web.DebugHost)
 
 	// The Debug function returns a mux to listen and serve on for all the debug
-	// related endpoints. This include the standard library endpoints.
+	// related endpoints. This includes the standard library endpoints.
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/debug/pprof/", pprof.Index)

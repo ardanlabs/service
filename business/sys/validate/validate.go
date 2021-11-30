@@ -25,7 +25,7 @@ func init() {
 	validate = validator.New()
 
 	// Create a translator for english so the error messages are
-	// more human readable than technical.
+	// more human-readable than technical.
 	translator, _ = ut.New(en.New(), en.New()).GetTranslator("en")
 
 	// Register the english error messages for use.

@@ -57,7 +57,7 @@ func (exp *Expvar) Stop(shutdownTimeout time.Duration) {
 	ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
 	defer cancel()
 
-	// Asking listener to shutdown and load shed.
+	// Asking listener to shut down and load shed.
 	if err := exp.server.Shutdown(ctx); err != nil {
 		exp.log.Errorw("expvar", "status", "graceful shutdown did not complete", "ERROR", err, "shutdownTimeout", shutdownTimeout)
 		if err := exp.server.Close(); err != nil {

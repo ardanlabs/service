@@ -26,7 +26,7 @@ var (
 	ErrAuthenticationFailure = errors.New("authentication failed")
 )
 
-// Core manages the set of API's for user access.
+// Core manages the set of APIs for user access.
 type Core struct {
 	store db.Store
 }

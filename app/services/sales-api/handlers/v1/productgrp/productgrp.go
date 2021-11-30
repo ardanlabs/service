@@ -14,7 +14,7 @@ import (
 	"github.com/ardanlabs/service/foundation/web"
 )
 
-// Handlers manages the set of product enpoints.
+// Handlers manages the set of product endpoints.
 type Handlers struct {
 	Product product.Core
 }
@@ -67,7 +67,7 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 			return fmt.Errorf("querying product[%s]: %w", id, err)
 		}
 	}
-	
+
 	// If you are not an admin and looking to update a product you don't own.
 	if !claims.Authorized(auth.RoleAdmin) && prd.UserID != claims.Subject {
 		return v1Web.NewRequestError(auth.ErrForbidden, http.StatusForbidden)

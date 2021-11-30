@@ -117,7 +117,7 @@ func TestCancelWorker(t *testing.T) {
 			// Wait for all 4 jobs to report they are running.
 			wg.Wait()
 
-			// Give all the jobs 1 second to shutdown cleanly.
+			// Give all the jobs 1 second to shut down cleanly.
 			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 			defer cancel()
 			if err := w.Shutdown(ctx); err != nil {

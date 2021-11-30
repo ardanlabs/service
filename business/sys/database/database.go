@@ -110,9 +110,9 @@ func WithinTran(ctx context.Context, log *zap.SugaredLogger, db Transactor, fn f
 	// Mark to the defer function a rollback is required.
 	mustRollback := true
 
-	// Setup a defer function for rolling back the transaction. If
-	// mustRollback is true it means the call to fn failed and we
-	// need to rollback the transaction.
+	// Set up a defer function for rolling back the transaction. If
+	// mustRollback is true it means the call to fn failed, and we
+	// need to roll back the transaction.
 	defer func() {
 		if mustRollback {
 			log.Infow("rollback tran", "traceid", traceID)
@@ -122,8 +122,8 @@ func WithinTran(ctx context.Context, log *zap.SugaredLogger, db Transactor, fn f
 		}
 	}()
 
-	// Execute the code inside of the transaction. If the function
-	// fails, return the error and the defer function will rollback.
+	// Execute the code inside the transaction. If the function
+	// fails, return the error and the defer function will roll back.
 	if err := fn(tx); err != nil {
 		return fmt.Errorf("exec tran: %w", err)
 	}
@@ -154,7 +154,7 @@ func NamedExecContext(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtCo
 }
 
 // NamedQuerySlice is a helper function for executing queries that return a
-// collection of data to be unmarshaled into a slice.
+// collection of data to be unmarshalled into a slice.
 func NamedQuerySlice(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext, query string, data interface{}, dest interface{}) error {
 	q := queryString(query, data)
 	log.Infow("database.NamedQuerySlice", "traceid", web.GetTraceID(ctx), "query", q)

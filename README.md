@@ -139,7 +139,7 @@ Go is the fusion of performance and productivity wrapped in a language that soft
 
 ## Minimal Qualified Student
 
-The material has been designed to be taught in a classroom environment. The code is well commented but missing some of the contextual concepts and ideas that will be covered in class. Students with the following minimal background will get the most out of the class.
+The material has been designed to be taught in a classroom environment. The code is well commented but missing some contextual concepts and ideas that will be covered in class. Students with the following minimal background will get the most out of the class.
 
 * Studied CS in school or has a minimum of two years of experience programming full time professionally.
 * Familiar with structural and object oriented programming styles.
@@ -174,7 +174,7 @@ https://bitfieldconsulting.com/books/fundamentals
 
 ### Joining the Go Slack Community
 
-We use a slack channel to share links, code, and examples during the training.  This is free.  This is also the same slack community you will use after training to ask for help and interact with may Go experts around the world in the community.
+We use a Slack channel to share links, code, and examples during the training.  This is free.  This is also the same Slack community you will use after training to ask for help and interact with may Go experts around the world in the community.
 
 1. Using the following link, fill out your name and email address: https://gophersinvite.herokuapp.com/
 1. Check your email, and follow the link to the slack application.
