@@ -1,4 +1,4 @@
-// Package keystore implements the auth.KeyStore interface. This implements
+// Package keystore implements the auth.KeyLookup interface. This implements
 // an in-memory keystore for JWT support.
 package keystore
 
@@ -16,7 +16,7 @@ import (
 )
 
 // KeyStore represents an in memory store implementation of the
-// KeyStore interface for use with the auth package.
+// KeyLookup interface for use with the auth package.
 type KeyStore struct {
 	mu    sync.RWMutex
 	store map[string]*rsa.PrivateKey
