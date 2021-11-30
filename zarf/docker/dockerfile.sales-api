@@ -24,7 +24,7 @@ RUN go build -ldflags "-X main.build=${BUILD_REF}"
 
 
 # Run the Go Binary in Alpine.
-FROM alpine:3.14
+FROM alpine:3.15
 ARG BUILD_DATE
 ARG BUILD_REF
 COPY --from=build_sales-api /service/zarf/keys/. /service/zarf/keys/.
