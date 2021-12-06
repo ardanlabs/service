@@ -99,7 +99,7 @@ this modeule.
 
 	const prefix = "APP"
 	var cfg config
-	help, err := conf.Parse(prefix, &cfg, yaml.With([]byte{yamlData}))
+	help, err := conf.Parse(prefix, &cfg, yaml.WithData([]byte{yamlData}))
 	if err != nil {
 		if errors.Is(err, conf.ErrHelpWanted) {
 			fmt.Println(help)

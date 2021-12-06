@@ -108,26 +108,24 @@ func extractFields(prefix []string, target interface{}) ([]Field, error) {
 
 		switch {
 
-		// If we've found a struct, drill down, appending fields as we go.
-		case f.Kind() == reflect.Struct:
+		// If we found a struct that can't deserialize itself, drill down,
+		// appending fields as we go.
+		case f.Kind() == reflect.Struct && setterFrom(f) == nil && textUnmarshaler(f) == nil && binaryUnmarshaler(f) == nil:
 
-			// Skip if it can deserialize itself.
-			if setterFrom(f) == nil && textUnmarshaler(f) == nil && binaryUnmarshaler(f) == nil {
-
-				// Prefix for any subkeys is the fieldKey, unless it's
-				// anonymous, then it's just the prefix so far.
-				innerPrefix := fieldKey
-				if structField.Anonymous {
-					innerPrefix = prefix
-				}
-
-				embeddedPtr := f.Addr().Interface()
-				innerFields, err := extractFields(innerPrefix, embeddedPtr)
-				if err != nil {
-					return nil, err
-				}
-				fields = append(fields, innerFields...)
+			// Prefix for any subkeys is the fieldKey, unless it's
+			// anonymous, then it's just the prefix so far.
+			innerPrefix := fieldKey
+			if structField.Anonymous {
+				innerPrefix = prefix
 			}
+
+			embeddedPtr := f.Addr().Interface()
+			innerFields, err := extractFields(innerPrefix, embeddedPtr)
+			if err != nil {
+				return nil, err
+			}
+			fields = append(fields, innerFields...)
+
 		default:
 			envKey := fieldKey
 			if fieldOpts.EnvName != "" {
