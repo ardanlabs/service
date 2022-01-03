@@ -85,7 +85,7 @@ func (a *App) Handle(method string, group string, path string, handler Handler, 
 		// process the request.
 		v := Values{
 			TraceID: span.SpanContext().TraceID().String(),
-			Now:     time.Now(),
+			Now:     time.Now().UTC(),
 		}
 		ctx = context.WithValue(ctx, key, &v)
 

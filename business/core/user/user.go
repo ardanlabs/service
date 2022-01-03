@@ -111,7 +111,7 @@ func (c Core) Update(ctx context.Context, userID string, uu UpdateUser, now time
 	dbUsr.DateUpdated = now
 
 	if err := c.store.Update(ctx, dbUsr); err != nil {
-		return fmt.Errorf("udpate: %w", err)
+		return fmt.Errorf("update: %w", err)
 	}
 
 	return nil
