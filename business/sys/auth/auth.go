@@ -27,7 +27,7 @@ type Auth struct {
 	keyLookup KeyLookup
 	method    jwt.SigningMethod
 	keyFunc   func(t *jwt.Token) (interface{}, error)
-	parser    jwt.Parser
+	parser    *jwt.Parser
 }
 
 // New creates an Auth to support authentication/authorization.
@@ -59,9 +59,7 @@ func New(activeKID string, keyLookup KeyLookup) (*Auth, error) {
 	// Create the token parser to use. The algorithm used to sign the JWT must be
 	// validated to avoid a critical vulnerability:
 	// https://auth0.com/blog/critical-vulnerabilities-in-json-web-token-libraries/
-	parser := jwt.Parser{
-		ValidMethods: []string{"RS256"},
-	}
+	parser := jwt.NewParser(jwt.WithValidMethods([]string{"RS256"}))
 
 	a := Auth{
 		activeKID: activeKID,
