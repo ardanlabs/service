@@ -4,7 +4,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/ardanlabs/service)](https://goreportcard.com/report/github.com/ardanlabs/service)
 [![go.mod Go version](https://img.shields.io/github/go-mod/go-version/ardanlabs/service)](https://github.com/ardanlabs/service)
 
-Copyright 2018, 2019, 2020, 2021, Ardan Labs  
+Copyright 2018, 2019, 2020, 2021, 2022, Ardan Labs  
 info@ardanlabs.com
 
 ## Ultimate Service 3.0 Classes
