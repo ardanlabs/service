@@ -104,7 +104,11 @@ func (h Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Req
 		case errors.Is(err, product.ErrInvalidID):
 			return v1Web.NewRequestError(err, http.StatusBadRequest)
 		case errors.Is(err, product.ErrNotFound):
-			return v1Web.NewRequestError(err, http.StatusNotFound)
+
+			// Don't send StatusNotFound here since the call to Delete
+			// below won't if this product is not found. We only know
+			// this because we are doing the Query for the UserID.
+			return v1Web.NewRequestError(err, http.StatusNoContent)
 		default:
 			return fmt.Errorf("querying product[%s]: %w", id, err)
 		}

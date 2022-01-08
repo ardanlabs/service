@@ -96,8 +96,6 @@ func (h Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Req
 		switch {
 		case errors.Is(err, user.ErrInvalidID):
 			return v1Web.NewRequestError(err, http.StatusBadRequest)
-		case errors.Is(err, user.ErrNotFound):
-			return v1Web.NewRequestError(err, http.StatusNotFound)
 		default:
 			return fmt.Errorf("ID[%s]: %w", userID, err)
 		}
