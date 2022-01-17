@@ -181,25 +181,6 @@ We use a Slack channel to share links, code, and examples during the training.  
 1. Join the training channel by clicking on this link: https://gophers.slack.com/messages/training/
 1. Click the “Join Channel” button at the bottom of the screen.
 
-### Installing Go
-
-#### Local Installation
-
-https://www.ardanlabs.com/blog/2016/05/installing-go-and-your-workspace.html
-
-### Editors
-
-**Visual Studio Code**  
-https://code.visualstudio.com/Updates  
-https://github.com/microsoft/vscode-go
-
-**VIM**  
-http://www.vim.org/download.php  
-http://farazdagi.com/blog/2015/vim-as-golang-ide/
-
-**Goland**  
-https://www.jetbrains.com/go/
-
 ### Installing the Training Material
 
 While many of the examples can be done using the online playground (http://play.golang.org), some may find it easier to complete them with their local editor.  To do so, you will want to load the training material locally to your machine.  From a command prompt, issue the following commands:
@@ -216,7 +197,7 @@ git clone https://github.com/ardanlabs/gotraining.git
 Jessie Frazelle ([@frazelledazzell](https://twitter.com/frazelledazzell/status/711355859066990592))  
 _"@goinggodotnet you were amazing!!! So enthusiastic!!! Thanks for doing this for everyone!"_
 
-Kelsey Hightower ([‏@kelseyhightower](https://twitter.com/kelseyhightower/status/673359937909592064))  
+Kelsey Hightower ([@kelseyhightower](https://twitter.com/kelseyhightower/status/673359937909592064))  
 _"Day 1 of the [Ultimate] Go workshop was outstanding! Big shoutout to @intel, @golangbridge, and @goinggodotnet for bringing this to Portland."_
 
 Katrina Owen ([@kytrinyx](https://twitter.com/kytrinyx/status/673360428278222848))  
