@@ -27,8 +27,11 @@ RUN go build -ldflags "-X main.build=${BUILD_REF}"
 FROM alpine:3.15
 ARG BUILD_DATE
 ARG BUILD_REF
-COPY --from=build_metrics /service/app/services/metrics/metrics /service/metrics
+RUN addgroup -g 1000 -S metrics && \
+    adduser -u 1000 -h /service -G metrics -S metrics
+COPY --from=build_metrics --chown=metrics:metrics /service/app/services/metrics/metrics /service/metrics
 WORKDIR /service
+USER metrics
 CMD ["./metrics"]
 
 LABEL org.opencontainers.image.created="${BUILD_DATE}" \
