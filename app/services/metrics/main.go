@@ -12,7 +12,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/ardanlabs/conf/v2"
+	"github.com/ardanlabs/conf/v3"
 	"github.com/ardanlabs/service/app/services/metrics/collector"
 	"github.com/ardanlabs/service/app/services/metrics/publisher"
 	expvarsrv "github.com/ardanlabs/service/app/services/metrics/publisher/expvar"

@@ -12,7 +12,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/ardanlabs/conf/v2"
+	"github.com/ardanlabs/conf/v3"
 	"github.com/ardanlabs/service/app/services/sales-api/handlers"
 	"github.com/ardanlabs/service/business/sys/auth"
 	"github.com/ardanlabs/service/business/sys/database"
