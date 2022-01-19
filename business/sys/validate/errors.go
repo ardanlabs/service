@@ -43,7 +43,7 @@ type FieldError struct {
 // FieldErrors represents a collection of field errors.
 type FieldErrors []FieldError
 
-// Error implments the error interface.
+// Error implements the error interface.
 func (fe FieldErrors) Error() string {
 	d, err := json.Marshal(fe)
 	if err != nil {
