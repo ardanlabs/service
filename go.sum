@@ -6,8 +6,8 @@ github.com/DATA-DOG/go-sqlmock v1.5.0/go.mod h1:f/Ixk793poVmq4qj/V1dPUg2JEAKC73Q
 github.com/Shopify/sarama v1.30.0/go.mod h1:zujlQQx1kzHsh4jfV1USnptCQrHAEZ2Hk8fTKCulPVs=
 github.com/Shopify/toxiproxy/v2 v2.1.6-0.20210914104332-15ea381dcdae/go.mod h1:/cvHQkZ1fst0EmZnA5dFtiQdWCNCFYzb+uE2vqVgvx0=
 github.com/antihax/optional v1.0.0/go.mod h1:uupD/76wgC+ih3iEmQUL+0Ugr19nfwCT1kdvxnR2qWY=
-github.com/ardanlabs/conf/v3 v3.0.1 h1:RFNbJfVDDqRFbCY/dDs0wlOPRZI4qT8SiCyUgULy3kU=
-github.com/ardanlabs/conf/v3 v3.0.1/go.mod h1:bIacyuGeZjkTdtszdbvOcuq49VhHpV3+IPZ2ewOAK4I=
+github.com/ardanlabs/conf/v3 v3.1.1 h1:jNzP/i9Z7ZPR09oBUp8l/1U0DiviW0EbjIuZ7hf8w94=
+github.com/ardanlabs/conf/v3 v3.1.1/go.mod h1:bIacyuGeZjkTdtszdbvOcuq49VhHpV3+IPZ2ewOAK4I=
 github.com/ardanlabs/darwin v1.3.0 h1:ImREePBjivFWZ6PFA9o40yQHBhooClRCrHgQbduSQwk=
 github.com/ardanlabs/darwin v1.3.0/go.mod h1:Y3MRjtKnFnamCJ42PmZZPpojM7aDqlHVEHcs1TnHy3A=
 github.com/benbjohnson/clock v1.1.0 h1:Q92kusRqC1XV2MjkWETPvjJVqKetz1OzxZB7mHJLju8=

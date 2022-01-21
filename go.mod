@@ -3,7 +3,7 @@ module github.com/ardanlabs/service
 go 1.17
 
 require (
-	github.com/ardanlabs/conf/v3 v3.0.1
+	github.com/ardanlabs/conf/v3 v3.1.1
 	github.com/ardanlabs/darwin v1.3.0
 	github.com/dimfeld/httptreemux/v5 v5.4.0
 	github.com/go-playground/locales v0.14.0
