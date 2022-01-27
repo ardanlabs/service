@@ -21,13 +21,13 @@
 // Package maxprocs lets Go programs easily configure runtime.GOMAXPROCS to
 // match the configured Linux CPU quota. Unlike the top-level automaxprocs
 // package, it lets the caller configure logging and handle errors.
-package maxprocs // import "go.uber.org/automaxprocs/maxprocs"
+package maxprocs // import "github.com/emadolsky/automaxprocs/maxprocs"
 
 import (
 	"os"
 	"runtime"
 
-	iruntime "go.uber.org/automaxprocs/internal/runtime"
+	iruntime "github.com/emadolsky/automaxprocs/internal/runtime"
 )
 
 const _maxProcsKey = "GOMAXPROCS"

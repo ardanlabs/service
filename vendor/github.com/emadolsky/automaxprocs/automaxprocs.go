@@ -18,32 +18,16 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-// +build linux
-
-package runtime
+// Package automaxprocs automatically sets GOMAXPROCS to match the Linux
+// container CPU quota, if any.
+package automaxprocs // import "go.uber.org/automaxprocs"
 
 import (
-	"math"
+	"log"
 
-	cg "go.uber.org/automaxprocs/internal/cgroups"
+	"github.com/emadolsky/automaxprocs/maxprocs"
 )
 
-// CPUQuotaToGOMAXPROCS converts the CPU quota applied to the calling process
-// to a valid GOMAXPROCS value.
-func CPUQuotaToGOMAXPROCS(minValue int) (int, CPUQuotaStatus, error) {
-	cgroups, err := cg.NewCGroupsForCurrentProcess()
-	if err != nil {
-		return -1, CPUQuotaUndefined, err
-	}
-
-	quota, defined, err := cgroups.CPUQuota()
-	if !defined || err != nil {
-		return -1, CPUQuotaUndefined, err
-	}
-
-	maxProcs := int(math.Floor(quota))
-	if minValue > 0 && maxProcs < minValue {
-		return minValue, CPUQuotaMinUsed, nil
-	}
-	return maxProcs, CPUQuotaUsed, nil
+func init() {
+	maxprocs.Set(maxprocs.Logger(log.Printf))
 }

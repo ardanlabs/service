@@ -18,13 +18,13 @@ import (
 	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/ardanlabs/service/foundation/keystore"
 	"github.com/ardanlabs/service/foundation/logger"
+	"github.com/emadolsky/automaxprocs/maxprocs"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/zipkin"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
-	"go.uber.org/automaxprocs/maxprocs"
 	"go.uber.org/zap"
 )
 

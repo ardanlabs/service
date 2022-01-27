@@ -6,6 +6,7 @@ require (
 	github.com/ardanlabs/conf/v3 v3.1.1
 	github.com/ardanlabs/darwin v1.3.0
 	github.com/dimfeld/httptreemux/v5 v5.4.0
+	github.com/emadolsky/automaxprocs v1.4.1-0.20220104203543-349281033d17
 	github.com/go-playground/locales v0.14.0
 	github.com/go-playground/universal-translator v0.18.0
 	github.com/go-playground/validator/v10 v10.10.0
@@ -19,7 +20,6 @@ require (
 	go.opentelemetry.io/otel/exporters/zipkin v1.3.0
 	go.opentelemetry.io/otel/sdk v1.3.0
 	go.opentelemetry.io/otel/trace v1.3.0
-	go.uber.org/automaxprocs v1.4.0
 	go.uber.org/zap v1.20.0
 	golang.org/x/crypto v0.0.0-20220112180741-5e0467b6c7ce
 
