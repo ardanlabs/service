@@ -9,7 +9,6 @@ github.com/ardanlabs/darwin
 github.com/dimfeld/httptreemux/v5
 # github.com/emadolsky/automaxprocs v1.4.1-0.20220104203543-349281033d17
 ## explicit; go 1.13
-github.com/emadolsky/automaxprocs
 github.com/emadolsky/automaxprocs/internal/cgroups
 github.com/emadolsky/automaxprocs/internal/runtime
 github.com/emadolsky/automaxprocs/maxprocs
