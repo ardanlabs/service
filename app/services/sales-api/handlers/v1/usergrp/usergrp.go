@@ -34,6 +34,9 @@ func (h Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Req
 
 	usr, err := h.User.Create(ctx, nu, v.Now)
 	if err != nil {
+		if errors.Is(err, user.ErrUniqueEmail) {
+			return v1Web.NewRequestError(err, http.StatusConflict)
+		}
 		return fmt.Errorf("user[%+v]: %w", &usr, err)
 	}
 

@@ -399,6 +399,9 @@ func (ut *UserTests) crudUser(t *testing.T) {
 	nu := ut.postUser201(t)
 	defer ut.deleteUser204(t, nu.ID)
 
+	nu = ut.postUser409(t)
+	defer ut.deleteUser204(t, nu.ID)
+
 	ut.getUser200(t, nu.ID)
 	ut.putUser204(t, nu.ID)
 	ut.putUser403(t, nu.ID)
@@ -453,6 +456,75 @@ func (ut *UserTests) postUser201(t *testing.T) user.User {
 				t.Fatalf("\t%s\tTest %d:\tShould get the expected result. Diff:\n%s", dbtest.Failed, testID, diff)
 			}
 			t.Logf("\t%s\tTest %d:\tShould get the expected result.", dbtest.Success, testID)
+		}
+	}
+
+	return got
+}
+
+// postUser409 validates a user email field is unique.
+func (ut *UserTests) postUser409(t *testing.T) user.User {
+	nu := user.NewUser{
+		Name:            "Bill Kennedy",
+		Email:           "bill@ardanlabs.com",
+		Roles:           []string{auth.RoleAdmin},
+		Password:        "gophers",
+		PasswordConfirm: "gophers",
+	}
+
+	body, err := json.Marshal(&nu)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	r := httptest.NewRequest(http.MethodPost, "/v1/users", bytes.NewBuffer(body))
+	w := httptest.NewRecorder()
+
+	r.Header.Set("Authorization", "Bearer "+ut.adminToken)
+	ut.app.ServeHTTP(w, r)
+
+	// This needs to be returned for other dbtest.
+	var got user.User
+
+	t.Log("Given the need to create a new user with the users endpoint.")
+	{
+		testID := 0
+		t.Logf("\tTest %d:\tWhen using the declared user value.", testID)
+		{
+			if w.Code != http.StatusCreated {
+				t.Fatalf("\t%s\tTest %d:\tShould receive a status code of 201 for the response : %v", dbtest.Failed, testID, w.Code)
+			}
+			t.Logf("\t%s\tTest %d:\tShould receive a status code of 201 for the response.", dbtest.Success, testID)
+
+			if err := json.NewDecoder(w.Body).Decode(&got); err != nil {
+				t.Fatalf("\t%s\tTest %d:\tShould be able to unmarshal the response : %v", dbtest.Failed, testID, err)
+			}
+
+			// Define what we wanted to receive. We will just trust the generated
+			// fields like ID and Dates so we copy u.
+			exp := got
+			exp.Name = "Bill Kennedy"
+			exp.Email = "bill@ardanlabs.com"
+			exp.Roles = []string{auth.RoleAdmin}
+
+			if diff := cmp.Diff(got, exp); diff != "" {
+				t.Fatalf("\t%s\tTest %d:\tShould get the expected result. Diff:\n%s", dbtest.Failed, testID, diff)
+			}
+			t.Logf("\t%s\tTest %d:\tShould get the expected result.", dbtest.Success, testID)
+		}
+	}
+
+	ut.app.ServeHTTP(w, r)
+	t.Log("Given the need to create a new user with a unique email with the users endpoint.")
+	{
+		testID := 1
+		t.Logf("\tTest %d:\tWhen using the same declared user value.", testID)
+		{
+			if w.Code != http.StatusConflict {
+				t.Fatalf("\t%s\tTest %d:\tShould receive a status code of 409 for the response : %v", dbtest.Failed, testID, w.Code)
+			}
+			t.Logf("\t%s\tTest %d:\tShould receive a status code of 409 for the response.", dbtest.Success, testID)
+
 		}
 	}
 
