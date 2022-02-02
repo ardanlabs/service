@@ -129,6 +129,10 @@ func WithinTran(ctx context.Context, log *zap.SugaredLogger, db Transactor, fn f
 	// Execute the code inside the transaction. If the function
 	// fails, return the error and the defer function will roll back.
 	if err := fn(tx); err != nil {
+		// Checks if the error is of code 23505 (unique_violation).
+		if pqerr, ok := err.(*pq.Error); ok && pqerr.Code == uniqueViolation {
+			return ErrDBDuplicatedEntry
+		}
 		return fmt.Errorf("exec tran: %w", err)
 	}
 
