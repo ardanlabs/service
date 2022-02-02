@@ -23,6 +23,8 @@ import (
 var (
 	ErrNotFound              = errors.New("user not found")
 	ErrInvalidID             = errors.New("ID is not in its proper form")
+	ErrInvalidEmail          = errors.New("email is not valid")
+	ErrUniqueEmail           = errors.New("email is not unique")
 	ErrAuthenticationFailure = errors.New("authentication failed")
 )
 
@@ -62,6 +64,9 @@ func (c Core) Create(ctx context.Context, nu NewUser, now time.Time) (User, erro
 	// This provides an example of how to execute a transaction if required.
 	tran := func(tx sqlx.ExtContext) error {
 		if err := c.store.Tran(tx).Create(ctx, dbUsr); err != nil {
+			if errors.Is(err, database.ErrDBDuplicatedEntry) {
+				return fmt.Errorf("create: %w", ErrUniqueEmail)
+			}
 			return fmt.Errorf("create: %w", err)
 		}
 		return nil
@@ -111,6 +116,9 @@ func (c Core) Update(ctx context.Context, userID string, uu UpdateUser, now time
 	dbUsr.DateUpdated = now
 
 	if err := c.store.Update(ctx, dbUsr); err != nil {
+		if errors.Is(err, database.ErrDBDuplicatedEntry) {
+			return fmt.Errorf("updating user userID[%s]: %w", userID, ErrUniqueEmail)
+		}
 		return fmt.Errorf("update: %w", err)
 	}
 
@@ -160,10 +168,10 @@ func (c Core) QueryByID(ctx context.Context, userID string) (User, error) {
 // QueryByEmail gets the specified user from the database by email.
 func (c Core) QueryByEmail(ctx context.Context, email string) (User, error) {
 
-	// Add Email Validate function in validate
-	// if err := validate.Email(email); err != nil {
-	// 	return User{}, ErrInvalidEmail
-	// }
+	// Email Validate function in validate.
+	if !validate.CheckEmail(email) {
+		return User{}, ErrInvalidEmail
+	}
 
 	dbUsr, err := c.store.QueryByEmail(ctx, email)
 	if err != nil {

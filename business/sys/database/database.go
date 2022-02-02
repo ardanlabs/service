@@ -12,9 +12,13 @@ import (
 
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/jmoiron/sqlx"
-	_ "github.com/lib/pq" // Calls init function.
+	"github.com/lib/pq" // Calls init function.
 	"go.uber.org/zap"
 )
+
+// lib/pq errorCodeNames
+// https://github.com/lib/pq/blob/master/error.go#L178
+const uniqueViolation = "23505"
 
 // Set of error variables for CRUD operations.
 var (
@@ -125,6 +129,11 @@ func WithinTran(ctx context.Context, log *zap.SugaredLogger, db Transactor, fn f
 	// Execute the code inside the transaction. If the function
 	// fails, return the error and the defer function will roll back.
 	if err := fn(tx); err != nil {
+
+		// Checks if the error is of code 23505 (unique_violation).
+		if pqerr, ok := err.(*pq.Error); ok && pqerr.Code == uniqueViolation {
+			return ErrDBDuplicatedEntry
+		}
 		return fmt.Errorf("exec tran: %w", err)
 	}
 
@@ -147,6 +156,11 @@ func NamedExecContext(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtCo
 	log.Infow("database.NamedExecContext", "traceid", web.GetTraceID(ctx), "query", q)
 
 	if _, err := sqlx.NamedExecContext(ctx, db, query, data); err != nil {
+
+		// Checks if the error is of code 23505 (unique_violation).
+		if pqerr, ok := err.(*pq.Error); ok && pqerr.Code == uniqueViolation {
+			return ErrDBDuplicatedEntry
+		}
 		return err
 	}
 

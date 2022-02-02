@@ -399,6 +399,8 @@ func (ut *UserTests) crudUser(t *testing.T) {
 	nu := ut.postUser201(t)
 	defer ut.deleteUser204(t, nu.ID)
 
+	ut.postUser409(t, nu)
+
 	ut.getUser200(t, nu.ID)
 	ut.putUser204(t, nu.ID)
 	ut.putUser403(t, nu.ID)
@@ -457,6 +459,41 @@ func (ut *UserTests) postUser201(t *testing.T) user.User {
 	}
 
 	return got
+}
+
+// postUser409 validates a user email field is unique.
+func (ut *UserTests) postUser409(t *testing.T, usr user.User) {
+	nu := user.NewUser{
+		Name:            usr.Name,
+		Email:           usr.Email,
+		Roles:           usr.Roles,
+		Password:        "gophers",
+		PasswordConfirm: "gophers",
+	}
+
+	body, err := json.Marshal(&nu)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	r := httptest.NewRequest(http.MethodPost, "/v1/users", bytes.NewBuffer(body))
+	w := httptest.NewRecorder()
+
+	r.Header.Set("Authorization", "Bearer "+ut.adminToken)
+	ut.app.ServeHTTP(w, r)
+
+	t.Log("Given the need to create a new user with a unique email with the users endpoint.")
+	{
+		testID := 0
+		t.Logf("\tTest %d:\tWhen using the same declared user value.", testID)
+		{
+			if w.Code != http.StatusConflict {
+				t.Fatalf("\t%s\tTest %d:\tShould receive a status code of 409 for the response : %v", dbtest.Failed, testID, w.Code)
+			}
+			t.Logf("\t%s\tTest %d:\tShould receive a status code of 409 for the response.", dbtest.Success, testID)
+
+		}
+	}
 }
 
 // deleteUser204 validates deleting a user that does exist.
