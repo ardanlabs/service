@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/lib/pq"
 	"net/url"
 	"reflect"
 	"strings"
@@ -12,7 +13,6 @@ import (
 
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/jmoiron/sqlx"
-	"github.com/lib/pq"
 	_ "github.com/lib/pq" // Calls init function.
 	"go.uber.org/zap"
 )
