@@ -462,8 +462,14 @@ func (ut *UserTests) postUser201(t *testing.T) user.User {
 }
 
 // postUser409 validates a user email field is unique.
-func (ut *UserTests) postUser409(t *testing.T, user user.User) {
-	nu := user
+func (ut *UserTests) postUser409(t *testing.T, usr user.User) {
+	nu := user.NewUser{
+		Name:            usr.Name,
+		Email:           usr.Email,
+		Roles:           usr.Roles,
+		Password:        "gophers",
+		PasswordConfirm: "gophers",
+	}
 
 	body, err := json.Marshal(&nu)
 	if err != nil {
