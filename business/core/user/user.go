@@ -23,6 +23,7 @@ import (
 var (
 	ErrNotFound              = errors.New("user not found")
 	ErrInvalidID             = errors.New("ID is not in its proper form")
+	ErrInvalidEmail          = errors.New("email is not valid")
 	ErrUniqueEmail           = errors.New("email is not unique")
 	ErrAuthenticationFailure = errors.New("authentication failed")
 )
@@ -167,10 +168,10 @@ func (c Core) QueryByID(ctx context.Context, userID string) (User, error) {
 // QueryByEmail gets the specified user from the database by email.
 func (c Core) QueryByEmail(ctx context.Context, email string) (User, error) {
 
-	// Add Email Validate function in validate
-	// if err := validate.Email(email); err != nil {
-	// 	return User{}, ErrInvalidEmail
-	// }
+	// Email Validate function in validate.
+	if !validate.CheckEmail(email) {
+		return User{}, ErrInvalidEmail
+	}
 
 	dbUsr, err := c.store.QueryByEmail(ctx, email)
 	if err != nil {
