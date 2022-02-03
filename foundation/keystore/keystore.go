@@ -41,9 +41,7 @@ func NewMap(store map[string]*rsa.PrivateKey) *KeyStore {
 // Example: keystore.NewFS(os.DirFS("/zarf/keys/"))
 // Example: /zarf/keys/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1.pem
 func NewFS(fsys fs.FS) (*KeyStore, error) {
-	ks := KeyStore{
-		store: make(map[string]*rsa.PrivateKey),
-	}
+	ks := New()
 
 	fn := func(fileName string, dirEntry fs.DirEntry, err error) error {
 		if err != nil {
@@ -85,7 +83,7 @@ func NewFS(fsys fs.FS) (*KeyStore, error) {
 		return nil, fmt.Errorf("walking directory: %w", err)
 	}
 
-	return &ks, nil
+	return ks, nil
 }
 
 // Add adds a private key and combination kid to the store.
