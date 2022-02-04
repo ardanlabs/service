@@ -9,6 +9,7 @@ SHELL := /bin/bash
 # curl -H "Authorization: Bearer ${TOKEN}" http://localhost:3000/v1/users/1/2
 #
 # For testing load on the service.
+# go install github.com/rakyll/hey@latest
 # hey -m GET -c 100 -n 10000 -H "Authorization: Bearer ${TOKEN}" http://localhost:3000/v1/users/1/2
 #
 # Access metrics directly (4000) or through the sidecar (3001)
@@ -31,6 +32,9 @@ SHELL := /bin/bash
 #
 # Running pgcli client for database.
 # pgcli postgresql://postgres:postgres@localhost
+#
+# Launch zipkin.
+# http://localhost:9411/zipkin/
 
 # ==============================================================================
 # Building containers
@@ -106,6 +110,9 @@ kind-logs:
 
 kind-logs-sales:
 	kubectl logs -l app=sales --all-containers=true -f --tail=100 | go run app/tooling/logfmt/main.go -service=SALES-API
+
+kind-logs-metrics:
+	kubectl logs -l app=sales --all-containers=true -f --tail=100 | go run app/tooling/logfmt/main.go -service=METRICS
 
 kind-logs-db:
 	kubectl logs -l app=database --namespace=database-system --all-containers=true -f --tail=100
