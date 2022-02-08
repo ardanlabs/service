@@ -1,4 +1,4 @@
-// Package metrics cosntructs the metrics the application will track.
+// Package metrics constructs the metrics the application will track.
 package metrics
 
 import (
