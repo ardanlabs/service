@@ -43,6 +43,7 @@ SHELL := /bin/bash
 dev.setup.mac:
 	brew update
 	brew list kind || brew install kind
+	brew list kubectl || brew install kubectl
 	brew list kustomize || brew install kustomize
 
 
