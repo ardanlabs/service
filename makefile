@@ -36,6 +36,16 @@ SHELL := /bin/bash
 # Launch zipkin.
 # http://localhost:9411/zipkin/
 
+
+# ==============================================================================
+# Install dependencies
+
+dev.setup.mac:
+	brew update
+	brew list kind || brew install kind
+	brew list kustomize || brew install kustomize
+
+
 # ==============================================================================
 # Building containers
 
