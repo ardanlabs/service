@@ -80,6 +80,8 @@ func (h Handlers) Liveness(w http.ResponseWriter, r *http.Request) {
 		h.Log.Errorw("liveness", "ERROR", err)
 	}
 
+	// THIS IS A FREE TIMER. WE COULD UPDATE THE METRIC GOROUTINE COUNT HERE.
+
 	h.Log.Infow("liveness", "statusCode", statusCode, "method", r.Method, "path", r.URL.Path, "remoteaddr", r.RemoteAddr)
 }
 

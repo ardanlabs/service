@@ -30,7 +30,6 @@ import (
 
 /*
 	Need to figure out timeouts for http service.
-	Look at using liveness to keep metric.Goroutines up to date.
 */
 
 // build is the git version of this program. It is set using build flags in the makefile.
