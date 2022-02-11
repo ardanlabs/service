@@ -82,11 +82,13 @@ func extractIPPort(id string, port string) (hostIP string, hostPort string, err 
 		return "", "", fmt.Errorf("could not inspect container %s: %w", id, err)
 	}
 
-	// {"HostIp":"0.0.0.0","HostPort":"55000"}
-	var doc map[string]interface{}
+	var doc struct {
+		HostIP   string
+		HostPort string
+	}
 	if err := json.Unmarshal(out.Bytes(), &doc); err != nil {
 		return "", "", fmt.Errorf("could not decode json: %w", err)
 	}
 
-	return doc["HostIp"].(string), doc["HostPort"].(string), nil
+	return doc.HostIP, doc.HostPort, nil
 }
