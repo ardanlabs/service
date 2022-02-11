@@ -73,42 +73,20 @@ func DumpContainerLogs(t *testing.T, id string) {
 }
 
 func extractIPPort(id string, port string) (hostIP string, hostPort string, err error) {
-	cmd := exec.Command("docker", "inspect", "-f", "{{json .NetworkSettings.Ports}}", id)
+	tmpl := fmt.Sprintf("{{range $k,$v := (index .NetworkSettings.Ports \"%s/tcp\")}}{{json $v}}{{end}}", port)
+
+	cmd := exec.Command("docker", "inspect", "-f", tmpl, id)
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	if err := cmd.Run(); err != nil {
 		return "", "", fmt.Errorf("could not inspect container %s: %w", id, err)
 	}
 
-	s := out.Bytes()
-	fmt.Println(string(s))
-
-	// {"5432/tcp":[{"HostIp":"0.0.0.0","HostPort":"55000"}],"9080/tcp":null}
+	// {"HostIp":"0.0.0.0","HostPort":"55000"}
 	var doc map[string]interface{}
-	if err := json.Unmarshal(s, &doc); err != nil {
+	if err := json.Unmarshal(out.Bytes(), &doc); err != nil {
 		return "", "", fmt.Errorf("could not decode json: %w", err)
 	}
 
-	// [{"HostIp":"0.0.0.0","HostPort":"55000"}]
-	tcp, exists := doc[port+"/tcp"]
-	if !exists {
-		return "", "", fmt.Errorf("could not find %q", port+"/tcp")
-	}
-
-	// [{"HostIp":"0.0.0.0","HostPort":"55000"}]
-	list, exists := tcp.([]interface{})
-	if !exists {
-		return "", "", fmt.Errorf("could not find host list information")
-	}
-
-	// {"HostIp":"0.0.0.0","HostPort":"55000"}
-	data, exists := list[0].(map[string]interface{})
-	if !exists {
-		return "", "", fmt.Errorf("could not find host information")
-	}
-
-	hostIP = data["HostIp"].(string)
-	hostPort = data["HostPort"].(string)
-
-	return hostIP, hostPort, nil
+	return doc["HostIp"].(string), doc["HostPort"].(string), nil
 }
