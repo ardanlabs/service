@@ -31,24 +31,14 @@ func StartContainer(image string, port string, args ...string) (*Container, erro
 	}
 
 	id := out.String()[:12]
-
-	cmd = exec.Command("docker", "inspect", id)
-	out.Reset()
-	cmd.Stdout = &out
-	if err := cmd.Run(); err != nil {
-		return nil, fmt.Errorf("could not inspect container %s: %w", id, err)
+	hostIp, hostPort, err := extractIPPort(id, port)
+	if err != nil {
+		return nil, fmt.Errorf("could not extract ip/port: %w", err)
 	}
-
-	var doc []map[string]interface{}
-	if err := json.Unmarshal(out.Bytes(), &doc); err != nil {
-		return nil, fmt.Errorf("could not decode json: %w", err)
-	}
-
-	ip, randPort := extractIPPort(doc, port)
 
 	c := Container{
 		ID:   id,
-		Host: net.JoinHostPort(ip, randPort),
+		Host: net.JoinHostPort(hostIp, hostPort),
 	}
 
 	fmt.Printf("Image:       %s\n", image)
@@ -82,36 +72,43 @@ func DumpContainerLogs(t *testing.T, id string) {
 	t.Logf("Logs for %s\n%s:", id, out)
 }
 
-func extractIPPort(doc []map[string]interface{}, port string) (string, string) {
-	nw, exists := doc[0]["NetworkSettings"]
-	if !exists {
-		return "", ""
+func extractIPPort(id string, port string) (hostIP string, hostPort string, err error) {
+	cmd := exec.Command("docker", "inspect", "-f", "{{json .NetworkSettings.Ports}}", id)
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	if err := cmd.Run(); err != nil {
+		return "", "", fmt.Errorf("could not inspect container %s: %w", id, err)
 	}
-	ports, exists := nw.(map[string]interface{})["Ports"]
-	if !exists {
-		return "", ""
+
+	s := out.Bytes()
+	fmt.Println(string(s))
+
+	// {"5432/tcp":[{"HostIp":"0.0.0.0","HostPort":"55000"}],"9080/tcp":null}
+	var doc map[string]interface{}
+	if err := json.Unmarshal(s, &doc); err != nil {
+		return "", "", fmt.Errorf("could not decode json: %w", err)
 	}
-	tcp, exists := ports.(map[string]interface{})[port+"/tcp"]
+
+	// [{"HostIp":"0.0.0.0","HostPort":"55000"}]
+	tcp, exists := doc[port+"/tcp"]
 	if !exists {
-		return "", ""
+		return "", "", fmt.Errorf("could not find %q", port+"/tcp")
 	}
+
+	// [{"HostIp":"0.0.0.0","HostPort":"55000"}]
 	list, exists := tcp.([]interface{})
 	if !exists {
-		return "", ""
+		return "", "", fmt.Errorf("could not find host list information")
 	}
 
-	var hostIP string
-	var hostPort string
-	for _, l := range list {
-		data, exists := l.(map[string]interface{})
-		if !exists {
-			return "", ""
-		}
-		hostIP = data["HostIp"].(string)
-		if hostIP != "::" {
-			hostPort = data["HostPort"].(string)
-		}
+	// {"HostIp":"0.0.0.0","HostPort":"55000"}
+	data, exists := list[0].(map[string]interface{})
+	if !exists {
+		return "", "", fmt.Errorf("could not find host information")
 	}
 
-	return hostIP, hostPort
+	hostIP = data["HostIp"].(string)
+	hostPort = data["HostPort"].(string)
+
+	return hostIP, hostPort, nil
 }
