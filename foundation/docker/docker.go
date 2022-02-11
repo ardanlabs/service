@@ -31,14 +31,14 @@ func StartContainer(image string, port string, args ...string) (*Container, erro
 	}
 
 	id := out.String()[:12]
-	hostIp, hostPort, err := extractIPPort(id, port)
+	hostIP, hostPort, err := extractIPPort(id, port)
 	if err != nil {
 		return nil, fmt.Errorf("could not extract ip/port: %w", err)
 	}
 
 	c := Container{
 		ID:   id,
-		Host: net.JoinHostPort(hostIp, hostPort),
+		Host: net.JoinHostPort(hostIP, hostPort),
 	}
 
 	fmt.Printf("Image:       %s\n", image)
