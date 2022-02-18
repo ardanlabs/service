@@ -289,7 +289,7 @@ func startTracing(serviceName string, reporterURI string, probability float64) (
 		trace.WithSampler(trace.TraceIDRatioBased(probability)),
 		trace.WithBatcher(exporter,
 			trace.WithMaxExportBatchSize(trace.DefaultMaxExportBatchSize),
-			trace.WithBatchTimeout(trace.DefaultBatchTimeout),
+			trace.WithBatchTimeout(trace.DefaultScheduleDelay*time.Millisecond),
 			trace.WithMaxExportBatchSize(trace.DefaultMaxExportBatchSize),
 		),
 		trace.WithResource(

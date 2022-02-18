@@ -12,15 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package otelhttp
+package zipkin // import "go.opentelemetry.io/otel/exporters/zipkin"
 
-// Version is the current release version of the otelhttp instrumentation.
-func Version() string {
-	return "0.29.0"
-	// This string is updated by the pre_release.sh script during release
-}
+import "os"
 
-// SemVersion is the semantic version to be supplied to tracer/meter creation.
-func SemVersion() string {
-	return "semver:" + Version()
+// Environment variable names
+const (
+	// Endpoint for Zipkin collector
+	envEndpoint = "OTEL_EXPORTER_ZIPKIN_ENDPOINT"
+)
+
+// envOr returns an env variable's value if it is exists or the default if not
+func envOr(key, defaultValue string) string {
+	if v, ok := os.LookupEnv(key); ok && v != "" {
+		return v
+	}
+	return defaultValue
 }
