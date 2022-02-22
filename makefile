@@ -31,6 +31,7 @@ SHELL := /bin/bash
 # curl http://localhost:4000/debug/readiness
 #
 # Running pgcli client for database.
+# brew install pgcli
 # pgcli postgresql://postgres:postgres@localhost
 #
 # Launch zipkin.
@@ -45,7 +46,6 @@ dev.setup.mac:
 	brew list kind || brew install kind
 	brew list kubectl || brew install kubectl
 	brew list kustomize || brew install kustomize
-
 
 # ==============================================================================
 # Building containers

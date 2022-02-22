@@ -127,12 +127,14 @@ func extractFields(prefix []string, target interface{}) ([]Field, error) {
 			fields = append(fields, innerFields...)
 
 		default:
-			envKey := fieldKey
+			envKey := make([]string, len(fieldKey))
+			copy(envKey, fieldKey)
 			if fieldOpts.EnvName != "" {
 				envKey = strings.Split(fieldOpts.EnvName, "_")
 			}
 
-			flagKey := fieldKey
+			flagKey := make([]string, len(fieldKey))
+			copy(flagKey, fieldKey)
 			if fieldOpts.FlagName != "" {
 				flagKey = strings.Split(fieldOpts.FlagName, "-")
 			}
