@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net"
 	"os/exec"
+	"strings"
 	"testing"
 )
 
@@ -73,7 +74,7 @@ func DumpContainerLogs(t *testing.T, id string) {
 }
 
 func extractIPPort(id string, port string) (hostIP string, hostPort string, err error) {
-	tmpl := fmt.Sprintf("{{range $k,$v := (index .NetworkSettings.Ports \"%s/tcp\")}}{{json $v}}{{end}}", port)
+	tmpl := fmt.Sprintf("[{{range $k,$v := (index .NetworkSettings.Ports \"%s/tcp\")}}{{json $v}}{{end}},]", port)
 
 	cmd := exec.Command("docker", "inspect", "-f", tmpl, id)
 	var out bytes.Buffer
@@ -82,13 +83,23 @@ func extractIPPort(id string, port string) (hostIP string, hostPort string, err 
 		return "", "", fmt.Errorf("could not inspect container %s: %w", id, err)
 	}
 
-	var doc struct {
+	// There will be a leading comma. The comma is necessary if IPv6 is present.
+	// [{"HostIp":"0.0.0.0","HostPort":"49190"},{"HostIp":"::","HostPort":"49190"},]
+	data := strings.Replace(out.String(), ",]", "]", 1)
+
+	var docs []struct {
 		HostIP   string
 		HostPort string
 	}
-	if err := json.Unmarshal(out.Bytes(), &doc); err != nil {
+	if err := json.Unmarshal([]byte(data), &docs); err != nil {
 		return "", "", fmt.Errorf("could not decode json: %w", err)
 	}
 
-	return doc.HostIP, doc.HostPort, nil
+	for _, doc := range docs {
+		if doc.HostIP != "::" {
+			return doc.HostIP, doc.HostPort, nil
+		}
+	}
+
+	return "", "", fmt.Errorf("could not locate ip/port")
 }
