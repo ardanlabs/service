@@ -74,7 +74,7 @@ func DumpContainerLogs(t *testing.T, id string) {
 }
 
 func extractIPPort(id string, port string) (hostIP string, hostPort string, err error) {
-	tmpl := fmt.Sprintf("{{range $k,$v := (index .NetworkSettings.Ports \"%s/tcp\")}}[{{json $v}},]{{end}}", port)
+	tmpl := fmt.Sprintf("[{{range $k,$v := (index .NetworkSettings.Ports \"%s/tcp\")}}{{json $v}}{{end}}]", port)
 
 	cmd := exec.Command("docker", "inspect", "-f", tmpl, id)
 	var out bytes.Buffer
@@ -83,9 +83,10 @@ func extractIPPort(id string, port string) (hostIP string, hostPort string, err 
 		return "", "", fmt.Errorf("could not inspect container %s: %w", id, err)
 	}
 
-	// There will be a leading comma. The comma is necessary if IPv6 is present.
-	// [{"HostIp":"0.0.0.0","HostPort":"49190"},{"HostIp":"::","HostPort":"49190"},]
-	data := strings.Replace(out.String(), ",]", "]", 1)
+	// When IPv6 is turned on with Docker.
+	// Got  [{"HostIp":"0.0.0.0","HostPort":"49190"}{"HostIp":"::","HostPort":"49190"}]
+	// Need [{"HostIp":"0.0.0.0","HostPort":"49190"},{"HostIp":"::","HostPort":"49190"}]
+	data := strings.ReplaceAll(out.String(), "}{", "},{")
 
 	var docs []struct {
 		HostIP   string
