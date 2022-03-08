@@ -74,7 +74,7 @@ func DumpContainerLogs(t *testing.T, id string) {
 }
 
 func extractIPPort(id string, port string) (hostIP string, hostPort string, err error) {
-	tmpl := fmt.Sprintf("[{{range $k,$v := (index .NetworkSettings.Ports \"%s/tcp\")}}{{json $v}}{{end}},]", port)
+	tmpl := fmt.Sprintf("{{range $k,$v := (index .NetworkSettings.Ports \"%s/tcp\")}}[{{json $v}},]{{end}}", port)
 
 	cmd := exec.Command("docker", "inspect", "-f", tmpl, id)
 	var out bytes.Buffer
