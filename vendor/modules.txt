@@ -30,7 +30,7 @@ github.com/go-playground/locales/en
 # github.com/go-playground/universal-translator v0.18.0
 ## explicit; go 1.13
 github.com/go-playground/universal-translator
-# github.com/go-playground/validator/v10 v10.10.0
+# github.com/go-playground/validator/v10 v10.10.1
 ## explicit; go 1.13
 github.com/go-playground/validator/v10
 github.com/go-playground/validator/v10/translations/en
@@ -107,7 +107,7 @@ go.opentelemetry.io/otel/trace
 # go.uber.org/atomic v1.9.0
 ## explicit; go 1.13
 go.uber.org/atomic
-# go.uber.org/multierr v1.7.0
+# go.uber.org/multierr v1.8.0
 ## explicit; go 1.14
 go.uber.org/multierr
 # go.uber.org/zap v1.21.0
@@ -118,12 +118,12 @@ go.uber.org/zap/internal/bufferpool
 go.uber.org/zap/internal/color
 go.uber.org/zap/internal/exit
 go.uber.org/zap/zapcore
-# golang.org/x/crypto v0.0.0-20220214200702-86341886e292
+# golang.org/x/crypto v0.0.0-20220314234724-5d542ad81a58
 ## explicit; go 1.17
 golang.org/x/crypto/bcrypt
 golang.org/x/crypto/blowfish
 golang.org/x/crypto/sha3
-# golang.org/x/sys v0.0.0-20220209214540-3681064d5158
+# golang.org/x/sys v0.0.0-20220310020820-b874c991c1a5
 ## explicit; go 1.17
 golang.org/x/sys/cpu
 golang.org/x/sys/internal/unsafeheader
