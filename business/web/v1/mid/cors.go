@@ -10,9 +10,9 @@ import (
 /*
 	// This handler needs to be set to be fully compliant with CORS. Do this
 	// in the Routes function.
-	app.OptionsHandler = func(w http.ResponseWriter, r *http.Request, params map[string]string) {
+	app.OptionsHandler(func(w http.ResponseWriter, r *http.Request, params map[string]string) {
 		w.WriteHeader(http.StatusOK)
-	}
+	})
 */
 
 // Cors sets the response headers needed for Cross-Origin Resource Sharing

@@ -102,3 +102,8 @@ func (a *App) Handle(method string, group string, path string, handler Handler, 
 	}
 	a.mux.Handle(method, finalPath, h)
 }
+
+// OptionsHandler assigns the given HandlerFunc to any OPTIONS request without its own OPTIONS handler.
+func (a *App) OptionsHandler(h httptreemux.HandlerFunc) {
+	a.mux.OptionsHandler = h
+}
