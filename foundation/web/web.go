@@ -103,7 +103,19 @@ func (a *App) Handle(method string, group string, path string, handler Handler, 
 	a.mux.Handle(method, finalPath, h)
 }
 
-// OptionsHandler assigns the given HandlerFunc to any OPTIONS request without its own OPTIONS handler.
-func (a *App) OptionsHandler(h httptreemux.HandlerFunc) {
+// OptionsHandler assigns the given Handler to respond to Option requests.
+func (a *App) OptionsHandler(handler Handler) {
+	h := func(w http.ResponseWriter, r *http.Request, params map[string]string) {
+		handler(r.Context(), w, r)
+	}
+
 	a.mux.OptionsHandler = h
+}
+
+// OptionsHandlerAll returns a 200 Status OK for all Option requests.
+func (a *App) OptionsHandlerAll() {
+	a.OptionsHandler(func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+		w.WriteHeader(http.StatusOK)
+		return nil
+	})
 }
