@@ -115,6 +115,10 @@ func (a *App) OptionsHandler(handler Handler) {
 // OptionsHandlerAll returns a 200 Status OK for all Option requests.
 func (a *App) OptionsHandlerAll() {
 	a.OptionsHandler(func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Origin, Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+
 		w.WriteHeader(http.StatusOK)
 		return nil
 	})
