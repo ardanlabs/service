@@ -55,7 +55,7 @@ func GenKey() error {
 		Bytes: asn1Bytes,
 	}
 
-	// Write the public key to the private key file.
+	// Write the public key to the public key file.
 	if err := pem.Encode(publicFile, &publicBlock); err != nil {
 		return fmt.Errorf("encoding to public file: %w", err)
 	}
