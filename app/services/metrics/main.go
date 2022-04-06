@@ -17,7 +17,7 @@ import (
 	"github.com/ardanlabs/service/app/services/metrics/publisher"
 	expvarsrv "github.com/ardanlabs/service/app/services/metrics/publisher/expvar"
 	"github.com/ardanlabs/service/foundation/logger"
-	"github.com/emadolsky/automaxprocs/maxprocs"
+	"go.uber.org/automaxprocs/maxprocs"
 	"go.uber.org/zap"
 )
 

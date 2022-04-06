@@ -21,13 +21,13 @@
 // Package maxprocs lets Go programs easily configure runtime.GOMAXPROCS to
 // match the configured Linux CPU quota. Unlike the top-level automaxprocs
 // package, it lets the caller configure logging and handle errors.
-package maxprocs // import "github.com/emadolsky/automaxprocs/maxprocs"
+package maxprocs // import "go.uber.org/automaxprocs/maxprocs"
 
 import (
 	"os"
 	"runtime"
 
-	iruntime "github.com/emadolsky/automaxprocs/internal/runtime"
+	iruntime "go.uber.org/automaxprocs/internal/runtime"
 )
 
 const _maxProcsKey = "GOMAXPROCS"
@@ -96,7 +96,7 @@ func Set(opts ...Option) (func(), error) {
 	// Honor the GOMAXPROCS environment variable if present. Otherwise, amend
 	// `runtime.GOMAXPROCS()` with the current process' CPU quota if the OS is
 	// Linux, and guarantee a minimum value of 1. The minimum guaranteed value
-	// can be overriden using `maxprocs.Min()`.
+	// can be overridden using `maxprocs.Min()`.
 	if max, exists := os.LookupEnv(_maxProcsKey); exists {
 		cfg.log("maxprocs: Honoring GOMAXPROCS=%q as set in environment", max)
 		return undoNoop, nil
