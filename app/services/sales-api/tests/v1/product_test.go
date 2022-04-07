@@ -26,13 +26,13 @@ type ProductTests struct {
 	userToken string
 }
 
-// TestProducts runs a series of tests to exercise Product behavior from the
+// Test_Products runs a series of tests to exercise Product behavior from the
 // API level. The subtests all share the same database and application for
 // speed and convenience. The downside is the order the tests are ran matters
 // and one test may break if other tests are not ran before it. If a particular
 // subtest needs a fresh instance of the application it can make it or it
 // should be its own Test* function.
-func TestProducts(t *testing.T) {
+func Test_Products(t *testing.T) {
 	t.Parallel()
 
 	test := dbtest.NewIntegration(t, c, "inttestprods")

@@ -27,7 +27,7 @@ func TestMain(m *testing.M) {
 	m.Run()
 }
 
-func TestProduct(t *testing.T) {
+func Test_Product(t *testing.T) {
 	log, db, teardown := dbtest.NewUnit(t, c, "testprod")
 	t.Cleanup(teardown)
 

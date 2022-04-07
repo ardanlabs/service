@@ -16,7 +16,7 @@ const (
 //go:embed *.pem
 var keyDocs embed.FS
 
-func TestRead(t *testing.T) {
+func Test_Read(t *testing.T) {
 	t.Log("Given the need to parse a directory of private key files.")
 	{
 		testID := 0

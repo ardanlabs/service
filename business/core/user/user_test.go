@@ -29,7 +29,7 @@ func TestMain(m *testing.M) {
 	m.Run()
 }
 
-func TestUser(t *testing.T) {
+func Test_User(t *testing.T) {
 	log, db, teardown := dbtest.NewUnit(t, c, "testuser")
 	t.Cleanup(teardown)
 
@@ -114,7 +114,7 @@ func TestUser(t *testing.T) {
 	}
 }
 
-func TestPagingUser(t *testing.T) {
+func Test_PagingUser(t *testing.T) {
 	log, db, teardown := dbtest.NewUnit(t, c, "testpaging")
 	t.Cleanup(teardown)
 

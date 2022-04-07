@@ -28,8 +28,8 @@ type UserTests struct {
 	adminToken string
 }
 
-// TestUsers is the entry point for testing user management functions.
-func TestUsers(t *testing.T) {
+// Test_Users is the entry point for testing user management functions.
+func Test_Users(t *testing.T) {
 	t.Parallel()
 
 	test := dbtest.NewIntegration(t, c, "inttestusers")

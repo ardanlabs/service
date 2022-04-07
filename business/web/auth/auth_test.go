@@ -16,7 +16,7 @@ const (
 	failed  = "\u2717"
 )
 
-func TestAuth(t *testing.T) {
+func Test_Auth(t *testing.T) {
 	t.Log("Given the need to be able to authenticate and authorize access.")
 	{
 		testID := 0

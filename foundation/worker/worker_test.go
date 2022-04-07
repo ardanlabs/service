@@ -17,7 +17,7 @@ const (
 
 var traceID = "00000000-0000-0000-0000-000000000000"
 
-func TestWorker(t *testing.T) {
+func Test_Worker(t *testing.T) {
 	t.Log("Given the need to start work and wait for it to complete.")
 	{
 		testID := 0
@@ -76,7 +76,7 @@ func TestWorker(t *testing.T) {
 	}
 }
 
-func TestCancelWorker(t *testing.T) {
+func Test_CancelWorker(t *testing.T) {
 	t.Log("Given the need to start work and cancel it on shutdown.")
 	{
 		testID := 0
@@ -128,7 +128,7 @@ func TestCancelWorker(t *testing.T) {
 	}
 }
 
-func TestStopWorker(t *testing.T) {
+func Test_StopWorker(t *testing.T) {
 	t.Log("Given the need to start work and stop work.")
 	{
 		testID := 0
