@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/core/user"
-	"github.com/ardanlabs/service/business/sys/auth"
 	"github.com/ardanlabs/service/business/sys/database"
+	"github.com/ardanlabs/service/business/web/auth"
 	"go.uber.org/zap"
 )
 

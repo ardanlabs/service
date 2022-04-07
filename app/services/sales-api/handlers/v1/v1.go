@@ -9,7 +9,7 @@ import (
 	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/usergrp"
 	"github.com/ardanlabs/service/business/core/product"
 	"github.com/ardanlabs/service/business/core/user"
-	"github.com/ardanlabs/service/business/sys/auth"
+	"github.com/ardanlabs/service/business/web/auth"
 	"github.com/ardanlabs/service/business/web/v1/mid"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/jmoiron/sqlx"

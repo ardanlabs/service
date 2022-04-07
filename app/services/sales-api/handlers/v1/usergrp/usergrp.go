@@ -9,7 +9,7 @@ import (
 	"strconv"
 
 	"github.com/ardanlabs/service/business/core/user"
-	"github.com/ardanlabs/service/business/sys/auth"
+	"github.com/ardanlabs/service/business/web/auth"
 	v1Web "github.com/ardanlabs/service/business/web/v1"
 	"github.com/ardanlabs/service/foundation/web"
 )

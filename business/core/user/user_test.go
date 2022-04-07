@@ -10,7 +10,7 @@ import (
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/data/dbschema"
 	"github.com/ardanlabs/service/business/data/dbtest"
-	"github.com/ardanlabs/service/business/sys/auth"
+	"github.com/ardanlabs/service/business/web/auth"
 	"github.com/ardanlabs/service/foundation/docker"
 	"github.com/google/go-cmp/cmp"
 )
