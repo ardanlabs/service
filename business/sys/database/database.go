@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
-	"reflect"
 	"strings"
 	"time"
 
@@ -169,14 +168,9 @@ func NamedExecContext(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtCo
 
 // NamedQuerySlice is a helper function for executing queries that return a
 // collection of data to be unmarshalled into a slice.
-func NamedQuerySlice(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext, query string, data any, dest any) error {
+func NamedQuerySlice[T any](ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext, query string, data any, dest *[]T) error {
 	q := queryString(query, data)
 	log.Infow("database.NamedQuerySlice", "traceid", web.GetTraceID(ctx), "query", q)
-
-	val := reflect.ValueOf(dest)
-	if val.Kind() != reflect.Ptr || val.Elem().Kind() != reflect.Slice {
-		return errors.New("must provide a pointer to a slice")
-	}
 
 	rows, err := sqlx.NamedQueryContext(ctx, db, query, data)
 	if err != nil {
@@ -184,14 +178,15 @@ func NamedQuerySlice(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtCon
 	}
 	defer rows.Close()
 
-	slice := val.Elem()
+	var slice []T
 	for rows.Next() {
-		v := reflect.New(slice.Type().Elem())
-		if err := rows.StructScan(v.Interface()); err != nil {
+		v := new(T)
+		if err := rows.StructScan(v); err != nil {
 			return err
 		}
-		slice.Set(reflect.Append(slice, v.Elem()))
+		slice = append(slice, *v)
 	}
+	*dest = slice
 
 	return nil
 }
