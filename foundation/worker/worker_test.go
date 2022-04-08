@@ -24,7 +24,7 @@ func Test_Worker(t *testing.T) {
 		t.Logf("\tTest %d:\tWhen handling multiple jobs", testID)
 		{
 			// Define a work function that waits to be canceled.
-			work := func(ctx context.Context, workKey string, data interface{}) {
+			work := func(ctx context.Context, workKey string, data any) {
 				t := data.(*testing.T)
 				t.Logf("\t\t%s\tTest %d:\tGoroutine running.", success, testID)
 				<-ctx.Done()
@@ -87,7 +87,7 @@ func Test_CancelWorker(t *testing.T) {
 			wg.Add(4)
 
 			// Define a work function that waits to be canceled.
-			work := func(ctx context.Context, workKey string, data interface{}) {
+			work := func(ctx context.Context, workKey string, data any) {
 				wg.Done()
 				t := data.(*testing.T)
 				t.Logf("\t\t%s\tTest %d:\tGoroutine running.", success, testID)
@@ -139,7 +139,7 @@ func Test_StopWorker(t *testing.T) {
 			wg.Add(4)
 
 			// Define a work function that waits to be canceled.
-			work := func(ctx context.Context, workKey string, data interface{}) {
+			work := func(ctx context.Context, workKey string, data any) {
 				wg.Done()
 				t := data.(*testing.T)
 				t.Logf("\t%s\tTest %d:\tGoroutine running.", success, testID)

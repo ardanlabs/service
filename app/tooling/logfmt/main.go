@@ -27,7 +27,7 @@ func main() {
 		s := scanner.Text()
 
 		// Convert the JSON to a map for processing.
-		m := make(map[string]interface{})
+		m := make(map[string]any)
 		err := json.Unmarshal([]byte(s), &m)
 		if err != nil {
 			if service == "" {

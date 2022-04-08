@@ -25,7 +25,7 @@ type Auth struct {
 	activeKID string
 	keyLookup KeyLookup
 	method    jwt.SigningMethod
-	keyFunc   func(t *jwt.Token) (interface{}, error)
+	keyFunc   func(t *jwt.Token) (any, error)
 	parser    *jwt.Parser
 }
 
@@ -43,7 +43,7 @@ func New(activeKID string, keyLookup KeyLookup) (*Auth, error) {
 		return nil, errors.New("configuring algorithm RS256")
 	}
 
-	keyFunc := func(t *jwt.Token) (interface{}, error) {
+	keyFunc := func(t *jwt.Token) (any, error) {
 		kid, ok := t.Header["kid"]
 		if !ok {
 			return nil, errors.New("missing key id (kid) in token header")

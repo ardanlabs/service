@@ -17,7 +17,7 @@ func Param(r *http.Request, key string) string {
 // body is decoded into the provided value.
 //
 // If the provided value is a struct then it is checked for validation tags.
-func Decode(r *http.Request, val interface{}) error {
+func Decode(r *http.Request, val any) error {
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
 	if err := decoder.Decode(val); err != nil {

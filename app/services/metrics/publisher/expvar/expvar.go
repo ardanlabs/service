@@ -17,7 +17,7 @@ import (
 type Expvar struct {
 	log    *zap.SugaredLogger
 	server http.Server
-	data   map[string]interface{}
+	data   map[string]any
 	mu     sync.Mutex
 }
 
@@ -67,7 +67,7 @@ func (exp *Expvar) Stop(shutdownTimeout time.Duration) {
 }
 
 // Publish is called by the publisher goroutine and saves the raw stats.
-func (exp *Expvar) Publish(data map[string]interface{}) {
+func (exp *Expvar) Publish(data map[string]any) {
 	exp.mu.Lock()
 	{
 		exp.data = data
@@ -80,7 +80,7 @@ func (exp *Expvar) handler(w http.ResponseWriter, r *http.Request, params map[st
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
-	var data map[string]interface{}
+	var data map[string]any
 	exp.mu.Lock()
 	{
 		data = exp.data

@@ -151,7 +151,7 @@ func WithinTran(ctx context.Context, log *zap.SugaredLogger, db Transactor, fn f
 
 // NamedExecContext is a helper function to execute a CUD operation with
 // logging and tracing.
-func NamedExecContext(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext, query string, data interface{}) error {
+func NamedExecContext(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext, query string, data any) error {
 	q := queryString(query, data)
 	log.Infow("database.NamedExecContext", "traceid", web.GetTraceID(ctx), "query", q)
 
@@ -169,7 +169,7 @@ func NamedExecContext(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtCo
 
 // NamedQuerySlice is a helper function for executing queries that return a
 // collection of data to be unmarshalled into a slice.
-func NamedQuerySlice(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext, query string, data interface{}, dest interface{}) error {
+func NamedQuerySlice(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext, query string, data any, dest any) error {
 	q := queryString(query, data)
 	log.Infow("database.NamedQuerySlice", "traceid", web.GetTraceID(ctx), "query", q)
 
@@ -198,7 +198,7 @@ func NamedQuerySlice(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtCon
 
 // NamedQueryStruct is a helper function for executing queries that return a
 // single value to be unmarshalled into a struct type.
-func NamedQueryStruct(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext, query string, data interface{}, dest interface{}) error {
+func NamedQueryStruct(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext, query string, data any, dest any) error {
 	q := queryString(query, data)
 	log.Infow("database.NamedQueryStruct", "traceid", web.GetTraceID(ctx), "query", q)
 
@@ -220,7 +220,7 @@ func NamedQueryStruct(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtCo
 }
 
 // queryString provides a pretty print version of the query and parameters.
-func queryString(query string, args ...interface{}) string {
+func queryString(query string, args ...any) string {
 	query, params, err := sqlx.Named(query, args)
 	if err != nil {
 		return err.Error()

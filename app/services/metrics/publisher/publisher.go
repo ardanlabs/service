@@ -20,14 +20,14 @@ const (
 // Collector defines a contract a collector must support
 // so a consumer can retrieve metrics.
 type Collector interface {
-	Collect() (map[string]interface{}, error)
+	Collect() (map[string]any, error)
 }
 
 // =============================================================================
 
 // Publisher defines a handler function that will be called
 // on each interval.
-type Publisher func(map[string]interface{})
+type Publisher func(map[string]any)
 
 // Publish provides the ability to receive metrics
 // on an interval.
@@ -99,21 +99,21 @@ func NewStdout(log *zap.SugaredLogger) *Stdout {
 }
 
 // Publish publishers for writing to stdout.
-func (s *Stdout) Publish(data map[string]interface{}) {
+func (s *Stdout) Publish(data map[string]any) {
 	rawJSON, err := json.Marshal(data)
 	if err != nil {
 		s.log.Errorw("stdout", "status", "marshal data", "ERROR", err)
 		return
 	}
 
-	var d map[string]interface{}
+	var d map[string]any
 	if err := json.Unmarshal(rawJSON, &d); err != nil {
 		s.log.Errorw("stdout", "status", "unmarshal data", "ERROR", err)
 		return
 	}
 
 	// Add heap value into the data set.
-	memStats, ok := (d["memstats"]).(map[string]interface{})
+	memStats, ok := (d["memstats"]).(map[string]any)
 	if ok {
 		d["heap"] = memStats["Alloc"]
 	}

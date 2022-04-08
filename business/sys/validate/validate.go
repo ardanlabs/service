@@ -52,7 +52,7 @@ func init() {
 }
 
 // Check validates the provided model against it's declared tags.
-func Check(val interface{}) error {
+func Check(val any) error {
 	if err := validate.Struct(val); err != nil {
 
 		// Use a type assertion to get the real error value.

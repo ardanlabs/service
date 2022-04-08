@@ -10,7 +10,7 @@ import (
 )
 
 // JobFunc defines a function that can execute work for a specific job.
-type JobFunc func(ctx context.Context, traceID string, payload interface{})
+type JobFunc func(ctx context.Context, traceID string, payload any)
 
 // Worker manages jobs and the execution of those jobs concurrently.
 type Worker struct {
@@ -68,7 +68,7 @@ func (w *Worker) Shutdown(ctx context.Context) error {
 
 // Start lookups a job by key and launches a goroutine to perform the work. A
 // work key is returned so the caller can cancel work early.
-func (w *Worker) Start(ctx context.Context, traceID string, jobKey string, payload interface{}) (string, error) {
+func (w *Worker) Start(ctx context.Context, traceID string, jobKey string, payload any) (string, error) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 

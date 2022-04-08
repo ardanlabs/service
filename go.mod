@@ -1,6 +1,6 @@
 module github.com/ardanlabs/service
 
-go 1.17
+go 1.18
 
 require (
 	github.com/ardanlabs/conf/v3 v3.1.2
@@ -22,7 +22,6 @@ require (
 	go.uber.org/automaxprocs v1.5.1
 	go.uber.org/zap v1.21.0
 	golang.org/x/crypto v0.0.0-20220321153916-2c7772ba3064
-
 )
 
 require (
