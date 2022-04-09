@@ -49,8 +49,8 @@ func toProduct(dbPrd db.Product) Product {
 
 func toProductSlice(dbPrds []db.Product) []Product {
 	prds := make([]Product, len(dbPrds))
-	for i, dbPrd := range dbPrds {
-		prds[i] = toProduct(dbPrd)
+	for i := range dbPrds {
+		prds[i] = toProduct(dbPrds[i])
 	}
 	return prds
 }

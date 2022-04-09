@@ -50,8 +50,8 @@ func toUser(dbUsr db.User) User {
 
 func toUserSlice(dbUsrs []db.User) []User {
 	users := make([]User, len(dbUsrs))
-	for i, dbUsr := range dbUsrs {
-		users[i] = toUser(dbUsr)
+	for i := range dbUsrs {
+		users[i] = toUser(dbUsrs[i])
 	}
 	return users
 }
