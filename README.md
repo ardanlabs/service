@@ -116,6 +116,7 @@ _**Video**_
 
 _**Podcasts**_  
 [Ardan Labs Podcast: On Going Series](https://ardanlabs.buzzsprout.com/)  
+[Mangtas Nation: A Golang Deep Dive with Bill Kennedy](https://anchor.fm/mangtasnation/episodes/A-Golang-Deep-Dive-with-Bill-Kennedy--S2-EP3-e1ij9c3)  
 [GoTime: Design Philosophy](https://changelog.com/gotime/172)  
 [GoTime: Learning and Teaching Go](https://changelog.com/gotime/72)  
 [GoTime: Bill Kennedy on Mechanical Sympathy](https://changelog.com/gotime/6)  
