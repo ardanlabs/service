@@ -7,7 +7,7 @@ github.com/ardanlabs/darwin
 # github.com/dimfeld/httptreemux/v5 v5.4.0
 ## explicit; go 1.9
 github.com/dimfeld/httptreemux/v5
-# github.com/felixge/httpsnoop v1.0.2
+# github.com/felixge/httpsnoop v1.0.3
 ## explicit; go 1.13
 github.com/felixge/httpsnoop
 # github.com/go-logr/logr v1.2.3
@@ -25,7 +25,7 @@ github.com/go-playground/locales/en
 # github.com/go-playground/universal-translator v0.18.0
 ## explicit; go 1.13
 github.com/go-playground/universal-translator
-# github.com/go-playground/validator/v10 v10.10.1
+# github.com/go-playground/validator/v10 v10.11.0
 ## explicit; go 1.13
 github.com/go-playground/validator/v10
 github.com/go-playground/validator/v10/translations/en
@@ -119,12 +119,12 @@ go.uber.org/zap/internal/bufferpool
 go.uber.org/zap/internal/color
 go.uber.org/zap/internal/exit
 go.uber.org/zap/zapcore
-# golang.org/x/crypto v0.0.0-20220427172511-eb4f295cb31f
+# golang.org/x/crypto v0.0.0-20220513210258-46612604a0f9
 ## explicit; go 1.17
 golang.org/x/crypto/bcrypt
 golang.org/x/crypto/blowfish
 golang.org/x/crypto/sha3
-# golang.org/x/sys v0.0.0-20220429233432-b5fbb4746d32
+# golang.org/x/sys v0.0.0-20220513210249-45d2b4557a2a
 ## explicit; go 1.17
 golang.org/x/sys/cpu
 golang.org/x/sys/internal/unsafeheader
