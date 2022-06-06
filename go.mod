@@ -21,7 +21,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.7.0
 	go.uber.org/automaxprocs v1.5.1
 	go.uber.org/zap v1.21.0
-	golang.org/x/crypto v0.0.0-20220518034528-6f7dac969898
+	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e
 )
 
 require (
