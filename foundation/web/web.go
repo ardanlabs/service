@@ -3,6 +3,7 @@ package web
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"os"
 	"syscall"
@@ -91,8 +92,23 @@ func (a *App) Handle(method string, group string, path string, handler Handler, 
 
 		// Call the wrapped handler functions.
 		if err := handler(ctx, w, r); err != nil {
-			a.SignalShutdown()
-			return
+
+			// Ignore syscall.EPIPE and syscall.ECONNRESET errors which occurs
+			// when a write operation happens on the http.ResponseWriter that
+			// has simultaneously been disconnected by the client. For instance,
+			// when large data (e.g., file) is being written or streamed to
+			// client with the w.Header().Set("Transfer-Encoding", "chunked")
+			// header.
+			// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Transfer-Encoding#chunked_encoding
+			switch {
+			case errors.Is(err, syscall.EPIPE):
+				return
+			case errors.Is(err, syscall.ECONNRESET):
+				return
+			default:
+				a.SignalShutdown()
+				return
+			}
 		}
 	}
 
