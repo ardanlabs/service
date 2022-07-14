@@ -103,12 +103,14 @@ func (a *App) Handle(method string, group string, path string, handler Handler, 
 			// https://gosamples.dev/connection-reset-by-peer/
 			switch {
 			case errors.Is(err, syscall.EPIPE):
+
 				// Usually, you get the broken pipe error when you write to the connection after the
 				// RST (TCP RST Flag) is sent.
 				// For example, the client's TCP connection is broken and the server writes to the
 				// connection.
 				return
 			case errors.Is(err, syscall.ECONNRESET):
+
 				// Usually, you get connection reset by peer error when you read from the
 				// connection after the RST (TCP RST Flag) is sent.
 				// For example, the client's TCP connection is broken while streaming data to/from
