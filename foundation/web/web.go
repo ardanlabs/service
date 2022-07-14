@@ -95,15 +95,24 @@ func (a *App) Handle(method string, group string, path string, handler Handler, 
 
 			// Ignore syscall.EPIPE and syscall.ECONNRESET errors which occurs
 			// when a write operation happens on the http.ResponseWriter that
-			// has simultaneously been disconnected by the client. For instance,
-			// when large data (e.g., file) is being written or streamed to
-			// client with the w.Header().Set("Transfer-Encoding", "chunked")
-			// header.
-			// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Transfer-Encoding#chunked_encoding
+			// has simultaneously been disconnected by the client (TCP
+			// connections is broken). For instance, when large amounts of
+			// data is being written or streamed to the client.
+			// https://blog.cloudflare.com/the-complete-guide-to-golang-net-http-timeouts/
+			// https://gosamples.dev/broken-pipe/
+			// https://gosamples.dev/connection-reset-by-peer/
 			switch {
 			case errors.Is(err, syscall.EPIPE):
+				// Usually, you get the broken pipe error when you write to the connection after the
+				// RST (TCP RST Flag) is sent.
+				// For example, the client's TCP connection is broken and the server writes to the
+				// connection.
 				return
 			case errors.Is(err, syscall.ECONNRESET):
+				// Usually, you get connection reset by peer error when you read from the
+				// connection after the RST (TCP RST Flag) is sent.
+				// For example, the client's TCP connection is broken while streaming data to/from
+				// the connection.
 				return
 			default:
 				a.SignalShutdown()
