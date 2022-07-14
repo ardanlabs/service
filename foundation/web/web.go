@@ -106,15 +106,21 @@ func (a *App) Handle(method string, group string, path string, handler Handler, 
 
 				// Usually, you get the broken pipe error when you write to the connection after the
 				// RST (TCP RST Flag) is sent.
-				// For example, the client's TCP connection is broken and the server writes to the
-				// connection.
+				// The broken pipe is a TCP/IP error occurring when you write to a stream where the
+				// other end (the peer) has closed the underlying connection. The first write to the
+				// closed connection causes the peer to reply with an RST packet indicating that the
+				// connection should be terminated immediately. The second write to the socket that
+				// has already received the RST causes the broken pipe error.
 				return
 			case errors.Is(err, syscall.ECONNRESET):
 
 				// Usually, you get connection reset by peer error when you read from the
 				// connection after the RST (TCP RST Flag) is sent.
-				// For example, the client's TCP connection is broken while streaming data to/from
-				// the connection.
+				// The connection reset by peer is a TCP/IP error that occurs when the other end (peer)
+				// has unexpectedly closed the connection. It happens when you send a packet from your
+				// end, but the other end crashes and forcibly closes the connection with the RST
+				// packet instead of the TCP FIN, which is used to close a connection under normal
+				// circumstances.
 				return
 			default:
 				a.SignalShutdown()
