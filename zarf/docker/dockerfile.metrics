@@ -14,9 +14,6 @@ ARG BUILD_REF
 # Copy the source code into the container.
 COPY . /service
 
-# Copy the source code into the container.
-COPY . /service
-
 # Build the service binary. We are doing this last since this will be different
 # every time we run through this process.
 WORKDIR /service/app/services/metrics
