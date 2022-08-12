@@ -46,6 +46,7 @@ dev.setup.mac:
 	brew list kind || brew install kind
 	brew list kubectl || brew install kubectl
 	brew list kustomize || brew install kustomize
+	brew list pgcli || brew install pgcli
 
 # ==============================================================================
 # Building containers
