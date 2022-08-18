@@ -13,7 +13,6 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq" // Calls init function.
 	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 )
 
@@ -156,12 +155,8 @@ func NamedExecContext(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtCo
 	q := queryString(query, data)
 	log.Infow("database.NamedExecContext", "traceid", web.GetTraceID(ctx), "query", q)
 
-	if tracer, err := web.GetTracer(ctx); err == nil {
-		var span trace.Span
-		ctx, span = tracer.Start(ctx, "business.sys.database.exec")
-		span.SetAttributes(attribute.String("query", q))
-		defer span.End()
-	}
+	ctx, span := web.AddSpan(ctx, "business.sys.database.exec", attribute.String("query", q))
+	defer web.EndSpan(span)
 
 	if _, err := sqlx.NamedExecContext(ctx, db, query, data); err != nil {
 
@@ -181,12 +176,8 @@ func NamedQuerySlice[T any](ctx context.Context, log *zap.SugaredLogger, db sqlx
 	q := queryString(query, data)
 	log.Infow("database.NamedQuerySlice", "traceid", web.GetTraceID(ctx), "query", q)
 
-	if tracer, err := web.GetTracer(ctx); err == nil {
-		var span trace.Span
-		ctx, span = tracer.Start(ctx, "business.sys.database.queryslice")
-		span.SetAttributes(attribute.String("query", q))
-		defer span.End()
-	}
+	ctx, span := web.AddSpan(ctx, "business.sys.database.queryslice", attribute.String("query", q))
+	defer web.EndSpan(span)
 
 	rows, err := sqlx.NamedQueryContext(ctx, db, query, data)
 	if err != nil {
@@ -213,12 +204,8 @@ func NamedQueryStruct(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtCo
 	q := queryString(query, data)
 	log.Infow("database.NamedQueryStruct", "traceid", web.GetTraceID(ctx), "query", q)
 
-	if tracer, err := web.GetTracer(ctx); err == nil {
-		var span trace.Span
-		ctx, span = tracer.Start(ctx, "business.sys.database.query")
-		span.SetAttributes(attribute.String("query", q))
-		defer span.End()
-	}
+	ctx, span := web.AddSpan(ctx, "business.sys.database.query", attribute.String("query", q))
+	defer web.EndSpan(span)
 
 	rows, err := sqlx.NamedQueryContext(ctx, db, query, data)
 	if err != nil {

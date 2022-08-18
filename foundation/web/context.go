@@ -5,6 +5,7 @@ import (
 	"errors"
 	"time"
 
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -40,13 +41,27 @@ func GetTraceID(ctx context.Context) string {
 	return v.TraceID
 }
 
-// GetTracer returns the tracer from the context.
-func GetTracer(ctx context.Context) (trace.Tracer, error) {
+// AddSpan adds a OpenTelemetry span to the trace and context.
+func AddSpan(ctx context.Context, spanName string, keyValues ...attribute.KeyValue) (context.Context, trace.Span) {
 	v, ok := ctx.Value(key).(*Values)
 	if !ok {
-		return nil, errors.New("tracer does not exist")
+		return nil, nil
 	}
-	return v.Tracer, nil
+
+	ctx, span := v.Tracer.Start(ctx, spanName)
+	for _, kv := range keyValues {
+		span.SetAttributes(kv)
+	}
+
+	return ctx, span
+}
+
+// EndSpan allows the caller to defer the End method for the specified span.
+func EndSpan(span trace.Span) func(options ...trace.SpanEndOption) {
+	if span != nil {
+		return span.End
+	}
+	return func(options ...trace.SpanEndOption) {}
 }
 
 // SetStatusCode sets the status code back into the context.
