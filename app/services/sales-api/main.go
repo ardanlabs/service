@@ -185,6 +185,8 @@ func run(log *zap.SugaredLogger) error {
 	}
 	defer traceProvider.Shutdown(context.Background())
 
+	tracer := traceProvider.Tracer("service")
+
 	// =========================================================================
 	// Start Debug Service
 
@@ -220,6 +222,7 @@ func run(log *zap.SugaredLogger) error {
 		Log:      log,
 		Auth:     auth,
 		DB:       db,
+		Tracer:   tracer,
 	})
 
 	// Construct a server to service the requests against the mux.

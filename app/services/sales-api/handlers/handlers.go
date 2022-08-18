@@ -14,6 +14,7 @@ import (
 	"github.com/ardanlabs/service/business/web/v1/mid"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/jmoiron/sqlx"
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 )
 
@@ -35,6 +36,7 @@ type APIMuxConfig struct {
 	Log      *zap.SugaredLogger
 	Auth     *auth.Auth
 	DB       *sqlx.DB
+	Tracer   trace.Tracer
 }
 
 // APIMux constructs a http.Handler with all application routes defined.
@@ -51,6 +53,7 @@ func APIMux(cfg APIMuxConfig, options ...func(opts *Options)) http.Handler {
 	if opts.corsOrigin != "" {
 		app = web.NewApp(
 			cfg.Shutdown,
+			cfg.Tracer,
 			mid.Logger(cfg.Log),
 			mid.Errors(cfg.Log),
 			mid.Metrics(),
@@ -70,6 +73,7 @@ func APIMux(cfg APIMuxConfig, options ...func(opts *Options)) http.Handler {
 	if app == nil {
 		app = web.NewApp(
 			cfg.Shutdown,
+			cfg.Tracer,
 			mid.Logger(cfg.Log),
 			mid.Errors(cfg.Log),
 			mid.Metrics(),

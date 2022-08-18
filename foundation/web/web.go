@@ -26,10 +26,11 @@ type App struct {
 	otmux    http.Handler
 	shutdown chan os.Signal
 	mw       []Middleware
+	tracer   trace.Tracer
 }
 
 // NewApp creates an App value that handle a set of routes for the application.
-func NewApp(shutdown chan os.Signal, mw ...Middleware) *App {
+func NewApp(shutdown chan os.Signal, tracer trace.Tracer, mw ...Middleware) *App {
 
 	// Create an OpenTelemetry HTTP Handler which wraps our router. This will start
 	// the initial span and annotate it with information about the request/response.
@@ -45,6 +46,7 @@ func NewApp(shutdown chan os.Signal, mw ...Middleware) *App {
 		otmux:    otelhttp.NewHandler(mux, "request"),
 		shutdown: shutdown,
 		mw:       mw,
+		tracer:   tracer,
 	}
 }
 
@@ -86,6 +88,7 @@ func (a *App) Handle(method string, group string, path string, handler Handler, 
 		// process the request.
 		v := Values{
 			TraceID: span.SpanContext().TraceID().String(),
+			Tracer:  a.tracer,
 			Now:     time.Now().UTC(),
 		}
 		ctx = context.WithValue(ctx, key, &v)
