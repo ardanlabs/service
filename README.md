@@ -53,7 +53,7 @@ bill@ardanlabs.com
 
 The entire training class has been recorded to be made available to those who can't have the class taught at their company or who can't attend a conference. This is the entire class material.
 
-[education.ardanlabs.com](https://education.ardanlabs.com)
+[ardanlabs.com/education](https://www.ardanlabs.com/education/)
 
 ## Our Experience
 
@@ -67,7 +67,7 @@ Our classes are perfect for intermediate-level developers who have at least a fe
 _William Kennedy is a managing partner at Ardan Labs in Miami, Florida. Ardan Labs is a high-performance development and training firm working with startups and fortune 500 companies. He is also a co-author of the book Go in Action, the author of the blog GoingGo.Net, and a founding member of GoBridge which is working to increase Go adoption through diversity._
 
 _**Video Training**_  
-[Ultimate Go Video](https://education.ardanlabs.com)  
+[Ultimate Go Video](https://www.ardanlabs.com/training/ultimate-go/) 
 [Ardan Labs YouTube Channel](http://youtube.ardanlabs.com/)
 
 _**Blog**_  
