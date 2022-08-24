@@ -17,8 +17,6 @@ spec:
       labels:
         app: sales
     spec:
-      dnsPolicy: ClusterFirstWithHostNet
-      hostNetwork: true
       terminationGracePeriodSeconds: 60
       initContainers:
       # sales-api init container configuration
@@ -92,7 +90,6 @@ metadata:
   name: sales-service
   namespace: sales-system
 spec:
-  type: ClusterIP
   selector:
     app: sales
   ports:

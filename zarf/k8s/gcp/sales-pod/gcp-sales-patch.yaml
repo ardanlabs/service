@@ -4,13 +4,19 @@ metadata:
   name: sales-pod
   namespace: sales-system
 spec:
-
-  # Use two replicas in a production environment to allow for rolling updates of the service.
   replicas: 2
   strategy:
     type: Recreate
+  selector:
+    matchLabels:
+      app: sales
   template:
+    metadata:
+      labels:
+        app: sales
     spec:
+      dnsPolicy: ClusterFirstWithHostNet
+      hostNetwork: true
       containers:
       - name: sales-api
 
@@ -30,4 +36,6 @@ metadata:
   name: sales-service
   namespace: sales-system
 spec:
+  selector:
+    app: sales
   type: LoadBalancer

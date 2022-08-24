@@ -15,6 +15,8 @@ spec:
       labels:
         app: sales
     spec:
+      dnsPolicy: ClusterFirstWithHostNet
+      hostNetwork: true
       containers:
       # sales-api container configuration
       - name: sales-api
@@ -30,3 +32,13 @@ spec:
             cpu: "500m" # Up to 1/2 full core
           requests:
             cpu: "250m" # Use 1/4 full core
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sales-service
+  namespace: sales-system
+spec:
+  selector:
+    app: sales
+  type: ClusterIP
