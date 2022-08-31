@@ -44,8 +44,8 @@ func GetTraceID(ctx context.Context) string {
 // AddSpan adds a OpenTelemetry span to the trace and context.
 func AddSpan(ctx context.Context, spanName string, keyValues ...attribute.KeyValue) (context.Context, trace.Span) {
 	v, ok := ctx.Value(key).(*Values)
-	if !ok {
-		return nil, nil
+	if !ok || v.Tracer == nil {
+		return ctx, trace.SpanFromContext(ctx)
 	}
 
 	ctx, span := v.Tracer.Start(ctx, spanName)
