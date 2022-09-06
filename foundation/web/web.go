@@ -113,7 +113,7 @@ func (a *App) Handle(method string, group string, path string, handler Handler, 
 }
 
 // validateShutdown validates the error for special conditions that do not
-// warrent an actual shutdown by the system.
+// warrant an actual shutdown by the system.
 func validateShutdown(err error) bool {
 
 	// Ignore syscall.EPIPE and syscall.ECONNRESET errors which occurs
