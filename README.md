@@ -1,4 +1,4 @@
-# Ultimate Service
+# Ultimate Go: Service with Kubernetes
 
 [![CircleCI](https://circleci.com/gh/ardanlabs/service.svg?style=svg)](https://circleci.com/gh/ardanlabs/service)
 [![Go Report Card](https://goreportcard.com/badge/github.com/ardanlabs/service)](https://goreportcard.com/report/github.com/ardanlabs/service)
@@ -7,7 +7,7 @@
 Copyright 2018, 2019, 2020, 2021, 2022, Ardan Labs  
 info@ardanlabs.com
 
-## Ultimate Service 3.0 Classes
+## Description
 
 This class teaches how to build production-level services in Go leveraging the power of Kubernetes. From the beginning, you will pair program with the instructor walking through the design philosophies and guidelines for building services in Go. With each new feature that is added to the service, you will learn how to deploy to and manage the Kubernetes environment used to run the service.
 
