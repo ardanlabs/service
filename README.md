@@ -33,11 +33,12 @@ limitations under the License.
 
 ## Learn More
 
-**To learn about Corporate training events, options and special pricing please contact:**
+**Reach out about corporate training events, open enrollment live training sessions, and on-demand learning options.**
 
-William Kennedy  
-ArdanLabs (www.ardanlabs.com)  
-bill@ardanlabs.com  
+Ardan Labs (www.ardanlabs.com)  
+hello@ardanlabs.com
+
+## Index
 
 * [Purchase Video](https://github.com/ardanlabs/service#purchase-video)
 * [Experience](https://github.com/ardanlabs/service#our-experience)
