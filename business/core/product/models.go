@@ -2,7 +2,6 @@ package product
 
 import (
 	"time"
-	"unsafe"
 
 	"github.com/ardanlabs/service/business/core/product/db"
 )
@@ -43,8 +42,7 @@ type UpdateProduct struct {
 // =============================================================================
 
 func toProduct(dbPrd db.Product) Product {
-	pu := (*Product)(unsafe.Pointer(&dbPrd))
-	return *pu
+	return Product(dbPrd)
 }
 
 func toProductSlice(dbPrds []db.Product) []Product {
