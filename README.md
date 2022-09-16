@@ -47,8 +47,6 @@ hello@ardanlabs.com
 * [Minimal Qualified Student](https://github.com/ardanlabs/service#minimal-qualified-student)
 * [Important Reading](https://github.com/ardanlabs/service#important-reading)
 * [Before You Come To Class](https://github.com/ardanlabs/service#before-you-come-to-class)
-* [Starter Material](https://github.com/ardanlabs/service#starter-material)
-* [Get The Training Material](https://github.com/ardanlabs/service#go-get-the-training-material)
 
 ## Purchase Video
 
@@ -65,7 +63,7 @@ Our classes are perfect for intermediate-level developers who have at least a fe
 ## Our Teacher
 
 ### William Kennedy ([@goinggodotnet](https://twitter.com/goinggodotnet))  
-_William Kennedy is a managing partner at Ardan Labs in Miami, Florida. Ardan Labs is a high-performance development and training firm working with startups and fortune 500 companies. He is also a co-author of the book Go in Action, the author of the blog GoingGo.Net, and a founding member of GoBridge which is working to increase Go adoption through diversity._
+_William Kennedy is a managing partner at Ardan Labs in Miami, Florida, a mobile, web, and systems development company. Bill has written extensively on the Ardan Labs blog, has written two books, and has trained thousands of developers worldwide in Go. Bill is also a founding member of GoBridge, which is working to increase Go adoption through diversity._
 
 _**Video Training**_  
 [Ultimate Go Video](https://www.ardanlabs.com/training/ultimate-go/) 
@@ -188,9 +186,12 @@ We use a Slack channel to share links, code, and examples during the training.  
 
 While many of the examples can be done using the online playground (http://play.golang.org), some may find it easier to complete them with their local editor.  To do so, you will want to load the training material locally to your machine.  From a command prompt, issue the following commands:
 
-```sh
-mkdir -p $(go env GOPATH)/src/github.com/ardanlabs && cd $_
-git clone https://github.com/ardanlabs/gotraining.git
+```
+$ cd $HOME
+$ mkdir code
+$ cd code
+$ git clone https://github.com/ardanlabs/service
+$ cd service
 ```
 
 *NOTE:* This assumes you have Git installed.  If you don’t, you can find the installation instructions here: https://git-scm.com/
