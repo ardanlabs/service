@@ -35,8 +35,12 @@ SHELL := /bin/bash
 # pgcli postgresql://postgres:postgres@localhost
 #
 # Launch zipkin.
+#
 # http://localhost:9411/zipkin/
-
+# To show what calls are being made underneath to the proxy and checksum db.
+# curl https://proxy.golang.org/github.com/ardanlabs/conf/v3/@v/list
+# curl https://proxy.golang.org/github.com/ardanlabs/conf/v3/@v/v3.1.1.info, v3.1.1.mod, or v3.1.1.zip
+# curl https://sum.golang.org/lookup/github.com/ardanlabs/conf/v3@v3.1.1
 
 # ==============================================================================
 # Install dependencies
