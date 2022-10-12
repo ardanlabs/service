@@ -43,7 +43,7 @@ func main() {
 
 		// I like always having a traceid present in the logs.
 		traceID := "00000000-0000-0000-0000-000000000000"
-		if v, ok := m["traceid"]; ok {
+		if v, ok := m["trace_id"]; ok {
 			traceID = fmt.Sprintf("%v", v)
 		}
 
@@ -63,7 +63,7 @@ func main() {
 		// added for the log.
 		for k, v := range m {
 			switch k {
-			case "service", "ts", "level", "traceid", "caller", "msg":
+			case "service", "ts", "level", "trace_id", "caller", "msg":
 				continue
 			}
 

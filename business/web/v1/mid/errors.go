@@ -32,7 +32,7 @@ func Errors(log *zap.SugaredLogger) web.Middleware {
 			if err := handler(ctx, w, r); err != nil {
 
 				// Log the error.
-				log.Errorw("ERROR", "traceid", v.TraceID, "message", err)
+				log.Errorw("ERROR", "trace_id", v.TraceID, "message", err)
 
 				// Build out the error response.
 				var er v1Web.ErrorResponse
