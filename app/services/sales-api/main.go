@@ -304,7 +304,10 @@ func startTracing(serviceName string, reporterURI string, probability float64) (
 		),
 	)
 
-	// I can only get this working properly using the singleton :(
+	// We must set this provider as the global provider for things to work,
+	// but we pass this provider around the program where needed to collect
+	// our traces.
 	otel.SetTracerProvider(traceProvider)
+
 	return traceProvider, nil
 }
