@@ -82,12 +82,12 @@ metrics:
 KIND_CLUSTER := ardan-starter-cluster
 
 # Upgrade to latest Kind: brew upgrade kind
-# For full Kind v0.15 release notes: https://github.com/kubernetes-sigs/kind/releases/tag/v0.15.0
+# For full Kind v0.16 release notes: https://github.com/kubernetes-sigs/kind/releases/tag/v0.16.0
 # The image used below was copied by the above link and supports both amd64 and arm64.
 
 kind-up:
 	kind create cluster \
-		--image kindest/node:v1.25.0@sha256:428aaa17ec82ccde0131cb2d1ca6547d13cf5fdabcc0bbecf749baa935387cbf \
+		--image kindest/node:v1.25.2@sha256: 9be91e9e9cdf116809841fc77ebdb8845443c4c72fe5218f3ae9eb57fdb4bace \
 		--name $(KIND_CLUSTER) \
 		--config zarf/k8s/kind/kind-config.yaml
 	kubectl config set-context --current --namespace=sales-system
