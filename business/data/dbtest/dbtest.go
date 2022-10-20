@@ -35,12 +35,19 @@ func StartDB() (*docker.Container, error) {
 	port := "5432"
 	args := []string{"-e", "POSTGRES_PASSWORD=postgres"}
 
-	return docker.StartContainer(image, port, args...)
+	c, err := docker.StartContainer(image, port, args...)
+
+	fmt.Printf("Image:       %s\n", image)
+	fmt.Printf("ContainerID: %s\n", c.ID)
+	fmt.Printf("Host:        %s\n", c.Host)
+
+	return c, err
 }
 
 // StopDB stops a running database instance.
 func StopDB(c *docker.Container) {
 	docker.StopContainer(c.ID)
+	fmt.Println("Stopped:", c.ID)
 }
 
 // NewUnit creates a test database inside a Docker container. It creates the
@@ -90,12 +97,12 @@ func NewUnit(t *testing.T, c *docker.Container, dbName string) (*zap.SugaredLogg
 	t.Log("Migrate and seed database ...")
 
 	if err := dbschema.Migrate(ctx, db); err != nil {
-		docker.DumpContainerLogs(t, c.ID)
+		t.Logf("Logs for %s\n%s:", c.ID, docker.DumpContainerLogs(c.ID))
 		t.Fatalf("Migrating error: %s", err)
 	}
 
 	if err := dbschema.Seed(ctx, db); err != nil {
-		docker.DumpContainerLogs(t, c.ID)
+		t.Logf("Logs for %s\n%s:", c.ID, docker.DumpContainerLogs(c.ID))
 		t.Fatalf("Seeding error: %s", err)
 	}
 
