@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vault-pod
+  namespace: vault-system
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: vault
+  template:
+    metadata:
+      labels:
+        app: vault
+    spec:
+      containers:
+      # vault container configuration
+      - name: vault
+        resources:
+          limits:
+            cpu: "500m" # Up to 1/2 full core
+          requests:
+            cpu: "250m" # Use 1/4 full core
+        ports:
+        - name: vault
+          containerPort: 8200
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vault-service
+  namespace: vault-system
+spec:
+  selector:
+    app: vault
+  ports:
+  - name: vault
+    port: 8200
+    targetPort: vault

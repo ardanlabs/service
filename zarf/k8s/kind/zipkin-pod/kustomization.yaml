@@ -3,8 +3,8 @@ kind: Kustomization
 resources:
   - ./kind-zipkin.yaml
 patchesStrategicMerge:
-- ./kind-zipkin-patch.yaml
+  - ./kind-zipkin-patch.yaml
 images:
-- name: openzipkin
-  newName: openzipkin/zipkin
-  newTag: "2.23"
+  - name: openzipkin
+    newName: openzipkin/zipkin
+    newTag: "2.23"

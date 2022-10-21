@@ -3,6 +3,8 @@ SHELL := /bin/bash
 # ==============================================================================
 # Testing running system
 
+# Deploy First
+#
 # For testing a simple query on the system. Don't forget to `make seed` first.
 # curl --user "admin@example.com:gophers" http://localhost:3000/v1/users/token
 # export TOKEN="COPY TOKEN STRING FROM LAST CALL"
@@ -41,6 +43,10 @@ SHELL := /bin/bash
 # curl https://proxy.golang.org/github.com/ardanlabs/conf/v3/@v/list
 # curl https://proxy.golang.org/github.com/ardanlabs/conf/v3/@v/v3.1.1.info, v3.1.1.mod, or v3.1.1.zip
 # curl https://sum.golang.org/lookup/github.com/ardanlabs/conf/v3@v3.1.1
+#
+# brew tap hashicorp/tap
+# brew install hashicorp/tap/vault
+# docker run --cap-add=IPC_LOCK -e 'VAULT_DEV_ROOT_TOKEN_ID=myroot' -e 'VAULT_DEV_LISTEN_ADDRESS=0.0.0.0:1234' -p 1234:1234 hashicorp/vault:1.12
 
 # ==============================================================================
 # Install dependencies
@@ -104,6 +110,8 @@ kind-load:
 kind-apply:
 	kustomize build zarf/k8s/kind/database-pod | kubectl apply -f -
 	kubectl wait --namespace=database-system --timeout=120s --for=condition=Available deployment/database-pod
+	kustomize build zarf/k8s/kind/vault-pod | kubectl apply -f -
+	kubectl wait --namespace=vault-system --timeout=120s --for=condition=Available deployment/vault-pod
 	kustomize build zarf/k8s/kind/zipkin-pod | kubectl apply -f -
 	kubectl wait --namespace=zipkin-system --timeout=120s --for=condition=Available deployment/zipkin-pod
 	kustomize build zarf/k8s/kind/sales-pod | kubectl apply -f -
@@ -135,6 +143,9 @@ kind-logs-db:
 kind-logs-zipkin:
 	kubectl logs -l app=zipkin --namespace=zipkin-system --all-containers=true -f --tail=100
 
+kind-logs-vault:
+		kubectl logs --namespace=vault-system -l app=vault --all-containers=true -f --tail=100
+
 kind-status:
 	kubectl get nodes -o wide
 	kubectl get svc -o wide
@@ -148,6 +159,9 @@ kind-status-db:
 
 kind-status-zipkin:
 	kubectl get pods -o wide --watch --namespace=zipkin-system
+
+kind-status-vault:
+	kubectl get pods -o wide --watch --namespace=vault-system
 
 kind-describe:
 	kubectl describe nodes
@@ -185,6 +199,9 @@ migrate:
 
 seed: migrate
 	go run app/tooling/sales-admin/main.go seed
+
+vault:
+	go run app/tooling/sales-admin/main.go vault
 
 # ==============================================================================
 # Running tests within the local computer

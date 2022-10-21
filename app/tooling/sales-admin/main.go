@@ -129,6 +129,11 @@ func processCommands(args conf.Args, log *zap.SugaredLogger, dbConfig database.C
 			return fmt.Errorf("generating token: %w", err)
 		}
 
+	case "vault":
+		if err := commands.Vault(); err != nil {
+			return fmt.Errorf("setting private key: %w", err)
+		}
+
 	default:
 		fmt.Println("migrate: create the schema in the database")
 		fmt.Println("seed: add data to the database")
