@@ -44,9 +44,6 @@ SHELL := /bin/bash
 # curl https://proxy.golang.org/github.com/ardanlabs/conf/v3/@v/v3.1.1.info, v3.1.1.mod, or v3.1.1.zip
 # curl https://sum.golang.org/lookup/github.com/ardanlabs/conf/v3@v3.1.1
 #
-# brew tap hashicorp/tap
-# brew install hashicorp/tap/vault
-# docker run --cap-add=IPC_LOCK -e 'VAULT_DEV_ROOT_TOKEN_ID=myroot' -e 'VAULT_DEV_LISTEN_ADDRESS=0.0.0.0:1234' -p 1234:1234 hashicorp/vault:1.12
 
 # ==============================================================================
 # Install dependencies
@@ -57,6 +54,8 @@ dev.setup.mac:
 	brew list kubectl || brew install kubectl
 	brew list kustomize || brew install kustomize
 	brew list pgcli || brew install pgcli
+	brew tap hashicorp/tap
+	brew list hashicorp/tap/vault || brew install hashicorp/tap/vault
 
 # ==============================================================================
 # Building containers
