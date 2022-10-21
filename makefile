@@ -115,11 +115,6 @@ kind-apply:
 	kubectl wait --namespace=zipkin-system --timeout=120s --for=condition=Available deployment/zipkin-pod
 	kustomize build zarf/k8s/kind/sales-pod | kubectl apply -f -
 
-kind-services-delete:
-	kustomize build zarf/k8s/kind/sales-pod | kubectl delete -f -
-	kustomize build zarf/k8s/kind/zipkin-pod | kubectl delete -f -
-	kustomize build zarf/k8s/kind/database-pod | kubectl delete -f -
-
 kind-restart:
 	kubectl rollout restart deployment sales-pod
 
@@ -130,45 +125,65 @@ kind-update-apply: all kind-load kind-apply
 kind-logs:
 	kubectl logs -l app=sales --all-containers=true -f --tail=100 | go run app/tooling/logfmt/main.go
 
+kind-status:
+	kubectl get nodes -o wide
+	kubectl get svc -o wide
+	kubectl get pods -o wide --watch --all-namespaces
+
+kind-describe:
+	kubectl describe nodes
+	kubectl describe svc
+
+# *** SALES-POD ****************************************************************
+
 kind-logs-sales:
 	kubectl logs -l app=sales --all-containers=true -f --tail=100 | go run app/tooling/logfmt/main.go -service=SALES-API
 
 kind-logs-metrics:
 	kubectl logs -l app=sales --all-containers=true -f --tail=100 | go run app/tooling/logfmt/main.go -service=METRICS
 
-kind-logs-db:
-	kubectl logs -l app=database --namespace=database-system --all-containers=true -f --tail=100
-
-kind-logs-zipkin:
-	kubectl logs -l app=zipkin --namespace=zipkin-system --all-containers=true -f --tail=100
-
-kind-logs-vault:
-		kubectl logs --namespace=vault-system -l app=vault --all-containers=true -f --tail=100
-
-kind-status:
-	kubectl get nodes -o wide
-	kubectl get svc -o wide
-	kubectl get pods -o wide --watch --all-namespaces
-
 kind-status-sales:
 	kubectl get pods -o wide --watch --namespace=sales-system
+
+kind-describe-deployment:
+	kubectl describe deployment sales-pod
+
+kind-describe:
+	kubectl describe pod -l app=sales
+
+kind-context-sales:
+	kubectl config set-context --current --namespace=sales-system
+
+# *** DB-POD *******************************************************************
+
+kind-logs-db:
+	kubectl logs -l app=database --namespace=database-system --all-containers=true -f --tail=100
 
 kind-status-db:
 	kubectl get pods -o wide --watch --namespace=database-system
 
+# *** ZIPKIN-POD ***************************************************************
+
+kind-logs-zipkin:
+	kubectl logs -l app=zipkin --namespace=zipkin-system --all-containers=true -f --tail=100
+
 kind-status-zipkin:
 	kubectl get pods -o wide --watch --namespace=zipkin-system
+
+# *** VAULT-POD ****************************************************************
+
+kind-logs-vault:
+		kubectl logs --namespace=vault-system -l app=vault --all-containers=true -f --tail=100
 
 kind-status-vault:
 	kubectl get pods -o wide --watch --namespace=vault-system
 
-kind-describe:
-	kubectl describe nodes
-	kubectl describe svc
-	kubectl describe pod -l app=sales
+# *** EXTRAS *******************************************************************
 
-kind-describe-deployment:
-	kubectl describe deployment sales-pod
+kind-services-delete:
+	kustomize build zarf/k8s/kind/sales-pod | kubectl delete -f -
+	kustomize build zarf/k8s/kind/zipkin-pod | kubectl delete -f -
+	kustomize build zarf/k8s/kind/database-pod | kubectl delete -f -
 
 kind-describe-replicaset:
 	kubectl get rs
@@ -179,9 +194,6 @@ kind-events:
 
 kind-events-warn:
 	kubectl get ev --field-selector type=Warning --sort-by metadata.creationTimestamp
-
-kind-context-sales:
-	kubectl config set-context --current --namespace=sales-system
 
 kind-shell:
 	kubectl exec -it $(shell kubectl get pods | grep sales | cut -c1-26) --container sales-api -- /bin/sh
