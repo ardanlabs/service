@@ -156,7 +156,7 @@ func NamedExecContext(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtCo
 	log.Infow("database.NamedExecContext", "trace_id", web.GetTraceID(ctx), "query", q)
 
 	ctx, span := web.AddSpan(ctx, "business.sys.database.exec", attribute.String("query", q))
-	defer web.EndSpan(span)
+	defer span.End()
 
 	if _, err := sqlx.NamedExecContext(ctx, db, query, data); err != nil {
 
@@ -177,7 +177,7 @@ func NamedQuerySlice[T any](ctx context.Context, log *zap.SugaredLogger, db sqlx
 	log.Infow("database.NamedQuerySlice", "trace_id", web.GetTraceID(ctx), "query", q)
 
 	ctx, span := web.AddSpan(ctx, "business.sys.database.queryslice", attribute.String("query", q))
-	defer web.EndSpan(span)
+	defer span.End()
 
 	rows, err := sqlx.NamedQueryContext(ctx, db, query, data)
 	if err != nil {
@@ -205,7 +205,7 @@ func NamedQueryStruct(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtCo
 	log.Infow("database.NamedQueryStruct", "trace_id", web.GetTraceID(ctx), "query", q)
 
 	ctx, span := web.AddSpan(ctx, "business.sys.database.query", attribute.String("query", q))
-	defer web.EndSpan(span)
+	defer span.End()
 
 	rows, err := sqlx.NamedQueryContext(ctx, db, query, data)
 	if err != nil {

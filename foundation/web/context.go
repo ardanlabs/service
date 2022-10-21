@@ -56,14 +56,6 @@ func AddSpan(ctx context.Context, spanName string, keyValues ...attribute.KeyVal
 	return ctx, span
 }
 
-// EndSpan allows the caller to defer the End method for the specified span.
-func EndSpan(span trace.Span) func(options ...trace.SpanEndOption) {
-	if span != nil {
-		return span.End
-	}
-	return func(options ...trace.SpanEndOption) {}
-}
-
 // SetStatusCode sets the status code back into the context.
 func SetStatusCode(ctx context.Context, statusCode int) error {
 	v, ok := ctx.Value(key).(*Values)

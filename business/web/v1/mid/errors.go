@@ -34,6 +34,11 @@ func Errors(log *zap.SugaredLogger) web.Middleware {
 				// Log the error.
 				log.Errorw("ERROR", "trace_id", v.TraceID, "message", err)
 
+				// Add a span for this error.
+				ctx, span := web.AddSpan(ctx, "business.web.v1.mid.error")
+				span.RecordError(err)
+				span.End()
+
 				// Build out the error response.
 				var er v1Web.ErrorResponse
 				var status int
