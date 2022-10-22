@@ -36,12 +36,15 @@ func StartDB() (*docker.Container, error) {
 	args := []string{"-e", "POSTGRES_PASSWORD=postgres"}
 
 	c, err := docker.StartContainer(image, port, args...)
+	if err != nil {
+		return nil, fmt.Errorf("starting container: %w", err)
+	}
 
 	fmt.Printf("Image:       %s\n", image)
 	fmt.Printf("ContainerID: %s\n", c.ID)
 	fmt.Printf("Host:        %s\n", c.Host)
 
-	return c, err
+	return c, nil
 }
 
 // StopDB stops a running database instance.

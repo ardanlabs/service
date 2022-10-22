@@ -20,6 +20,9 @@ spec:
       terminationGracePeriodSeconds: 60
       initContainers:
       # sales-api init container configuration
+      - name: init-vault
+        image: sales-api-image
+        command: ['./sales-admin', 'vault']
       - name: init-migrate
         image: sales-api-image
         command: ['./sales-admin', 'migrate']

@@ -4,6 +4,8 @@ package keystore
 
 import (
 	"crypto/rsa"
+	"crypto/x509"
+	"encoding/pem"
 	"errors"
 	"fmt"
 	"io"
@@ -11,8 +13,6 @@ import (
 	"path"
 	"strings"
 	"sync"
-
-	"github.com/golang-jwt/jwt/v4"
 )
 
 // KeyStore represents an in memory store implementation of the
@@ -70,7 +70,7 @@ func NewFS(fsys fs.FS) (*KeyStore, error) {
 			return fmt.Errorf("reading auth private key: %w", err)
 		}
 
-		privateKey, err := jwt.ParseRSAPrivateKeyFromPEM(privatePEM)
+		privateKey, err := parseRSAPrivateKeyFromPEM(privatePEM)
 		if err != nil {
 			return fmt.Errorf("parsing auth private key: %w", err)
 		}
@@ -126,4 +126,30 @@ func (ks *KeyStore) PublicKey(kid string) (*rsa.PublicKey, error) {
 		return nil, errors.New("kid lookup failed")
 	}
 	return &privateKey.PublicKey, nil
+}
+
+// =============================================================================
+
+// parseRSAPrivateKeyFromPEM was taken from the JWT package to reduce the dependency.
+func parseRSAPrivateKeyFromPEM(key []byte) (*rsa.PrivateKey, error) {
+	var block *pem.Block
+	if block, _ = pem.Decode(key); block == nil {
+		return nil, errors.New("invalid key: Key must be a PEM encoded PKCS1 or PKCS8 key")
+	}
+
+	var parsedKey interface{}
+	parsedKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+	if err != nil {
+		parsedKey, err = x509.ParsePKCS8PrivateKey(block.Bytes)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	pkey, ok := parsedKey.(*rsa.PrivateKey)
+	if !ok {
+		return nil, errors.New("key is not a valid RSA private key")
+	}
+
+	return pkey, nil
 }

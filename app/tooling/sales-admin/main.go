@@ -28,6 +28,9 @@ type config struct {
 	Vault struct {
 		KeysFolder string `conf:"default:zarf/keys/"`
 		Address    string `conf:"default:http://0.0.0.0:8200"`
+		Token      string `conf:"default:myroot,mask"`
+		MountPath  string `conf:"default:secret,mask"`
+		AppPath    string `conf:"default:sales,mask"`
 	}
 }
 
@@ -125,7 +128,7 @@ func processCommands(args conf.Args, log *zap.SugaredLogger, cfg config) error {
 		}
 
 	case "vault":
-		if err := commands.Vault(cfg.Vault.Address, cfg.Vault.KeysFolder); err != nil {
+		if err := commands.Vault(cfg.Vault.Address, cfg.Vault.Token, cfg.Vault.MountPath, cfg.Vault.AppPath, cfg.Vault.KeysFolder); err != nil {
 			return fmt.Errorf("setting private key: %w", err)
 		}
 

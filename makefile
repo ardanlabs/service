@@ -105,6 +105,9 @@ kind-load:
 	cd zarf/k8s/kind/sales-pod; kustomize edit set image metrics-image=metrics-amd64:$(VERSION)
 	kind load docker-image sales-api-amd64:$(VERSION) --name $(KIND_CLUSTER)
 	kind load docker-image metrics-amd64:$(VERSION) --name $(KIND_CLUSTER)
+	kind load docker-image postgres:14-alpine --name $(KIND_CLUSTER)
+	kind load docker-image hashicorp/vault:1.12 --name $(KIND_CLUSTER)
+	kind load docker-image openzipkin/zipkin:2.23 --name $(KIND_CLUSTER)
 
 kind-apply:
 	kustomize build zarf/k8s/kind/database-pod | kubectl apply -f -

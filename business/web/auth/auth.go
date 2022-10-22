@@ -31,13 +31,6 @@ type Auth struct {
 
 // New creates an Auth to support authentication/authorization.
 func New(activeKID string, keyLookup KeyLookup) (*Auth, error) {
-
-	// The activeKID represents the private key used to signed new tokens.
-	_, err := keyLookup.PrivateKey(activeKID)
-	if err != nil {
-		return nil, errors.New("active KID does not exist in store")
-	}
-
 	method := jwt.GetSigningMethod("RS256")
 	if method == nil {
 		return nil, errors.New("configuring algorithm RS256")
@@ -78,7 +71,7 @@ func (a *Auth) GenerateToken(claims Claims) (string, error) {
 
 	privateKey, err := a.keyLookup.PrivateKey(a.activeKID)
 	if err != nil {
-		return "", errors.New("kid lookup failed")
+		return "", fmt.Errorf("private key: %w", err)
 	}
 
 	str, err := token.SignedString(privateKey)

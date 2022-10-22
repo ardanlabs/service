@@ -12,23 +12,25 @@ import (
 	"github.com/hashicorp/vault/api"
 )
 
-func Vault(address string, keysFolder string) error {
+// Vault loads the current private key into the vault system.
+func Vault(address string, token string, mountPath string, secretPath string, keysFolder string) error {
 	client, err := api.NewClient(&api.Config{
 		Address: address,
 	})
 	if err != nil {
 		return fmt.Errorf("creating client: %w", err)
 	}
+	client.SetToken(token)
 
-	if err := loadKeys(client, os.DirFS(keysFolder)); err != nil {
+	if err := loadKeys(client, mountPath, secretPath, os.DirFS(keysFolder)); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func loadKeys(client *api.Client, fsys fs.FS) error {
-	v2 := client.KVv2("secret")
+func loadKeys(client *api.Client, mountPath string, secretPath string, fsys fs.FS) error {
+	v2 := client.KVv2(mountPath)
 
 	fn := func(fileName string, dirEntry fs.DirEntry, err error) error {
 		if err != nil {
@@ -60,7 +62,7 @@ func loadKeys(client *api.Client, fsys fs.FS) error {
 		key := strings.TrimSuffix(dirEntry.Name(), ".pem")
 		fmt.Println("Loading Key:", key)
 
-		if _, err := v2.Put(context.Background(), "service", map[string]interface{}{key: privatePEM}, api.WithCheckAndSet(1)); err != nil {
+		if _, err := v2.Put(context.Background(), secretPath, map[string]interface{}{key: string(privatePEM)}); err != nil {
 			return fmt.Errorf("put: %w", err)
 		}
 

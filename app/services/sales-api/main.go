@@ -81,6 +81,12 @@ func run(log *zap.SugaredLogger) error {
 			APIHost         string        `conf:"default:0.0.0.0:3000"`
 			DebugHost       string        `conf:"default:0.0.0.0:4000"`
 		}
+		Vault struct {
+			Address   string `conf:"default:http://0.0.0.0:8200"`
+			Token     string `conf:"default:myroot,mask"`
+			MountPath string `conf:"default:secret,mask"`
+			AppPath   string `conf:"default:sales,mask"`
+		}
 		Auth struct {
 			KeysFolder string `conf:"default:zarf/keys/"`
 			ActiveKID  string `conf:"default:54bb2165-71e1-41a6-af3e-7da4a0e1e2c1"`
@@ -135,11 +141,14 @@ func run(log *zap.SugaredLogger) error {
 
 	log.Infow("startup", "status", "initializing authentication support")
 
-	// Construct a key store based on the key files stored in
-	// the specified directory.
-	ks, err := keystore.NewFS(os.DirFS(cfg.Auth.KeysFolder))
+	ks, err := keystore.NewVault(keystore.VaultConfig{
+		Address:    cfg.Vault.Address,
+		Token:      cfg.Vault.Token,
+		MountPath:  cfg.Vault.MountPath,
+		SecretPath: cfg.Vault.AppPath,
+	})
 	if err != nil {
-		return fmt.Errorf("reading keys: %w", err)
+		return fmt.Errorf("constructing vault: %w", err)
 	}
 
 	auth, err := auth.New(cfg.Auth.ActiveKID, ks)
