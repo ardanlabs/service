@@ -15,7 +15,7 @@ func GenKey() error {
 	// Generate a new private key.
 	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
-		return ErrHelp
+		return fmt.Errorf("generating key: %w", err)
 	}
 
 	// Create a file for the private key information in PEM form.

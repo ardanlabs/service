@@ -13,12 +13,25 @@ import (
 	"go.uber.org/zap"
 )
 
-// build is the git version of this program. It is set using build flags in the makefile.
 var build = "develop"
 
-func main() {
+type config struct {
+	conf.Version
+	Args conf.Args
+	DB   struct {
+		User       string `conf:"default:postgres"`
+		Password   string `conf:"default:postgres,mask"`
+		Host       string `conf:"default:localhost"`
+		Name       string `conf:"default:postgres"`
+		DisableTLS bool   `conf:"default:true"`
+	}
+	Vault struct {
+		KeysFolder string `conf:"default:zarf/keys/"`
+		Address    string `conf:"default:http://0.0.0.0:8200"`
+	}
+}
 
-	// Construct the application logger.
+func main() {
 	log, err := logger.New("ADMIN")
 	if err != nil {
 		fmt.Println(err)
@@ -26,7 +39,6 @@ func main() {
 	}
 	defer log.Sync()
 
-	// Perform the startup and shutdown sequence.
 	if err := run(log); err != nil {
 		if !errors.Is(err, commands.ErrHelp) {
 			log.Errorw("startup", "ERROR", err)
@@ -37,21 +49,7 @@ func main() {
 }
 
 func run(log *zap.SugaredLogger) error {
-
-	// =========================================================================
-	// Configuration
-
-	cfg := struct {
-		conf.Version
-		Args conf.Args
-		DB   struct {
-			User       string `conf:"default:postgres"`
-			Password   string `conf:"default:postgres,mask"`
-			Host       string `conf:"default:localhost"`
-			Name       string `conf:"default:postgres"`
-			DisableTLS bool   `conf:"default:true"`
-		}
-	}{
+	cfg := config{
 		Version: conf.Version{
 			Build: build,
 			Desc:  "copyright information here",
@@ -74,9 +72,12 @@ func run(log *zap.SugaredLogger) error {
 	}
 	log.Infow("startup", "config", out)
 
-	// =========================================================================
-	// Commands
+	return processCommands(cfg.Args, log, cfg)
+}
 
+// processCommands handles the execution of the commands specified on
+// the command line.
+func processCommands(args conf.Args, log *zap.SugaredLogger, cfg config) error {
 	dbConfig := database.Config{
 		User:       cfg.DB.User,
 		Password:   cfg.DB.Password,
@@ -85,12 +86,6 @@ func run(log *zap.SugaredLogger) error {
 		DisableTLS: cfg.DB.DisableTLS,
 	}
 
-	return processCommands(cfg.Args, log, dbConfig)
-}
-
-// processCommands handles the execution of the commands specified on
-// the command line.
-func processCommands(args conf.Args, log *zap.SugaredLogger, dbConfig database.Config) error {
 	switch args.Num(0) {
 	case "migrate":
 		if err := commands.Migrate(dbConfig); err != nil {
@@ -130,17 +125,18 @@ func processCommands(args conf.Args, log *zap.SugaredLogger, dbConfig database.C
 		}
 
 	case "vault":
-		if err := commands.Vault(); err != nil {
+		if err := commands.Vault(cfg.Vault.Address, cfg.Vault.KeysFolder); err != nil {
 			return fmt.Errorf("setting private key: %w", err)
 		}
 
 	default:
-		fmt.Println("migrate: create the schema in the database")
-		fmt.Println("seed: add data to the database")
-		fmt.Println("useradd: add a new user to the database")
-		fmt.Println("users: get a list of users from the database")
-		fmt.Println("genkey: generate a set of private/public key files")
+		fmt.Println("migrate:  create the schema in the database")
+		fmt.Println("seed:     add data to the database")
+		fmt.Println("useradd:  add a new user to the database")
+		fmt.Println("users:    get a list of users from the database")
+		fmt.Println("genkey:   generate a set of private/public key files")
 		fmt.Println("gentoken: generate a JWT for a user with claims")
+		fmt.Println("valut:    load prviate keys into vault system")
 		fmt.Println("provide a command to get more help.")
 		return commands.ErrHelp
 	}

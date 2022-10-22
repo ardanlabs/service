@@ -148,7 +148,7 @@ kind-status-sales:
 kind-describe-deployment:
 	kubectl describe deployment sales-pod
 
-kind-describe:
+kind-describe-sales:
 	kubectl describe pod -l app=sales
 
 kind-context-sales:
@@ -173,7 +173,7 @@ kind-status-zipkin:
 # *** VAULT-POD ****************************************************************
 
 kind-logs-vault:
-		kubectl logs --namespace=vault-system -l app=vault --all-containers=true -f --tail=100
+	kubectl logs --namespace=vault-system -l app=vault --all-containers=true -f --tail=100
 
 kind-status-vault:
 	kubectl get pods -o wide --watch --namespace=vault-system
