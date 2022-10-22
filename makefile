@@ -57,6 +57,14 @@ dev.setup.mac:
 	brew tap hashicorp/tap
 	brew list hashicorp/tap/vault || brew install hashicorp/tap/vault
 
+dev.docker:
+	docker pull hashicorp/vault:1.12
+	docker pull openzipkin/zipkin:2.23
+	docker pull kindest/node:v1.25.2
+	docker pull golang:1.19
+	docker pull postgres:14-alpine
+	docker pull alpine:3.16
+
 # ==============================================================================
 # Building containers
 
