@@ -28,20 +28,24 @@ SHELL := /bin/bash
 # go test -coverprofile p.out
 # go tool cover -html p.out
 #
-# Test debug endpoints.
-# curl http://localhost:4000/debug/liveness
-# curl http://localhost:4000/debug/readiness
-#
-# Running pgcli client for database.
-# brew install pgcli
-# pgcli postgresql://postgres:postgres@localhost
-#
 # Launch zipkin.
 # http://localhost:9411/zipkin/
 #
+# Vault CLI commands.
+# export VAULT_TOKEN=myroot
+# export VAULT_ADDR='http://0.0.0.0:8200'
+# vault secrets list
+# vault kv get secret/sales
+# vault kv put secret/sales key="some data"
+#
+# For full Kind v0.16 release notes: https://github.com/kubernetes-sigs/kind/releases/tag/v0.16.0
+#
 # To show what calls are being made underneath to the proxy and checksum db.
+# curl https://proxy.golang.org/github.com/ardanlabs/conf/@v/list
 # curl https://proxy.golang.org/github.com/ardanlabs/conf/v3/@v/list
-# curl https://proxy.golang.org/github.com/ardanlabs/conf/v3/@v/v3.1.1.info, v3.1.1.mod, or v3.1.1.zip
+# curl https://proxy.golang.org/github.com/ardanlabs/conf/v3/@v/v3.1.1.info
+# curl https://proxy.golang.org/github.com/ardanlabs/conf/v3/@v/v3.1.1.mod
+# curl https://proxy.golang.org/github.com/ardanlabs/conf/v3/@v/v3.1.1.zip
 # curl https://sum.golang.org/lookup/github.com/ardanlabs/conf/v3@v3.1.1
 #
 
@@ -50,11 +54,11 @@ SHELL := /bin/bash
 
 dev.setup.mac:
 	brew update
+	brew tap hashicorp/tap
 	brew list kind || brew install kind
 	brew list kubectl || brew install kubectl
 	brew list kustomize || brew install kustomize
 	brew list pgcli || brew install pgcli
-	brew tap hashicorp/tap
 	brew list vault || brew install vault
 
 dev.docker:
@@ -93,10 +97,9 @@ metrics:
 # Running from within k8s/kind
 
 KIND_CLUSTER := ardan-starter-cluster
-
-# Upgrade to latest Kind: brew upgrade kind
-# For full Kind v0.16 release notes: https://github.com/kubernetes-sigs/kind/releases/tag/v0.16.0
-# The image used below was copied by the above link and supports both amd64 and arm64.
+POSTGRES := postgres:14-alpine
+VAULT := hashicorp/vault:1.12
+ZIPKIN := openzipkin/zipkin:2.23
 
 kind-up:
 	kind create cluster \
@@ -113,9 +116,9 @@ kind-load:
 	cd zarf/k8s/kind/sales-pod; kustomize edit set image metrics-image=metrics-amd64:$(VERSION)
 	kind load docker-image sales-api-amd64:$(VERSION) --name $(KIND_CLUSTER)
 	kind load docker-image metrics-amd64:$(VERSION) --name $(KIND_CLUSTER)
-	kind load docker-image postgres:14-alpine --name $(KIND_CLUSTER)
-	kind load docker-image hashicorp/vault:1.12 --name $(KIND_CLUSTER)
-	kind load docker-image openzipkin/zipkin:2.23 --name $(KIND_CLUSTER)
+	kind load docker-image $(POSTGRES) --name $(KIND_CLUSTER)
+	kind load docker-image $(VAULT) --name $(KIND_CLUSTER)
+	kind load docker-image $(ZIPKIN) --name $(KIND_CLUSTER)
 
 kind-apply:
 	kustomize build zarf/k8s/kind/database-pod | kubectl apply -f -
@@ -225,6 +228,15 @@ seed: migrate
 vault:
 	go run app/tooling/sales-admin/main.go vault
 
+pgcli:
+	pgcli postgresql://postgres:postgres@localhost
+
+liveness:
+	curl -il http://localhost:4000/debug/liveness
+
+readiness:
+	curl -il http://localhost:4000/debug/readiness
+
 # ==============================================================================
 # Running tests within the local computer
 # go install honnef.co/go/tools/cmd/staticcheck@latest
@@ -270,6 +282,7 @@ docker-clean:
 
 docker-kind-logs:
 	docker logs -f $(KIND_CLUSTER)-control-plane
+
 
 # ==============================================================================
 # GCP
