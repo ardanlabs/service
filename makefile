@@ -55,7 +55,7 @@ dev.setup.mac:
 	brew list kustomize || brew install kustomize
 	brew list pgcli || brew install pgcli
 	brew tap hashicorp/tap
-	brew list hashicorp/tap/vault || brew install hashicorp/tap/vault
+	brew list vault || brew install vault
 
 dev.docker:
 	docker pull hashicorp/vault:1.12
