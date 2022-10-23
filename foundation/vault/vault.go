@@ -69,55 +69,15 @@ func New(cfg Config) (*Vault, error) {
 	}, nil
 }
 
-// PrivateKey searches the key store for a given kid and returns
-// the private key.
-func (v *Vault) PrivateKey(kid string) (*rsa.PrivateKey, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
-	privatePEM, err := v.requestSecret(ctx, kid)
-	if err != nil {
-		return nil, fmt.Errorf("kid lookup failed: %w", err)
-	}
-
-	privateKey, err := parseRSAPrivateKeyFromPEM([]byte(privatePEM))
-	if err != nil {
-		return nil, fmt.Errorf("parsing private key: %w", err)
-	}
-
-	return privateKey, nil
-}
-
-// PublicKey searches the key store for a given kid and returns
-// the public key.
-func (v *Vault) PublicKey(kid string) (*rsa.PublicKey, error) {
-	if pk, err := v.keyLookup(kid); err == nil {
-		return pk, nil
-	}
-
-	privateKey, err := v.PrivateKey(kid)
-	if err != nil {
-		return nil, err
-	}
-
-	v.mu.Lock()
-	{
-		v.store[kid] = &privateKey.PublicKey
-	}
-	v.mu.Unlock()
-
-	return &privateKey.PublicKey, nil
-}
-
-// PutKey places a new secret in Vault.
-func (v *Vault) PutKey(ctx context.Context, key string, value string) error {
-	url := fmt.Sprintf("%s/v1/%s/data/%s", v.address, v.mountPath, key)
+// AddPrivateKey adds a new private key into vault as PEM encoded.
+func (v *Vault) AddPrivateKey(ctx context.Context, kid string, pem []byte) error {
+	url := fmt.Sprintf("%s/v1/%s/data/%s", v.address, v.mountPath, kid)
 
 	data := struct {
 		M map[string]string `json:"data"`
 	}{
 		M: map[string]string{
-			"pk": value,
+			"pem": string(pem),
 		},
 	}
 	var b bytes.Buffer
@@ -148,6 +108,46 @@ func (v *Vault) PutKey(ctx context.Context, key string, value string) error {
 	return nil
 }
 
+// PrivateKey searches the key store for a given kid and returns
+// the private key.
+func (v *Vault) PrivateKey(kid string) (*rsa.PrivateKey, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	privatePEM, err := v.retrieveKID(ctx, kid)
+	if err != nil {
+		return nil, fmt.Errorf("kid lookup failed: %w", err)
+	}
+
+	privateKey, err := toPrivateKey(privatePEM)
+	if err != nil {
+		return nil, fmt.Errorf("parsing private key: %w", err)
+	}
+
+	return privateKey, nil
+}
+
+// PublicKey searches the key store for a given kid and returns
+// the public key.
+func (v *Vault) PublicKey(kid string) (*rsa.PublicKey, error) {
+	if pk, err := v.keyLookup(kid); err == nil {
+		return pk, nil
+	}
+
+	privateKey, err := v.PrivateKey(kid)
+	if err != nil {
+		return nil, err
+	}
+
+	v.mu.Lock()
+	{
+		v.store[kid] = &privateKey.PublicKey
+	}
+	v.mu.Unlock()
+
+	return &privateKey.PublicKey, nil
+}
+
 // =============================================================================
 
 // keyLookup performs a safe lookup in the store map.
@@ -162,10 +162,10 @@ func (v *Vault) keyLookup(kid string) (*rsa.PublicKey, error) {
 	return nil, errors.New("not found")
 }
 
-// requestSecret performs the HTTP call against the Vault service for the
-// specified key.
-func (v *Vault) requestSecret(ctx context.Context, key string) (string, error) {
-	url := fmt.Sprintf("%s/v1/%s/data/%s", v.address, v.mountPath, key)
+// retrieveKID performs the HTTP call against the Vault service for the
+// specified kid and returns the pem value.
+func (v *Vault) retrieveKID(ctx context.Context, kid string) (string, error) {
+	url := fmt.Sprintf("%s/v1/%s/data/%s", v.address, v.mountPath, kid)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
@@ -201,20 +201,21 @@ func (v *Vault) requestSecret(ctx context.Context, key string) (string, error) {
 		return "", fmt.Errorf("decoding: %w", err)
 	}
 
-	keyValue, ok := data.Data.Data["pk"]
+	pem, ok := data.Data.Data["pem"]
 	if !ok {
-		return "", fmt.Errorf("key %q does not exist", key)
+		return "", fmt.Errorf("kid %q does not exist", kid)
 	}
 
-	return keyValue, nil
+	return pem, nil
 }
 
 // =============================================================================
 
-// parseRSAPrivateKeyFromPEM was taken from the JWT package to reduce the dependency.
-func parseRSAPrivateKeyFromPEM(key []byte) (*rsa.PrivateKey, error) {
+// toPrivateKey was taken from the JWT package to reduce the dependency. It
+// accepts a PEM encoding of a RSA private key and converts to a proper type.
+func toPrivateKey(privateKeyPEM string) (*rsa.PrivateKey, error) {
 	var block *pem.Block
-	if block, _ = pem.Decode(key); block == nil {
+	if block, _ = pem.Decode([]byte(privateKeyPEM)); block == nil {
 		return nil, errors.New("invalid key: Key must be a PEM encoded PKCS1 or PKCS8 key")
 	}
 

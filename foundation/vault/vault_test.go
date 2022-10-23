@@ -74,7 +74,7 @@ func Test_Vault(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to encode pk to PEM.", success, testID)
 
-			if err := vault.PutKey(context.Background(), key, bExp.String()); err != nil {
+			if err := vault.AddPrivateKey(context.Background(), key, bExp.Bytes()); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to put the PEM into Vault: %v", failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to put the PEM into Vault.", success, testID)

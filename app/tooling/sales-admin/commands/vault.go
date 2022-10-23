@@ -58,10 +58,10 @@ func loadKeys(vault *vault.Vault, mountPath string, fsys fs.FS) error {
 			return fmt.Errorf("reading auth private key: %w", err)
 		}
 
-		key := strings.TrimSuffix(dirEntry.Name(), ".pem")
-		fmt.Println("Loading Key:", key)
+		kid := strings.TrimSuffix(dirEntry.Name(), ".pem")
+		fmt.Println("Loading kid:", kid)
 
-		if err := vault.PutKey(context.Background(), key, string(privatePEM)); err != nil {
+		if err := vault.AddPrivateKey(context.Background(), kid, privatePEM); err != nil {
 			return fmt.Errorf("put: %w", err)
 		}
 
