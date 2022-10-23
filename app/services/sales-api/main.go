@@ -82,9 +82,8 @@ func run(log *zap.SugaredLogger) error {
 			DebugHost       string        `conf:"default:0.0.0.0:4000"`
 		}
 		Vault struct {
-			Address    string `conf:"default:http://0.0.0.0:8200"`
-			MountPath  string `conf:"default:secret"`
-			SecretPath string `conf:"default:sales"`
+			Address   string `conf:"default:http://0.0.0.0:8200"`
+			MountPath string `conf:"default:secret"`
 
 			// This MUST be handled like any root credential.
 			// This value comes from Vault when it starts.
@@ -144,17 +143,16 @@ func run(log *zap.SugaredLogger) error {
 
 	log.Infow("startup", "status", "initializing authentication support")
 
-	ks, err := vault.New(vault.Config{
-		Address:    cfg.Vault.Address,
-		Token:      cfg.Vault.Token,
-		MountPath:  cfg.Vault.MountPath,
-		SecretPath: cfg.Vault.SecretPath,
+	vault, err := vault.New(vault.Config{
+		Address:   cfg.Vault.Address,
+		Token:     cfg.Vault.Token,
+		MountPath: cfg.Vault.MountPath,
 	})
 	if err != nil {
 		return fmt.Errorf("constructing vault: %w", err)
 	}
 
-	auth, err := auth.New(cfg.Auth.ActiveKID, ks)
+	auth, err := auth.New(cfg.Auth.ActiveKID, vault)
 	if err != nil {
 		return fmt.Errorf("constructing auth: %w", err)
 	}

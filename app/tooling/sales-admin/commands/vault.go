@@ -10,29 +10,27 @@ import (
 	"strings"
 
 	"github.com/ardanlabs/service/foundation/vault"
-	"github.com/hashicorp/vault/api"
 )
 
 // Vault loads the current private key into the vault system.
 func Vault(vaultConfig vault.Config, keysFolder string) error {
-	client, err := api.NewClient(&api.Config{
-		Address: vaultConfig.Address,
+	vault, err := vault.New(vault.Config{
+		Address:   vaultConfig.Address,
+		Token:     vaultConfig.Token,
+		MountPath: vaultConfig.MountPath,
 	})
 	if err != nil {
-		return fmt.Errorf("creating client: %w", err)
+		return fmt.Errorf("constructing vault: %w", err)
 	}
-	client.SetToken(vaultConfig.Token)
 
-	if err := loadKeys(client, vaultConfig.MountPath, vaultConfig.SecretPath, os.DirFS(keysFolder)); err != nil {
+	if err := loadKeys(vault, vaultConfig.MountPath, os.DirFS(keysFolder)); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func loadKeys(client *api.Client, mountPath string, secretPath string, fsys fs.FS) error {
-	v2 := client.KVv2(mountPath)
-
+func loadKeys(vault *vault.Vault, mountPath string, fsys fs.FS) error {
 	fn := func(fileName string, dirEntry fs.DirEntry, err error) error {
 		if err != nil {
 			return fmt.Errorf("walkdir failure: %w", err)
@@ -63,7 +61,7 @@ func loadKeys(client *api.Client, mountPath string, secretPath string, fsys fs.F
 		key := strings.TrimSuffix(dirEntry.Name(), ".pem")
 		fmt.Println("Loading Key:", key)
 
-		if _, err := v2.Put(context.Background(), secretPath, map[string]interface{}{key: string(privatePEM)}); err != nil {
+		if err := vault.PutKey(context.Background(), key, string(privatePEM)); err != nil {
 			return fmt.Errorf("put: %w", err)
 		}
 

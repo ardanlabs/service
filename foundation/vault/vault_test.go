@@ -12,7 +12,6 @@ import (
 
 	"github.com/ardanlabs/service/foundation/docker"
 	"github.com/ardanlabs/service/foundation/vault"
-	"github.com/hashicorp/vault/api"
 )
 
 // Success and failure markers.
@@ -25,10 +24,9 @@ func Test_Vault(t *testing.T) {
 	const address = "0.0.0.0:8200"
 	const token = "myroot"
 	const mountPath = "secret"
-	const secretPath = "sales"
+	const key = "54bb2165-71e1-41a6-af3e-7da4a0e1e2c1"
 	const image = "hashicorp/vault:1.12"
 	const port = "8200"
-	const key = "54bb2165-71e1-41a6-af3e-7da4a0e1e2c1"
 
 	args := []string{"-e", "VAULT_DEV_ROOT_TOKEN_ID=" + token, "-e", "VAULT_DEV_LISTEN_ADDRESS=" + address}
 
@@ -50,17 +48,15 @@ func Test_Vault(t *testing.T) {
 		testID := 0
 		t.Logf("\tTest %d:\tWhen handling a single key.", testID)
 		{
-			cfg := api.Config{
-				Address: "http://" + c.Host,
-			}
-			client, err := api.NewClient(&cfg)
+			vault, err := vault.New(vault.Config{
+				Address:   "http://" + c.Host,
+				Token:     token,
+				MountPath: mountPath,
+			})
 			if err != nil {
-				t.Fatalf("\t%s\tTest %d:\tShould be able to create a client: %v", failed, testID, err)
+				t.Fatalf("\t%s\tTest %d:\tShould be able to construct our Vault API: %v", failed, testID, err)
 			}
-			t.Logf("\t%s\tTest %d:\tShould be able to create a client.", success, testID)
-
-			client.SetToken(token)
-			v2 := client.KVv2(mountPath)
+			t.Logf("\t%s\tTest %d:\tShould be able to construct our Vault API.", success, testID)
 
 			pkExp, err := rsa.GenerateKey(rand.Reader, 2048)
 			if err != nil {
@@ -78,21 +74,10 @@ func Test_Vault(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to encode pk to PEM.", success, testID)
 
-			if _, err := v2.Put(context.Background(), secretPath, map[string]interface{}{key: bExp.String()}); err != nil {
+			if err := vault.PutKey(context.Background(), key, bExp.String()); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to put the PEM into Vault: %v", failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to put the PEM into Vault.", success, testID)
-
-			vault, err := vault.New(vault.Config{
-				Address:    cfg.Address,
-				Token:      token,
-				MountPath:  mountPath,
-				SecretPath: secretPath,
-			})
-			if err != nil {
-				t.Fatalf("\t%s\tTest %d:\tShould be able to construct our Vault API: %v", failed, testID, err)
-			}
-			t.Logf("\t%s\tTest %d:\tShould be able to construct our Vault API.", success, testID)
 
 			pkGot, err := vault.PrivateKey(key)
 			if err != nil {

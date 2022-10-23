@@ -39,6 +39,18 @@ SHELL := /bin/bash
 # vault kv get secret/sales
 # vault kv put secret/sales key="some data"
 #
+# curl \
+#   -H "X-Vault-Token: myroot" \
+#   -X GET \
+#   http://0.0.0.0:8200/v1/secret/data/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
+# 
+# curl \
+#   -H "X-Vault-Token: myroot" \
+#   -H "Content-Type: application/json" \
+#   -X POST \
+#   -d '{"data":{"pk":"PEM"}}' \
+#   http://127.0.0.1:8200/v1/secret/data/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
+#
 # For full Kind v0.16 release notes: https://github.com/kubernetes-sigs/kind/releases/tag/v0.16.0
 #
 # To show what calls are being made underneath to the proxy and checksum db.

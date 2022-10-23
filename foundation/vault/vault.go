@@ -3,52 +3,69 @@
 package vault
 
 import (
+	"bytes"
 	"context"
 	"crypto/rsa"
 	"crypto/x509"
+	"encoding/json"
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"net"
+	"net/http"
 	"sync"
 	"time"
-
-	"github.com/hashicorp/vault/api"
 )
+
+// This provides a default client configuration, but it's recommended
+// this is replaced by the user with application specific settings using
+// the WithClient function at the time a GraphQL is constructed.
+var defaultClient = http.Client{
+	Transport: &http.Transport{
+		Proxy: http.ProxyFromEnvironment,
+		DialContext: (&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+			DualStack: true,
+		}).DialContext,
+		ForceAttemptHTTP2:     true,
+		MaxIdleConns:          1,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+	},
+}
 
 // Config represents the mandatory settings needed to work with Vault.
 type Config struct {
-	Address    string
-	Token      string
-	MountPath  string
-	SecretPath string
+	Address   string
+	Token     string
+	MountPath string
+	Client    *http.Client
 }
 
 // Vault provides support to access Hashicorp's Vault product for keys.
 type Vault struct {
-	address    string
-	mountPath  string
-	secretPath string
-	client     *api.Client
-	mu         sync.RWMutex
-	store      map[string]*rsa.PublicKey
+	address   string
+	token     string
+	mountPath string
+	client    *http.Client
+	mu        sync.RWMutex
+	store     map[string]*rsa.PublicKey
 }
 
 // New constructs a vault for use.
 func New(cfg Config) (*Vault, error) {
-	client, err := api.NewClient(&api.Config{
-		Address: cfg.Address,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("creating client: %w", err)
+	if cfg.Client == nil {
+		cfg.Client = &defaultClient
 	}
-	client.SetToken(cfg.Token)
 
 	return &Vault{
-		address:    cfg.Address,
-		mountPath:  cfg.MountPath,
-		secretPath: cfg.SecretPath,
-		client:     client,
-		store:      make(map[string]*rsa.PublicKey),
+		address:   cfg.Address,
+		token:     cfg.Token,
+		mountPath: cfg.MountPath,
+		client:    cfg.Client,
+		store:     make(map[string]*rsa.PublicKey),
 	}, nil
 }
 
@@ -58,22 +75,12 @@ func (v *Vault) PrivateKey(kid string) (*rsa.PrivateKey, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	data, err := v.client.KVv2(v.mountPath).Get(ctx, v.secretPath)
+	privatePEM, err := v.requestSecret(ctx, kid)
 	if err != nil {
 		return nil, fmt.Errorf("kid lookup failed: %w", err)
 	}
 
-	privatePEM, exists := data.Data[kid]
-	if !exists {
-		return nil, errors.New("kid not found")
-	}
-
-	key, ok := privatePEM.(string)
-	if !ok {
-		return nil, errors.New("private PEM encoding is wrong")
-	}
-
-	privateKey, err := parseRSAPrivateKeyFromPEM([]byte(key))
+	privateKey, err := parseRSAPrivateKeyFromPEM([]byte(privatePEM))
 	if err != nil {
 		return nil, fmt.Errorf("parsing private key: %w", err)
 	}
@@ -102,6 +109,47 @@ func (v *Vault) PublicKey(kid string) (*rsa.PublicKey, error) {
 	return &privateKey.PublicKey, nil
 }
 
+// PutKey places a new secret in Vault.
+func (v *Vault) PutKey(ctx context.Context, key string, value string) error {
+	url := fmt.Sprintf("%s/v1/%s/data/%s", v.address, v.mountPath, key)
+
+	data := struct {
+		M map[string]string `json:"data"`
+	}{
+		M: map[string]string{
+			"pk": value,
+		},
+	}
+	var b bytes.Buffer
+	if err := json.NewEncoder(&b).Encode(data); err != nil {
+		return fmt.Errorf("encode data: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPut, url, &b)
+	if err != nil {
+		return fmt.Errorf("create request: %w", err)
+	}
+
+	req.Header.Set("X-Vault-Token", v.token)
+	req.Header.Set("Cache-Control", "no-cache")
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := v.client.Do(req)
+	if err != nil {
+		return fmt.Errorf("do: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("status code: %s", resp.Status)
+	}
+
+	return nil
+}
+
+// =============================================================================
+
 // keyLookup performs a safe lookup in the store map.
 func (v *Vault) keyLookup(kid string) (*rsa.PublicKey, error) {
 	v.mu.RLock()
@@ -112,6 +160,53 @@ func (v *Vault) keyLookup(kid string) (*rsa.PublicKey, error) {
 	}
 
 	return nil, errors.New("not found")
+}
+
+// requestSecret performs the HTTP call against the Vault service for the
+// specified key.
+func (v *Vault) requestSecret(ctx context.Context, key string) (string, error) {
+	url := fmt.Sprintf("%s/v1/%s/data/%s", v.address, v.mountPath, key)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return "", fmt.Errorf("create request: %w", err)
+	}
+
+	req.Header.Set("X-Vault-Token", v.token)
+	req.Header.Set("Cache-Control", "no-cache")
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := v.client.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("do: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("status code: %s", resp.Status)
+	}
+
+	var data struct {
+		RequestID     string `json:"request_id"`
+		LeaseID       string `json:"lease_id"`
+		Renewable     bool   `json:"renewable"`
+		LeaseDuration int    `json:"lease_duration"`
+		Data          struct {
+			Data map[string]string `json:"data"`
+		} `json:"data"`
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return "", fmt.Errorf("decoding: %w", err)
+	}
+
+	keyValue, ok := data.Data.Data["pk"]
+	if !ok {
+		return "", fmt.Errorf("key %q does not exist", key)
+	}
+
+	return keyValue, nil
 }
 
 // =============================================================================
