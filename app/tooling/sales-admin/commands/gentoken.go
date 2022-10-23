@@ -3,25 +3,24 @@ package commands
 import (
 	"context"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/ardanlabs/service/business/web/auth"
-	"github.com/ardanlabs/service/foundation/keystore"
+	"github.com/ardanlabs/service/foundation/vault"
 	"github.com/golang-jwt/jwt/v4"
 	"go.uber.org/zap"
 )
 
 // GenToken generates a JWT for the specified user.
-func GenToken(log *zap.SugaredLogger, cfg database.Config, userID string, kid string) error {
+func GenToken(log *zap.SugaredLogger, dbConfig database.Config, vaultConfig vault.Config, userID string, kid string) error {
 	if userID == "" || kid == "" {
 		fmt.Println("help: gentoken <user_id> <kid>")
 		return ErrHelp
 	}
 
-	db, err := database.Open(cfg)
+	db, err := database.Open(dbConfig)
 	if err != nil {
 		return fmt.Errorf("connect database: %w", err)
 	}
@@ -39,10 +38,9 @@ func GenToken(log *zap.SugaredLogger, cfg database.Config, userID string, kid st
 
 	// Construct a key store based on the key files stored in
 	// the specified directory.
-	keysFolder := "zarf/keys/"
-	ks, err := keystore.NewFS(os.DirFS(keysFolder))
+	ks, err := vault.New(vaultConfig)
 	if err != nil {
-		return fmt.Errorf("reading keys: %w", err)
+		return fmt.Errorf("new keystore: %w", err)
 	}
 
 	// Init the auth package.

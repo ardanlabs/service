@@ -229,6 +229,9 @@ seed: migrate
 vault:
 	go run app/tooling/sales-admin/main.go vault
 
+token:
+	go run app/tooling/sales-admin/main.go gentoken 5cf37266-3473-4006-984f-9325122678b7 54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
+
 pgcli:
 	pgcli postgresql://postgres:postgres@localhost
 

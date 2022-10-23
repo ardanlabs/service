@@ -7,6 +7,7 @@ import (
 	"context"
 	"crypto/rand"
 	"crypto/rsa"
+	"errors"
 	"fmt"
 	"testing"
 	"time"
@@ -16,7 +17,6 @@ import (
 	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/ardanlabs/service/business/web/auth"
 	"github.com/ardanlabs/service/foundation/docker"
-	"github.com/ardanlabs/service/foundation/keystore"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
@@ -157,7 +157,7 @@ func NewIntegration(t *testing.T, c *docker.Container, dbName string) *Test {
 	}
 
 	// Build an authenticator using this private key and id for the key store.
-	auth, err := auth.New(keyID, keystore.NewMap(map[string]*rsa.PrivateKey{keyID: privateKey}))
+	auth, err := auth.New(keyID, newStore(map[string]*rsa.PrivateKey{keyID: privateKey}))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -213,4 +213,40 @@ func StringPointer(s string) *string {
 // useful in some tests.
 func IntPointer(i int) *int {
 	return &i
+}
+
+// =============================================================================
+// Mock implementation of a keystore.
+
+// keyStore represents an in memory store implementation of the
+// KeyLookup interface for use with the auth package.
+type keyStore struct {
+	store map[string]*rsa.PrivateKey
+}
+
+// newStore constructs a KeyStore with an initial set of keys.
+func newStore(store map[string]*rsa.PrivateKey) *keyStore {
+	return &keyStore{
+		store: store,
+	}
+}
+
+// PrivateKey searches the key store for a given kid and returns
+// the private key.
+func (ks *keyStore) PrivateKey(kid string) (*rsa.PrivateKey, error) {
+	privateKey, found := ks.store[kid]
+	if !found {
+		return nil, errors.New("kid lookup failed")
+	}
+	return privateKey, nil
+}
+
+// PublicKey searches the key store for a given kid and returns
+// the public key.
+func (ks *keyStore) PublicKey(kid string) (*rsa.PublicKey, error) {
+	privateKey, found := ks.store[kid]
+	if !found {
+		return nil, errors.New("kid lookup failed")
+	}
+	return &privateKey.PublicKey, nil
 }

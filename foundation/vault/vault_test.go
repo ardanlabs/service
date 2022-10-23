@@ -1,18 +1,17 @@
-package keystore_test
+package vault_test
 
 import (
 	"bytes"
 	"context"
 	"crypto/rand"
 	"crypto/rsa"
-	"crypto/x509"
-	"embed" // Calls init function.
+	"crypto/x509" // Calls init function.
 	"encoding/pem"
 	"testing"
 	"time"
 
 	"github.com/ardanlabs/service/foundation/docker"
-	"github.com/ardanlabs/service/foundation/keystore"
+	"github.com/ardanlabs/service/foundation/vault"
 	"github.com/hashicorp/vault/api"
 )
 
@@ -21,36 +20,6 @@ const (
 	success = "\u2713"
 	failed  = "\u2717"
 )
-
-//go:embed *.pem
-var keyDocs embed.FS
-
-func Test_Read(t *testing.T) {
-	t.Log("Given the need to parse a directory of private key files.")
-	{
-		testID := 0
-		t.Logf("\tTest %d:\tWhen handling a directory of keyfile(s).", testID)
-		{
-			ks, err := keystore.NewFS(keyDocs)
-			if err != nil {
-				t.Fatalf("\t%s\tTest %d:\tShould be able to construct key store: %v", failed, testID, err)
-			}
-			t.Logf("\t%s\tTest %d:\tShould be able to construct key store.", success, testID)
-
-			const keyID = "test"
-			pk, err := ks.PrivateKey(keyID)
-			if err != nil {
-				t.Fatalf("\t%s\tTest %d:\tShould be able to find key in store: %v", failed, testID, err)
-			}
-			t.Logf("\t%s\tTest %d:\tShould be able to find key in store.", success, testID)
-
-			if err := pk.Validate(); err != nil {
-				t.Fatalf("\t%s\tTest %d:\tShould be able to validate the key: %v", failed, testID, err)
-			}
-			t.Logf("\t%s\tTest %d:\tShould be able to validate the key.", success, testID)
-		}
-	}
-}
 
 func Test_Vault(t *testing.T) {
 	const address = "0.0.0.0:8200"
@@ -114,7 +83,7 @@ func Test_Vault(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to put the PEM into Vault.", success, testID)
 
-			vault, err := keystore.NewVault(keystore.VaultConfig{
+			vault, err := vault.New(vault.Config{
 				Address:    cfg.Address,
 				Token:      token,
 				MountPath:  mountPath,

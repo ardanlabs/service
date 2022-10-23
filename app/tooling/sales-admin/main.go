@@ -9,7 +9,7 @@ import (
 	"github.com/ardanlabs/conf/v3"
 	"github.com/ardanlabs/service/app/tooling/sales-admin/commands"
 	"github.com/ardanlabs/service/business/sys/database"
-	"github.com/ardanlabs/service/foundation/logger"
+	"github.com/ardanlabs/service/foundation/vault"
 	"go.uber.org/zap"
 )
 
@@ -38,18 +38,10 @@ type config struct {
 }
 
 func main() {
-	log, err := logger.New("ADMIN")
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	defer log.Sync()
-
-	if err := run(log); err != nil {
+	if err := run(zap.NewNop().Sugar()); err != nil {
 		if !errors.Is(err, commands.ErrHelp) {
-			log.Errorw("startup", "ERROR", err)
+			fmt.Println("ERROR", err)
 		}
-		log.Sync()
 		os.Exit(1)
 	}
 }
@@ -69,14 +61,15 @@ func run(log *zap.SugaredLogger) error {
 			fmt.Println(help)
 			return nil
 		}
+
+		out, err := conf.String(&cfg)
+		if err != nil {
+			return fmt.Errorf("generating config for output: %w", err)
+		}
+		log.Infow("startup", "config", out)
+
 		return fmt.Errorf("parsing config: %w", err)
 	}
-
-	out, err := conf.String(&cfg)
-	if err != nil {
-		return fmt.Errorf("generating config for output: %w", err)
-	}
-	log.Infow("startup", "config", out)
 
 	return processCommands(cfg.Args, log, cfg)
 }
@@ -90,6 +83,13 @@ func processCommands(args conf.Args, log *zap.SugaredLogger, cfg config) error {
 		Host:       cfg.DB.Host,
 		Name:       cfg.DB.Name,
 		DisableTLS: cfg.DB.DisableTLS,
+	}
+
+	vaultConfig := vault.Config{
+		Address:    cfg.Vault.Address,
+		Token:      cfg.Vault.Token,
+		MountPath:  cfg.Vault.MountPath,
+		SecretPath: cfg.Vault.SecretPath,
 	}
 
 	switch args.Num(0) {
@@ -126,12 +126,12 @@ func processCommands(args conf.Args, log *zap.SugaredLogger, cfg config) error {
 	case "gentoken":
 		userID := args.Num(1)
 		kid := args.Num(2)
-		if err := commands.GenToken(log, dbConfig, userID, kid); err != nil {
+		if err := commands.GenToken(log, dbConfig, vaultConfig, userID, kid); err != nil {
 			return fmt.Errorf("generating token: %w", err)
 		}
 
 	case "vault":
-		if err := commands.Vault(cfg.Vault.Address, cfg.Vault.Token, cfg.Vault.MountPath, cfg.Vault.SecretPath, cfg.Vault.KeysFolder); err != nil {
+		if err := commands.Vault(vaultConfig, cfg.Vault.KeysFolder); err != nil {
 			return fmt.Errorf("setting private key: %w", err)
 		}
 

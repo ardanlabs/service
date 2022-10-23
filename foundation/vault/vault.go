@@ -1,8 +1,12 @@
-package keystore
+// Package vault provides support for accessing Hashicorp's vault service
+// to access private keys.
+package vault
 
 import (
 	"context"
 	"crypto/rsa"
+	"crypto/x509"
+	"encoding/pem"
 	"errors"
 	"fmt"
 	"sync"
@@ -11,8 +15,8 @@ import (
 	"github.com/hashicorp/vault/api"
 )
 
-// VaultConfig represents the mandatory settings needed to work with Vault.
-type VaultConfig struct {
+// Config represents the mandatory settings needed to work with Vault.
+type Config struct {
 	Address    string
 	Token      string
 	MountPath  string
@@ -29,8 +33,8 @@ type Vault struct {
 	store      map[string]*rsa.PublicKey
 }
 
-// NewVault constructs a vault for use.
-func NewVault(cfg VaultConfig) (*Vault, error) {
+// New constructs a vault for use.
+func New(cfg Config) (*Vault, error) {
 	client, err := api.NewClient(&api.Config{
 		Address: cfg.Address,
 	})
@@ -108,4 +112,30 @@ func (v *Vault) keyLookup(kid string) (*rsa.PublicKey, error) {
 	}
 
 	return nil, errors.New("not found")
+}
+
+// =============================================================================
+
+// parseRSAPrivateKeyFromPEM was taken from the JWT package to reduce the dependency.
+func parseRSAPrivateKeyFromPEM(key []byte) (*rsa.PrivateKey, error) {
+	var block *pem.Block
+	if block, _ = pem.Decode(key); block == nil {
+		return nil, errors.New("invalid key: Key must be a PEM encoded PKCS1 or PKCS8 key")
+	}
+
+	var parsedKey interface{}
+	parsedKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+	if err != nil {
+		parsedKey, err = x509.ParsePKCS8PrivateKey(block.Bytes)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	pkey, ok := parsedKey.(*rsa.PrivateKey)
+	if !ok {
+		return nil, errors.New("key is not a valid RSA private key")
+	}
+
+	return pkey, nil
 }

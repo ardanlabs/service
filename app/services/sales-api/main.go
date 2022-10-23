@@ -16,8 +16,8 @@ import (
 	"github.com/ardanlabs/service/app/services/sales-api/handlers"
 	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/ardanlabs/service/business/web/auth"
-	"github.com/ardanlabs/service/foundation/keystore"
 	"github.com/ardanlabs/service/foundation/logger"
+	"github.com/ardanlabs/service/foundation/vault"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/zipkin"
@@ -144,7 +144,7 @@ func run(log *zap.SugaredLogger) error {
 
 	log.Infow("startup", "status", "initializing authentication support")
 
-	ks, err := keystore.NewVault(keystore.VaultConfig{
+	ks, err := vault.New(vault.Config{
 		Address:    cfg.Vault.Address,
 		Token:      cfg.Vault.Token,
 		MountPath:  cfg.Vault.MountPath,

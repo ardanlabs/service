@@ -9,20 +9,21 @@ import (
 	"path"
 	"strings"
 
+	"github.com/ardanlabs/service/foundation/vault"
 	"github.com/hashicorp/vault/api"
 )
 
 // Vault loads the current private key into the vault system.
-func Vault(address string, token string, mountPath string, secretPath string, keysFolder string) error {
+func Vault(vaultConfig vault.Config, keysFolder string) error {
 	client, err := api.NewClient(&api.Config{
-		Address: address,
+		Address: vaultConfig.Address,
 	})
 	if err != nil {
 		return fmt.Errorf("creating client: %w", err)
 	}
-	client.SetToken(token)
+	client.SetToken(vaultConfig.Token)
 
-	if err := loadKeys(client, mountPath, secretPath, os.DirFS(keysFolder)); err != nil {
+	if err := loadKeys(client, vaultConfig.MountPath, vaultConfig.SecretPath, os.DirFS(keysFolder)); err != nil {
 		return err
 	}
 
