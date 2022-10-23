@@ -31,7 +31,8 @@ SHELL := /bin/bash
 # Launch zipkin.
 # http://localhost:9411/zipkin/
 #
-# Vault CLI commands.
+# Vault Information.
+# READ THIS: https://developer.hashicorp.com/vault/docs/concepts/tokens
 # export VAULT_TOKEN=myroot
 # export VAULT_ADDR='http://0.0.0.0:8200'
 # vault secrets list
