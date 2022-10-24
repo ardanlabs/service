@@ -95,13 +95,8 @@ func StatusCheck(ctx context.Context, db *sqlx.DB) error {
 	return db.QueryRowContext(ctx, q).Scan(&tmp)
 }
 
-// Transactor interface needed to begin transaction.
-type Transactor interface {
-	Beginx() (*sqlx.Tx, error)
-}
-
 // WithinTran runs passed function and do commit/rollback at the end.
-func WithinTran(ctx context.Context, log *zap.SugaredLogger, db Transactor, fn func(sqlx.ExtContext) error) error {
+func WithinTran(ctx context.Context, log *zap.SugaredLogger, db *sqlx.DB, fn func(*sqlx.Tx) error) error {
 	traceID := web.GetTraceID(ctx)
 
 	// Begin the transaction.
