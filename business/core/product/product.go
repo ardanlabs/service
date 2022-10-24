@@ -9,11 +9,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ardanlabs/service/business/core/product/db"
 	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/ardanlabs/service/business/sys/validate"
-	"github.com/jmoiron/sqlx"
-	"go.uber.org/zap"
 )
 
 // Set of error variables for CRUD operations.
@@ -22,15 +19,25 @@ var (
 	ErrInvalidID = errors.New("ID is not in its proper form")
 )
 
+// Store interface declares the behavior core needs to perists and retrieve data.
+type Store interface {
+	Create(ctx context.Context, prd Product) error
+	Update(ctx context.Context, prd Product) error
+	Delete(ctx context.Context, productID string) error
+	Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]Product, error)
+	QueryByID(ctx context.Context, productID string) (Product, error)
+	QueryByUserID(ctx context.Context, userID string) ([]Product, error)
+}
+
 // Core manages the set of APIs for product access.
 type Core struct {
-	store db.Store
+	store Store
 }
 
 // NewCore constructs a core for product api access.
-func NewCore(log *zap.SugaredLogger, sqlxDB *sqlx.DB) Core {
+func NewCore(store Store) Core {
 	return Core{
-		store: db.NewStore(log, sqlxDB),
+		store: store,
 	}
 }
 
@@ -41,7 +48,7 @@ func (c Core) Create(ctx context.Context, np NewProduct, now time.Time) (Product
 		return Product{}, fmt.Errorf("validating data: %w", err)
 	}
 
-	dbPrd := db.Product{
+	prd := Product{
 		ID:          validate.GenerateID(),
 		Name:        np.Name,
 		Cost:        np.Cost,
@@ -51,11 +58,11 @@ func (c Core) Create(ctx context.Context, np NewProduct, now time.Time) (Product
 		DateUpdated: now,
 	}
 
-	if err := c.store.Create(ctx, dbPrd); err != nil {
+	if err := c.store.Create(ctx, prd); err != nil {
 		return Product{}, fmt.Errorf("create: %w", err)
 	}
 
-	return toProduct(dbPrd), nil
+	return prd, nil
 }
 
 // Update modifies data about a Product. It will error if the specified ID is
@@ -69,7 +76,7 @@ func (c Core) Update(ctx context.Context, productID string, up UpdateProduct, no
 		return fmt.Errorf("validating data: %w", err)
 	}
 
-	dbPrd, err := c.store.QueryByID(ctx, productID)
+	prd, err := c.store.QueryByID(ctx, productID)
 	if err != nil {
 		if errors.Is(err, database.ErrDBNotFound) {
 			return ErrNotFound
@@ -78,17 +85,17 @@ func (c Core) Update(ctx context.Context, productID string, up UpdateProduct, no
 	}
 
 	if up.Name != nil {
-		dbPrd.Name = *up.Name
+		prd.Name = *up.Name
 	}
 	if up.Cost != nil {
-		dbPrd.Cost = *up.Cost
+		prd.Cost = *up.Cost
 	}
 	if up.Quantity != nil {
-		dbPrd.Quantity = *up.Quantity
+		prd.Quantity = *up.Quantity
 	}
-	dbPrd.DateUpdated = now
+	prd.DateUpdated = now
 
-	if err := c.store.Update(ctx, dbPrd); err != nil {
+	if err := c.store.Update(ctx, prd); err != nil {
 		return fmt.Errorf("update: %w", err)
 	}
 
@@ -110,12 +117,12 @@ func (c Core) Delete(ctx context.Context, productID string) error {
 
 // Query gets all Products from the database.
 func (c Core) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]Product, error) {
-	dbPrds, err := c.store.Query(ctx, pageNumber, rowsPerPage)
+	prds, err := c.store.Query(ctx, pageNumber, rowsPerPage)
 	if err != nil {
 		return nil, fmt.Errorf("query: %w", err)
 	}
 
-	return toProductSlice(dbPrds), nil
+	return prds, nil
 }
 
 // QueryByID finds the product identified by a given ID.
@@ -124,7 +131,7 @@ func (c Core) QueryByID(ctx context.Context, productID string) (Product, error) 
 		return Product{}, ErrInvalidID
 	}
 
-	dbPrd, err := c.store.QueryByID(ctx, productID)
+	prd, err := c.store.QueryByID(ctx, productID)
 	if err != nil {
 		if errors.Is(err, database.ErrDBNotFound) {
 			return Product{}, ErrNotFound
@@ -132,7 +139,7 @@ func (c Core) QueryByID(ctx context.Context, productID string) (Product, error) 
 		return Product{}, fmt.Errorf("query: %w", err)
 	}
 
-	return toProduct(dbPrd), nil
+	return prd, nil
 }
 
 // QueryByUserID finds the products identified by a given User ID.
@@ -141,10 +148,10 @@ func (c Core) QueryByUserID(ctx context.Context, userID string) ([]Product, erro
 		return nil, ErrInvalidID
 	}
 
-	dbPrds, err := c.store.QueryByUserID(ctx, userID)
+	prds, err := c.store.QueryByUserID(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("query: %w", err)
 	}
 
-	return toProductSlice(dbPrds), nil
+	return prds, nil
 }

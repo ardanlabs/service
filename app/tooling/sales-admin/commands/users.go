@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/core/user"
+	"github.com/ardanlabs/service/business/core/user/stores/userdb"
 	"github.com/ardanlabs/service/business/sys/database"
 	"go.uber.org/zap"
 )
@@ -34,9 +35,9 @@ func Users(log *zap.SugaredLogger, cfg database.Config, pageNumber string, rowsP
 		return fmt.Errorf("converting rows per page: %w", err)
 	}
 
-	user := user.NewCore(log, db)
+	core := user.NewCore(userdb.NewStore(log, db))
 
-	users, err := user.Query(ctx, page, rows)
+	users, err := core.Query(ctx, page, rows)
 	if err != nil {
 		return fmt.Errorf("retrieve users: %w", err)
 	}

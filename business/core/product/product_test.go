@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/core/product"
+	"github.com/ardanlabs/service/business/core/product/stores/productdb"
 	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/ardanlabs/service/foundation/docker"
 	"github.com/google/go-cmp/cmp"
@@ -31,7 +32,7 @@ func Test_Product(t *testing.T) {
 	log, db, teardown := dbtest.NewUnit(t, c, "testprod")
 	t.Cleanup(teardown)
 
-	core := product.NewCore(log, db)
+	core := product.NewCore(productdb.NewStore(log, db))
 
 	t.Log("Given the need to work with Product records.")
 	{

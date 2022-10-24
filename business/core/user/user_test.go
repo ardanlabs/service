@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/core/user"
+	"github.com/ardanlabs/service/business/core/user/stores/userdb"
 	"github.com/ardanlabs/service/business/data/dbschema"
 	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/ardanlabs/service/business/web/auth"
@@ -33,7 +34,7 @@ func Test_User(t *testing.T) {
 	log, db, teardown := dbtest.NewUnit(t, c, "testuser")
 	t.Cleanup(teardown)
 
-	core := user.NewCore(log, db)
+	core := user.NewCore(userdb.NewStore(log, db))
 
 	t.Log("Given the need to work with User records.")
 	{
@@ -123,7 +124,7 @@ func Test_PagingUser(t *testing.T) {
 
 	dbschema.Seed(ctx, db)
 
-	user := user.NewCore(log, db)
+	core := user.NewCore(userdb.NewStore(log, db))
 
 	t.Log("Given the need to page through User records.")
 	{
@@ -132,7 +133,7 @@ func Test_PagingUser(t *testing.T) {
 		{
 			ctx := context.Background()
 
-			users1, err := user.Query(ctx, 1, 1)
+			users1, err := core.Query(ctx, 1, 1)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve users for page 1 : %s.", dbtest.Failed, testID, err)
 			}
@@ -143,7 +144,7 @@ func Test_PagingUser(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould have a single user.", dbtest.Success, testID)
 
-			users2, err := user.Query(ctx, 2, 1)
+			users2, err := core.Query(ctx, 2, 1)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve users for page 2 : %s.", dbtest.Failed, testID, err)
 			}

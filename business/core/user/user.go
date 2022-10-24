@@ -9,13 +9,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ardanlabs/service/business/core/user/db"
 	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/ardanlabs/service/business/web/auth"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/jmoiron/sqlx"
-	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -28,15 +26,27 @@ var (
 	ErrAuthenticationFailure = errors.New("authentication failed")
 )
 
+// Store interface declares the behavior core needs to perists and retrieve data.
+type Store interface {
+	WithinTran(ctx context.Context, fn func(sqlx.ExtContext) error) error
+	Tran(tx sqlx.ExtContext) Store
+	Create(ctx context.Context, usr User) error
+	Update(ctx context.Context, usr User) error
+	Delete(ctx context.Context, userID string) error
+	Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]User, error)
+	QueryByID(ctx context.Context, userID string) (User, error)
+	QueryByEmail(ctx context.Context, email string) (User, error)
+}
+
 // Core manages the set of APIs for user access.
 type Core struct {
-	store db.Store
+	store Store
 }
 
 // NewCore constructs a core for user api access.
-func NewCore(log *zap.SugaredLogger, sqlxDB *sqlx.DB) Core {
+func NewCore(store Store) Core {
 	return Core{
-		store: db.NewStore(log, sqlxDB),
+		store: store,
 	}
 }
 
@@ -51,7 +61,7 @@ func (c Core) Create(ctx context.Context, nu NewUser, now time.Time) (User, erro
 		return User{}, fmt.Errorf("generating password hash: %w", err)
 	}
 
-	dbUsr := db.User{
+	user := User{
 		ID:           validate.GenerateID(),
 		Name:         nu.Name,
 		Email:        nu.Email,
@@ -63,7 +73,7 @@ func (c Core) Create(ctx context.Context, nu NewUser, now time.Time) (User, erro
 
 	// This provides an example of how to execute a transaction if required.
 	tran := func(tx sqlx.ExtContext) error {
-		if err := c.store.Tran(tx).Create(ctx, dbUsr); err != nil {
+		if err := c.store.Tran(tx).Create(ctx, user); err != nil {
 			if errors.Is(err, database.ErrDBDuplicatedEntry) {
 				return fmt.Errorf("create: %w", ErrUniqueEmail)
 			}
@@ -76,7 +86,7 @@ func (c Core) Create(ctx context.Context, nu NewUser, now time.Time) (User, erro
 		return User{}, fmt.Errorf("tran: %w", err)
 	}
 
-	return toUser(dbUsr), nil
+	return user, nil
 }
 
 // Update replaces a user document in the database.
@@ -89,7 +99,7 @@ func (c Core) Update(ctx context.Context, userID string, uu UpdateUser, now time
 		return fmt.Errorf("validating data: %w", err)
 	}
 
-	dbUsr, err := c.store.QueryByID(ctx, userID)
+	user, err := c.store.QueryByID(ctx, userID)
 	if err != nil {
 		if errors.Is(err, database.ErrDBNotFound) {
 			return ErrNotFound
@@ -98,24 +108,24 @@ func (c Core) Update(ctx context.Context, userID string, uu UpdateUser, now time
 	}
 
 	if uu.Name != nil {
-		dbUsr.Name = *uu.Name
+		user.Name = *uu.Name
 	}
 	if uu.Email != nil {
-		dbUsr.Email = *uu.Email
+		user.Email = *uu.Email
 	}
 	if uu.Roles != nil {
-		dbUsr.Roles = uu.Roles
+		user.Roles = uu.Roles
 	}
 	if uu.Password != nil {
 		pw, err := bcrypt.GenerateFromPassword([]byte(*uu.Password), bcrypt.DefaultCost)
 		if err != nil {
 			return fmt.Errorf("generating password hash: %w", err)
 		}
-		dbUsr.PasswordHash = pw
+		user.PasswordHash = pw
 	}
-	dbUsr.DateUpdated = now
+	user.DateUpdated = now
 
-	if err := c.store.Update(ctx, dbUsr); err != nil {
+	if err := c.store.Update(ctx, user); err != nil {
 		if errors.Is(err, database.ErrDBDuplicatedEntry) {
 			return fmt.Errorf("updating user userID[%s]: %w", userID, ErrUniqueEmail)
 		}
@@ -140,12 +150,12 @@ func (c Core) Delete(ctx context.Context, userID string) error {
 
 // Query retrieves a list of existing users from the database.
 func (c Core) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]User, error) {
-	dbUsers, err := c.store.Query(ctx, pageNumber, rowsPerPage)
+	users, err := c.store.Query(ctx, pageNumber, rowsPerPage)
 	if err != nil {
 		return nil, fmt.Errorf("query: %w", err)
 	}
 
-	return toUserSlice(dbUsers), nil
+	return users, nil
 }
 
 // QueryByID gets the specified user from the database.
@@ -154,7 +164,7 @@ func (c Core) QueryByID(ctx context.Context, userID string) (User, error) {
 		return User{}, ErrInvalidID
 	}
 
-	dbUsr, err := c.store.QueryByID(ctx, userID)
+	user, err := c.store.QueryByID(ctx, userID)
 	if err != nil {
 		if errors.Is(err, database.ErrDBNotFound) {
 			return User{}, ErrNotFound
@@ -162,7 +172,7 @@ func (c Core) QueryByID(ctx context.Context, userID string) (User, error) {
 		return User{}, fmt.Errorf("query: %w", err)
 	}
 
-	return toUser(dbUsr), nil
+	return user, nil
 }
 
 // QueryByEmail gets the specified user from the database by email.
@@ -173,7 +183,7 @@ func (c Core) QueryByEmail(ctx context.Context, email string) (User, error) {
 		return User{}, ErrInvalidEmail
 	}
 
-	dbUsr, err := c.store.QueryByEmail(ctx, email)
+	user, err := c.store.QueryByEmail(ctx, email)
 	if err != nil {
 		if errors.Is(err, database.ErrDBNotFound) {
 			return User{}, ErrNotFound
@@ -181,7 +191,7 @@ func (c Core) QueryByEmail(ctx context.Context, email string) (User, error) {
 		return User{}, fmt.Errorf("query: %w", err)
 	}
 
-	return toUser(dbUsr), nil
+	return user, nil
 }
 
 // Authenticate finds a user by their email and verifies their password. On

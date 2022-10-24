@@ -1,10 +1,11 @@
-// Package db contains user related CRUD functionality.
-package db
+// Package userdb contains user related CRUD functionality.
+package userdb
 
 import (
 	"context"
 	"fmt"
 
+	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
@@ -36,7 +37,7 @@ func (s Store) WithinTran(ctx context.Context, fn func(sqlx.ExtContext) error) e
 }
 
 // Tran return new Store with transaction in it.
-func (s Store) Tran(tx sqlx.ExtContext) Store {
+func (s Store) Tran(tx sqlx.ExtContext) user.Store {
 	return Store{
 		log:          s.log,
 		tr:           s.tr,
@@ -46,14 +47,14 @@ func (s Store) Tran(tx sqlx.ExtContext) Store {
 }
 
 // Create inserts a new user into the database.
-func (s Store) Create(ctx context.Context, usr User) error {
+func (s Store) Create(ctx context.Context, usr user.User) error {
 	const q = `
 	INSERT INTO users
 		(user_id, name, email, password_hash, roles, date_created, date_updated)
 	VALUES
 		(:user_id, :name, :email, :password_hash, :roles, :date_created, :date_updated)`
 
-	if err := database.NamedExecContext(ctx, s.log, s.db, q, usr); err != nil {
+	if err := database.NamedExecContext(ctx, s.log, s.db, q, toDBUser(usr)); err != nil {
 		return fmt.Errorf("inserting user: %w", err)
 	}
 
@@ -61,7 +62,7 @@ func (s Store) Create(ctx context.Context, usr User) error {
 }
 
 // Update replaces a user document in the database.
-func (s Store) Update(ctx context.Context, usr User) error {
+func (s Store) Update(ctx context.Context, usr user.User) error {
 	const q = `
 	UPDATE
 		users
@@ -74,7 +75,7 @@ func (s Store) Update(ctx context.Context, usr User) error {
 	WHERE
 		user_id = :user_id`
 
-	if err := database.NamedExecContext(ctx, s.log, s.db, q, usr); err != nil {
+	if err := database.NamedExecContext(ctx, s.log, s.db, q, toDBUser(usr)); err != nil {
 		return fmt.Errorf("updating userID[%s]: %w", usr.ID, err)
 	}
 
@@ -103,7 +104,7 @@ func (s Store) Delete(ctx context.Context, userID string) error {
 }
 
 // Query retrieves a list of existing users from the database.
-func (s Store) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]User, error) {
+func (s Store) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]user.User, error) {
 	data := struct {
 		Offset      int `db:"offset"`
 		RowsPerPage int `db:"rows_per_page"`
@@ -121,16 +122,16 @@ func (s Store) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]Us
 		user_id
 	OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY`
 
-	var usrs []User
+	var usrs []dbUser
 	if err := database.NamedQuerySlice(ctx, s.log, s.db, q, data, &usrs); err != nil {
 		return nil, fmt.Errorf("selecting users: %w", err)
 	}
 
-	return usrs, nil
+	return toCoreUserSlice(usrs), nil
 }
 
 // QueryByID gets the specified user from the database.
-func (s Store) QueryByID(ctx context.Context, userID string) (User, error) {
+func (s Store) QueryByID(ctx context.Context, userID string) (user.User, error) {
 	data := struct {
 		UserID string `db:"user_id"`
 	}{
@@ -145,16 +146,16 @@ func (s Store) QueryByID(ctx context.Context, userID string) (User, error) {
 	WHERE 
 		user_id = :user_id`
 
-	var usr User
+	var usr dbUser
 	if err := database.NamedQueryStruct(ctx, s.log, s.db, q, data, &usr); err != nil {
-		return User{}, fmt.Errorf("selecting userID[%q]: %w", userID, err)
+		return user.User{}, fmt.Errorf("selecting userID[%q]: %w", userID, err)
 	}
 
-	return usr, nil
+	return toCoreUser(usr), nil
 }
 
 // QueryByEmail gets the specified user from the database by email.
-func (s Store) QueryByEmail(ctx context.Context, email string) (User, error) {
+func (s Store) QueryByEmail(ctx context.Context, email string) (user.User, error) {
 	data := struct {
 		Email string `db:"email"`
 	}{
@@ -169,10 +170,10 @@ func (s Store) QueryByEmail(ctx context.Context, email string) (User, error) {
 	WHERE
 		email = :email`
 
-	var usr User
+	var usr dbUser
 	if err := database.NamedQueryStruct(ctx, s.log, s.db, q, data, &usr); err != nil {
-		return User{}, fmt.Errorf("selecting email[%q]: %w", email, err)
+		return user.User{}, fmt.Errorf("selecting email[%q]: %w", email, err)
 	}
 
-	return usr, nil
+	return toCoreUser(usr), nil
 }

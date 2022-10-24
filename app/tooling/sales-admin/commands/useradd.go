@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/core/user"
+	"github.com/ardanlabs/service/business/core/user/stores/userdb"
 	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/ardanlabs/service/business/web/auth"
 	"go.uber.org/zap"
@@ -27,7 +28,7 @@ func UserAdd(log *zap.SugaredLogger, cfg database.Config, name, email, password 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	core := user.NewCore(log, db)
+	core := user.NewCore(userdb.NewStore(log, db))
 
 	nu := user.NewUser{
 		Name:            name,

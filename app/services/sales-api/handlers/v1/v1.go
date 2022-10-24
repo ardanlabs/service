@@ -8,7 +8,9 @@ import (
 	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/productgrp"
 	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/usergrp"
 	"github.com/ardanlabs/service/business/core/product"
+	"github.com/ardanlabs/service/business/core/product/stores/productdb"
 	"github.com/ardanlabs/service/business/core/user"
+	"github.com/ardanlabs/service/business/core/user/stores/userdb"
 	"github.com/ardanlabs/service/business/web/auth"
 	"github.com/ardanlabs/service/business/web/v1/mid"
 	"github.com/ardanlabs/service/foundation/web"
@@ -32,7 +34,7 @@ func Routes(app *web.App, cfg Config) {
 
 	// Register user management and authentication endpoints.
 	ugh := usergrp.Handlers{
-		User: user.NewCore(cfg.Log, cfg.DB),
+		User: user.NewCore(userdb.NewStore(cfg.Log, cfg.DB)),
 		Auth: cfg.Auth,
 	}
 	app.Handle(http.MethodGet, version, "/users/token", ugh.Token)
@@ -44,7 +46,7 @@ func Routes(app *web.App, cfg Config) {
 
 	// Register product and sale endpoints.
 	pgh := productgrp.Handlers{
-		Product: product.NewCore(cfg.Log, cfg.DB),
+		Product: product.NewCore(productdb.NewStore(cfg.Log, cfg.DB)),
 	}
 	app.Handle(http.MethodGet, version, "/products/:page/:rows", pgh.Query, authen)
 	app.Handle(http.MethodGet, version, "/products/:id", pgh.QueryByID, authen)

@@ -2,8 +2,6 @@ package product
 
 import (
 	"time"
-
-	"github.com/ardanlabs/service/business/core/product/db"
 )
 
 // Product represents an individual product.
@@ -37,18 +35,4 @@ type UpdateProduct struct {
 	Name     *string `json:"name"`
 	Cost     *int    `json:"cost" validate:"omitempty,gte=0"`
 	Quantity *int    `json:"quantity" validate:"omitempty,gte=1"`
-}
-
-// =============================================================================
-
-func toProduct(dbPrd db.Product) Product {
-	return Product(dbPrd)
-}
-
-func toProductSlice(dbPrds []db.Product) []Product {
-	prds := make([]Product, len(dbPrds))
-	for i, dbPrd := range dbPrds {
-		prds[i] = toProduct(dbPrd)
-	}
-	return prds
 }

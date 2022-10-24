@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/core/user"
+	"github.com/ardanlabs/service/business/core/user/stores/userdb"
 	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/ardanlabs/service/business/web/auth"
 	"github.com/ardanlabs/service/foundation/vault"
@@ -29,9 +30,9 @@ func GenToken(log *zap.SugaredLogger, dbConfig database.Config, vaultConfig vaul
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	user := user.NewCore(log, db)
+	core := user.NewCore(userdb.NewStore(log, db))
 
-	usr, err := user.QueryByID(ctx, userID)
+	usr, err := core.QueryByID(ctx, userID)
 	if err != nil {
 		return fmt.Errorf("retrieve user: %w", err)
 	}
