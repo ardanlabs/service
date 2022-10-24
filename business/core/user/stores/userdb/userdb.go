@@ -3,7 +3,6 @@ package userdb
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/ardanlabs/service/business/core/user"
@@ -27,20 +26,15 @@ func NewStore(log *zap.SugaredLogger, db *sqlx.DB) Store {
 }
 
 // WithinTran runs passed function and do commit/rollback at the end.
-func (s Store) WithinTran(ctx context.Context, fn func(*sqlx.Tx) error) error {
-	db, ok := s.db.(*sqlx.DB)
-	if !ok {
-		return errors.New("don't have a sqlx databse connection pool")
-	}
-
-	return database.WithinTran(ctx, s.log, db, fn)
+func (s Store) WithinTran(ctx context.Context, fn func(database.Tx) error) error {
+	return database.WithinTran(ctx, s.log, s.db.(*sqlx.DB), fn)
 }
 
 // Tran return new Store with transaction in it.
-func (s Store) Tran(tx *sqlx.Tx) user.Store {
+func (s Store) Tran(tx database.Tx) user.Store {
 	return Store{
 		log: s.log,
-		db:  tx,
+		db:  tx.(*sqlx.Tx),
 	}
 }
 

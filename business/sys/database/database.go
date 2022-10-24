@@ -95,8 +95,14 @@ func StatusCheck(ctx context.Context, db *sqlx.DB) error {
 	return db.QueryRowContext(ctx, q).Scan(&tmp)
 }
 
+// Tx represents behavior required for a transaction.
+type Tx interface {
+	Commit() error
+	Rollback() error
+}
+
 // WithinTran runs passed function and do commit/rollback at the end.
-func WithinTran(ctx context.Context, log *zap.SugaredLogger, db *sqlx.DB, fn func(*sqlx.Tx) error) error {
+func WithinTran(ctx context.Context, log *zap.SugaredLogger, db *sqlx.DB, fn func(Tx) error) error {
 	traceID := web.GetTraceID(ctx)
 
 	// Begin the transaction.
