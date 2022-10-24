@@ -15,6 +15,7 @@ import (
 type Store struct {
 	log *zap.SugaredLogger
 	db  sqlx.ExtContext
+	tx  database.Tx
 }
 
 // NewStore constructs a data for api access.
@@ -27,6 +28,10 @@ func NewStore(log *zap.SugaredLogger, db *sqlx.DB) Store {
 
 // WithinTran runs passed function and do commit/rollback at the end.
 func (s Store) WithinTran(ctx context.Context, fn func(database.Tx) error) error {
+	if s.tx != nil {
+		fn(s.tx)
+	}
+
 	return database.WithinTran(ctx, s.log, s.db.(*sqlx.DB), fn)
 }
 
@@ -35,6 +40,7 @@ func (s Store) Tran(tx database.Tx) user.Store {
 	return Store{
 		log: s.log,
 		db:  tx.(*sqlx.Tx),
+		tx:  tx,
 	}
 }
 
