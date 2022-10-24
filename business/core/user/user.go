@@ -27,8 +27,8 @@ var (
 
 // Store interface declares the behavior core needs to perists and retrieve data.
 type Store interface {
-	WithinTran(ctx context.Context, fn func(database.Tx) error) error
-	Tran(tx database.Tx) Store
+	WithinTran(ctx context.Context, fn func(tx any) error) error
+	Tran(tx any) Store
 	Create(ctx context.Context, usr User) error
 	Update(ctx context.Context, usr User) error
 	Delete(ctx context.Context, userID string) error
@@ -71,7 +71,7 @@ func (c Core) Create(ctx context.Context, nu NewUser, now time.Time) (User, erro
 	}
 
 	// This provides an example of how to execute a transaction if required.
-	tran := func(tx database.Tx) error {
+	tran := func(tx any) error {
 		if err := c.store.Tran(tx).Create(ctx, user); err != nil {
 			if errors.Is(err, database.ErrDBDuplicatedEntry) {
 				return fmt.Errorf("create: %w", ErrUniqueEmail)
