@@ -11,6 +11,7 @@ import (
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/core/user/stores/userdb"
 	"github.com/ardanlabs/service/business/sys/database"
+	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
 )
 
@@ -35,7 +36,7 @@ func Users(log *zap.SugaredLogger, cfg database.Config, pageNumber string, rowsP
 		return fmt.Errorf("converting rows per page: %w", err)
 	}
 
-	core := user.NewCore(userdb.NewStore(log, db))
+	core := user.NewCore[*sqlx.Tx](userdb.NewStore(log, db))
 
 	users, err := core.Query(ctx, page, rows)
 	if err != nil {

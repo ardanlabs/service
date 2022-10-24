@@ -14,6 +14,7 @@ import (
 	"github.com/ardanlabs/service/business/web/auth"
 	"github.com/ardanlabs/service/foundation/docker"
 	"github.com/google/go-cmp/cmp"
+	"github.com/jmoiron/sqlx"
 )
 
 var c *docker.Container
@@ -34,7 +35,7 @@ func Test_User(t *testing.T) {
 	log, db, teardown := dbtest.NewUnit(t, c, "testuser")
 	t.Cleanup(teardown)
 
-	core := user.NewCore(userdb.NewStore(log, db))
+	core := user.NewCore[*sqlx.Tx](userdb.NewStore(log, db))
 
 	t.Log("Given the need to work with User records.")
 	{
@@ -124,7 +125,7 @@ func Test_PagingUser(t *testing.T) {
 
 	dbschema.Seed(ctx, db)
 
-	core := user.NewCore(userdb.NewStore(log, db))
+	core := user.NewCore[*sqlx.Tx](userdb.NewStore(log, db))
 
 	t.Log("Given the need to page through User records.")
 	{

@@ -27,26 +27,20 @@ func NewStore(log *zap.SugaredLogger, db *sqlx.DB) Store {
 }
 
 // WithinTran runs passed function and do commit/rollback at the end.
-func (s Store) WithinTran(ctx context.Context, fn func(any) error) error {
+func (s Store) WithinTran(ctx context.Context, fn func(*sqlx.Tx) error) error {
 	if s.tx != nil {
 		fn(s.tx)
 	}
 
-	f := func(tx *sqlx.Tx) error {
-		return fn(tx)
-	}
-
-	return database.WithinTran(ctx, s.log, s.db.(*sqlx.DB), f)
+	return database.WithinTran(ctx, s.log, s.db.(*sqlx.DB), fn)
 }
 
 // Tran return new Store with transaction in it.
-func (s Store) Tran(tx any) user.Store {
-	sqlTx := tx.(*sqlx.Tx)
-
+func (s Store) Tran(tx *sqlx.Tx) user.Store[*sqlx.Tx] {
 	return Store{
 		log: s.log,
-		db:  sqlTx,
-		tx:  sqlTx,
+		db:  tx,
+		tx:  tx,
 	}
 }
 

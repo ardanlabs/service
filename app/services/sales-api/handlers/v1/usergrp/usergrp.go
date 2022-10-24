@@ -12,11 +12,12 @@ import (
 	"github.com/ardanlabs/service/business/web/auth"
 	v1Web "github.com/ardanlabs/service/business/web/v1"
 	"github.com/ardanlabs/service/foundation/web"
+	"github.com/jmoiron/sqlx"
 )
 
 // Handlers manages the set of user endpoints.
 type Handlers struct {
-	User user.Core
+	User user.Core[*sqlx.Tx]
 	Auth *auth.Auth
 }
 

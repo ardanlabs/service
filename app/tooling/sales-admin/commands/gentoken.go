@@ -11,6 +11,7 @@ import (
 	"github.com/ardanlabs/service/business/web/auth"
 	"github.com/ardanlabs/service/foundation/vault"
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
 )
 
@@ -30,7 +31,7 @@ func GenToken(log *zap.SugaredLogger, dbConfig database.Config, vaultConfig vaul
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	core := user.NewCore(userdb.NewStore(log, db))
+	core := user.NewCore[*sqlx.Tx](userdb.NewStore(log, db))
 
 	usr, err := core.QueryByID(ctx, userID)
 	if err != nil {
