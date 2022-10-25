@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/core/user"
+	"github.com/ardanlabs/service/business/core/user/stores/usercache"
 	"github.com/ardanlabs/service/business/core/user/stores/userdb"
 	"github.com/ardanlabs/service/business/data/dbschema"
 	"github.com/ardanlabs/service/business/data/dbtest"
@@ -34,7 +35,7 @@ func Test_User(t *testing.T) {
 	log, db, teardown := dbtest.NewUnit(t, c, "testuser")
 	t.Cleanup(teardown)
 
-	core := user.NewCore(userdb.NewStore(log, db))
+	core := user.NewCore(usercache.NewStore(log, userdb.NewStore(log, db)))
 
 	t.Log("Given the need to work with User records.")
 	{
