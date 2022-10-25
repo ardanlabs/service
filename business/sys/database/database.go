@@ -3,6 +3,7 @@ package database
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"net/url"
@@ -106,19 +107,16 @@ func WithinTran(ctx context.Context, log *zap.SugaredLogger, db *sqlx.DB, fn fun
 		return fmt.Errorf("begin tran: %w", err)
 	}
 
-	// Mark to the defer function a rollback is required.
-	mustRollback := true
-
-	// Set up a defer function for rolling back the transaction. If
-	// mustRollback is true it means the call to fn failed, and we
-	// need to roll back the transaction.
+	// We can defer the rollback since the code checks if the transaction
+	// has already been committed.
 	defer func() {
-		if mustRollback {
-			log.Infow("rollback tran", "trace_id", traceID)
-			if err := tx.Rollback(); err != nil {
-				log.Errorw("unable to rollback tran", "trace_id", traceID, "ERROR", err)
+		if err := tx.Rollback(); err != nil {
+			if errors.Is(err, sql.ErrTxDone) {
+				return
 			}
+			log.Errorw("unable to rollback tran", "trace_id", traceID, "ERROR", err)
 		}
+		log.Infow("rollback tran", "trace_id", traceID)
 	}()
 
 	// Execute the code inside the transaction. If the function
@@ -132,14 +130,11 @@ func WithinTran(ctx context.Context, log *zap.SugaredLogger, db *sqlx.DB, fn fun
 		return fmt.Errorf("exec tran: %w", err)
 	}
 
-	// Disarm the deferred rollback.
-	mustRollback = false
-
 	// Commit the transaction.
-	log.Infow("commit tran", "trace_id", traceID)
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("commit tran: %w", err)
 	}
+	log.Infow("commit tran", "trace_id", traceID)
 
 	return nil
 }
