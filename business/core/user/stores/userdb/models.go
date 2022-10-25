@@ -24,15 +24,15 @@ type dbUser struct {
 
 func toDBUser(usr user.User) dbUser {
 
-	// We can't use dbUser(usr) because pq requires us to use their StringArray
-	// type so we are performing a casting operation.
+	// We can't use dbUser(usr) because pq requires us to use their
+	// StringArray type so we are performing a casting operation.
 	return *(*dbUser)(unsafe.Pointer(&usr))
 }
 
 func toCoreUser(dbUsr dbUser) user.User {
 
-	// We can't use user.User(dbUsr) because pq requires us to use their StringArray
-	// type so we are performing a casting operation.
+	// We can't use user.User(dbUsr) because pq requires us to use their
+	// StringArray type so we are performing a casting operation.
 	return *(*user.User)(unsafe.Pointer(&dbUsr))
 }
 
