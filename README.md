@@ -80,6 +80,7 @@ _**Articles**_
 [IT World Canada](http://www.itworldcanada.com/article/nascent-google-development-language-shows-promise-for-more-productive-coding/387449)
 
 _**Video**_  
+[P99 Talk (2022) - Evaluating Performance In Go](https://www.youtube.com/watch?v=PYMs-urosXs)  
 [GopherCon Europe (2022) - Practical Memory Profiling](https://www.youtube.com/watch?v=6qAfkJGWsns)  
 [GDN Event #1 (2021) - GoBridge Needs Your Help](https://www.youtube.com/watch?v=Tst0oI97cvQ&t=2s)  
 [Training Within The Go Community (2019)](https://www.youtube.com/watch?v=PSR1twjzzAM&feature=youtu.be)  
@@ -88,7 +89,6 @@ _**Video**_
 [GopherCon Singapore (2019) - Garbage Collection Semantics](https://www.youtube.com/watch?v=q4HoWwdZUHs)  
 [GopherCon India (2019) - Channel Semantics](https://www.youtube.com/watch?v=AHAf1Xfr_HE)  
 [GoWayFest Minsk (2018) - Profiling Web Apps](https://www.youtube.com/watch?v=-GBMFPegqgw)  
-[GopherChina (2018) - Composition In Go William](https://www.youtube.com/watch?v=pvLUO9ZManM&feature=youtu.be)  
 [GopherCon Singapore (2018) - Optimizing For Correctness](https://engineers.sg/video/optimize-for-correctness-gopherconsg-2018--2610)  
 [GopherCon India (2018) - What is the Legacy You Are Leaving Behind](https://www.youtube.com/watch?v=j3zCUc06OXo&t=0s&index=11&list=PLhJxE57Cki63cElK2kmt3_vi8j2eIHTqZ)  
 [Code::Dive (2017) - Optimizing For Correctness](https://www.youtube.com/watch?v=OTLjN8NQDyo)  
