@@ -13,7 +13,7 @@ import (
 type Store struct {
 	log    *zap.SugaredLogger
 	storer user.Storer
-	cache  map[string]user.User
+	cache  map[string]*user.User
 }
 
 // NewStore constructs the api for data and caching access.
@@ -21,7 +21,7 @@ func NewStore(log *zap.SugaredLogger, storer user.Storer) Store {
 	return Store{
 		log:    log,
 		storer: storer,
-		cache:  map[string]user.User{},
+		cache:  map[string]*user.User{},
 	}
 }
 
@@ -36,8 +36,8 @@ func (s Store) Create(ctx context.Context, usr user.User) error {
 		return err
 	}
 
-	s.cache[usr.ID] = usr
-	s.cache[usr.Email] = usr
+	s.cache[usr.ID] = &usr
+	s.cache[usr.Email] = &usr
 
 	return nil
 }
@@ -48,8 +48,8 @@ func (s Store) Update(ctx context.Context, usr user.User) error {
 		return err
 	}
 
-	s.cache[usr.ID] = usr
-	s.cache[usr.Email] = usr
+	s.cache[usr.ID] = &usr
+	s.cache[usr.Email] = &usr
 
 	return nil
 }
@@ -81,9 +81,9 @@ func (s Store) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]us
 
 // QueryByID gets the specified user from the database.
 func (s Store) QueryByID(ctx context.Context, userID string) (user.User, error) {
-	usr, ok := s.cache[userID]
+	cachedUsr, ok := s.cache[userID]
 	if ok {
-		return usr, nil
+		return *cachedUsr, nil
 	}
 
 	usr, err := s.storer.QueryByID(ctx, userID)
@@ -91,17 +91,17 @@ func (s Store) QueryByID(ctx context.Context, userID string) (user.User, error) 
 		return user.User{}, err
 	}
 
-	s.cache[usr.ID] = usr
-	s.cache[usr.Email] = usr
+	s.cache[usr.ID] = &usr
+	s.cache[usr.Email] = &usr
 
 	return usr, nil
 }
 
 // QueryByEmail gets the specified user from the database by email.
 func (s Store) QueryByEmail(ctx context.Context, email string) (user.User, error) {
-	usr, ok := s.cache[email]
+	cachedUsr, ok := s.cache[email]
 	if ok {
-		return usr, nil
+		return *cachedUsr, nil
 	}
 
 	usr, err := s.storer.QueryByEmail(ctx, email)
@@ -109,8 +109,8 @@ func (s Store) QueryByEmail(ctx context.Context, email string) (user.User, error
 		return user.User{}, err
 	}
 
-	s.cache[usr.ID] = usr
-	s.cache[usr.Email] = usr
+	s.cache[usr.ID] = &usr
+	s.cache[usr.Email] = &usr
 
 	return usr, nil
 }
