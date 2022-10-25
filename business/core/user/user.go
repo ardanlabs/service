@@ -25,10 +25,11 @@ var (
 	ErrAuthenticationFailure = errors.New("authentication failed")
 )
 
-// Store interface declares the behavior core needs to perists and retrieve data.
-type Store[TX any] interface {
+// Storer interface declares the behavior this package needs to perists and
+// retrieve data.
+type Storer[TX any] interface {
 	WithinTran(ctx context.Context, fn func(tx TX) error) error
-	Tran(tx TX) Store[TX]
+	Tran(tx TX) Storer[TX]
 	Create(ctx context.Context, usr User) error
 	Update(ctx context.Context, usr User) error
 	Delete(ctx context.Context, userID string) error
@@ -39,13 +40,13 @@ type Store[TX any] interface {
 
 // Core manages the set of APIs for user access.
 type Core[TX any] struct {
-	store Store[TX]
+	storer Storer[TX]
 }
 
 // NewCore constructs a core for user api access.
-func NewCore[TX any](store Store[TX]) Core[TX] {
+func NewCore[TX any](storer Storer[TX]) Core[TX] {
 	return Core[TX]{
-		store: store,
+		storer: storer,
 	}
 }
 
@@ -72,7 +73,7 @@ func (c Core[TX]) Create(ctx context.Context, nu NewUser, now time.Time) (User, 
 
 	// This provides an example of how to execute a transaction if required.
 	tran := func(tx TX) error {
-		if err := c.store.Tran(tx).Create(ctx, user); err != nil {
+		if err := c.storer.Tran(tx).Create(ctx, user); err != nil {
 			if errors.Is(err, database.ErrDBDuplicatedEntry) {
 				return fmt.Errorf("create: %w", ErrUniqueEmail)
 			}
@@ -81,7 +82,7 @@ func (c Core[TX]) Create(ctx context.Context, nu NewUser, now time.Time) (User, 
 		return nil
 	}
 
-	if err := c.store.WithinTran(ctx, tran); err != nil {
+	if err := c.storer.WithinTran(ctx, tran); err != nil {
 		return User{}, fmt.Errorf("tran: %w", err)
 	}
 
@@ -98,7 +99,7 @@ func (c Core[TX]) Update(ctx context.Context, userID string, uu UpdateUser, now 
 		return fmt.Errorf("validating data: %w", err)
 	}
 
-	user, err := c.store.QueryByID(ctx, userID)
+	user, err := c.storer.QueryByID(ctx, userID)
 	if err != nil {
 		if errors.Is(err, database.ErrDBNotFound) {
 			return ErrNotFound
@@ -124,7 +125,7 @@ func (c Core[TX]) Update(ctx context.Context, userID string, uu UpdateUser, now 
 	}
 	user.DateUpdated = now
 
-	if err := c.store.Update(ctx, user); err != nil {
+	if err := c.storer.Update(ctx, user); err != nil {
 		if errors.Is(err, database.ErrDBDuplicatedEntry) {
 			return fmt.Errorf("updating user userID[%s]: %w", userID, ErrUniqueEmail)
 		}
@@ -140,7 +141,7 @@ func (c Core[TX]) Delete(ctx context.Context, userID string) error {
 		return ErrInvalidID
 	}
 
-	if err := c.store.Delete(ctx, userID); err != nil {
+	if err := c.storer.Delete(ctx, userID); err != nil {
 		return fmt.Errorf("delete: %w", err)
 	}
 
@@ -149,7 +150,7 @@ func (c Core[TX]) Delete(ctx context.Context, userID string) error {
 
 // Query retrieves a list of existing users from the database.
 func (c Core[TX]) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]User, error) {
-	users, err := c.store.Query(ctx, pageNumber, rowsPerPage)
+	users, err := c.storer.Query(ctx, pageNumber, rowsPerPage)
 	if err != nil {
 		return nil, fmt.Errorf("query: %w", err)
 	}
@@ -163,7 +164,7 @@ func (c Core[TX]) QueryByID(ctx context.Context, userID string) (User, error) {
 		return User{}, ErrInvalidID
 	}
 
-	user, err := c.store.QueryByID(ctx, userID)
+	user, err := c.storer.QueryByID(ctx, userID)
 	if err != nil {
 		if errors.Is(err, database.ErrDBNotFound) {
 			return User{}, ErrNotFound
@@ -182,7 +183,7 @@ func (c Core[TX]) QueryByEmail(ctx context.Context, email string) (User, error) 
 		return User{}, ErrInvalidEmail
 	}
 
-	user, err := c.store.QueryByEmail(ctx, email)
+	user, err := c.storer.QueryByEmail(ctx, email)
 	if err != nil {
 		if errors.Is(err, database.ErrDBNotFound) {
 			return User{}, ErrNotFound
@@ -197,7 +198,7 @@ func (c Core[TX]) QueryByEmail(ctx context.Context, email string) (User, error) 
 // success it returns a Claims User representing this user. The claims can be
 // used to generate a token for future authentication.
 func (c Core[TX]) Authenticate(ctx context.Context, now time.Time, email, password string) (auth.Claims, error) {
-	dbUsr, err := c.store.QueryByEmail(ctx, email)
+	dbUsr, err := c.storer.QueryByEmail(ctx, email)
 	if err != nil {
 		if errors.Is(err, database.ErrDBNotFound) {
 			return auth.Claims{}, ErrNotFound

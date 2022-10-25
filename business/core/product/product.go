@@ -19,8 +19,9 @@ var (
 	ErrInvalidID = errors.New("ID is not in its proper form")
 )
 
-// Store interface declares the behavior core needs to perists and retrieve data.
-type Store interface {
+// Storer interface declares the behavior this package needs to perists and
+// retrieve data.
+type Storer interface {
 	Create(ctx context.Context, prd Product) error
 	Update(ctx context.Context, prd Product) error
 	Delete(ctx context.Context, productID string) error
@@ -31,13 +32,13 @@ type Store interface {
 
 // Core manages the set of APIs for product access.
 type Core struct {
-	store Store
+	storer Storer
 }
 
 // NewCore constructs a core for product api access.
-func NewCore(store Store) Core {
+func NewCore(storer Storer) Core {
 	return Core{
-		store: store,
+		storer: storer,
 	}
 }
 
@@ -58,7 +59,7 @@ func (c Core) Create(ctx context.Context, np NewProduct, now time.Time) (Product
 		DateUpdated: now,
 	}
 
-	if err := c.store.Create(ctx, prd); err != nil {
+	if err := c.storer.Create(ctx, prd); err != nil {
 		return Product{}, fmt.Errorf("create: %w", err)
 	}
 
@@ -76,7 +77,7 @@ func (c Core) Update(ctx context.Context, productID string, up UpdateProduct, no
 		return fmt.Errorf("validating data: %w", err)
 	}
 
-	prd, err := c.store.QueryByID(ctx, productID)
+	prd, err := c.storer.QueryByID(ctx, productID)
 	if err != nil {
 		if errors.Is(err, database.ErrDBNotFound) {
 			return ErrNotFound
@@ -95,7 +96,7 @@ func (c Core) Update(ctx context.Context, productID string, up UpdateProduct, no
 	}
 	prd.DateUpdated = now
 
-	if err := c.store.Update(ctx, prd); err != nil {
+	if err := c.storer.Update(ctx, prd); err != nil {
 		return fmt.Errorf("update: %w", err)
 	}
 
@@ -108,7 +109,7 @@ func (c Core) Delete(ctx context.Context, productID string) error {
 		return ErrInvalidID
 	}
 
-	if err := c.store.Delete(ctx, productID); err != nil {
+	if err := c.storer.Delete(ctx, productID); err != nil {
 		return fmt.Errorf("delete: %w", err)
 	}
 
@@ -117,7 +118,7 @@ func (c Core) Delete(ctx context.Context, productID string) error {
 
 // Query gets all Products from the database.
 func (c Core) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]Product, error) {
-	prds, err := c.store.Query(ctx, pageNumber, rowsPerPage)
+	prds, err := c.storer.Query(ctx, pageNumber, rowsPerPage)
 	if err != nil {
 		return nil, fmt.Errorf("query: %w", err)
 	}
@@ -131,7 +132,7 @@ func (c Core) QueryByID(ctx context.Context, productID string) (Product, error) 
 		return Product{}, ErrInvalidID
 	}
 
-	prd, err := c.store.QueryByID(ctx, productID)
+	prd, err := c.storer.QueryByID(ctx, productID)
 	if err != nil {
 		if errors.Is(err, database.ErrDBNotFound) {
 			return Product{}, ErrNotFound
@@ -148,7 +149,7 @@ func (c Core) QueryByUserID(ctx context.Context, userID string) ([]Product, erro
 		return nil, ErrInvalidID
 	}
 
-	prds, err := c.store.QueryByUserID(ctx, userID)
+	prds, err := c.storer.QueryByUserID(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("query: %w", err)
 	}

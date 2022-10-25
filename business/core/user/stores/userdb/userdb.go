@@ -37,7 +37,7 @@ func (s Store) WithinTran(ctx context.Context, fn func(*sqlx.Tx) error) error {
 
 // Tran return new Store reassigning the connection pool with the transaction.
 // The transaction is maintained incase WithinTran is called multiple times.
-func (s Store) Tran(tx *sqlx.Tx) user.Store[*sqlx.Tx] {
+func (s Store) Tran(tx *sqlx.Tx) user.Storer[*sqlx.Tx] {
 	return Store{
 		log: s.log,
 		db:  tx,
