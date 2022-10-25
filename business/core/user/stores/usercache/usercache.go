@@ -4,6 +4,7 @@ package usercache
 import (
 	"context"
 	"errors"
+	"sync"
 
 	"github.com/ardanlabs/service/business/core/user"
 	"go.uber.org/zap"
@@ -14,6 +15,7 @@ type Store struct {
 	log    *zap.SugaredLogger
 	storer user.Storer
 	cache  map[string]*user.User
+	mu     *sync.RWMutex
 }
 
 // NewStore constructs the api for data and caching access.
@@ -22,6 +24,7 @@ func NewStore(log *zap.SugaredLogger, storer user.Storer) Store {
 		log:    log,
 		storer: storer,
 		cache:  map[string]*user.User{},
+		mu:     &sync.RWMutex{},
 	}
 }
 
@@ -36,8 +39,7 @@ func (s Store) Create(ctx context.Context, usr user.User) error {
 		return err
 	}
 
-	s.cache[usr.ID] = &usr
-	s.cache[usr.Email] = &usr
+	s.writeCache(usr)
 
 	return nil
 }
@@ -48,8 +50,7 @@ func (s Store) Update(ctx context.Context, usr user.User) error {
 		return err
 	}
 
-	s.cache[usr.ID] = &usr
-	s.cache[usr.Email] = &usr
+	s.writeCache(usr)
 
 	return nil
 }
@@ -68,8 +69,7 @@ func (s Store) Delete(ctx context.Context, userID string) error {
 		return err
 	}
 
-	delete(s.cache, usr.ID)
-	delete(s.cache, usr.Email)
+	s.deleteCache(usr)
 
 	return nil
 }
@@ -81,9 +81,9 @@ func (s Store) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]us
 
 // QueryByID gets the specified user from the database.
 func (s Store) QueryByID(ctx context.Context, userID string) (user.User, error) {
-	cachedUsr, ok := s.cache[userID]
+	cachedUsr, ok := s.readCache(userID)
 	if ok {
-		return *cachedUsr, nil
+		return cachedUsr, nil
 	}
 
 	usr, err := s.storer.QueryByID(ctx, userID)
@@ -91,17 +91,16 @@ func (s Store) QueryByID(ctx context.Context, userID string) (user.User, error) 
 		return user.User{}, err
 	}
 
-	s.cache[usr.ID] = &usr
-	s.cache[usr.Email] = &usr
+	s.writeCache(usr)
 
 	return usr, nil
 }
 
 // QueryByEmail gets the specified user from the database by email.
 func (s Store) QueryByEmail(ctx context.Context, email string) (user.User, error) {
-	cachedUsr, ok := s.cache[email]
+	cachedUsr, ok := s.readCache(email)
 	if ok {
-		return *cachedUsr, nil
+		return cachedUsr, nil
 	}
 
 	usr, err := s.storer.QueryByEmail(ctx, email)
@@ -109,8 +108,40 @@ func (s Store) QueryByEmail(ctx context.Context, email string) (user.User, error
 		return user.User{}, err
 	}
 
-	s.cache[usr.ID] = &usr
-	s.cache[usr.Email] = &usr
+	s.writeCache(usr)
 
 	return usr, nil
+}
+
+// =============================================================================
+
+// readCache performs a safe search in the cache for the specified key.
+func (s Store) readCache(key string) (user.User, bool) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	usr, exists := s.cache[key]
+	if !exists {
+		return user.User{}, false
+	}
+
+	return *usr, true
+}
+
+// writeCache performs a safe write to the cache for the specified user.
+func (s Store) writeCache(usr user.User) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.cache[usr.ID] = &usr
+	s.cache[usr.Email] = &usr
+}
+
+// deleteCache performs a safe removal from the cache for the specified user.
+func (s Store) deleteCache(usr user.User) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	delete(s.cache, usr.ID)
+	delete(s.cache, usr.Email)
 }
