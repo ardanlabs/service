@@ -3,6 +3,7 @@ package productdb
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/ardanlabs/service/business/core/product"
@@ -140,6 +141,9 @@ func (s Store) QueryByID(ctx context.Context, productID string) (product.Product
 
 	var prd dbProduct
 	if err := database.NamedQueryStruct(ctx, s.log, s.db, q, data, &prd); err != nil {
+		if errors.Is(err, database.ErrDBNotFound) {
+			return product.Product{}, product.ErrNotFound
+		}
 		return product.Product{}, fmt.Errorf("selecting product productID[%q]: %w", productID, err)
 	}
 

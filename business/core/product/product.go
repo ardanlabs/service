@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/ardanlabs/service/business/sys/validate"
 )
 
@@ -79,9 +78,6 @@ func (c Core) Update(ctx context.Context, productID string, up UpdateProduct, no
 
 	prd, err := c.storer.QueryByID(ctx, productID)
 	if err != nil {
-		if errors.Is(err, database.ErrDBNotFound) {
-			return ErrNotFound
-		}
 		return fmt.Errorf("updating product productID[%s]: %w", productID, err)
 	}
 
@@ -134,9 +130,6 @@ func (c Core) QueryByID(ctx context.Context, productID string) (Product, error) 
 
 	prd, err := c.storer.QueryByID(ctx, productID)
 	if err != nil {
-		if errors.Is(err, database.ErrDBNotFound) {
-			return Product{}, ErrNotFound
-		}
 		return Product{}, fmt.Errorf("query: %w", err)
 	}
 
