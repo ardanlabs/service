@@ -34,7 +34,7 @@ func Routes(app *web.App, cfg Config) {
 
 	// Register user management and authentication endpoints.
 	ugh := usergrp.Handlers{
-		User: user.NewCore[*sqlx.Tx](userdb.NewStore(cfg.Log, cfg.DB)),
+		User: user.NewCore(userdb.NewStore(cfg.Log, cfg.DB)),
 		Auth: cfg.Auth,
 	}
 	app.Handle(http.MethodGet, version, "/users/token", ugh.Token)
