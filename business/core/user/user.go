@@ -10,8 +10,6 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/sys/validate"
-	"github.com/ardanlabs/service/business/web/auth"
-	"github.com/golang-jwt/jwt/v4"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -180,29 +178,17 @@ func (c Core) QueryByEmail(ctx context.Context, email string) (User, error) {
 // Authenticate finds a user by their email and verifies their password. On
 // success it returns a Claims User representing this user. The claims can be
 // used to generate a token for future authentication.
-func (c Core) Authenticate(ctx context.Context, now time.Time, email, password string) (auth.Claims, error) {
-	dbUsr, err := c.storer.QueryByEmail(ctx, email)
+func (c Core) Authenticate(ctx context.Context, now time.Time, email, password string) (User, error) {
+	usr, err := c.storer.QueryByEmail(ctx, email)
 	if err != nil {
-		return auth.Claims{}, fmt.Errorf("query: %w", err)
+		return User{}, fmt.Errorf("query: %w", err)
 	}
 
 	// Compare the provided password with the saved hash. Use the bcrypt
 	// comparison function so it is cryptographically secure.
-	if err := bcrypt.CompareHashAndPassword(dbUsr.PasswordHash, []byte(password)); err != nil {
-		return auth.Claims{}, ErrAuthenticationFailure
+	if err := bcrypt.CompareHashAndPassword(usr.PasswordHash, []byte(password)); err != nil {
+		return User{}, ErrAuthenticationFailure
 	}
 
-	// If we are this far the request is valid. Create some claims for the user
-	// and generate their token.
-	claims := auth.Claims{
-		RegisteredClaims: jwt.RegisteredClaims{
-			Subject:   dbUsr.ID,
-			Issuer:    "service project",
-			ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(time.Hour)),
-			IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
-		},
-		Roles: dbUsr.Roles,
-	}
-
-	return claims, nil
+	return usr, nil
 }

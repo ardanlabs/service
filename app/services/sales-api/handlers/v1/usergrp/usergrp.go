@@ -7,11 +7,13 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/web/auth"
 	v1Web "github.com/ardanlabs/service/business/web/v1"
 	"github.com/ardanlabs/service/foundation/web"
+	"github.com/golang-jwt/jwt/v4"
 )
 
 // Handlers manages the set of user endpoints.
@@ -170,7 +172,7 @@ func (h Handlers) Token(ctx context.Context, w http.ResponseWriter, r *http.Requ
 		return v1Web.NewRequestError(err, http.StatusUnauthorized)
 	}
 
-	claims, err := h.User.Authenticate(ctx, v.Now, email, pass)
+	usr, err := h.User.Authenticate(ctx, v.Now, email, pass)
 	if err != nil {
 		switch {
 		case errors.Is(err, user.ErrNotFound):
@@ -180,6 +182,16 @@ func (h Handlers) Token(ctx context.Context, w http.ResponseWriter, r *http.Requ
 		default:
 			return fmt.Errorf("authenticating: %w", err)
 		}
+	}
+
+	claims := auth.Claims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject:   usr.ID,
+			Issuer:    "service project",
+			ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(time.Hour)),
+			IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
+		},
+		Roles: usr.Roles,
 	}
 
 	var tkn struct {
