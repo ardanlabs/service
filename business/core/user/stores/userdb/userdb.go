@@ -3,6 +3,7 @@ package userdb
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/ardanlabs/service/business/core/user"
@@ -53,6 +54,9 @@ func (s Store) Create(ctx context.Context, usr user.User) error {
 		(:user_id, :name, :email, :password_hash, :roles, :date_created, :date_updated)`
 
 	if err := database.NamedExecContext(ctx, s.log, s.db, q, toDBUser(usr)); err != nil {
+		if errors.Is(err, database.ErrDBDuplicatedEntry) {
+			return fmt.Errorf("create: %w", user.ErrUniqueEmail)
+		}
 		return fmt.Errorf("inserting user: %w", err)
 	}
 
@@ -74,6 +78,9 @@ func (s Store) Update(ctx context.Context, usr user.User) error {
 		user_id = :user_id`
 
 	if err := database.NamedExecContext(ctx, s.log, s.db, q, toDBUser(usr)); err != nil {
+		if errors.Is(err, database.ErrDBDuplicatedEntry) {
+			return user.ErrUniqueEmail
+		}
 		return fmt.Errorf("updating userID[%s]: %w", usr.ID, err)
 	}
 
@@ -146,6 +153,9 @@ func (s Store) QueryByID(ctx context.Context, userID string) (user.User, error) 
 
 	var usr dbUser
 	if err := database.NamedQueryStruct(ctx, s.log, s.db, q, data, &usr); err != nil {
+		if errors.Is(err, database.ErrDBNotFound) {
+			return user.User{}, user.ErrNotFound
+		}
 		return user.User{}, fmt.Errorf("selecting userID[%q]: %w", userID, err)
 	}
 
@@ -170,6 +180,9 @@ func (s Store) QueryByEmail(ctx context.Context, email string) (user.User, error
 
 	var usr dbUser
 	if err := database.NamedQueryStruct(ctx, s.log, s.db, q, data, &usr); err != nil {
+		if errors.Is(err, database.ErrDBNotFound) {
+			return user.User{}, user.ErrNotFound
+		}
 		return user.User{}, fmt.Errorf("selecting email[%q]: %w", email, err)
 	}
 

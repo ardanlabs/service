@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/ardanlabs/service/business/web/auth"
 	"github.com/golang-jwt/jwt/v4"
@@ -73,9 +72,6 @@ func (c Core) Create(ctx context.Context, nu NewUser, now time.Time) (User, erro
 	// This provides an example of how to execute a transaction if required.
 	tran := func(s Storer) error {
 		if err := s.Create(ctx, user); err != nil {
-			if errors.Is(err, database.ErrDBDuplicatedEntry) {
-				return fmt.Errorf("create: %w", ErrUniqueEmail)
-			}
 			return fmt.Errorf("create: %w", err)
 		}
 		return nil
@@ -100,9 +96,6 @@ func (c Core) Update(ctx context.Context, userID string, uu UpdateUser, now time
 
 	user, err := c.storer.QueryByID(ctx, userID)
 	if err != nil {
-		if errors.Is(err, database.ErrDBNotFound) {
-			return ErrNotFound
-		}
 		return fmt.Errorf("updating user userID[%s]: %w", userID, err)
 	}
 
@@ -125,9 +118,6 @@ func (c Core) Update(ctx context.Context, userID string, uu UpdateUser, now time
 	user.DateUpdated = now
 
 	if err := c.storer.Update(ctx, user); err != nil {
-		if errors.Is(err, database.ErrDBDuplicatedEntry) {
-			return fmt.Errorf("updating user userID[%s]: %w", userID, ErrUniqueEmail)
-		}
 		return fmt.Errorf("update: %w", err)
 	}
 
@@ -165,9 +155,6 @@ func (c Core) QueryByID(ctx context.Context, userID string) (User, error) {
 
 	user, err := c.storer.QueryByID(ctx, userID)
 	if err != nil {
-		if errors.Is(err, database.ErrDBNotFound) {
-			return User{}, ErrNotFound
-		}
 		return User{}, fmt.Errorf("query: %w", err)
 	}
 
@@ -184,9 +171,6 @@ func (c Core) QueryByEmail(ctx context.Context, email string) (User, error) {
 
 	user, err := c.storer.QueryByEmail(ctx, email)
 	if err != nil {
-		if errors.Is(err, database.ErrDBNotFound) {
-			return User{}, ErrNotFound
-		}
 		return User{}, fmt.Errorf("query: %w", err)
 	}
 
@@ -199,9 +183,6 @@ func (c Core) QueryByEmail(ctx context.Context, email string) (User, error) {
 func (c Core) Authenticate(ctx context.Context, now time.Time, email, password string) (auth.Claims, error) {
 	dbUsr, err := c.storer.QueryByEmail(ctx, email)
 	if err != nil {
-		if errors.Is(err, database.ErrDBNotFound) {
-			return auth.Claims{}, ErrNotFound
-		}
 		return auth.Claims{}, fmt.Errorf("query: %w", err)
 	}
 
