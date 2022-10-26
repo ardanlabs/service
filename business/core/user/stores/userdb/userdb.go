@@ -14,9 +14,9 @@ import (
 
 // Store manages the set of APIs for user database access.
 type Store struct {
-	log *zap.SugaredLogger
-	db  sqlx.ExtContext
-	tx  sqlx.ExtContext
+	log    *zap.SugaredLogger
+	db     sqlx.ExtContext
+	inTran bool
 }
 
 // NewStore constructs the api for data access.
@@ -29,17 +29,17 @@ func NewStore(log *zap.SugaredLogger, db *sqlx.DB) Store {
 
 // WithinTran runs passed function and do commit/rollback at the end.
 func (s Store) WithinTran(ctx context.Context, fn func(s user.Storer) error) error {
-	if s.tx != nil {
+	if s.inTran {
 		return fn(s)
 	}
 
 	f := func(tx *sqlx.Tx) error {
-		x := Store{
-			log: s.log,
-			db:  tx,
-			tx:  tx,
+		s := Store{
+			log:    s.log,
+			db:     tx,
+			inTran: true,
 		}
-		return fn(x)
+		return fn(s)
 	}
 
 	return database.WithinTran(ctx, s.log, s.db.(*sqlx.DB), f)
