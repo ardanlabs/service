@@ -139,6 +139,23 @@ func WithinTran(ctx context.Context, log *zap.SugaredLogger, db *sqlx.DB, fn fun
 	return nil
 }
 
+// ExecContext is a helper function to execute a CUD operation with
+// logging and tracing.
+func ExecContext(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext, query string) error {
+	log.Infow("database.NamedExecContext", "trace_id", web.GetTraceID(ctx), "query", query)
+
+	if _, err := db.ExecContext(context.Background(), query); err != nil {
+
+		// Checks if the error is of code 23505 (unique_violation).
+		if pqerr, ok := err.(*pq.Error); ok && pqerr.Code == uniqueViolation {
+			return ErrDBDuplicatedEntry
+		}
+		return err
+	}
+
+	return nil
+}
+
 // NamedExecContext is a helper function to execute a CUD operation with
 // logging and tracing.
 func NamedExecContext(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext, query string, data any) error {
@@ -216,22 +233,28 @@ func NamedQueryStruct(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtCo
 
 // queryString provides a pretty print version of the query and parameters.
 func queryString(query string, args ...any) string {
-	query, params, err := sqlx.Named(query, args)
-	if err != nil {
-		return err.Error()
+	if len(args) == 1 && args[0] == nil {
+		args = nil
 	}
 
-	for _, param := range params {
-		var value string
-		switch v := param.(type) {
-		case string:
-			value = fmt.Sprintf("%q", v)
-		case []byte:
-			value = fmt.Sprintf("%q", string(v))
-		default:
-			value = fmt.Sprintf("%v", v)
+	if args != nil {
+		query, params, err := sqlx.Named(query, args)
+		if err != nil {
+			return err.Error()
 		}
-		query = strings.Replace(query, "?", value, 1)
+
+		for _, param := range params {
+			var value string
+			switch v := param.(type) {
+			case string:
+				value = fmt.Sprintf("%q", v)
+			case []byte:
+				value = fmt.Sprintf("%q", string(v))
+			default:
+				value = fmt.Sprintf("%v", v)
+			}
+			query = strings.Replace(query, "?", value, 1)
+		}
 	}
 
 	query = strings.ReplaceAll(query, "\t", "")
