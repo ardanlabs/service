@@ -238,7 +238,10 @@ func queryString(query string, args ...any) string {
 	}
 
 	if args != nil {
-		query, params, err := sqlx.Named(query, args)
+		var params []interface{}
+		var err error
+
+		query, params, err = sqlx.Named(query, args)
 		if err != nil {
 			return err.Error()
 		}
