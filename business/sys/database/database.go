@@ -101,7 +101,7 @@ func WithinTran(ctx context.Context, log *zap.SugaredLogger, db *sqlx.DB, fn fun
 	traceID := web.GetTraceID(ctx)
 
 	// Begin the transaction.
-	log.Infow("begin tran", "trace_id", traceID)
+	log.Infow("begin tran")
 	tx, err := db.Beginx()
 	if err != nil {
 		return fmt.Errorf("begin tran: %w", err)
@@ -142,22 +142,11 @@ func WithinTran(ctx context.Context, log *zap.SugaredLogger, db *sqlx.DB, fn fun
 // ExecContext is a helper function to execute a CUD operation with
 // logging and tracing.
 func ExecContext(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext, query string) error {
-	log.Infow("database.NamedExecContext", "trace_id", web.GetTraceID(ctx), "query", query)
-
-	if _, err := db.ExecContext(context.Background(), query); err != nil {
-
-		// Checks if the error is of code 23505 (unique_violation).
-		if pqerr, ok := err.(*pq.Error); ok && pqerr.Code == uniqueViolation {
-			return ErrDBDuplicatedEntry
-		}
-		return err
-	}
-
-	return nil
+	return NamedExecContext(ctx, log, db, query, struct{}{})
 }
 
 // NamedExecContext is a helper function to execute a CUD operation with
-// logging and tracing.
+// logging and tracing where field replacement is necessary.
 func NamedExecContext(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext, query string, data any) error {
 	q := queryString(query, data)
 	log.Infow("database.NamedExecContext", "trace_id", web.GetTraceID(ctx), "query", q)
@@ -177,8 +166,14 @@ func NamedExecContext(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtCo
 	return nil
 }
 
-// NamedQuerySlice is a helper function for executing queries that return a
+// QuerySlice is a helper function for executing queries that return a
 // collection of data to be unmarshalled into a slice.
+func QuerySlice[T any](ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext, query string, dest *[]T) error {
+	return NamedQuerySlice(ctx, log, db, query, struct{}{}, dest)
+}
+
+// NamedQuerySlice is a helper function for executing queries that return a
+// collection of data to be unmarshalled into a slice where field replacement is necessary.
 func NamedQuerySlice[T any](ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext, query string, data any, dest *[]T) error {
 	q := queryString(query, data)
 	log.Infow("database.NamedQuerySlice", "trace_id", web.GetTraceID(ctx), "query", q)
@@ -205,8 +200,14 @@ func NamedQuerySlice[T any](ctx context.Context, log *zap.SugaredLogger, db sqlx
 	return nil
 }
 
+// QueryStruct is a helper function for executing queries that return a
+// single value to be unmarshalled into a struct type where field replacement is necessary.
+func QueryStruct(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext, query string, dest any) error {
+	return NamedQueryStruct(ctx, log, db, query, struct{}{}, dest)
+}
+
 // NamedQueryStruct is a helper function for executing queries that return a
-// single value to be unmarshalled into a struct type.
+// single value to be unmarshalled into a struct type where field replacement is necessary.
 func NamedQueryStruct(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext, query string, data any, dest any) error {
 	q := queryString(query, data)
 	log.Infow("database.NamedQueryStruct", "trace_id", web.GetTraceID(ctx), "query", q)
@@ -233,31 +234,22 @@ func NamedQueryStruct(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtCo
 
 // queryString provides a pretty print version of the query and parameters.
 func queryString(query string, args ...any) string {
-	if len(args) == 1 && args[0] == nil {
-		args = nil
+	query, params, err := sqlx.Named(query, args)
+	if err != nil {
+		return err.Error()
 	}
 
-	if args != nil {
-		var params []interface{}
-		var err error
-
-		query, params, err = sqlx.Named(query, args)
-		if err != nil {
-			return err.Error()
+	for _, param := range params {
+		var value string
+		switch v := param.(type) {
+		case string:
+			value = fmt.Sprintf("%q", v)
+		case []byte:
+			value = fmt.Sprintf("%q", string(v))
+		default:
+			value = fmt.Sprintf("%v", v)
 		}
-
-		for _, param := range params {
-			var value string
-			switch v := param.(type) {
-			case string:
-				value = fmt.Sprintf("%q", v)
-			case []byte:
-				value = fmt.Sprintf("%q", string(v))
-			default:
-				value = fmt.Sprintf("%v", v)
-			}
-			query = strings.Replace(query, "?", value, 1)
-		}
+		query = strings.Replace(query, "?", value, 1)
 	}
 
 	query = strings.ReplaceAll(query, "\t", "")

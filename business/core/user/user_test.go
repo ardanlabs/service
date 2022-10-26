@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"runtime/debug"
 	"testing"
 	"time"
 
@@ -35,7 +36,8 @@ func Test_User(t *testing.T) {
 	log, db, teardown := dbtest.NewUnit(t, c, "testuser")
 	defer func() {
 		if r := recover(); r != nil {
-			t.Error(r)
+			t.Log(r)
+			t.Error(string(debug.Stack()))
 		}
 		t.Cleanup(teardown)
 	}()
@@ -125,7 +127,8 @@ func Test_PagingUser(t *testing.T) {
 	log, db, teardown := dbtest.NewUnit(t, c, "testpaging")
 	defer func() {
 		if r := recover(); r != nil {
-			t.Error(r)
+			t.Log(r)
+			t.Error(string(debug.Stack()))
 		}
 		t.Cleanup(teardown)
 	}()

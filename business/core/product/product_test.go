@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"runtime/debug"
 	"testing"
 	"time"
 
@@ -32,7 +33,8 @@ func Test_Product(t *testing.T) {
 	log, db, teardown := dbtest.NewUnit(t, c, "testprod")
 	defer func() {
 		if r := recover(); r != nil {
-			t.Error(r)
+			t.Log(r)
+			t.Error(string(debug.Stack()))
 		}
 		t.Cleanup(teardown)
 	}()
