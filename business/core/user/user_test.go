@@ -33,7 +33,12 @@ func TestMain(m *testing.M) {
 
 func Test_User(t *testing.T) {
 	log, db, teardown := dbtest.NewUnit(t, c, "testuser")
-	t.Cleanup(teardown)
+	defer func() {
+		if r := recover(); r != nil {
+			t.Error(r)
+		}
+		t.Cleanup(teardown)
+	}()
 
 	core := user.NewCore(usercache.NewStore(log, userdb.NewStore(log, db)))
 
@@ -118,7 +123,12 @@ func Test_User(t *testing.T) {
 
 func Test_PagingUser(t *testing.T) {
 	log, db, teardown := dbtest.NewUnit(t, c, "testpaging")
-	t.Cleanup(teardown)
+	defer func() {
+		if r := recover(); r != nil {
+			t.Error(r)
+		}
+		t.Cleanup(teardown)
+	}()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()

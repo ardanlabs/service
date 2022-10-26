@@ -33,7 +33,12 @@ func Test_Users(t *testing.T) {
 	t.Parallel()
 
 	test := dbtest.NewIntegration(t, c, "inttestusers")
-	t.Cleanup(test.Teardown)
+	defer func() {
+		if r := recover(); r != nil {
+			t.Error(r)
+		}
+		t.Cleanup(test.Teardown)
+	}()
 
 	shutdown := make(chan os.Signal, 1)
 	tests := UserTests{

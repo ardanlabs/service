@@ -30,7 +30,12 @@ func TestMain(m *testing.M) {
 
 func Test_Product(t *testing.T) {
 	log, db, teardown := dbtest.NewUnit(t, c, "testprod")
-	t.Cleanup(teardown)
+	defer func() {
+		if r := recover(); r != nil {
+			t.Error(r)
+		}
+		t.Cleanup(teardown)
+	}()
 
 	core := product.NewCore(productdb.NewStore(log, db))
 
