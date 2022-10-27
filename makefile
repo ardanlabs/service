@@ -135,11 +135,11 @@ kind-load:
 
 kind-apply:
 	kustomize build zarf/k8s/kind/database-pod | kubectl apply -f -
-	kubectl wait --namespace=database-system --timeout=120s --for=condition=Available deployment/database-pod
+	kubectl wait --timeout=120s --for=condition=Available deployment/database-pod
 	kustomize build zarf/k8s/kind/vault-pod | kubectl apply -f -
-	kubectl wait --namespace=vault-system --timeout=120s --for=condition=Available deployment/vault-pod
+	kubectl wait --timeout=120s --for=condition=Available deployment/vault-pod
 	kustomize build zarf/k8s/kind/zipkin-pod | kubectl apply -f -
-	kubectl wait --namespace=zipkin-system --timeout=120s --for=condition=Available deployment/zipkin-pod
+	kubectl wait --timeout=120s --for=condition=Available deployment/zipkin-pod
 	kustomize build zarf/k8s/kind/sales-pod | kubectl apply -f -
 
 kind-restart:
@@ -161,7 +161,7 @@ kind-describe:
 	kubectl describe nodes
 	kubectl describe svc
 
-# *** SALES-POD ****************************************************************
+# *** SALES-SYSTEM *************************************************************
 
 kind-logs-sales:
 	kubectl logs -l app=sales --all-containers=true -f --tail=100 | go run app/tooling/logfmt/main.go -service=SALES-API
@@ -181,29 +181,16 @@ kind-describe-sales:
 kind-context-sales:
 	kubectl config set-context --current --namespace=sales-system
 
-# *** DB-POD *******************************************************************
-
-kind-logs-db:
-	kubectl logs -l app=database --namespace=database-system --all-containers=true -f --tail=100
-
-kind-status-db:
-	kubectl get pods -o wide --watch --namespace=database-system
-
-# *** ZIPKIN-POD ***************************************************************
-
-kind-logs-zipkin:
-	kubectl logs -l app=zipkin --namespace=zipkin-system --all-containers=true -f --tail=100
-
-kind-status-zipkin:
-	kubectl get pods -o wide --watch --namespace=zipkin-system
-
-# *** VAULT-POD ****************************************************************
+# *** OTHER-POD ****************************************************************
 
 kind-logs-vault:
-	kubectl logs --namespace=vault-system -l app=vault --all-containers=true -f --tail=100
+	kubectl logs -l app=vault --all-containers=true -f --tail=100
 
-kind-status-vault:
-	kubectl get pods -o wide --watch --namespace=vault-system
+kind-logs-db:
+	kubectl logs -l app=database --all-containers=true -f --tail=100
+
+kind-logs-zipkin:
+	kubectl logs -l app=zipkin --all-containers=true -f --tail=100
 
 # *** EXTRAS *******************************************************************
 
