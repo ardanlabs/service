@@ -5,10 +5,10 @@ nodes:
   extraPortMappings:
   - containerPort: 3000
     hostPort: 3000
-  - containerPort: 3001
-    hostPort: 3001
   - containerPort: 4000
     hostPort: 4000
+  - containerPort: 3001
+    hostPort: 3001
   - containerPort: 4001
     hostPort: 4001
   - containerPort: 9411

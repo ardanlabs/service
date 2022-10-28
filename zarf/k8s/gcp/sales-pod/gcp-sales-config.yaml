@@ -1,9 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: app-config
-data:
-  db_host: localdev.me
-  db_password: postgres
-  zipkin_reporter_uri: "http://localdev.me:9411/api/v2/spans"
-  collect_from: "http://localdev.me:4000/debug/vars"
