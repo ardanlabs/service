@@ -9,7 +9,7 @@ SHELL := /bin/bash
 # go install github.com/divan/expvarmon@latest
 # go install github.com/rakyll/hey@latest
 #
-# For full Kind v0.16 release notes: https://github.com/kubernetes-sigs/kind/releases/tag/v0.16.0
+# For full Kind v0.17 release notes: https://github.com/kubernetes-sigs/kind/releases/tag/v0.17.0
 #
 # For testing a simple query on the system. Don't forget to `make seed` first.
 # curl --user "admin@example.com:gophers" http://localhost:3000/v1/users/token
@@ -111,7 +111,7 @@ ZIPKIN := openzipkin/zipkin:2.23
 
 kind-up:
 	kind create cluster \
-		--image kindest/node:v1.25.2@sha256:9be91e9e9cdf116809841fc77ebdb8845443c4c72fe5218f3ae9eb57fdb4bace \
+		--image kindest/node:v1.25.2@sha256:f52781bc0d7a19fb6c405c2af83abfeb311f130707a0e219175677e366cc45d1 \
 		--name $(KIND_CLUSTER) \
 		--config zarf/k8s/kind/kind-config.yaml
 	kubectl config set-context --current --namespace=sales-system
