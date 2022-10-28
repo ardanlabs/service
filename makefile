@@ -88,7 +88,7 @@ all: sales metrics
 sales:
 	docker build \
 		-f zarf/docker/dockerfile.sales-api \
-		-t sales-api-amd64:$(VERSION) \
+		-t sales-api:$(VERSION) \
 		--build-arg BUILD_REF=$(VERSION) \
 		--build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
 		.
@@ -96,7 +96,7 @@ sales:
 metrics:
 	docker build \
 		-f zarf/docker/dockerfile.metrics \
-		-t metrics-amd64:$(VERSION) \
+		-t metrics:$(VERSION) \
 		--build-arg BUILD_REF=$(VERSION) \
 		--build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
 		.
@@ -109,105 +109,105 @@ POSTGRES := postgres:14-alpine
 VAULT := hashicorp/vault:1.12
 ZIPKIN := openzipkin/zipkin:2.23
 
-kind-up:
+dev-up:
 	kind create cluster \
 		--image kindest/node:v1.25.2@sha256:f52781bc0d7a19fb6c405c2af83abfeb311f130707a0e219175677e366cc45d1 \
 		--name $(KIND_CLUSTER) \
-		--config zarf/k8s/kind/kind-config.yaml
+		--config zarf/k8s/dev/kind-config.yaml
 	kubectl config set-context --current --namespace=sales-system
 
-kind-down:
+dev-down:
 	kind delete cluster --name $(KIND_CLUSTER)
 
-kind-load:
-	cd zarf/k8s/kind/sales; kustomize edit set image sales-api-image=sales-api-amd64:$(VERSION)
-	cd zarf/k8s/kind/sales; kustomize edit set image metrics-image=metrics-amd64:$(VERSION)
-	kind load docker-image sales-api-amd64:$(VERSION) --name $(KIND_CLUSTER)
-	kind load docker-image metrics-amd64:$(VERSION) --name $(KIND_CLUSTER)
+dev-load:
+	cd zarf/k8s/dev/sales; kustomize edit set image sales-api-image=sales-api:$(VERSION)
+	cd zarf/k8s/dev/sales; kustomize edit set image metrics-image=metrics:$(VERSION)
+	kind load docker-image sales-api:$(VERSION) --name $(KIND_CLUSTER)
+	kind load docker-image metrics:$(VERSION) --name $(KIND_CLUSTER)
 	kind load docker-image $(POSTGRES) --name $(KIND_CLUSTER)
 	kind load docker-image $(VAULT) --name $(KIND_CLUSTER)
 	kind load docker-image $(ZIPKIN) --name $(KIND_CLUSTER)
 
-kind-apply:
-	kustomize build zarf/k8s/kind/database | kubectl apply -f -
+dev-apply:
+	kustomize build zarf/k8s/dev/database | kubectl apply -f -
 	kubectl wait --timeout=120s --for=condition=Available deployment/database
-	kustomize build zarf/k8s/kind/vault | kubectl apply -f -
+	kustomize build zarf/k8s/dev/vault | kubectl apply -f -
 	kubectl wait --timeout=120s --for=condition=Available deployment/vault
-	kustomize build zarf/k8s/kind/zipkin | kubectl apply -f -
+	kustomize build zarf/k8s/dev/zipkin | kubectl apply -f -
 	kubectl wait --timeout=120s --for=condition=Available deployment/zipkin
-	kustomize build zarf/k8s/kind/sales | kubectl apply -f -
+	kustomize build zarf/k8s/dev/sales | kubectl apply -f -
 
-kind-restart:
+dev-restart:
 	kubectl rollout restart deployment sales
 
-kind-update: all kind-load kind-restart
+dev-update: all dev-load dev-restart
 
-kind-update-apply: all kind-load kind-apply
+dev-update-apply: all dev-load dev-apply
 
-kind-logs:
+dev-logs:
 	kubectl logs -l app=sales --all-containers=true -f --tail=100 | go run app/tooling/logfmt/main.go
 
-kind-status:
+dev-status:
 	kubectl get nodes -o wide
 	kubectl get svc -o wide
 	kubectl get pods -o wide --watch --all-namespaces
 
-kind-describe:
+dev-describe:
 	kubectl describe nodes
 	kubectl describe svc
 
 # *** SALES-SYSTEM *************************************************************
 
-kind-logs-sales:
+dev-logs-sales:
 	kubectl logs -l app=sales --all-containers=true -f --tail=100 | go run app/tooling/logfmt/main.go -service=SALES-API
 
-kind-logs-metrics:
+dev-logs-metrics:
 	kubectl logs -l app=sales --all-containers=true -f --tail=100 | go run app/tooling/logfmt/main.go -service=METRICS
 
-kind-status-sales:
+dev-status-sales:
 	kubectl get pods -o wide --watch --namespace=sales-system
 
-kind-describe-deployment:
+dev-describe-deployment:
 	kubectl describe deployment sales
 
-kind-describe-sales:
+dev-describe-sales:
 	kubectl describe pod -l app=sales
 
-kind-context-sales:
+dev-context-sales:
 	kubectl config set-context --current --namespace=sales-system
 
 # *** OTHER ****************************************************************
 
-kind-logs-vault:
+dev-logs-vault:
 	kubectl logs -l app=vault --all-containers=true -f --tail=100
 
-kind-logs-db:
+dev-logs-db:
 	kubectl logs -l app=database --all-containers=true -f --tail=100
 
-kind-logs-zipkin:
+dev-logs-zipkin:
 	kubectl logs -l app=zipkin --all-containers=true -f --tail=100
 
 # *** EXTRAS *******************************************************************
 
-kind-services-delete:
-	kustomize build zarf/k8s/kind/sales | kubectl delete -f -
-	kustomize build zarf/k8s/kind/zipkin | kubectl delete -f -
-	kustomize build zarf/k8s/kind/database | kubectl delete -f -
+dev-services-delete:
+	kustomize build zarf/k8s/dev/sales | kubectl delete -f -
+	kustomize build zarf/k8s/dev/zipkin | kubectl delete -f -
+	kustomize build zarf/k8s/dev/database | kubectl delete -f -
 
-kind-describe-replicaset:
+dev-describe-replicaset:
 	kubectl get rs
 	kubectl describe rs -l app=sales
 
-kind-events:
+dev-events:
 	kubectl get ev --sort-by metadata.creationTimestamp
 
-kind-events-warn:
+dev-events-warn:
 	kubectl get ev --field-selector type=Warning --sort-by metadata.creationTimestamp
 
-kind-shell:
+dev-shell:
 	kubectl exec -it $(shell kubectl get pods | grep sales | cut -c1-26) --container sales-api -- /bin/sh
 
-kind-database:
+dev-database:
 	# ./admin --db-disable-tls=1 migrate
 	# ./admin --db-disable-tls=1 seed
 
