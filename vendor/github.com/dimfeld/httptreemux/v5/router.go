@@ -55,7 +55,8 @@ type LookupResult struct {
 	// will also be used in the case
 	StatusCode  int
 	handler     HandlerFunc
-	params      map[string]string
+	// Params represents the key value pairs of the path parameters.
+	Params      map[string]string
 	leafHandler map[string]HandlerFunc // Only has a value when StatusCode is MethodNotAllowed.
 }
 
@@ -249,7 +250,7 @@ func (t *TreeMux) ServeLookupResult(w http.ResponseWriter, r *http.Request, lr L
 		}
 	} else {
 		r = t.setDefaultRequestContext(r)
-		lr.handler(w, r, lr.params)
+		lr.handler(w, r, lr.Params)
 	}
 }
 
