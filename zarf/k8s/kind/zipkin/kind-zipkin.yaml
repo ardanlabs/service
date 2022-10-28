@@ -6,7 +6,7 @@ metadata:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: zipkin-pod # Base POD name
+  name: zipkin
   namespace: sales-system
 spec:
   selector:

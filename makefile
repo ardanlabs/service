@@ -120,8 +120,8 @@ kind-down:
 	kind delete cluster --name $(KIND_CLUSTER)
 
 kind-load:
-	cd zarf/k8s/kind/sales-pod; kustomize edit set image sales-api-image=sales-api-amd64:$(VERSION)
-	cd zarf/k8s/kind/sales-pod; kustomize edit set image metrics-image=metrics-amd64:$(VERSION)
+	cd zarf/k8s/kind/sales; kustomize edit set image sales-api-image=sales-api-amd64:$(VERSION)
+	cd zarf/k8s/kind/sales; kustomize edit set image metrics-image=metrics-amd64:$(VERSION)
 	kind load docker-image sales-api-amd64:$(VERSION) --name $(KIND_CLUSTER)
 	kind load docker-image metrics-amd64:$(VERSION) --name $(KIND_CLUSTER)
 	kind load docker-image $(POSTGRES) --name $(KIND_CLUSTER)
@@ -129,16 +129,16 @@ kind-load:
 	kind load docker-image $(ZIPKIN) --name $(KIND_CLUSTER)
 
 kind-apply:
-	kustomize build zarf/k8s/kind/database-pod | kubectl apply -f -
-	kubectl wait --timeout=120s --for=condition=Available deployment/database-pod
-	kustomize build zarf/k8s/kind/vault-pod | kubectl apply -f -
-	kubectl wait --timeout=120s --for=condition=Available deployment/vault-pod
-	kustomize build zarf/k8s/kind/zipkin-pod | kubectl apply -f -
-	kubectl wait --timeout=120s --for=condition=Available deployment/zipkin-pod
-	kustomize build zarf/k8s/kind/sales-pod | kubectl apply -f -
+	kustomize build zarf/k8s/kind/database | kubectl apply -f -
+	kubectl wait --timeout=120s --for=condition=Available deployment/database
+	kustomize build zarf/k8s/kind/vault | kubectl apply -f -
+	kubectl wait --timeout=120s --for=condition=Available deployment/vault
+	kustomize build zarf/k8s/kind/zipkin | kubectl apply -f -
+	kubectl wait --timeout=120s --for=condition=Available deployment/zipkin
+	kustomize build zarf/k8s/kind/sales | kubectl apply -f -
 
 kind-restart:
-	kubectl rollout restart deployment sales-pod
+	kubectl rollout restart deployment sales
 
 kind-update: all kind-load kind-restart
 
@@ -168,7 +168,7 @@ kind-status-sales:
 	kubectl get pods -o wide --watch --namespace=sales-system
 
 kind-describe-deployment:
-	kubectl describe deployment sales-pod
+	kubectl describe deployment sales
 
 kind-describe-sales:
 	kubectl describe pod -l app=sales
@@ -176,7 +176,7 @@ kind-describe-sales:
 kind-context-sales:
 	kubectl config set-context --current --namespace=sales-system
 
-# *** OTHER-POD ****************************************************************
+# *** OTHER ****************************************************************
 
 kind-logs-vault:
 	kubectl logs -l app=vault --all-containers=true -f --tail=100
@@ -190,9 +190,9 @@ kind-logs-zipkin:
 # *** EXTRAS *******************************************************************
 
 kind-services-delete:
-	kustomize build zarf/k8s/kind/sales-pod | kubectl delete -f -
-	kustomize build zarf/k8s/kind/zipkin-pod | kubectl delete -f -
-	kustomize build zarf/k8s/kind/database-pod | kubectl delete -f -
+	kustomize build zarf/k8s/kind/sales | kubectl delete -f -
+	kustomize build zarf/k8s/kind/zipkin | kubectl delete -f -
+	kustomize build zarf/k8s/kind/database | kubectl delete -f -
 
 kind-describe-replicaset:
 	kubectl get rs

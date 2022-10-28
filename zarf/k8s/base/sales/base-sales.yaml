@@ -6,12 +6,12 @@ metadata:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: sales-pod # Base POD name
+  name: sales
   namespace: sales-system
 spec:
   selector:
     matchLabels:
-      app: sales # Selector for POD name search.
+      app: sales # Selector for name search.
   template:
     metadata:
       labels:
@@ -67,15 +67,15 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
-        - name: KUBERNETES_PODNAME
+        - name: KUBERNETES_NAME
           valueFrom:
             fieldRef:
               fieldPath: metadata.name
-        - name: KUBERNETES_NAMESPACE_POD_IP
+        - name: KUBERNETES_POD_IP
           valueFrom:
             fieldRef:
               fieldPath: status.podIP
-        - name: KUBERNETES_NODENAME
+        - name: KUBERNETES_NODE_NAME
           valueFrom:
             fieldRef:
               fieldPath: spec.nodeName

@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: vault-pod
+  name: zipkin
   namespace: sales-system
 spec:
   replicas: 1
@@ -9,33 +9,17 @@ spec:
     type: Recreate
   selector:
     matchLabels:
-      app: vault
+      app: zipkin
   template:
     metadata:
       labels:
-        app: vault
+        app: zipkin
     spec:
       containers:
-      # vault container configuration
-      - name: vault
+      # zipkin container configuration
+      - name: zipkin
         resources:
           limits:
             cpu: "500m" # Up to 1/2 full core
           requests:
             cpu: "250m" # Use 1/4 full core
-        ports:
-        - name: vault
-          containerPort: 8200
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: vault-service
-  namespace: sales-system
-spec:
-  selector:
-    app: vault
-  ports:
-  - name: vault
-    port: 8200
-    targetPort: vault

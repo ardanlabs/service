@@ -61,7 +61,7 @@ func (h Handlers) Liveness(w http.ResponseWriter, r *http.Request) {
 		Status    string `json:"status,omitempty"`
 		Build     string `json:"build,omitempty"`
 		Host      string `json:"host,omitempty"`
-		Pod       string `json:"pod,omitempty"`
+		Name      string `json:"name,omitempty"`
 		PodIP     string `json:"podIP,omitempty"`
 		Node      string `json:"node,omitempty"`
 		Namespace string `json:"namespace,omitempty"`
@@ -69,9 +69,9 @@ func (h Handlers) Liveness(w http.ResponseWriter, r *http.Request) {
 		Status:    "up",
 		Build:     h.Build,
 		Host:      host,
-		Pod:       os.Getenv("KUBERNETES_PODNAME"),
-		PodIP:     os.Getenv("KUBERNETES_NAMESPACE_POD_IP"),
-		Node:      os.Getenv("KUBERNETES_NODENAME"),
+		Name:      os.Getenv("KUBERNETES_NAME"),
+		PodIP:     os.Getenv("KUBERNETES_POD_IP"),
+		Node:      os.Getenv("KUBERNETES_NODE_NAME"),
 		Namespace: os.Getenv("KUBERNETES_NAMESPACE"),
 	}
 

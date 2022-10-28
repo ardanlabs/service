@@ -6,7 +6,7 @@ metadata:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: database-pod
+  name: database
   namespace: sales-system
 spec:
   replicas: 1

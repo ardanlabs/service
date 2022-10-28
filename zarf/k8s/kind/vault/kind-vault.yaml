@@ -6,7 +6,7 @@ metadata:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: vault-pod # Base POD name
+  name: vault
   namespace: sales-system
 spec:
   selector:
