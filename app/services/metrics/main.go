@@ -74,7 +74,7 @@ func run(log *zap.SugaredLogger) error {
 			ShutdownTimeout time.Duration `conf:"default:5s"`
 		}
 		Collect struct {
-			From string `conf:"default:http://zipkin-service:4000/debug/vars"`
+			From string `conf:"default:http://sales-service:4000/debug/vars"`
 		}
 		Publish struct {
 			To       string        `conf:"default:console"`
