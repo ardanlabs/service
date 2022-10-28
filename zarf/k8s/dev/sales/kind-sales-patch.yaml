@@ -4,12 +4,12 @@ metadata:
   name: sales
   namespace: sales-system
 spec:
-  replicas: 1
-  strategy:
-    type: Recreate
   selector:
     matchLabels:
       app: sales
+  replicas: 1
+  strategy:
+    type: Recreate
   template:
     metadata:
       labels:
@@ -18,14 +18,12 @@ spec:
       dnsPolicy: ClusterFirstWithHostNet
       hostNetwork: true
       containers:
-      # sales-api container configuration
       - name: sales-api
         resources:
           limits:
             cpu: "2000m" # Up to 2 full cores
           requests:
             cpu: "1000m" # Use 1 full cores
-      # metrics container configuration
       - name: metrics
         resources:
           limits:
@@ -42,3 +40,16 @@ spec:
   selector:
     app: sales
   type: ClusterIP
+  ports:
+  - name: sales-api
+    port: 3000
+    targetPort: sales-api
+  - name: sales-api-debug
+    port: 4000
+    targetPort: sales-api-debug
+  - name: metrics
+    port: 3001
+    targetPort: metrics
+  - name: metrics-debug
+    port: 4001
+    targetPort: metrics-debug

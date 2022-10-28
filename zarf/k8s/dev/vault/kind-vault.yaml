@@ -11,7 +11,10 @@ metadata:
 spec:
   selector:
     matchLabels:
-      app: vault # Selector for POD name search.
+      app: vault
+  replicas: 1
+  strategy:
+    type: Recreate
   template:
     metadata:
       labels:
@@ -21,20 +24,21 @@ spec:
       hostNetwork: true
       terminationGracePeriodSeconds: 60
       containers:
-      # zipkin container configuration
       - name: vault
-        image: hashicorpvault
+        image: hashicorp/vault:1.12
+        ports:
+        - name: vault
+          containerPort: 8200
         env:
         - name: VAULT_DEV_ROOT_TOKEN_ID
-          valueFrom:
-            configMapKeyRef:
-              name: app-config
-              key: root_token_id
+          value: myroot
         - name: VAULT_DEV_LISTEN_ADDRESS
-          valueFrom:
-            configMapKeyRef:
-              name: app-config
-              key: listen_address
+          value: 0.0.0.0:8200
+        resources:
+          limits:
+            cpu: "500m" # Up to 1/2 full core
+          requests:
+            cpu: "250m" # Use 1/4 full core
 ---
 apiVersion: v1
 kind: Service
@@ -45,3 +49,7 @@ spec:
   type: ClusterIP
   selector:
     app: vault
+  ports:
+  - name: vault
+    port: 8200
+    targetPort: vault

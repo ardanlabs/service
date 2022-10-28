@@ -6,12 +6,9 @@ resources:
 patchesStrategicMerge:
 - ./kind-sales-patch.yaml
 images:
-- name: metrics-image
-  newName: metrics
-  newTag: "1.0"
-- name: openzipkin
-  newName: openzipkin/zipkin
-  newTag: "2.23"
 - name: sales-api-image
   newName: sales-api
+  newTag: "1.0"
+- name: metrics-image
+  newName: metrics
   newTag: "1.0"

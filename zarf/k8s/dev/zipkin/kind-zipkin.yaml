@@ -11,7 +11,10 @@ metadata:
 spec:
   selector:
     matchLabels:
-      app: zipkin # Selector for POD name search.
+      app: zipkin
+  replicas: 1
+  strategy:
+    type: Recreate
   template:
     metadata:
       labels:
@@ -23,10 +26,15 @@ spec:
       containers:
       # zipkin container configuration
       - name: zipkin
-        image: openzipkin
+        image: openzipkin/zipkin:2.23
         ports:
         - name: zipkin
           containerPort: 9411
+        resources:
+          limits:
+            cpu: "500m" # Up to 1/2 full core
+          requests:
+            cpu: "250m" # Use 1/4 full core
 ---
 apiVersion: v1
 kind: Service

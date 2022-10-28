@@ -9,12 +9,12 @@ metadata:
   name: database
   namespace: sales-system
 spec:
-  replicas: 1
-  strategy:
-    type: Recreate
   selector:
     matchLabels:
       app: database
+  replicas: 1
+  strategy:
+    type: Recreate
   template:
     metadata:
       labels:
@@ -22,6 +22,7 @@ spec:
     spec:
       dnsPolicy: ClusterFirstWithHostNet
       hostNetwork: true
+      terminationGracePeriodSeconds: 60
       containers:
       - name: postgres
         image: postgres:14-alpine
@@ -32,10 +33,7 @@ spec:
             cpu: "1000m" # Use 1 full core
         env:
         - name: POSTGRES_PASSWORD
-          valueFrom:
-            configMapKeyRef:
-              name: app-config
-              key: db_password
+          value: postgres
         ports:
         - name: postgres
           containerPort: 5432
@@ -70,6 +68,6 @@ spec:
   selector:
     app: database
   ports:
-    - name: postgres
-      port: 5432
-      targetPort: postgres
+  - name: postgres
+    port: 5432
+    targetPort: postgres
