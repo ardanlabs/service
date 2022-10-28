@@ -3,7 +3,13 @@ SHELL := /bin/bash
 # ==============================================================================
 # Testing running system
 
-# Deploy First
+# Deploy First Mentality
+#
+# Other commands to install.
+# go install github.com/divan/expvarmon@latest
+# go install github.com/rakyll/hey@latest
+#
+# For full Kind v0.16 release notes: https://github.com/kubernetes-sigs/kind/releases/tag/v0.16.0
 #
 # For testing a simple query on the system. Don't forget to `make seed` first.
 # curl --user "admin@example.com:gophers" http://localhost:3000/v1/users/token
@@ -11,13 +17,7 @@ SHELL := /bin/bash
 # curl -H "Authorization: Bearer ${TOKEN}" http://localhost:3000/v1/users/1/2
 #
 # For testing load on the service.
-# go install github.com/rakyll/hey@latest
 # hey -m GET -c 100 -n 10000 -H "Authorization: Bearer ${TOKEN}" http://localhost:3000/v1/users/1/2
-#
-# Access metrics directly (4000) or through the sidecar (3001)
-# go install github.com/divan/expvarmon@latest
-# expvarmon -ports=":4000" -vars="build,requests,goroutines,errors,panics,mem:memstats.Alloc"
-# expvarmon -ports=":3001" -endpoint="/metrics" -vars="build,requests,goroutines,errors,panics,mem:memstats.Alloc"
 #
 # To generate a private/public key PEM file.
 # openssl genpkey -algorithm RSA -out private.pem -pkeyopt rsa_keygen_bits:2048
@@ -27,9 +27,6 @@ SHELL := /bin/bash
 # Testing coverage.
 # go test -coverprofile p.out
 # go tool cover -html p.out
-#
-# Launch zipkin.
-# http://localhost:9411/zipkin/
 #
 # Vault Information.
 # READ THIS: https://developer.hashicorp.com/vault/docs/concepts/tokens
@@ -50,8 +47,6 @@ SHELL := /bin/bash
 #   -X POST \
 #   -d '{"data":{"pk":"PEM"}}' \
 #   http://127.0.0.1:8200/v1/secret/data/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
-#
-# For full Kind v0.16 release notes: https://github.com/kubernetes-sigs/kind/releases/tag/v0.16.0
 #
 # To show what calls are being made underneath to the proxy and checksum db.
 # curl https://proxy.golang.org/github.com/ardanlabs/conf/@v/list
@@ -239,6 +234,18 @@ liveness:
 
 readiness:
 	curl -il http://localhost:4000/debug/readiness
+
+# ==============================================================================
+# Metrics and Tracing
+
+metrics-view:
+	expvarmon -ports=":4000" -vars="build,requests,goroutines,errors,panics,mem:memstats.Alloc"
+
+metrics-view-sidecar:
+	expvarmon -ports=":3001" -endpoint="/metrics" -vars="build,requests,goroutines,errors,panics,mem:memstats.Alloc"
+
+zipkin:
+	open -a "Google Chrome" http://localhost:9411/zipkin/
 
 # ==============================================================================
 # Running tests within the local computer
