@@ -62,6 +62,7 @@ spec:
             configMapKeyRef:
               name: app-config
               key: db_host
+              optional: true
         - name: KUBERNETES_NAMESPACE
           valueFrom:
             fieldRef:
