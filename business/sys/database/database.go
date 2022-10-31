@@ -110,10 +110,7 @@ func WithinTran(ctx context.Context, log *zap.SugaredLogger, db *sqlx.DB, fn fun
 	// We can defer the rollback since the code checks if the transaction
 	// has already been committed.
 	defer func() {
-		if err := tx.Rollback(); err != nil {
-			if errors.Is(err, sql.ErrTxDone) {
-				return
-			}
+		if err := tx.Rollback(); err != nil && !errors.Is(err, sql.ErrTxDone) {
 			log.Errorw("unable to rollback tran", "trace_id", traceID, "ERROR", err)
 		}
 		log.Infow("rollback tran", "trace_id", traceID)

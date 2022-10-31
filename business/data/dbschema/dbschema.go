@@ -50,10 +50,9 @@ func Seed(ctx context.Context, db *sqlx.DB) error {
 		return err
 	}
 
+	defer tx.Rollback()
+
 	if _, err := tx.Exec(seedDoc); err != nil {
-		if err := tx.Rollback(); err != nil {
-			return err
-		}
 		return err
 	}
 
@@ -68,10 +67,9 @@ func DeleteAll(db *sqlx.DB) error {
 		return err
 	}
 
+	defer tx.Rollback()
+
 	if _, err := tx.Exec(deleteDoc); err != nil {
-		if err := tx.Rollback(); err != nil {
-			return err
-		}
 		return err
 	}
 
