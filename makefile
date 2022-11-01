@@ -12,12 +12,12 @@ SHELL := /bin/bash
 # For full Kind v0.17 release notes: https://github.com/kubernetes-sigs/kind/releases/tag/v0.17.0
 #
 # For testing a simple query on the system. Don't forget to `make seed` first.
-# curl --user "admin@example.com:gophers" http://localhost:3000/v1/users/token
+# curl --user "admin@example.com:gophers" http://sales-service.sales-system.svc.cluster.local:3000/v1/users/token
 # export TOKEN="COPY TOKEN STRING FROM LAST CALL"
-# curl -H "Authorization: Bearer ${TOKEN}" http://localhost:3000/v1/users/1/2
+# curl -H "Authorization: Bearer ${TOKEN}" http://sales-service.sales-system.svc.cluster.local:3000/v1/users/1/2
 #
 # For testing load on the service.
-# hey -m GET -c 100 -n 10000 -H "Authorization: Bearer ${TOKEN}" http://localhost:3000/v1/users/1/2
+# hey -m GET -c 100 -n 10000 -H "Authorization: Bearer ${TOKEN}" http://sales-service.sales-system.svc.cluster.local:3000/v1/users/1/2
 #
 # To generate a private/public key PEM file.
 # openssl genpkey -algorithm RSA -out private.pem -pkeyopt rsa_keygen_bits:2048
@@ -31,22 +31,12 @@ SHELL := /bin/bash
 # Vault Information.
 # READ THIS: https://developer.hashicorp.com/vault/docs/concepts/tokens
 # export VAULT_TOKEN=myroot
-# export VAULT_ADDR='http://0.0.0.0:8200'
+# export VAULT_ADDR='http://vault-service.sales-system.svc.cluster.local:8200'
 # vault secrets list
 # vault kv get secret/sales
 # vault kv put secret/sales key="some data"
-#
-# curl \
-#   -H "X-Vault-Token: myroot" \
-#   -X GET \
-#   http://0.0.0.0:8200/v1/secret/data/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
-# 
-# curl \
-#   -H "X-Vault-Token: myroot" \
-#   -H "Content-Type: application/json" \
-#   -X POST \
-#   -d '{"data":{"pk":"PEM"}}' \
-#   http://127.0.0.1:8200/v1/secret/data/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
+# curl -H "X-Vault-Token: myroot" -X GET http://vault-service.sales-system.svc.cluster.local:8200/v1/secret/data/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
+# curl -H "X-Vault-Token: myroot" -H "Content-Type: application/json" -X POST -d '{"data":{"pk":"PEM"}}' http://vault-service.sales-system.svc.cluster.local:8200/v1/secret/data/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
 #
 # To show what calls are being made underneath to the proxy and checksum db.
 # curl https://proxy.golang.org/github.com/ardanlabs/conf/@v/list
@@ -68,14 +58,15 @@ dev.setup.mac:
 	brew list kustomize || brew install kustomize
 	brew list pgcli || brew install pgcli
 	brew list vault || brew install vault
+	brew list datawire/blackbird/telepresence || brew install datawire/blackbird/telepresence
 
 dev.docker:
+	docker pull golang:1.19
+	docker pull alpine:3.16
+	docker pull kindest/node:v1.25.2
+	docker pull postgres:14-alpine
 	docker pull hashicorp/vault:1.12
 	docker pull openzipkin/zipkin:2.23
-	docker pull kindest/node:v1.25.2
-	docker pull golang:1.19
-	docker pull postgres:14-alpine
-	docker pull alpine:3.16
 
 # ==============================================================================
 # Building containers
@@ -115,6 +106,9 @@ dev-up:
 		--name $(KIND_CLUSTER) \
 		--config zarf/k8s/dev/kind-config.yaml
 	kubectl config set-context --current --namespace=sales-system
+	kubectl wait --timeout=120s --namespace=local-path-storage --for=condition=Available deployment/local-path-provisioner
+	sudo -E telepresence helm install
+	sudo -E telepresence --kubeconfig=$${HOME}/.kube/config connect
 
 dev-down:
 	kind delete cluster --name $(KIND_CLUSTER)
@@ -145,7 +139,7 @@ dev-update: all dev-load dev-restart
 dev-update-apply: all dev-load dev-apply
 
 dev-logs:
-	kubectl logs -l app=sales --all-containers=true -f --tail=100 | go run app/tooling/logfmt/main.go
+	kubectl logs -l app=sales --all-containers=true -f --tail=100 | go run app/tooling/logfmt/main.go -service=SALES-API
 
 dev-status:
 	kubectl get nodes -o wide
@@ -156,25 +150,11 @@ dev-describe:
 	kubectl describe nodes
 	kubectl describe svc
 
-# *** SALES-SYSTEM *************************************************************
-
-dev-logs-sales:
-	kubectl logs -l app=sales --all-containers=true -f --tail=100 | go run app/tooling/logfmt/main.go -service=SALES-API
-
-dev-logs-metrics:
-	kubectl logs -l app=sales --all-containers=true -f --tail=100 | go run app/tooling/logfmt/main.go -service=METRICS
-
-dev-status-sales:
-	kubectl get pods -o wide --watch --namespace=sales-system
-
 dev-describe-deployment:
 	kubectl describe deployment sales
 
 dev-describe-sales:
 	kubectl describe pod -l app=sales
-
-dev-context-sales:
-	kubectl config set-context --current --namespace=sales-system
 
 # *** OTHER ****************************************************************
 
@@ -227,25 +207,25 @@ token:
 	go run app/tooling/sales-admin/main.go gentoken 5cf37266-3473-4006-984f-9325122678b7 54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
 
 pgcli:
-	pgcli postgresql://postgres:postgres@localhost
+	pgcli postgresql://postgres:postgres@database-service.sales-system.svc.cluster.local
 
 liveness:
-	curl -il http://localhost:4000/debug/liveness
+	curl -il http://sales-service.sales-system.svc.cluster.local:4000/debug/liveness
 
 readiness:
-	curl -il http://localhost:4000/debug/readiness
+	curl -il http://sales-service.sales-system.svc.cluster.local:4000/debug/readiness
 
 # ==============================================================================
 # Metrics and Tracing
 
 metrics-view:
-	expvarmon -ports=":4000" -vars="build,requests,goroutines,errors,panics,mem:memstats.Alloc"
+	expvarmon -ports="sales-service.sales-system.svc.cluster.local:4000" -vars="build,requests,goroutines,errors,panics,mem:memstats.Alloc"
 
 metrics-view-sidecar:
-	expvarmon -ports=":3001" -endpoint="/metrics" -vars="build,requests,goroutines,errors,panics,mem:memstats.Alloc"
+	expvarmon -ports="sales-service.sales-system.svc.cluster.local:3001" -endpoint="/metrics" -vars="build,requests,goroutines,errors,panics,mem:memstats.Alloc"
 
 zipkin:
-	open -a "Google Chrome" http://localhost:9411/zipkin/
+	open -a "Google Chrome" http://zipkin-service.sales-system.svc.cluster.local:9411/zipkin/
 
 # ==============================================================================
 # Running tests within the local computer

@@ -83,7 +83,7 @@ func run(log *zap.SugaredLogger) error {
 			DebugHost       string        `conf:"default:0.0.0.0:4000"`
 		}
 		Vault struct {
-			Address   string `conf:"default:http://vault-service:8200"`
+			Address   string `conf:"default:http://vault-service.sales-system.svc.cluster.local:8200"`
 			MountPath string `conf:"default:secret"`
 
 			// This MUST be handled like any root credential.
@@ -97,14 +97,14 @@ func run(log *zap.SugaredLogger) error {
 		DB struct {
 			User         string `conf:"default:postgres"`
 			Password     string `conf:"default:postgres,mask"`
-			Host         string `conf:"default:database-service"`
+			Host         string `conf:"default:database-service.sales-system.svc.cluster.local"`
 			Name         string `conf:"default:postgres"`
 			MaxIdleConns int    `conf:"default:0"`
 			MaxOpenConns int    `conf:"default:0"`
 			DisableTLS   bool   `conf:"default:true"`
 		}
 		Zipkin struct {
-			ReporterURI string  `conf:"default:http://zipkin-service:9411/api/v2/spans"`
+			ReporterURI string  `conf:"default:http://zipkin-service.sales-system.svc.cluster.local:9411/api/v2/spans"`
 			ServiceName string  `conf:"default:sales-api"`
 			Probability float64 `conf:"default:0.05"`
 		}
