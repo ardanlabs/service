@@ -132,7 +132,7 @@ dev-apply:
 	kustomize build zarf/k8s/dev/sales | kubectl apply -f -
 
 dev-restart:
-	kubectl rollout restart deployment sales
+	kubectl rollout restart deployment sales --namespace=sales-system
 
 dev-update: all dev-load dev-restart
 
