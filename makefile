@@ -46,6 +46,7 @@ SHELL := /bin/bash
 # curl https://proxy.golang.org/github.com/ardanlabs/conf/v3/@v/v3.1.1.zip
 # curl https://sum.golang.org/lookup/github.com/ardanlabs/conf/v3@v3.1.1
 #
+# https://app.getambassador.io/download/tel2/linux/amd64/2.7.6/telepresence
 
 # ==============================================================================
 # Install dependencies
@@ -168,6 +169,9 @@ dev-logs-zipkin:
 	kubectl logs -l app=zipkin --all-containers=true -f --tail=100
 
 # *** EXTRAS *******************************************************************
+
+dev-telepresence-quit:
+	sudo telepresence quit -r -u
 
 dev-services-delete:
 	kustomize build zarf/k8s/dev/sales | kubectl delete -f -
