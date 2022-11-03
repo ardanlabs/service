@@ -106,7 +106,6 @@ dev-up:
 		--image kindest/node:v1.25.2@sha256:f52781bc0d7a19fb6c405c2af83abfeb311f130707a0e219175677e366cc45d1 \
 		--name $(KIND_CLUSTER) \
 		--config zarf/k8s/dev/kind-config.yaml
-	kubectl config set-context --current --namespace=sales-system
 	kubectl wait --timeout=120s --namespace=local-path-storage --for=condition=Available deployment/local-path-provisioner
 	telepresence --context=kind-$(KIND_CLUSTER) --kubeconfig=$${HOME}/.kube/config helm install
 	telepresence --context=kind-$(KIND_CLUSTER) --kubeconfig=$${HOME}/.kube/config connect
@@ -125,11 +124,11 @@ dev-load:
 
 dev-apply:
 	kustomize build zarf/k8s/dev/database | kubectl apply -f -
-	kubectl wait --timeout=120s --for=condition=Available deployment/database
+	kubectl wait --timeout=120s --namespace=sales-system --for=condition=Available deployment/database
 	kustomize build zarf/k8s/dev/vault | kubectl apply -f -
-	kubectl wait --timeout=120s --for=condition=Available deployment/vault
+	kubectl wait --timeout=120s --namespace=sales-system --for=condition=Available deployment/vault
 	kustomize build zarf/k8s/dev/zipkin | kubectl apply -f -
-	kubectl wait --timeout=120s --for=condition=Available deployment/zipkin
+	kubectl wait --timeout=120s --namespace=sales-system --for=condition=Available deployment/zipkin
 	kustomize build zarf/k8s/dev/sales | kubectl apply -f -
 
 dev-restart:
@@ -140,7 +139,7 @@ dev-update: all dev-load dev-restart
 dev-update-apply: all dev-load dev-apply
 
 dev-logs:
-	kubectl logs -l app=sales --all-containers=true -f --tail=100 | go run app/tooling/logfmt/main.go -service=SALES-API
+	kubectl logs --namespace=sales-system -l app=sales --all-containers=true -f --tail=100 | go run app/tooling/logfmt/main.go -service=SALES-API
 
 dev-status:
 	kubectl get nodes -o wide
@@ -152,21 +151,21 @@ dev-describe:
 	kubectl describe svc
 
 dev-describe-deployment:
-	kubectl describe deployment sales
+	kubectl describe deployment --namespace=sales-system sales
 
 dev-describe-sales:
-	kubectl describe pod -l app=sales
+	kubectl describe pod --namespace=sales-system -l app=sales
 
 # *** OTHER ****************************************************************
 
 dev-logs-vault:
-	kubectl logs -l app=vault --all-containers=true -f --tail=100
+	kubectl logs --namespace=sales-system -l app=vault --all-containers=true -f --tail=100
 
 dev-logs-db:
-	kubectl logs -l app=database --all-containers=true -f --tail=100
+	kubectl logs --namespace=sales-system -l app=database --all-containers=true -f --tail=100
 
 dev-logs-zipkin:
-	kubectl logs -l app=zipkin --all-containers=true -f --tail=100
+	kubectl logs --namespace=sales-system -l app=zipkin --all-containers=true -f --tail=100
 
 # *** EXTRAS *******************************************************************
 
@@ -180,7 +179,7 @@ dev-services-delete:
 
 dev-describe-replicaset:
 	kubectl get rs
-	kubectl describe rs -l app=sales
+	kubectl describe rs --namespace=sales-system -l app=sales
 
 dev-events:
 	kubectl get ev --sort-by metadata.creationTimestamp
@@ -189,7 +188,7 @@ dev-events-warn:
 	kubectl get ev --field-selector type=Warning --sort-by metadata.creationTimestamp
 
 dev-shell:
-	kubectl exec -it $(shell kubectl get pods | grep sales | cut -c1-26) --container sales-api -- /bin/sh
+	kubectl exec --namespace=sales-system -it $(shell kubectl get pods --namespace=sales-system | grep sales | cut -c1-26) --container sales-api -- /bin/sh
 
 dev-database:
 	# ./admin --db-disable-tls=1 migrate
