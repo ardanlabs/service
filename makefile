@@ -111,6 +111,7 @@ dev-up:
 	telepresence --context=kind-$(KIND_CLUSTER) --kubeconfig=$${HOME}/.kube/config connect
 
 dev-down:
+	telepresence quit -r -u
 	kind delete cluster --name $(KIND_CLUSTER)
 
 dev-load:
