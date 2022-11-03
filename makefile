@@ -108,7 +108,7 @@ dev-up:
 		--config zarf/k8s/dev/kind-config.yaml
 	kubectl config set-context --current --namespace=sales-system
 	kubectl wait --timeout=120s --namespace=local-path-storage --for=condition=Available deployment/local-path-provisioner
-	sudo -E telepresence helm install
+	sudo -E telepresence --kubeconfig=$${HOME}/.kube/config helm install
 	sudo -E telepresence --kubeconfig=$${HOME}/.kube/config connect
 
 dev-down:
