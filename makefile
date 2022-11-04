@@ -59,6 +59,16 @@ dev.setup.mac:
 	brew list vault || brew install vault
 	brew list telepresence || brew install telepresence
 
+dev.setup.mac.arm64:
+	brew update
+	brew tap hashicorp/tap
+	brew list kind || brew install kind
+	brew list kubectl || brew install kubectl
+	brew list kustomize || brew install kustomize
+	brew list pgcli || brew install pgcli
+	brew list vault || brew install vault
+	brew list telepresence-arm64 || brew install telepresence-arm64
+
 dev.docker:
 	docker pull golang:1.19
 	docker pull alpine:3.16
