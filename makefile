@@ -105,8 +105,8 @@ dev-up:
 		--name $(KIND_CLUSTER) \
 		--config zarf/k8s/dev/kind-config.yaml
 	kubectl wait --timeout=120s --namespace=local-path-storage --for=condition=Available deployment/local-path-provisioner
-	telepresence --context=kind-$(KIND_CLUSTER) --kubeconfig=$${HOME}/.kube/config helm install
-	telepresence --context=kind-$(KIND_CLUSTER) --kubeconfig=$${HOME}/.kube/config connect
+	telepresence --context=kind-$(KIND_CLUSTER) helm install
+	telepresence --context=kind-$(KIND_CLUSTER) connect
 
 dev-down:
 	telepresence quit -r -u
