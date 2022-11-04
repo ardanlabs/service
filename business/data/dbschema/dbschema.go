@@ -3,7 +3,9 @@ package dbschema
 
 import (
 	"context"
+	"database/sql"
 	_ "embed" // Calls init function.
+	"errors"
 	"fmt"
 
 	"github.com/ardanlabs/darwin"
@@ -40,7 +42,7 @@ func Migrate(ctx context.Context, db *sqlx.DB) error {
 
 // Seed runs the set of seed-data queries against db. The queries are ran in a
 // transaction and rolled back if any fail.
-func Seed(ctx context.Context, db *sqlx.DB) error {
+func Seed(ctx context.Context, db *sqlx.DB) (err error) {
 	if err := database.StatusCheck(ctx, db); err != nil {
 		return fmt.Errorf("status check database: %w", err)
 	}
@@ -50,30 +52,56 @@ func Seed(ctx context.Context, db *sqlx.DB) error {
 		return err
 	}
 
-	if _, err := tx.Exec(seedDoc); err != nil {
-		if err := tx.Rollback(); err != nil {
-			return err
+	defer func() {
+		if errTx := tx.Rollback(); errTx != nil {
+			if errors.Is(errTx, sql.ErrTxDone) {
+				return
+			}
+			err = fmt.Errorf("rollback: %w", errTx)
+			return
 		}
-		return err
+	}()
+
+	if _, err := tx.Exec(seedDoc); err != nil {
+		return fmt.Errorf("exec: %w", err)
 	}
 
-	return tx.Commit()
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("commit: %w", err)
+	}
+
+	return nil
 }
 
 // DeleteAll runs the set of Drop-table queries against db. The queries are ran in a
 // transaction and rolled back if any fail.
-func DeleteAll(db *sqlx.DB) error {
+func DeleteAll(ctx context.Context, db *sqlx.DB) error {
+	if err := database.StatusCheck(ctx, db); err != nil {
+		return fmt.Errorf("status check database: %w", err)
+	}
+
 	tx, err := db.Begin()
 	if err != nil {
 		return err
 	}
 
-	if _, err := tx.Exec(deleteDoc); err != nil {
-		if err := tx.Rollback(); err != nil {
-			return err
+	defer func() {
+		if errTx := tx.Rollback(); errTx != nil {
+			if errors.Is(errTx, sql.ErrTxDone) {
+				return
+			}
+			err = fmt.Errorf("rollback: %w", errTx)
+			return
 		}
-		return err
+	}()
+
+	if _, err := tx.Exec(deleteDoc); err != nil {
+		return fmt.Errorf("exec: %w", err)
 	}
 
-	return tx.Commit()
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("commit: %w", err)
+	}
+
+	return nil
 }
