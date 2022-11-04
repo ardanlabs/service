@@ -49,7 +49,7 @@ SHELL := /bin/bash
 # ==============================================================================
 # Install dependencies
 
-dev.setup.mac:
+dev.setup.mac.common:
 	brew update
 	brew tap hashicorp/tap
 	brew list kind || brew install kind
@@ -57,17 +57,12 @@ dev.setup.mac:
 	brew list kustomize || brew install kustomize
 	brew list pgcli || brew install pgcli
 	brew list vault || brew install vault
-	brew list telepresence || brew install telepresence
 
-dev.setup.mac.arm64:
-	brew update
-	brew tap hashicorp/tap
-	brew list kind || brew install kind
-	brew list kubectl || brew install kubectl
-	brew list kustomize || brew install kustomize
-	brew list pgcli || brew install pgcli
-	brew list vault || brew install vault
-	brew list telepresence-arm64 || brew install telepresence-arm64
+dev.setup.mac: dev.setup.mac.common
+	brew telepresence || brew install telepresence
+
+dev.setup.mac.arm64: dev.setup.mac.common
+	brew telepresence-arm64 || brew install telepresence-arm64
 
 dev.docker:
 	docker pull golang:1.19
