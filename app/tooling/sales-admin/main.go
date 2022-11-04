@@ -21,7 +21,7 @@ type config struct {
 	DB   struct {
 		User       string `conf:"default:postgres"`
 		Password   string `conf:"default:postgres,mask"`
-		Host       string `conf:"default:localhost"`
+		Host       string `conf:"default:database-service.sales-system.svc.cluster.local"`
 		Name       string `conf:"default:postgres"`
 		DisableTLS bool   `conf:"default:true"`
 	}
