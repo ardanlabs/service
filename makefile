@@ -71,6 +71,7 @@ dev.docker:
 	docker pull postgres:14-alpine
 	docker pull hashicorp/vault:1.12
 	docker pull openzipkin/zipkin:2.23
+	docker pull docker.io/datawire/tel2:2.8.5
 
 # ==============================================================================
 # Building containers
@@ -103,6 +104,7 @@ KIND_CLUSTER := ardan-starter-cluster
 POSTGRES := postgres:14-alpine
 VAULT := hashicorp/vault:1.12
 ZIPKIN := openzipkin/zipkin:2.23
+TELEPRESENCE := docker.io/datawire/tel2:2.8.5
 
 dev-up:
 	kind create cluster \
@@ -110,6 +112,7 @@ dev-up:
 		--name $(KIND_CLUSTER) \
 		--config zarf/k8s/dev/kind-config.yaml
 	kubectl wait --timeout=120s --namespace=local-path-storage --for=condition=Available deployment/local-path-provisioner
+	kind load docker-image $(TELEPRESENCE) --name $(KIND_CLUSTER)
 	telepresence --context=kind-$(KIND_CLUSTER) helm install
 	telepresence --context=kind-$(KIND_CLUSTER) connect
 
