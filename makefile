@@ -59,10 +59,10 @@ dev.setup.mac.common:
 	brew list vault || brew install vault
 
 dev.setup.mac: dev.setup.mac.common
-	brew telepresence || brew install telepresence
+	brew datawire/blackbird/telepresence || brew install datawire/blackbird/telepresence
 
 dev.setup.mac.arm64: dev.setup.mac.common
-	brew telepresence-arm64 || brew install telepresence-arm64
+	brew datawire/blackbird/telepresence-arm64 || brew install datawire/blackbird/telepresence-arm64
 
 dev.docker:
 	docker pull golang:1.19
