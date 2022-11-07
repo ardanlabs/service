@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/ardanlabs/conf/v3 v3.1.2
-	github.com/ardanlabs/darwin v1.3.0
+	github.com/ardanlabs/darwin v1.4.0
 	github.com/dimfeld/httptreemux/v5 v5.5.0
 	github.com/go-playground/locales v0.14.0
 	github.com/go-playground/universal-translator v0.18.0
@@ -34,6 +34,6 @@ require (
 	go.opentelemetry.io/otel/metric v0.33.0 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
-	golang.org/x/sys v0.1.0 // indirect
+	golang.org/x/sys v0.2.0 // indirect
 	golang.org/x/text v0.4.0 // indirect
 )

@@ -19,12 +19,16 @@ import (
 
 // lib/pq errorCodeNames
 // https://github.com/lib/pq/blob/master/error.go#L178
-const uniqueViolation = "23505"
+const (
+	uniqueViolation = "23505"
+	undefinedTable  = "42P01"
+)
 
 // Set of error variables for CRUD operations.
 var (
-	ErrDBNotFound        = errors.New("not found")
+	ErrDBNotFound        = sql.ErrNoRows
 	ErrDBDuplicatedEntry = errors.New("duplicated entry")
+	ErrUndefinedTable    = errors.New("undefined table")
 )
 
 // Config is the required properties to use the database.
@@ -160,10 +164,13 @@ func NamedExecContext(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtCo
 	defer span.End()
 
 	if _, err := sqlx.NamedExecContext(ctx, db, query, data); err != nil {
-
-		// Checks if the error is of code 23505 (unique_violation).
-		if pqerr, ok := err.(*pq.Error); ok && pqerr.Code == uniqueViolation {
-			return ErrDBDuplicatedEntry
+		if pqerr, ok := err.(*pq.Error); ok {
+			switch pqerr.Code {
+			case undefinedTable:
+				return ErrUndefinedTable
+			case uniqueViolation:
+				return ErrDBDuplicatedEntry
+			}
 		}
 		return err
 	}
@@ -193,6 +200,9 @@ func NamedQuerySlice[T any](ctx context.Context, log *zap.SugaredLogger, db sqlx
 
 	rows, err := sqlx.NamedQueryContext(ctx, db, query, data)
 	if err != nil {
+		if pqerr, ok := err.(*pq.Error); ok && pqerr.Code == undefinedTable {
+			return ErrUndefinedTable
+		}
 		return err
 	}
 	defer rows.Close()
@@ -232,6 +242,9 @@ func NamedQueryStruct(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtCo
 
 	rows, err := sqlx.NamedQueryContext(ctx, db, query, data)
 	if err != nil {
+		if pqerr, ok := err.(*pq.Error); ok && pqerr.Code == undefinedTable {
+			return ErrUndefinedTable
+		}
 		return err
 	}
 	defer rows.Close()

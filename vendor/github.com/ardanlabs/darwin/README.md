@@ -4,7 +4,7 @@
 
 Copyright (c) 2016 Claudemiro  
 Copyright 2021, Ardan Labs  
-info@ardanlabs.com
+hello@ardanlabs.com
 
 Project forked from:  
 https://github.com/GuiaBolso/darwin
