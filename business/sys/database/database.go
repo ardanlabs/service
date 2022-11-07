@@ -149,7 +149,12 @@ func ExecContext(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext
 // logging and tracing where field replacement is necessary.
 func NamedExecContext(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext, query string, data any) error {
 	q := queryString(query, data)
-	log.Infow("database.NamedExecContext", "trace_id", web.GetTraceID(ctx), "query", q)
+
+	if _, ok := data.(struct{}); ok {
+		log.WithOptions(zap.AddCallerSkip(2)).Infow("database.NamedExecContext", "trace_id", web.GetTraceID(ctx), "query", q)
+	} else {
+		log.WithOptions(zap.AddCallerSkip(1)).Infow("database.NamedExecContext", "trace_id", web.GetTraceID(ctx), "query", q)
+	}
 
 	ctx, span := web.AddSpan(ctx, "business.sys.database.exec", attribute.String("query", q))
 	defer span.End()
@@ -176,7 +181,12 @@ func QuerySlice[T any](ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtC
 // collection of data to be unmarshalled into a slice where field replacement is necessary.
 func NamedQuerySlice[T any](ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext, query string, data any, dest *[]T) error {
 	q := queryString(query, data)
-	log.Infow("database.NamedQuerySlice", "trace_id", web.GetTraceID(ctx), "query", q)
+
+	if _, ok := data.(struct{}); ok {
+		log.WithOptions(zap.AddCallerSkip(2)).Infow("database.NamedQuerySlice", "trace_id", web.GetTraceID(ctx), "query", q)
+	} else {
+		log.WithOptions(zap.AddCallerSkip(1)).Infow("database.NamedQuerySlice", "trace_id", web.GetTraceID(ctx), "query", q)
+	}
 
 	ctx, span := web.AddSpan(ctx, "business.sys.database.queryslice", attribute.String("query", q))
 	defer span.End()
@@ -210,7 +220,12 @@ func QueryStruct(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext
 // single value to be unmarshalled into a struct type where field replacement is necessary.
 func NamedQueryStruct(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext, query string, data any, dest any) error {
 	q := queryString(query, data)
-	log.Infow("database.NamedQueryStruct", "trace_id", web.GetTraceID(ctx), "query", q)
+
+	if _, ok := data.(struct{}); ok {
+		log.WithOptions(zap.AddCallerSkip(2)).Infow("database.NamedQueryStruct", "trace_id", web.GetTraceID(ctx), "query", q)
+	} else {
+		log.WithOptions(zap.AddCallerSkip(1)).Infow("database.NamedQueryStruct", "trace_id", web.GetTraceID(ctx), "query", q)
+	}
 
 	ctx, span := web.AddSpan(ctx, "business.sys.database.query", attribute.String("query", q))
 	defer span.End()
