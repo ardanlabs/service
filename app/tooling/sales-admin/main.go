@@ -19,11 +19,13 @@ type config struct {
 	conf.Version
 	Args conf.Args
 	DB   struct {
-		User       string `conf:"default:postgres"`
-		Password   string `conf:"default:postgres,mask"`
-		Host       string `conf:"default:database-service.sales-system.svc.cluster.local"`
-		Name       string `conf:"default:postgres"`
-		DisableTLS bool   `conf:"default:true"`
+		User         string `conf:"default:postgres"`
+		Password     string `conf:"default:postgres,mask"`
+		Host         string `conf:"default:database-service.sales-system.svc.cluster.local"`
+		Name         string `conf:"default:postgres"`
+		MaxIdleConns int    `conf:"default:2"`
+		MaxOpenConns int    `conf:"default:0"`
+		DisableTLS   bool   `conf:"default:true"`
 	}
 	Vault struct {
 		KeysFolder string `conf:"default:zarf/keys/"`
@@ -77,11 +79,13 @@ func run(log *zap.SugaredLogger) error {
 // the command line.
 func processCommands(args conf.Args, log *zap.SugaredLogger, cfg config) error {
 	dbConfig := database.Config{
-		User:       cfg.DB.User,
-		Password:   cfg.DB.Password,
-		Host:       cfg.DB.Host,
-		Name:       cfg.DB.Name,
-		DisableTLS: cfg.DB.DisableTLS,
+		User:         cfg.DB.User,
+		Password:     cfg.DB.Password,
+		Host:         cfg.DB.Host,
+		Name:         cfg.DB.Name,
+		MaxIdleConns: cfg.DB.MaxIdleConns,
+		MaxOpenConns: cfg.DB.MaxOpenConns,
+		DisableTLS:   cfg.DB.DisableTLS,
 	}
 
 	vaultConfig := vault.Config{
