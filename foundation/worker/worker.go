@@ -3,6 +3,7 @@ package worker
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 
@@ -10,34 +11,51 @@ import (
 )
 
 // JobFunc defines a function that can execute work for a specific job.
-type JobFunc func(ctx context.Context, traceID string, payload any)
+type JobFunc func(ctx context.Context)
 
 // Worker manages jobs and the execution of those jobs concurrently.
 type Worker struct {
-	wg       sync.WaitGroup
-	mu       sync.Mutex
-	registry map[string]JobFunc
-	running  map[string]context.CancelFunc
+	wg         sync.WaitGroup
+	mu         sync.RWMutex
+	sem        chan bool
+	isShutdown chan struct{}
+	running    map[string]context.CancelFunc
 }
 
-// New constructs a Worker for managing and executing jobs.
-func New(registry map[string]JobFunc) *Worker {
-	return &Worker{
-		registry: registry,
-		running:  make(map[string]context.CancelFunc),
+// New constructs a Worker for managing and executing jobs. The capacity value
+// represents the maximum number of G's that can be executing at any given time.
+func New(maxRunningJobs int) (*Worker, error) {
+	if maxRunningJobs <= 0 {
+		return nil, errors.New("max running jobs must be greater than 0")
 	}
+
+	sem := make(chan bool, maxRunningJobs)
+	for i := 0; i < maxRunningJobs; i++ {
+		sem <- true
+	}
+
+	w := Worker{
+		sem:        sem,
+		isShutdown: make(chan struct{}),
+		running:    make(map[string]context.CancelFunc),
+	}
+
+	return &w, nil
 }
 
 // Running returns the number of jobs running.
 func (w *Worker) Running() int {
-	w.mu.Lock()
-	defer w.mu.Unlock()
+	w.mu.RLock()
+	defer w.mu.RUnlock()
 
 	return len(w.running)
 }
 
 // Shutdown waits for all jobs to complete before it returns.
 func (w *Worker) Shutdown(ctx context.Context) error {
+
+	// Signal we are shutting down.
+	close(w.isShutdown)
 
 	// Call the cancel function for all running goroutines.
 	w.mu.Lock()
@@ -68,29 +86,48 @@ func (w *Worker) Shutdown(ctx context.Context) error {
 
 // Start lookups a job by key and launches a goroutine to perform the work. A
 // work key is returned so the caller can cancel work early.
-func (w *Worker) Start(ctx context.Context, traceID string, jobKey string, payload any) (string, error) {
-	w.mu.Lock()
-	defer w.mu.Unlock()
+func (w *Worker) Start(ctx context.Context, fn JobFunc) (string, error) {
 
-	// Locate the job in the jobs registry.
-	f, exists := w.registry[jobKey]
-	if !exists {
-		return "", fmt.Errorf("job[%s] is not registered", jobKey)
+	// We need to block here waiting to capture a semaphore, timeout or shutdown.
+	// The shutdown is first to handle that event as priority.
+	select {
+	case <-w.isShutdown:
+		return "", errors.New("shutting down")
+	case <-ctx.Done():
+		return "", ctx.Err()
+	case <-w.sem:
 	}
 
 	// Need a unique key for this work.
 	workKey := uuid.NewString()
 
 	// Create a cancel function and keep it for stop/shutdown purposes.
-	ctx, cancel := context.WithCancel(ctx)
+	ctx, cancel := context.WithCancel(context.Background())
+
+	// Register this new G as running.
+	w.mu.Lock()
+	defer w.mu.Unlock()
 	w.running[workKey] = cancel
 
 	// Launch a goroutine to perform the work.
 	w.wg.Add(1)
 	go func() {
-		defer w.wg.Done()
-		defer func() { cancel(); w.removeWork(workKey) }()
-		f(ctx, traceID, payload)
+
+		// Do this in a separate defer incase the other defer panics.
+		// This adds a value back to the semaphore allowing a new message
+		// to be processed.
+		defer func() { w.sem <- true }()
+
+		// We must call cancel regardless, remove the work key and report
+		// to the outer G we are done.
+		defer func() {
+			cancel()
+			w.removeWork(workKey)
+			w.wg.Done()
+		}()
+
+		// Execute the actually workload.
+		fn(ctx)
 	}()
 
 	return workKey, nil
@@ -101,7 +138,6 @@ func (w *Worker) Stop(workKey string) error {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
-	// Locate the work in the running list.
 	cancel, exists := w.running[workKey]
 	if !exists {
 		return fmt.Errorf("work[%s] is not running", workKey)

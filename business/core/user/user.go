@@ -40,14 +40,14 @@ type Core struct {
 }
 
 // NewCore constructs a core for user api access.
-func NewCore(storer Storer) Core {
-	return Core{
+func NewCore(storer Storer) *Core {
+	return &Core{
 		storer: storer,
 	}
 }
 
 // Create inserts a new user into the database.
-func (c Core) Create(ctx context.Context, nu NewUser, now time.Time) (User, error) {
+func (c *Core) Create(ctx context.Context, nu NewUser, now time.Time) (User, error) {
 	if err := validate.Check(nu); err != nil {
 		return User{}, fmt.Errorf("validating data: %w", err)
 	}
@@ -57,7 +57,7 @@ func (c Core) Create(ctx context.Context, nu NewUser, now time.Time) (User, erro
 		return User{}, fmt.Errorf("generating password hash: %w", err)
 	}
 
-	user := User{
+	usr := User{
 		ID:           validate.GenerateID(),
 		Name:         nu.Name,
 		Email:        nu.Email,
@@ -69,7 +69,7 @@ func (c Core) Create(ctx context.Context, nu NewUser, now time.Time) (User, erro
 
 	// This provides an example of how to execute a transaction if required.
 	tran := func(s Storer) error {
-		if err := s.Create(ctx, user); err != nil {
+		if err := s.Create(ctx, usr); err != nil {
 			return fmt.Errorf("create: %w", err)
 		}
 		return nil
@@ -79,11 +79,11 @@ func (c Core) Create(ctx context.Context, nu NewUser, now time.Time) (User, erro
 		return User{}, fmt.Errorf("tran: %w", err)
 	}
 
-	return user, nil
+	return usr, nil
 }
 
 // Update replaces a user document in the database.
-func (c Core) Update(ctx context.Context, userID string, uu UpdateUser, now time.Time) error {
+func (c *Core) Update(ctx context.Context, userID string, uu UpdateUser, now time.Time) error {
 	if err := validate.CheckID(userID); err != nil {
 		return ErrInvalidID
 	}
@@ -123,7 +123,7 @@ func (c Core) Update(ctx context.Context, userID string, uu UpdateUser, now time
 }
 
 // Delete removes a user from the database.
-func (c Core) Delete(ctx context.Context, userID string) error {
+func (c *Core) Delete(ctx context.Context, userID string) error {
 	if err := validate.CheckID(userID); err != nil {
 		return ErrInvalidID
 	}
@@ -136,7 +136,7 @@ func (c Core) Delete(ctx context.Context, userID string) error {
 }
 
 // Query retrieves a list of existing users from the database.
-func (c Core) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]User, error) {
+func (c *Core) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]User, error) {
 	users, err := c.storer.Query(ctx, pageNumber, rowsPerPage)
 	if err != nil {
 		return nil, fmt.Errorf("query: %w", err)
@@ -146,7 +146,7 @@ func (c Core) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]Use
 }
 
 // QueryByID gets the specified user from the database.
-func (c Core) QueryByID(ctx context.Context, userID string) (User, error) {
+func (c *Core) QueryByID(ctx context.Context, userID string) (User, error) {
 	if err := validate.CheckID(userID); err != nil {
 		return User{}, ErrInvalidID
 	}
@@ -160,7 +160,7 @@ func (c Core) QueryByID(ctx context.Context, userID string) (User, error) {
 }
 
 // QueryByEmail gets the specified user from the database by email.
-func (c Core) QueryByEmail(ctx context.Context, email string) (User, error) {
+func (c *Core) QueryByEmail(ctx context.Context, email string) (User, error) {
 
 	// Email Validate function in validate.
 	if !validate.CheckEmail(email) {
@@ -178,7 +178,7 @@ func (c Core) QueryByEmail(ctx context.Context, email string) (User, error) {
 // Authenticate finds a user by their email and verifies their password. On
 // success it returns a Claims User representing this user. The claims can be
 // used to generate a token for future authentication.
-func (c Core) Authenticate(ctx context.Context, now time.Time, email, password string) (User, error) {
+func (c *Core) Authenticate(ctx context.Context, now time.Time, email, password string) (User, error) {
 	usr, err := c.storer.QueryByEmail(ctx, email)
 	if err != nil {
 		return User{}, fmt.Errorf("query: %w", err)

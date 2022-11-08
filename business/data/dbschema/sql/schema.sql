@@ -1,4 +1,4 @@
--- Version: 1.1
+-- Version: 1.01
 -- Description: Create table users
 CREATE TABLE users (
 	user_id       UUID,
@@ -12,7 +12,7 @@ CREATE TABLE users (
 	PRIMARY KEY (user_id)
 );
 
--- Version: 1.2
+-- Version: 1.02
 -- Description: Create table products
 CREATE TABLE products (
 	product_id   UUID,
@@ -27,7 +27,7 @@ CREATE TABLE products (
 	FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
 
--- Version: 1.3
+-- Version: 1.03
 -- Description: Create table sales
 CREATE TABLE sales (
 	sale_id      UUID,

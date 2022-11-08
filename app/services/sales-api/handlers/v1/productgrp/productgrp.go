@@ -16,7 +16,7 @@ import (
 
 // Handlers manages the set of product endpoints.
 type Handlers struct {
-	Product product.Core
+	Product *product.Core
 }
 
 // Create adds a new product to the system.

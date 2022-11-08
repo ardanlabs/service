@@ -19,12 +19,16 @@ import (
 
 // lib/pq errorCodeNames
 // https://github.com/lib/pq/blob/master/error.go#L178
-const uniqueViolation = "23505"
+const (
+	uniqueViolation = "23505"
+	undefinedTable  = "42P01"
+)
 
 // Set of error variables for CRUD operations.
 var (
-	ErrDBNotFound        = errors.New("not found")
+	ErrDBNotFound        = sql.ErrNoRows
 	ErrDBDuplicatedEntry = errors.New("duplicated entry")
+	ErrUndefinedTable    = errors.New("undefined table")
 )
 
 // Config is the required properties to use the database.
@@ -146,16 +150,24 @@ func ExecContext(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext
 // logging and tracing where field replacement is necessary.
 func NamedExecContext(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext, query string, data any) error {
 	q := queryString(query, data)
-	log.Infow("database.NamedExecContext", "trace_id", web.GetTraceID(ctx), "query", q)
+
+	if _, ok := data.(struct{}); ok {
+		log.WithOptions(zap.AddCallerSkip(2)).Infow("database.NamedExecContext", "trace_id", web.GetTraceID(ctx), "query", q)
+	} else {
+		log.WithOptions(zap.AddCallerSkip(1)).Infow("database.NamedExecContext", "trace_id", web.GetTraceID(ctx), "query", q)
+	}
 
 	ctx, span := web.AddSpan(ctx, "business.sys.database.exec", attribute.String("query", q))
 	defer span.End()
 
 	if _, err := sqlx.NamedExecContext(ctx, db, query, data); err != nil {
-
-		// Checks if the error is of code 23505 (unique_violation).
-		if pqerr, ok := err.(*pq.Error); ok && pqerr.Code == uniqueViolation {
-			return ErrDBDuplicatedEntry
+		if pqerr, ok := err.(*pq.Error); ok {
+			switch pqerr.Code {
+			case undefinedTable:
+				return ErrUndefinedTable
+			case uniqueViolation:
+				return ErrDBDuplicatedEntry
+			}
 		}
 		return err
 	}
@@ -173,13 +185,21 @@ func QuerySlice[T any](ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtC
 // collection of data to be unmarshalled into a slice where field replacement is necessary.
 func NamedQuerySlice[T any](ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext, query string, data any, dest *[]T) error {
 	q := queryString(query, data)
-	log.Infow("database.NamedQuerySlice", "trace_id", web.GetTraceID(ctx), "query", q)
+
+	if _, ok := data.(struct{}); ok {
+		log.WithOptions(zap.AddCallerSkip(2)).Infow("database.NamedQuerySlice", "trace_id", web.GetTraceID(ctx), "query", q)
+	} else {
+		log.WithOptions(zap.AddCallerSkip(1)).Infow("database.NamedQuerySlice", "trace_id", web.GetTraceID(ctx), "query", q)
+	}
 
 	ctx, span := web.AddSpan(ctx, "business.sys.database.queryslice", attribute.String("query", q))
 	defer span.End()
 
 	rows, err := sqlx.NamedQueryContext(ctx, db, query, data)
 	if err != nil {
+		if pqerr, ok := err.(*pq.Error); ok && pqerr.Code == undefinedTable {
+			return ErrUndefinedTable
+		}
 		return err
 	}
 	defer rows.Close()
@@ -207,13 +227,21 @@ func QueryStruct(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext
 // single value to be unmarshalled into a struct type where field replacement is necessary.
 func NamedQueryStruct(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext, query string, data any, dest any) error {
 	q := queryString(query, data)
-	log.Infow("database.NamedQueryStruct", "trace_id", web.GetTraceID(ctx), "query", q)
+
+	if _, ok := data.(struct{}); ok {
+		log.WithOptions(zap.AddCallerSkip(2)).Infow("database.NamedQueryStruct", "trace_id", web.GetTraceID(ctx), "query", q)
+	} else {
+		log.WithOptions(zap.AddCallerSkip(1)).Infow("database.NamedQueryStruct", "trace_id", web.GetTraceID(ctx), "query", q)
+	}
 
 	ctx, span := web.AddSpan(ctx, "business.sys.database.query", attribute.String("query", q))
 	defer span.End()
 
 	rows, err := sqlx.NamedQueryContext(ctx, db, query, data)
 	if err != nil {
+		if pqerr, ok := err.(*pq.Error); ok && pqerr.Code == undefinedTable {
+			return ErrUndefinedTable
+		}
 		return err
 	}
 	defer rows.Close()

@@ -115,8 +115,9 @@ func NewUnit(t *testing.T, c *docker.Container, dbName string) (*zap.SugaredLogg
 	encoder := zapcore.NewConsoleEncoder(zap.NewDevelopmentEncoderConfig())
 	writer := bufio.NewWriter(&buf)
 	log := zap.New(
-		zapcore.NewCore(encoder, zapcore.AddSync(writer), zapcore.DebugLevel)).
-		Sugar()
+		zapcore.NewCore(encoder, zapcore.AddSync(writer), zapcore.DebugLevel),
+		zap.WithCaller(true),
+	).Sugar()
 
 	// teardown is the function that should be invoked when the caller is done
 	// with the database.

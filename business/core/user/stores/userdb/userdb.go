@@ -20,21 +20,21 @@ type Store struct {
 }
 
 // NewStore constructs the api for data access.
-func NewStore(log *zap.SugaredLogger, db *sqlx.DB) Store {
-	return Store{
+func NewStore(log *zap.SugaredLogger, db *sqlx.DB) *Store {
+	return &Store{
 		log: log,
 		db:  db,
 	}
 }
 
 // WithinTran runs passed function and do commit/rollback at the end.
-func (s Store) WithinTran(ctx context.Context, fn func(s user.Storer) error) error {
+func (s *Store) WithinTran(ctx context.Context, fn func(s user.Storer) error) error {
 	if s.inTran {
 		return fn(s)
 	}
 
 	f := func(tx *sqlx.Tx) error {
-		s := Store{
+		s := &Store{
 			log:    s.log,
 			db:     tx,
 			inTran: true,
@@ -46,7 +46,7 @@ func (s Store) WithinTran(ctx context.Context, fn func(s user.Storer) error) err
 }
 
 // Create inserts a new user into the database.
-func (s Store) Create(ctx context.Context, usr user.User) error {
+func (s *Store) Create(ctx context.Context, usr user.User) error {
 	const q = `
 	INSERT INTO users
 		(user_id, name, email, password_hash, roles, date_created, date_updated)
@@ -64,7 +64,7 @@ func (s Store) Create(ctx context.Context, usr user.User) error {
 }
 
 // Update replaces a user document in the database.
-func (s Store) Update(ctx context.Context, usr user.User) error {
+func (s *Store) Update(ctx context.Context, usr user.User) error {
 	const q = `
 	UPDATE
 		users
@@ -88,7 +88,7 @@ func (s Store) Update(ctx context.Context, usr user.User) error {
 }
 
 // Delete removes a user from the database.
-func (s Store) Delete(ctx context.Context, userID string) error {
+func (s *Store) Delete(ctx context.Context, userID string) error {
 	data := struct {
 		UserID string `db:"user_id"`
 	}{
@@ -109,7 +109,7 @@ func (s Store) Delete(ctx context.Context, userID string) error {
 }
 
 // Query retrieves a list of existing users from the database.
-func (s Store) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]user.User, error) {
+func (s *Store) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]user.User, error) {
 	data := struct {
 		Offset      int `db:"offset"`
 		RowsPerPage int `db:"rows_per_page"`
@@ -136,7 +136,7 @@ func (s Store) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]us
 }
 
 // QueryByID gets the specified user from the database.
-func (s Store) QueryByID(ctx context.Context, userID string) (user.User, error) {
+func (s *Store) QueryByID(ctx context.Context, userID string) (user.User, error) {
 	data := struct {
 		UserID string `db:"user_id"`
 	}{
@@ -163,7 +163,7 @@ func (s Store) QueryByID(ctx context.Context, userID string) (user.User, error) 
 }
 
 // QueryByEmail gets the specified user from the database by email.
-func (s Store) QueryByEmail(ctx context.Context, email string) (user.User, error) {
+func (s *Store) QueryByEmail(ctx context.Context, email string) (user.User, error) {
 	data := struct {
 		Email string `db:"email"`
 	}{

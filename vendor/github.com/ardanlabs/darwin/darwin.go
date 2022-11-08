@@ -108,21 +108,31 @@ func ParseMigrations(s string) []Migration {
 		v := scanner.Text()
 		lower := strings.ToLower(v)
 		switch {
-		case len(v) >= 5 && (lower[:6] == "-- ver" || lower[:5] == "--ver"):
+		case (len(v) >= 5 && lower[:5] == "--ver") || (len(v) >= 6 && lower[:6] == "-- ver"):
 			mig.Script = script
 			migs = append(migs, mig)
 
 			mig = Migration{}
 			script = ""
 
-			f, err := strconv.ParseFloat(strings.TrimSpace(v[11:]), 64)
+			parts := strings.Split(v, ":")
+			if len(parts) != 2 {
+				return nil
+			}
+
+			f, err := strconv.ParseFloat(strings.TrimSpace(parts[1]), 64)
 			if err != nil {
 				return nil
 			}
 			mig.Version = f
 
-		case len(v) >= 5 && (lower[:6] == "-- des" || lower[:5] == "--des"):
-			mig.Description = strings.TrimSpace(v[15:])
+		case (len(v) >= 5 && lower[:5] == "--des") || (len(v) >= 6 && lower[:6] == "-- des"):
+			parts := strings.Split(v, ":")
+			if len(parts) != 2 {
+				return nil
+			}
+
+			mig.Description = strings.TrimSpace(parts[1])
 
 		default:
 			script += v + "\n"

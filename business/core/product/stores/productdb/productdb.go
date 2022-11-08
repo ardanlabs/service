@@ -19,8 +19,8 @@ type Store struct {
 }
 
 // NewStore constructs the api for data access.
-func NewStore(log *zap.SugaredLogger, db *sqlx.DB) Store {
-	return Store{
+func NewStore(log *zap.SugaredLogger, db *sqlx.DB) *Store {
+	return &Store{
 		log: log,
 		db:  db,
 	}
@@ -28,7 +28,7 @@ func NewStore(log *zap.SugaredLogger, db *sqlx.DB) Store {
 
 // Create adds a Product to the database. It returns the created Product with
 // fields like ID and DateCreated populated.
-func (s Store) Create(ctx context.Context, prd product.Product) error {
+func (s *Store) Create(ctx context.Context, prd product.Product) error {
 	const q = `
 	INSERT INTO products
 		(product_id, user_id, name, cost, quantity, date_created, date_updated)
@@ -44,7 +44,7 @@ func (s Store) Create(ctx context.Context, prd product.Product) error {
 
 // Update modifies data about a Product. It will error if the specified ID is
 // invalid or does not reference an existing Product.
-func (s Store) Update(ctx context.Context, prd product.Product) error {
+func (s *Store) Update(ctx context.Context, prd product.Product) error {
 	const q = `
 	UPDATE
 		products
@@ -64,7 +64,7 @@ func (s Store) Update(ctx context.Context, prd product.Product) error {
 }
 
 // Delete removes the product identified by a given ID.
-func (s Store) Delete(ctx context.Context, productID string) error {
+func (s *Store) Delete(ctx context.Context, productID string) error {
 	data := struct {
 		ProductID string `db:"product_id"`
 	}{
@@ -85,7 +85,7 @@ func (s Store) Delete(ctx context.Context, productID string) error {
 }
 
 // Query gets all Products from the database.
-func (s Store) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]product.Product, error) {
+func (s *Store) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]product.Product, error) {
 	data := struct {
 		Offset      int `db:"offset"`
 		RowsPerPage int `db:"rows_per_page"`
@@ -118,7 +118,7 @@ func (s Store) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]pr
 }
 
 // QueryByID finds the product identified by a given ID.
-func (s Store) QueryByID(ctx context.Context, productID string) (product.Product, error) {
+func (s *Store) QueryByID(ctx context.Context, productID string) (product.Product, error) {
 	data := struct {
 		ProductID string `db:"product_id"`
 	}{
@@ -151,7 +151,7 @@ func (s Store) QueryByID(ctx context.Context, productID string) (product.Product
 }
 
 // QueryByUserID finds the product identified by a given User ID.
-func (s Store) QueryByUserID(ctx context.Context, userID string) ([]product.Product, error) {
+func (s *Store) QueryByUserID(ctx context.Context, userID string) ([]product.Product, error) {
 	data := struct {
 		UserID string `db:"user_id"`
 	}{

@@ -23,7 +23,7 @@ func New(service string, outputPaths ...string) (*zap.SugaredLogger, error) {
 		config.OutputPaths = outputPaths
 	}
 
-	log, err := config.Build()
+	log, err := config.Build(zap.WithCaller(true))
 	if err != nil {
 		return nil, err
 	}
