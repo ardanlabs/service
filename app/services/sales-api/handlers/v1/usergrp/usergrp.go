@@ -18,7 +18,7 @@ import (
 
 // Handlers manages the set of user endpoints.
 type Handlers struct {
-	User user.Core
+	User *user.Core
 	Auth *auth.Auth
 }
 

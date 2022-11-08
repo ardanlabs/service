@@ -35,15 +35,15 @@ type Core struct {
 }
 
 // NewCore constructs a core for product api access.
-func NewCore(storer Storer) Core {
-	return Core{
+func NewCore(storer Storer) *Core {
+	return &Core{
 		storer: storer,
 	}
 }
 
 // Create adds a Product to the database. It returns the created Product with
 // fields like ID and DateCreated populated.
-func (c Core) Create(ctx context.Context, np NewProduct, now time.Time) (Product, error) {
+func (c *Core) Create(ctx context.Context, np NewProduct, now time.Time) (Product, error) {
 	if err := validate.Check(np); err != nil {
 		return Product{}, fmt.Errorf("validating data: %w", err)
 	}
@@ -67,7 +67,7 @@ func (c Core) Create(ctx context.Context, np NewProduct, now time.Time) (Product
 
 // Update modifies data about a Product. It will error if the specified ID is
 // invalid or does not reference an existing Product.
-func (c Core) Update(ctx context.Context, productID string, up UpdateProduct, now time.Time) error {
+func (c *Core) Update(ctx context.Context, productID string, up UpdateProduct, now time.Time) error {
 	if err := validate.CheckID(productID); err != nil {
 		return ErrInvalidID
 	}
@@ -100,7 +100,7 @@ func (c Core) Update(ctx context.Context, productID string, up UpdateProduct, no
 }
 
 // Delete removes the product identified by a given ID.
-func (c Core) Delete(ctx context.Context, productID string) error {
+func (c *Core) Delete(ctx context.Context, productID string) error {
 	if err := validate.CheckID(productID); err != nil {
 		return ErrInvalidID
 	}
@@ -113,7 +113,7 @@ func (c Core) Delete(ctx context.Context, productID string) error {
 }
 
 // Query gets all Products from the database.
-func (c Core) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]Product, error) {
+func (c *Core) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]Product, error) {
 	prds, err := c.storer.Query(ctx, pageNumber, rowsPerPage)
 	if err != nil {
 		return nil, fmt.Errorf("query: %w", err)
@@ -123,7 +123,7 @@ func (c Core) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]Pro
 }
 
 // QueryByID finds the product identified by a given ID.
-func (c Core) QueryByID(ctx context.Context, productID string) (Product, error) {
+func (c *Core) QueryByID(ctx context.Context, productID string) (Product, error) {
 	if err := validate.CheckID(productID); err != nil {
 		return Product{}, ErrInvalidID
 	}
@@ -137,7 +137,7 @@ func (c Core) QueryByID(ctx context.Context, productID string) (Product, error) 
 }
 
 // QueryByUserID finds the products identified by a given User ID.
-func (c Core) QueryByUserID(ctx context.Context, userID string) ([]Product, error) {
+func (c *Core) QueryByUserID(ctx context.Context, userID string) ([]Product, error) {
 	if err := validate.CheckID(userID); err != nil {
 		return nil, ErrInvalidID
 	}

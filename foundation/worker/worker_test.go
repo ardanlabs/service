@@ -24,34 +24,29 @@ func Test_Worker(t *testing.T) {
 		t.Logf("\tTest %d:\tWhen handling multiple jobs", testID)
 		{
 			// Define a work function that waits to be canceled.
-			work := func(ctx context.Context, workKey string, data any) {
-				t := data.(*testing.T)
+			work := func(ctx context.Context) {
 				t.Logf("\t\t%s\tTest %d:\tGoroutine running.", success, testID)
 				<-ctx.Done()
 				t.Logf("\t\t%s\tTest %d:\tGoroutine terminating.", success, testID)
 			}
 
-			// Load 4 jobs in the system.
-			var jobs = map[string]worker.JobFunc{
-				"script1": work,
-				"script2": work,
-				"script3": work,
-				"script4": work,
+			// Create a worker and start all 4 jobs.
+			w, err := worker.New(4)
+			if err != nil {
+				t.Fatalf("\t\t%s\tTest %d:\tShould be able to create a worker with max 4: %v", failed, testID, err)
 			}
 
-			// Create a worker and start all 4 jobs.
-			w := worker.New(jobs)
-			for key := range jobs {
+			for i := 0; i < 4; i++ {
 				ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 				defer cancel()
-				if _, err := w.Start(ctx, traceID, key, t); err != nil {
+				if _, err := w.Start(ctx, work); err != nil {
 					t.Fatalf("\t\t%s\tTest %d:\tShould be able to execute work: %v", failed, testID, err)
 				}
 				t.Logf("\t\t%s\tTest %d:\tShould be able to execute work.", success, testID)
 			}
 
 			// Wait for all the jobs to finish.
-			for i := 0; i < 3; i++ {
+			for i := 0; i < 4; i++ {
 				if w.Running() == 0 {
 					break
 				}
@@ -87,28 +82,23 @@ func Test_CancelWorker(t *testing.T) {
 			wg.Add(4)
 
 			// Define a work function that waits to be canceled.
-			work := func(ctx context.Context, workKey string, data any) {
+			work := func(ctx context.Context) {
 				wg.Done()
-				t := data.(*testing.T)
 				t.Logf("\t\t%s\tTest %d:\tGoroutine running.", success, testID)
 				<-ctx.Done()
 				t.Logf("\t\t%s\tTest %d:\tGoroutine terminating.", success, testID)
 			}
 
-			// Load 4 jobs in the system.
-			var jobs = map[string]worker.JobFunc{
-				"script1": work,
-				"script2": work,
-				"script3": work,
-				"script4": work,
+			// Create a worker and start all 4 jobs.
+			w, err := worker.New(4)
+			if err != nil {
+				t.Fatalf("\t\t%s\tTest %d:\tShould be able to create a worker with max 4: %v", failed, testID, err)
 			}
 
-			// Create a worker and start all 4 jobs.
-			w := worker.New(jobs)
-			for key := range jobs {
+			for i := 0; i < 4; i++ {
 				ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 				defer cancel()
-				if _, err := w.Start(ctx, traceID, key, t); err != nil {
+				if _, err := w.Start(ctx, work); err != nil {
 					t.Fatalf("\t%s\tTest %d:\tShould be able to execute work: %v", failed, testID, err)
 				}
 				t.Logf("\t%s\tTest %d:\tShould be able to execute work.", success, testID)
@@ -139,30 +129,25 @@ func Test_StopWorker(t *testing.T) {
 			wg.Add(4)
 
 			// Define a work function that waits to be canceled.
-			work := func(ctx context.Context, workKey string, data any) {
+			work := func(ctx context.Context) {
 				wg.Done()
-				t := data.(*testing.T)
 				t.Logf("\t%s\tTest %d:\tGoroutine running.", success, testID)
 				<-ctx.Done()
 				t.Logf("\t%s\tTest %d:\tGoroutine terminating.", success, testID)
 			}
 
-			// Load 4 jobs in the system.
-			var jobs = map[string]worker.JobFunc{
-				"script1": work,
-				"script2": work,
-				"script3": work,
-				"script4": work,
-			}
-
 			var works []string
 
 			// Create a worker and start all 4 jobs.
-			w := worker.New(jobs)
-			for key := range jobs {
+			w, err := worker.New(4)
+			if err != nil {
+				t.Fatalf("\t\t%s\tTest %d:\tShould be able to create a worker with max 4: %v", failed, testID, err)
+			}
+
+			for i := 0; i < 4; i++ {
 				ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 				defer cancel()
-				work, err := w.Start(ctx, traceID, key, t)
+				work, err := w.Start(ctx, work)
 				if err != nil {
 					t.Fatalf("\t%s\tTest %d:\tShould be able to execute work: %v", failed, testID, err)
 				}
