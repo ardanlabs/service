@@ -62,6 +62,7 @@ func Seed(ctx context.Context, db *sqlx.DB) (err error) {
 
 	if _, err := tx.Exec(seedDoc); err != nil {
 		return fmt.Errorf("exec: %w", err)
+	}
 
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("commit: %w", err)
@@ -96,6 +97,7 @@ func DeleteAll(ctx context.Context, db *sqlx.DB) error {
 
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("commit: %w", err)
+	}
 
 	return nil
 }
