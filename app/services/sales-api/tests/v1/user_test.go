@@ -37,7 +37,7 @@ func Test_Users(t *testing.T) {
 		if r := recover(); r != nil {
 			t.Error(r)
 		}
-		t.Cleanup(test.Teardown)
+		test.Teardown()
 	}()
 
 	shutdown := make(chan os.Signal, 1)

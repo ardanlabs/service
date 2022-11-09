@@ -36,7 +36,7 @@ func Test_Product(t *testing.T) {
 			t.Log(r)
 			t.Error(string(debug.Stack()))
 		}
-		t.Cleanup(teardown)
+		teardown()
 	}()
 
 	core := product.NewCore(productdb.NewStore(log, db))

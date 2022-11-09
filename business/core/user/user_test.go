@@ -39,7 +39,7 @@ func Test_User(t *testing.T) {
 			t.Log(r)
 			t.Error(string(debug.Stack()))
 		}
-		t.Cleanup(teardown)
+		teardown()
 	}()
 
 	core := user.NewCore(usercache.NewStore(log, userdb.NewStore(log, db)))
@@ -130,7 +130,7 @@ func Test_PagingUser(t *testing.T) {
 			t.Log(r)
 			t.Error(string(debug.Stack()))
 		}
-		t.Cleanup(teardown)
+		teardown()
 	}()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
