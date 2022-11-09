@@ -37,6 +37,7 @@ type Config struct {
 	Password     string
 	Host         string
 	Name         string
+	Schema       string
 	MaxIdleConns int
 	MaxOpenConns int
 	DisableTLS   bool
@@ -52,6 +53,9 @@ func Open(cfg Config) (*sqlx.DB, error) {
 	q := make(url.Values)
 	q.Set("sslmode", sslMode)
 	q.Set("timezone", "utc")
+	if cfg.Schema != "" {
+		q.Set("search_path", cfg.Schema)
+	}
 
 	u := url.URL{
 		Scheme:   "postgres",
