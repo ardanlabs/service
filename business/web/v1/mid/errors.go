@@ -21,18 +21,11 @@ func Errors(log *zap.SugaredLogger) web.Middleware {
 		// Create the handler that will be attached in the middleware chain.
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 
-			// If the context is missing this value, request the service
-			// to be shutdown gracefully.
-			v, err := web.GetValues(ctx)
-			if err != nil {
-				return web.NewShutdownError("web value missing from context")
-			}
-
 			// Run the next handler and catch any propagated error.
 			if err := handler(ctx, w, r); err != nil {
 
 				// Log the error.
-				log.Errorw("ERROR", "trace_id", v.TraceID, "message", err)
+				log.Errorw("ERROR", "trace_id", web.GetTraceID(ctx), "message", err)
 
 				// Add a span for this error.
 				ctx, span := web.AddSpan(ctx, "business.web.v1.mid.error")

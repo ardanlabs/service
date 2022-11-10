@@ -21,17 +21,12 @@ type Handlers struct {
 
 // Create adds a new product to the system.
 func (h Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	v, err := web.GetValues(ctx)
-	if err != nil {
-		return web.NewShutdownError("web value missing from context")
-	}
-
 	var np product.NewProduct
 	if err := web.Decode(r, &np); err != nil {
 		return fmt.Errorf("unable to decode payload: %w", err)
 	}
 
-	prod, err := h.Product.Create(ctx, np, v.Now)
+	prod, err := h.Product.Create(ctx, np, web.GetTime(ctx))
 	if err != nil {
 		return fmt.Errorf("creating new product, np[%+v]: %w", np, err)
 	}
@@ -41,15 +36,7 @@ func (h Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Req
 
 // Update updates a product in the system.
 func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	v, err := web.GetValues(ctx)
-	if err != nil {
-		return web.NewShutdownError("web value missing from context")
-	}
-
-	claims, err := auth.GetClaims(ctx)
-	if err != nil {
-		return v1Web.NewRequestError(auth.ErrForbidden, http.StatusForbidden)
-	}
+	claims := auth.GetClaims(ctx)
 
 	var upd product.UpdateProduct
 	if err := web.Decode(r, &upd); err != nil {
@@ -75,7 +62,7 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 		return v1Web.NewRequestError(auth.ErrForbidden, http.StatusForbidden)
 	}
 
-	if err := h.Product.Update(ctx, id, upd, v.Now); err != nil {
+	if err := h.Product.Update(ctx, id, upd, web.GetTime(ctx)); err != nil {
 		switch {
 		case errors.Is(err, product.ErrInvalidID):
 			return v1Web.NewRequestError(err, http.StatusBadRequest)
@@ -91,11 +78,7 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 
 // Delete removes a product from the system.
 func (h Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	claims, err := auth.GetClaims(ctx)
-	if err != nil {
-		return v1Web.NewRequestError(auth.ErrForbidden, http.StatusForbidden)
-	}
-
+	claims := auth.GetClaims(ctx)
 	id := web.Param(r, "id")
 
 	prd, err := h.Product.QueryByID(ctx, id)

@@ -24,17 +24,12 @@ type Handlers struct {
 
 // Create adds a new user to the system.
 func (h Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	v, err := web.GetValues(ctx)
-	if err != nil {
-		return web.NewShutdownError("web value missing from context")
-	}
-
 	var nu user.NewUser
 	if err := web.Decode(r, &nu); err != nil {
 		return fmt.Errorf("unable to decode payload: %w", err)
 	}
 
-	usr, err := h.User.Create(ctx, nu, v.Now)
+	usr, err := h.User.Create(ctx, nu, web.GetTime(ctx))
 	if err != nil {
 		if errors.Is(err, user.ErrUniqueEmail) {
 			return v1Web.NewRequestError(err, http.StatusConflict)
@@ -47,15 +42,7 @@ func (h Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Req
 
 // Update updates a user in the system.
 func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	v, err := web.GetValues(ctx)
-	if err != nil {
-		return web.NewShutdownError("web value missing from context")
-	}
-
-	claims, err := auth.GetClaims(ctx)
-	if err != nil {
-		return v1Web.NewRequestError(auth.ErrForbidden, http.StatusForbidden)
-	}
+	claims := auth.GetClaims(ctx)
 
 	var upd user.UpdateUser
 	if err := web.Decode(r, &upd); err != nil {
@@ -69,7 +56,7 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 		return v1Web.NewRequestError(auth.ErrForbidden, http.StatusForbidden)
 	}
 
-	if err := h.User.Update(ctx, userID, upd, v.Now); err != nil {
+	if err := h.User.Update(ctx, userID, upd, web.GetTime(ctx)); err != nil {
 		switch {
 		case errors.Is(err, user.ErrInvalidID):
 			return v1Web.NewRequestError(err, http.StatusBadRequest)
@@ -85,11 +72,7 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 
 // Delete removes a user from the system.
 func (h Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	claims, err := auth.GetClaims(ctx)
-	if err != nil {
-		return v1Web.NewRequestError(auth.ErrForbidden, http.StatusForbidden)
-	}
-
+	claims := auth.GetClaims(ctx)
 	userID := web.Param(r, "id")
 
 	// If you are not an admin and looking to delete someone other than yourself.
@@ -132,11 +115,7 @@ func (h Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Requ
 
 // QueryByID returns a user by its ID.
 func (h Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	claims, err := auth.GetClaims(ctx)
-	if err != nil {
-		return v1Web.NewRequestError(auth.ErrForbidden, http.StatusForbidden)
-	}
-
+	claims := auth.GetClaims(ctx)
 	userID := web.Param(r, "id")
 
 	// If you are not an admin and looking to retrieve someone other than yourself.
@@ -161,18 +140,13 @@ func (h Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http.
 
 // Token provides an API token for the authenticated user.
 func (h Handlers) Token(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	v, err := web.GetValues(ctx)
-	if err != nil {
-		return web.NewShutdownError("web value missing from context")
-	}
-
 	email, pass, ok := r.BasicAuth()
 	if !ok {
 		err := errors.New("must provide email and password in Basic auth")
 		return v1Web.NewRequestError(err, http.StatusUnauthorized)
 	}
 
-	usr, err := h.User.Authenticate(ctx, v.Now, email, pass)
+	usr, err := h.User.Authenticate(ctx, web.GetTime(ctx), email, pass)
 	if err != nil {
 		switch {
 		case errors.Is(err, user.ErrNotFound):

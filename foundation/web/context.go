@@ -2,7 +2,6 @@ package web
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"go.opentelemetry.io/otel/attribute"
@@ -24,12 +23,17 @@ type Values struct {
 }
 
 // GetValues returns the values from the context.
-func GetValues(ctx context.Context) (*Values, error) {
+func GetValues(ctx context.Context) *Values {
 	v, ok := ctx.Value(key).(*Values)
 	if !ok {
-		return nil, errors.New("web value missing from context")
+		return &Values{
+			TraceID: "00000000-0000-0000-0000-000000000000",
+			Tracer:  trace.NewNoopTracerProvider().Tracer(""),
+			Now:     time.Now(),
+		}
 	}
-	return v, nil
+
+	return v
 }
 
 // GetTraceID returns the trace id from the context.
@@ -39,6 +43,15 @@ func GetTraceID(ctx context.Context) string {
 		return "00000000-0000-0000-0000-000000000000"
 	}
 	return v.TraceID
+}
+
+// GetTime returns the time from the context.
+func GetTime(ctx context.Context) time.Time {
+	v, ok := ctx.Value(key).(*Values)
+	if !ok {
+		return time.Now()
+	}
+	return v.Now
 }
 
 // AddSpan adds a OpenTelemetry span to the trace and context.
@@ -57,11 +70,11 @@ func AddSpan(ctx context.Context, spanName string, keyValues ...attribute.KeyVal
 }
 
 // SetStatusCode sets the status code back into the context.
-func SetStatusCode(ctx context.Context, statusCode int) error {
+func SetStatusCode(ctx context.Context, statusCode int) {
 	v, ok := ctx.Value(key).(*Values)
 	if !ok {
-		return errors.New("web value missing from context")
+		return
 	}
+
 	v.StatusCode = statusCode
-	return nil
 }

@@ -61,8 +61,8 @@ func Authorize(roles ...string) web.Middleware {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 
 			// If the context is missing this value return failure.
-			claims, err := auth.GetClaims(ctx)
-			if err != nil {
+			claims := auth.GetClaims(ctx)
+			if claims.Subject == "" {
 				return v1Web.NewRequestError(
 					fmt.Errorf("you are not authorized for that action, no claims"),
 					http.StatusForbidden,
