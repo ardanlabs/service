@@ -102,7 +102,7 @@ func (w *Worker) Start(ctx context.Context, fn JobFunc) (string, error) {
 	workKey := uuid.NewString()
 
 	// Create a cancel function and keep it for stop/shutdown purposes.
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(ctx)
 
 	// Register this new G as running.
 	w.mu.Lock()
