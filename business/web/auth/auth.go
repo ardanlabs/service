@@ -31,11 +31,6 @@ type Auth struct {
 
 // New creates an Auth to support authentication/authorization.
 func New(activeKID string, keyLookup KeyLookup) (*Auth, error) {
-	method := jwt.GetSigningMethod("RS256")
-	if method == nil {
-		return nil, errors.New("configuring algorithm RS256")
-	}
-
 	keyFunc := func(t *jwt.Token) (any, error) {
 		kid, ok := t.Header["kid"]
 		if !ok {
@@ -48,17 +43,12 @@ func New(activeKID string, keyLookup KeyLookup) (*Auth, error) {
 		return keyLookup.PublicKey(kidID)
 	}
 
-	// Create the token parser to use. The algorithm used to sign the JWT must be
-	// validated to avoid a critical vulnerability:
-	// https://auth0.com/blog/critical-vulnerabilities-in-json-web-token-libraries/
-	parser := jwt.NewParser(jwt.WithValidMethods([]string{"RS256"}))
-
 	a := Auth{
 		activeKID: activeKID,
 		keyLookup: keyLookup,
-		method:    method,
+		method:    jwt.GetSigningMethod("RS256"),
 		keyFunc:   keyFunc,
-		parser:    parser,
+		parser:    jwt.NewParser(jwt.WithValidMethods([]string{"RS256"})),
 	}
 
 	return &a, nil
