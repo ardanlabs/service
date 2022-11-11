@@ -78,7 +78,6 @@ func Open(cfg Config) (*sqlx.DB, error) {
 // StatusCheck returns nil if it can successfully talk to the database. It
 // returns a non-nil error otherwise.
 func StatusCheck(ctx context.Context, db *sqlx.DB) error {
-
 	// First check we can ping the database.
 	var pingError error
 	for attempts := 1; ; attempts++ {
@@ -264,9 +263,9 @@ func NamedQueryStruct(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtCo
 	return nil
 }
 
-// queryString provides a pretty print version of the query and parameters.
-func queryString(query string, args ...any) string {
-	query, params, err := sqlx.Named(query, args)
+// queryString provides a pretty print version of the query and parameter.
+func queryString(query string, arg any) string {
+	query, params, err := sqlx.Named(query, arg)
 	if err != nil {
 		return err.Error()
 	}
