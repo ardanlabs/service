@@ -5,6 +5,7 @@ import (
 	"crypto/rsa"
 	"errors"
 	"fmt"
+	"sync"
 
 	"github.com/golang-jwt/jwt/v4"
 )
@@ -26,6 +27,8 @@ type Auth struct {
 	keyLookup KeyLookup
 	method    jwt.SigningMethod
 	parser    *jwt.Parser
+	mu        sync.RWMutex
+	cache     map[string]*rsa.PublicKey
 }
 
 // New creates an Auth to support authentication/authorization.
@@ -35,6 +38,7 @@ func New(activeKID string, keyLookup KeyLookup) (*Auth, error) {
 		keyLookup: keyLookup,
 		method:    jwt.GetSigningMethod("RS256"),
 		parser:    jwt.NewParser(jwt.WithValidMethods([]string{"RS256"})),
+		cache:     make(map[string]*rsa.PublicKey),
 	}
 
 	return &a, nil
@@ -62,7 +66,7 @@ func (a *Auth) GenerateToken(claims Claims) (string, error) {
 // verifies that the token was signed using our key.
 func (a *Auth) ValidateToken(tokenStr string) (Claims, error) {
 	var claims Claims
-	token, err := a.parser.ParseWithClaims(tokenStr, &claims, a.keyFunc())
+	token, err := a.parser.ParseWithClaims(tokenStr, &claims, a.publicKeyLookup())
 	if err != nil {
 		return Claims{}, fmt.Errorf("parsing token: %w", err)
 	}
@@ -76,19 +80,43 @@ func (a *Auth) ValidateToken(tokenStr string) (Claims, error) {
 
 // =============================================================================
 
-// keyFunc implements the JWT key lookup function for returning the public
+// publicKeyLookup implements the JWT key lookup function for returning the public
 // key based on the kid in the token header.
-func (a *Auth) keyFunc() func(t *jwt.Token) (any, error) {
+func (a *Auth) publicKeyLookup() func(t *jwt.Token) (any, error) {
 	f := func(t *jwt.Token) (any, error) {
 		kid, ok := t.Header["kid"]
 		if !ok {
 			return nil, errors.New("missing key id (kid) in token header")
 		}
+
 		kidID, ok := kid.(string)
 		if !ok {
 			return nil, errors.New("user token key id (kid) must be string")
 		}
-		return a.keyLookup.PublicKey(kidID)
+
+		pubKey, err := func() (*rsa.PublicKey, error) {
+			a.mu.RLock()
+			defer a.mu.RUnlock()
+			pubKey, exists := a.cache[kidID]
+			if !exists {
+				return nil, errors.New("not found")
+			}
+			return pubKey, nil
+		}()
+		if err == nil {
+			return pubKey, nil
+		}
+
+		pubKey, err = a.keyLookup.PublicKey(kidID)
+		if err != nil {
+			return nil, fmt.Errorf("fetching public key: %w", err)
+		}
+
+		a.mu.Lock()
+		defer a.mu.Unlock()
+		a.cache[kidID] = pubKey
+
+		return pubKey, nil
 	}
 
 	return f
