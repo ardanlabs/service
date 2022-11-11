@@ -25,29 +25,15 @@ type Auth struct {
 	activeKID string
 	keyLookup KeyLookup
 	method    jwt.SigningMethod
-	keyFunc   func(t *jwt.Token) (any, error)
 	parser    *jwt.Parser
 }
 
 // New creates an Auth to support authentication/authorization.
 func New(activeKID string, keyLookup KeyLookup) (*Auth, error) {
-	keyFunc := func(t *jwt.Token) (any, error) {
-		kid, ok := t.Header["kid"]
-		if !ok {
-			return nil, errors.New("missing key id (kid) in token header")
-		}
-		kidID, ok := kid.(string)
-		if !ok {
-			return nil, errors.New("user token key id (kid) must be string")
-		}
-		return keyLookup.PublicKey(kidID)
-	}
-
 	a := Auth{
 		activeKID: activeKID,
 		keyLookup: keyLookup,
 		method:    jwt.GetSigningMethod("RS256"),
-		keyFunc:   keyFunc,
 		parser:    jwt.NewParser(jwt.WithValidMethods([]string{"RS256"})),
 	}
 
@@ -76,7 +62,7 @@ func (a *Auth) GenerateToken(claims Claims) (string, error) {
 // verifies that the token was signed using our key.
 func (a *Auth) ValidateToken(tokenStr string) (Claims, error) {
 	var claims Claims
-	token, err := a.parser.ParseWithClaims(tokenStr, &claims, a.keyFunc)
+	token, err := a.parser.ParseWithClaims(tokenStr, &claims, a.keyFunc())
 	if err != nil {
 		return Claims{}, fmt.Errorf("parsing token: %w", err)
 	}
@@ -86,4 +72,24 @@ func (a *Auth) ValidateToken(tokenStr string) (Claims, error) {
 	}
 
 	return claims, nil
+}
+
+// =============================================================================
+
+// keyFunc implements the JWT key lookup function for returning the public
+// key based on the kid in the token header.
+func (a *Auth) keyFunc() func(t *jwt.Token) (any, error) {
+	f := func(t *jwt.Token) (any, error) {
+		kid, ok := t.Header["kid"]
+		if !ok {
+			return nil, errors.New("missing key id (kid) in token header")
+		}
+		kidID, ok := kid.(string)
+		if !ok {
+			return nil, errors.New("user token key id (kid) must be string")
+		}
+		return a.keyLookup.PublicKey(kidID)
+	}
+
+	return f
 }

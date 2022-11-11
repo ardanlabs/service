@@ -15,8 +15,6 @@ const (
 	failed  = "\u2717"
 )
 
-var traceID = "00000000-0000-0000-0000-000000000000"
-
 func Test_Worker(t *testing.T) {
 	t.Log("Given the need to start work and wait for it to complete.")
 	{
