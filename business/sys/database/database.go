@@ -185,12 +185,24 @@ func NamedExecContext(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtCo
 // QuerySlice is a helper function for executing queries that return a
 // collection of data to be unmarshalled into a slice.
 func QuerySlice[T any](ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext, query string, dest *[]T) error {
-	return NamedQuerySlice(ctx, log, db, query, struct{}{}, dest)
+	return namedQuerySlice(ctx, log, db, query, struct{}{}, dest, false)
 }
 
 // NamedQuerySlice is a helper function for executing queries that return a
-// collection of data to be unmarshalled into a slice where field replacement is necessary.
+// collection of data to be unmarshalled into a slice where field replacement is
+// necessary.
 func NamedQuerySlice[T any](ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext, query string, data any, dest *[]T) error {
+	return namedQuerySlice(ctx, log, db, query, data, dest, false)
+}
+
+// NamedQuerySliceUsingIN is a helper function for executing queries that return
+// a collection of data to be unmarshalled into a slice where field replacement
+// is necessary. Use this if the query has an IN clause.
+func NamedQuerySliceUsingIN[T any](ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext, query string, data any, dest *[]T) error {
+	return namedQuerySlice(ctx, log, db, query, data, dest, true)
+}
+
+func namedQuerySlice[T any](ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext, query string, data any, dest *[]T, withIn bool) error {
 	q := queryString(query, data)
 
 	if _, ok := data.(struct{}); ok {
@@ -202,7 +214,30 @@ func NamedQuerySlice[T any](ctx context.Context, log *zap.SugaredLogger, db sqlx
 	ctx, span := web.AddSpan(ctx, "business.sys.database.queryslice", attribute.String("query", q))
 	defer span.End()
 
-	rows, err := sqlx.NamedQueryContext(ctx, db, query, data)
+	var rows *sqlx.Rows
+	var err error
+
+	switch withIn {
+	case true:
+		rows, err = func() (*sqlx.Rows, error) {
+			named, args, err := sqlx.Named(query, data)
+			if err != nil {
+				return nil, err
+			}
+
+			query, args, err := sqlx.In(named, args...)
+			if err != nil {
+				return nil, err
+			}
+
+			query = db.Rebind(query)
+			return db.QueryxContext(ctx, query, args...)
+		}()
+
+	default:
+		rows, err = sqlx.NamedQueryContext(ctx, db, query, data)
+	}
+
 	if err != nil {
 		if pqerr, ok := err.(*pq.Error); ok && pqerr.Code == undefinedTable {
 			return ErrUndefinedTable
@@ -227,12 +262,23 @@ func NamedQuerySlice[T any](ctx context.Context, log *zap.SugaredLogger, db sqlx
 // QueryStruct is a helper function for executing queries that return a
 // single value to be unmarshalled into a struct type where field replacement is necessary.
 func QueryStruct(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext, query string, dest any) error {
-	return NamedQueryStruct(ctx, log, db, query, struct{}{}, dest)
+	return namedQueryStruct(ctx, log, db, query, struct{}{}, dest, false)
 }
 
 // NamedQueryStruct is a helper function for executing queries that return a
 // single value to be unmarshalled into a struct type where field replacement is necessary.
 func NamedQueryStruct(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext, query string, data any, dest any) error {
+	return namedQueryStruct(ctx, log, db, query, data, dest, false)
+}
+
+// NamedQueryStructUsingIn is a helper function for executing queries that return
+// a single value to be unmarshalled into a struct type where field replacement
+// is necessary. Use this if the query has an IN clause.
+func NamedQueryStructUsingIn(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext, query string, data any, dest any) error {
+	return namedQueryStruct(ctx, log, db, query, data, dest, true)
+}
+
+func namedQueryStruct(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext, query string, data any, dest any, withIn bool) error {
 	q := queryString(query, data)
 
 	if _, ok := data.(struct{}); ok {
@@ -244,7 +290,30 @@ func NamedQueryStruct(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtCo
 	ctx, span := web.AddSpan(ctx, "business.sys.database.query", attribute.String("query", q))
 	defer span.End()
 
-	rows, err := sqlx.NamedQueryContext(ctx, db, query, data)
+	var rows *sqlx.Rows
+	var err error
+
+	switch withIn {
+	case true:
+		rows, err = func() (*sqlx.Rows, error) {
+			named, args, err := sqlx.Named(query, data)
+			if err != nil {
+				return nil, err
+			}
+
+			query, args, err := sqlx.In(named, args...)
+			if err != nil {
+				return nil, err
+			}
+
+			query = db.Rebind(query)
+			return db.QueryxContext(ctx, query, args...)
+		}()
+
+	default:
+		rows, err = sqlx.NamedQueryContext(ctx, db, query, data)
+	}
+
 	if err != nil {
 		if pqerr, ok := err.(*pq.Error); ok && pqerr.Code == undefinedTable {
 			return ErrUndefinedTable
