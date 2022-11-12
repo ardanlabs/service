@@ -18,7 +18,6 @@ import (
 func StandardLibraryMux() *http.ServeMux {
 	mux := http.NewServeMux()
 
-	// Register all the standard library debug endpoints.
 	mux.HandleFunc("/debug/pprof/", pprof.Index)
 	mux.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
 	mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
@@ -36,7 +35,6 @@ func StandardLibraryMux() *http.ServeMux {
 func Mux(build string, log *zap.SugaredLogger, db *sqlx.DB) http.Handler {
 	mux := StandardLibraryMux()
 
-	// Register debug check endpoints.
 	cgh := checkgrp.Handlers{
 		Build: build,
 		Log:   log,

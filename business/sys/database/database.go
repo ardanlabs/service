@@ -78,8 +78,6 @@ func Open(cfg Config) (*sqlx.DB, error) {
 // StatusCheck returns nil if it can successfully talk to the database. It
 // returns a non-nil error otherwise.
 func StatusCheck(ctx context.Context, db *sqlx.DB) error {
-
-	// First check we can ping the database.
 	var pingError error
 	for attempts := 1; ; attempts++ {
 		pingError = db.Ping()
@@ -92,13 +90,12 @@ func StatusCheck(ctx context.Context, db *sqlx.DB) error {
 		}
 	}
 
-	// Make sure we didn't timeout or be cancelled.
 	if ctx.Err() != nil {
 		return ctx.Err()
 	}
 
-	// Run a simple query to determine connectivity. Running this query forces a
-	// round trip through the database.
+	// Run a simple query to determine connectivity.
+	// Running this query forces a round trip through the database.
 	const q = `SELECT true`
 	var tmp bool
 	return db.QueryRowContext(ctx, q).Scan(&tmp)
@@ -108,7 +105,6 @@ func StatusCheck(ctx context.Context, db *sqlx.DB) error {
 func WithinTran(ctx context.Context, log *zap.SugaredLogger, db *sqlx.DB, fn func(*sqlx.Tx) error) error {
 	traceID := web.GetTraceID(ctx)
 
-	// Begin the transaction.
 	log.Infow("begin tran")
 	tx, err := db.Beginx()
 	if err != nil {
@@ -127,18 +123,13 @@ func WithinTran(ctx context.Context, log *zap.SugaredLogger, db *sqlx.DB, fn fun
 		log.Infow("rollback tran", "trace_id", traceID)
 	}()
 
-	// Execute the code inside the transaction. If the function
-	// fails, return the error and the defer function will roll back.
 	if err := fn(tx); err != nil {
-
-		// Checks if the error is of code 23505 (unique_violation).
 		if pqerr, ok := err.(*pq.Error); ok && pqerr.Code == uniqueViolation {
 			return ErrDBDuplicatedEntry
 		}
 		return fmt.Errorf("exec tran: %w", err)
 	}
 
-	// Commit the transaction.
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("commit tran: %w", err)
 	}

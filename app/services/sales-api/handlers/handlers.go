@@ -43,10 +43,8 @@ func APIMux(cfg APIMuxConfig, options ...func(opts *Options)) http.Handler {
 		option(&opts)
 	}
 
-	// Construct the web.App which holds all routes as well as common Middleware.
 	var app *web.App
 
-	// Do we need CORS?
 	if opts.corsOrigin != "" {
 		app = web.NewApp(
 			cfg.Shutdown,
@@ -58,9 +56,6 @@ func APIMux(cfg APIMuxConfig, options ...func(opts *Options)) http.Handler {
 			mid.Panics(),
 		)
 
-		// Accept CORS 'OPTIONS' preflight requests if config has been provided.
-		// Don't forget to apply the CORS middleware to the routes that need it.
-		// Example Config: `conf:"default:https://MY_DOMAIN.COM"`
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 			return nil
 		}
@@ -78,7 +73,6 @@ func APIMux(cfg APIMuxConfig, options ...func(opts *Options)) http.Handler {
 		)
 	}
 
-	// Load the v1 routes.
 	v1.Routes(app, v1.Config{
 		Log:  cfg.Log,
 		Auth: cfg.Auth,

@@ -184,8 +184,6 @@ func (c *Core) Authenticate(ctx context.Context, now time.Time, email, password 
 		return User{}, fmt.Errorf("query: %w", err)
 	}
 
-	// Compare the provided password with the saved hash. Use the bcrypt
-	// comparison function so it is cryptographically secure.
 	if err := bcrypt.CompareHashAndPassword(usr.PasswordHash, []byte(password)); err != nil {
 		return User{}, ErrAuthenticationFailure
 	}

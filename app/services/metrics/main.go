@@ -21,12 +21,9 @@ import (
 	"go.uber.org/zap"
 )
 
-// build is the git version of this program. It is set using build flags in the makefile.
 var build = "develop"
 
 func main() {
-
-	// Construct the application logger.
 	log, err := logger.New("METRICS")
 	if err != nil {
 		fmt.Println(err)
@@ -34,7 +31,6 @@ func main() {
 	}
 	defer log.Sync()
 
-	// Perform the startup and shutdown sequence.
 	if err := run(log); err != nil {
 		log.Errorw("startup", "ERROR", err)
 		log.Sync()
@@ -47,11 +43,7 @@ func run(log *zap.SugaredLogger) error {
 	// =========================================================================
 	// GOMAXPROCS
 
-	// Want to see what maxprocs reports.
 	opt := maxprocs.Logger(log.Infof)
-
-	// Set the correct number of threads for the service
-	// based on what is available either by the machine or quotas.
 	if _, err := maxprocs.Set(opt); err != nil {
 		return fmt.Errorf("maxprocs: %w", err)
 	}
@@ -114,9 +106,6 @@ func run(log *zap.SugaredLogger) error {
 
 	log.Infow("startup", "status", "debug router started", "host", cfg.Web.DebugHost)
 
-	// The Debug function returns a mux to listen and serve on for all the debug
-	// related endpoints. This includes the standard library endpoints.
-
 	mux := http.NewServeMux()
 	mux.HandleFunc("/debug/pprof/", pprof.Index)
 	mux.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
@@ -125,8 +114,6 @@ func run(log *zap.SugaredLogger) error {
 	mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
 	mux.Handle("/debug/vars", expvar.Handler())
 
-	// Start the service listening for debug requests.
-	// Not concerned with shutting this down with load shedding.
 	go func() {
 		if err := http.ListenAndServe(cfg.Web.DebugHost, mux); err != nil {
 			log.Errorw("shutdown", "status", "debug router closed", "host", cfg.Web.DebugHost, "ERROR", err)
@@ -142,17 +129,13 @@ func run(log *zap.SugaredLogger) error {
 	// =========================================================================
 	// Start collectors and publishers
 
-	// Initialize to allow for the collection of metrics.
 	collector, err := collector.New(cfg.Collect.From)
 	if err != nil {
 		return fmt.Errorf("starting collector: %w", err)
 	}
 
-	// Create a stdout publisher.
-	// TODO: Respect the cfg.publish.to config option.
 	stdout := publisher.NewStdout(log)
 
-	// Start the publisher to collect/publish metrics.
 	publish, err := publisher.New(log, collector, cfg.Publish.Interval, exp.Publish, stdout.Publish)
 	if err != nil {
 		return fmt.Errorf("starting publisher: %w", err)
@@ -162,8 +145,6 @@ func run(log *zap.SugaredLogger) error {
 	// =========================================================================
 	// Shutdown
 
-	// Make a channel to listen for an interrupt or terminate signal from the OS.
-	// Use a buffered channel because the signal package requires it.
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
 	<-shutdown

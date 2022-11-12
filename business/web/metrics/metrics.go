@@ -39,24 +39,14 @@ func init() {
 
 // =============================================================================
 
-// Metrics will be supported through the context.
-
-// ctxKeyMetric represents the type of value for the context key.
 type ctxKey int
 
-// key is how metric values are stored/retrieved.
 const key ctxKey = 1
-
-// =============================================================================
 
 // Set sets the metrics data into the context.
 func Set(ctx context.Context) context.Context {
 	return context.WithValue(ctx, key, m)
 }
-
-// Add more of these functions when a metric needs to be collected in
-// different parts of the codebase. This will keep this package the
-// central authority for metrics and metrics won't get lost.
 
 // AddGoroutines refreshes the goroutine metric every 100 requests.
 func AddGoroutines(ctx context.Context) {

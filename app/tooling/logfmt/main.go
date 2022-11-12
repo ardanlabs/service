@@ -21,12 +21,10 @@ func main() {
 	flag.Parse()
 	var b strings.Builder
 
-	// Scan standard input for log data per line.
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
 		s := scanner.Text()
 
-		// Convert the JSON to a map for processing.
 		m := make(map[string]any)
 		err := json.Unmarshal([]byte(s), &m)
 		if err != nil {

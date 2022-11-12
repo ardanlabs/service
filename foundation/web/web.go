@@ -67,25 +67,14 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // Handle sets a handler function for a given HTTP method and path pair
 // to the application server mux.
 func (a *App) Handle(method string, group string, path string, handler Handler, mw ...Middleware) {
-
-	// First wrap handler specific middleware around this handler.
 	handler = wrapMiddleware(mw, handler)
-
-	// Add the application's general middleware to the handler chain.
 	handler = wrapMiddleware(a.mw, handler)
 
-	// The function to execute for each request.
 	h := func(w http.ResponseWriter, r *http.Request) {
-
-		// Pull the context from the request and
-		// use it as a separate parameter.
 		ctx := r.Context()
 
-		// Capture the parent request span from the context.
 		span := trace.SpanFromContext(ctx)
 
-		// Set the context with the required values to
-		// process the request.
 		v := Values{
 			TraceID: span.SpanContext().TraceID().String(),
 			Tracer:  a.tracer,
@@ -93,11 +82,7 @@ func (a *App) Handle(method string, group string, path string, handler Handler, 
 		}
 		ctx = context.WithValue(ctx, key, &v)
 
-		// Call the wrapped handler functions.
 		if err := handler(ctx, w, r); err != nil {
-
-			// Since there was an error, validate the condition of this
-			// error and determine if we need to actually shutdown or not.
 			if validateShutdown(err) {
 				a.SignalShutdown()
 				return

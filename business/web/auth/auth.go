@@ -98,6 +98,8 @@ func (a *Auth) Authenticate(ctx context.Context, bearerToken string) (Claims, er
 		return Claims{}, errors.New("token failed signature check")
 	}
 
+	// Perform an extra level of authentication verification with OPA.
+
 	pem, err := a.keyLookup.PublicKeyPEM(token.Header["kid"].(string))
 	if err != nil {
 		return Claims{}, fmt.Errorf("failed to fetch public key: %w", err)
@@ -112,6 +114,8 @@ func (a *Auth) Authenticate(ctx context.Context, bearerToken string) (Claims, er
 		return Claims{}, fmt.Errorf("authentication failed : %w", err)
 	}
 
+	// Check the database for this user to verify they are still enabled.
+
 	if !a.isUserEnabled(ctx, claims) {
 		return Claims{}, fmt.Errorf("user not enabled : %w", err)
 	}
@@ -124,7 +128,7 @@ func (a *Auth) Authenticate(ctx context.Context, bearerToken string) (Claims, er
 // otherwise the user is authorized.
 func (a *Auth) Authorize(ctx context.Context, claims Claims, roles ...string) error {
 
-	// If no roles are provided, we should always default to using all the given roles to authorize.
+	// If no roles are provided, default to using all known roles to authorize.
 	if len(roles) == 0 {
 		roles = []string{RoleAdmin, RoleUser}
 	}
