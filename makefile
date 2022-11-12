@@ -256,8 +256,10 @@ tidy:
 	go mod tidy
 	go mod vendor
 
+deps-list:
+	go list -m -u -mod=readonly all
+
 deps-upgrade:
-	# go get $(go list -f '{{if not (or .Main .Indirect)}}{{.Path}}{{end}}' -m all)
 	go get -u -v ./...
 	go mod tidy
 	go mod vendor
