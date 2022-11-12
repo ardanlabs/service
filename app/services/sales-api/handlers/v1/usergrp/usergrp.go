@@ -51,9 +51,9 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 
 	userID := web.Param(r, "id")
 
-	// If you are not an admin and looking to retrieve someone other than yourself.
-	if !claims.Authorized(auth.RoleAdmin) && claims.Subject != userID {
-		return v1Web.NewRequestError(auth.ErrForbidden, http.StatusForbidden)
+	err := h.Auth.Authorize(ctx, claims, auth.RoleAdmin)
+	if claims.Subject != userID && err != nil {
+		return auth.NewAuthError(err)
 	}
 
 	if err := h.User.Update(ctx, userID, upd, web.GetTime(ctx)); err != nil {
@@ -75,9 +75,9 @@ func (h Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Req
 	claims := auth.GetClaims(ctx)
 	userID := web.Param(r, "id")
 
-	// If you are not an admin and looking to delete someone other than yourself.
-	if !claims.Authorized(auth.RoleAdmin) && claims.Subject != userID {
-		return v1Web.NewRequestError(auth.ErrForbidden, http.StatusForbidden)
+	err := h.Auth.Authorize(ctx, claims, auth.RoleAdmin)
+	if claims.Subject != userID && err != nil {
+		return auth.NewAuthError(err)
 	}
 
 	if err := h.User.Delete(ctx, userID); err != nil {
@@ -118,9 +118,9 @@ func (h Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http.
 	claims := auth.GetClaims(ctx)
 	userID := web.Param(r, "id")
 
-	// If you are not an admin and looking to retrieve someone other than yourself.
-	if !claims.Authorized(auth.RoleAdmin) && claims.Subject != userID {
-		return v1Web.NewRequestError(auth.ErrForbidden, http.StatusForbidden)
+	err := h.Auth.Authorize(ctx, claims, auth.RoleAdmin)
+	if claims.Subject != userID && err != nil {
+		return auth.NewAuthError(err)
 	}
 
 	usr, err := h.User.QueryByID(ctx, userID)
@@ -140,10 +140,15 @@ func (h Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http.
 
 // Token provides an API token for the authenticated user.
 func (h Handlers) Token(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	kid := web.Param(r, "kid")
+	if kid == "" {
+		return v1Web.NewRequestError(errors.New("missing kid"), http.StatusBadRequest)
+	}
+
 	email, pass, ok := r.BasicAuth()
 	if !ok {
 		err := errors.New("must provide email and password in Basic auth")
-		return v1Web.NewRequestError(err, http.StatusUnauthorized)
+		return auth.NewAuthError(err)
 	}
 
 	usr, err := h.User.Authenticate(ctx, web.GetTime(ctx), email, pass)
@@ -152,7 +157,7 @@ func (h Handlers) Token(ctx context.Context, w http.ResponseWriter, r *http.Requ
 		case errors.Is(err, user.ErrNotFound):
 			return v1Web.NewRequestError(err, http.StatusNotFound)
 		case errors.Is(err, user.ErrAuthenticationFailure):
-			return v1Web.NewRequestError(err, http.StatusUnauthorized)
+			return auth.NewAuthError(err)
 		default:
 			return fmt.Errorf("authenticating: %w", err)
 		}
@@ -171,7 +176,7 @@ func (h Handlers) Token(ctx context.Context, w http.ResponseWriter, r *http.Requ
 	var tkn struct {
 		Token string `json:"token"`
 	}
-	tkn.Token, err = h.Auth.GenerateToken(claims)
+	tkn.Token, err = h.Auth.GenerateToken(kid, claims)
 	if err != nil {
 		return fmt.Errorf("generating token: %w", err)
 	}

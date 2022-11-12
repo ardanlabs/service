@@ -51,7 +51,7 @@ type Vault struct {
 	mountPath string
 	client    *http.Client
 	mu        sync.RWMutex
-	store     map[string]*rsa.PublicKey
+	store     map[string]string
 }
 
 // New constructs a vault for use.
@@ -65,7 +65,7 @@ func New(cfg Config) (*Vault, error) {
 		token:     cfg.Token,
 		mountPath: cfg.MountPath,
 		client:    cfg.Client,
-		store:     make(map[string]*rsa.PublicKey),
+		store:     make(map[string]string),
 	}, nil
 }
 
@@ -108,58 +108,58 @@ func (v *Vault) AddPrivateKey(ctx context.Context, kid string, pem []byte) error
 	return nil
 }
 
-// PrivateKey searches the key store for a given kid and returns
-// the private key.
-func (v *Vault) PrivateKey(kid string) (*rsa.PrivateKey, error) {
+// PrivateKeyPEM searches the key store for a given kid and returns
+// the private key in pem format.
+func (v *Vault) PrivateKeyPEM(kid string) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
 	privatePEM, err := v.retrieveKID(ctx, kid)
 	if err != nil {
-		return nil, fmt.Errorf("kid lookup failed: %w", err)
+		return "", fmt.Errorf("kid lookup failed: %w", err)
 	}
 
-	privateKey, err := toPrivateKey(privatePEM)
-	if err != nil {
-		return nil, fmt.Errorf("parsing private key: %w", err)
-	}
-
-	return privateKey, nil
+	return privatePEM, nil
 }
 
-// PublicKey searches the key store for a given kid and returns
-// the public key.
-func (v *Vault) PublicKey(kid string) (*rsa.PublicKey, error) {
-	if pk, err := v.keyLookup(kid); err == nil {
-		return pk, nil
+// PublicKeyPEM searches the key store for a given kid and returns
+// the public key in pem format.
+func (v *Vault) PublicKeyPEM(kid string) (string, error) {
+	if pem, err := v.keyLookup(kid); err == nil {
+		return pem, nil
 	}
 
-	privateKey, err := v.PrivateKey(kid)
+	privatePEM, err := v.PrivateKeyPEM(kid)
 	if err != nil {
-		return nil, err
+		return "", err
+	}
+
+	publicPEM, err := toPublicPEM(privatePEM)
+	if err != nil {
+		return "", err
 	}
 
 	v.mu.Lock()
 	{
-		v.store[kid] = &privateKey.PublicKey
+		v.store[kid] = publicPEM
 	}
 	v.mu.Unlock()
 
-	return &privateKey.PublicKey, nil
+	return publicPEM, nil
 }
 
 // =============================================================================
 
 // keyLookup performs a safe lookup in the store map.
-func (v *Vault) keyLookup(kid string) (*rsa.PublicKey, error) {
+func (v *Vault) keyLookup(kid string) (string, error) {
 	v.mu.RLock()
 	defer v.mu.RUnlock()
 
-	if pk, exists := v.store[kid]; exists {
-		return pk, nil
+	if pem, exists := v.store[kid]; exists {
+		return pem, nil
 	}
 
-	return nil, errors.New("not found")
+	return "", errors.New("not found")
 }
 
 // retrieveKID performs the HTTP call against the Vault service for the
@@ -211,12 +211,13 @@ func (v *Vault) retrieveKID(ctx context.Context, kid string) (string, error) {
 
 // =============================================================================
 
-// toPrivateKey was taken from the JWT package to reduce the dependency. It
-// accepts a PEM encoding of a RSA private key and converts to a proper type.
-func toPrivateKey(privateKeyPEM string) (*rsa.PrivateKey, error) {
+// toPublicPEM was taken from the JWT package to reduce the dependency. It
+// accepts a PEM encoding of a RSA private key and converts to a PEM encoded
+// public key.
+func toPublicPEM(privateKeyPEM string) (string, error) {
 	var block *pem.Block
 	if block, _ = pem.Decode([]byte(privateKeyPEM)); block == nil {
-		return nil, errors.New("invalid key: Key must be a PEM encoded PKCS1 or PKCS8 key")
+		return "", errors.New("invalid key: Key must be a PEM encoded PKCS1 or PKCS8 key")
 	}
 
 	var parsedKey interface{}
@@ -224,14 +225,29 @@ func toPrivateKey(privateKeyPEM string) (*rsa.PrivateKey, error) {
 	if err != nil {
 		parsedKey, err = x509.ParsePKCS8PrivateKey(block.Bytes)
 		if err != nil {
-			return nil, err
+			return "", err
 		}
 	}
 
-	pkey, ok := parsedKey.(*rsa.PrivateKey)
+	privateKey, ok := parsedKey.(*rsa.PrivateKey)
 	if !ok {
-		return nil, errors.New("key is not a valid RSA private key")
+		return "", errors.New("key is not a valid RSA private key")
 	}
 
-	return pkey, nil
+	asn1Bytes, err := x509.MarshalPKIXPublicKey(&privateKey.PublicKey)
+	if err != nil {
+		return "", fmt.Errorf("marshaling public key: %w", err)
+	}
+
+	publicBlock := pem.Block{
+		Type:  "PUBLIC KEY",
+		Bytes: asn1Bytes,
+	}
+
+	var buf bytes.Buffer
+	if err := pem.Encode(&buf, &publicBlock); err != nil {
+		return "", fmt.Errorf("encoding to public PEM: %w", err)
+	}
+
+	return buf.String(), nil
 }

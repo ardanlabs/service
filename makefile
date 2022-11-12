@@ -12,9 +12,9 @@ SHELL := /bin/bash
 # For full Kind v0.17 release notes: https://github.com/kubernetes-sigs/kind/releases/tag/v0.17.0
 #
 # For testing a simple query on the system. Don't forget to `make seed` first.
-# curl --user "admin@example.com:gophers" http://sales-service.sales-system.svc.cluster.local:3000/v1/users/token
+# curl -il --user "admin@example.com:gophers" http://sales-service.sales-system.svc.cluster.local:3000/v1/users/token/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
 # export TOKEN="COPY TOKEN STRING FROM LAST CALL"
-# curl -H "Authorization: Bearer ${TOKEN}" http://sales-service.sales-system.svc.cluster.local:3000/v1/users/1/2
+# curl -il -H "Authorization: Bearer ${TOKEN}" http://sales-service.sales-system.svc.cluster.local:3000/v1/users/1/2
 #
 # For testing load on the service.
 # hey -m GET -c 100 -n 10000 -H "Authorization: Bearer ${TOKEN}" http://sales-service.sales-system.svc.cluster.local:3000/v1/users/1/2
@@ -113,6 +113,9 @@ dev-up:
 		--config zarf/k8s/dev/kind-config.yaml
 	kubectl wait --timeout=120s --namespace=local-path-storage --for=condition=Available deployment/local-path-provisioner
 	kind load docker-image $(TELEPRESENCE) --name $(KIND_CLUSTER)
+	kind load docker-image $(POSTGRES) --name $(KIND_CLUSTER)
+	kind load docker-image $(VAULT) --name $(KIND_CLUSTER)
+	kind load docker-image $(ZIPKIN) --name $(KIND_CLUSTER)
 	telepresence --context=kind-$(KIND_CLUSTER) helm install
 	telepresence --context=kind-$(KIND_CLUSTER) connect
 
@@ -125,9 +128,6 @@ dev-load:
 	cd zarf/k8s/dev/sales; kustomize edit set image metrics-image=metrics:$(VERSION)
 	kind load docker-image sales-api:$(VERSION) --name $(KIND_CLUSTER)
 	kind load docker-image metrics:$(VERSION) --name $(KIND_CLUSTER)
-	kind load docker-image $(POSTGRES) --name $(KIND_CLUSTER)
-	kind load docker-image $(VAULT) --name $(KIND_CLUSTER)
-	kind load docker-image $(ZIPKIN) --name $(KIND_CLUSTER)
 
 dev-apply:
 	kustomize build zarf/k8s/dev/database | kubectl apply -f -

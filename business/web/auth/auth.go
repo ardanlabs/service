@@ -2,12 +2,17 @@
 package auth
 
 import (
+	"context"
 	"crypto/rsa"
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/jmoiron/sqlx"
+	"github.com/open-policy-agent/opa/rego"
+	"go.uber.org/zap"
 )
 
 // ErrForbidden is returned when a auth issue is identified.
@@ -16,14 +21,22 @@ var ErrForbidden = errors.New("attempted action is not allowed")
 // KeyLookup declares a method set of behavior for looking up
 // private and public keys for JWT use.
 type KeyLookup interface {
-	PrivateKey(kid string) (*rsa.PrivateKey, error)
-	PublicKey(kid string) (*rsa.PublicKey, error)
+	PrivateKeyPEM(kid string) (string, error)
+	PublicKeyPEM(kid string) (string, error)
+}
+
+// Config represents information required to initialize auth.
+type Config struct {
+	Log       *zap.SugaredLogger
+	DB        *sqlx.DB
+	KeyLookup KeyLookup
 }
 
 // Auth is used to authenticate clients. It can generate a token for a
 // set of user claims and recreate the claims by parsing the token.
 type Auth struct {
-	activeKID string
+	log       *zap.SugaredLogger
+	db        *sqlx.DB
 	keyLookup KeyLookup
 	method    jwt.SigningMethod
 	parser    *jwt.Parser
@@ -32,10 +45,11 @@ type Auth struct {
 }
 
 // New creates an Auth to support authentication/authorization.
-func New(activeKID string, keyLookup KeyLookup) (*Auth, error) {
+func New(cfg Config) (*Auth, error) {
 	a := Auth{
-		activeKID: activeKID,
-		keyLookup: keyLookup,
+		log:       cfg.Log,
+		db:        cfg.DB,
+		keyLookup: cfg.KeyLookup,
 		method:    jwt.GetSigningMethod("RS256"),
 		parser:    jwt.NewParser(jwt.WithValidMethods([]string{"RS256"})),
 		cache:     make(map[string]*rsa.PublicKey),
@@ -45,13 +59,18 @@ func New(activeKID string, keyLookup KeyLookup) (*Auth, error) {
 }
 
 // GenerateToken generates a signed JWT token string representing the user Claims.
-func (a *Auth) GenerateToken(claims Claims) (string, error) {
+func (a *Auth) GenerateToken(kid string, claims Claims) (string, error) {
 	token := jwt.NewWithClaims(a.method, claims)
-	token.Header["kid"] = a.activeKID
+	token.Header["kid"] = kid
 
-	privateKey, err := a.keyLookup.PrivateKey(a.activeKID)
+	privateKeyPEM, err := a.keyLookup.PrivateKeyPEM(kid)
 	if err != nil {
 		return "", fmt.Errorf("private key: %w", err)
+	}
+
+	privateKey, err := jwt.ParseRSAPrivateKeyFromPEM([]byte(privateKeyPEM))
+	if err != nil {
+		return "", fmt.Errorf("parsing private pem: %w", err)
 	}
 
 	str, err := token.SignedString(privateKey)
@@ -62,20 +81,64 @@ func (a *Auth) GenerateToken(claims Claims) (string, error) {
 	return str, nil
 }
 
-// ValidateToken recreates the Claims that were used to generate a token. It
-// verifies that the token was signed using our key.
-func (a *Auth) ValidateToken(tokenStr string) (Claims, error) {
+// Authenticate processes the token to validate the sender's token is valid.
+func (a *Auth) Authenticate(ctx context.Context, bearerToken string) (Claims, error) {
+	parts := strings.Split(bearerToken, " ")
+	if len(parts) != 2 || parts[0] != "Bearer" {
+		return Claims{}, errors.New("expected authorization header format: Bearer <token>")
+	}
+
 	var claims Claims
-	token, err := a.parser.ParseWithClaims(tokenStr, &claims, a.publicKeyLookup())
+	token, err := a.parser.ParseWithClaims(parts[1], &claims, a.publicKeyLookup())
 	if err != nil {
-		return Claims{}, fmt.Errorf("parsing token: %w", err)
+		return Claims{}, fmt.Errorf("error parsing token: %w", err)
 	}
 
 	if !token.Valid {
-		return Claims{}, errors.New("invalid token")
+		return Claims{}, errors.New("token failed signature check")
+	}
+
+	pem, err := a.keyLookup.PublicKeyPEM(token.Header["kid"].(string))
+	if err != nil {
+		return Claims{}, fmt.Errorf("failed to fetch public key: %w", err)
+	}
+
+	input := map[string]any{
+		"Key":   pem,
+		"Token": parts[1],
+	}
+
+	if err := a.regoEvaluation(ctx, regoAuthentication, input); err != nil {
+		return Claims{}, fmt.Errorf("authentication failed : %w", err)
+	}
+
+	if !a.isUserEnabled(ctx, claims) {
+		return Claims{}, fmt.Errorf("user not enabled : %w", err)
 	}
 
 	return claims, nil
+}
+
+// Authorize attempts to authorize the user with the provided input roles, if
+// none of the input roles are within the user's claims, we return an error
+// otherwise the user is authorized.
+func (a *Auth) Authorize(ctx context.Context, claims Claims, roles ...string) error {
+
+	// If no roles are provided, we should always default to using all the given roles to authorize.
+	if len(roles) == 0 {
+		roles = []string{RoleAdmin, RoleUser}
+	}
+
+	input := map[string]any{
+		"Roles":      claims.Roles,
+		"InputRoles": roles,
+	}
+
+	if err := a.regoEvaluation(ctx, regoAuthorization, input); err != nil {
+		return fmt.Errorf("rego evaluation failed : %w", err)
+	}
+
+	return nil
 }
 
 // =============================================================================
@@ -107,9 +170,14 @@ func (a *Auth) publicKeyLookup() func(t *jwt.Token) (any, error) {
 			return pubKey, nil
 		}
 
-		pubKey, err = a.keyLookup.PublicKey(kidID)
+		pem, err := a.keyLookup.PublicKeyPEM(kidID)
 		if err != nil {
 			return nil, fmt.Errorf("fetching public key: %w", err)
+		}
+
+		pubKey, err = jwt.ParseRSAPublicKeyFromPEM([]byte(pem))
+		if err != nil {
+			return nil, fmt.Errorf("parsing public pem: %w", err)
 		}
 
 		a.mu.Lock()
@@ -120,4 +188,71 @@ func (a *Auth) publicKeyLookup() func(t *jwt.Token) (any, error) {
 	}
 
 	return f
+}
+
+// regoEvaluation asks opa to evaulate the token against the specified token
+// policy and public key.
+func (a *Auth) regoEvaluation(ctx context.Context, policyRules string, input any) error {
+	query, err := rego.New(
+		rego.Query(fmt.Sprintf("x = data.%s.allow", regoPackageName)),
+		rego.Module("policy.rego", policyRules),
+	).PrepareForEval(ctx)
+	if err != nil {
+		return err
+	}
+
+	results, err := query.Eval(ctx, rego.EvalInput(input))
+	if err != nil {
+		return fmt.Errorf("query: %w", err)
+	}
+
+	if len(results) == 0 {
+		return errors.New("no results")
+	}
+
+	result, ok := results[0].Bindings["x"].(bool)
+	if !ok || !result {
+		return fmt.Errorf("bindings results[%v] ok[%v]", results, ok)
+	}
+
+	return nil
+}
+
+// isUserEnabled hits the database and checks the user is not disabled. If the
+// user is not found in the database, they are still considered validated by
+// their token.
+func (a *Auth) isUserEnabled(ctx context.Context, claims Claims) bool {
+
+	// For now until I learn more, not having a db connection means the
+	// account is trused.
+	// if a.db == nil {
+	// 	return true
+	// }
+
+	// data := struct {
+	// 	KeycloakId string `db:"keycloak_id"`
+	// }{
+	// 	KeycloakId: claims.Subject,
+	// }
+
+	// const query = `
+	// SELECT
+	// 	id
+	// FROM
+	// 	users
+	// WHERE
+	// 	user_id = :user_id AND
+	// 	enabled = true,
+	// LIMIT 1;`
+
+	// var usr user.User
+	// if err := database.NamedQueryStruct(ctx, a.log, a.db, query, data, &usr); err != nil {
+	// 	return err == database.ErrDBNotFound
+	// }
+
+	// if !usr.Enabled {
+	// 	return false
+	// }
+
+	return true
 }

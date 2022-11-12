@@ -37,16 +37,18 @@ func GenToken(log *zap.SugaredLogger, dbConfig database.Config, vaultConfig vaul
 		return fmt.Errorf("retrieve user: %w", err)
 	}
 
-	// Construct a key store based on the key files stored in
-	// the specified directory.
-	ks, err := vault.New(vaultConfig)
+	vault, err := vault.New(vaultConfig)
 	if err != nil {
 		return fmt.Errorf("new keystore: %w", err)
 	}
 
-	// Init the auth package.
-	activeKID := "54bb2165-71e1-41a6-af3e-7da4a0e1e2c1"
-	a, err := auth.New(activeKID, ks)
+	authCfg := auth.Config{
+		Log:       log,
+		DB:        db,
+		KeyLookup: vault,
+	}
+
+	a, err := auth.New(authCfg)
 	if err != nil {
 		return fmt.Errorf("constructing auth: %w", err)
 	}
@@ -76,7 +78,7 @@ func GenToken(log *zap.SugaredLogger, dbConfig database.Config, vaultConfig vaul
 	// with need to be configured with the information found in the public key
 	// file to validate these claims. Dgraph does not support key rotate at
 	// this time.
-	token, err := a.GenerateToken(claims)
+	token, err := a.GenerateToken(kid, claims)
 	if err != nil {
 		return fmt.Errorf("generating token: %w", err)
 	}

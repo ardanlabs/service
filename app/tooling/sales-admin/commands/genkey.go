@@ -27,7 +27,7 @@ func GenKey() error {
 
 	// Construct a PEM block for the private key.
 	privateBlock := pem.Block{
-		Type:  "RSA PRIVATE KEY",
+		Type:  "PRIVATE KEY",
 		Bytes: x509.MarshalPKCS1PrivateKey(privateKey),
 	}
 
@@ -51,7 +51,7 @@ func GenKey() error {
 
 	// Construct a PEM block for the public key.
 	publicBlock := pem.Block{
-		Type:  "RSA PUBLIC KEY",
+		Type:  "PUBLIC KEY",
 		Bytes: asn1Bytes,
 	}
 

@@ -29,7 +29,7 @@ type config struct {
 	}
 	Vault struct {
 		KeysFolder string `conf:"default:zarf/keys/"`
-		Address    string `conf:"default:http://0.0.0.0:8200"`
+		Address    string `conf:"default:http://vault-service.sales-system.svc.cluster.local:8200"`
 		MountPath  string `conf:"default:secret"`
 
 		// This MUST be handled like any root credential.

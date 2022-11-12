@@ -2,13 +2,9 @@ package mid
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/ardanlabs/service/business/web/auth"
-	v1Web "github.com/ardanlabs/service/business/web/v1"
 	"github.com/ardanlabs/service/foundation/web"
 )
 
@@ -21,20 +17,10 @@ func Authenticate(a *auth.Auth) web.Middleware {
 		// Create the handler that will be attached in the middleware chain.
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 
-			// Expecting: bearer <token>
-			authStr := r.Header.Get("authorization")
-
-			// Parse the authorization header.
-			parts := strings.Split(authStr, " ")
-			if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
-				err := errors.New("expected authorization header format: bearer <token>")
-				return v1Web.NewRequestError(err, http.StatusUnauthorized)
-			}
-
-			// Validate the token is signed by us.
-			claims, err := a.ValidateToken(parts[1])
+			// Authenticate against the expected JWT.
+			claims, err := a.Authenticate(ctx, r.Header.Get("authorization"))
 			if err != nil {
-				return v1Web.NewRequestError(err, http.StatusUnauthorized)
+				return auth.NewAuthErrorf("authenticate: failed: %s", err)
 			}
 
 			// Add claims to the context, so they can be retrieved later.
@@ -52,7 +38,7 @@ func Authenticate(a *auth.Auth) web.Middleware {
 
 // Authorize validates that an authenticated user has at least one role from a
 // specified list. This method constructs the actual function that is used.
-func Authorize(roles ...string) web.Middleware {
+func Authorize(a *auth.Auth, roles ...string) web.Middleware {
 
 	// This is the actual middleware function to be executed.
 	m := func(handler web.Handler) web.Handler {
@@ -63,17 +49,11 @@ func Authorize(roles ...string) web.Middleware {
 			// If the context is missing this value return failure.
 			claims := auth.GetClaims(ctx)
 			if claims.Subject == "" {
-				return v1Web.NewRequestError(
-					fmt.Errorf("you are not authorized for that action, no claims"),
-					http.StatusForbidden,
-				)
+				return auth.NewAuthErrorf("authorize: you are not authorized for that action, no claims")
 			}
 
-			if !claims.Authorized(roles...) {
-				return v1Web.NewRequestError(
-					fmt.Errorf("you are not authorized for that action, claims[%v] roles[%v]", claims.Roles, roles),
-					http.StatusForbidden,
-				)
+			if err := a.Authorize(ctx, claims, roles...); err != nil {
+				return auth.NewAuthErrorf("authorize: you are not authorized for that action, claims[%v] roles[%v]: %s", claims.Roles, roles, err)
 			}
 
 			return handler(ctx, w, r)

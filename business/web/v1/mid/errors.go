@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/ardanlabs/service/business/sys/validate"
+	"github.com/ardanlabs/service/business/web/auth"
 	v1Web "github.com/ardanlabs/service/business/web/v1"
 	"github.com/ardanlabs/service/foundation/web"
 	"go.uber.org/zap"
@@ -50,6 +51,12 @@ func Errors(log *zap.SugaredLogger) web.Middleware {
 						Error: reqErr.Error(),
 					}
 					status = reqErr.Status
+
+				case auth.IsAuthError(err):
+					er = v1Web.ErrorResponse{
+						Error: http.StatusText(http.StatusUnauthorized),
+					}
+					status = http.StatusUnauthorized
 
 				default:
 					er = v1Web.ErrorResponse{

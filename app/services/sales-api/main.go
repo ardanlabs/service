@@ -140,25 +140,6 @@ func run(log *zap.SugaredLogger) error {
 	expvar.NewString("build").Set(build)
 
 	// =========================================================================
-	// Initialize authentication support
-
-	log.Infow("startup", "status", "initializing authentication support")
-
-	vault, err := vault.New(vault.Config{
-		Address:   cfg.Vault.Address,
-		Token:     cfg.Vault.Token,
-		MountPath: cfg.Vault.MountPath,
-	})
-	if err != nil {
-		return fmt.Errorf("constructing vault: %w", err)
-	}
-
-	auth, err := auth.New(cfg.Auth.ActiveKID, vault)
-	if err != nil {
-		return fmt.Errorf("constructing auth: %w", err)
-	}
-
-	// =========================================================================
 	// Database Support
 
 	// Create connectivity to the database.
@@ -180,6 +161,31 @@ func run(log *zap.SugaredLogger) error {
 		log.Infow("shutdown", "status", "stopping database support", "host", cfg.DB.Host)
 		db.Close()
 	}()
+
+	// =========================================================================
+	// Initialize authentication support
+
+	log.Infow("startup", "status", "initializing authentication support")
+
+	vault, err := vault.New(vault.Config{
+		Address:   cfg.Vault.Address,
+		Token:     cfg.Vault.Token,
+		MountPath: cfg.Vault.MountPath,
+	})
+	if err != nil {
+		return fmt.Errorf("constructing vault: %w", err)
+	}
+
+	authCfg := auth.Config{
+		Log:       log,
+		DB:        db,
+		KeyLookup: vault,
+	}
+
+	auth, err := auth.New(authCfg)
+	if err != nil {
+		return fmt.Errorf("constructing auth: %w", err)
+	}
 
 	// =========================================================================
 	// Start Tracing Support

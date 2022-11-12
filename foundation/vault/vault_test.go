@@ -65,39 +65,29 @@ func Test_Vault(t *testing.T) {
 			t.Logf("\t%s\tTest %d:\tShould be able to generate a private key.", success, testID)
 
 			pbExp := pem.Block{
-				Type:  "RSA PRIVATE KEY",
+				Type:  "PRIVATE KEY",
 				Bytes: x509.MarshalPKCS1PrivateKey(pkExp),
 			}
-			var bExp bytes.Buffer
-			if err := pem.Encode(&bExp, &pbExp); err != nil {
+			var expPEM bytes.Buffer
+			if err := pem.Encode(&expPEM, &pbExp); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to encode pk to PEM: %v", failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to encode pk to PEM.", success, testID)
 
-			if err := vault.AddPrivateKey(context.Background(), key, bExp.Bytes()); err != nil {
+			if err := vault.AddPrivateKey(context.Background(), key, expPEM.Bytes()); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to put the PEM into Vault: %v", failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to put the PEM into Vault.", success, testID)
 
-			pkGot, err := vault.PrivateKey(key)
+			gotPEM, err := vault.PrivateKeyPEM(key)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to pull the private key from Vault: %v", failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to pull the private key from Vault.", success, testID)
 
-			pbGot := pem.Block{
-				Type:  "RSA PRIVATE KEY",
-				Bytes: x509.MarshalPKCS1PrivateKey(pkGot),
-			}
-			var bGot bytes.Buffer
-			if err := pem.Encode(&bGot, &pbGot); err != nil {
-				t.Fatalf("\t%s\tTest %d:\tShould be able to encode the returned private key: %v", failed, testID, err)
-			}
-			t.Logf("\t%s\tTest %d:\tShould be able to encode the returned private key.", success, testID)
-
-			if bExp.String() != bGot.String() {
-				t.Logf("\t\tTest %d:\texp: %s", testID, bExp.String())
-				t.Logf("\t\tTest %d:\tgot: %s", testID, bGot.String())
+			if expPEM.String() != gotPEM {
+				t.Logf("\t\tTest %d:\texp: %s", testID, expPEM.String())
+				t.Logf("\t\tTest %d:\tgot: %s", testID, gotPEM)
 				t.Fatalf("\t%s\tTest %d:\tShould be able to see the keys match: %v", failed, testID, err)
 			}
 		}

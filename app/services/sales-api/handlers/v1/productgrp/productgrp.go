@@ -17,6 +17,7 @@ import (
 // Handlers manages the set of product endpoints.
 type Handlers struct {
 	Product *product.Core
+	Auth    *auth.Auth
 }
 
 // Create adds a new product to the system.
@@ -57,9 +58,9 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 		}
 	}
 
-	// If you are not an admin and looking to update a product you don't own.
-	if !claims.Authorized(auth.RoleAdmin) && prd.UserID != claims.Subject {
-		return v1Web.NewRequestError(auth.ErrForbidden, http.StatusForbidden)
+	err = h.Auth.Authorize(ctx, claims, auth.RoleAdmin)
+	if claims.Subject != prd.UserID && err != nil {
+		return v1Web.NewRequestError(err, http.StatusUnauthorized)
 	}
 
 	if err := h.Product.Update(ctx, id, upd, web.GetTime(ctx)); err != nil {
@@ -97,9 +98,9 @@ func (h Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Req
 		}
 	}
 
-	// If you are not an admin and looking to delete a product you don't own.
-	if !claims.Authorized(auth.RoleAdmin) && prd.UserID != claims.Subject {
-		return v1Web.NewRequestError(auth.ErrForbidden, http.StatusForbidden)
+	err = h.Auth.Authorize(ctx, claims, auth.RoleAdmin)
+	if claims.Subject != prd.UserID && err != nil {
+		return v1Web.NewRequestError(err, http.StatusUnauthorized)
 	}
 
 	if err := h.Product.Delete(ctx, id); err != nil {

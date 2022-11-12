@@ -56,9 +56,9 @@ func Test_Users(t *testing.T) {
 	t.Run("getToken200", tests.getToken200)
 	t.Run("postUser400", tests.postUser400)
 	t.Run("postUser401", tests.postUser401)
-	t.Run("postUser403", tests.postUser403)
+	t.Run("postAdmin401", tests.postAdmin401)
 	t.Run("getUser400", tests.getUser400)
-	t.Run("getUser403", tests.getUser403)
+	t.Run("getUser401", tests.getUser401)
 	t.Run("getUser404", tests.getUser404)
 	t.Run("deleteUserNotFound", tests.deleteUserNotFound)
 	t.Run("putUser404", tests.putUser404)
@@ -67,7 +67,7 @@ func Test_Users(t *testing.T) {
 
 // getToken401 ensures an unknown user can't generate a token.
 func (ut *UserTests) getToken404(t *testing.T) {
-	r := httptest.NewRequest(http.MethodGet, "/v1/users/token", nil)
+	r := httptest.NewRequest(http.MethodGet, "/v1/users/token/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1", nil)
 	w := httptest.NewRecorder()
 
 	r.SetBasicAuth("unknown@example.com", "some-password")
@@ -87,7 +87,7 @@ func (ut *UserTests) getToken404(t *testing.T) {
 }
 
 func (ut *UserTests) getToken200(t *testing.T) {
-	r := httptest.NewRequest(http.MethodGet, "/v1/users/token", nil)
+	r := httptest.NewRequest(http.MethodGet, "/v1/users/token/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1", nil)
 	w := httptest.NewRecorder()
 
 	r.SetBasicAuth("admin@example.com", "gophers")
@@ -171,9 +171,9 @@ func (ut *UserTests) postUser400(t *testing.T) {
 	}
 }
 
-// postUser403 validates a user can't be created unless the calling user is
+// postAdmin401 validates a user can't be created unless the calling user is
 // an admin. Regular users can't do this.
-func (ut *UserTests) postUser403(t *testing.T) {
+func (ut *UserTests) postAdmin401(t *testing.T) {
 	body, err := json.Marshal(&user.NewUser{})
 	if err != nil {
 		t.Fatal(err)
@@ -190,10 +190,10 @@ func (ut *UserTests) postUser403(t *testing.T) {
 		testID := 0
 		t.Logf("\tTest %d:\tWhen using an incomplete user value.", testID)
 		{
-			if w.Code != http.StatusForbidden {
-				t.Fatalf("\t%s\tTest %d:\tShould receive a status code of 403 for the response : %v", dbtest.Failed, testID, w.Code)
+			if w.Code != http.StatusUnauthorized {
+				t.Fatalf("\t%s\tTest %d:\tShould receive a status code of 401 for the response : %v", dbtest.Failed, testID, w.Code)
 			}
-			t.Logf("\t%s\tTest %d:\tShould receive a status code of 403 for the response.", dbtest.Success, testID)
+			t.Logf("\t%s\tTest %d:\tShould receive a status code of 401 for the response.", dbtest.Success, testID)
 		}
 	}
 }
@@ -257,8 +257,8 @@ func (ut *UserTests) getUser400(t *testing.T) {
 	}
 }
 
-// getUser403 validates a regular user can't fetch anyone but themselves.
-func (ut *UserTests) getUser403(t *testing.T) {
+// getUser401 validates a regular user can't fetch anyone but themselves.
+func (ut *UserTests) getUser401(t *testing.T) {
 	t.Log("Given the need to validate regular users can't fetch other users.")
 	{
 		testID := 0
@@ -271,13 +271,13 @@ func (ut *UserTests) getUser403(t *testing.T) {
 			r.Header.Set("Authorization", "Bearer "+ut.userToken)
 			ut.app.ServeHTTP(w, r)
 
-			if w.Code != http.StatusForbidden {
-				t.Fatalf("\t%s\tTest %d:\tShould receive a status code of 403 for the response : %v", dbtest.Failed, testID, w.Code)
+			if w.Code != http.StatusUnauthorized {
+				t.Fatalf("\t%s\tTest %d:\tShould receive a status code of 401 for the response : %v", dbtest.Failed, testID, w.Code)
 			}
-			t.Logf("\t%s\tTest %d:\tShould receive a status code of 403 for the response.", dbtest.Success, testID)
+			t.Logf("\t%s\tTest %d:\tShould receive a status code of 401 for the response.", dbtest.Success, testID)
 
 			recv := w.Body.String()
-			resp := `{"error":"attempted action is not allowed"}`
+			resp := `{"error":"Unauthorized"}`
 			if resp != recv {
 				t.Log("Got :", recv)
 				t.Log("Want:", resp)
@@ -408,7 +408,7 @@ func (ut *UserTests) crudUser(t *testing.T) {
 
 	ut.getUser200(t, nu.ID)
 	ut.putUser204(t, nu.ID)
-	ut.putUser403(t, nu.ID)
+	ut.putUser401(t, nu.ID)
 }
 
 // postUser201 validates a user can be created with the endpoint.
@@ -610,8 +610,8 @@ func (ut *UserTests) putUser204(t *testing.T, id string) {
 	}
 }
 
-// putUser403 validates that a user can't modify users unless they are an admin.
-func (ut *UserTests) putUser403(t *testing.T, id string) {
+// putUser401 validates that a user can't modify users unless they are an admin.
+func (ut *UserTests) putUser401(t *testing.T, id string) {
 	body := `{"name": "Anna Walker"}`
 
 	r := httptest.NewRequest(http.MethodPut, "/v1/users/"+id, strings.NewReader(body))
@@ -625,10 +625,10 @@ func (ut *UserTests) putUser403(t *testing.T, id string) {
 		testID := 0
 		t.Logf("\tTest %d:\tWhen a non-admin user makes a request", testID)
 		{
-			if w.Code != http.StatusForbidden {
-				t.Fatalf("\t%s\tTest %d:\tShould receive a status code of 403 for the response : %v", dbtest.Failed, testID, w.Code)
+			if w.Code != http.StatusUnauthorized {
+				t.Fatalf("\t%s\tTest %d:\tShould receive a status code of 401 for the response : %v", dbtest.Failed, testID, w.Code)
 			}
-			t.Logf("\t%s\tTest %d:\tShould receive a status code of 403 for the response.", dbtest.Success, testID)
+			t.Logf("\t%s\tTest %d:\tShould receive a status code of 401 for the response.", dbtest.Success, testID)
 		}
 	}
 }
