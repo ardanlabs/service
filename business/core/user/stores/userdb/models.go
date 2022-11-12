@@ -2,7 +2,6 @@ package userdb
 
 import (
 	"time"
-	"unsafe"
 
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/lib/pq"
@@ -24,17 +23,29 @@ type dbUser struct {
 // =============================================================================
 
 func toDBUser(usr user.User) dbUser {
-
-	// We can't use dbUser(usr) because pq requires us to use their
-	// StringArray type so we are performing a casting operation.
-	return *(*dbUser)(unsafe.Pointer(&usr))
+	return dbUser{
+		ID:           usr.ID,
+		Name:         usr.Name,
+		Email:        usr.Email,
+		Roles:        usr.Roles,
+		PasswordHash: usr.PasswordHash,
+		Enabled:      usr.Enabled,
+		DateCreated:  usr.DateCreated,
+		DateUpdated:  usr.DateUpdated,
+	}
 }
 
 func toCoreUser(dbUsr dbUser) user.User {
-
-	// We can't use user.User(dbUsr) because pq requires us to use their
-	// StringArray type so we are performing a casting operation.
-	return *(*user.User)(unsafe.Pointer(&dbUsr))
+	return user.User{
+		ID:           dbUsr.ID,
+		Name:         dbUsr.Name,
+		Email:        dbUsr.Email,
+		Roles:        dbUsr.Roles,
+		PasswordHash: dbUsr.PasswordHash,
+		Enabled:      dbUsr.Enabled,
+		DateCreated:  dbUsr.DateCreated,
+		DateUpdated:  dbUsr.DateUpdated,
+	}
 }
 
 func toCoreUserSlice(dbUsers []dbUser) []user.User {
