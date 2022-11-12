@@ -25,7 +25,7 @@ spec:
       terminationGracePeriodSeconds: 60
       containers:
       - name: postgres
-        image: postgres:14-alpine
+        image: postgres:15-alpine
         resources:
           limits:
             cpu: "1000m" # Up to 1 full core

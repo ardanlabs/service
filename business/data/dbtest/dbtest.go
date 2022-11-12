@@ -28,7 +28,7 @@ const (
 
 // StartDB starts a database instance.
 func StartDB() (*docker.Container, error) {
-	image := "postgres:14-alpine"
+	image := "postgres:15-alpine"
 	port := "5432"
 	args := []string{"-e", "POSTGRES_PASSWORD=postgres"}
 

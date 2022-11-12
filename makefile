@@ -67,8 +67,8 @@ dev.setup.mac.arm64: dev.setup.mac.common
 dev.docker:
 	docker pull golang:1.19
 	docker pull alpine:3.16
-	docker pull kindest/node:v1.25.2
-	docker pull postgres:14-alpine
+	docker pull kindest/node:v1.25.3
+	docker pull postgres:15-alpine
 	docker pull hashicorp/vault:1.12
 	docker pull openzipkin/zipkin:2.23
 	docker pull docker.io/datawire/tel2:2.8.5
@@ -101,14 +101,14 @@ metrics:
 # Running from within k8s/kind
 
 KIND_CLUSTER := ardan-starter-cluster
-POSTGRES := postgres:14-alpine
+POSTGRES := postgres:15-alpine
 VAULT := hashicorp/vault:1.12
 ZIPKIN := openzipkin/zipkin:2.23
 TELEPRESENCE := docker.io/datawire/tel2:2.8.5
 
 dev-up:
 	kind create cluster \
-		--image kindest/node:v1.25.2@sha256:f52781bc0d7a19fb6c405c2af83abfeb311f130707a0e219175677e366cc45d1 \
+		--image kindest/node:v1.25.3@sha256:f52781bc0d7a19fb6c405c2af83abfeb311f130707a0e219175677e366cc45d1 \
 		--name $(KIND_CLUSTER) \
 		--config zarf/k8s/dev/kind-config.yaml
 	kubectl wait --timeout=120s --namespace=local-path-storage --for=condition=Available deployment/local-path-provisioner

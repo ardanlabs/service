@@ -6,6 +6,7 @@ CREATE TABLE users (
 	email         TEXT UNIQUE,
 	roles         TEXT[],
 	password_hash TEXT,
+    enabled       BOOLEAN,
 	date_created  TIMESTAMP,
 	date_updated  TIMESTAMP,
 

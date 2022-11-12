@@ -49,9 +49,9 @@ func (s *Store) WithinTran(ctx context.Context, fn func(s user.Storer) error) er
 func (s *Store) Create(ctx context.Context, usr user.User) error {
 	const q = `
 	INSERT INTO users
-		(user_id, name, email, password_hash, roles, date_created, date_updated)
+		(user_id, name, email, password_hash, roles, enabled, date_created, date_updated)
 	VALUES
-		(:user_id, :name, :email, :password_hash, :roles, :date_created, :date_updated)`
+		(:user_id, :name, :email, :password_hash, :roles, :enabled, :date_created, :date_updated)`
 
 	if err := database.NamedExecContext(ctx, s.log, s.db, q, toDBUser(usr)); err != nil {
 		if errors.Is(err, database.ErrDBDuplicatedEntry) {

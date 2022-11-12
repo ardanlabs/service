@@ -9,6 +9,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/ardanlabs/service/business/core/user"
+	"github.com/ardanlabs/service/business/core/user/stores/userdb"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/jmoiron/sqlx"
 	"github.com/open-policy-agent/opa/rego"
@@ -36,8 +38,8 @@ type Config struct {
 // set of user claims and recreate the claims by parsing the token.
 type Auth struct {
 	log       *zap.SugaredLogger
-	db        *sqlx.DB
 	keyLookup KeyLookup
+	user      *user.Core
 	method    jwt.SigningMethod
 	parser    *jwt.Parser
 	mu        sync.RWMutex
@@ -46,10 +48,18 @@ type Auth struct {
 
 // New creates an Auth to support authentication/authorization.
 func New(cfg Config) (*Auth, error) {
+
+	// If a database connection is not provided, we won't perform the
+	// user enabled check.
+	var usr *user.Core
+	if cfg.DB != nil {
+		usr = user.NewCore(userdb.NewStore(cfg.Log, cfg.DB))
+	}
+
 	a := Auth{
 		log:       cfg.Log,
-		db:        cfg.DB,
 		keyLookup: cfg.KeyLookup,
+		user:      usr,
 		method:    jwt.GetSigningMethod("RS256"),
 		parser:    jwt.NewParser(jwt.WithValidMethods([]string{"RS256"})),
 		cache:     make(map[string]*rsa.PublicKey),
@@ -223,40 +233,16 @@ func (a *Auth) opaPolicyEvaluation(ctx context.Context, opaPolicy string, input 
 }
 
 // isUserEnabled hits the database and checks the user is not disabled. If the
-// user is not found in the database, they are still considered validated by
-// their token.
+// no database connection was provided, this check is skipped.
 func (a *Auth) isUserEnabled(ctx context.Context, claims Claims) bool {
+	if a.user == nil {
+		return true
+	}
 
-	// For now until I learn more, not having a db connection means the
-	// account is trused.
-	// if a.db == nil {
-	// 	return true
-	// }
+	usr, err := a.user.QueryByID(ctx, claims.Subject)
+	if err != nil {
+		return false
+	}
 
-	// data := struct {
-	// 	KeycloakId string `db:"keycloak_id"`
-	// }{
-	// 	KeycloakId: claims.Subject,
-	// }
-
-	// const query = `
-	// SELECT
-	// 	id
-	// FROM
-	// 	users
-	// WHERE
-	// 	user_id = :user_id AND
-	// 	enabled = true,
-	// LIMIT 1;`
-
-	// var usr user.User
-	// if err := database.NamedQueryStruct(ctx, a.log, a.db, query, data, &usr); err != nil {
-	// 	return err == database.ErrDBNotFound
-	// }
-
-	// if !usr.Enabled {
-	// 	return false
-	// }
-
-	return true
+	return usr.Enabled
 }

@@ -11,6 +11,7 @@ type User struct {
 	Email        string    `json:"email"`
 	Roles        []string  `json:"roles"`
 	PasswordHash []byte    `json:"-"`
+	Enabled      bool      `json:"enabled"`
 	DateCreated  time.Time `json:"date_created"`
 	DateUpdated  time.Time `json:"date_updated"`
 }
@@ -36,4 +37,5 @@ type UpdateUser struct {
 	Roles           []string `json:"roles"`
 	Password        *string  `json:"password"`
 	PasswordConfirm *string  `json:"password_confirm" validate:"omitempty,eqfield=Password"`
+	Enabled         *bool    `json:"enabled"`
 }

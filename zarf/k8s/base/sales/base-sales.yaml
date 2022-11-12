@@ -42,7 +42,7 @@ spec:
           httpGet:
             path: /debug/readiness
             port: 4000
-          initialDelaySeconds: 5
+          initialDelaySeconds: 2
           periodSeconds: 15
           timeoutSeconds: 5
           successThreshold: 1
@@ -51,7 +51,7 @@ spec:
           httpGet:
             path: /debug/liveness
             port: 4000
-          initialDelaySeconds: 5
+          initialDelaySeconds: 2
           periodSeconds: 30
           timeoutSeconds: 5
           successThreshold: 1

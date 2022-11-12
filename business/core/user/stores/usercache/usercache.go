@@ -15,7 +15,7 @@ type Store struct {
 	log    *zap.SugaredLogger
 	storer user.Storer
 	cache  map[string]*user.User
-	mu     *sync.RWMutex
+	mu     sync.RWMutex
 }
 
 // NewStore constructs the api for data and caching access.
@@ -24,7 +24,6 @@ func NewStore(log *zap.SugaredLogger, storer user.Storer) *Store {
 		log:    log,
 		storer: storer,
 		cache:  map[string]*user.User{},
-		mu:     &sync.RWMutex{},
 	}
 }
 

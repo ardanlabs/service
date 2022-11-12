@@ -63,6 +63,7 @@ func (c *Core) Create(ctx context.Context, nu NewUser, now time.Time) (User, err
 		Email:        nu.Email,
 		PasswordHash: hash,
 		Roles:        nu.Roles,
+		Enabled:      true,
 		DateCreated:  now,
 		DateUpdated:  now,
 	}
@@ -112,6 +113,9 @@ func (c *Core) Update(ctx context.Context, userID string, uu UpdateUser, now tim
 			return fmt.Errorf("generating password hash: %w", err)
 		}
 		user.PasswordHash = pw
+	}
+	if uu.Enabled != nil {
+		user.Enabled = *uu.Enabled
 	}
 	user.DateUpdated = now
 
