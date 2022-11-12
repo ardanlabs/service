@@ -110,7 +110,7 @@ func (a *Auth) Authenticate(ctx context.Context, bearerToken string) (Claims, er
 		"Token": parts[1],
 	}
 
-	if err := a.regoEvaluation(ctx, regoAuthentication, input); err != nil {
+	if err := a.opaPolicyEvaluation(ctx, opaAuthentication, input); err != nil {
 		return Claims{}, fmt.Errorf("authentication failed : %w", err)
 	}
 
@@ -138,7 +138,7 @@ func (a *Auth) Authorize(ctx context.Context, claims Claims, roles ...string) er
 		"InputRoles": roles,
 	}
 
-	if err := a.regoEvaluation(ctx, regoAuthorization, input); err != nil {
+	if err := a.opaPolicyEvaluation(ctx, opaAuthorization, input); err != nil {
 		return fmt.Errorf("rego evaluation failed : %w", err)
 	}
 
@@ -194,12 +194,12 @@ func (a *Auth) publicKeyLookup() func(t *jwt.Token) (any, error) {
 	return f
 }
 
-// regoEvaluation asks opa to evaulate the token against the specified token
+// opaPolicyEvaluation asks opa to evaulate the token against the specified token
 // policy and public key.
-func (a *Auth) regoEvaluation(ctx context.Context, policyRules string, input any) error {
+func (a *Auth) opaPolicyEvaluation(ctx context.Context, opaPolicy string, input any) error {
 	query, err := rego.New(
-		rego.Query(fmt.Sprintf("x = data.%s.allow", regoPackageName)),
-		rego.Module("policy.rego", policyRules),
+		rego.Query(fmt.Sprintf("x = data.%s.allow", opaPackage)),
+		rego.Module("policy.rego", opaPolicy),
 	).PrepareForEval(ctx)
 	if err != nil {
 		return err

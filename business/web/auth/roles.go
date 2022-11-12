@@ -12,14 +12,14 @@ const (
 
 // Package name of our rego code.
 const (
-	regoPackageName string = "ardan.rego"
+	opaPackage string = "ardan.rego"
 )
 
 // Core OPA policies.
 var (
 	//go:embed rego/authentication.rego
-	regoAuthentication string
+	opaAuthentication string
 
 	//go:embed rego/authorization.rego
-	regoAuthorization string
+	opaAuthorization string
 )
