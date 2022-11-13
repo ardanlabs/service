@@ -105,7 +105,16 @@ func (a *Auth) Authenticate(ctx context.Context, bearerToken string) (Claims, er
 
 	// Perform an extra level of authentication verification with OPA.
 
-	kid := token.Header["kid"].(string)
+	kidRaw, exists := token.Header["kid"]
+	if !exists {
+		return Claims{}, fmt.Errorf("kid missing from header: %w", err)
+	}
+
+	kid, ok := kidRaw.(string)
+	if !ok {
+		return Claims{}, fmt.Errorf("kid malformed: %w", err)
+	}
+
 	pem, err := a.publicKeyLookup(kid)
 	if err != nil {
 		return Claims{}, fmt.Errorf("failed to fetch public key: %w", err)
