@@ -3,7 +3,6 @@ package auth
 
 import (
 	"context"
-	"crypto/rsa"
 	"errors"
 	"fmt"
 	"strings"
@@ -43,7 +42,7 @@ type Auth struct {
 	method    jwt.SigningMethod
 	parser    *jwt.Parser
 	mu        sync.RWMutex
-	cache     map[string]*rsa.PublicKey
+	cache     map[string]string
 }
 
 // New creates an Auth to support authentication/authorization.
@@ -62,7 +61,7 @@ func New(cfg Config) (*Auth, error) {
 		user:      usr,
 		method:    jwt.GetSigningMethod("RS256"),
 		parser:    jwt.NewParser(jwt.WithValidMethods([]string{"RS256"})),
-		cache:     make(map[string]*rsa.PublicKey),
+		cache:     make(map[string]string),
 	}
 
 	return &a, nil
@@ -99,18 +98,15 @@ func (a *Auth) Authenticate(ctx context.Context, bearerToken string) (Claims, er
 	}
 
 	var claims Claims
-	token, err := a.parser.ParseWithClaims(parts[1], &claims, a.publicKeyLookup())
+	token, _, err := a.parser.ParseUnverified(parts[1], &claims)
 	if err != nil {
 		return Claims{}, fmt.Errorf("error parsing token: %w", err)
 	}
 
-	if !token.Valid {
-		return Claims{}, errors.New("token failed signature check")
-	}
-
 	// Perform an extra level of authentication verification with OPA.
 
-	pem, err := a.keyLookup.PublicKeyPEM(token.Header["kid"].(string))
+	kid := token.Header["kid"].(string)
+	pem, err := a.publicKeyLookup(kid)
 	if err != nil {
 		return Claims{}, fmt.Errorf("failed to fetch public key: %w", err)
 	}
@@ -157,51 +153,32 @@ func (a *Auth) Authorize(ctx context.Context, claims Claims, roles ...string) er
 
 // =============================================================================
 
-// publicKeyLookup implements the JWT key lookup function for returning the public
-// key based on the kid in the token header.
-func (a *Auth) publicKeyLookup() func(t *jwt.Token) (any, error) {
-	f := func(t *jwt.Token) (any, error) {
-		kid, ok := t.Header["kid"]
-		if !ok {
-			return nil, errors.New("missing key id (kid) in token header")
+// publicKeyLookup performs a lookup for the public pem for the specified kid.
+func (a *Auth) publicKeyLookup(kid string) (string, error) {
+	pem, err := func() (string, error) {
+		a.mu.RLock()
+		defer a.mu.RUnlock()
+
+		pem, exists := a.cache[kid]
+		if !exists {
+			return "", errors.New("not found")
 		}
-
-		kidID, ok := kid.(string)
-		if !ok {
-			return nil, errors.New("user token key id (kid) must be string")
-		}
-
-		pubKey, err := func() (*rsa.PublicKey, error) {
-			a.mu.RLock()
-			defer a.mu.RUnlock()
-			pubKey, exists := a.cache[kidID]
-			if !exists {
-				return nil, errors.New("not found")
-			}
-			return pubKey, nil
-		}()
-		if err == nil {
-			return pubKey, nil
-		}
-
-		pem, err := a.keyLookup.PublicKeyPEM(kidID)
-		if err != nil {
-			return nil, fmt.Errorf("fetching public key: %w", err)
-		}
-
-		pubKey, err = jwt.ParseRSAPublicKeyFromPEM([]byte(pem))
-		if err != nil {
-			return nil, fmt.Errorf("parsing public pem: %w", err)
-		}
-
-		a.mu.Lock()
-		defer a.mu.Unlock()
-		a.cache[kidID] = pubKey
-
-		return pubKey, nil
+		return pem, nil
+	}()
+	if err == nil {
+		return pem, nil
 	}
 
-	return f
+	pem, err = a.keyLookup.PublicKeyPEM(kid)
+	if err != nil {
+		return "", fmt.Errorf("fetching public key: %w", err)
+	}
+
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	a.cache[kid] = pem
+
+	return pem, nil
 }
 
 // opaPolicyEvaluation asks opa to evaulate the token against the specified token
