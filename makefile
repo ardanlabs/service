@@ -45,6 +45,9 @@ SHELL := /bin/bash
 # curl https://proxy.golang.org/github.com/ardanlabs/conf/v3/@v/v3.1.1.mod
 # curl https://proxy.golang.org/github.com/ardanlabs/conf/v3/@v/v3.1.1.zip
 # curl https://sum.golang.org/lookup/github.com/ardanlabs/conf/v3@v3.1.1
+#
+# OPA Playground
+# https://play.openpolicyagent.org/
 
 # ==============================================================================
 # Install dependencies
