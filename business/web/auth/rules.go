@@ -4,10 +4,12 @@ import (
 	_ "embed"
 )
 
-// These are the expected values for Claims.Roles.
+// These the current set of rules we have for auth.
 const (
-	RoleAdmin = "ADMIN"
-	RoleUser  = "USER"
+	RuleAuthenticate = "auth"
+	RuleAny          = "allowAny"
+	RuleAdminOnly    = "allowOnlyAdmin"
+	RuleUserOnly     = "allowOnlyUser"
 )
 
 // Package name of our rego code.

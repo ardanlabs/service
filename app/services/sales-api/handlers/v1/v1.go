@@ -31,7 +31,7 @@ func Routes(app *web.App, cfg Config) {
 	const version = "v1"
 
 	authen := mid.Authenticate(cfg.Auth)
-	admin := mid.Authorize(cfg.Auth, auth.RoleAdmin)
+	admin := mid.Authorize(cfg.Auth, auth.RuleAdminOnly)
 
 	ugh := usergrp.Handlers{
 		User: user.NewCore(usercache.NewStore(cfg.Log, userdb.NewStore(cfg.Log, cfg.DB))),

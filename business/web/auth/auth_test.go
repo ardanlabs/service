@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/web/auth"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/jmoiron/sqlx"
@@ -55,7 +56,7 @@ func Test_Auth(t *testing.T) {
 					ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(time.Hour)),
 					IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
 				},
-				Roles: []string{auth.RoleAdmin},
+				Roles: []string{user.RoleAdmin},
 			}
 
 			token, err := a.GenerateToken(kid, claims)
@@ -70,14 +71,14 @@ func Test_Auth(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to authenticate the claims.", success, testID)
 
-			err = a.Authorize(context.Background(), parsedClaims, auth.RoleAdmin)
+			err = a.Authorize(context.Background(), parsedClaims, auth.RuleAdminOnly)
 			if err != nil {
 				t.Errorf("\t%s\tTest %d:\tShould be able to authorize the RoleAdmin claims: %v", failed, testID, err)
 			} else {
 				t.Logf("\t%s\tTest %d:\tShould be able to authorize the RoleAdmin claims.", success, testID)
 			}
 
-			err = a.Authorize(context.Background(), parsedClaims, auth.RoleUser)
+			err = a.Authorize(context.Background(), parsedClaims, auth.RuleUserOnly)
 			if err == nil {
 				t.Errorf("\t%s\tTest %d:\tShould NOT be able to authorize the RoleUser claim.", failed, testID)
 			} else {

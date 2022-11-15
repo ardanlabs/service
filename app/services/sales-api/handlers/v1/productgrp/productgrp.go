@@ -58,9 +58,8 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 		}
 	}
 
-	err = h.Auth.Authorize(ctx, claims, auth.RoleAdmin)
-	if claims.Subject != prd.UserID && err != nil {
-		return v1Web.NewRequestError(err, http.StatusUnauthorized)
+	if claims.Subject != prd.UserID && h.Auth.Authorize(ctx, claims, auth.RuleAdminOnly) != nil {
+		return auth.NewAuthError("auth failed")
 	}
 
 	if err := h.Product.Update(ctx, id, upd, web.GetTime(ctx)); err != nil {
@@ -98,9 +97,8 @@ func (h Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Req
 		}
 	}
 
-	err = h.Auth.Authorize(ctx, claims, auth.RoleAdmin)
-	if claims.Subject != prd.UserID && err != nil {
-		return v1Web.NewRequestError(err, http.StatusUnauthorized)
+	if claims.Subject != prd.UserID && h.Auth.Authorize(ctx, claims, auth.RuleAdminOnly) != nil {
+		return auth.NewAuthError("auth failed")
 	}
 
 	if err := h.Product.Delete(ctx, id); err != nil {

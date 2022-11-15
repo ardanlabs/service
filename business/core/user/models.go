@@ -4,6 +4,12 @@ import (
 	"time"
 )
 
+// Set of possible roles for a user.
+const (
+	RoleAdmin = "ADMIN"
+	RoleUser  = "USER"
+)
+
 // User represents an individual user.
 type User struct {
 	ID           string    `json:"id"`

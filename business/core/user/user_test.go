@@ -13,7 +13,6 @@ import (
 	"github.com/ardanlabs/service/business/core/user/stores/userdb"
 	"github.com/ardanlabs/service/business/data/dbschema"
 	"github.com/ardanlabs/service/business/data/dbtest"
-	"github.com/ardanlabs/service/business/web/auth"
 	"github.com/ardanlabs/service/foundation/docker"
 	"github.com/google/go-cmp/cmp"
 )
@@ -55,7 +54,7 @@ func Test_User(t *testing.T) {
 			nu := user.NewUser{
 				Name:            "Bill Kennedy",
 				Email:           "bill@ardanlabs.com",
-				Roles:           []string{auth.RoleAdmin},
+				Roles:           []string{user.RoleAdmin},
 				Password:        "gophers",
 				PasswordConfirm: "gophers",
 			}

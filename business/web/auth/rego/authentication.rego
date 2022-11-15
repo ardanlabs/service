@@ -1,9 +1,9 @@
 package ardan.rego
 
-default allow = false
+default auth = false
 
 # This function decodes and verifies the JWT, it also makes sure that it hasn't expired etc. 
-allow {
+auth {
 	jwt_valid
 }
 

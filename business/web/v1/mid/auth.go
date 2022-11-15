@@ -14,7 +14,7 @@ func Authenticate(a *auth.Auth) web.Middleware {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 			claims, err := a.Authenticate(ctx, r.Header.Get("authorization"))
 			if err != nil {
-				return auth.NewAuthErrorf("authenticate: failed: %s", err)
+				return auth.NewAuthError("authenticate: failed: %s", err)
 			}
 
 			ctx = auth.SetClaims(ctx, claims)
@@ -30,16 +30,16 @@ func Authenticate(a *auth.Auth) web.Middleware {
 
 // Authorize validates that an authenticated user has at least one role from a
 // specified list. This method constructs the actual function that is used.
-func Authorize(a *auth.Auth, roles ...string) web.Middleware {
+func Authorize(a *auth.Auth, rule string) web.Middleware {
 	m := func(handler web.Handler) web.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 			claims := auth.GetClaims(ctx)
 			if claims.Subject == "" {
-				return auth.NewAuthErrorf("authorize: you are not authorized for that action, no claims")
+				return auth.NewAuthError("authorize: you are not authorized for that action, no claims")
 			}
 
-			if err := a.Authorize(ctx, claims, roles...); err != nil {
-				return auth.NewAuthErrorf("authorize: you are not authorized for that action, claims[%v] roles[%v]: %s", claims.Roles, roles, err)
+			if err := a.Authorize(ctx, claims, rule); err != nil {
+				return auth.NewAuthError("authorize: you are not authorized for that action, claims[%v] rule[%v]: %s", claims.Roles, rule, err)
 			}
 
 			return handler(ctx, w, r)

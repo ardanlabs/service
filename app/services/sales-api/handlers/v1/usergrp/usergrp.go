@@ -51,9 +51,8 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 
 	userID := web.Param(r, "id")
 
-	err := h.Auth.Authorize(ctx, claims, auth.RoleAdmin)
-	if claims.Subject != userID && err != nil {
-		return auth.NewAuthError(err)
+	if claims.Subject != userID && h.Auth.Authorize(ctx, claims, auth.RuleAdminOnly) != nil {
+		return auth.NewAuthError("auth failed")
 	}
 
 	if err := h.User.Update(ctx, userID, upd, web.GetTime(ctx)); err != nil {
@@ -75,9 +74,8 @@ func (h Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Req
 	claims := auth.GetClaims(ctx)
 	userID := web.Param(r, "id")
 
-	err := h.Auth.Authorize(ctx, claims, auth.RoleAdmin)
-	if claims.Subject != userID && err != nil {
-		return auth.NewAuthError(err)
+	if claims.Subject != userID && h.Auth.Authorize(ctx, claims, auth.RuleAdminOnly) != nil {
+		return auth.NewAuthError("auth failed")
 	}
 
 	if err := h.User.Delete(ctx, userID); err != nil {
@@ -118,9 +116,8 @@ func (h Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http.
 	claims := auth.GetClaims(ctx)
 	userID := web.Param(r, "id")
 
-	err := h.Auth.Authorize(ctx, claims, auth.RoleAdmin)
-	if claims.Subject != userID && err != nil {
-		return auth.NewAuthError(err)
+	if claims.Subject != userID && h.Auth.Authorize(ctx, claims, auth.RuleAdminOnly) != nil {
+		return auth.NewAuthError("auth failed")
 	}
 
 	usr, err := h.User.QueryByID(ctx, userID)
@@ -147,8 +144,7 @@ func (h Handlers) Token(ctx context.Context, w http.ResponseWriter, r *http.Requ
 
 	email, pass, ok := r.BasicAuth()
 	if !ok {
-		err := errors.New("must provide email and password in Basic auth")
-		return auth.NewAuthError(err)
+		return auth.NewAuthError("must provide email and password in Basic auth")
 	}
 
 	usr, err := h.User.Authenticate(ctx, web.GetTime(ctx), email, pass)
@@ -157,7 +153,7 @@ func (h Handlers) Token(ctx context.Context, w http.ResponseWriter, r *http.Requ
 		case errors.Is(err, user.ErrNotFound):
 			return v1Web.NewRequestError(err, http.StatusNotFound)
 		case errors.Is(err, user.ErrAuthenticationFailure):
-			return auth.NewAuthError(err)
+			return auth.NewAuthError(err.Error())
 		default:
 			return fmt.Errorf("authenticating: %w", err)
 		}

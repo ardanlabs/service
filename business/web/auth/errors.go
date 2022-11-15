@@ -11,17 +11,8 @@ type AuthError struct {
 	msg string
 }
 
-// NewAuthError wraps a provided error with an HTTP status code of
-// StatusForbidden.
-func NewAuthError(err error) error {
-	return &AuthError{
-		msg: err.Error(),
-	}
-}
-
-// NewAuthErrorf wraps a provided error with an HTTP status code of
-// StatusForbidden.
-func NewAuthErrorf(format string, args ...any) error {
+// NewAuthError creates an AuthError for the provided message.
+func NewAuthError(format string, args ...any) error {
 	return &AuthError{
 		msg: fmt.Sprintf(format, args...),
 	}

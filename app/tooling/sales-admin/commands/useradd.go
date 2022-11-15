@@ -8,7 +8,6 @@ import (
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/core/user/stores/userdb"
 	"github.com/ardanlabs/service/business/sys/database"
-	"github.com/ardanlabs/service/business/web/auth"
 	"go.uber.org/zap"
 )
 
@@ -35,7 +34,7 @@ func UserAdd(log *zap.SugaredLogger, cfg database.Config, name, email, password 
 		Email:           email,
 		Password:        password,
 		PasswordConfirm: password,
-		Roles:           []string{auth.RoleAdmin, auth.RoleUser},
+		Roles:           []string{user.RoleAdmin, user.RoleUser},
 	}
 
 	usr, err := core.Create(ctx, nu, time.Now())

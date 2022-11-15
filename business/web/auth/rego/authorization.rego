@@ -1,17 +1,27 @@
 package ardan.rego
 
-default allow = false
+default allowAny = false
+default allowOnlyUser = false
+default allowOnlyAdmin = false
 
-allow {
-	# The roles provided in the argument.
-	input_roles := {inputRole | inputRole := input.InputRoles[_]}
+roleUser := "USER"
+roleAdmin := "ADMIN"
+roleAll := {roleAdmin, roleUser}
 
-	# The roles from the user's claims
+allowAny {
 	roles_from_claims := {role | role := input.Roles[_]}
+	input_role_is_in_claim := roleAll & roles_from_claims
+	count(input_role_is_in_claim) > 0
+}
 
-	# The intersection between the input roles, and roles in the claim
-	input_role_is_in_claim := input_roles & roles_from_claims
+allowOnlyUser {
+	roles_from_claims := {role | role := input.Roles[_]}
+	input_role_is_in_claim := {roleUser} & roles_from_claims
+	count(input_role_is_in_claim) > 0
+}
 
-	# The number of roles within the users' claims, if its more than 0 then the condition is true.
+allowOnlyAdmin {
+	roles_from_claims := {role | role := input.Roles[_]}
+	input_role_is_in_claim := {roleAdmin} & roles_from_claims
 	count(input_role_is_in_claim) > 0
 }

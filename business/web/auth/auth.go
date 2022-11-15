@@ -125,7 +125,7 @@ func (a *Auth) Authenticate(ctx context.Context, bearerToken string) (Claims, er
 		"Token": parts[1],
 	}
 
-	if err := a.opaPolicyEvaluation(ctx, opaAuthentication, input); err != nil {
+	if err := a.opaPolicyEvaluation(ctx, opaAuthentication, RuleAuthenticate, input); err != nil {
 		return Claims{}, fmt.Errorf("authentication failed : %w", err)
 	}
 
@@ -141,19 +141,12 @@ func (a *Auth) Authenticate(ctx context.Context, bearerToken string) (Claims, er
 // Authorize attempts to authorize the user with the provided input roles, if
 // none of the input roles are within the user's claims, we return an error
 // otherwise the user is authorized.
-func (a *Auth) Authorize(ctx context.Context, claims Claims, roles ...string) error {
-
-	// If no roles are provided, default to using all known roles to authorize.
-	if len(roles) == 0 {
-		roles = []string{RoleAdmin, RoleUser}
-	}
-
+func (a *Auth) Authorize(ctx context.Context, claims Claims, rule string) error {
 	input := map[string]any{
-		"Roles":      claims.Roles,
-		"InputRoles": roles,
+		"Roles": claims.Roles,
 	}
 
-	if err := a.opaPolicyEvaluation(ctx, opaAuthorization, input); err != nil {
+	if err := a.opaPolicyEvaluation(ctx, opaAuthorization, rule, input); err != nil {
 		return fmt.Errorf("rego evaluation failed : %w", err)
 	}
 
@@ -192,16 +185,18 @@ func (a *Auth) publicKeyLookup(kid string) (string, error) {
 
 // opaPolicyEvaluation asks opa to evaulate the token against the specified token
 // policy and public key.
-func (a *Auth) opaPolicyEvaluation(ctx context.Context, opaPolicy string, input any) error {
-	query, err := rego.New(
-		rego.Query(fmt.Sprintf("x = data.%s.allow", opaPackage)),
+func (a *Auth) opaPolicyEvaluation(ctx context.Context, opaPolicy string, rule string, input any) error {
+	query := fmt.Sprintf("x = data.%s.%s", opaPackage, rule)
+
+	q, err := rego.New(
+		rego.Query(query),
 		rego.Module("policy.rego", opaPolicy),
 	).PrepareForEval(ctx)
 	if err != nil {
 		return err
 	}
 
-	results, err := query.Eval(ctx, rego.EvalInput(input))
+	results, err := q.Eval(ctx, rego.EvalInput(input))
 	if err != nil {
 		return fmt.Errorf("query: %w", err)
 	}
