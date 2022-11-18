@@ -48,7 +48,7 @@ func NewOrder(fields map[string]bool, defaultField string) *Order {
 }
 
 // Check validates the order by contains expected values.
-func (o *Order) Check(orderBy *OrderBy) error {
+func (o *Order) Check(orderBy OrderBy) error {
 	if _, exists := o.Fields[orderBy.Field]; !exists {
 		return fmt.Errorf("field %q is not a field you can order by", orderBy.Field)
 	}

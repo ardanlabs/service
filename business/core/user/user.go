@@ -143,7 +143,7 @@ func (c *Core) Delete(ctx context.Context, userID string) error {
 
 // Query retrieves a list of existing users from the database.
 func (c *Core) Query(ctx context.Context, orderBy sort.OrderBy, pageNumber int, rowsPerPage int) ([]User, error) {
-	if err := Order.Check(&orderBy); err != nil {
+	if err := Order.Check(orderBy); err != nil {
 		return nil, fmt.Errorf("%w: %s", ErrInvalidOrder, err.Error())
 	}
 

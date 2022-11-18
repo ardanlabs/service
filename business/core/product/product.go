@@ -116,7 +116,7 @@ func (c *Core) Delete(ctx context.Context, productID string) error {
 
 // Query gets all Products from the database.
 func (c *Core) Query(ctx context.Context, orderBy sort.OrderBy, pageNumber int, rowsPerPage int) ([]Product, error) {
-	if err := Order.Check(&orderBy); err != nil {
+	if err := Order.Check(orderBy); err != nil {
 		return nil, fmt.Errorf("%w: %s", ErrInvalidOrder, err.Error())
 	}
 
