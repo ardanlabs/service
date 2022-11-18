@@ -85,7 +85,7 @@ func Test_Product(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to update product.", dbtest.Success, testID)
 
-			products, err := core.Query(ctx, 1, 3)
+			products, err := core.Query(ctx, product.DefaultOrderBy, 1, 3)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve updated product : %s.", dbtest.Failed, testID, err)
 			}

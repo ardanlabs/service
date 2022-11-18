@@ -146,7 +146,7 @@ func Test_PagingUser(t *testing.T) {
 		{
 			ctx := context.Background()
 
-			users1, err := core.Query(ctx, 1, 1)
+			users1, err := core.Query(ctx, user.DefaultOrderBy, 1, 1)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve users for page 1 : %s.", dbtest.Failed, testID, err)
 			}
@@ -157,7 +157,7 @@ func Test_PagingUser(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould have a single user.", dbtest.Success, testID)
 
-			users2, err := core.Query(ctx, 2, 1)
+			users2, err := core.Query(ctx, user.DefaultOrderBy, 2, 1)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve users for page 2 : %s.", dbtest.Failed, testID, err)
 			}

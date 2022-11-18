@@ -103,8 +103,16 @@ func (h Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Requ
 		return v1Web.NewRequestError(fmt.Errorf("invalid rows format [%s]", rows), http.StatusBadRequest)
 	}
 
-	users, err := h.User.Query(ctx, pageNumber, rowsPerPage)
+	orderBy, err := user.Order.FromQueryString(r.URL.Query().Get("orderby"))
 	if err != nil {
+		return v1Web.NewRequestError(err, http.StatusBadRequest)
+	}
+
+	users, err := h.User.Query(ctx, orderBy, pageNumber, rowsPerPage)
+	if err != nil {
+		if errors.Is(err, user.ErrInvalidOrder) {
+			return v1Web.NewRequestError(err, http.StatusBadRequest)
+		}
 		return fmt.Errorf("unable to query for users: %w", err)
 	}
 

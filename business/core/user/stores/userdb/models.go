@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/core/user"
+	"github.com/ardanlabs/service/business/data/sort"
 	"github.com/lib/pq"
 )
 
@@ -54,4 +55,21 @@ func toCoreUserSlice(dbUsers []dbUser) []user.User {
 		usrs[i] = toCoreUser(dbUsr)
 	}
 	return usrs
+}
+
+// =============================================================================
+
+// orderByfields is the map of fields that is used to translate between the
+// application layer names and the database.
+var orderByfields = map[string]string{
+	user.OrderByID:      "user_id",
+	user.OrderByName:    "name",
+	user.OrderByEmail:   "email",
+	user.OrderByRoles:   "roles",
+	user.OrderByEnabled: "enabled",
+}
+
+// orderByClause returns the SQL order by code.
+func orderByClause(o sort.OrderBy) string {
+	return orderByfields[o.Field] + " " + o.Direction
 }

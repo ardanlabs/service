@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/ardanlabs/service/business/data/sort"
 	"github.com/ardanlabs/service/business/sys/validate"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -20,6 +21,7 @@ var (
 	ErrInvalidEmail          = errors.New("email is not valid")
 	ErrUniqueEmail           = errors.New("email is not unique")
 	ErrAuthenticationFailure = errors.New("authentication failed")
+	ErrInvalidOrder          = errors.New("validating order by")
 )
 
 // Storer interface declares the behavior this package needs to perists and
@@ -29,7 +31,7 @@ type Storer interface {
 	Create(ctx context.Context, usr User) error
 	Update(ctx context.Context, usr User) error
 	Delete(ctx context.Context, userID string) error
-	Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]User, error)
+	Query(ctx context.Context, orderBy sort.OrderBy, pageNumber int, rowsPerPage int) ([]User, error)
 	QueryByID(ctx context.Context, userID string) (User, error)
 	QueryByEmail(ctx context.Context, email string) (User, error)
 }
@@ -140,8 +142,12 @@ func (c *Core) Delete(ctx context.Context, userID string) error {
 }
 
 // Query retrieves a list of existing users from the database.
-func (c *Core) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]User, error) {
-	users, err := c.storer.Query(ctx, pageNumber, rowsPerPage)
+func (c *Core) Query(ctx context.Context, orderBy sort.OrderBy, pageNumber int, rowsPerPage int) ([]User, error) {
+	if err := Order.Check(&orderBy); err != nil {
+		return nil, fmt.Errorf("%w: %s", ErrInvalidOrder, err.Error())
+	}
+
+	users, err := c.storer.Query(ctx, orderBy, pageNumber, rowsPerPage)
 	if err != nil {
 		return nil, fmt.Errorf("query: %w", err)
 	}

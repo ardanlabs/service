@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/ardanlabs/service/business/core/user"
+	"github.com/ardanlabs/service/business/data/sort"
 	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
@@ -109,7 +110,7 @@ func (s *Store) Delete(ctx context.Context, userID string) error {
 }
 
 // Query retrieves a list of existing users from the database.
-func (s *Store) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]user.User, error) {
+func (s *Store) Query(ctx context.Context, orderBy sort.OrderBy, pageNumber int, rowsPerPage int) ([]user.User, error) {
 	data := struct {
 		Offset      int `db:"offset"`
 		RowsPerPage int `db:"rows_per_page"`
@@ -118,14 +119,15 @@ func (s *Store) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]u
 		RowsPerPage: rowsPerPage,
 	}
 
-	const q = `
+	q := fmt.Sprintf(`
 	SELECT
 		*
 	FROM
 		users
 	ORDER BY
-		user_id
-	OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY`
+		%s
+	OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY`,
+		orderByClause(orderBy))
 
 	var usrs []dbUser
 	if err := database.NamedQuerySlice(ctx, s.log, s.db, q, data, &usrs); err != nil {

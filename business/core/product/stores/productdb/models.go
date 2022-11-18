@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/core/product"
+	"github.com/ardanlabs/service/business/data/sort"
 )
 
 // dbProduct represents an individual product.
@@ -35,4 +36,23 @@ func toCoreProductSlice(dbProducts []dbProduct) []product.Product {
 		prds[i] = toCoreProduct(dbPrd)
 	}
 	return prds
+}
+
+// =============================================================================
+
+// orderByfields is the map of fields that is used to translate between the
+// application layer names and the database.
+var orderByfields = map[string]string{
+	product.OrderByID:       "product_id",
+	product.OrderByName:     "name",
+	product.OrderByCost:     "cost",
+	product.OrderByQuantity: "quantity",
+	product.OrderBySold:     "sold",
+	product.OrderByRevenue:  "revenue",
+	product.OrderByUserID:   "user_id",
+}
+
+// orderByClause returns the SQL order by code.
+func orderByClause(o sort.OrderBy) string {
+	return orderByfields[o.Field] + " " + o.Direction
 }

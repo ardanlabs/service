@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/ardanlabs/service/business/core/product"
+	"github.com/ardanlabs/service/business/data/sort"
 	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
@@ -85,7 +86,7 @@ func (s *Store) Delete(ctx context.Context, productID string) error {
 }
 
 // Query gets all Products from the database.
-func (s *Store) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]product.Product, error) {
+func (s *Store) Query(ctx context.Context, orderBy sort.OrderBy, pageNumber int, rowsPerPage int) ([]product.Product, error) {
 	data := struct {
 		Offset      int `db:"offset"`
 		RowsPerPage int `db:"rows_per_page"`
@@ -94,7 +95,7 @@ func (s *Store) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]p
 		RowsPerPage: rowsPerPage,
 	}
 
-	const q = `
+	q := fmt.Sprintf(`
 	SELECT
 		p.*,
 		COALESCE(SUM(s.quantity) ,0) AS sold,
@@ -106,8 +107,9 @@ func (s *Store) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]p
 	GROUP BY
 		p.product_id
 	ORDER BY
-		user_id
-	OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY`
+		%s
+	OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY`,
+		orderByClause(orderBy))
 
 	var prds []dbProduct
 	if err := database.NamedQuerySlice(ctx, s.log, s.db, q, data, &prds); err != nil {
