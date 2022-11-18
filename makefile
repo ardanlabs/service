@@ -200,8 +200,8 @@ dev-shell:
 	kubectl exec --namespace=sales-system -it $(shell kubectl get pods --namespace=sales-system | grep sales | cut -c1-26) --container sales-api -- /bin/sh
 
 dev-database:
-	# ./admin --db-disable-tls=1 migrate
-	# ./admin --db-disable-tls=1 seed
+	# ./sales-admin --db-disable-tls=1 migrate
+	# ./sales-admin --db-disable-tls=1 seed
 
 # ==============================================================================
 # Administration
