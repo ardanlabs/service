@@ -54,6 +54,14 @@ SHELL := /bin/bash
 # ==============================================================================
 # Install dependencies
 
+GOLANG       := golang:1.19
+ALPINE       := alpine:3.16
+KIND         := kindest/node:v1.25.3
+POSTGRES     := postgres:15-alpine
+VAULT        := hashicorp/vault:1.12
+ZIPKIN       := openzipkin/zipkin:2.23
+TELEPRESENCE := docker.io/datawire/tel2:2.8.5
+
 dev.setup.mac.common:
 	brew update
 	brew tap hashicorp/tap
@@ -70,8 +78,15 @@ dev.setup.mac.arm64: dev.setup.mac.common
 	brew datawire/blackbird/telepresence-arm64 || brew install datawire/blackbird/telepresence-arm64
 
 dev.docker:
-	docker pull golang:1.19
-	docker pull alpine:3.16
+	docker pull $(GOLANG)
+	docker pull $(ALPINE)
+	docker pull $(KIND)
+	docker pull $(POSTGRES)
+	docker pull $(VAULT)
+	docker pull $(ZIPKIN)
+	docker pull $(TELEPRESENCE)
+
+dev.docker:
 	docker pull kindest/node:v1.25.3
 	docker pull postgres:15-alpine
 	docker pull hashicorp/vault:1.12
@@ -117,10 +132,12 @@ dev-up:
 		--name $(KIND_CLUSTER) \
 		--config zarf/k8s/dev/kind-config.yaml
 	kubectl wait --timeout=120s --namespace=local-path-storage --for=condition=Available deployment/local-path-provisioner
+	
 	kind load docker-image $(TELEPRESENCE) --name $(KIND_CLUSTER)
 	kind load docker-image $(POSTGRES) --name $(KIND_CLUSTER)
 	kind load docker-image $(VAULT) --name $(KIND_CLUSTER)
 	kind load docker-image $(ZIPKIN) --name $(KIND_CLUSTER)
+	
 	telepresence --context=kind-$(KIND_CLUSTER) helm install
 	telepresence --context=kind-$(KIND_CLUSTER) connect
 
@@ -130,18 +147,23 @@ dev-down:
 
 dev-load:
 	cd zarf/k8s/dev/sales; kustomize edit set image sales-api-image=sales-api:$(VERSION)
-	cd zarf/k8s/dev/sales; kustomize edit set image metrics-image=metrics:$(VERSION)
 	kind load docker-image sales-api:$(VERSION) --name $(KIND_CLUSTER)
+
+	cd zarf/k8s/dev/sales; kustomize edit set image metrics-image=metrics:$(VERSION)
 	kind load docker-image metrics:$(VERSION) --name $(KIND_CLUSTER)
 
 dev-apply:
 	kustomize build zarf/k8s/dev/database | kubectl apply -f -
 	kubectl wait --timeout=120s --namespace=sales-system --for=condition=Available deployment/database
+	
 	kustomize build zarf/k8s/dev/vault | kubectl apply -f -
 	kubectl wait --timeout=120s --namespace=sales-system --for=condition=Available deployment/vault
+	
 	kustomize build zarf/k8s/dev/zipkin | kubectl apply -f -
 	kubectl wait --timeout=120s --namespace=sales-system --for=condition=Available deployment/zipkin
+	
 	kustomize build zarf/k8s/dev/sales | kubectl apply -f -
+	kubectl wait --timeout=120s --namespace=sales-system --for=condition=Available deployment/sales
 
 dev-restart:
 	kubectl rollout restart deployment sales --namespace=sales-system
