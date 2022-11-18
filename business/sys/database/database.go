@@ -325,7 +325,7 @@ func namedQueryStruct(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtCo
 }
 
 // queryString provides a pretty print version of the query and parameters.
-func queryString(query string, args ...any) string {
+func queryString(query string, args any) string {
 	query, params, err := sqlx.Named(query, args)
 	if err != nil {
 		return err.Error()
