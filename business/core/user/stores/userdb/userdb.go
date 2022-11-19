@@ -7,7 +7,7 @@ import (
 	"fmt"
 
 	"github.com/ardanlabs/service/business/core/user"
-	"github.com/ardanlabs/service/business/data/sort"
+	"github.com/ardanlabs/service/business/data/order"
 	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
@@ -110,7 +110,7 @@ func (s *Store) Delete(ctx context.Context, userID string) error {
 }
 
 // Query retrieves a list of existing users from the database.
-func (s *Store) Query(ctx context.Context, orderBy sort.OrderBy, pageNumber int, rowsPerPage int) ([]user.User, error) {
+func (s *Store) Query(ctx context.Context, orderBy order.By, pageNumber int, rowsPerPage int) ([]user.User, error) {
 	data := struct {
 		Offset      int `db:"offset"`
 		RowsPerPage int `db:"rows_per_page"`

@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ardanlabs/service/business/data/sort"
+	"github.com/ardanlabs/service/business/data/order"
 	"github.com/ardanlabs/service/business/sys/validate"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -31,7 +31,7 @@ type Storer interface {
 	Create(ctx context.Context, usr User) error
 	Update(ctx context.Context, usr User) error
 	Delete(ctx context.Context, userID string) error
-	Query(ctx context.Context, orderBy sort.OrderBy, pageNumber int, rowsPerPage int) ([]User, error)
+	Query(ctx context.Context, orderBy order.By, pageNumber int, rowsPerPage int) ([]User, error)
 	QueryByID(ctx context.Context, userID string) (User, error)
 	QueryByEmail(ctx context.Context, email string) (User, error)
 }
@@ -142,8 +142,8 @@ func (c *Core) Delete(ctx context.Context, userID string) error {
 }
 
 // Query retrieves a list of existing users from the database.
-func (c *Core) Query(ctx context.Context, orderBy sort.OrderBy, pageNumber int, rowsPerPage int) ([]User, error) {
-	if err := Order.Check(orderBy); err != nil {
+func (c *Core) Query(ctx context.Context, orderBy order.By, pageNumber int, rowsPerPage int) ([]User, error) {
+	if err := ordering.Check(orderBy); err != nil {
 		return nil, fmt.Errorf("%w: %s", ErrInvalidOrder, err.Error())
 	}
 

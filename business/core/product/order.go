@@ -1,12 +1,13 @@
 package product
 
-import "github.com/ardanlabs/service/business/data/sort"
+import (
+	"github.com/ardanlabs/service/business/data/order"
+)
 
-// Order provides acces to ordering functionality.
-var Order = sort.NewOrder(orderByfields, OrderByID)
+var ordering = order.New(orderByfields, OrderByID)
 
 // DefaultOrderBy represents the default way we sort.
-var DefaultOrderBy = sort.OrderBy{Field: OrderByID, Direction: sort.ASC}
+var DefaultOrderBy = order.By{Field: OrderByID, Direction: order.ASC}
 
 // Set of fields that the results can be ordered by. These are the names
 // that should be used by the application layer.
@@ -31,7 +32,13 @@ var orderByfields = map[string]bool{
 	OrderByUserID:   true,
 }
 
-// NewOrderBy creates a new OrderBy with field validation.
-func NewOrderBy(field string, direction string) (sort.OrderBy, error) {
-	return Order.NewOrderBy(field, direction)
+// NewOrderBy creates a new order.By with field validation.
+func NewOrderBy(field string, direction string) (order.By, error) {
+	return ordering.By(field, direction)
+}
+
+// OrderByFromQueryString takes a query string for ordering and creates a order.By
+// value. Expected format is field or field,direction.
+func OrderByFromQueryString(queryString string) (order.By, error) {
+	return ordering.OrderByFromQueryString(queryString)
 }

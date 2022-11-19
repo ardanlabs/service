@@ -7,7 +7,7 @@ import (
 	"fmt"
 
 	"github.com/ardanlabs/service/business/core/product"
-	"github.com/ardanlabs/service/business/data/sort"
+	"github.com/ardanlabs/service/business/data/order"
 	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
@@ -86,7 +86,7 @@ func (s *Store) Delete(ctx context.Context, productID string) error {
 }
 
 // Query gets all Products from the database.
-func (s *Store) Query(ctx context.Context, orderBy sort.OrderBy, pageNumber int, rowsPerPage int) ([]product.Product, error) {
+func (s *Store) Query(ctx context.Context, orderBy order.By, pageNumber int, rowsPerPage int) ([]product.Product, error) {
 	data := struct {
 		Offset      int `db:"offset"`
 		RowsPerPage int `db:"rows_per_page"`

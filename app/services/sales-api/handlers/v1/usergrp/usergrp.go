@@ -103,7 +103,7 @@ func (h Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Requ
 		return v1Web.NewRequestError(fmt.Errorf("invalid rows format [%s]", rows), http.StatusBadRequest)
 	}
 
-	orderBy, err := user.Order.FromQueryString(r.URL.Query().Get("orderby"))
+	orderBy, err := user.OrderByFromQueryString(r.URL.Query().Get("orderby"))
 	if err != nil {
 		return v1Web.NewRequestError(err, http.StatusBadRequest)
 	}

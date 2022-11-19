@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ardanlabs/service/business/data/sort"
+	"github.com/ardanlabs/service/business/data/order"
 	"github.com/ardanlabs/service/business/sys/validate"
 )
 
@@ -26,7 +26,7 @@ type Storer interface {
 	Create(ctx context.Context, prd Product) error
 	Update(ctx context.Context, prd Product) error
 	Delete(ctx context.Context, productID string) error
-	Query(ctx context.Context, orderBy sort.OrderBy, pageNumber int, rowsPerPage int) ([]Product, error)
+	Query(ctx context.Context, orderBy order.By, pageNumber int, rowsPerPage int) ([]Product, error)
 	QueryByID(ctx context.Context, productID string) (Product, error)
 	QueryByUserID(ctx context.Context, userID string) ([]Product, error)
 }
@@ -115,8 +115,8 @@ func (c *Core) Delete(ctx context.Context, productID string) error {
 }
 
 // Query gets all Products from the database.
-func (c *Core) Query(ctx context.Context, orderBy sort.OrderBy, pageNumber int, rowsPerPage int) ([]Product, error) {
-	if err := Order.Check(orderBy); err != nil {
+func (c *Core) Query(ctx context.Context, orderBy order.By, pageNumber int, rowsPerPage int) ([]Product, error) {
+	if err := ordering.Check(orderBy); err != nil {
 		return nil, fmt.Errorf("%w: %s", ErrInvalidOrder, err.Error())
 	}
 

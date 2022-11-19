@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/core/user"
-	"github.com/ardanlabs/service/business/data/sort"
+	"github.com/ardanlabs/service/business/data/order"
 	"github.com/lib/pq"
 )
 
@@ -70,6 +70,6 @@ var orderByfields = map[string]string{
 }
 
 // orderByClause returns the SQL order by code.
-func orderByClause(o sort.OrderBy) string {
-	return orderByfields[o.Field] + " " + o.Direction
+func orderByClause(orderBy order.By) string {
+	return orderByfields[orderBy.Field] + " " + orderBy.Direction
 }

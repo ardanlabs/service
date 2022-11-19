@@ -7,7 +7,7 @@ import (
 	"sync"
 
 	"github.com/ardanlabs/service/business/core/user"
-	"github.com/ardanlabs/service/business/data/sort"
+	"github.com/ardanlabs/service/business/data/order"
 	"go.uber.org/zap"
 )
 
@@ -75,7 +75,7 @@ func (s *Store) Delete(ctx context.Context, userID string) error {
 }
 
 // Query retrieves a list of existing users from the database.
-func (s *Store) Query(ctx context.Context, orderBy sort.OrderBy, pageNumber int, rowsPerPage int) ([]user.User, error) {
+func (s *Store) Query(ctx context.Context, orderBy order.By, pageNumber int, rowsPerPage int) ([]user.User, error) {
 	return s.storer.Query(ctx, orderBy, pageNumber, rowsPerPage)
 }
 
