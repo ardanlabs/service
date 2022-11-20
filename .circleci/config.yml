@@ -14,20 +14,19 @@ jobs:
               which go
               go version
       - run:
-          name: Run vet
+          name: Run govulncheck
           command: |
-              go vet ./...
+              go install golang.org/x/vuln/cmd/govulncheck@latest
+              govulncheck ./...
       - run:
           name: Run staticheck
           command: |
-              wget -O staticcheck.tgz https://github.com/dominikh/go-tools/releases/download/v0.3.3/staticcheck_linux_amd64.tar.gz
-              sudo tar -xzf staticcheck.tgz
-              ./staticcheck/staticcheck --version
-              ./staticcheck/staticcheck -checks=all ./...
+              go install honnef.co/go/tools/cmd/staticcheck@latest
+              staticcheck -checks=all ./...
       - run:
-          name: Download the DB image
+          name: Run vet
           command: |
-              docker pull postgres:15-alpine
+              go vet ./...
       - run:
           name: Run tests
           command: |
