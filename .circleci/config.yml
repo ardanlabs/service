@@ -14,11 +14,6 @@ jobs:
               which go
               go version
       - run:
-          name: Run govulncheck
-          command: |
-              go install golang.org/x/vuln/cmd/govulncheck@latest
-              govulncheck ./...
-      - run:
           name: Run staticheck
           command: |
               go install honnef.co/go/tools/cmd/staticcheck@latest
