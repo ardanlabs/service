@@ -86,13 +86,6 @@ dev.docker:
 	docker pull $(ZIPKIN)
 	docker pull $(TELEPRESENCE)
 
-dev.docker:
-	docker pull kindest/node:v1.25.3
-	docker pull postgres:15-alpine
-	docker pull hashicorp/vault:1.12
-	docker pull openzipkin/zipkin:2.23
-	docker pull docker.io/datawire/tel2:2.8.5
-
 # ==============================================================================
 # Building containers
 
