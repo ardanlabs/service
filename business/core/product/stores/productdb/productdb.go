@@ -112,7 +112,7 @@ func (s *Store) Query(ctx context.Context, orderBy order.By, pageNumber int, row
 	GROUP BY
 		p.product_id
 	ORDER BY
-		:%s
+		%s
 	OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY`,
 		orderByClause)
 

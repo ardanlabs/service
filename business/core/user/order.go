@@ -30,9 +30,3 @@ var orderByfields = map[string]bool{
 func NewOrderBy(field string, direction string) (order.By, error) {
 	return ordering.By(field, direction)
 }
-
-// ParseOrderBy constructs an order.By value by parsing a string in the form
-// of "field,direction".
-func ParseOrderBy(query string) (order.By, error) {
-	return ordering.ParseOrderBy(query)
-}

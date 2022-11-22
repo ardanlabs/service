@@ -2,10 +2,8 @@
 package order
 
 import (
-	"errors"
 	"fmt"
 	"regexp"
-	"strings"
 )
 
 // Set of directions for data ordering.
@@ -47,6 +45,14 @@ func Validate(field string, direction string) error {
 type By struct {
 	Field     string
 	Direction string
+}
+
+// NewBy constructs a new By value with no checks.
+func NewBy(field string, direction string) By {
+	return By{
+		Field:     field,
+		Direction: direction,
+	}
 }
 
 // IsZeroValue checks if the By value is empty.
@@ -103,31 +109,4 @@ func (o *Order) By(field string, direction string) (By, error) {
 	}
 
 	return By{Field: field, Direction: direction}, nil
-}
-
-// ParseOrderBy constructs a By value by parsing a string in the form
-// of "field,direction".
-func (o *Order) ParseOrderBy(s string) (By, error) {
-	if s == "" {
-		return By{Field: o.Default, Direction: ASC}, nil
-	}
-
-	orderParts := strings.Split(s, ",")
-
-	var by By
-	var err error
-	switch len(orderParts) {
-	case 1:
-		by, err = o.By(strings.Trim(orderParts[0], " "), ASC)
-	case 2:
-		by, err = o.By(strings.Trim(orderParts[0], " "), strings.Trim(orderParts[1], " "))
-	default:
-		return By{}, errors.New("invalid ordering information")
-	}
-
-	if err != nil {
-		return By{}, err
-	}
-
-	return by, nil
 }

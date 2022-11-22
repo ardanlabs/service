@@ -1,7 +1,13 @@
 // Package v1 represents types used by the web application for v1.
 package v1
 
-import "errors"
+import (
+	"errors"
+	"net/http"
+	"strings"
+
+	"github.com/ardanlabs/service/business/data/order"
+)
 
 // ErrorResponse is the form used for API responses from failures in the API.
 type ErrorResponse struct {
@@ -41,4 +47,30 @@ func GetRequestError(err error) *RequestError {
 		return nil
 	}
 	return re
+}
+
+// =============================================================================
+
+// GetOrderBy constructs a order.By value by parsing a string in the form
+// of "field,direction".
+func GetOrderBy(r *http.Request, defaultOrder order.By) (order.By, error) {
+	v := r.URL.Query().Get("orderBy")
+
+	if v == "" {
+		return defaultOrder, nil
+	}
+
+	orderParts := strings.Split(v, ",")
+
+	var by order.By
+	switch len(orderParts) {
+	case 1:
+		by = order.NewBy(strings.Trim(orderParts[0], " "), order.ASC)
+	case 2:
+		by = order.NewBy(strings.Trim(orderParts[0], " "), strings.Trim(orderParts[1], " "))
+	default:
+		return order.By{}, errors.New("invalid ordering information")
+	}
+
+	return by, nil
 }
