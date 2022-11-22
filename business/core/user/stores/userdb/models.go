@@ -61,7 +61,7 @@ func toCoreUserSlice(dbUsers []dbUser) []user.User {
 
 // orderByfields is the map of fields that is used to translate between the
 // application layer names and the database.
-var orderByfields = map[string]string{
+var orderByFields = map[string]string{
 	user.OrderByID:      "user_id",
 	user.OrderByName:    "name",
 	user.OrderByEmail:   "email",
@@ -75,7 +75,7 @@ func orderByClause(orderBy order.By) string {
 		return ""
 	}
 
-	by, exists := orderByfields[orderBy.Field]
+	by, exists := orderByFields[orderBy.Field]
 	if !exists {
 		return ""
 	}
