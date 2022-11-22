@@ -152,6 +152,8 @@ func Test_PagingUser(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to retrieve users for page 1.", dbtest.Success, testID)
 
+			fmt.Println("users1", users1)
+
 			if len(users1) != 1 {
 				t.Fatalf("\t%s\tTest %d:\tShould have a single user : %s.", dbtest.Failed, testID, err)
 			}
@@ -162,6 +164,8 @@ func Test_PagingUser(t *testing.T) {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve users for page 2 : %s.", dbtest.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to retrieve users for page 2.", dbtest.Success, testID)
+
+			fmt.Println("users2", users2)
 
 			if len(users2) != 1 {
 				t.Fatalf("\t%s\tTest %d:\tShould have a single user : %s.", dbtest.Failed, testID, err)

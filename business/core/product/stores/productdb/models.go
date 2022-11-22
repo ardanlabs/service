@@ -52,7 +52,16 @@ var orderByfields = map[string]string{
 	product.OrderByUserID:   "user_id",
 }
 
-// orderByClause returns the SQL order by code.
+// orderByClause validates the order by for correct fields and sql injection.
 func orderByClause(orderBy order.By) string {
-	return orderByfields[orderBy.Field] + " " + orderBy.Direction
+	if err := order.Validate(orderBy.Field, orderBy.Direction); err != nil {
+		return ""
+	}
+
+	by, exists := orderByfields[orderBy.Field]
+	if !exists {
+		return ""
+	}
+
+	return by + " " + orderBy.Direction
 }

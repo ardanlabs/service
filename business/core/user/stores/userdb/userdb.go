@@ -112,23 +112,22 @@ func (s *Store) Delete(ctx context.Context, userID string) error {
 // Query retrieves a list of existing users from the database.
 func (s *Store) Query(ctx context.Context, orderBy order.By, pageNumber int, rowsPerPage int) ([]user.User, error) {
 	data := struct {
-		Offset      int    `db:"offset"`
-		RowsPerPage int    `db:"rows_per_page"`
-		Order       string `db:"order"`
+		Offset      int `db:"offset"`
+		RowsPerPage int `db:"rows_per_page"`
 	}{
 		Offset:      (pageNumber - 1) * rowsPerPage,
 		RowsPerPage: rowsPerPage,
-		Order:       orderByClause(orderBy),
 	}
 
-	const q = `
+	q := fmt.Sprintf(`
 	SELECT
 		*
 	FROM
 		users
 	ORDER BY
-		:order
-	OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY`
+		%s
+	OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY`,
+		orderByClause(orderBy))
 
 	var usrs []dbUser
 	if err := database.NamedQuerySlice(ctx, s.log, s.db, q, data, &usrs); err != nil {
