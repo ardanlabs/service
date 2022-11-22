@@ -1,6 +1,7 @@
 package productdb
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/ardanlabs/service/business/core/product"
@@ -53,15 +54,15 @@ var orderByFields = map[string]string{
 }
 
 // orderByClause validates the order by for correct fields and sql injection.
-func orderByClause(orderBy order.By) string {
+func orderByClause(orderBy order.By) (string, error) {
 	if err := order.Validate(orderBy.Field, orderBy.Direction); err != nil {
-		return ""
+		return "", err
 	}
 
 	by, exists := orderByFields[orderBy.Field]
 	if !exists {
-		return ""
+		return "", fmt.Errorf("field %q does not exist", orderBy.Field)
 	}
 
-	return by + " " + orderBy.Direction
+	return by + " " + orderBy.Direction, nil
 }

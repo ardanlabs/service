@@ -88,16 +88,19 @@ func (s *Store) Delete(ctx context.Context, productID string) error {
 // Query gets all Products from the database.
 func (s *Store) Query(ctx context.Context, orderBy order.By, pageNumber int, rowsPerPage int) ([]product.Product, error) {
 	data := struct {
-		Offset      int    `db:"offset"`
-		RowsPerPage int    `db:"rows_per_page"`
-		Order       string `db:"order"`
+		Offset      int `db:"offset"`
+		RowsPerPage int `db:"rows_per_page"`
 	}{
 		Offset:      (pageNumber - 1) * rowsPerPage,
 		RowsPerPage: rowsPerPage,
-		Order:       orderByClause(orderBy),
 	}
 
-	const q = `
+	orderByClause, err := orderByClause(orderBy)
+	if err != nil {
+		return nil, err
+	}
+
+	q := fmt.Sprintf(`
 	SELECT
 		p.*,
 		COALESCE(SUM(s.quantity) ,0) AS sold,
@@ -109,8 +112,9 @@ func (s *Store) Query(ctx context.Context, orderBy order.By, pageNumber int, row
 	GROUP BY
 		p.product_id
 	ORDER BY
-		:order
-	OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY`
+		:%s
+	OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY`,
+		orderByClause)
 
 	var prds []dbProduct
 	if err := database.NamedQuerySlice(ctx, s.log, s.db, q, data, &prds); err != nil {

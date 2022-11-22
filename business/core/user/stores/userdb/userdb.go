@@ -119,6 +119,11 @@ func (s *Store) Query(ctx context.Context, orderBy order.By, pageNumber int, row
 		RowsPerPage: rowsPerPage,
 	}
 
+	orderByClause, err := orderByClause(orderBy)
+	if err != nil {
+		return nil, err
+	}
+
 	q := fmt.Sprintf(`
 	SELECT
 		*
@@ -127,7 +132,7 @@ func (s *Store) Query(ctx context.Context, orderBy order.By, pageNumber int, row
 	ORDER BY
 		%s
 	OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY`,
-		orderByClause(orderBy))
+		orderByClause)
 
 	var usrs []dbUser
 	if err := database.NamedQuerySlice(ctx, s.log, s.db, q, data, &usrs); err != nil {
