@@ -2,9 +2,11 @@
 package userdb
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/data/order"
@@ -110,10 +112,13 @@ func (s *Store) Delete(ctx context.Context, userID string) error {
 }
 
 // Query retrieves a list of existing users from the database.
-func (s *Store) Query(ctx context.Context, orderBy order.By, pageNumber int, rowsPerPage int) ([]user.User, error) {
+func (s *Store) Query(ctx context.Context, filter user.QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]user.User, error) {
 	data := struct {
-		Offset      int `db:"offset"`
-		RowsPerPage int `db:"rows_per_page"`
+		ID          string `db:"id"`
+		Name        string `db:"name"`
+		Email       string `db:"email"`
+		Offset      int    `db:"offset"`
+		RowsPerPage int    `db:"rows_per_page"`
 	}{
 		Offset:      (pageNumber - 1) * rowsPerPage,
 		RowsPerPage: rowsPerPage,
@@ -124,18 +129,36 @@ func (s *Store) Query(ctx context.Context, orderBy order.By, pageNumber int, row
 		return nil, err
 	}
 
-	q := fmt.Sprintf(`
-	SELECT
-		*
-	FROM
-		users
-	ORDER BY
-		%s
-	OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY`,
-		orderByClause)
+	buf := bytes.NewBufferString("SELECT * FROM users ")
+
+	var wc []string
+
+	if filter.ID != nil {
+		data.ID = *filter.ID
+		wc = append(wc, "id = :id")
+	}
+
+	if filter.Name != nil {
+		data.Name = fmt.Sprintf("%%%s%%", *filter.Name)
+		wc = append(wc, "name LIKE :name")
+	}
+
+	if filter.Email != nil {
+		data.Email = *filter.Email
+		wc = append(wc, "email = :email")
+	}
+
+	if len(wc) > 0 {
+		buf.WriteString("WHERE ")
+		buf.WriteString(strings.Join(wc, " AND "))
+	}
+
+	buf.WriteString(" ORDER BY ")
+	buf.WriteString(orderByClause)
+	buf.WriteString(" OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY")
 
 	var usrs []dbUser
-	if err := database.NamedQuerySlice(ctx, s.log, s.db, q, data, &usrs); err != nil {
+	if err := database.NamedQuerySlice(ctx, s.log, s.db, buf.String(), data, &usrs); err != nil {
 		return nil, fmt.Errorf("selecting users: %w", err)
 	}
 

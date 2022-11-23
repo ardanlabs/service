@@ -146,33 +146,44 @@ func Test_PagingUser(t *testing.T) {
 		{
 			ctx := context.Background()
 
-			users1, err := core.Query(ctx, user.DefaultOrderBy, 1, 1)
+			name := "User Gopher"
+			users1, err := core.Query(ctx, user.QueryFilter{Name: &name}, user.DefaultOrderBy, 1, 1)
 			if err != nil {
-				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve users for page 1 : %s.", dbtest.Failed, testID, err)
+				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve user %q : %s.", dbtest.Failed, testID, name, err)
 			}
-			t.Logf("\t%s\tTest %d:\tShould be able to retrieve users for page 1.", dbtest.Success, testID)
+			t.Logf("\t%s\tTest %d:\tShould be able to retrieve user %q.", dbtest.Success, testID, name)
 
-			fmt.Println("users1", users1)
-
-			if len(users1) != 1 {
-				t.Fatalf("\t%s\tTest %d:\tShould have a single user : %s.", dbtest.Failed, testID, err)
+			if len(users1) != 1 && users1[0].Name == name {
+				t.Fatalf("\t%s\tTest %d:\tShould have a single user for %q : %s.", dbtest.Failed, testID, name, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould have a single user.", dbtest.Success, testID)
 
-			users2, err := core.Query(ctx, user.DefaultOrderBy, 2, 1)
+			name = "Admin Gopher"
+			users2, err := core.Query(ctx, user.QueryFilter{Name: &name}, user.DefaultOrderBy, 1, 1)
 			if err != nil {
-				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve users for page 2 : %s.", dbtest.Failed, testID, err)
+				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve user %q : %s.", dbtest.Failed, testID, name, err)
 			}
-			t.Logf("\t%s\tTest %d:\tShould be able to retrieve users for page 2.", dbtest.Success, testID)
+			t.Logf("\t%s\tTest %d:\tShould be able to retrieve users %q.", dbtest.Success, testID, name)
 
-			fmt.Println("users2", users2)
-
-			if len(users2) != 1 {
-				t.Fatalf("\t%s\tTest %d:\tShould have a single user : %s.", dbtest.Failed, testID, err)
+			if len(users2) != 1 && users2[0].Name == name {
+				t.Fatalf("\t%s\tTest %d:\tShould have a single user for %q : %s.", dbtest.Failed, testID, name, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould have a single user.", dbtest.Success, testID)
 
-			if users1[0].ID == users2[0].ID {
+			users3, err := core.Query(ctx, user.QueryFilter{}, user.DefaultOrderBy, 1, 2)
+			if err != nil {
+				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve 2 users for page 1 : %s.", dbtest.Failed, testID, err)
+			}
+			t.Logf("\t%s\tTest %d:\tShould be able to retrieve 2 users for page 1.", dbtest.Success, testID)
+
+			if len(users3) != 2 {
+				t.Logf("\t\tTest %d:\tgot: %v", testID, len(users3))
+				t.Logf("\t\tTest %d:\texp: %v", testID, 2)
+				t.Fatalf("\t%s\tTest %d:\tShould have 2 users for page 1 : %s.", dbtest.Failed, testID, err)
+			}
+			t.Logf("\t%s\tTest %d:\tShould have 2 users for page 1.", dbtest.Success, testID)
+
+			if users3[0].ID == users3[1].ID {
 				t.Logf("\t\tTest %d:\tUser1: %v", testID, users1[0].ID)
 				t.Logf("\t\tTest %d:\tUser2: %v", testID, users2[0].ID)
 				t.Fatalf("\t%s\tTest %d:\tShould have different users : %s.", dbtest.Failed, testID, err)

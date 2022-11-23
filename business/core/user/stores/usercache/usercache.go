@@ -75,8 +75,8 @@ func (s *Store) Delete(ctx context.Context, userID string) error {
 }
 
 // Query retrieves a list of existing users from the database.
-func (s *Store) Query(ctx context.Context, orderBy order.By, pageNumber int, rowsPerPage int) ([]user.User, error) {
-	return s.storer.Query(ctx, orderBy, pageNumber, rowsPerPage)
+func (s *Store) Query(ctx context.Context, filter user.QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]user.User, error) {
+	return s.storer.Query(ctx, filter, orderBy, pageNumber, rowsPerPage)
 }
 
 // QueryByID gets the specified user from the database.

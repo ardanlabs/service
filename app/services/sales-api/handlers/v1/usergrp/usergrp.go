@@ -103,12 +103,17 @@ func (h Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Requ
 		return v1Web.NewRequestError(fmt.Errorf("invalid rows format [%s]", rows), http.StatusBadRequest)
 	}
 
+	filter, err := getFilter(r)
+	if err != nil {
+		return v1Web.NewRequestError(err, http.StatusBadRequest)
+	}
+
 	orderBy, err := v1Web.GetOrderBy(r, user.DefaultOrderBy)
 	if err != nil {
 		return v1Web.NewRequestError(err, http.StatusBadRequest)
 	}
 
-	users, err := h.User.Query(ctx, orderBy, pageNumber, rowsPerPage)
+	users, err := h.User.Query(ctx, filter, orderBy, pageNumber, rowsPerPage)
 	if err != nil {
 		if errors.Is(err, user.ErrInvalidOrder) {
 			return v1Web.NewRequestError(err, http.StatusBadRequest)
