@@ -129,30 +129,32 @@ func (s *Store) Query(ctx context.Context, filter user.QueryFilter, orderBy orde
 		return nil, err
 	}
 
-	buf := bytes.NewBufferString("SELECT * FROM users ")
-
 	var wc []string
-
 	if filter.ID != nil {
 		data.ID = *filter.ID
 		wc = append(wc, "id = :id")
 	}
-
 	if filter.Name != nil {
 		data.Name = fmt.Sprintf("%%%s%%", *filter.Name)
 		wc = append(wc, "name LIKE :name")
 	}
-
 	if filter.Email != nil {
 		data.Email = *filter.Email
 		wc = append(wc, "email = :email")
 	}
 
+	const q = `
+	SELECT
+		*
+	FROM
+		users
+	`
+	buf := bytes.NewBufferString(q)
+
 	if len(wc) > 0 {
 		buf.WriteString("WHERE ")
 		buf.WriteString(strings.Join(wc, " AND "))
 	}
-
 	buf.WriteString(" ORDER BY ")
 	buf.WriteString(orderByClause)
 	buf.WriteString(" OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY")

@@ -126,12 +126,17 @@ func (h Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Requ
 		return v1Web.NewRequestError(fmt.Errorf("invalid rows format, rows[%s]", rows), http.StatusBadRequest)
 	}
 
+	filter, err := getFilter(r)
+	if err != nil {
+		return v1Web.NewRequestError(err, http.StatusBadRequest)
+	}
+
 	orderBy, err := v1Web.GetOrderBy(r, product.DefaultOrderBy)
 	if err != nil {
 		return v1Web.NewRequestError(err, http.StatusBadRequest)
 	}
 
-	products, err := h.Product.Query(ctx, orderBy, pageNumber, rowsPerPage)
+	products, err := h.Product.Query(ctx, filter, orderBy, pageNumber, rowsPerPage)
 	if err != nil {
 		return fmt.Errorf("unable to query for products: %w", err)
 	}

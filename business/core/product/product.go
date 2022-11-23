@@ -26,7 +26,7 @@ type Storer interface {
 	Create(ctx context.Context, prd Product) error
 	Update(ctx context.Context, prd Product) error
 	Delete(ctx context.Context, productID string) error
-	Query(ctx context.Context, orderBy order.By, pageNumber int, rowsPerPage int) ([]Product, error)
+	Query(ctx context.Context, filter QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]Product, error)
 	QueryByID(ctx context.Context, productID string) (Product, error)
 	QueryByUserID(ctx context.Context, userID string) ([]Product, error)
 }
@@ -115,12 +115,16 @@ func (c *Core) Delete(ctx context.Context, productID string) error {
 }
 
 // Query gets all Products from the database.
-func (c *Core) Query(ctx context.Context, orderBy order.By, pageNumber int, rowsPerPage int) ([]Product, error) {
+func (c *Core) Query(ctx context.Context, filter QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]Product, error) {
+	if err := validate.Check(filter); err != nil {
+		return nil, fmt.Errorf("validating filter: %w", err)
+	}
+
 	if err := ordering.Check(orderBy); err != nil {
 		return nil, fmt.Errorf("%w: %s", ErrInvalidOrder, err.Error())
 	}
 
-	prds, err := c.storer.Query(ctx, orderBy, pageNumber, rowsPerPage)
+	prds, err := c.storer.Query(ctx, filter, orderBy, pageNumber, rowsPerPage)
 	if err != nil {
 		return nil, fmt.Errorf("query: %w", err)
 	}

@@ -2,9 +2,11 @@
 package productdb
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/ardanlabs/service/business/core/product"
 	"github.com/ardanlabs/service/business/data/order"
@@ -86,10 +88,14 @@ func (s *Store) Delete(ctx context.Context, productID string) error {
 }
 
 // Query gets all Products from the database.
-func (s *Store) Query(ctx context.Context, orderBy order.By, pageNumber int, rowsPerPage int) ([]product.Product, error) {
+func (s *Store) Query(ctx context.Context, filter product.QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]product.Product, error) {
 	data := struct {
-		Offset      int `db:"offset"`
-		RowsPerPage int `db:"rows_per_page"`
+		ID          string `db:"id"`
+		Name        string `db:"name"`
+		Cost        int    `db:"cost"`
+		Quantity    int    `db:"quantity"`
+		Offset      int    `db:"offset"`
+		RowsPerPage int    `db:"rows_per_page"`
 	}{
 		Offset:      (pageNumber - 1) * rowsPerPage,
 		RowsPerPage: rowsPerPage,
@@ -100,7 +106,25 @@ func (s *Store) Query(ctx context.Context, orderBy order.By, pageNumber int, row
 		return nil, err
 	}
 
-	q := fmt.Sprintf(`
+	var wc []string
+	if filter.ID != nil {
+		data.ID = *filter.ID
+		wc = append(wc, "id = :id")
+	}
+	if filter.Name != nil {
+		data.Name = fmt.Sprintf("%%%s%%", *filter.Name)
+		wc = append(wc, "name LIKE :name")
+	}
+	if filter.Cost != nil {
+		data.Cost = *filter.Cost
+		wc = append(wc, "cost = :cost")
+	}
+	if filter.Quantity != nil {
+		data.Quantity = *filter.Quantity
+		wc = append(wc, "quantity = :quantity")
+	}
+
+	const q = `
 	SELECT
 		p.*,
 		COALESCE(SUM(s.quantity) ,0) AS sold,
@@ -109,15 +133,20 @@ func (s *Store) Query(ctx context.Context, orderBy order.By, pageNumber int, row
 		products AS p
 	LEFT JOIN
 		sales AS s ON p.product_id = s.product_id
-	GROUP BY
-		p.product_id
-	ORDER BY
-		%s
-	OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY`,
-		orderByClause)
+	`
+	buf := bytes.NewBufferString(q)
+
+	if len(wc) > 0 {
+		buf.WriteString("WHERE ")
+		buf.WriteString(strings.Join(wc, " AND "))
+	}
+	buf.WriteString(" GROUP BY p.product_id ")
+	buf.WriteString(" ORDER BY ")
+	buf.WriteString(orderByClause)
+	buf.WriteString(" OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY")
 
 	var prds []dbProduct
-	if err := database.NamedQuerySlice(ctx, s.log, s.db, q, data, &prds); err != nil {
+	if err := database.NamedQuerySlice(ctx, s.log, s.db, buf.String(), data, &prds); err != nil {
 		return nil, fmt.Errorf("selecting products: %w", err)
 	}
 

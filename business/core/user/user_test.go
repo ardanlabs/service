@@ -11,7 +11,6 @@ import (
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/core/user/stores/usercache"
 	"github.com/ardanlabs/service/business/core/user/stores/userdb"
-	"github.com/ardanlabs/service/business/data/dbschema"
 	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/ardanlabs/service/foundation/docker"
 	"github.com/google/go-cmp/cmp"
@@ -132,11 +131,6 @@ func Test_PagingUser(t *testing.T) {
 		teardown()
 	}()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	dbschema.Seed(ctx, db)
-
 	core := user.NewCore(userdb.NewStore(log, db))
 
 	t.Log("Given the need to page through User records.")
@@ -184,8 +178,8 @@ func Test_PagingUser(t *testing.T) {
 			t.Logf("\t%s\tTest %d:\tShould have 2 users for page 1.", dbtest.Success, testID)
 
 			if users3[0].ID == users3[1].ID {
-				t.Logf("\t\tTest %d:\tUser1: %v", testID, users1[0].ID)
-				t.Logf("\t\tTest %d:\tUser2: %v", testID, users2[0].ID)
+				t.Logf("\t\tTest %d:\tUser1: %v", testID, users3[0].ID)
+				t.Logf("\t\tTest %d:\tUser2: %v", testID, users3[1].ID)
 				t.Fatalf("\t%s\tTest %d:\tShould have different users : %s.", dbtest.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould have different users.", dbtest.Success, testID)
