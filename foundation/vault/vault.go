@@ -36,6 +36,25 @@ var defaultClient = http.Client{
 	},
 }
 
+type InitRequest struct {
+	SecretShares    int `json:"secret_shares"`
+	SecretThreshold int `json:"secret_threshold"`
+}
+
+type InitResponse struct {
+	KeysB64   []string `json:"keys_base64"`
+	RootToken string   `json:"root_token"`
+}
+
+type UnsealOpts struct {
+	Key string `json:"key"`
+}
+
+type MountInput struct {
+	Type    string            `json:"type"`
+	Options map[string]string `json:"options"`
+}
+
 // Config represents the mandatory settings needed to work with Vault.
 type Config struct {
 	Address   string
@@ -62,11 +81,14 @@ func New(cfg Config) (*Vault, error) {
 
 	return &Vault{
 		address:   cfg.Address,
-		token:     cfg.Token,
 		mountPath: cfg.MountPath,
 		client:    cfg.Client,
 		store:     make(map[string]string),
 	}, nil
+}
+
+func (v *Vault) SetToken(token string) {
+	v.token = token
 }
 
 // AddPrivateKey adds a new private key into vault as PEM encoded.
@@ -146,6 +168,151 @@ func (v *Vault) PublicKeyPEM(kid string) (string, error) {
 	v.mu.Unlock()
 
 	return publicPEM, nil
+}
+
+// =============================================================================
+
+func (v *Vault) Init(ctx context.Context, opts *InitRequest) (*InitResponse, error) {
+	url := fmt.Sprintf("%s/v1/sys/init", v.address)
+
+	var b bytes.Buffer
+	if err := json.NewEncoder(&b).Encode(opts); err != nil {
+		return nil, fmt.Errorf("encode data: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPut, url, &b)
+	if err != nil {
+		return nil, fmt.Errorf("create request: %w", err)
+	}
+
+	req.Header.Set("X-Vault-Token", v.token)
+	req.Header.Set("Cache-Control", "no-cache")
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := v.client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("do: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("status code: %s", resp.Status)
+	}
+
+	var response InitResponse
+
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		return nil, fmt.Errorf("json decoade: %w", err)
+	}
+
+	return &response, nil
+}
+
+func (v *Vault) Unseal(ctx context.Context, opts *UnsealOpts) error {
+	url := fmt.Sprintf("%s/v1/sys/unseal", v.address)
+
+	var b bytes.Buffer
+	if err := json.NewEncoder(&b).Encode(opts); err != nil {
+		return fmt.Errorf("encode data: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPut, url, &b)
+	if err != nil {
+		return fmt.Errorf("create request: %w", err)
+	}
+
+	req.Header.Set("X-Vault-Token", v.token)
+	req.Header.Set("Cache-Control", "no-cache")
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := v.client.Do(req)
+	if err != nil {
+		return fmt.Errorf("do: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("status code: %s", resp.Status)
+	}
+
+	return nil
+}
+
+func (v *Vault) Mount(ctx context.Context, opts *MountInput) error {
+	mounts, err := v.ListMounts(ctx)
+	if err != nil {
+		return fmt.Errorf("error getting mount list: %w", err)
+	}
+
+	// Mount already exists so we'll do nothing
+	if _, ok := mounts[v.mountPath]; ok {
+		return nil
+	}
+
+	url := fmt.Sprintf("%s/v1/sys/mounts/%s", v.address, v.mountPath)
+
+	var b bytes.Buffer
+	if err := json.NewEncoder(&b).Encode(opts); err != nil {
+		return fmt.Errorf("encode data: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, &b)
+	if err != nil {
+		return fmt.Errorf("create request: %w", err)
+	}
+
+	req.Header.Set("X-Vault-Token", v.token)
+	req.Header.Set("Cache-Control", "no-cache")
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := v.client.Do(req)
+	if err != nil {
+		return fmt.Errorf("do: %w", err)
+	}
+	defer resp.Body.Close()
+
+	// Catching 400 like this isn't great but it probably means the mount already exists
+	if resp.StatusCode != http.StatusNoContent && resp.StatusCode != http.StatusBadRequest {
+		return fmt.Errorf("status code: %s", resp.Status)
+	}
+
+	return nil
+}
+
+func (v *Vault) ListMounts(ctx context.Context) (map[string]interface{}, error) {
+	url := fmt.Sprintf("%s/v1/sys/mounts", v.address)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("create request: %w", err)
+	}
+
+	req.Header.Set("X-Vault-Token", v.token)
+	req.Header.Set("Cache-Control", "no-cache")
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := v.client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("do: %w", err)
+	}
+	defer resp.Body.Close()
+
+	// Catching 400 like this isn't great but it probably means the mount already exists
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("status code: %s", resp.Status)
+	}
+
+	var response map[string]interface{}
+
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		return nil, fmt.Errorf("json decoade: %w", err)
+	}
+
+	return response, nil
 }
 
 // =============================================================================
