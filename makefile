@@ -60,7 +60,7 @@ KIND         := kindest/node:v1.25.3
 POSTGRES     := postgres:15-alpine
 VAULT        := hashicorp/vault:1.12
 ZIPKIN       := openzipkin/zipkin:2.23
-TELEPRESENCE := docker.io/datawire/tel2:2.9.2
+TELEPRESENCE := docker.io/datawire/tel2:2.9.3
 
 dev.setup.mac.common:
 	brew update
@@ -114,9 +114,6 @@ metrics:
 # Running from within k8s/kind
 
 KIND_CLUSTER := ardan-starter-cluster
-POSTGRES := postgres:15-alpine
-VAULT := hashicorp/vault:1.12
-ZIPKIN := openzipkin/zipkin:2.23
 
 dev-up:
 	kind create cluster \
