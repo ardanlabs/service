@@ -117,7 +117,6 @@ KIND_CLUSTER := ardan-starter-cluster
 POSTGRES := postgres:15-alpine
 VAULT := hashicorp/vault:1.12
 ZIPKIN := openzipkin/zipkin:2.23
-TELEPRESENCE := docker.io/datawire/tel2:2.8.5
 
 dev-up:
 	kind create cluster \
