@@ -50,7 +50,6 @@ func Test_Vault(t *testing.T) {
 		{
 			vault, err := vault.New(vault.Config{
 				Address:   "http://" + c.Host,
-				Token:     token,
 				MountPath: mountPath,
 				Token:     token,
 			})
