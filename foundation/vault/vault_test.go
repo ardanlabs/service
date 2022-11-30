@@ -22,7 +22,7 @@ const (
 
 func Test_Vault(t *testing.T) {
 	const address = "0.0.0.0:8200"
-	const token = "myroot"
+	const token = "mytoken"
 	const mountPath = "secret"
 	const key = "54bb2165-71e1-41a6-af3e-7da4a0e1e2c1"
 	const image = "hashicorp/vault:1.12"

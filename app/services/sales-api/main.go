@@ -80,7 +80,7 @@ func run(log *zap.SugaredLogger) error {
 
 			// This MUST be handled like any root credential.
 			// This value comes from Vault when it starts.
-			Token string `conf:"default:myroot,mask"`
+			Token string `conf:"default:mytoken,mask"`
 		}
 		Auth struct {
 			KeysFolder string `conf:"default:zarf/keys/"`

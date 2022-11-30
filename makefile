@@ -30,13 +30,13 @@ SHELL := /bin/bash
 #
 # Vault Information.
 # READ THIS: https://developer.hashicorp.com/vault/docs/concepts/tokens
-# export VAULT_TOKEN=myroot
+# export VAULT_TOKEN=mytoken
 # export VAULT_ADDR='http://vault-service.sales-system.svc.cluster.local:8200'
 # vault secrets list
 # vault kv get secret/sales
 # vault kv put secret/sales key="some data"
-# curl -H "X-Vault-Token: myroot" -X GET http://vault-service.sales-system.svc.cluster.local:8200/v1/secret/data/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
-# curl -H "X-Vault-Token: myroot" -H "Content-Type: application/json" -X POST -d '{"data":{"pk":"PEM"}}' http://vault-service.sales-system.svc.cluster.local:8200/v1/secret/data/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
+# curl -H "X-Vault-Token: mytoken" -X GET http://vault-service.sales-system.svc.cluster.local:8200/v1/secret/data/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
+# curl -H "X-Vault-Token: mytoken" -H "Content-Type: application/json" -X POST -d '{"data":{"pk":"PEM"}}' http://vault-service.sales-system.svc.cluster.local:8200/v1/secret/data/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
 #
 # To show what calls are being made underneath to the proxy and checksum db.
 # curl https://proxy.golang.org/github.com/ardanlabs/conf/@v/list
