@@ -69,6 +69,7 @@ func New(cfg Config) (*Vault, error) {
 	}, nil
 }
 
+// SetToken allows the user to change out the token to use on calls.
 func (v *Vault) SetToken(token string) {
 	v.token = token
 }
