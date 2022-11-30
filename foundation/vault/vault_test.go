@@ -43,7 +43,7 @@ func Test_Vault(t *testing.T) {
 	// Give Vault time to initialize.
 	time.Sleep(time.Second)
 
-	t.Log("Given the to talk to Vault for key support.")
+	t.Log("Given the need to talk to Vault for key support.")
 	{
 		testID := 0
 		t.Logf("\tTest %d:\tWhen handling a single key.", testID)
@@ -51,6 +51,7 @@ func Test_Vault(t *testing.T) {
 			vault, err := vault.New(vault.Config{
 				Address:   "http://" + c.Host,
 				MountPath: mountPath,
+				Token:     token,
 			})
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to construct our Vault API: %v", failed, testID, err)
