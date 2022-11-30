@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 )
@@ -73,6 +74,8 @@ func New(cfg Config) (*Vault, error) {
 func (v *Vault) SetToken(token string) {
 	v.token = token
 }
+
+// =============================================================================
 
 // AddPrivateKey adds a new private key into vault as PEM encoded.
 func (v *Vault) AddPrivateKey(ctx context.Context, kid string, pem []byte) error {
@@ -155,17 +158,39 @@ func (v *Vault) PublicKeyPEM(kid string) (string, error) {
 
 // =============================================================================
 
-func (v *Vault) Init(ctx context.Context, opts *InitRequest) (*InitResponse, error) {
+// Error variables for this set of API calls.
+var (
+	ErrAlreadyInitialized = errors.New("already initalized")
+	ErrBadRequest         = errors.New("bad request")
+	ErrPathInUse          = errors.New("path in use")
+)
+
+// SystemInitResponse represents the response from a system init call.
+type SystemInitResponse struct {
+	KeysB64   []string `json:"keys_base64"`
+	RootToken string   `json:"root_token"`
+}
+
+// SystemInit provides support to initialize a valut system for use.
+func (v *Vault) SystemInit(ctx context.Context, shares int, threshold int) (SystemInitResponse, error) {
 	url := fmt.Sprintf("%s/v1/sys/init", v.address)
 
+	cfg := struct {
+		Shares    int `json:"secret_shares"`
+		Threshold int `json:"secret_threshold"`
+	}{
+		Shares:    shares,
+		Threshold: threshold,
+	}
+
 	var b bytes.Buffer
-	if err := json.NewEncoder(&b).Encode(opts); err != nil {
-		return nil, fmt.Errorf("encode data: %w", err)
+	if err := json.NewEncoder(&b).Encode(cfg); err != nil {
+		return SystemInitResponse{}, fmt.Errorf("encode data: %w", err)
 	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPut, url, &b)
 	if err != nil {
-		return nil, fmt.Errorf("create request: %w", err)
+		return SystemInitResponse{}, fmt.Errorf("create request: %w", err)
 	}
 
 	req.Header.Set("X-Vault-Token", v.token)
@@ -175,27 +200,37 @@ func (v *Vault) Init(ctx context.Context, opts *InitRequest) (*InitResponse, err
 
 	resp, err := v.client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("do: %w", err)
+		if strings.Contains(err.Error(), "Vault is already initialized") {
+			return SystemInitResponse{}, ErrAlreadyInitialized
+		}
+		return SystemInitResponse{}, fmt.Errorf("do: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("status code: %s", resp.Status)
+		return SystemInitResponse{}, fmt.Errorf("status code: %s", resp.Status)
 	}
 
-	var response InitResponse
+	var response SystemInitResponse
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
-		return nil, fmt.Errorf("json decoade: %w", err)
+		return SystemInitResponse{}, fmt.Errorf("json decode: %w", err)
 	}
 
-	return &response, nil
+	return response, nil
 }
 
-func (v *Vault) Unseal(ctx context.Context, opts *UnsealOpts) error {
+// Unseal does what the unseal command does.
+func (v *Vault) Unseal(ctx context.Context, key string) error {
 	url := fmt.Sprintf("%s/v1/sys/unseal", v.address)
 
+	cfg := struct {
+		Key string `json:"key"`
+	}{
+		Key: key,
+	}
+
 	var b bytes.Buffer
-	if err := json.NewEncoder(&b).Encode(opts); err != nil {
+	if err := json.NewEncoder(&b).Encode(cfg); err != nil {
 		return fmt.Errorf("encode data: %w", err)
 	}
 
@@ -216,14 +251,20 @@ func (v *Vault) Unseal(ctx context.Context, opts *UnsealOpts) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("status code: %s", resp.Status)
+		switch resp.StatusCode {
+		case http.StatusBadRequest:
+			return ErrBadRequest
+		default:
+			return fmt.Errorf("status code: %s", resp.Status)
+		}
 	}
 
 	return nil
 }
 
-func (v *Vault) Mount(ctx context.Context, opts *MountInput) error {
-	mounts, err := v.ListMounts(ctx)
+// Mount accepts a mount point and mounts vault to that point.
+func (v *Vault) Mount(ctx context.Context) error {
+	mounts, err := v.listMounts(ctx)
 	if err != nil {
 		return fmt.Errorf("error getting mount list: %w", err)
 	}
@@ -235,8 +276,16 @@ func (v *Vault) Mount(ctx context.Context, opts *MountInput) error {
 
 	url := fmt.Sprintf("%s/v1/sys/mounts/%s", v.address, v.mountPath)
 
+	cfg := struct {
+		Type    string            `json:"type"`
+		Options map[string]string `json:"options"`
+	}{
+		Type:    "kv-v2",
+		Options: map[string]string{"version": "2"},
+	}
+
 	var b bytes.Buffer
-	if err := json.NewEncoder(&b).Encode(opts); err != nil {
+	if err := json.NewEncoder(&b).Encode(cfg); err != nil {
 		return fmt.Errorf("encode data: %w", err)
 	}
 
@@ -252,11 +301,13 @@ func (v *Vault) Mount(ctx context.Context, opts *MountInput) error {
 
 	resp, err := v.client.Do(req)
 	if err != nil {
+		if !strings.Contains(err.Error(), "path is already in use at") {
+			return ErrPathInUse
+		}
 		return fmt.Errorf("do: %w", err)
 	}
 	defer resp.Body.Close()
 
-	// Catching 400 like this isn't great but it probably means the mount already exists.
 	if resp.StatusCode != http.StatusNoContent && resp.StatusCode != http.StatusBadRequest {
 		return fmt.Errorf("status code: %s", resp.Status)
 	}
@@ -264,41 +315,11 @@ func (v *Vault) Mount(ctx context.Context, opts *MountInput) error {
 	return nil
 }
 
-func (v *Vault) ListMounts(ctx context.Context) (map[string]interface{}, error) {
-	url := fmt.Sprintf("%s/v1/sys/mounts", v.address)
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
-	if err != nil {
-		return nil, fmt.Errorf("create request: %w", err)
-	}
-
-	req.Header.Set("X-Vault-Token", v.token)
-	req.Header.Set("Cache-Control", "no-cache")
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "application/json")
-
-	resp, err := v.client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("do: %w", err)
-	}
-	defer resp.Body.Close()
-
-	// Catching 400 like this isn't great but it probably means the mount already exists
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("status code: %s", resp.Status)
-	}
-
-	var response map[string]interface{}
-
-	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
-		return nil, fmt.Errorf("json decoade: %w", err)
-	}
-
-	return response, nil
-}
-
-func (v *Vault) CreatePolicy(ctx context.Context, name, policy string) error {
+// CreatePolicy defines a policy inside of Vault.
+func (v *Vault) CreatePolicy(ctx context.Context, name string, path string, capabilities []string) error {
 	url := fmt.Sprintf("%s/v1/sys/policies/acl/%s", v.address, name)
+
+	policy := fmt.Sprintf(`{"policy":"path %q {\n  capabilities = ["%s"]\n}\n"}`, path, strings.Join(capabilities, "\",\""))
 
 	var b bytes.Buffer
 	b.WriteString(policy)
@@ -319,7 +340,6 @@ func (v *Vault) CreatePolicy(ctx context.Context, name, policy string) error {
 	}
 	defer resp.Body.Close()
 
-	// Catching 400 like this isn't great but it probably means the mount already exists
 	if resp.StatusCode != http.StatusNoContent {
 		return fmt.Errorf("status code: %s", resp.Status)
 	}
@@ -327,13 +347,20 @@ func (v *Vault) CreatePolicy(ctx context.Context, name, policy string) error {
 	return nil
 }
 
-func (v *Vault) CheckToken(ctx context.Context, opts TokenCreateRequest) error {
+// CheckToken validates the specified token exists.
+func (v *Vault) CheckToken(ctx context.Context, token string) error {
 	url := fmt.Sprintf("%s/v1/auth/token/lookup", v.address)
 
+	t := struct {
+		Token string `json:"token"`
+	}{
+		Token: token,
+	}
+
 	var b bytes.Buffer
-	b.WriteString("{\"token\": \")")
-	b.WriteString(opts.ID)
-	b.WriteString("\"}")
+	if err := json.NewEncoder(&b).Encode(t); err != nil {
+		return fmt.Errorf("encode data: %w", err)
+	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, &b)
 	if err != nil {
@@ -349,19 +376,31 @@ func (v *Vault) CheckToken(ctx context.Context, opts TokenCreateRequest) error {
 	if err != nil {
 		return fmt.Errorf("do: %w", err)
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("token doesn't exist: %s", opts.ID)
+		return fmt.Errorf("token doesn't exist: %s", token)
 	}
 
 	return nil
 }
 
-func (v *Vault) CreateToken(ctx context.Context, opts TokenCreateRequest) error {
+// CreateToken creates a new token in Vault.
+func (v *Vault) CreateToken(ctx context.Context, id string, policies []string, displayName string) error {
 	url := fmt.Sprintf("%s/v1/auth/token/create", v.address)
 
+	cfg := struct {
+		ID          string   `json:"id,omitempty"`
+		Policies    []string `json:"policies,omitempty"`
+		DisplayName string   `json:"display_name"`
+	}{
+		ID:          id,
+		Policies:    policies,
+		DisplayName: displayName,
+	}
+
 	var b bytes.Buffer
-	if err := json.NewEncoder(&b).Encode(opts); err != nil {
+	if err := json.NewEncoder(&b).Encode(cfg); err != nil {
 		return fmt.Errorf("encode data: %w", err)
 	}
 
@@ -379,8 +418,8 @@ func (v *Vault) CreateToken(ctx context.Context, opts TokenCreateRequest) error 
 	if err != nil {
 		return fmt.Errorf("do: %w", err)
 	}
+	defer resp.Body.Close()
 
-	// Catching 400 like this isn't great but it probably means the mount already exists
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("status code: %s", resp.Status)
 	}
@@ -447,6 +486,38 @@ func (v *Vault) retrieveKID(ctx context.Context, kid string) (string, error) {
 	}
 
 	return pem, nil
+}
+
+// ListMounts returns the set of mount points that exist.
+func (v *Vault) listMounts(ctx context.Context) (map[string]interface{}, error) {
+	url := fmt.Sprintf("%s/v1/sys/mounts", v.address)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("create request: %w", err)
+	}
+
+	req.Header.Set("X-Vault-Token", v.token)
+	req.Header.Set("Cache-Control", "no-cache")
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := v.client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("do: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("status code: %s", resp.Status)
+	}
+
+	var response map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		return nil, fmt.Errorf("json decode: %w", err)
+	}
+
+	return response, nil
 }
 
 // =============================================================================

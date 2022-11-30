@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strings"
+	"time"
 
 	"github.com/ardanlabs/service/foundation/vault"
 )
@@ -16,7 +16,8 @@ const credentialsFileName = "/vault/credentials.json"
 
 // VaultInit sets up a newly provisioned vault instance.
 func VaultInit(vaultConfig vault.Config) error {
-	var ctx = context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 
 	vaultSrv, err := vault.New(vault.Config{
 		Address:   vaultConfig.Address,
@@ -26,50 +27,43 @@ func VaultInit(vaultConfig vault.Config) error {
 		return fmt.Errorf("constructing vault: %w", err)
 	}
 
-	initResponse, err := ReadCredentialsFile()
+	initResponse, err := readCredentialsFile()
 	if err != nil {
 		switch {
 		case errors.Is(err, os.ErrNotExist):
 			log.Println("credential file doesn't exist, initializing vault")
 
-			initResponse, err = vaultSrv.Init(ctx, &vault.InitRequest{
-				SecretShares:    1,
-				SecretThreshold: 1,
-			})
+			initResponse, err = vaultSrv.SystemInit(ctx, 1, 1)
 			if err != nil {
-				// In order for an initContainer to continue we need to not return an error in this case.
-				if strings.Contains(err.Error(), "Vault is already initialized") {
-					log.Fatalf("Vault is already initialized but we don't have the credentials file")
+				if errors.Is(err, vault.ErrAlreadyInitialized) {
+					return fmt.Errorf("vault is already initialized but we don't have the credentials file")
 				}
-				log.Fatalf("unable to initialize Vault instance: %v", err.Error())
+				return fmt.Errorf("unable to initialize Vault instance: %w", err)
 			}
 
 			b, err := json.Marshal(initResponse)
 			if err != nil {
-				log.Fatalf("unable to marshal")
+				return errors.New("unable to marshal")
 			}
 
-			err = os.WriteFile(credentialsFileName, b, 0644)
-			if err != nil {
-				log.Fatalf("unable to write %s file: %s", credentialsFileName, err)
+			if err := os.WriteFile(credentialsFileName, b, 0644); err != nil {
+				return fmt.Errorf("unable to write %s file: %w", credentialsFileName, err)
 			}
 
 		default:
-			log.Fatalf("unable to read credentials file: %s", err)
+			return fmt.Errorf("unable to read credentials file: %w", err)
 		}
 	}
 
 	// =============================================================================================================
 
 	log.Println("Unsealing vault")
-	err = vaultSrv.Unseal(ctx, &vault.UnsealOpts{
-		Key: initResponse.KeysB64[0],
-	})
+	err = vaultSrv.Unseal(ctx, initResponse.KeysB64[0])
 	if err != nil {
-		if strings.Contains(err.Error(), "400 Bad Request") {
-			log.Fatalf("Vault is not initialized. Check for old credentials file: %s", credentialsFileName)
+		if errors.Is(err, vault.ErrBadRequest) {
+			return fmt.Errorf("vault is not initialized. Check for old credentials file: %s", credentialsFileName)
 		}
-		log.Fatalf("Error unsealing vault: %s", err)
+		return fmt.Errorf("error unsealing vault: %w", err)
 	}
 
 	// =============================================================================================================
@@ -77,69 +71,58 @@ func VaultInit(vaultConfig vault.Config) error {
 	log.Println("Mounting path in vault")
 
 	vaultSrv.SetToken(initResponse.RootToken)
-	err = vaultSrv.Mount(ctx, &vault.MountInput{
-		Type:    "kv-v2",
-		Options: map[string]string{"version": "2"},
-	})
-	if err != nil {
-		if !strings.Contains(err.Error(), "path is already in use at") {
-			log.Fatalf("Unable to mount path: %s", err)
+	if err := vaultSrv.Mount(ctx); err != nil {
+		if errors.Is(err, vault.ErrPathInUse) {
+			return fmt.Errorf("unable to mount path: %w", err)
 		}
+		return fmt.Errorf("error unsealing vault: %w", err)
 	}
 
 	// =============================================================================================================
 
 	log.Println("Creating sales-api policy")
 
-	policy := `{"policy":"path \"secret/data/*\" {\n  capabilities = [\"read\",\"create\",\"update\"]\n}\n"}`
-
-	err = vaultSrv.CreatePolicy(ctx, "sales-api", policy)
+	err = vaultSrv.CreatePolicy(ctx, "sales-api", "secret/data/*", []string{"read", "create", "update"})
 	if err != nil {
-		log.Fatalf("Unable to create policy: %s", err)
+		return fmt.Errorf("unable to create policy: %w", err)
 	}
 
 	// =============================================================================================================
 
 	log.Printf("Generating sales-api token: %s", vaultConfig.Token)
 
-	createRequest := vault.TokenCreateRequest{
-		ID:          vaultConfig.Token,
-		Policies:    []string{"sales-api"},
-		DisplayName: "Sales API",
-	}
-
 	// First let's check if it exists already.
-	err = vaultSrv.CheckToken(ctx, createRequest)
+	err = vaultSrv.CheckToken(ctx, vaultConfig.Token)
 	if err == nil {
 		log.Printf("token already exists: %s", vaultConfig.Token)
 		return nil
 	}
 
 	// We don't currently save the token because we're always going to specify it.
-	err = vaultSrv.CreateToken(ctx, createRequest)
+	err = vaultSrv.CreateToken(ctx, vaultConfig.Token, []string{"sales-api"}, "Sales API")
 	if err != nil {
-		log.Fatalf("Unable to create token: %s", err)
+		return fmt.Errorf("unable to create token: %w", err)
 	}
 
 	return nil
 }
 
-func ReadCredentialsFile() (*vault.InitResponse, error) {
-	var initResponse = &vault.InitResponse{}
+// =============================================================================
 
+func readCredentialsFile() (vault.SystemInitResponse, error) {
 	if _, err := os.Stat(credentialsFileName); err != nil {
-		return nil, err
+		return vault.SystemInitResponse{}, err
 	}
 
-	initResponseJson, err := os.ReadFile(credentialsFileName)
+	data, err := os.ReadFile(credentialsFileName)
 	if err != nil {
-		log.Fatalf("Error reading %s file: %s", credentialsFileName, err)
+		return vault.SystemInitResponse{}, fmt.Errorf("reading %s file: %s", credentialsFileName, err)
 	}
 
-	err = json.Unmarshal(initResponseJson, &initResponse)
-	if err != nil {
-		log.Fatalf("Error Unmarshalling json: %s", err)
+	var response vault.SystemInitResponse
+	if err := json.Unmarshal(data, &response); err != nil {
+		return vault.SystemInitResponse{}, fmt.Errorf("unmarshalling json: %s", err)
 	}
 
-	return initResponse, nil
+	return response, nil
 }
