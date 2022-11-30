@@ -22,12 +22,7 @@ func Vault(vaultConfig vault.Config, keysFolder string) error {
 		return fmt.Errorf("constructing vault: %w", err)
 	}
 
-	initResponse, err := ReadCredentialsFile()
-	if err != nil {
-		return err
-	}
-
-	vault.SetToken(initResponse.RootToken)
+	vault.SetToken(vaultConfig.Token)
 
 	if err := loadKeys(vault, os.DirFS(keysFolder)); err != nil {
 		return err

@@ -100,6 +100,7 @@ sales:
 		-t sales-api:$(VERSION) \
 		--build-arg BUILD_REF=$(VERSION) \
 		--build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
+		--load \
 		.
 
 metrics:
@@ -108,6 +109,7 @@ metrics:
 		-t metrics:$(VERSION) \
 		--build-arg BUILD_REF=$(VERSION) \
 		--build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
+		--load \
 		.
 
 # ==============================================================================
@@ -142,11 +144,10 @@ dev-load:
 	kind load docker-image metrics:$(VERSION) --name $(KIND_CLUSTER)
 
 dev-apply:
+	kustomize build zarf/k8s/dev/vault | kubectl apply -f -
+
 	kustomize build zarf/k8s/dev/database | kubectl apply -f -
 	kubectl wait --timeout=120s --namespace=sales-system --for=condition=Available deployment/database
-	
-	kustomize build zarf/k8s/dev/vault | kubectl apply -f -
-	kubectl wait --timeout=120s --namespace=sales-system --for=condition=Available deployment/vault
 	
 	kustomize build zarf/k8s/dev/zipkin | kubectl apply -f -
 	kubectl wait --timeout=120s --namespace=sales-system --for=condition=Available deployment/zipkin

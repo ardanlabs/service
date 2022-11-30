@@ -18,3 +18,13 @@ type MountInput struct {
 	Type    string            `json:"type"`
 	Options map[string]string `json:"options"`
 }
+
+type Policy struct {
+	Capabilities []string `json:"capabilities"`
+}
+
+type TokenCreateRequest struct {
+	ID          string   `json:"id,omitempty"`
+	Policies    []string `json:"policies,omitempty"`
+	DisplayName string   `json:"display_name"`
+}

@@ -30,6 +30,7 @@ type config struct {
 	Vault struct {
 		KeysFolder string `conf:"default:zarf/keys/"`
 		Address    string `conf:"default:http://vault.sales-system.svc.cluster.local:8200"`
+		Token      string `conf:"default:mytoken,mask"`
 		MountPath  string `conf:"default:secret"`
 	}
 }
@@ -85,8 +86,8 @@ func processCommands(args conf.Args, log *zap.SugaredLogger, cfg config) error {
 	}
 
 	vaultConfig := vault.Config{
-		Address: cfg.Vault.Address,
-		// Token:     cfg.Vault.Token,
+		Address:   cfg.Vault.Address,
+		Token:     cfg.Vault.Token,
 		MountPath: cfg.Vault.MountPath,
 	}
 

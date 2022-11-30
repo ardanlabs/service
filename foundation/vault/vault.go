@@ -40,6 +40,7 @@ var defaultClient = http.Client{
 type Config struct {
 	Address   string
 	MountPath string
+	Token     string
 	Client    *http.Client
 }
 
@@ -292,6 +293,97 @@ func (v *Vault) ListMounts(ctx context.Context) (map[string]interface{}, error) 
 	}
 
 	return response, nil
+}
+
+func (v *Vault) CreatePolicy(ctx context.Context, name, policy string) error {
+	url := fmt.Sprintf("%s/v1/sys/policies/acl/%s", v.address, name)
+
+	var b bytes.Buffer
+	b.WriteString(policy)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPut, url, &b)
+	if err != nil {
+		return fmt.Errorf("create request: %w", err)
+	}
+
+	req.Header.Set("X-Vault-Token", v.token)
+	req.Header.Set("Cache-Control", "no-cache")
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := v.client.Do(req)
+	if err != nil {
+		return fmt.Errorf("do: %w", err)
+	}
+	defer resp.Body.Close()
+
+	// Catching 400 like this isn't great but it probably means the mount already exists
+	if resp.StatusCode != http.StatusNoContent {
+		return fmt.Errorf("status code: %s", resp.Status)
+	}
+
+	return nil
+}
+
+func (v *Vault) CheckToken(ctx context.Context, opts TokenCreateRequest) error {
+	url := fmt.Sprintf("%s/v1/auth/token/lookup", v.address)
+
+	var b bytes.Buffer
+	b.WriteString("{\"token\": \")")
+	b.WriteString(opts.ID)
+	b.WriteString("\"}")
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, &b)
+	if err != nil {
+		return fmt.Errorf("lookup request: %w", err)
+	}
+
+	req.Header.Set("X-Vault-Token", v.token)
+	req.Header.Set("Cache-Control", "no-cache")
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := v.client.Do(req)
+	if err != nil {
+		return fmt.Errorf("do: %w", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("token doesn't exist: %s", opts.ID)
+	}
+
+	return nil
+}
+
+func (v *Vault) CreateToken(ctx context.Context, opts TokenCreateRequest) error {
+	url := fmt.Sprintf("%s/v1/auth/token/create", v.address)
+
+	var b bytes.Buffer
+	if err := json.NewEncoder(&b).Encode(opts); err != nil {
+		return fmt.Errorf("encode data: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, &b)
+	if err != nil {
+		return fmt.Errorf("create request: %w", err)
+	}
+
+	req.Header.Set("X-Vault-Token", v.token)
+	req.Header.Set("Cache-Control", "no-cache")
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := v.client.Do(req)
+	if err != nil {
+		return fmt.Errorf("do: %w", err)
+	}
+
+	// Catching 400 like this isn't great but it probably means the mount already exists
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("status code: %s", resp.Status)
+	}
+
+	return nil
 }
 
 // =============================================================================

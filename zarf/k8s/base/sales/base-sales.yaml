@@ -3,6 +3,18 @@ kind: Namespace
 metadata:
   name: sales-system
 ---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  namespace: sales-system
+  name: vault-credentials
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -18,8 +30,18 @@ spec:
         app: sales
     spec:
       terminationGracePeriodSeconds: 60
+      volumes:
+        - name: vault
+          persistentVolumeClaim:
+            claimName: vault-credentials
       initContainers:
       # sales-api init container configuration
+      - name: init-vault-server
+        image: sales-api-image
+        command: ['./sales-admin', 'vault-init']
+        volumeMounts:
+          - name: vault
+            mountPath: /vault
       - name: init-vault
         image: sales-api-image
         command: ['./sales-admin', 'vault']
@@ -79,6 +101,9 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: spec.nodeName
+        volumeMounts:
+          - name: vault
+            mountPath: /vault
       # metrics container configuration
       - name: metrics
         image: metrics-image
