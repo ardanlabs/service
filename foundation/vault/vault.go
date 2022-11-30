@@ -36,29 +36,9 @@ var defaultClient = http.Client{
 	},
 }
 
-type InitRequest struct {
-	SecretShares    int `json:"secret_shares"`
-	SecretThreshold int `json:"secret_threshold"`
-}
-
-type InitResponse struct {
-	KeysB64   []string `json:"keys_base64"`
-	RootToken string   `json:"root_token"`
-}
-
-type UnsealOpts struct {
-	Key string `json:"key"`
-}
-
-type MountInput struct {
-	Type    string            `json:"type"`
-	Options map[string]string `json:"options"`
-}
-
 // Config represents the mandatory settings needed to work with Vault.
 type Config struct {
 	Address   string
-	Token     string
 	MountPath string
 	Client    *http.Client
 }
@@ -201,7 +181,6 @@ func (v *Vault) Init(ctx context.Context, opts *InitRequest) (*InitResponse, err
 	}
 
 	var response InitResponse
-
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
 		return nil, fmt.Errorf("json decoade: %w", err)
 	}
@@ -246,7 +225,7 @@ func (v *Vault) Mount(ctx context.Context, opts *MountInput) error {
 		return fmt.Errorf("error getting mount list: %w", err)
 	}
 
-	// Mount already exists so we'll do nothing
+	// Mount already exists so we'll do nothing.
 	if _, ok := mounts[v.mountPath]; ok {
 		return nil
 	}
@@ -274,7 +253,7 @@ func (v *Vault) Mount(ctx context.Context, opts *MountInput) error {
 	}
 	defer resp.Body.Close()
 
-	// Catching 400 like this isn't great but it probably means the mount already exists
+	// Catching 400 like this isn't great but it probably means the mount already exists.
 	if resp.StatusCode != http.StatusNoContent && resp.StatusCode != http.StatusBadRequest {
 		return fmt.Errorf("status code: %s", resp.Status)
 	}

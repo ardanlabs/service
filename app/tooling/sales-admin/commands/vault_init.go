@@ -14,35 +14,21 @@ import (
 
 const credentialsFileName = "/tmp/vault-init.json"
 
-// VaultInit sets up a newly provisioned vault instance
+// VaultInit sets up a newly provisioned vault instance.
 func VaultInit(vaultConfig vault.Config) error {
-	var (
-		initResponse = &vault.InitResponse{}
-		ctx          = context.Background()
-	)
+	var ctx = context.Background()
 
 	vaultSrv, err := vault.New(vault.Config{
 		Address:   vaultConfig.Address,
-		Token:     vaultConfig.Token,
 		MountPath: vaultConfig.MountPath,
 	})
 	if err != nil {
 		return fmt.Errorf("constructing vault: %w", err)
 	}
 
-	if _, err := os.Stat(credentialsFileName); err == nil {
-		log.Printf("credentials file exists, loading from %s", credentialsFileName)
-
-		initResponseJson, err := os.ReadFile(credentialsFileName)
-		if err != nil {
-			log.Fatalf("Error reading %s file: %s", credentialsFileName, err)
-		}
-
-		err = json.Unmarshal(initResponseJson, &initResponse)
-		if err != nil {
-			log.Fatalf("Error Unmarshalling json: %s", err)
-		}
-	} else if errors.Is(err, os.ErrNotExist) {
+	initResponse, err := ReadCredentialsFile()
+	switch {
+	case errors.Is(err, os.ErrNotExist):
 		log.Println("credential file doesn't exist, initializing vault")
 
 		initResponse, err = vaultSrv.Init(ctx, &vault.InitRequest{
@@ -66,6 +52,9 @@ func VaultInit(vaultConfig vault.Config) error {
 		if err != nil {
 			log.Fatalf("unable to write %s file: %s", credentialsFileName, err)
 		}
+
+	default:
+		log.Fatalf("unable to read credentials file: %s", err)
 	}
 
 	log.Println("Unsealing vault")
@@ -93,4 +82,24 @@ func VaultInit(vaultConfig vault.Config) error {
 	}
 
 	return nil
+}
+
+func ReadCredentialsFile() (*vault.InitResponse, error) {
+	var initResponse = &vault.InitResponse{}
+
+	if _, err := os.Stat(credentialsFileName); err != nil {
+		return nil, err
+	}
+
+	initResponseJson, err := os.ReadFile(credentialsFileName)
+	if err != nil {
+		log.Fatalf("Error reading %s file: %s", credentialsFileName, err)
+	}
+
+	err = json.Unmarshal(initResponseJson, &initResponse)
+	if err != nil {
+		log.Fatalf("Error Unmarshalling json: %s", err)
+	}
+
+	return initResponse, nil
 }
