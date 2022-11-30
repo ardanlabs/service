@@ -63,9 +63,9 @@ func New(cfg Config) (*Vault, error) {
 
 	return &Vault{
 		address:   cfg.Address,
+		token:     cfg.Token,
 		mountPath: cfg.MountPath,
 		client:    cfg.Client,
-		token:     cfg.Token,
 		store:     make(map[string]string),
 	}, nil
 }
