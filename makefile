@@ -133,7 +133,7 @@ dev-up:
 	telepresence --context=kind-$(KIND_CLUSTER) connect
 
 dev-down:
-	telepresence quit -r -u
+	telepresence quit -s
 	kind delete cluster --name $(KIND_CLUSTER)
 
 dev-load:

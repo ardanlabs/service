@@ -55,6 +55,8 @@ func VaultInit(vaultConfig vault.Config) error {
 		}
 	}
 
+	log.Printf("rootToken: %s", initResponse.RootToken)
+
 	// =============================================================================================================
 
 	log.Println("Unsealing vault")

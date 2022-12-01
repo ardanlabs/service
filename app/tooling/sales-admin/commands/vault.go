@@ -16,6 +16,7 @@ import (
 func Vault(vaultConfig vault.Config, keysFolder string) error {
 	vault, err := vault.New(vault.Config{
 		Address:   vaultConfig.Address,
+		Token:     vaultConfig.Token,
 		MountPath: vaultConfig.MountPath,
 	})
 	if err != nil {

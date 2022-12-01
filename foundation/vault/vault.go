@@ -319,10 +319,17 @@ func (v *Vault) Mount(ctx context.Context) error {
 func (v *Vault) CreatePolicy(ctx context.Context, name string, path string, capabilities []string) error {
 	url := fmt.Sprintf("%s/v1/sys/policies/acl/%s", v.address, name)
 
-	policy := fmt.Sprintf(`{"policy":"path %q {\n  capabilities = ["%s"]\n}\n"}`, path, strings.Join(capabilities, "\",\""))
+	policy := map[string]string{
+		"policy": fmt.Sprintf(
+			`path %q { capabilities = ["%s"] }`,
+			path,
+			strings.Join(capabilities, "\",\"")),
+	}
 
 	var b bytes.Buffer
-	b.WriteString(policy)
+	if err := json.NewEncoder(&b).Encode(policy); err != nil {
+		return fmt.Errorf("encode data: %w", err)
+	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPut, url, &b)
 	if err != nil {
