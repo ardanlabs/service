@@ -23,14 +23,14 @@ func Vault(vaultConfig vault.Config, keysFolder string) error {
 		return fmt.Errorf("constructing vault: %w", err)
 	}
 
-	if err := loadKeys(vault, vaultConfig.MountPath, os.DirFS(keysFolder)); err != nil {
+	if err := loadKeys(vault, os.DirFS(keysFolder)); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func loadKeys(vault *vault.Vault, mountPath string, fsys fs.FS) error {
+func loadKeys(vault *vault.Vault, fsys fs.FS) error {
 	fn := func(fileName string, dirEntry fs.DirEntry, err error) error {
 		if err != nil {
 			return fmt.Errorf("walkdir failure: %w", err)

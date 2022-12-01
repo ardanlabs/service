@@ -30,13 +30,14 @@ SHELL := /bin/bash
 #
 # Vault Information.
 # READ THIS: https://developer.hashicorp.com/vault/docs/concepts/tokens
-# export VAULT_TOKEN=myroot
+# export VAULT_TOKEN=mytoken
 # export VAULT_ADDR='http://vault-service.sales-system.svc.cluster.local:8200'
 # vault secrets list
 # vault kv get secret/sales
 # vault kv put secret/sales key="some data"
-# curl -H "X-Vault-Token: myroot" -X GET http://vault-service.sales-system.svc.cluster.local:8200/v1/secret/data/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
-# curl -H "X-Vault-Token: myroot" -H "Content-Type: application/json" -X POST -d '{"data":{"pk":"PEM"}}' http://vault-service.sales-system.svc.cluster.local:8200/v1/secret/data/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
+# kubectl logs --namespace=sales-system -l app=sales -c init-vault-server
+# curl -H "X-Vault-Token: mytoken" -X GET http://vault-service.sales-system.svc.cluster.local:8200/v1/secret/data/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
+# curl -H "X-Vault-Token: mytoken" -H "Content-Type: application/json" -X POST -d '{"data":{"pk":"PEM"}}' http://vault-service.sales-system.svc.cluster.local:8200/v1/secret/data/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
 #
 # To show what calls are being made underneath to the proxy and checksum db.
 # curl https://proxy.golang.org/github.com/ardanlabs/conf/@v/list
@@ -131,7 +132,7 @@ dev-up:
 	telepresence --context=kind-$(KIND_CLUSTER) connect
 
 dev-down:
-	telepresence quit -r -u
+	telepresence quit -s
 	kind delete cluster --name $(KIND_CLUSTER)
 
 dev-load:
@@ -142,11 +143,10 @@ dev-load:
 	kind load docker-image metrics:$(VERSION) --name $(KIND_CLUSTER)
 
 dev-apply:
+	kustomize build zarf/k8s/dev/vault | kubectl apply -f -
+
 	kustomize build zarf/k8s/dev/database | kubectl apply -f -
 	kubectl wait --timeout=120s --namespace=sales-system --for=condition=Available deployment/database
-	
-	kustomize build zarf/k8s/dev/vault | kubectl apply -f -
-	kubectl wait --timeout=120s --namespace=sales-system --for=condition=Available deployment/vault
 	
 	kustomize build zarf/k8s/dev/zipkin | kubectl apply -f -
 	kubectl wait --timeout=120s --namespace=sales-system --for=condition=Available deployment/zipkin
@@ -162,7 +162,7 @@ dev-update: all dev-load dev-restart
 dev-update-apply: all dev-load dev-apply
 
 dev-logs:
-	kubectl logs --namespace=sales-system -l app=sales --all-containers=true -f --tail=100 | go run app/tooling/logfmt/main.go -service=SALES-API
+	kubectl logs --namespace=sales-system -l app=sales --all-containers=true -f --tail=100 --max-log-requests=6 | go run app/tooling/logfmt/main.go -service=SALES-API
 
 dev-status:
 	kubectl get nodes -o wide

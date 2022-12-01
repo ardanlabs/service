@@ -22,7 +22,7 @@ const (
 
 func Test_Vault(t *testing.T) {
 	const address = "0.0.0.0:8200"
-	const token = "myroot"
+	const token = "mytoken"
 	const mountPath = "secret"
 	const key = "54bb2165-71e1-41a6-af3e-7da4a0e1e2c1"
 	const image = "hashicorp/vault:1.12"
@@ -43,15 +43,15 @@ func Test_Vault(t *testing.T) {
 	// Give Vault time to initialize.
 	time.Sleep(time.Second)
 
-	t.Log("Given the to talk to Vault for key support.")
+	t.Log("Given the need to talk to Vault for key support.")
 	{
 		testID := 0
 		t.Logf("\tTest %d:\tWhen handling a single key.", testID)
 		{
 			vault, err := vault.New(vault.Config{
 				Address:   "http://" + c.Host,
-				Token:     token,
 				MountPath: mountPath,
+				Token:     token,
 			})
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to construct our Vault API: %v", failed, testID, err)

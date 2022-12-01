@@ -30,11 +30,8 @@ type config struct {
 	Vault struct {
 		KeysFolder string `conf:"default:zarf/keys/"`
 		Address    string `conf:"default:http://vault-service.sales-system.svc.cluster.local:8200"`
+		Token      string `conf:"default:mytoken,mask"`
 		MountPath  string `conf:"default:secret"`
-
-		// This MUST be handled like any root credential.
-		// This value comes from Vault when it starts.
-		Token string `conf:"default:myroot,mask"`
 	}
 }
 
@@ -137,14 +134,20 @@ func processCommands(args conf.Args, log *zap.SugaredLogger, cfg config) error {
 			return fmt.Errorf("setting private key: %w", err)
 		}
 
+	case "vault-init":
+		if err := commands.VaultInit(vaultConfig); err != nil {
+			return fmt.Errorf("initializing vault instance: %w", err)
+		}
+
 	default:
-		fmt.Println("migrate:  create the schema in the database")
-		fmt.Println("seed:     add data to the database")
-		fmt.Println("useradd:  add a new user to the database")
-		fmt.Println("users:    get a list of users from the database")
-		fmt.Println("genkey:   generate a set of private/public key files")
-		fmt.Println("gentoken: generate a JWT for a user with claims")
-		fmt.Println("vault:    load private keys into vault system")
+		fmt.Println("migrate:    create the schema in the database")
+		fmt.Println("seed:       add data to the database")
+		fmt.Println("useradd:    add a new user to the database")
+		fmt.Println("users:      get a list of users from the database")
+		fmt.Println("genkey:     generate a set of private/public key files")
+		fmt.Println("gentoken:   generate a JWT for a user with claims")
+		fmt.Println("vault:      load private keys into vault system")
+		fmt.Println("vault-init: initialize a new vault instance")
 		fmt.Println("provide a command to get more help.")
 		return commands.ErrHelp
 	}
