@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"runtime/debug"
 	"testing"
+	"time"
 
 	"github.com/ardanlabs/service/business/core/product"
 	"github.com/ardanlabs/service/business/core/product/stores/productdb"
@@ -66,6 +67,25 @@ func Test_Product(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to retrieve product by ID.", dbtest.Success, testID)
 
+			if !saved.DateCreated.Equal(prd.DateCreated) {
+				t.Logf("\t\tTest %d:\tGot: %v", testID, saved.DateCreated)
+				t.Logf("\t\tTest %d:\tExp: %v", testID, prd.DateCreated)
+				t.Fatalf("\t%s\tTest %d:\tShould get back the same date created: %s.", dbtest.Failed, testID, err)
+			}
+			t.Logf("\t%s\tTest %d:\tShould get back the same date created.", dbtest.Success, testID)
+
+			if !saved.DateUpdated.Equal(prd.DateUpdated) {
+				t.Logf("\t\tTest %d:\tGot: %v", testID, saved.DateUpdated)
+				t.Logf("\t\tTest %d:\tExp: %v", testID, prd.DateUpdated)
+				t.Fatalf("\t%s\tTest %d:\tShould get back the same date updated: %s.", dbtest.Failed, testID, err)
+			}
+			t.Logf("\t%s\tTest %d:\tShould get back the same date updated.", dbtest.Success, testID)
+
+			prd.DateCreated = time.Time{}
+			prd.DateUpdated = time.Time{}
+			saved.DateCreated = time.Time{}
+			saved.DateUpdated = time.Time{}
+
 			if diff := cmp.Diff(prd, saved); diff != "" {
 				t.Fatalf("\t%s\tTest %d:\tShould get back the same product. Diff:\n%s", dbtest.Failed, testID, diff)
 			}
@@ -108,6 +128,11 @@ func Test_Product(t *testing.T) {
 					idx = i
 				}
 			}
+
+			products[idx].DateCreated = time.Time{}
+			products[idx].DateUpdated = time.Time{}
+			saved.DateCreated = time.Time{}
+			saved.DateUpdated = time.Time{}
 
 			if diff := cmp.Diff(saved, products[idx]); diff != "" {
 				t.Fatalf("\t%s\tTest %d:\tShould get back the same product. Diff:\n%s", dbtest.Failed, testID, diff)
