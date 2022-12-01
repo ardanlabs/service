@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -101,8 +102,14 @@ func (w *Worker) Start(ctx context.Context, fn JobFunc) (string, error) {
 	// Need a unique key for this work.
 	workKey := uuid.NewString()
 
+	// Let's continue with the current context's deadline.
+	deadline, ok := ctx.Deadline()
+	if !ok {
+		deadline = time.Now().Add(time.Second)
+	}
+
 	// Create a cancel function and keep it for stop/shutdown purposes.
-	ctx, cancel := context.WithCancel(ctx)
+	ctx, cancel := context.WithDeadline(context.Background(), deadline)
 
 	// Register this new G as running.
 	w.mu.Lock()
