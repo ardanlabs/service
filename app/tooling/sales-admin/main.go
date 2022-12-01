@@ -29,7 +29,7 @@ type config struct {
 	}
 	Vault struct {
 		KeysFolder string `conf:"default:zarf/keys/"`
-		Address    string `conf:"default:http://vault.sales-system.svc.cluster.local:8200"`
+		Address    string `conf:"default:http://vault-service.sales-system.svc.cluster.local:8200"`
 		Token      string `conf:"default:mytoken,mask"`
 		MountPath  string `conf:"default:secret"`
 	}

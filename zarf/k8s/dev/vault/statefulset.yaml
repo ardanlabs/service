@@ -77,12 +77,12 @@ spec:
             - name: home
               mountPath: /home/vault
           ports:
-            - containerPort: 8200
-              name: http
-            - containerPort: 8201
-              name: https-internal
-            - containerPort: 8202
-              name: http-rep
+            - name: http
+              containerPort: 8200
+            - name: https-internal
+              containerPort: 8201
+            - name: http-rep
+              containerPort: 8202
           readinessProbe:
             exec:
               command: ["/bin/sh", "-ec", "vault status -tls-skip-verify"]

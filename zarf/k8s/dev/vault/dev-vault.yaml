@@ -3,53 +3,53 @@ kind: Namespace
 metadata:
   name: sales-system
 ---
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: vault
-  namespace: sales-system
-spec:
-  selector:
-    matchLabels:
-      app: vault
-  replicas: 1
-  strategy:
-    type: Recreate
-  template:
-    metadata:
-      labels:
-        app: vault
-    spec:
-      dnsPolicy: ClusterFirstWithHostNet
-      hostNetwork: true
-      terminationGracePeriodSeconds: 60
-      containers:
-      - name: vault
-        image: hashicorp/vault:1.12
-        ports:
-        - name: vault
-          containerPort: 8200
-        env:
-        - name: VAULT_DEV_ROOT_TOKEN_ID
-          value: mytoken
-        - name: VAULT_DEV_LISTEN_ADDRESS
-          value: 0.0.0.0:8200
-        resources:
-          limits:
-            cpu: "500m" # Up to 1/2 full core
-          requests:
-            cpu: "250m" # Use 1/4 full core
----
+# Service for Vault Server
 apiVersion: v1
 kind: Service
 metadata:
   name: vault-service
   namespace: sales-system
+  labels:
+    app.kubernetes.io/name: vault
+    app.kubernetes.io/instance: vault
+  annotations:
 spec:
-  type: ClusterIP
-  selector:
-    app: vault
+  type: NodePort
+  publishNotReadyAddresses: true
   ports:
-  - name: vault
-    port: 8200
-    targetPort: vault
+    - name: http
+      port: 8200
+      targetPort: http
+      nodePort: 32000
+    - name: https-internal
+      port: 8201
+      targetPort: https-internal
+  selector:
+    app.kubernetes.io/name: vault
+    app.kubernetes.io/instance: vault
+    component: server
+---
+# Headless Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: vault-internal
+  namespace: sales-system
+  labels:
+    app.kubernetes.io/name: vault
+    app.kubernetes.io/instance: vault
+  annotations:
+spec:
+  clusterIP: None
+  publishNotReadyAddresses: true
+  ports:
+    - name: http
+      port: 8200
+      targetPort: http
+    - name: https-internal
+      port: 8201
+      targetPort: https-internal
+  selector:
+    app.kubernetes.io/name: vault
+    app.kubernetes.io/instance: vault
+    component: server

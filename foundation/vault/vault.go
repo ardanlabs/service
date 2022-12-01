@@ -495,7 +495,7 @@ func (v *Vault) retrieveKID(ctx context.Context, kid string) (string, error) {
 	return pem, nil
 }
 
-// ListMounts returns the set of mount points that exist.
+// listMounts returns the set of mount points that exist.
 func (v *Vault) listMounts(ctx context.Context) (map[string]interface{}, error) {
 	url := fmt.Sprintf("%s/v1/sys/mounts", v.address)
 

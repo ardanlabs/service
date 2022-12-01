@@ -1,11 +1,7 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-  - ../../base/vault/
-images:
-- name: metrics-image
-  newName: metrics
-  newTag: "1.0"
-- name: sales-api-image
-  newName: sales-api
-  newTag: "1.0"
+  - ./rbac.yaml
+  - ./configmap.yaml
+  - ./dev-vault.yaml
+  - ./statefulset.yaml

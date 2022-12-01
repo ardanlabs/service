@@ -100,7 +100,6 @@ sales:
 		-t sales-api:$(VERSION) \
 		--build-arg BUILD_REF=$(VERSION) \
 		--build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
-		--load \
 		.
 
 metrics:
@@ -109,7 +108,6 @@ metrics:
 		-t metrics:$(VERSION) \
 		--build-arg BUILD_REF=$(VERSION) \
 		--build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
-		--load \
 		.
 
 # ==============================================================================
@@ -163,7 +161,7 @@ dev-update: all dev-load dev-restart
 dev-update-apply: all dev-load dev-apply
 
 dev-logs:
-	kubectl logs --namespace=sales-system -l app=sales --all-containers=true -f --tail=100 | go run app/tooling/logfmt/main.go -service=SALES-API
+	kubectl logs --namespace=sales-system -l app=sales --all-containers=true -f --tail=100 --max-log-requests=6 | go run app/tooling/logfmt/main.go -service=SALES-API
 
 dev-status:
 	kubectl get nodes -o wide
