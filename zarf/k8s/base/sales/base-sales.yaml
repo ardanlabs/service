@@ -3,6 +3,7 @@ kind: Namespace
 metadata:
   name: sales-system
 ---
+# We need the vault credentials to exist across pod restarts
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:

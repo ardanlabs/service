@@ -27,7 +27,7 @@ func VaultInit(vaultConfig vault.Config) error {
 		return fmt.Errorf("constructing vault: %w", err)
 	}
 
-	initResponse, err := readCredentialsFile()
+	initResponse, err := checkIfCredFileExists()
 	if err != nil {
 		switch {
 		case errors.Is(err, os.ErrNotExist):
@@ -111,7 +111,7 @@ func VaultInit(vaultConfig vault.Config) error {
 
 // =============================================================================
 
-func readCredentialsFile() (vault.SystemInitResponse, error) {
+func checkIfCredFileExists() (vault.SystemInitResponse, error) {
 	if _, err := os.Stat(credentialsFileName); err != nil {
 		return vault.SystemInitResponse{}, err
 	}
