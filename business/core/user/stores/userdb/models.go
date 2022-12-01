@@ -48,8 +48,9 @@ func toCoreUser(dbUsr dbUser) user.User {
 		DateCreated:  dbUsr.DateCreated,
 		DateUpdated:  dbUsr.DateUpdated,
 	}
-	usr.DateCreated = time.Date(usr.DateCreated.Year(), usr.DateCreated.Month(), usr.DateCreated.Day(), usr.DateCreated.Hour(), usr.DateCreated.Minute(), usr.DateCreated.Second(), usr.DateCreated.Nanosecond(), time.Local)
-	usr.DateUpdated = time.Date(usr.DateUpdated.Year(), usr.DateUpdated.Month(), usr.DateUpdated.Day(), usr.DateUpdated.Hour(), usr.DateUpdated.Minute(), usr.DateUpdated.Second(), usr.DateUpdated.Nanosecond(), time.Local)
+
+	usr.DateCreated = time.Date(usr.DateCreated.Year(), usr.DateCreated.Month(), usr.DateCreated.Day(), usr.DateCreated.Hour(), usr.DateCreated.Minute(), usr.DateCreated.Second(), usr.DateCreated.Nanosecond(), time.UTC)
+	usr.DateUpdated = time.Date(usr.DateUpdated.Year(), usr.DateUpdated.Month(), usr.DateUpdated.Day(), usr.DateUpdated.Hour(), usr.DateUpdated.Minute(), usr.DateUpdated.Second(), usr.DateUpdated.Nanosecond(), time.UTC)
 
 	return usr
 }
