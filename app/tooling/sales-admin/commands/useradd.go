@@ -37,7 +37,7 @@ func UserAdd(log *zap.SugaredLogger, cfg database.Config, name, email, password 
 		Roles:           []string{user.RoleAdmin, user.RoleUser},
 	}
 
-	usr, err := core.Create(ctx, nu, time.Now())
+	usr, err := core.Create(ctx, nu)
 	if err != nil {
 		return fmt.Errorf("create user: %w", err)
 	}

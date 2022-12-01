@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"runtime/debug"
 	"testing"
-	"time"
 
 	"github.com/ardanlabs/service/business/core/product"
 	"github.com/ardanlabs/service/business/core/product/stores/productdb"
@@ -47,7 +46,6 @@ func Test_Product(t *testing.T) {
 		t.Logf("\tTest %d:\tWhen handling a single Product.", testID)
 		{
 			ctx := context.Background()
-			now := time.Date(2019, time.January, 1, 0, 0, 0, 0, time.UTC)
 
 			np := product.NewProduct{
 				Name:     "Comic Books",
@@ -56,7 +54,7 @@ func Test_Product(t *testing.T) {
 				UserID:   "5cf37266-3473-4006-984f-9325122678b7",
 			}
 
-			prd, err := core.Create(ctx, np, now)
+			prd, err := core.Create(ctx, np)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to create a product : %s.", dbtest.Failed, testID, err)
 			}
@@ -78,12 +76,22 @@ func Test_Product(t *testing.T) {
 				Cost:     dbtest.IntPointer(50),
 				Quantity: dbtest.IntPointer(40),
 			}
-			updatedTime := time.Date(2019, time.January, 1, 1, 1, 1, 0, time.UTC)
 
-			if err := core.Update(ctx, prd.ID, upd, updatedTime); err != nil {
+			if err := core.Update(ctx, prd.ID, upd); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to update product : %s.", dbtest.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to update product.", dbtest.Success, testID)
+
+			saved, err = core.QueryByID(ctx, prd.ID)
+			if err != nil {
+				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve updated product : %s.", dbtest.Failed, testID, err)
+			}
+			t.Logf("\t%s\tTest %d:\tShould be able to retrieve updated product.", dbtest.Success, testID)
+
+			diff := prd.DateUpdated.Sub(saved.DateUpdated)
+			if diff > 0 {
+				t.Fatalf("Should have a larger DateUpdated : sav %v, prd %v, dif %v", saved.DateUpdated, saved.DateUpdated, diff)
+			}
 
 			products, err := core.Query(ctx, product.QueryFilter{}, product.DefaultOrderBy, 1, 3)
 			if err != nil {
@@ -93,19 +101,15 @@ func Test_Product(t *testing.T) {
 
 			// Check specified fields were updated. Make a copy of the original product
 			// and change just the fields we expect then diff it with what was saved.
-			want := prd
-			want.Name = *upd.Name
-			want.Cost = *upd.Cost
-			want.Quantity = *upd.Quantity
-			want.DateUpdated = updatedTime
 
 			var idx int
 			for i, p := range products {
-				if p.ID == want.ID {
+				if p.ID == saved.ID {
 					idx = i
 				}
 			}
-			if diff := cmp.Diff(want, products[idx]); diff != "" {
+
+			if diff := cmp.Diff(saved, products[idx]); diff != "" {
 				t.Fatalf("\t%s\tTest %d:\tShould get back the same product. Diff:\n%s", dbtest.Failed, testID, diff)
 			}
 			t.Logf("\t%s\tTest %d:\tShould get back the same product.", dbtest.Success, testID)
@@ -114,7 +118,7 @@ func Test_Product(t *testing.T) {
 				Name: dbtest.StringPointer("Graphic Novels"),
 			}
 
-			if err := core.Update(ctx, prd.ID, upd, updatedTime); err != nil {
+			if err := core.Update(ctx, prd.ID, upd); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to update just some fields of product : %s.", dbtest.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to update just some fields of product.", dbtest.Success, testID)
@@ -124,6 +128,11 @@ func Test_Product(t *testing.T) {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve updated product : %s.", dbtest.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to retrieve updated product.", dbtest.Success, testID)
+
+			diff = prd.DateUpdated.Sub(saved.DateUpdated)
+			if diff > 0 {
+				t.Fatalf("Should have a larger DateUpdated : sav %v, prd %v, dif %v", saved.DateUpdated, prd.DateUpdated, diff)
+			}
 
 			if saved.Name != *upd.Name {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to see updated Name field : got %q want %q.", dbtest.Failed, testID, saved.Name, *upd.Name)

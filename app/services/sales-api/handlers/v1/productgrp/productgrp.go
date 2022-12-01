@@ -27,7 +27,7 @@ func (h Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Req
 		return fmt.Errorf("unable to decode payload: %w", err)
 	}
 
-	prod, err := h.Product.Create(ctx, np, web.GetTime(ctx))
+	prod, err := h.Product.Create(ctx, np)
 	if err != nil {
 		return fmt.Errorf("creating new product, np[%+v]: %w", np, err)
 	}
@@ -62,7 +62,7 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 		return auth.NewAuthError("auth failed")
 	}
 
-	if err := h.Product.Update(ctx, id, upd, web.GetTime(ctx)); err != nil {
+	if err := h.Product.Update(ctx, id, upd); err != nil {
 		switch {
 		case errors.Is(err, product.ErrInvalidID):
 			return v1Web.NewRequestError(err, http.StatusBadRequest)

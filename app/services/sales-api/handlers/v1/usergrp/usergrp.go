@@ -29,7 +29,7 @@ func (h Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Req
 		return fmt.Errorf("unable to decode payload: %w", err)
 	}
 
-	usr, err := h.User.Create(ctx, nu, web.GetTime(ctx))
+	usr, err := h.User.Create(ctx, nu)
 	if err != nil {
 		if errors.Is(err, user.ErrUniqueEmail) {
 			return v1Web.NewRequestError(err, http.StatusConflict)
@@ -55,7 +55,7 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 		return auth.NewAuthError("auth failed")
 	}
 
-	if err := h.User.Update(ctx, userID, upd, web.GetTime(ctx)); err != nil {
+	if err := h.User.Update(ctx, userID, upd); err != nil {
 		switch {
 		case errors.Is(err, user.ErrInvalidID):
 			return v1Web.NewRequestError(err, http.StatusBadRequest)
@@ -160,7 +160,7 @@ func (h Handlers) Token(ctx context.Context, w http.ResponseWriter, r *http.Requ
 		return auth.NewAuthError("must provide email and password in Basic auth")
 	}
 
-	usr, err := h.User.Authenticate(ctx, web.GetTime(ctx), email, pass)
+	usr, err := h.User.Authenticate(ctx, email, pass)
 	if err != nil {
 		switch {
 		case errors.Is(err, user.ErrNotFound):

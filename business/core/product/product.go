@@ -45,10 +45,12 @@ func NewCore(storer Storer) *Core {
 
 // Create adds a Product to the database. It returns the created Product with
 // fields like ID and DateCreated populated.
-func (c *Core) Create(ctx context.Context, np NewProduct, now time.Time) (Product, error) {
+func (c *Core) Create(ctx context.Context, np NewProduct) (Product, error) {
 	if err := validate.Check(np); err != nil {
 		return Product{}, fmt.Errorf("validating data: %w", err)
 	}
+
+	now := time.Now().UTC()
 
 	prd := Product{
 		ID:          validate.GenerateID(),
@@ -69,7 +71,7 @@ func (c *Core) Create(ctx context.Context, np NewProduct, now time.Time) (Produc
 
 // Update modifies data about a Product. It will error if the specified ID is
 // invalid or does not reference an existing Product.
-func (c *Core) Update(ctx context.Context, productID string, up UpdateProduct, now time.Time) error {
+func (c *Core) Update(ctx context.Context, productID string, up UpdateProduct) error {
 	if err := validate.CheckID(productID); err != nil {
 		return ErrInvalidID
 	}
@@ -92,7 +94,7 @@ func (c *Core) Update(ctx context.Context, productID string, up UpdateProduct, n
 	if up.Quantity != nil {
 		prd.Quantity = *up.Quantity
 	}
-	prd.DateUpdated = now
+	prd.DateUpdated = time.Now().UTC()
 
 	if err := c.storer.Update(ctx, prd); err != nil {
 		return fmt.Errorf("update: %w", err)

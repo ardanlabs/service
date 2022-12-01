@@ -49,7 +49,7 @@ func NewCore(storer Storer) *Core {
 }
 
 // Create inserts a new user into the database.
-func (c *Core) Create(ctx context.Context, nu NewUser, now time.Time) (User, error) {
+func (c *Core) Create(ctx context.Context, nu NewUser) (User, error) {
 	if err := validate.Check(nu); err != nil {
 		return User{}, fmt.Errorf("validating data: %w", err)
 	}
@@ -58,6 +58,8 @@ func (c *Core) Create(ctx context.Context, nu NewUser, now time.Time) (User, err
 	if err != nil {
 		return User{}, fmt.Errorf("generating password hash: %w", err)
 	}
+
+	now := time.Now().UTC()
 
 	usr := User{
 		ID:           validate.GenerateID(),
@@ -86,7 +88,7 @@ func (c *Core) Create(ctx context.Context, nu NewUser, now time.Time) (User, err
 }
 
 // Update replaces a user document in the database.
-func (c *Core) Update(ctx context.Context, userID string, uu UpdateUser, now time.Time) error {
+func (c *Core) Update(ctx context.Context, userID string, uu UpdateUser) error {
 	if err := validate.CheckID(userID); err != nil {
 		return ErrInvalidID
 	}
@@ -119,7 +121,7 @@ func (c *Core) Update(ctx context.Context, userID string, uu UpdateUser, now tim
 	if uu.Enabled != nil {
 		user.Enabled = *uu.Enabled
 	}
-	user.DateUpdated = now
+	user.DateUpdated = time.Now().UTC()
 
 	if err := c.storer.Update(ctx, user); err != nil {
 		return fmt.Errorf("update: %w", err)
@@ -192,7 +194,7 @@ func (c *Core) QueryByEmail(ctx context.Context, email string) (User, error) {
 // Authenticate finds a user by their email and verifies their password. On
 // success it returns a Claims User representing this user. The claims can be
 // used to generate a token for future authentication.
-func (c *Core) Authenticate(ctx context.Context, now time.Time, email, password string) (User, error) {
+func (c *Core) Authenticate(ctx context.Context, email, password string) (User, error) {
 	usr, err := c.storer.QueryByEmail(ctx, email)
 	if err != nil {
 		return User{}, fmt.Errorf("query: %w", err)

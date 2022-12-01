@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"runtime/debug"
 	"testing"
-	"time"
 
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/core/user/stores/usercache"
@@ -48,7 +47,6 @@ func Test_User(t *testing.T) {
 		t.Logf("\tTest %d:\tWhen handling a single User.", testID)
 		{
 			ctx := context.Background()
-			now := time.Date(2018, time.October, 1, 0, 0, 0, 0, time.UTC)
 
 			nu := user.NewUser{
 				Name:            "Bill Kennedy",
@@ -58,7 +56,7 @@ func Test_User(t *testing.T) {
 				PasswordConfirm: "gophers",
 			}
 
-			usr, err := core.Create(ctx, nu, now)
+			usr, err := core.Create(ctx, nu)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to create user : %s.", dbtest.Failed, testID, err)
 			}
@@ -80,7 +78,7 @@ func Test_User(t *testing.T) {
 				Email: dbtest.StringPointer("jacob@ardanlabs.com"),
 			}
 
-			if err := core.Update(ctx, usr.ID, upd, now); err != nil {
+			if err := core.Update(ctx, usr.ID, upd); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to update user : %s.", dbtest.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to update user.", dbtest.Success, testID)
@@ -90,6 +88,11 @@ func Test_User(t *testing.T) {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve user by Email : %s.", dbtest.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to retrieve user by Email.", dbtest.Success, testID)
+
+			diff := usr.DateUpdated.Sub(saved.DateUpdated)
+			if diff > 0 {
+				t.Fatalf("Should have a larger DateUpdated : sav %v, usr %v, dif %v", saved.DateUpdated, usr.DateUpdated, diff)
+			}
 
 			if saved.Name != *upd.Name {
 				t.Errorf("\t%s\tTest %d:\tShould be able to see updates to Name.", dbtest.Failed, testID)
