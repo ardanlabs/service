@@ -72,14 +72,15 @@ func Test_User(t *testing.T) {
 			if !saved.DateCreated.Equal(usr.DateCreated) {
 				t.Logf("\t\tTest %d:\tGot: %v", testID, saved.DateCreated)
 				t.Logf("\t\tTest %d:\tExp: %v", testID, usr.DateCreated)
-				t.Fatalf("\t%s\tTest %d:\tShould get back the same date created: %s.", dbtest.Failed, testID, err)
+				t.Logf("\t\tTest %d:\tDiff: %v", testID, saved.DateCreated.Sub(usr.DateCreated))
+				t.Fatalf("\t%s\tTest %d:\tShould get back the same date created.", dbtest.Failed, testID)
 			}
 			t.Logf("\t%s\tTest %d:\tShould get back the same date created.", dbtest.Success, testID)
 
 			if !saved.DateUpdated.Equal(usr.DateUpdated) {
 				t.Logf("\t\tTest %d:\tGot: %v", testID, saved.DateUpdated)
 				t.Logf("\t\tTest %d:\tExp: %v", testID, usr.DateUpdated)
-				t.Fatalf("\t%s\tTest %d:\tShould get back the same date updated: %s.", dbtest.Failed, testID, err)
+				t.Fatalf("\t%s\tTest %d:\tShould get back the same date updated.", dbtest.Failed, testID)
 			}
 			t.Logf("\t%s\tTest %d:\tShould get back the same date updated.", dbtest.Success, testID)
 
