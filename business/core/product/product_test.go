@@ -67,6 +67,27 @@ func Test_Product(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to retrieve product by ID.", dbtest.Success, testID)
 
+			if saved.DateCreated.Sub(prd.DateCreated) > time.Millisecond {
+				t.Logf("\t\tTest %d:\tGot: %v", testID, saved.DateCreated)
+				t.Logf("\t\tTest %d:\tExp: %v", testID, prd.DateCreated)
+				t.Logf("\t\tTest %d:\tDiff: %v", testID, saved.DateCreated.Sub(prd.DateCreated))
+				t.Fatalf("\t%s\tTest %d:\tShould get back the same date created.", dbtest.Failed, testID)
+			}
+			t.Logf("\t%s\tTest %d:\tShould get back the same date created.", dbtest.Success, testID)
+
+			if saved.DateUpdated.Sub(prd.DateUpdated) > time.Millisecond {
+				t.Logf("\t\tTest %d:\tGot: %v", testID, saved.DateUpdated)
+				t.Logf("\t\tTest %d:\tExp: %v", testID, prd.DateUpdated)
+				t.Logf("\t\tTest %d:\tDiff: %v", testID, saved.DateUpdated.Sub(prd.DateUpdated))
+				t.Fatalf("\t%s\tTest %d:\tShould get back the same date updated.", dbtest.Failed, testID)
+			}
+			t.Logf("\t%s\tTest %d:\tShould get back the same date updated.", dbtest.Success, testID)
+
+			prd.DateCreated = time.Time{}
+			prd.DateUpdated = time.Time{}
+			saved.DateCreated = time.Time{}
+			saved.DateUpdated = time.Time{}
+
 			if diff := cmp.Diff(prd, saved); diff != "" {
 				t.Fatalf("\t%s\tTest %d:\tShould get back the same product. Diff:\n%s", dbtest.Failed, testID, diff)
 			}
