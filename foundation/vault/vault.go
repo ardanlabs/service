@@ -171,7 +171,7 @@ type SystemInitResponse struct {
 	RootToken string   `json:"root_token"`
 }
 
-// SystemInit provides support to initialize a valut system for use.
+// SystemInit provides support to initialize a vault system for use.
 func (v *Vault) SystemInit(ctx context.Context, shares int, threshold int) (SystemInitResponse, error) {
 	url := fmt.Sprintf("%s/v1/sys/init", v.address)
 
