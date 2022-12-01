@@ -35,6 +35,7 @@ SHELL := /bin/bash
 # vault secrets list
 # vault kv get secret/sales
 # vault kv put secret/sales key="some data"
+# kubectl logs --namespace=sales-system -l app=sales -c init-vault-server
 # curl -H "X-Vault-Token: mytoken" -X GET http://vault-service.sales-system.svc.cluster.local:8200/v1/secret/data/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
 # curl -H "X-Vault-Token: mytoken" -H "Content-Type: application/json" -X POST -d '{"data":{"pk":"PEM"}}' http://vault-service.sales-system.svc.cluster.local:8200/v1/secret/data/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
 #
