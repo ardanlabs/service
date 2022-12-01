@@ -50,7 +50,7 @@ func (c *Core) Create(ctx context.Context, np NewProduct) (Product, error) {
 		return Product{}, fmt.Errorf("validating data: %w", err)
 	}
 
-	now := time.Now().UTC()
+	now := time.Now()
 
 	prd := Product{
 		ID:          validate.GenerateID(),
@@ -94,7 +94,7 @@ func (c *Core) Update(ctx context.Context, productID string, up UpdateProduct) e
 	if up.Quantity != nil {
 		prd.Quantity = *up.Quantity
 	}
-	prd.DateUpdated = time.Now().UTC()
+	prd.DateUpdated = time.Now()
 
 	if err := c.storer.Update(ctx, prd); err != nil {
 		return fmt.Errorf("update: %w", err)
