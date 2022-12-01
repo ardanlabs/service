@@ -14,13 +14,12 @@ metadata:
     app.kubernetes.io/instance: vault
   annotations:
 spec:
-  type: NodePort
+  type: ClusterIP
   publishNotReadyAddresses: true
   ports:
     - name: http
       port: 8200
       targetPort: http
-      nodePort: 32000
     - name: https-internal
       port: 8201
       targetPort: https-internal

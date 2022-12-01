@@ -21,7 +21,7 @@ spec:
         app.kubernetes.io/instance: vault
         component: server
     spec:
-      serviceAccountName: vault
+#      serviceAccountName: vault
       securityContext:
         runAsNonRoot: true
         runAsGroup: 1000
