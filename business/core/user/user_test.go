@@ -69,7 +69,7 @@ func Test_User(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to retrieve user by ID.", dbtest.Success, testID)
 
-			if saved.DateCreated.Sub(usr.DateCreated) > time.Millisecond {
+			if usr.DateCreated.UnixMilli() != saved.DateCreated.UnixMilli() {
 				t.Logf("\t\tTest %d:\tGot: %v", testID, saved.DateCreated)
 				t.Logf("\t\tTest %d:\tExp: %v", testID, usr.DateCreated)
 				t.Logf("\t\tTest %d:\tDiff: %v", testID, saved.DateCreated.Sub(usr.DateCreated))
@@ -77,7 +77,7 @@ func Test_User(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould get back the same date created.", dbtest.Success, testID)
 
-			if saved.DateUpdated.Sub(usr.DateUpdated) > time.Millisecond {
+			if usr.DateUpdated.UnixMilli() != saved.DateUpdated.UnixMilli() {
 				t.Logf("\t\tTest %d:\tGot: %v", testID, saved.DateUpdated)
 				t.Logf("\t\tTest %d:\tExp: %v", testID, usr.DateUpdated)
 				t.Logf("\t\tTest %d:\tDiff: %v", testID, saved.DateUpdated.Sub(usr.DateUpdated))

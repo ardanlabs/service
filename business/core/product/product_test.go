@@ -67,7 +67,7 @@ func Test_Product(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to retrieve product by ID.", dbtest.Success, testID)
 
-			if saved.DateCreated.Sub(prd.DateCreated) > time.Millisecond {
+			if prd.DateCreated.UnixMilli() != saved.DateCreated.UnixMilli() {
 				t.Logf("\t\tTest %d:\tGot: %v", testID, saved.DateCreated)
 				t.Logf("\t\tTest %d:\tExp: %v", testID, prd.DateCreated)
 				t.Logf("\t\tTest %d:\tDiff: %v", testID, saved.DateCreated.Sub(prd.DateCreated))
@@ -75,7 +75,7 @@ func Test_Product(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould get back the same date created.", dbtest.Success, testID)
 
-			if saved.DateUpdated.Sub(prd.DateUpdated) > time.Millisecond {
+			if prd.DateUpdated.UnixMilli() != saved.DateUpdated.UnixMilli() {
 				t.Logf("\t\tTest %d:\tGot: %v", testID, saved.DateUpdated)
 				t.Logf("\t\tTest %d:\tExp: %v", testID, prd.DateUpdated)
 				t.Logf("\t\tTest %d:\tDiff: %v", testID, saved.DateUpdated.Sub(prd.DateUpdated))

@@ -25,8 +25,8 @@ type dbProduct struct {
 
 func toDBProduct(prd product.Product) dbProduct {
 	prdDB := dbProduct(prd)
-	prdDB.DateCreated = prdDB.DateCreated.In(time.Local)
-	prdDB.DateUpdated = prdDB.DateUpdated.In(time.Local)
+	prdDB.DateCreated = prdDB.DateCreated.UTC()
+	prdDB.DateUpdated = prdDB.DateUpdated.UTC()
 
 	return prdDB
 }
