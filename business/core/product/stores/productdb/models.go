@@ -33,9 +33,8 @@ func toDBProduct(prd product.Product) dbProduct {
 
 func toCoreProduct(dbPrd dbProduct) product.Product {
 	prd := product.Product(dbPrd)
-
-	prd.DateCreated = time.Date(prd.DateCreated.Year(), prd.DateCreated.Month(), prd.DateCreated.Day(), prd.DateCreated.Hour(), prd.DateCreated.Minute(), prd.DateCreated.Second(), prd.DateCreated.Nanosecond(), time.UTC)
-	prd.DateUpdated = time.Date(prd.DateUpdated.Year(), prd.DateUpdated.Month(), prd.DateUpdated.Day(), prd.DateUpdated.Hour(), prd.DateUpdated.Minute(), prd.DateUpdated.Second(), prd.DateUpdated.Nanosecond(), time.UTC)
+	prd.DateCreated = prd.DateCreated.In(time.Local)
+	prd.DateUpdated = prd.DateUpdated.In(time.Local)
 
 	return prd
 }
