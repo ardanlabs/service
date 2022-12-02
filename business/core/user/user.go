@@ -59,7 +59,7 @@ func (c *Core) Create(ctx context.Context, nu NewUser) (User, error) {
 		return User{}, fmt.Errorf("generating password hash: %w", err)
 	}
 
-	now := time.Now().UTC()
+	now := time.Now()
 
 	usr := User{
 		ID:           validate.GenerateID(),
@@ -121,7 +121,7 @@ func (c *Core) Update(ctx context.Context, userID string, uu UpdateUser) error {
 	if uu.Enabled != nil {
 		user.Enabled = *uu.Enabled
 	}
-	user.DateUpdated = time.Now().UTC()
+	user.DateUpdated = time.Now()
 
 	if err := c.storer.Update(ctx, user); err != nil {
 		return fmt.Errorf("update: %w", err)

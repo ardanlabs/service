@@ -32,8 +32,8 @@ func toDBUser(usr user.User) dbUser {
 		Roles:        usr.Roles,
 		PasswordHash: usr.PasswordHash,
 		Enabled:      usr.Enabled,
-		DateCreated:  usr.DateCreated,
-		DateUpdated:  usr.DateUpdated,
+		DateCreated:  usr.DateCreated.In(time.Local),
+		DateUpdated:  usr.DateUpdated.In(time.Local),
 	}
 }
 

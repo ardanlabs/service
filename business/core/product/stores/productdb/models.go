@@ -24,7 +24,11 @@ type dbProduct struct {
 // =============================================================================
 
 func toDBProduct(prd product.Product) dbProduct {
-	return dbProduct(prd)
+	prdDB := dbProduct(prd)
+	prdDB.DateCreated = prdDB.DateCreated.In(time.Local)
+	prdDB.DateUpdated = prdDB.DateUpdated.In(time.Local)
+
+	return prdDB
 }
 
 func toCoreProduct(dbPrd dbProduct) product.Product {
