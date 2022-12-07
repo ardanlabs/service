@@ -16,6 +16,7 @@ import (
 	v1Web "github.com/ardanlabs/service/business/web/v1"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/google/uuid"
 )
 
 // UserTests holds methods for each user subtest. This type allows passing
@@ -501,8 +502,8 @@ func (ut *UserTests) postUser409(t *testing.T, usr user.User) {
 }
 
 // deleteUser204 validates deleting a user that does exist.
-func (ut *UserTests) deleteUser204(t *testing.T, id string) {
-	r := httptest.NewRequest(http.MethodDelete, "/v1/users/"+id, nil)
+func (ut *UserTests) deleteUser204(t *testing.T, id uuid.UUID) {
+	r := httptest.NewRequest(http.MethodDelete, "/v1/users/"+id.String(), nil)
 	w := httptest.NewRecorder()
 
 	r.Header.Set("Authorization", "Bearer "+ut.adminToken)
@@ -522,8 +523,8 @@ func (ut *UserTests) deleteUser204(t *testing.T, id string) {
 }
 
 // getUser200 validates a user request for an existing userid.
-func (ut *UserTests) getUser200(t *testing.T, id string) {
-	r := httptest.NewRequest(http.MethodGet, "/v1/users/"+id, nil)
+func (ut *UserTests) getUser200(t *testing.T, id uuid.UUID) {
+	r := httptest.NewRequest(http.MethodGet, "/v1/users/"+id.String(), nil)
 	w := httptest.NewRecorder()
 
 	r.Header.Set("Authorization", "Bearer "+ut.adminToken)
@@ -561,10 +562,10 @@ func (ut *UserTests) getUser200(t *testing.T, id string) {
 }
 
 // putUser204 validates updating a user that does exist.
-func (ut *UserTests) putUser204(t *testing.T, id string) {
+func (ut *UserTests) putUser204(t *testing.T, id uuid.UUID) {
 	body := `{"name": "Jacob Walker"}`
 
-	r := httptest.NewRequest(http.MethodPut, "/v1/users/"+id, strings.NewReader(body))
+	r := httptest.NewRequest(http.MethodPut, "/v1/users/"+id.String(), strings.NewReader(body))
 	w := httptest.NewRecorder()
 
 	r.Header.Set("Authorization", "Bearer "+ut.adminToken)
@@ -580,7 +581,7 @@ func (ut *UserTests) putUser204(t *testing.T, id string) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould receive a status code of 204 for the response.", dbtest.Success, testID)
 
-			r = httptest.NewRequest(http.MethodGet, "/v1/users/"+id, nil)
+			r = httptest.NewRequest(http.MethodGet, "/v1/users/"+id.String(), nil)
 			w = httptest.NewRecorder()
 
 			r.Header.Set("Authorization", "Bearer "+ut.adminToken)
@@ -610,10 +611,10 @@ func (ut *UserTests) putUser204(t *testing.T, id string) {
 }
 
 // putUser401 validates that a user can't modify users unless they are an admin.
-func (ut *UserTests) putUser401(t *testing.T, id string) {
+func (ut *UserTests) putUser401(t *testing.T, id uuid.UUID) {
 	body := `{"name": "Anna Walker"}`
 
-	r := httptest.NewRequest(http.MethodPut, "/v1/users/"+id, strings.NewReader(body))
+	r := httptest.NewRequest(http.MethodPut, "/v1/users/"+id.String(), strings.NewReader(body))
 	w := httptest.NewRecorder()
 
 	r.Header.Set("Authorization", "Bearer "+ut.userToken)

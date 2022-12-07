@@ -2,6 +2,8 @@ package user
 
 import (
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // Set of possible roles for a user.
@@ -12,7 +14,7 @@ const (
 
 // User represents an individual user.
 type User struct {
-	ID           string    `json:"id"`
+	ID           uuid.UUID `json:"id"`
 	Name         string    `json:"name"`
 	Email        string    `json:"email"`
 	Roles        []string  `json:"roles"`

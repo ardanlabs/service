@@ -11,6 +11,7 @@ import (
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/data/order"
 	"github.com/ardanlabs/service/business/sys/database"
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
 )
@@ -91,11 +92,11 @@ func (s *Store) Update(ctx context.Context, usr user.User) error {
 }
 
 // Delete removes a user from the database.
-func (s *Store) Delete(ctx context.Context, userID string) error {
+func (s *Store) Delete(ctx context.Context, usr user.User) error {
 	data := struct {
 		UserID string `db:"user_id"`
 	}{
-		UserID: userID,
+		UserID: usr.ID.String(),
 	}
 
 	const q = `
@@ -105,7 +106,7 @@ func (s *Store) Delete(ctx context.Context, userID string) error {
 		user_id = :user_id`
 
 	if err := database.NamedExecContext(ctx, s.log, s.db, q, data); err != nil {
-		return fmt.Errorf("deleting userID[%s]: %w", userID, err)
+		return fmt.Errorf("deleting userID[%s]: %w", usr.ID, err)
 	}
 
 	return nil
@@ -168,11 +169,11 @@ func (s *Store) Query(ctx context.Context, filter user.QueryFilter, orderBy orde
 }
 
 // QueryByID gets the specified user from the database.
-func (s *Store) QueryByID(ctx context.Context, userID string) (user.User, error) {
+func (s *Store) QueryByID(ctx context.Context, userID uuid.UUID) (user.User, error) {
 	data := struct {
 		UserID string `db:"user_id"`
 	}{
-		UserID: userID,
+		UserID: userID.String(),
 	}
 
 	const q = `

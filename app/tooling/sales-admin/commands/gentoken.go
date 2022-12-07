@@ -11,12 +11,13 @@ import (
 	"github.com/ardanlabs/service/business/web/auth"
 	"github.com/ardanlabs/service/foundation/vault"
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
 // GenToken generates a JWT for the specified user.
-func GenToken(log *zap.SugaredLogger, dbConfig database.Config, vaultConfig vault.Config, userID string, kid string) error {
-	if userID == "" || kid == "" {
+func GenToken(log *zap.SugaredLogger, dbConfig database.Config, vaultConfig vault.Config, userID uuid.UUID, kid string) error {
+	if kid == "" {
 		fmt.Println("help: gentoken <user_id> <kid>")
 		return ErrHelp
 	}
@@ -66,7 +67,7 @@ func GenToken(log *zap.SugaredLogger, dbConfig database.Config, vaultConfig vaul
 	// jti (JWT ID): Unique identifier; can be used to prevent the JWT from being replayed (allows a token to be used only once)
 	claims := auth.Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
-			Subject:   usr.ID,
+			Subject:   usr.ID.String(),
 			Issuer:    "service project",
 			ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(8760 * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),

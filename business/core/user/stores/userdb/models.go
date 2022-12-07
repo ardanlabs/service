@@ -6,6 +6,7 @@ import (
 
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/data/order"
+	"github.com/google/uuid"
 	"github.com/lib/pq"
 )
 
@@ -26,7 +27,7 @@ type dbUser struct {
 
 func toDBUser(usr user.User) dbUser {
 	return dbUser{
-		ID:           usr.ID,
+		ID:           usr.ID.String(),
 		Name:         usr.Name,
 		Email:        usr.Email,
 		Roles:        usr.Roles,
@@ -39,7 +40,7 @@ func toDBUser(usr user.User) dbUser {
 
 func toCoreUser(dbUsr dbUser) user.User {
 	usr := user.User{
-		ID:           dbUsr.ID,
+		ID:           uuid.MustParse(dbUsr.ID),
 		Name:         dbUsr.Name,
 		Email:        dbUsr.Email,
 		Roles:        dbUsr.Roles,

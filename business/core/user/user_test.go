@@ -100,7 +100,7 @@ func Test_User(t *testing.T) {
 				Email: dbtest.StringPointer("jacob@ardanlabs.com"),
 			}
 
-			if err := core.Update(ctx, usr.ID, upd); err != nil {
+			if err := core.Update(ctx, saved, upd); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to update user : %s.", dbtest.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to update user.", dbtest.Success, testID)
@@ -132,12 +132,12 @@ func Test_User(t *testing.T) {
 				t.Logf("\t%s\tTest %d:\tShould be able to see updates to Email.", dbtest.Success, testID)
 			}
 
-			if err := core.Delete(ctx, usr.ID); err != nil {
+			if err := core.Delete(ctx, saved); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to delete user : %s.", dbtest.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to delete user.", dbtest.Success, testID)
 
-			_, err = core.QueryByID(ctx, usr.ID)
+			_, err = core.QueryByID(ctx, saved.ID)
 			if !errors.Is(err, user.ErrNotFound) {
 				t.Fatalf("\t%s\tTest %d:\tShould NOT be able to retrieve user : %s.", dbtest.Failed, testID, err)
 			}

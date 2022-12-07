@@ -10,6 +10,7 @@ import (
 	"github.com/ardanlabs/service/app/tooling/sales-admin/commands"
 	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/ardanlabs/service/foundation/vault"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
@@ -123,7 +124,10 @@ func processCommands(args conf.Args, log *zap.SugaredLogger, cfg config) error {
 		}
 
 	case "gentoken":
-		userID := args.Num(1)
+		userID, err := uuid.Parse(args.Num(1))
+		if err != nil {
+			return fmt.Errorf("generating token: %w", err)
+		}
 		kid := args.Num(2)
 		if err := commands.GenToken(log, dbConfig, vaultConfig, userID, kid); err != nil {
 			return fmt.Errorf("generating token: %w", err)
