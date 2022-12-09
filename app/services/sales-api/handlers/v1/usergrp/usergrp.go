@@ -6,11 +6,11 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/mail"
 	"strconv"
 	"time"
 
 	"github.com/ardanlabs/service/business/core/user"
-	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/ardanlabs/service/business/web/auth"
 	v1Web "github.com/ardanlabs/service/business/web/v1"
 	"github.com/ardanlabs/service/foundation/web"
@@ -33,10 +33,6 @@ func (h Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Req
 		return fmt.Errorf("unable to decode payload: %w", err)
 	}
 
-	if err := validate.Check(nu); err != nil {
-		return fmt.Errorf("validating data: %w", err)
-	}
-
 	usr, err := h.User.Create(ctx, nu)
 	if err != nil {
 		if errors.Is(err, user.ErrUniqueEmail) {
@@ -53,10 +49,6 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 	var upd user.UpdateUser
 	if err := web.Decode(r, &upd); err != nil {
 		return fmt.Errorf("unable to decode payload: %w", err)
-	}
-
-	if err := validate.Check(upd); err != nil {
-		return fmt.Errorf("validating data: %w", err)
 	}
 
 	userID, err := uuid.Parse(web.Param(r, "id"))
@@ -79,11 +71,12 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 		}
 	}
 
-	if err := h.User.Update(ctx, usr, upd); err != nil {
+	usr, err = h.User.Update(ctx, usr, upd)
+	if err != nil {
 		return fmt.Errorf("ID[%s] User[%+v]: %w", userID, &upd, err)
 	}
 
-	return web.Respond(ctx, w, nil, http.StatusNoContent)
+	return web.Respond(ctx, w, usr, http.StatusOK)
 }
 
 // Delete removes a user from the system.
@@ -186,7 +179,12 @@ func (h Handlers) Token(ctx context.Context, w http.ResponseWriter, r *http.Requ
 		return auth.NewAuthError("must provide email and password in Basic auth")
 	}
 
-	usr, err := h.User.Authenticate(ctx, email, pass)
+	addr, err := mail.ParseAddress(email)
+	if err != nil {
+		return auth.NewAuthError("invalid email format")
+	}
+
+	usr, err := h.User.Authenticate(ctx, *addr, pass)
 	if err != nil {
 		switch {
 		case errors.Is(err, user.ErrNotFound):

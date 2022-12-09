@@ -77,14 +77,7 @@ func run(log *zap.SugaredLogger) error {
 		Vault struct {
 			Address   string `conf:"default:http://vault-service.sales-system.svc.cluster.local:8200"`
 			MountPath string `conf:"default:secret"`
-
-			// This MUST be handled like any root credential.
-			// This value comes from Vault when it starts.
-			Token string `conf:"default:mytoken,mask"`
-		}
-		Auth struct {
-			KeysFolder string `conf:"default:zarf/keys/"`
-			ActiveKID  string `conf:"default:54bb2165-71e1-41a6-af3e-7da4a0e1e2c1"`
+			Token     string `conf:"default:mytoken,mask"`
 		}
 		DB struct {
 			User         string `conf:"default:postgres"`

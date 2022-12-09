@@ -2,6 +2,7 @@ package userdb
 
 import (
 	"fmt"
+	"net/mail"
 	"time"
 
 	"github.com/ardanlabs/service/business/core/user"
@@ -29,7 +30,7 @@ func toDBUser(usr user.User) dbUser {
 	return dbUser{
 		ID:           usr.ID.String(),
 		Name:         usr.Name,
-		Email:        usr.Email,
+		Email:        usr.Email.Address,
 		Roles:        usr.Roles,
 		PasswordHash: usr.PasswordHash,
 		Enabled:      usr.Enabled,
@@ -39,10 +40,16 @@ func toDBUser(usr user.User) dbUser {
 }
 
 func toCoreUser(dbUsr dbUser) user.User {
+	addr, err := mail.ParseAddress(dbUsr.Email)
+	if err != nil {
+		addr.Name = "unknown"
+		addr.Address = dbUsr.Email
+	}
+
 	usr := user.User{
 		ID:           uuid.MustParse(dbUsr.ID),
 		Name:         dbUsr.Name,
-		Email:        dbUsr.Email,
+		Email:        *addr,
 		Roles:        dbUsr.Roles,
 		PasswordHash: dbUsr.PasswordHash,
 		Enabled:      dbUsr.Enabled,

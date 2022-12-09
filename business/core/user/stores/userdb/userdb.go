@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/mail"
 	"strings"
 
 	"github.com/ardanlabs/service/business/core/user"
@@ -132,7 +133,7 @@ func (s *Store) Query(ctx context.Context, filter user.QueryFilter, orderBy orde
 
 	var wc []string
 	if filter.ID != nil {
-		data.ID = *filter.ID
+		data.ID = (*filter.ID).String()
 		wc = append(wc, "id = :id")
 	}
 	if filter.Name != nil {
@@ -140,7 +141,7 @@ func (s *Store) Query(ctx context.Context, filter user.QueryFilter, orderBy orde
 		wc = append(wc, "name LIKE :name")
 	}
 	if filter.Email != nil {
-		data.Email = *filter.Email
+		data.Email = (*filter.Email).String()
 		wc = append(wc, "email = :email")
 	}
 
@@ -196,11 +197,11 @@ func (s *Store) QueryByID(ctx context.Context, userID uuid.UUID) (user.User, err
 }
 
 // QueryByEmail gets the specified user from the database by email.
-func (s *Store) QueryByEmail(ctx context.Context, email string) (user.User, error) {
+func (s *Store) QueryByEmail(ctx context.Context, email mail.Address) (user.User, error) {
 	data := struct {
 		Email string `db:"email"`
 	}{
-		Email: email,
+		Email: email.Address,
 	}
 
 	const q = `

@@ -3,6 +3,7 @@ package commands
 import (
 	"context"
 	"fmt"
+	"net/mail"
 	"time"
 
 	"github.com/ardanlabs/service/business/core/user"
@@ -29,9 +30,14 @@ func UserAdd(log *zap.SugaredLogger, cfg database.Config, name, email, password 
 
 	core := user.NewCore(userdb.NewStore(log, db))
 
+	addr, err := mail.ParseAddress(email)
+	if err != nil {
+		return fmt.Errorf("parsing email: %w", err)
+	}
+
 	nu := user.NewUser{
 		Name:            name,
-		Email:           email,
+		Email:           *addr,
 		Password:        password,
 		PasswordConfirm: password,
 		Roles:           []string{user.RoleAdmin, user.RoleUser},

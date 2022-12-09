@@ -36,7 +36,6 @@ spec:
           persistentVolumeClaim:
             claimName: vault-credentials
       initContainers:
-      # sales-api init container configuration
       - name: init-vault-server
         image: sales-api-image
         command: ['./sales-admin', 'vault-init']
@@ -53,7 +52,6 @@ spec:
         image: sales-api-image
         command: ['./sales-admin', 'seed']
       containers:
-      # sales-api container configuration
       - name: sales-api
         image: sales-api-image
         ports:

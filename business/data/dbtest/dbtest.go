@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"net/mail"
 	"testing"
 	"time"
 
@@ -172,8 +173,10 @@ func NewIntegration(t *testing.T, c *docker.Container, dbName string) *Test {
 func (test *Test) Token(email string, pass string) string {
 	test.t.Log("Generating token for test ...")
 
+	addr, _ := mail.ParseAddress(email)
+
 	store := userdb.NewStore(test.Log, test.DB)
-	dbUsr, err := store.QueryByEmail(context.Background(), email)
+	dbUsr, err := store.QueryByEmail(context.Background(), *addr)
 	if err != nil {
 		return ""
 	}

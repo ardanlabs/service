@@ -3,6 +3,7 @@ package usercache
 
 import (
 	"context"
+	"net/mail"
 	"sync"
 
 	"github.com/ardanlabs/service/business/core/user"
@@ -89,8 +90,8 @@ func (s *Store) QueryByID(ctx context.Context, userID uuid.UUID) (user.User, err
 }
 
 // QueryByEmail gets the specified user from the database by email.
-func (s *Store) QueryByEmail(ctx context.Context, email string) (user.User, error) {
-	cachedUsr, ok := s.readCache(email)
+func (s *Store) QueryByEmail(ctx context.Context, email mail.Address) (user.User, error) {
+	cachedUsr, ok := s.readCache(email.Address)
 	if ok {
 		return cachedUsr, nil
 	}
@@ -126,7 +127,7 @@ func (s *Store) writeCache(usr user.User) {
 	defer s.mu.Unlock()
 
 	s.cache[usr.ID.String()] = &usr
-	s.cache[usr.Email] = &usr
+	s.cache[usr.Email.Address] = &usr
 }
 
 // deleteCache performs a safe removal from the cache for the specified user.
@@ -135,5 +136,5 @@ func (s *Store) deleteCache(usr user.User) {
 	defer s.mu.Unlock()
 
 	delete(s.cache, usr.ID.String())
-	delete(s.cache, usr.Email)
+	delete(s.cache, usr.Email.Address)
 }

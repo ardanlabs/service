@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"net/mail"
 	"os"
 	"strings"
 	"testing"
@@ -119,7 +120,13 @@ func (ut *UserTests) getToken200(t *testing.T) {
 // postUser400 validates a user can't be created with the endpoint
 // unless a valid user document is submitted.
 func (ut *UserTests) postUser400(t *testing.T) {
-	body, err := json.Marshal(&user.NewUser{})
+	usr := user.NewUser{
+		Email: mail.Address{
+			Name:    "Bill",
+			Address: "bill@ardanlabs.com",
+		},
+	}
+	body, err := json.Marshal(usr)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -148,7 +155,6 @@ func (ut *UserTests) postUser400(t *testing.T) {
 
 			fields := validate.FieldErrors{
 				{Field: "name", Error: "name is a required field"},
-				{Field: "email", Error: "email is a required field"},
 				{Field: "roles", Error: "roles is a required field"},
 				{Field: "password", Error: "password is a required field"},
 			}
@@ -413,9 +419,15 @@ func (ut *UserTests) crudUser(t *testing.T) {
 
 // postUser201 validates a user can be created with the endpoint.
 func (ut *UserTests) postUser201(t *testing.T) user.User {
+	email, err := mail.ParseAddress("bill@ardanlabs.com")
+	if err != nil {
+		t.Fatalf("\t%s\tTest %d:\tShould be able to parse email: %s.", dbtest.Failed, 0, err)
+	}
+	t.Logf("\t%s\tTest %d:\tShould be able to parse email.", dbtest.Success, 0)
+
 	nu := user.NewUser{
 		Name:            "Bill Kennedy",
-		Email:           "bill@ardanlabs.com",
+		Email:           *email,
 		Roles:           []string{user.RoleAdmin},
 		Password:        "gophers",
 		PasswordConfirm: "gophers",
@@ -449,11 +461,17 @@ func (ut *UserTests) postUser201(t *testing.T) user.User {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to unmarshal the response : %v", dbtest.Failed, testID, err)
 			}
 
+			email, err := mail.ParseAddress("bill@ardanlabs.com")
+			if err != nil {
+				t.Fatalf("\t%s\tTest %d:\tShould be able to parse email: %s.", dbtest.Failed, testID, err)
+			}
+			t.Logf("\t%s\tTest %d:\tShould be able to parse email.", dbtest.Success, testID)
+
 			// Define what we wanted to receive. We will just trust the generated
 			// fields like ID and Dates so we copy u.
 			exp := got
 			exp.Name = "Bill Kennedy"
-			exp.Email = "bill@ardanlabs.com"
+			exp.Email = *email
 			exp.Roles = []string{user.RoleAdmin}
 
 			if diff := cmp.Diff(got, exp); diff != "" {
@@ -545,12 +563,18 @@ func (ut *UserTests) getUser200(t *testing.T, id uuid.UUID) {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to unmarshal the response : %v", dbtest.Failed, testID, err)
 			}
 
+			email, err := mail.ParseAddress("bill@ardanlabs.com")
+			if err != nil {
+				t.Fatalf("\t%s\tTest %d:\tShould be able to parse email: %s.", dbtest.Failed, testID, err)
+			}
+			t.Logf("\t%s\tTest %d:\tShould be able to parse email.", dbtest.Success, testID)
+
 			// Define what we wanted to receive. We will just trust the generated
 			// fields like Dates so we copy p.
 			exp := got
 			exp.ID = id
 			exp.Name = "Bill Kennedy"
-			exp.Email = "bill@ardanlabs.com"
+			exp.Email = *email
 			exp.Roles = []string{user.RoleAdmin}
 
 			if diff := cmp.Diff(got, exp); diff != "" {
@@ -576,10 +600,10 @@ func (ut *UserTests) putUser204(t *testing.T, id uuid.UUID) {
 		testID := 0
 		t.Logf("\tTest %d:\tWhen using the modified user value.", testID)
 		{
-			if w.Code != http.StatusNoContent {
-				t.Fatalf("\t%s\tTest %d:\tShould receive a status code of 204 for the response : %v", dbtest.Failed, testID, w.Code)
+			if w.Code != http.StatusOK {
+				t.Fatalf("\t%s\tTest %d:\tShould receive a status code of 200 for the response : %v", dbtest.Failed, testID, w.Code)
 			}
-			t.Logf("\t%s\tTest %d:\tShould receive a status code of 204 for the response.", dbtest.Success, testID)
+			t.Logf("\t%s\tTest %d:\tShould receive a status code of 200 for the response.", dbtest.Success, testID)
 
 			r = httptest.NewRequest(http.MethodGet, "/v1/users/"+id.String(), nil)
 			w = httptest.NewRecorder()
@@ -602,7 +626,13 @@ func (ut *UserTests) putUser204(t *testing.T, id uuid.UUID) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould see an updated Name.", dbtest.Success, testID)
 
-			if ru.Email != "bill@ardanlabs.com" {
+			email, err := mail.ParseAddress("bill@ardanlabs.com")
+			if err != nil {
+				t.Fatalf("\t%s\tTest %d:\tShould be able to parse email: %s.", dbtest.Failed, testID, err)
+			}
+			t.Logf("\t%s\tTest %d:\tShould be able to parse email.", dbtest.Success, testID)
+
+			if ru.Email != *email {
 				t.Fatalf("\t%s\tTest %d:\tShould not affect other fields like Email : got %q want %q", dbtest.Failed, testID, ru.Email, "bill@ardanlabs.com")
 			}
 			t.Logf("\t%s\tTest %d:\tShould not affect other fields like Email.", dbtest.Success, testID)

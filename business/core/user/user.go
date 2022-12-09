@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/mail"
 	"time"
 
 	"github.com/ardanlabs/service/business/data/order"
@@ -33,7 +34,7 @@ type Storer interface {
 	Delete(ctx context.Context, usr User) error
 	Query(ctx context.Context, filter QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]User, error)
 	QueryByID(ctx context.Context, userID uuid.UUID) (User, error)
-	QueryByEmail(ctx context.Context, email string) (User, error)
+	QueryByEmail(ctx context.Context, email mail.Address) (User, error)
 }
 
 // Core manages the set of APIs for user access.
@@ -50,6 +51,10 @@ func NewCore(storer Storer) *Core {
 
 // Create inserts a new user into the database.
 func (c *Core) Create(ctx context.Context, nu NewUser) (User, error) {
+	if err := validate.Check(nu); err != nil {
+		return User{}, fmt.Errorf("validating data: %w", err)
+	}
+
 	hash, err := bcrypt.GenerateFromPassword([]byte(nu.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return User{}, fmt.Errorf("generating password hash: %w", err)
@@ -84,7 +89,11 @@ func (c *Core) Create(ctx context.Context, nu NewUser) (User, error) {
 }
 
 // Update replaces a user document in the database.
-func (c *Core) Update(ctx context.Context, usr User, uu UpdateUser) error {
+func (c *Core) Update(ctx context.Context, usr User, uu UpdateUser) (User, error) {
+	if err := validate.Check(uu); err != nil {
+		return User{}, fmt.Errorf("validating data: %w", err)
+	}
+
 	if uu.Name != nil {
 		usr.Name = *uu.Name
 	}
@@ -97,7 +106,7 @@ func (c *Core) Update(ctx context.Context, usr User, uu UpdateUser) error {
 	if uu.Password != nil {
 		pw, err := bcrypt.GenerateFromPassword([]byte(*uu.Password), bcrypt.DefaultCost)
 		if err != nil {
-			return fmt.Errorf("generating password hash: %w", err)
+			return User{}, fmt.Errorf("generating password hash: %w", err)
 		}
 		usr.PasswordHash = pw
 	}
@@ -107,10 +116,10 @@ func (c *Core) Update(ctx context.Context, usr User, uu UpdateUser) error {
 	usr.DateUpdated = time.Now()
 
 	if err := c.storer.Update(ctx, usr); err != nil {
-		return fmt.Errorf("update: %w", err)
+		return User{}, fmt.Errorf("update: %w", err)
 	}
 
-	return nil
+	return usr, nil
 }
 
 // Delete removes a user from the database.
@@ -151,11 +160,7 @@ func (c *Core) QueryByID(ctx context.Context, userID uuid.UUID) (User, error) {
 }
 
 // QueryByEmail gets the specified user from the database by email.
-func (c *Core) QueryByEmail(ctx context.Context, email string) (User, error) {
-	if !validate.CheckEmail(email) {
-		return User{}, ErrInvalidEmail
-	}
-
+func (c *Core) QueryByEmail(ctx context.Context, email mail.Address) (User, error) {
 	user, err := c.storer.QueryByEmail(ctx, email)
 	if err != nil {
 		return User{}, fmt.Errorf("query: %w", err)
@@ -167,7 +172,7 @@ func (c *Core) QueryByEmail(ctx context.Context, email string) (User, error) {
 // Authenticate finds a user by their email and verifies their password. On
 // success it returns a Claims User representing this user. The claims can be
 // used to generate a token for future authentication.
-func (c *Core) Authenticate(ctx context.Context, email, password string) (User, error) {
+func (c *Core) Authenticate(ctx context.Context, email mail.Address, password string) (User, error) {
 	usr, err := c.storer.QueryByEmail(ctx, email)
 	if err != nil {
 		return User{}, fmt.Errorf("query: %w", err)
