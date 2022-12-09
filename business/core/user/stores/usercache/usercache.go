@@ -3,11 +3,12 @@ package usercache
 
 import (
 	"context"
-	"errors"
+	"net/mail"
 	"sync"
 
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/data/order"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
@@ -56,16 +57,8 @@ func (s *Store) Update(ctx context.Context, usr user.User) error {
 }
 
 // Delete removes a user from the database.
-func (s *Store) Delete(ctx context.Context, userID string) error {
-	usr, err := s.storer.QueryByID(ctx, userID)
-	if err != nil {
-		if errors.Is(err, user.ErrNotFound) {
-			return nil
-		}
-		return err
-	}
-
-	if err := s.storer.Delete(ctx, usr.ID); err != nil {
+func (s *Store) Delete(ctx context.Context, usr user.User) error {
+	if err := s.storer.Delete(ctx, usr); err != nil {
 		return err
 	}
 
@@ -80,8 +73,8 @@ func (s *Store) Query(ctx context.Context, filter user.QueryFilter, orderBy orde
 }
 
 // QueryByID gets the specified user from the database.
-func (s *Store) QueryByID(ctx context.Context, userID string) (user.User, error) {
-	cachedUsr, ok := s.readCache(userID)
+func (s *Store) QueryByID(ctx context.Context, userID uuid.UUID) (user.User, error) {
+	cachedUsr, ok := s.readCache(userID.String())
 	if ok {
 		return cachedUsr, nil
 	}
@@ -97,8 +90,8 @@ func (s *Store) QueryByID(ctx context.Context, userID string) (user.User, error)
 }
 
 // QueryByEmail gets the specified user from the database by email.
-func (s *Store) QueryByEmail(ctx context.Context, email string) (user.User, error) {
-	cachedUsr, ok := s.readCache(email)
+func (s *Store) QueryByEmail(ctx context.Context, email mail.Address) (user.User, error) {
+	cachedUsr, ok := s.readCache(email.Address)
 	if ok {
 		return cachedUsr, nil
 	}
@@ -133,8 +126,8 @@ func (s *Store) writeCache(usr user.User) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	s.cache[usr.ID] = &usr
-	s.cache[usr.Email] = &usr
+	s.cache[usr.ID.String()] = &usr
+	s.cache[usr.Email.Address] = &usr
 }
 
 // deleteCache performs a safe removal from the cache for the specified user.
@@ -142,6 +135,6 @@ func (s *Store) deleteCache(usr user.User) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	delete(s.cache, usr.ID)
-	delete(s.cache, usr.Email)
+	delete(s.cache, usr.ID.String())
+	delete(s.cache, usr.Email.Address)
 }

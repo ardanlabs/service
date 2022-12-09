@@ -6,6 +6,7 @@ import (
 
 	"github.com/ardanlabs/service/business/core/product"
 	"github.com/ardanlabs/service/business/data/order"
+	"github.com/google/uuid"
 )
 
 // dbProduct represents an individual product.
@@ -24,17 +25,33 @@ type dbProduct struct {
 // =============================================================================
 
 func toDBProduct(prd product.Product) dbProduct {
-	prdDB := dbProduct(prd)
-	prdDB.DateCreated = prdDB.DateCreated.UTC()
-	prdDB.DateUpdated = prdDB.DateUpdated.UTC()
+	prdDB := dbProduct{
+		ID:          prd.ID.String(),
+		Name:        prd.Name,
+		Cost:        prd.Cost,
+		Quantity:    prd.Quantity,
+		Sold:        prd.Sold,
+		Revenue:     prd.Revenue,
+		UserID:      prd.UserID.String(),
+		DateCreated: prd.DateCreated.UTC(),
+		DateUpdated: prd.DateUpdated.UTC(),
+	}
 
 	return prdDB
 }
 
 func toCoreProduct(dbPrd dbProduct) product.Product {
-	prd := product.Product(dbPrd)
-	prd.DateCreated = prd.DateCreated.In(time.Local)
-	prd.DateUpdated = prd.DateUpdated.In(time.Local)
+	prd := product.Product{
+		ID:          uuid.MustParse(dbPrd.ID),
+		Name:        dbPrd.Name,
+		Cost:        dbPrd.Cost,
+		Quantity:    dbPrd.Quantity,
+		Sold:        dbPrd.Sold,
+		Revenue:     dbPrd.Revenue,
+		UserID:      uuid.MustParse(dbPrd.UserID),
+		DateCreated: dbPrd.DateCreated.In(time.Local),
+		DateUpdated: dbPrd.DateUpdated.In(time.Local),
+	}
 
 	return prd
 }

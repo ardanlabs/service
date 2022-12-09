@@ -6,11 +6,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/mail"
 	"strings"
 
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/data/order"
 	"github.com/ardanlabs/service/business/sys/database"
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
 )
@@ -91,11 +93,11 @@ func (s *Store) Update(ctx context.Context, usr user.User) error {
 }
 
 // Delete removes a user from the database.
-func (s *Store) Delete(ctx context.Context, userID string) error {
+func (s *Store) Delete(ctx context.Context, usr user.User) error {
 	data := struct {
 		UserID string `db:"user_id"`
 	}{
-		UserID: userID,
+		UserID: usr.ID.String(),
 	}
 
 	const q = `
@@ -105,7 +107,7 @@ func (s *Store) Delete(ctx context.Context, userID string) error {
 		user_id = :user_id`
 
 	if err := database.NamedExecContext(ctx, s.log, s.db, q, data); err != nil {
-		return fmt.Errorf("deleting userID[%s]: %w", userID, err)
+		return fmt.Errorf("deleting userID[%s]: %w", usr.ID, err)
 	}
 
 	return nil
@@ -131,7 +133,7 @@ func (s *Store) Query(ctx context.Context, filter user.QueryFilter, orderBy orde
 
 	var wc []string
 	if filter.ID != nil {
-		data.ID = *filter.ID
+		data.ID = (*filter.ID).String()
 		wc = append(wc, "id = :id")
 	}
 	if filter.Name != nil {
@@ -139,7 +141,7 @@ func (s *Store) Query(ctx context.Context, filter user.QueryFilter, orderBy orde
 		wc = append(wc, "name LIKE :name")
 	}
 	if filter.Email != nil {
-		data.Email = *filter.Email
+		data.Email = (*filter.Email).String()
 		wc = append(wc, "email = :email")
 	}
 
@@ -168,11 +170,11 @@ func (s *Store) Query(ctx context.Context, filter user.QueryFilter, orderBy orde
 }
 
 // QueryByID gets the specified user from the database.
-func (s *Store) QueryByID(ctx context.Context, userID string) (user.User, error) {
+func (s *Store) QueryByID(ctx context.Context, userID uuid.UUID) (user.User, error) {
 	data := struct {
 		UserID string `db:"user_id"`
 	}{
-		UserID: userID,
+		UserID: userID.String(),
 	}
 
 	const q = `
@@ -195,11 +197,11 @@ func (s *Store) QueryByID(ctx context.Context, userID string) (user.User, error)
 }
 
 // QueryByEmail gets the specified user from the database by email.
-func (s *Store) QueryByEmail(ctx context.Context, email string) (user.User, error) {
+func (s *Store) QueryByEmail(ctx context.Context, email mail.Address) (user.User, error) {
 	data := struct {
 		Email string `db:"email"`
 	}{
-		Email: email,
+		Email: email.Address,
 	}
 
 	const q = `

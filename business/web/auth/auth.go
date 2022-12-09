@@ -11,6 +11,7 @@ import (
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/core/user/stores/userdb"
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/open-policy-agent/opa/rego"
 	"go.uber.org/zap"
@@ -220,7 +221,12 @@ func (a *Auth) isUserEnabled(ctx context.Context, claims Claims) bool {
 		return true
 	}
 
-	usr, err := a.user.QueryByID(ctx, claims.Subject)
+	userID, err := uuid.Parse(claims.Subject)
+	if err != nil {
+		return false
+	}
+
+	usr, err := a.user.QueryByID(ctx, userID)
 	if err != nil {
 		return false
 	}

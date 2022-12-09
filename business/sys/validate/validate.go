@@ -2,7 +2,6 @@
 package validate
 
 import (
-	"errors"
 	"reflect"
 	"regexp"
 	"strings"
@@ -11,7 +10,6 @@ import (
 	ut "github.com/go-playground/universal-translator"
 	"github.com/go-playground/validator/v10"
 	en_translations "github.com/go-playground/validator/v10/translations/en"
-	"github.com/google/uuid"
 )
 
 // validate holds the settings and caches for validating request struct values.
@@ -74,22 +72,4 @@ func Check(val any) error {
 	}
 
 	return nil
-}
-
-// GenerateID generate a unique id for entities.
-func GenerateID() string {
-	return uuid.NewString()
-}
-
-// CheckID validates that the format of an id is valid.
-func CheckID(id string) error {
-	if _, err := uuid.Parse(id); err != nil {
-		return errors.New("ID is not in its proper form")
-	}
-	return nil
-}
-
-// CheckEmail validates that the string is an email.
-func CheckEmail(email string) bool {
-	return emailRegex.MatchString(email)
 }

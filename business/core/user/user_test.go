@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/mail"
 	"runtime/debug"
 	"testing"
 	"time"
@@ -49,9 +50,15 @@ func Test_User(t *testing.T) {
 		{
 			ctx := context.Background()
 
+			email, err := mail.ParseAddress("bill@ardanlabs.com")
+			if err != nil {
+				t.Fatalf("\t%s\tTest %d:\tShould be able to parse email: %s.", dbtest.Failed, testID, err)
+			}
+			t.Logf("\t%s\tTest %d:\tShould be able to parse email.", dbtest.Success, testID)
+
 			nu := user.NewUser{
 				Name:            "Bill Kennedy",
-				Email:           "bill@ardanlabs.com",
+				Email:           *email,
 				Roles:           []string{user.RoleAdmin},
 				Password:        "gophers",
 				PasswordConfirm: "gophers",
@@ -95,12 +102,18 @@ func Test_User(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould get back the same user.", dbtest.Success, testID)
 
+			email, err = mail.ParseAddress("jacob@ardanlabs.com")
+			if err != nil {
+				t.Fatalf("\t%s\tTest %d:\tShould be able to parse email: %s.", dbtest.Failed, testID, err)
+			}
+			t.Logf("\t%s\tTest %d:\tShould be able to parse email.", dbtest.Success, testID)
+
 			upd := user.UpdateUser{
 				Name:  dbtest.StringPointer("Jacob Walker"),
-				Email: dbtest.StringPointer("jacob@ardanlabs.com"),
+				Email: email,
 			}
 
-			if err := core.Update(ctx, usr.ID, upd); err != nil {
+			if _, err := core.Update(ctx, saved, upd); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to update user : %s.", dbtest.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to update user.", dbtest.Success, testID)
@@ -132,12 +145,12 @@ func Test_User(t *testing.T) {
 				t.Logf("\t%s\tTest %d:\tShould be able to see updates to Email.", dbtest.Success, testID)
 			}
 
-			if err := core.Delete(ctx, usr.ID); err != nil {
+			if err := core.Delete(ctx, saved); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to delete user : %s.", dbtest.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to delete user.", dbtest.Success, testID)
 
-			_, err = core.QueryByID(ctx, usr.ID)
+			_, err = core.QueryByID(ctx, saved.ID)
 			if !errors.Is(err, user.ErrNotFound) {
 				t.Fatalf("\t%s\tTest %d:\tShould NOT be able to retrieve user : %s.", dbtest.Failed, testID, err)
 			}

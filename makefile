@@ -61,7 +61,7 @@ KIND         := kindest/node:v1.25.3
 POSTGRES     := postgres:15-alpine
 VAULT        := hashicorp/vault:1.12
 ZIPKIN       := openzipkin/zipkin:2.23
-TELEPRESENCE := docker.io/datawire/tel2:2.9.3
+TELEPRESENCE := docker.io/datawire/tel2:2.9.4
 
 dev.setup.mac.common:
 	brew update
@@ -163,6 +163,12 @@ dev-update-apply: all dev-load dev-apply
 
 dev-logs:
 	kubectl logs --namespace=sales-system -l app=sales --all-containers=true -f --tail=100 --max-log-requests=6 | go run app/tooling/logfmt/main.go -service=SALES-API
+
+dev-logs-init:
+	kubectl logs --namespace=sales-system -l app=sales -f --tail=100 -c init-vault-server
+	kubectl logs --namespace=sales-system -l app=sales -f --tail=100 -c init-vault
+	kubectl logs --namespace=sales-system -l app=sales -f --tail=100 -c init-migrate
+	kubectl logs --namespace=sales-system -l app=sales -f --tail=100 -c init-seed
 
 dev-status:
 	kubectl get nodes -o wide

@@ -150,9 +150,9 @@ func NamedExecContext(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtCo
 	q := queryString(query, data)
 
 	if _, ok := data.(struct{}); ok {
-		log.WithOptions(zap.AddCallerSkip(2)).Infow("database.NamedExecContext", "trace_id", web.GetTraceID(ctx), "query", q)
+		log.WithOptions(zap.AddCallerSkip(3)).Infow("database.NamedExecContext", "trace_id", web.GetTraceID(ctx), "query", q)
 	} else {
-		log.WithOptions(zap.AddCallerSkip(1)).Infow("database.NamedExecContext", "trace_id", web.GetTraceID(ctx), "query", q)
+		log.WithOptions(zap.AddCallerSkip(2)).Infow("database.NamedExecContext", "trace_id", web.GetTraceID(ctx), "query", q)
 	}
 
 	ctx, span := web.AddSpan(ctx, "business.sys.database.exec", attribute.String("query", q))
@@ -197,9 +197,9 @@ func namedQuerySlice[T any](ctx context.Context, log *zap.SugaredLogger, db sqlx
 	q := queryString(query, data)
 
 	if _, ok := data.(struct{}); ok {
-		log.WithOptions(zap.AddCallerSkip(2)).Infow("database.NamedQuerySlice", "trace_id", web.GetTraceID(ctx), "query", q)
+		log.WithOptions(zap.AddCallerSkip(3)).Infow("database.NamedQuerySlice", "trace_id", web.GetTraceID(ctx), "query", q)
 	} else {
-		log.WithOptions(zap.AddCallerSkip(1)).Infow("database.NamedQuerySlice", "trace_id", web.GetTraceID(ctx), "query", q)
+		log.WithOptions(zap.AddCallerSkip(2)).Infow("database.NamedQuerySlice", "trace_id", web.GetTraceID(ctx), "query", q)
 	}
 
 	ctx, span := web.AddSpan(ctx, "business.sys.database.queryslice", attribute.String("query", q))
@@ -273,9 +273,9 @@ func namedQueryStruct(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtCo
 	q := queryString(query, data)
 
 	if _, ok := data.(struct{}); ok {
-		log.WithOptions(zap.AddCallerSkip(2)).Infow("database.NamedQueryStruct", "trace_id", web.GetTraceID(ctx), "query", q)
+		log.WithOptions(zap.AddCallerSkip(3)).Infow("database.NamedQueryStruct", "trace_id", web.GetTraceID(ctx), "query", q)
 	} else {
-		log.WithOptions(zap.AddCallerSkip(1)).Infow("database.NamedQueryStruct", "trace_id", web.GetTraceID(ctx), "query", q)
+		log.WithOptions(zap.AddCallerSkip(2)).Infow("database.NamedQueryStruct", "trace_id", web.GetTraceID(ctx), "query", q)
 	}
 
 	ctx, span := web.AddSpan(ctx, "business.sys.database.query", attribute.String("query", q))

@@ -10,7 +10,7 @@ jobs:
           name: Install Go 1.19
           command: |
               sudo rm -rf /usr/local/go
-              wget -O go.tgz https://dl.google.com/go/go1.19.3.linux-amd64.tar.gz
+              wget -O go.tgz https://dl.google.com/go/go1.19.4.linux-amd64.tar.gz
               sudo tar -C /usr/local -xzf go.tgz
               which go
               go version

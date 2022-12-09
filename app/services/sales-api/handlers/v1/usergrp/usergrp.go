@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/mail"
 	"strconv"
 	"time"
 
@@ -14,7 +15,10 @@ import (
 	v1Web "github.com/ardanlabs/service/business/web/v1"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/google/uuid"
 )
+
+var ErrInvalidID = errors.New("ID is not in its proper form")
 
 // Handlers manages the set of user endpoints.
 type Handlers struct {
@@ -42,49 +46,63 @@ func (h Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Req
 
 // Update updates a user in the system.
 func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	claims := auth.GetClaims(ctx)
-
 	var upd user.UpdateUser
 	if err := web.Decode(r, &upd); err != nil {
 		return fmt.Errorf("unable to decode payload: %w", err)
 	}
 
-	userID := web.Param(r, "id")
+	userID, err := uuid.Parse(web.Param(r, "id"))
+	if err != nil {
+		return v1Web.NewRequestError(ErrInvalidID, http.StatusBadRequest)
+	}
 
-	if claims.Subject != userID && h.Auth.Authorize(ctx, claims, auth.RuleAdminOnly) != nil {
+	claims := auth.GetClaims(ctx)
+	if claims.Subject != userID.String() && h.Auth.Authorize(ctx, claims, auth.RuleAdminOnly) != nil {
 		return auth.NewAuthError("auth failed")
 	}
 
-	if err := h.User.Update(ctx, userID, upd); err != nil {
+	usr, err := h.User.QueryByID(ctx, userID)
+	if err != nil {
 		switch {
-		case errors.Is(err, user.ErrInvalidID):
-			return v1Web.NewRequestError(err, http.StatusBadRequest)
 		case errors.Is(err, user.ErrNotFound):
 			return v1Web.NewRequestError(err, http.StatusNotFound)
 		default:
-			return fmt.Errorf("ID[%s] User[%+v]: %w", userID, &upd, err)
+			return fmt.Errorf("ID[%s]: %w", userID, err)
 		}
 	}
 
-	return web.Respond(ctx, w, nil, http.StatusNoContent)
+	usr, err = h.User.Update(ctx, usr, upd)
+	if err != nil {
+		return fmt.Errorf("ID[%s] User[%+v]: %w", userID, &upd, err)
+	}
+
+	return web.Respond(ctx, w, usr, http.StatusOK)
 }
 
 // Delete removes a user from the system.
 func (h Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	claims := auth.GetClaims(ctx)
-	userID := web.Param(r, "id")
+	userID, err := uuid.Parse(web.Param(r, "id"))
+	if err != nil {
+		return v1Web.NewRequestError(ErrInvalidID, http.StatusBadRequest)
+	}
 
-	if claims.Subject != userID && h.Auth.Authorize(ctx, claims, auth.RuleAdminOnly) != nil {
+	claims := auth.GetClaims(ctx)
+	if claims.Subject != userID.String() && h.Auth.Authorize(ctx, claims, auth.RuleAdminOnly) != nil {
 		return auth.NewAuthError("auth failed")
 	}
 
-	if err := h.User.Delete(ctx, userID); err != nil {
+	usr, err := h.User.QueryByID(ctx, userID)
+	if err != nil {
 		switch {
-		case errors.Is(err, user.ErrInvalidID):
-			return v1Web.NewRequestError(err, http.StatusBadRequest)
+		case errors.Is(err, user.ErrNotFound):
+			return web.Respond(ctx, w, nil, http.StatusNoContent)
 		default:
 			return fmt.Errorf("ID[%s]: %w", userID, err)
 		}
+	}
+
+	if err := h.User.Delete(ctx, usr); err != nil {
+		return fmt.Errorf("ID[%s]: %w", userID, err)
 	}
 
 	return web.Respond(ctx, w, nil, http.StatusNoContent)
@@ -126,18 +144,19 @@ func (h Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Requ
 
 // QueryByID returns a user by its ID.
 func (h Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	claims := auth.GetClaims(ctx)
-	userID := web.Param(r, "id")
+	userID, err := uuid.Parse(web.Param(r, "id"))
+	if err != nil {
+		return v1Web.NewRequestError(ErrInvalidID, http.StatusBadRequest)
+	}
 
-	if claims.Subject != userID && h.Auth.Authorize(ctx, claims, auth.RuleAdminOnly) != nil {
+	claims := auth.GetClaims(ctx)
+	if claims.Subject != userID.String() && h.Auth.Authorize(ctx, claims, auth.RuleAdminOnly) != nil {
 		return auth.NewAuthError("auth failed")
 	}
 
 	usr, err := h.User.QueryByID(ctx, userID)
 	if err != nil {
 		switch {
-		case errors.Is(err, user.ErrInvalidID):
-			return v1Web.NewRequestError(err, http.StatusBadRequest)
 		case errors.Is(err, user.ErrNotFound):
 			return v1Web.NewRequestError(err, http.StatusNotFound)
 		default:
@@ -160,7 +179,12 @@ func (h Handlers) Token(ctx context.Context, w http.ResponseWriter, r *http.Requ
 		return auth.NewAuthError("must provide email and password in Basic auth")
 	}
 
-	usr, err := h.User.Authenticate(ctx, email, pass)
+	addr, err := mail.ParseAddress(email)
+	if err != nil {
+		return auth.NewAuthError("invalid email format")
+	}
+
+	usr, err := h.User.Authenticate(ctx, *addr, pass)
 	if err != nil {
 		switch {
 		case errors.Is(err, user.ErrNotFound):
@@ -174,7 +198,7 @@ func (h Handlers) Token(ctx context.Context, w http.ResponseWriter, r *http.Requ
 
 	claims := auth.Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
-			Subject:   usr.ID,
+			Subject:   usr.ID.String(),
 			Issuer:    "service project",
 			ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
