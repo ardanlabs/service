@@ -11,6 +11,7 @@ import (
 	"github.com/ardanlabs/service/business/core/product"
 	"github.com/ardanlabs/service/business/data/order"
 	"github.com/ardanlabs/service/business/sys/database"
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
 )
@@ -67,11 +68,11 @@ func (s *Store) Update(ctx context.Context, prd product.Product) error {
 }
 
 // Delete removes the product identified by a given ID.
-func (s *Store) Delete(ctx context.Context, productID string) error {
+func (s *Store) Delete(ctx context.Context, prd product.Product) error {
 	data := struct {
 		ProductID string `db:"product_id"`
 	}{
-		ProductID: productID,
+		ProductID: prd.ID.String(),
 	}
 
 	const q = `
@@ -81,7 +82,7 @@ func (s *Store) Delete(ctx context.Context, productID string) error {
 		product_id = :product_id`
 
 	if err := database.NamedExecContext(ctx, s.log, s.db, q, data); err != nil {
-		return fmt.Errorf("deleting product productID[%s]: %w", productID, err)
+		return fmt.Errorf("deleting product productID[%s]: %w", prd.ID, err)
 	}
 
 	return nil
@@ -154,11 +155,11 @@ func (s *Store) Query(ctx context.Context, filter product.QueryFilter, orderBy o
 }
 
 // QueryByID finds the product identified by a given ID.
-func (s *Store) QueryByID(ctx context.Context, productID string) (product.Product, error) {
+func (s *Store) QueryByID(ctx context.Context, productID uuid.UUID) (product.Product, error) {
 	data := struct {
 		ProductID string `db:"product_id"`
 	}{
-		ProductID: productID,
+		ProductID: productID.String(),
 	}
 
 	const q = `
@@ -187,11 +188,11 @@ func (s *Store) QueryByID(ctx context.Context, productID string) (product.Produc
 }
 
 // QueryByUserID finds the product identified by a given User ID.
-func (s *Store) QueryByUserID(ctx context.Context, userID string) ([]product.Product, error) {
+func (s *Store) QueryByUserID(ctx context.Context, userID uuid.UUID) ([]product.Product, error) {
 	data := struct {
 		UserID string `db:"user_id"`
 	}{
-		UserID: userID,
+		UserID: userID.String(),
 	}
 
 	const q = `

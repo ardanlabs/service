@@ -13,6 +13,7 @@ import (
 	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/ardanlabs/service/foundation/docker"
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/uuid"
 )
 
 var c *docker.Container
@@ -52,7 +53,7 @@ func Test_Product(t *testing.T) {
 				Name:     "Comic Books",
 				Cost:     10,
 				Quantity: 55,
-				UserID:   "5cf37266-3473-4006-984f-9325122678b7",
+				UserID:   uuid.MustParse("5cf37266-3473-4006-984f-9325122678b7"),
 			}
 
 			prd, err := core.Create(ctx, np)
@@ -99,7 +100,7 @@ func Test_Product(t *testing.T) {
 				Quantity: dbtest.IntPointer(40),
 			}
 
-			if err := core.Update(ctx, prd.ID, upd); err != nil {
+			if _, err := core.Update(ctx, saved, upd); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to update product : %s.", dbtest.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to update product.", dbtest.Success, testID)
@@ -145,7 +146,7 @@ func Test_Product(t *testing.T) {
 				Name: dbtest.StringPointer("Graphic Novels"),
 			}
 
-			if err := core.Update(ctx, prd.ID, upd); err != nil {
+			if _, err := core.Update(ctx, saved, upd); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to update just some fields of product : %s.", dbtest.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to update just some fields of product.", dbtest.Success, testID)
@@ -167,7 +168,7 @@ func Test_Product(t *testing.T) {
 				t.Logf("\t%s\tTest %d:\tShould be able to see updated Name field.", dbtest.Success, testID)
 			}
 
-			if err := core.Delete(ctx, prd.ID); err != nil {
+			if err := core.Delete(ctx, saved); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to delete product : %s.", dbtest.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to delete product.", dbtest.Success, testID)

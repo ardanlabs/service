@@ -16,6 +16,7 @@ import (
 	v1Web "github.com/ardanlabs/service/business/web/v1"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/google/uuid"
 )
 
 // ProductTests holds methods for each product subtest. This type allows
@@ -289,7 +290,7 @@ func (pt *ProductTests) postProduct201(t *testing.T) product.Product {
 		Name:     "Comic Books",
 		Cost:     25,
 		Quantity: 60,
-		UserID:   "5cf37266-3473-4006-984f-9325122678b7",
+		UserID:   uuid.MustParse("5cf37266-3473-4006-984f-9325122678b7"),
 	}
 
 	body, err := json.Marshal(&np)
@@ -338,8 +339,8 @@ func (pt *ProductTests) postProduct201(t *testing.T) product.Product {
 }
 
 // deleteProduct200 validates deleting a product that does exist.
-func (pt *ProductTests) deleteProduct204(t *testing.T, id string) {
-	r := httptest.NewRequest(http.MethodDelete, "/v1/products/"+id, nil)
+func (pt *ProductTests) deleteProduct204(t *testing.T, id uuid.UUID) {
+	r := httptest.NewRequest(http.MethodDelete, "/v1/products/"+id.String(), nil)
 	w := httptest.NewRecorder()
 
 	r.Header.Set("Authorization", "Bearer "+pt.userToken)
@@ -359,8 +360,8 @@ func (pt *ProductTests) deleteProduct204(t *testing.T, id string) {
 }
 
 // getProduct200 validates a product request for an existing id.
-func (pt *ProductTests) getProduct200(t *testing.T, id string) {
-	r := httptest.NewRequest(http.MethodGet, "/v1/products/"+id, nil)
+func (pt *ProductTests) getProduct200(t *testing.T, id uuid.UUID) {
+	r := httptest.NewRequest(http.MethodGet, "/v1/products/"+id.String(), nil)
 	w := httptest.NewRecorder()
 
 	r.Header.Set("Authorization", "Bearer "+pt.userToken)
@@ -398,9 +399,9 @@ func (pt *ProductTests) getProduct200(t *testing.T, id string) {
 }
 
 // putProduct204 validates updating a product that does exist.
-func (pt *ProductTests) putProduct204(t *testing.T, id string) {
+func (pt *ProductTests) putProduct204(t *testing.T, id uuid.UUID) {
 	body := `{"name": "Graphic Novels", "cost": 100}`
-	r := httptest.NewRequest(http.MethodPut, "/v1/products/"+id, strings.NewReader(body))
+	r := httptest.NewRequest(http.MethodPut, "/v1/products/"+id.String(), strings.NewReader(body))
 	w := httptest.NewRecorder()
 
 	r.Header.Set("Authorization", "Bearer "+pt.userToken)
@@ -411,12 +412,12 @@ func (pt *ProductTests) putProduct204(t *testing.T, id string) {
 		testID := 0
 		t.Logf("\tTest %d:\tWhen using the modified product value.", testID)
 		{
-			if w.Code != http.StatusNoContent {
+			if w.Code != http.StatusOK {
 				t.Fatalf("\t%s\tTest %d:\tShould receive a status code of 204 for the response : %v", dbtest.Failed, testID, w.Code)
 			}
 			t.Logf("\t%s\tTest %d:\tShould receive a status code of 204 for the response.", dbtest.Success, testID)
 
-			r = httptest.NewRequest(http.MethodGet, "/v1/products/"+id, nil)
+			r = httptest.NewRequest(http.MethodGet, "/v1/products/"+id.String(), nil)
 			w = httptest.NewRecorder()
 
 			r.Header.Set("Authorization", "Bearer "+pt.userToken)

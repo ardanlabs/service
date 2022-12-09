@@ -11,6 +11,7 @@ import (
 
 	"github.com/ardanlabs/service/business/data/order"
 	"github.com/ardanlabs/service/business/sys/validate"
+	"github.com/google/uuid"
 )
 
 // Set of error variables for CRUD operations.
@@ -25,10 +26,10 @@ var (
 type Storer interface {
 	Create(ctx context.Context, prd Product) error
 	Update(ctx context.Context, prd Product) error
-	Delete(ctx context.Context, productID string) error
+	Delete(ctx context.Context, prd Product) error
 	Query(ctx context.Context, filter QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]Product, error)
-	QueryByID(ctx context.Context, productID string) (Product, error)
-	QueryByUserID(ctx context.Context, userID string) ([]Product, error)
+	QueryByID(ctx context.Context, productID uuid.UUID) (Product, error)
+	QueryByUserID(ctx context.Context, userID uuid.UUID) ([]Product, error)
 }
 
 // Core manages the set of APIs for product access.
@@ -53,7 +54,7 @@ func (c *Core) Create(ctx context.Context, np NewProduct) (Product, error) {
 	now := time.Now()
 
 	prd := Product{
-		ID:          validate.GenerateID(),
+		ID:          uuid.New(),
 		Name:        np.Name,
 		Cost:        np.Cost,
 		Quantity:    np.Quantity,
@@ -71,18 +72,9 @@ func (c *Core) Create(ctx context.Context, np NewProduct) (Product, error) {
 
 // Update modifies data about a Product. It will error if the specified ID is
 // invalid or does not reference an existing Product.
-func (c *Core) Update(ctx context.Context, productID string, up UpdateProduct) error {
-	if err := validate.CheckID(productID); err != nil {
-		return ErrInvalidID
-	}
-
+func (c *Core) Update(ctx context.Context, prd Product, up UpdateProduct) (Product, error) {
 	if err := validate.Check(up); err != nil {
-		return fmt.Errorf("validating data: %w", err)
-	}
-
-	prd, err := c.storer.QueryByID(ctx, productID)
-	if err != nil {
-		return fmt.Errorf("updating product productID[%s]: %w", productID, err)
+		return Product{}, fmt.Errorf("validating data: %w", err)
 	}
 
 	if up.Name != nil {
@@ -97,19 +89,15 @@ func (c *Core) Update(ctx context.Context, productID string, up UpdateProduct) e
 	prd.DateUpdated = time.Now()
 
 	if err := c.storer.Update(ctx, prd); err != nil {
-		return fmt.Errorf("update: %w", err)
+		return Product{}, fmt.Errorf("update: %w", err)
 	}
 
-	return nil
+	return prd, nil
 }
 
 // Delete removes the product identified by a given ID.
-func (c *Core) Delete(ctx context.Context, productID string) error {
-	if err := validate.CheckID(productID); err != nil {
-		return ErrInvalidID
-	}
-
-	if err := c.storer.Delete(ctx, productID); err != nil {
+func (c *Core) Delete(ctx context.Context, prd Product) error {
+	if err := c.storer.Delete(ctx, prd); err != nil {
 		return fmt.Errorf("delete: %w", err)
 	}
 
@@ -135,11 +123,7 @@ func (c *Core) Query(ctx context.Context, filter QueryFilter, orderBy order.By, 
 }
 
 // QueryByID finds the product identified by a given ID.
-func (c *Core) QueryByID(ctx context.Context, productID string) (Product, error) {
-	if err := validate.CheckID(productID); err != nil {
-		return Product{}, ErrInvalidID
-	}
-
+func (c *Core) QueryByID(ctx context.Context, productID uuid.UUID) (Product, error) {
 	prd, err := c.storer.QueryByID(ctx, productID)
 	if err != nil {
 		return Product{}, fmt.Errorf("query: %w", err)
@@ -149,11 +133,7 @@ func (c *Core) QueryByID(ctx context.Context, productID string) (Product, error)
 }
 
 // QueryByUserID finds the products identified by a given User ID.
-func (c *Core) QueryByUserID(ctx context.Context, userID string) ([]Product, error) {
-	if err := validate.CheckID(userID); err != nil {
-		return nil, ErrInvalidID
-	}
-
+func (c *Core) QueryByUserID(ctx context.Context, userID uuid.UUID) ([]Product, error) {
 	prds, err := c.storer.QueryByUserID(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("query: %w", err)
