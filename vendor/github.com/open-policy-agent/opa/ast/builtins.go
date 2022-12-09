@@ -164,6 +164,7 @@ var DefaultBuiltins = [...]*Builtin{
 	ObjectRemove,
 	ObjectFilter,
 	ObjectGet,
+	ObjectKeys,
 	ObjectSubset,
 
 	// JSON Object Manipulation
@@ -241,6 +242,9 @@ var DefaultBuiltins = [...]*Builtin{
 	GraphQLParseSchema,
 	GraphQLIsValid,
 	GraphQLSchemaIsValid,
+
+	// Cloud Provider Helpers
+	ProvidersAWSSignReqObj,
 
 	// Rego
 	RegoParseModule,
@@ -1473,7 +1477,9 @@ var JSONRemove = &Builtin{
 var JSONPatch = &Builtin{
 	Name: "json.patch",
 	Description: "Patches an object according to RFC6902. " +
-		"For example: `json.patch({\"a\": {\"foo\": 1}}, [{\"op\": \"add\", \"path\": \"/a/bar\", \"value\": 2}])` results in `{\"a\": {\"foo\": 1, \"bar\": 2}`.  The patches are applied atomically: if any of them fails, the result will be undefined.",
+		"For example: `json.patch({\"a\": {\"foo\": 1}}, [{\"op\": \"add\", \"path\": \"/a/bar\", \"value\": 2}])` results in `{\"a\": {\"foo\": 1, \"bar\": 2}`. " +
+		"The patches are applied atomically: if any of them fails, the result will be undefined. " +
+		"Additionally works on sets, where a value contained in the set is considered to be its path.",
 	Decl: types.NewFunction(
 		types.Args(
 			types.Named("object", types.A), // TODO(sr): types.A?
@@ -1613,6 +1619,18 @@ var ObjectGet = &Builtin{
 			types.Named("default", types.A).Description("default to use when lookup fails"),
 		),
 		types.Named("value", types.A).Description("`object[key]` if present, otherwise `default`"),
+	),
+}
+
+var ObjectKeys = &Builtin{
+	Name: "object.keys",
+	Description: "Returns a set of an object's keys. " +
+		"For example: `object.keys({\"a\": 1, \"b\": true, \"c\": \"d\")` results in `{\"a\", \"b\", \"c\"}`.",
+	Decl: types.NewFunction(
+		types.Args(
+			types.Named("object", types.NewObject(nil, types.NewDynamicProperty(types.A, types.A))).Description("object to get keys from"),
+		),
+		types.Named("value", types.NewSet(types.A)).Description("set of `object`'s keys"),
 	),
 }
 
@@ -2120,7 +2138,7 @@ var ParseDurationNanos = &Builtin{
 	Description: "Returns the duration in nanoseconds represented by a string.",
 	Decl: types.NewFunction(
 		types.Args(
-			types.Named("duration", types.S).Description("a duration like \"3m\"; seethe [Go `time` package documentation](https://golang.org/pkg/time/#ParseDuration) for more details"),
+			types.Named("duration", types.S).Description("a duration like \"3m\"; see the [Go `time` package documentation](https://golang.org/pkg/time/#ParseDuration) for more details"),
 		),
 		types.Named("ns", types.N).Description("the `duration` in nanoseconds"),
 	),
@@ -2613,6 +2631,25 @@ var GraphQLSchemaIsValid = &Builtin{
 		),
 		types.Named("output", types.B).Description("`true` if the schema is a valid GraphQL schema. `false` otherwise."),
 	),
+}
+
+/**
+ * Cloud Provider Helper Functions
+ */
+var providersAWSCat = category("providers.aws")
+
+var ProvidersAWSSignReqObj = &Builtin{
+	Name:        "providers.aws.sign_req",
+	Description: "Signs an HTTP request object for Amazon Web Services. Currently implements [AWS Signature Version 4 request signing](https://docs.aws.amazon.com/AmazonS3/latest/API/sig-v4-authenticating-requests.html) by the `Authorization` header method.",
+	Decl: types.NewFunction(
+		types.Args(
+			types.Named("request", types.NewObject(nil, types.NewDynamicProperty(types.S, types.A))),
+			types.Named("aws_config", types.NewObject(nil, types.NewDynamicProperty(types.S, types.A))),
+			types.Named("time_ns", types.N),
+		),
+		types.Named("signed_request", types.NewObject(nil, types.NewDynamicProperty(types.A, types.A))),
+	),
+	Categories: providersAWSCat,
 }
 
 /**

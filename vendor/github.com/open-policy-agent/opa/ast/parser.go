@@ -644,9 +644,12 @@ func (p *Parser) parseRules() []*Rule {
 	}
 
 	if p.s.tok == tokens.Else {
-
+		if r := rule.Head.Ref(); len(r) > 1 && !r[len(r)-1].Value.IsGround() {
+			p.error(p.s.Loc(), "else keyword cannot be used on rules with variables in head")
+			return nil
+		}
 		if rule.Head.Key != nil {
-			p.error(p.s.Loc(), "else keyword cannot be used on partial rules")
+			p.error(p.s.Loc(), "else keyword cannot be used on multi-value rules")
 			return nil
 		}
 
@@ -657,9 +660,7 @@ func (p *Parser) parseRules() []*Rule {
 
 	rule.Location.Text = p.s.Text(rule.Location.Offset, p.s.lastEnd)
 
-	var rules []*Rule
-
-	rules = append(rules, &rule)
+	rules := []*Rule{&rule}
 
 	for p.s.tok == tokens.LBrace {
 
@@ -685,6 +686,11 @@ func (p *Parser) parseRules() []*Rule {
 		// rule's head AST but have their location
 		// set to the rule body.
 		next.Head = rule.Head.Copy()
+		for i := range next.Head.Args {
+			if v, ok := next.Head.Args[i].Value.(Var); ok && v.IsWildcard() {
+				next.Head.Args[i].Value = Var(p.genwildcard())
+			}
+		}
 		setLocRecursive(next.Head, loc)
 
 		rules = append(rules, &next)
@@ -699,6 +705,11 @@ func (p *Parser) parseElse(head *Head) *Rule {
 	rule.SetLoc(p.s.Loc())
 
 	rule.Head = head.Copy()
+	for i := range rule.Head.Args {
+		if v, ok := rule.Head.Args[i].Value.(Var); ok && v.IsWildcard() {
+			rule.Head.Args[i].Value = Var(p.genwildcard())
+		}
+	}
 	rule.Head.SetLoc(p.s.Loc())
 
 	defer func() {
@@ -711,6 +722,7 @@ func (p *Parser) parseElse(head *Head) *Rule {
 	case tokens.LBrace, tokens.If: // no value, but a body follows directly
 		rule.Head.Value = BooleanTerm(true)
 	case tokens.Assign, tokens.Unify:
+		rule.Head.Assign = tokens.Assign == p.s.tok
 		p.scan()
 		rule.Head.Value = p.parseTermInfixCall()
 		if rule.Head.Value == nil {

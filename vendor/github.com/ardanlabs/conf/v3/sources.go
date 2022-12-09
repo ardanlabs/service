@@ -89,7 +89,7 @@ type flag struct {
 }
 
 // newSourceFlag parsing a string of command line arguments. NewFlag will return
-// errHelpWanted, if the help flag is identifyed. This code is adapted
+// errHelpWanted, if the help flag is identified. This code is adapted
 // from the Go standard library flag package.
 func newSourceFlag(args []string) (*flag, error) {
 	m := make(map[string]flagValue)
