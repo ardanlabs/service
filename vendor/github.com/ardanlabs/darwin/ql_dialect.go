@@ -1,6 +1,6 @@
 package darwin
 
-//QLDialect implements Dialect interface for ql database.
+// QLDialect implements Dialect interface for ql database.
 type QLDialect struct{}
 
 // CreateTableSQL returns the SQL to create the schema table.

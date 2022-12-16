@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/ardanlabs/conf/v3 v3.1.3
-	github.com/ardanlabs/darwin v1.4.0
+	github.com/ardanlabs/darwin v1.5.0
 	github.com/dimfeld/httptreemux/v5 v5.5.0
 	github.com/go-playground/locales v0.14.0
 	github.com/go-playground/universal-translator v0.18.0
@@ -14,7 +14,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/lib/pq v1.10.7
-	github.com/open-policy-agent/opa v0.47.2
+	github.com/open-policy-agent/opa v0.47.3
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.37.0
 	go.opentelemetry.io/otel v1.11.2
 	go.opentelemetry.io/otel/exporters/zipkin v1.11.2
@@ -43,7 +43,7 @@ require (
 	github.com/yashtewari/glob-intersection v0.1.0 // indirect
 	go.opentelemetry.io/otel/metric v0.34.0 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
-	go.uber.org/multierr v1.8.0 // indirect
+	go.uber.org/multierr v1.9.0 // indirect
 	golang.org/x/sys v0.3.0 // indirect
 	golang.org/x/text v0.5.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect

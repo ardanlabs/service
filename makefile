@@ -56,12 +56,12 @@ SHELL := /bin/bash
 # Install dependencies
 
 GOLANG       := golang:1.19
-ALPINE       := alpine:3.16
+ALPINE       := alpine:3.17
 KIND         := kindest/node:v1.25.3
 POSTGRES     := postgres:15-alpine
 VAULT        := hashicorp/vault:1.12
 ZIPKIN       := openzipkin/zipkin:2.23
-TELEPRESENCE := docker.io/datawire/tel2:2.9.4
+TELEPRESENCE := docker.io/datawire/tel2:2.9.5
 
 dev.setup.mac.common:
 	brew update
