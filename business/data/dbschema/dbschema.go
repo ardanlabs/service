@@ -8,7 +8,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/ardanlabs/darwin"
+	"github.com/ardanlabs/darwin/v2"
 	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/jmoiron/sqlx"
 )
