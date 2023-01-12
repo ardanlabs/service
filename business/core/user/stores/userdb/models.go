@@ -14,7 +14,7 @@ import (
 // dbUser represent the structure we need for moving data
 // between the app and the database.
 type dbUser struct {
-	ID           string         `db:"user_id"`
+	ID           uuid.UUID      `db:"user_id"`
 	Name         string         `db:"name"`
 	Email        string         `db:"email"`
 	Roles        pq.StringArray `db:"roles"`
@@ -28,7 +28,7 @@ type dbUser struct {
 
 func toDBUser(usr user.User) dbUser {
 	return dbUser{
-		ID:           usr.ID.String(),
+		ID:           usr.ID,
 		Name:         usr.Name,
 		Email:        usr.Email.Address,
 		Roles:        usr.Roles,
@@ -45,7 +45,7 @@ func toCoreUser(dbUsr dbUser) user.User {
 	}
 
 	usr := user.User{
-		ID:           uuid.MustParse(dbUsr.ID),
+		ID:           dbUsr.ID,
 		Name:         dbUsr.Name,
 		Email:        addr,
 		Roles:        dbUsr.Roles,
