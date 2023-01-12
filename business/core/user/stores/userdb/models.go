@@ -40,16 +40,14 @@ func toDBUser(usr user.User) dbUser {
 }
 
 func toCoreUser(dbUsr dbUser) user.User {
-	addr, err := mail.ParseAddress(dbUsr.Email)
-	if err != nil {
-		addr.Name = "unknown"
-		addr.Address = dbUsr.Email
+	addr := mail.Address{
+		Address: dbUsr.Email,
 	}
 
 	usr := user.User{
 		ID:           uuid.MustParse(dbUsr.ID),
 		Name:         dbUsr.Name,
-		Email:        *addr,
+		Email:        addr,
 		Roles:        dbUsr.Roles,
 		PasswordHash: dbUsr.PasswordHash,
 		Enabled:      dbUsr.Enabled,
