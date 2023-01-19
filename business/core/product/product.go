@@ -14,6 +14,9 @@ import (
 	"github.com/google/uuid"
 )
 
+// DefaultOrderBy represents the default way we sort.
+var DefaultOrderBy = order.NewBy(order.MustParseField("product_id"), order.ASC)
+
 // Set of error variables for CRUD operations.
 var (
 	ErrNotFound     = errors.New("product not found")
@@ -24,6 +27,7 @@ var (
 // Storer interface declares the behavior this package needs to perists and
 // retrieve data.
 type Storer interface {
+	OrderingFields() order.FieldSet
 	Create(ctx context.Context, prd Product) error
 	Update(ctx context.Context, prd Product) error
 	Delete(ctx context.Context, prd Product) error
@@ -42,6 +46,11 @@ func NewCore(storer Storer) *Core {
 	return &Core{
 		storer: storer,
 	}
+}
+
+// OrderingFields returns the field set defined by the store.
+func (c *Core) OrderingFields() order.FieldSet {
+	return c.storer.OrderingFields()
 }
 
 // Create adds a Product to the database. It returns the created Product with
@@ -108,10 +117,6 @@ func (c *Core) Delete(ctx context.Context, prd Product) error {
 func (c *Core) Query(ctx context.Context, filter QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]Product, error) {
 	if err := validate.Check(filter); err != nil {
 		return nil, fmt.Errorf("validating filter: %w", err)
-	}
-
-	if err := ordering.Check(orderBy); err != nil {
-		return nil, fmt.Errorf("%w: %s", ErrInvalidOrder, err.Error())
 	}
 
 	prds, err := c.storer.Query(ctx, filter, orderBy, pageNumber, rowsPerPage)

@@ -8,10 +8,11 @@ import (
 	"github.com/google/uuid"
 )
 
-func getFilter(r *http.Request) (user.QueryFilter, error) {
+func parseFilter(r *http.Request) (user.QueryFilter, error) {
+	var filter user.QueryFilter
+
 	values := r.URL.Query()
 
-	var filter user.QueryFilter
 	if id, err := uuid.Parse(values.Get("id")); err == nil {
 		filter.ByID(id)
 	}

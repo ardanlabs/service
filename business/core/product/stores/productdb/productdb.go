@@ -30,6 +30,11 @@ func NewStore(log *zap.SugaredLogger, db *sqlx.DB) *Store {
 	}
 }
 
+// OrderingFields returns the field set for this store.
+func (s *Store) OrderingFields() order.FieldSet {
+	return orderingFields
+}
+
 // Create adds a Product to the database. It returns the created Product with
 // fields like ID and DateCreated populated.
 func (s *Store) Create(ctx context.Context, prd product.Product) error {
@@ -91,7 +96,7 @@ func (s *Store) Delete(ctx context.Context, prd product.Product) error {
 // Query gets all Products from the database.
 func (s *Store) Query(ctx context.Context, filter product.QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]product.Product, error) {
 	data := struct {
-		ID          string `db:"id"`
+		ID          string `db:"product_id"`
 		Name        string `db:"name"`
 		Cost        int    `db:"cost"`
 		Quantity    int    `db:"quantity"`
@@ -102,7 +107,7 @@ func (s *Store) Query(ctx context.Context, filter product.QueryFilter, orderBy o
 		RowsPerPage: rowsPerPage,
 	}
 
-	orderByClause, err := orderByClause(orderBy)
+	orderByClause, err := orderBy.Clause()
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +115,7 @@ func (s *Store) Query(ctx context.Context, filter product.QueryFilter, orderBy o
 	var wc []string
 	if filter.ID != nil {
 		data.ID = *filter.ID
-		wc = append(wc, "id = :id")
+		wc = append(wc, "product_id = :product_id")
 	}
 	if filter.Name != nil {
 		data.Name = fmt.Sprintf("%%%s%%", *filter.Name)

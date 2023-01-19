@@ -32,6 +32,11 @@ func NewStore(log *zap.SugaredLogger, db *sqlx.DB) *Store {
 	}
 }
 
+// OrderingFields returns the field set for this store.
+func (s *Store) OrderingFields() order.FieldSet {
+	return orderingFields
+}
+
 // WithinTran runs passed function and do commit/rollback at the end.
 func (s *Store) WithinTran(ctx context.Context, fn func(s user.Storer) error) error {
 	if s.inTran {
@@ -116,7 +121,7 @@ func (s *Store) Delete(ctx context.Context, usr user.User) error {
 // Query retrieves a list of existing users from the database.
 func (s *Store) Query(ctx context.Context, filter user.QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]user.User, error) {
 	data := struct {
-		ID          string `db:"id"`
+		ID          string `db:"user_id"`
 		Name        string `db:"name"`
 		Email       string `db:"email"`
 		Offset      int    `db:"offset"`
@@ -126,7 +131,7 @@ func (s *Store) Query(ctx context.Context, filter user.QueryFilter, orderBy orde
 		RowsPerPage: rowsPerPage,
 	}
 
-	orderByClause, err := orderByClause(orderBy)
+	orderByClause, err := orderBy.Clause()
 	if err != nil {
 		return nil, err
 	}
@@ -134,7 +139,7 @@ func (s *Store) Query(ctx context.Context, filter user.QueryFilter, orderBy orde
 	var wc []string
 	if filter.ID != nil {
 		data.ID = (*filter.ID).String()
-		wc = append(wc, "id = :id")
+		wc = append(wc, "user_id = :user_id")
 	}
 	if filter.Name != nil {
 		data.Name = fmt.Sprintf("%%%s%%", *filter.Name)
