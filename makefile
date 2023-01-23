@@ -61,7 +61,7 @@ KIND         := kindest/node:v1.25.3
 POSTGRES     := postgres:15-alpine
 VAULT        := hashicorp/vault:1.12
 ZIPKIN       := openzipkin/zipkin:2.23
-TELEPRESENCE := docker.io/datawire/tel2:2.10.1
+TELEPRESENCE := docker.io/datawire/tel2:2.10.4
 
 dev.setup.mac.common:
 	brew update
