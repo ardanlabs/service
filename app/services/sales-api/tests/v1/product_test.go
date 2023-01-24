@@ -281,7 +281,7 @@ func (pt *ProductTests) crudProduct(t *testing.T) {
 	defer pt.deleteProduct204(t, p.ID)
 
 	pt.getProduct200(t, p.ID)
-	pt.putProduct204(t, p.ID)
+	pt.putProduct200(t, p.ID)
 }
 
 // postProduct201 validates a product can be created with the endpoint.
@@ -398,8 +398,8 @@ func (pt *ProductTests) getProduct200(t *testing.T, id uuid.UUID) {
 	}
 }
 
-// putProduct204 validates updating a product that does exist.
-func (pt *ProductTests) putProduct204(t *testing.T, id uuid.UUID) {
+// putProduct200 validates updating a product that does exist.
+func (pt *ProductTests) putProduct200(t *testing.T, id uuid.UUID) {
 	body := `{"name": "Graphic Novels", "cost": 100}`
 	r := httptest.NewRequest(http.MethodPut, "/v1/products/"+id.String(), strings.NewReader(body))
 	w := httptest.NewRecorder()

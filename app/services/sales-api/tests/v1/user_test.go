@@ -413,7 +413,7 @@ func (ut *UserTests) crudUser(t *testing.T) {
 	ut.postUser409(t, nu)
 
 	ut.getUser200(t, nu.ID)
-	ut.putUser204(t, nu.ID)
+	ut.putUser200(t, nu.ID)
 	ut.putUser401(t, nu.ID)
 }
 
@@ -585,8 +585,8 @@ func (ut *UserTests) getUser200(t *testing.T, id uuid.UUID) {
 	}
 }
 
-// putUser204 validates updating a user that does exist.
-func (ut *UserTests) putUser204(t *testing.T, id uuid.UUID) {
+// putUser200 validates updating a user that does exist.
+func (ut *UserTests) putUser200(t *testing.T, id uuid.UUID) {
 	body := `{"name": "Jacob Walker"}`
 
 	r := httptest.NewRequest(http.MethodPut, "/v1/users/"+id.String(), strings.NewReader(body))
