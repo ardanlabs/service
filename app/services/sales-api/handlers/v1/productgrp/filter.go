@@ -32,7 +32,7 @@ func getFilter(r *http.Request) (product.QueryFilter, error) {
 			return product.QueryFilter{}, fmt.Errorf("invalid field filter quantity format: %s", quantity)
 		}
 
-		filter.ByCost(int(qua))
+		filter.ByQuantity(int(qua))
 	}
 
 	return filter, nil
