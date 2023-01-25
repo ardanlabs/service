@@ -20,7 +20,7 @@ type Handlers struct {
 	DB    *sqlx.DB
 }
 
-// Readiness checks if the database is ready and if not will return a 500 status.
+// Readiness checks if the database is ready and if not will return a 502 status.
 // Do not respond by just returning an error because further up in the call
 // stack it will interpret that as a non-trusted error.
 func (h Handlers) Readiness(w http.ResponseWriter, r *http.Request) {
@@ -31,7 +31,7 @@ func (h Handlers) Readiness(w http.ResponseWriter, r *http.Request) {
 	statusCode := http.StatusOK
 	if err := database.StatusCheck(ctx, h.DB); err != nil {
 		status = "db not ready"
-		statusCode = http.StatusInternalServerError
+		statusCode = http.StatusBadGateway
 	}
 
 	data := struct {
