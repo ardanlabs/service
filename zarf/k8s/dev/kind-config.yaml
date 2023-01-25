@@ -2,3 +2,13 @@ kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 nodes:
 - role: control-plane
+  - containerPort: 3000
+    hostPort: 3000
+  - containerPort: 4000
+    hostPort: 4000
+  - containerPort: 8200
+    hostPort: 8200
+  - containerPort: 5432
+    hostPort: 5432
+  - containerPort: 9411
+    hostPort: 9411

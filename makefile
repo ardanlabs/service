@@ -1,56 +1,95 @@
 SHELL := /bin/bash
 
-# ==============================================================================
-# Testing running system
-
 # Deploy First Mentality
+
+# ==============================================================================
+# Windows Users Brew Install
 #
-# Other commands to install.
-# go install github.com/divan/expvarmon@latest
-# go install github.com/rakyll/hey@latest
+#	$ /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 #
-# For full Kind v0.17 release notes: https://github.com/kubernetes-sigs/kind/releases/tag/v0.17.0
+# 	Run these three commands in your terminal to add Homebrew to your PATH:
+# 	Replace <name> with your username.
+#	$ echo '# Set PATH, MANPATH, etc., for Homebrew.' >> /home/<name>/.profile
+#	$ echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /home/<name>/.profile
+#	$ eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 #
-# For testing a simple query on the system. Don't forget to `make seed` first.
-# curl -il --user "admin@example.com:gophers" http://sales-service.sales-system.svc.cluster.local:3000/v1/users/token/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
-# export TOKEN="COPY TOKEN STRING FROM LAST CALL"
-# curl -il -H "Authorization: Bearer ${TOKEN}" http://sales-service.sales-system.svc.cluster.local:3000/v1/users/1/2
+# 	Install Homebrew's dependencies:
+#	$ sudo apt-get install build-essential
 #
-# For testing load on the service.
-# hey -m GET -c 100 -n 10000 -H "Authorization: Bearer ${TOKEN}" http://sales-service.sales-system.svc.cluster.local:3000/v1/users/1/2
+# 	Install GCC:
+#	$ brew install gcc
+
+# ==============================================================================
+# Windows Users Install Telepresence
 #
-# To generate a private/public key PEM file.
-# openssl genpkey -algorithm RSA -out private.pem -pkeyopt rsa_keygen_bits:2048
-# openssl rsa -pubout -in private.pem -out public.pem
-# ./sales-admin genkey
+#	$ sudo curl -fL https://app.getambassador.io/download/tel2/linux/amd64/latest/telepresence -o /usr/local/bin/telepresence
+#	$ sudo chmod a+x /usr/local/bin/telepresence
 #
-# Testing coverage.
-# go test -coverprofile p.out
-# go tool cover -html p.out
+# 	Restart your wsl environment.
+
+# ==============================================================================
+# Install Tooling and Dependencies 
 #
-# Vault Information.
-# READ THIS: https://developer.hashicorp.com/vault/docs/concepts/tokens
-# export VAULT_TOKEN=mytoken
-# export VAULT_ADDR='http://vault-service.sales-system.svc.cluster.local:8200'
-# vault secrets list
-# vault kv get secret/sales
-# vault kv put secret/sales key="some data"
-# kubectl logs --namespace=sales-system -l app=sales -c init-vault-server
-# curl -H "X-Vault-Token: mytoken" -X GET http://vault-service.sales-system.svc.cluster.local:8200/v1/secret/data/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
-# curl -H "X-Vault-Token: mytoken" -H "Content-Type: application/json" -X POST -d '{"data":{"pk":"PEM"}}' http://vault-service.sales-system.svc.cluster.local:8200/v1/secret/data/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
+#	If you are running a mac or linux machine with brew, run these commands:
+#	$ make dev-brew
+#	$ make dev-docker
+#	$ make dev-gotooling
 #
-# To show what calls are being made underneath to the proxy and checksum db.
-# curl https://proxy.golang.org/github.com/ardanlabs/conf/@v/list
-# curl https://proxy.golang.org/github.com/ardanlabs/conf/v3/@v/list
-# curl https://proxy.golang.org/github.com/ardanlabs/conf/v3/@v/v3.1.1.info
-# curl https://proxy.golang.org/github.com/ardanlabs/conf/v3/@v/v3.1.1.mod
-# curl https://proxy.golang.org/github.com/ardanlabs/conf/v3/@v/v3.1.1.zip
-# curl https://sum.golang.org/lookup/github.com/ardanlabs/conf/v3@v3.1.1
+#	If you are a windows user and have installed brew, run these commands:
+#	$ make dev-brew-common
+#	$ make dev-docker
+#	$ make dev-gotooling
+
+# ==============================================================================
+# Starting The Project
+#
+#	If you want to use telepresence (recommended):
+#	$ make dev-up
+#	$ make dev-update-apply 
+#
+#	If telepresence is not working for you:
+#	$ make dev-up-local
+#	$ make dev-update-apply 
+
+# ==============================================================================
+# CLASS NOTES
+#
+# Kind
+# 	For full Kind v0.17 release notes: https://github.com/kubernetes-sigs/kind/releases/tag/v0.17.0
+#
+# RSA Keys
+# 	To generate a private/public key PEM file.
+# 	$ openssl genpkey -algorithm RSA -out private.pem -pkeyopt rsa_keygen_bits:2048
+# 	$ openssl rsa -pubout -in private.pem -out public.pem
+# 	$ ./sales-admin genkey
+#
+# Testing Coverage
+# 	$ go test -coverprofile p.out
+# 	$ go tool cover -html p.out
+#
+# Hashicorp Vault
+# 	READ THIS: https://developer.hashicorp.com/vault/docs/concepts/tokens
+# 	$ export VAULT_TOKEN=mytoken
+# 	$ export VAULT_ADDR='http://vault-service.sales-system.svc.cluster.local:8200'
+# 	$ vault secrets list
+# 	$ vault kv get secret/sales
+# 	$ vault kv put secret/sales key="some data"
+# 	$ kubectl logs --namespace=sales-system -l app=sales -c init-vault-server
+# 	$ curl -H "X-Vault-Token: mytoken" -X GET http://vault-service.sales-system.svc.cluster.local:8200/v1/secret/data/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
+# 	$ curl -H "X-Vault-Token: mytoken" -H "Content-Type: application/json" -X POST -d '{"data":{"pk":"PEM"}}' http://vault-service.sales-system.svc.cluster.local:8200/v1/secret/data/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
+#
+# Module Call Examples
+# 	$ curl https://proxy.golang.org/github.com/ardanlabs/conf/@v/list
+# 	$ curl https://proxy.golang.org/github.com/ardanlabs/conf/v3/@v/list
+# 	$ curl https://proxy.golang.org/github.com/ardanlabs/conf/v3/@v/v3.1.1.info
+# 	$ curl https://proxy.golang.org/github.com/ardanlabs/conf/v3/@v/v3.1.1.mod
+# 	$ curl https://proxy.golang.org/github.com/ardanlabs/conf/v3/@v/v3.1.1.zip
+# 	$ curl https://sum.golang.org/lookup/github.com/ardanlabs/conf/v3@v3.1.1
 #
 # OPA Playground
-# https://play.openpolicyagent.org/
-# https://academy.styra.com/
-# https://www.openpolicyagent.org/docs/latest/policy-reference/
+# 	https://play.openpolicyagent.org/
+# 	https://academy.styra.com/
+# 	https://www.openpolicyagent.org/docs/latest/policy-reference/
 
 # ==============================================================================
 # Install dependencies
@@ -63,7 +102,7 @@ VAULT        := hashicorp/vault:1.12
 ZIPKIN       := openzipkin/zipkin:2.23
 TELEPRESENCE := docker.io/datawire/tel2:2.10.4
 
-dev.setup.mac.common:
+dev-brew-common:
 	brew update
 	brew tap hashicorp/tap
 	brew list kind || brew install kind
@@ -72,13 +111,13 @@ dev.setup.mac.common:
 	brew list pgcli || brew install pgcli
 	brew list vault || brew install vault
 
-dev.setup.mac: dev.setup.mac.common
-	brew datawire/blackbird/telepresence || brew install datawire/blackbird/telepresence
+dev-brew: dev-brew-common
+	brew list datawire/blackbird/telepresence || brew install datawire/blackbird/telepresence
 
-dev.setup.mac.arm64: dev.setup.mac.common
-	brew datawire/blackbird/telepresence-arm64 || brew install datawire/blackbird/telepresence-arm64
+dev-brew-arm64: dev-brew-common
+	brew list datawire/blackbird/telepresence-arm64 || brew install datawire/blackbird/telepresence-arm64
 
-dev.docker:
+dev-docker:
 	docker pull $(GOLANG)
 	docker pull $(ALPINE)
 	docker pull $(KIND)
@@ -87,10 +126,14 @@ dev.docker:
 	docker pull $(ZIPKIN)
 	docker pull $(TELEPRESENCE)
 
+dev-gotooling:
+	go install github.com/divan/expvarmon@latest
+	go install github.com/rakyll/hey@latest
+
 # ==============================================================================
 # Building containers
 
-# $(shell git rev-parse --short HEAD)
+# Example: $(shell git rev-parse --short HEAD)
 VERSION := 1.0
 
 all: sales metrics
@@ -116,7 +159,7 @@ metrics:
 
 KIND_CLUSTER := ardan-starter-cluster
 
-dev-up:
+dev-up-local:
 	kind create cluster \
 		--image kindest/node:v1.25.3@sha256:f52781bc0d7a19fb6c405c2af83abfeb311f130707a0e219175677e366cc45d1 \
 		--name $(KIND_CLUSTER) \
@@ -127,13 +170,19 @@ dev-up:
 	kind load docker-image $(POSTGRES) --name $(KIND_CLUSTER)
 	kind load docker-image $(VAULT) --name $(KIND_CLUSTER)
 	kind load docker-image $(ZIPKIN) --name $(KIND_CLUSTER)
-	
+
+dev-up: dev-up-local
 	telepresence --context=kind-$(KIND_CLUSTER) helm install
 	telepresence --context=kind-$(KIND_CLUSTER) connect
+
+dev-down-local:
+	kind delete cluster --name $(KIND_CLUSTER)
 
 dev-down:
 	telepresence quit -s
 	kind delete cluster --name $(KIND_CLUSTER)
+
+# ------------------------------------------------------------------------------
 
 dev-load:
 	cd zarf/k8s/dev/sales; kustomize edit set image sales-api-image=sales-api:$(VERSION)
@@ -161,6 +210,8 @@ dev-update: all dev-load dev-restart
 
 dev-update-apply: all dev-load dev-apply
 
+# ------------------------------------------------------------------------------
+
 dev-logs:
 	kubectl logs --namespace=sales-system -l app=sales --all-containers=true -f --tail=100 --max-log-requests=6 | go run app/tooling/logfmt/main.go -service=SALES-API
 
@@ -185,7 +236,7 @@ dev-describe-deployment:
 dev-describe-sales:
 	kubectl describe pod --namespace=sales-system -l app=sales
 
-# *** OTHER ****************************************************************
+# ------------------------------------------------------------------------------
 
 dev-logs-vault:
 	kubectl logs --namespace=sales-system -l app=vault --all-containers=true -f --tail=100
@@ -196,7 +247,7 @@ dev-logs-db:
 dev-logs-zipkin:
 	kubectl logs --namespace=sales-system -l app=zipkin --all-containers=true -f --tail=100
 
-# *** EXTRAS *******************************************************************
+# ------------------------------------------------------------------------------
 
 dev-services-delete:
 	kustomize build zarf/k8s/dev/sales | kubectl delete -f -
@@ -235,11 +286,20 @@ vault:
 token:
 	go run app/tooling/sales-admin/main.go gentoken 5cf37266-3473-4006-984f-9325122678b7 54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
 
+pgcli-local:
+	pgcli postgresql://postgres:postgres@localhost
+
 pgcli:
 	pgcli postgresql://postgres:postgres@database-service.sales-system.svc.cluster.local
 
+liveness-local:
+	curl -il http://localhost:4000/debug/liveness
+
 liveness:
 	curl -il http://sales-service.sales-system.svc.cluster.local:4000/debug/liveness
+
+readiness-local:
+	curl -il http://localhost:4000/debug/readiness
 
 readiness:
 	curl -il http://sales-service.sales-system.svc.cluster.local:4000/debug/readiness
@@ -247,11 +307,20 @@ readiness:
 # ==============================================================================
 # Metrics and Tracing
 
+metrics-viewlocal:
+	expvarmon -ports="localhost:4000" -vars="build,requests,goroutines,errors,panics,mem:memstats.Alloc"
+
 metrics-view:
 	expvarmon -ports="sales-service.sales-system.svc.cluster.local:4000" -vars="build,requests,goroutines,errors,panics,mem:memstats.Alloc"
 
-metrics-view-sidecar:
+metrics-viewlocal:
+	expvarmon -ports="localhost:3001" -endpoint="/metrics" -vars="build,requests,goroutines,errors,panics,mem:memstats.Alloc"
+
+metrics-view:
 	expvarmon -ports="sales-service.sales-system.svc.cluster.local:3001" -endpoint="/metrics" -vars="build,requests,goroutines,errors,panics,mem:memstats.Alloc"
+
+zipkinlocal:
+	open -a "Google Chrome" http://localhost:9411/zipkin/
 
 zipkin:
 	open -a "Google Chrome" http://zipkin-service.sales-system.svc.cluster.local:9411/zipkin/
@@ -266,6 +335,26 @@ test:
 	CGO_ENABLED=0 go vet ./...
 	staticcheck -checks=all ./...
 	govulncheck ./...
+
+test-token-local:
+	curl -il --user "admin@example.com:gophers" http://localhost:3000/v1/users/token/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
+
+test-token:
+	curl -il --user "admin@example.com:gophers" http://sales-service.sales-system.svc.cluster.local:3000/v1/users/token/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
+
+# export TOKEN="COPY TOKEN STRING FROM LAST CALL"
+
+test-users-local:
+	curl -il -H "Authorization: Bearer ${TOKEN}" http://localhost:3000/v1/users/1/2
+
+test-users:
+	curl -il -H "Authorization: Bearer ${TOKEN}" http://sales-service.sales-system.svc.cluster.local:3000/v1/users/1/2
+
+test-load-local:
+	hey -m GET -c 100 -n 10000 -H "Authorization: Bearer ${TOKEN}" http://localhost:3000/v1/users/1/2
+
+test-load:
+	hey -m GET -c 100 -n 10000 -H "Authorization: Bearer ${TOKEN}" http://sales-service.sales-system.svc.cluster.local:3000/v1/users/1/2
 
 # ==============================================================================
 # Modules support
