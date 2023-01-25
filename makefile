@@ -3,9 +3,16 @@ SHELL := /bin/bash
 # Deploy First Mentality
 
 # ==============================================================================
-# Windows Users Brew Install
+# Brew Installation
 #
+#	Having brew installed will simplify the process of installing all the tooling.
+#
+#	Run this command to install brew on your machine. This works for Linux, Max and Windows.
+#	The script explains what it will do and then pauses before it does it.
 #	$ /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+#
+#	WINDOWS MACHINES
+#	These are extra things you will most likely need to do after installing brew
 #
 # 	Run these three commands in your terminal to add Homebrew to your PATH:
 # 	Replace <name> with your username.
@@ -20,7 +27,10 @@ SHELL := /bin/bash
 #	$ brew install gcc
 
 # ==============================================================================
-# Windows Users Install Telepresence
+# Windows Users ONLY - Install Telepresence
+#
+#	Unfortunately you can't use brew to install telepresence because you will
+#	receive a bad binary. Please follow these instruction.
 #
 #	$ sudo curl -fL https://app.getambassador.io/download/tel2/linux/amd64/latest/telepresence -o /usr/local/bin/telepresence
 #	$ sudo chmod a+x /usr/local/bin/telepresence
@@ -41,6 +51,14 @@ SHELL := /bin/bash
 #	$ make dev-gotooling
 
 # ==============================================================================
+# Running Test
+#
+#	Running the tests is a good way to verify you have installed most of the
+#	dependencies properly.
+#
+#	$ make test
+
+# ==============================================================================
 # Starting The Project
 #
 #	If you want to use telepresence (recommended):
@@ -49,7 +67,14 @@ SHELL := /bin/bash
 #
 #	If telepresence is not working for you:
 #	$ make dev-up-local
-#	$ make dev-update-apply 
+#	$ make dev-update-apply
+#
+#	Note: If you attempted to run with telepresence and it didn't work, you may
+#		  want to restart the cluser.
+#		  $ make dev-down-local
+#
+#	Note: When running without telepresence, if you see a command where there is
+#         a `-local` option, you will need to use that command.
 
 # ==============================================================================
 # CLASS NOTES
