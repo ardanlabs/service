@@ -28,7 +28,6 @@ func New(log *log.Logger, apiKey string, host string) *Datadog {
 		DialContext: (&net.Dialer{
 			Timeout:   30 * time.Second,
 			KeepAlive: 30 * time.Second,
-			DualStack: true,
 		}).DialContext,
 		MaxIdleConns:          2,
 		IdleConnTimeout:       90 * time.Second,
