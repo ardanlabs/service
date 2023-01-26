@@ -23,8 +23,8 @@ var ErrForbidden = errors.New("attempted action is not allowed")
 // KeyLookup declares a method set of behavior for looking up
 // private and public keys for JWT use.
 type KeyLookup interface {
-	PrivateKeyPEM(kid string) (string, error)
-	PublicKeyPEM(kid string) (string, error)
+	PrivateKeyPEM(kid string) (pem string, err error)
+	PublicKeyPEM(kid string) (pem string, err error)
 }
 
 // Config represents information required to initialize auth.
