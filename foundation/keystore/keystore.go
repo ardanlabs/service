@@ -3,34 +3,41 @@
 package keystore
 
 import (
+	"bytes"
 	"crypto/rsa"
+	"crypto/x509"
+	"encoding/pem"
 	"errors"
 	"fmt"
 	"io"
 	"io/fs"
 	"path"
 	"strings"
-	"sync"
 
 	"github.com/golang-jwt/jwt/v4"
 )
 
+// PrivateKey represents key information.
+type PrivateKey struct {
+	PK  *rsa.PrivateKey
+	PEM []byte
+}
+
 // KeyStore represents an in memory store implementation of the
 // KeyLookup interface for use with the auth package.
 type KeyStore struct {
-	mu    sync.RWMutex
-	store map[string]*rsa.PrivateKey
+	store map[string]PrivateKey
 }
 
 // New constructs an empty KeyStore ready for use.
 func New() *KeyStore {
 	return &KeyStore{
-		store: make(map[string]*rsa.PrivateKey),
+		store: make(map[string]PrivateKey),
 	}
 }
 
 // NewMap constructs a KeyStore with an initial set of keys.
-func NewMap(store map[string]*rsa.PrivateKey) *KeyStore {
+func NewMap(store map[string]PrivateKey) *KeyStore {
 	return &KeyStore{
 		store: store,
 	}
@@ -65,17 +72,23 @@ func NewFS(fsys fs.FS) (*KeyStore, error) {
 		// limit PEM file size to 1 megabyte. This should be reasonable for
 		// almost any PEM file and prevents shenanigans like linking the file
 		// to /dev/random or something like that.
-		privatePEM, err := io.ReadAll(io.LimitReader(file, 1024*1024))
+		pem, err := io.ReadAll(io.LimitReader(file, 1024*1024))
 		if err != nil {
 			return fmt.Errorf("reading auth private key: %w", err)
 		}
 
-		privateKey, err := jwt.ParseRSAPrivateKeyFromPEM(privatePEM)
+		pk, err := jwt.ParseRSAPrivateKeyFromPEM(pem)
 		if err != nil {
 			return fmt.Errorf("parsing auth private key: %w", err)
 		}
 
-		ks.store[strings.TrimSuffix(dirEntry.Name(), ".pem")] = privateKey
+		key := PrivateKey{
+			PK:  pk,
+			PEM: pem,
+		}
+
+		ks.store[strings.TrimSuffix(dirEntry.Name(), ".pem")] = key
+
 		return nil
 	}
 
@@ -86,44 +99,39 @@ func NewFS(fsys fs.FS) (*KeyStore, error) {
 	return ks, nil
 }
 
-// Add adds a private key and combination kid to the store.
-func (ks *KeyStore) Add(privateKey *rsa.PrivateKey, kid string) {
-	ks.mu.Lock()
-	defer ks.mu.Unlock()
-
-	ks.store[kid] = privateKey
-}
-
-// Remove removes a private key and combination kid to the store.
-func (ks *KeyStore) Remove(kid string) {
-	ks.mu.Lock()
-	defer ks.mu.Unlock()
-
-	delete(ks.store, kid)
-}
-
 // PrivateKey searches the key store for a given kid and returns
 // the private key.
-func (ks *KeyStore) PrivateKey(kid string) (*rsa.PrivateKey, error) {
-	ks.mu.RLock()
-	defer ks.mu.RUnlock()
-
+func (ks *KeyStore) PrivateKey(kid string) (string, error) {
 	privateKey, found := ks.store[kid]
 	if !found {
-		return nil, errors.New("kid lookup failed")
+		return "", errors.New("kid lookup failed")
 	}
-	return privateKey, nil
+
+	return string(privateKey.PEM), nil
 }
 
 // PublicKey searches the key store for a given kid and returns
 // the public key.
-func (ks *KeyStore) PublicKey(kid string) (*rsa.PublicKey, error) {
-	ks.mu.RLock()
-	defer ks.mu.RUnlock()
-
+func (ks *KeyStore) PublicKey(kid string) (string, error) {
 	privateKey, found := ks.store[kid]
 	if !found {
-		return nil, errors.New("kid lookup failed")
+		return "", errors.New("kid lookup failed")
 	}
-	return &privateKey.PublicKey, nil
+
+	asn1Bytes, err := x509.MarshalPKIXPublicKey(&privateKey.PK.PublicKey)
+	if err != nil {
+		return "", fmt.Errorf("marshaling public key: %w", err)
+	}
+
+	block := pem.Block{
+		Type:  "PUBLIC KEY",
+		Bytes: asn1Bytes,
+	}
+
+	var b bytes.Buffer
+	if err := pem.Encode(&b, &block); err != nil {
+		return "", fmt.Errorf("encoding to private file: %w", err)
+	}
+
+	return b.String(), nil
 }
