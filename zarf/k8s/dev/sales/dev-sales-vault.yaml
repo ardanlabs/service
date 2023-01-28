@@ -1,0 +1,18 @@
+# We need persistent storage to hold a credential file we produce during the
+# Vault init process. This file contains critical information needed to use
+# Vault after it is initialized. If the sales pod is restarted, we need to read
+# this file to gain access to the information again.
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  namespace: sales-system
+  name: vault-credentials
+
+spec:
+  accessModes:
+    - ReadWriteOnce
+  
+  resources:
+    requests:
+      storage: 1Gi

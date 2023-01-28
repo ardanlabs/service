@@ -27,39 +27,58 @@ func VaultInit(vaultConfig vault.Config) error {
 		return fmt.Errorf("constructing vault: %w", err)
 	}
 
+	// =========================================================================
+
+	log.Println("Check system is already initialized")
+
+	// NOTE: This assumes the Vault POD is never restarted.
+
 	initResponse, err := checkIfCredFileExists()
-	if err != nil {
-		switch {
-		case errors.Is(err, os.ErrNotExist):
-			log.Println("credential file doesn't exist, initializing vault")
+	if err == nil {
+		log.Printf("rootToken: %s", initResponse.RootToken)
+		vaultSrv.SetToken(initResponse.RootToken)
 
-			initResponse, err = vaultSrv.SystemInit(ctx, 1, 1)
-			if err != nil {
-				if errors.Is(err, vault.ErrAlreadyInitialized) {
-					return fmt.Errorf("vault is already initialized but we don't have the credentials file")
-				}
-				return fmt.Errorf("unable to initialize Vault instance: %w", err)
-			}
-
-			b, err := json.Marshal(initResponse)
-			if err != nil {
-				return errors.New("unable to marshal")
-			}
-
-			if err := os.WriteFile(credentialsFileName, b, 0644); err != nil {
-				return fmt.Errorf("unable to write %s file: %w", credentialsFileName, err)
-			}
-
-		default:
-			return fmt.Errorf("unable to read credentials file: %w", err)
+		if err = vaultSrv.CheckToken(ctx, vaultConfig.Token); err == nil {
+			log.Printf("application token %q exists", vaultConfig.Token)
+			return nil
 		}
 	}
 
-	log.Printf("rootToken: %s", initResponse.RootToken)
+	// =========================================================================
 
-	// =============================================================================================================
+	log.Println("Initializing vault")
+
+	initResponse, err = vaultSrv.SystemInit(ctx, 1, 1)
+	if err != nil {
+		if errors.Is(err, vault.ErrAlreadyInitialized) {
+			return fmt.Errorf("vault is already initialized but we don't have the credentials file")
+		}
+		return fmt.Errorf("unable to initialize Vault instance: %w", err)
+	}
+
+	b, err := json.Marshal(initResponse)
+	if err != nil {
+		return errors.New("unable to marshal")
+	}
+
+	if err := os.WriteFile(credentialsFileName, b, 0644); err != nil {
+		return fmt.Errorf("unable to write %s file: %w", credentialsFileName, err)
+	}
+
+	log.Printf("rootToken: %s", initResponse.RootToken)
+	vaultSrv.SetToken(initResponse.RootToken)
+
+	log.Println("checking token exists")
+	err = vaultSrv.CheckToken(ctx, vaultConfig.Token)
+	if err == nil {
+		log.Printf("token already exists: %s", vaultConfig.Token)
+		return nil
+	}
+
+	// =========================================================================
 
 	log.Println("Unsealing vault")
+
 	err = vaultSrv.Unseal(ctx, initResponse.KeysB64[0])
 	if err != nil {
 		if errors.Is(err, vault.ErrBadRequest) {
@@ -68,7 +87,7 @@ func VaultInit(vaultConfig vault.Config) error {
 		return fmt.Errorf("error unsealing vault: %w", err)
 	}
 
-	// =============================================================================================================
+	// =========================================================================
 
 	log.Println("Mounting path in vault")
 
@@ -80,7 +99,7 @@ func VaultInit(vaultConfig vault.Config) error {
 		return fmt.Errorf("error unsealing vault: %w", err)
 	}
 
-	// =============================================================================================================
+	// =========================================================================
 
 	log.Println("Creating sales-api policy")
 
@@ -89,16 +108,9 @@ func VaultInit(vaultConfig vault.Config) error {
 		return fmt.Errorf("unable to create policy: %w", err)
 	}
 
-	// =============================================================================================================
+	// =========================================================================
 
 	log.Printf("Generating sales-api token: %s", vaultConfig.Token)
-
-	// First let's check if it exists already.
-	err = vaultSrv.CheckToken(ctx, vaultConfig.Token)
-	if err == nil {
-		log.Printf("token already exists: %s", vaultConfig.Token)
-		return nil
-	}
 
 	// We don't currently save the token because we're always going to specify it.
 	err = vaultSrv.CreateToken(ctx, vaultConfig.Token, []string{"sales-api"}, "Sales API")
