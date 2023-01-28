@@ -189,6 +189,7 @@ dev-up-local:
 		--image kindest/node:v1.25.3@sha256:f52781bc0d7a19fb6c405c2af83abfeb311f130707a0e219175677e366cc45d1 \
 		--name $(KIND_CLUSTER) \
 		--config zarf/k8s/dev/kind-config.yaml
+	
 	kubectl wait --timeout=120s --namespace=local-path-storage --for=condition=Available deployment/local-path-provisioner
 	
 	kind load docker-image $(TELEPRESENCE) --name $(KIND_CLUSTER)
@@ -241,8 +242,8 @@ dev-logs:
 	kubectl logs --namespace=sales-system -l app=sales --all-containers=true -f --tail=100 --max-log-requests=6 | go run app/tooling/logfmt/main.go -service=SALES-API
 
 dev-logs-init:
-	kubectl logs --namespace=sales-system -l app=sales -f --tail=100 -c init-vault-server
-	kubectl logs --namespace=sales-system -l app=sales -f --tail=100 -c init-vault
+	kubectl logs --namespace=sales-system -l app=sales -f --tail=100 -c init-vault-system
+	kubectl logs --namespace=sales-system -l app=sales -f --tail=100 -c init-vault-loadkeys
 	kubectl logs --namespace=sales-system -l app=sales -f --tail=100 -c init-migrate
 	kubectl logs --namespace=sales-system -l app=sales -f --tail=100 -c init-seed
 
@@ -332,19 +333,19 @@ readiness:
 # ==============================================================================
 # Metrics and Tracing
 
-metrics-viewlocal:
+metrics-view-local-sc:
 	expvarmon -ports="localhost:4000" -vars="build,requests,goroutines,errors,panics,mem:memstats.Alloc"
 
-metrics-view:
+metrics-view-sc:
 	expvarmon -ports="sales-service.sales-system.svc.cluster.local:4000" -vars="build,requests,goroutines,errors,panics,mem:memstats.Alloc"
 
-metrics-viewlocal:
+metrics-view-local:
 	expvarmon -ports="localhost:3001" -endpoint="/metrics" -vars="build,requests,goroutines,errors,panics,mem:memstats.Alloc"
 
 metrics-view:
 	expvarmon -ports="sales-service.sales-system.svc.cluster.local:3001" -endpoint="/metrics" -vars="build,requests,goroutines,errors,panics,mem:memstats.Alloc"
 
-zipkinlocal:
+zipkin-local:
 	open -a "Google Chrome" http://localhost:9411/zipkin/
 
 zipkin:

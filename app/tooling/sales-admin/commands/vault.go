@@ -14,7 +14,7 @@ import (
 
 // Vault loads the current private key into the vault system.
 func Vault(vaultConfig vault.Config, keysFolder string) error {
-	vault, err := vault.New(vault.Config{
+	vaultSrv, err := vault.New(vault.Config{
 		Address:   vaultConfig.Address,
 		Token:     vaultConfig.Token,
 		MountPath: vaultConfig.MountPath,
@@ -23,7 +23,7 @@ func Vault(vaultConfig vault.Config, keysFolder string) error {
 		return fmt.Errorf("constructing vault: %w", err)
 	}
 
-	if err := loadKeys(vault, os.DirFS(keysFolder)); err != nil {
+	if err := loadKeys(vaultSrv, os.DirFS(keysFolder)); err != nil {
 		return err
 	}
 

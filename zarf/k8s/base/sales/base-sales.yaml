@@ -2,63 +2,47 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: sales-system
+
 ---
-# We need the vault credentials to exist across pod restarts
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  namespace: sales-system
-  name: vault-credentials
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
----
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: sales
   namespace: sales-system
+
 spec:
   selector:
     matchLabels:
       app: sales
+  
   template:
     metadata:
       labels:
         app: sales
+    
     spec:
       terminationGracePeriodSeconds: 60
-      volumes:
-        - name: vault
-          persistentVolumeClaim:
-            claimName: vault-credentials
+      
       initContainers:
-      - name: init-vault-server
-        image: sales-api-image
-        command: ['./sales-admin', 'vault-init']
-        volumeMounts:
-          - name: vault
-            mountPath: /vault
-      - name: init-vault
-        image: sales-api-image
-        command: ['./sales-admin', 'vault']
       - name: init-migrate
         image: sales-api-image
         command: ['./sales-admin', 'migrate']
+      
       - name: init-seed
         image: sales-api-image
         command: ['./sales-admin', 'seed']
+      
       containers:
       - name: sales-api
         image: sales-api-image
+        
         ports:
         - name: sales-api
           containerPort: 3000
         - name: sales-api-debug
           containerPort: 4000
+        
         readinessProbe: # readiness probes mark the service available to accept traffic.
           httpGet:
             path: /debug/readiness
@@ -68,6 +52,7 @@ spec:
           timeoutSeconds: 5
           successThreshold: 1
           failureThreshold: 2
+        
         livenessProbe: # liveness probes mark the service alive or dead (to be restarted).
           httpGet:
             path: /debug/liveness
@@ -77,6 +62,7 @@ spec:
           timeoutSeconds: 5
           successThreshold: 1
           failureThreshold: 2
+        
         env:
         - name: SALES_DB_HOST
           valueFrom:
@@ -103,9 +89,10 @@ spec:
         volumeMounts:
           - name: vault
             mountPath: /vault
-      # metrics container configuration
+      
       - name: metrics
         image: metrics-image
+        
         ports:
         - name: metrics
           containerPort: 3001

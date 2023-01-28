@@ -3,8 +3,10 @@ kind: Kustomization
 resources:
 - ./dev-sales-config.yaml
 - ../../base/sales/
+- ./dev-sales-vault.yaml
 patchesStrategicMerge:
 - ./dev-sales-patch.yaml
+- ./dev-sales-vault-patch.yaml
 images:
 - name: metrics-image
   newName: metrics
