@@ -119,7 +119,7 @@ SHELL := /bin/bash
 # ==============================================================================
 # Install dependencies
 
-GOLANG       := golang:1.19
+GOLANG       := golang:1.20
 ALPINE       := alpine:3.17
 KIND         := kindest/node:v1.25.3
 POSTGRES     := postgres:15-alpine
