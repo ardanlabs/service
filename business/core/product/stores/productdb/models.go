@@ -13,7 +13,7 @@ var orderingFields = order.NewFieldSet(
 	order.MustParseField("product_id"),
 	order.MustParseField("name"),
 	order.MustParseField("cost"),
-	order.MustParseField("quanity"),
+	order.MustParseField("quantity"),
 	order.MustParseField("sold"),
 	order.MustParseField("revenue"),
 	order.MustParseField("user_id"),
