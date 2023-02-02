@@ -62,8 +62,8 @@ func New(cfg Config) (*Auth, error) {
 		log:       cfg.Log,
 		keyLookup: cfg.KeyLookup,
 		user:      usr,
-		method:    jwt.GetSigningMethod("RS256"),
-		parser:    jwt.NewParser(jwt.WithValidMethods([]string{"RS256"})),
+		method:    jwt.GetSigningMethod(jwt.SigningMethodRS256.Name),
+		parser:    jwt.NewParser(jwt.WithValidMethods([]string{jwt.SigningMethodRS256.Name})),
 		cache:     make(map[string]string),
 	}
 
