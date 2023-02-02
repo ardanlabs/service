@@ -15,7 +15,7 @@ const (
 	OrderByID       = "id"
 	OrderByName     = "name"
 	OrderByCost     = "cost"
-	OrderByQuantity = "quanity"
+	OrderByQuantity = "quantity"
 	OrderBySold     = "sold"
 	OrderByRevenue  = "revenue"
 	OrderByUserID   = "userId"
