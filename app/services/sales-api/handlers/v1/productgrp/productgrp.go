@@ -15,7 +15,10 @@ import (
 	"github.com/google/uuid"
 )
 
-var ErrInvalidID = errors.New("ID is not in its proper form")
+// Set of error variables for handling product group errors.
+var (
+	ErrInvalidID = errors.New("ID is not in its proper form")
+)
 
 // Handlers manages the set of product endpoints.
 type Handlers struct {

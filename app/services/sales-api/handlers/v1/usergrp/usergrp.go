@@ -18,7 +18,10 @@ import (
 	"github.com/google/uuid"
 )
 
-var ErrInvalidID = errors.New("ID is not in its proper form")
+// Set of error variables for handling user group errors.
+var (
+	ErrInvalidID = errors.New("ID is not in its proper form")
+)
 
 // Handlers manages the set of user endpoints.
 type Handlers struct {

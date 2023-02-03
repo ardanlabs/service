@@ -31,18 +31,19 @@ func Routes(app *web.App, cfg Config) {
 	const version = "v1"
 
 	authen := mid.Authenticate(cfg.Auth)
-	admin := mid.Authorize(cfg.Auth, auth.RuleAdminOnly)
+	ruleAdmin := mid.Authorize(cfg.Auth, auth.RuleAdminOnly)
+	ruleAny := mid.Authorize(cfg.Auth, auth.RuleAny)
 
 	ugh := usergrp.Handlers{
 		User: user.NewCore(usercache.NewStore(cfg.Log, userdb.NewStore(cfg.Log, cfg.DB))),
 		Auth: cfg.Auth,
 	}
 	app.Handle(http.MethodGet, version, "/users/token/:kid", ugh.Token)
-	app.Handle(http.MethodGet, version, "/users/:page/:rows", ugh.Query, authen, admin)
-	app.Handle(http.MethodGet, version, "/users/:id", ugh.QueryByID, authen)
-	app.Handle(http.MethodPost, version, "/users", ugh.Create, authen, admin)
-	app.Handle(http.MethodPut, version, "/users/:id", ugh.Update, authen, admin)
-	app.Handle(http.MethodDelete, version, "/users/:id", ugh.Delete, authen, admin)
+	app.Handle(http.MethodGet, version, "/users/:page/:rows", ugh.Query, authen, ruleAdmin)
+	app.Handle(http.MethodGet, version, "/users/:id", ugh.QueryByID, ruleAny)
+	app.Handle(http.MethodPost, version, "/users", ugh.Create, authen, ruleAdmin)
+	app.Handle(http.MethodPut, version, "/users/:id", ugh.Update, authen, ruleAny)
+	app.Handle(http.MethodDelete, version, "/users/:id", ugh.Delete, authen, ruleAny)
 
 	pgh := productgrp.Handlers{
 		Product: product.NewCore(productdb.NewStore(cfg.Log, cfg.DB)),
