@@ -3,6 +3,7 @@ package v1
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -51,9 +52,9 @@ func GetRequestError(err error) *RequestError {
 
 // =============================================================================
 
-// GetOrderBy constructs a order.By value by parsing a string in the form
-// of "field,direction".
-func GetOrderBy(r *http.Request, defaultOrder order.By) (order.By, error) {
+// ParseOrderBy constructs an order.By value by parsing a string in the form
+// of "field,direction" from the request.
+func ParseOrderBy(r *http.Request, orderingFields order.FieldSet, defaultOrder order.By) (order.By, error) {
 	v := r.URL.Query().Get("orderBy")
 
 	if v == "" {
@@ -65,9 +66,26 @@ func GetOrderBy(r *http.Request, defaultOrder order.By) (order.By, error) {
 	var by order.By
 	switch len(orderParts) {
 	case 1:
-		by = order.NewBy(strings.Trim(orderParts[0], " "), order.ASC)
+		field, err := orderingFields.ParseField(strings.Trim(orderParts[0], " "))
+		if err != nil {
+			return order.By{}, fmt.Errorf("parse field: %w", err)
+		}
+
+		by = order.NewBy(field, order.ASC)
+
 	case 2:
-		by = order.NewBy(strings.Trim(orderParts[0], " "), strings.Trim(orderParts[1], " "))
+		field, err := orderingFields.ParseField(strings.Trim(orderParts[0], " "))
+		if err != nil {
+			return order.By{}, fmt.Errorf("parse field: %w", err)
+		}
+
+		dir, err := order.ParseDirection(strings.Trim(orderParts[1], " "))
+		if err != nil {
+			return order.By{}, fmt.Errorf("parse direction: %w", err)
+		}
+
+		by = order.NewBy(field, dir)
+
 	default:
 		return order.By{}, errors.New("invalid ordering information")
 	}

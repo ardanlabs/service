@@ -12,6 +12,17 @@ import (
 	"go.uber.org/zap"
 )
 
+// orderingFields maintains a set of fields allowed for ordering.
+var orderingFields = order.NewFieldSet(
+	user.OrderByUserID,
+	user.OrderByName,
+	user.OrderByEmail,
+	user.OrderByRoles,
+	user.OrderByEnabled,
+)
+
+// =============================================================================
+
 // Store manages the set of APIs for user data and caching.
 type Store struct {
 	log    *zap.SugaredLogger
@@ -27,6 +38,11 @@ func NewStore(log *zap.SugaredLogger, storer user.Storer) *Store {
 		storer: storer,
 		cache:  map[string]*user.User{},
 	}
+}
+
+// OrderingFields returns the field set for this store.
+func (s *Store) OrderingFields() order.FieldSet {
+	return orderingFields
 }
 
 // WithinTran runs passed function and do commit/rollback at the end.

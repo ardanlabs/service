@@ -128,12 +128,12 @@ func (h Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Requ
 		return v1Web.NewRequestError(fmt.Errorf("invalid rows format, rows[%s]", rows), http.StatusBadRequest)
 	}
 
-	filter, err := getFilter(r)
+	filter, err := parseFilter(r)
 	if err != nil {
 		return v1Web.NewRequestError(err, http.StatusBadRequest)
 	}
 
-	orderBy, err := v1Web.GetOrderBy(r, product.DefaultOrderBy)
+	orderBy, err := v1Web.ParseOrderBy(r, h.Product.OrderingFields(), product.DefaultOrderBy)
 	if err != nil {
 		return v1Web.NewRequestError(err, http.StatusBadRequest)
 	}

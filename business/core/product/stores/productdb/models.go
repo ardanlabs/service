@@ -1,13 +1,25 @@
 package productdb
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/ardanlabs/service/business/core/product"
 	"github.com/ardanlabs/service/business/data/order"
 	"github.com/google/uuid"
 )
+
+// orderingFields maintains a set of fields allowed for ordering.
+var orderingFields = order.NewFieldSet(
+	product.OrderByProdID,
+	product.OrderByName,
+	product.OrderByCost,
+	product.OrderByQuantity,
+	product.OrderBySold,
+	product.OrderByRevenue,
+	product.OrderByUserID,
+)
+
+// =============================================================================
 
 // dbProduct represents an individual product.
 type dbProduct struct {
@@ -62,32 +74,4 @@ func toCoreProductSlice(dbProducts []dbProduct) []product.Product {
 		prds[i] = toCoreProduct(dbPrd)
 	}
 	return prds
-}
-
-// =============================================================================
-
-// orderByfields is the map of fields that is used to translate between the
-// application layer names and the database.
-var orderByFields = map[string]string{
-	product.OrderByID:       "product_id",
-	product.OrderByName:     "name",
-	product.OrderByCost:     "cost",
-	product.OrderByQuantity: "quantity",
-	product.OrderBySold:     "sold",
-	product.OrderByRevenue:  "revenue",
-	product.OrderByUserID:   "user_id",
-}
-
-// orderByClause validates the order by for correct fields and sql injection.
-func orderByClause(orderBy order.By) (string, error) {
-	if err := order.Validate(orderBy.Field, orderBy.Direction); err != nil {
-		return "", err
-	}
-
-	by, exists := orderByFields[orderBy.Field]
-	if !exists {
-		return "", fmt.Errorf("field %q does not exist", orderBy.Field)
-	}
-
-	return by + " " + orderBy.Direction, nil
 }

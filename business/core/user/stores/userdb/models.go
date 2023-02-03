@@ -1,7 +1,6 @@
 package userdb
 
 import (
-	"fmt"
 	"net/mail"
 	"time"
 
@@ -10,6 +9,17 @@ import (
 	"github.com/google/uuid"
 	"github.com/lib/pq"
 )
+
+// orderingFields maintains a set of fields allowed for ordering.
+var orderingFields = order.NewFieldSet(
+	user.OrderByUserID,
+	user.OrderByName,
+	user.OrderByEmail,
+	user.OrderByRoles,
+	user.OrderByEnabled,
+)
+
+// =============================================================================
 
 // dbUser represent the structure we need for moving data
 // between the app and the database.
@@ -64,30 +74,4 @@ func toCoreUserSlice(dbUsers []dbUser) []user.User {
 		usrs[i] = toCoreUser(dbUsr)
 	}
 	return usrs
-}
-
-// =============================================================================
-
-// orderByfields is the map of fields that is used to translate between the
-// application layer names and the database.
-var orderByFields = map[string]string{
-	user.OrderByID:      "user_id",
-	user.OrderByName:    "name",
-	user.OrderByEmail:   "email",
-	user.OrderByRoles:   "roles",
-	user.OrderByEnabled: "enabled",
-}
-
-// orderByClause validates the order by for correct fields and sql injection.
-func orderByClause(orderBy order.By) (string, error) {
-	if err := order.Validate(orderBy.Field, orderBy.Direction); err != nil {
-		return "", err
-	}
-
-	by, exists := orderByFields[orderBy.Field]
-	if !exists {
-		return "", fmt.Errorf("field %q does not exist", orderBy.Field)
-	}
-
-	return by + " " + orderBy.Direction, nil
 }

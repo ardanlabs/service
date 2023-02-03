@@ -8,10 +8,11 @@ import (
 	"github.com/ardanlabs/service/business/core/product"
 )
 
-func getFilter(r *http.Request) (product.QueryFilter, error) {
+func parseFilter(r *http.Request) (product.QueryFilter, error) {
+	var filter product.QueryFilter
+
 	values := r.URL.Query()
 
-	var filter product.QueryFilter
 	filter.ByID(values.Get("id"))
 	filter.ByName(values.Get("name"))
 
