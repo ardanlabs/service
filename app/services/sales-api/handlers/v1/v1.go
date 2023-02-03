@@ -40,7 +40,7 @@ func Routes(app *web.App, cfg Config) {
 	}
 	app.Handle(http.MethodGet, version, "/users/token/:kid", ugh.Token)
 	app.Handle(http.MethodGet, version, "/users/:page/:rows", ugh.Query, authen, ruleAdmin)
-	app.Handle(http.MethodGet, version, "/users/:id", ugh.QueryByID, ruleAny)
+	app.Handle(http.MethodGet, version, "/users/:id", ugh.QueryByID, authen, ruleAny)
 	app.Handle(http.MethodPost, version, "/users", ugh.Create, authen, ruleAdmin)
 	app.Handle(http.MethodPut, version, "/users/:id", ugh.Update, authen, ruleAny)
 	app.Handle(http.MethodDelete, version, "/users/:id", ugh.Delete, authen, ruleAny)
