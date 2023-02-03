@@ -78,6 +78,15 @@ func Open(cfg Config) (*sqlx.DB, error) {
 // StatusCheck returns nil if it can successfully talk to the database. It
 // returns a non-nil error otherwise.
 func StatusCheck(ctx context.Context, db *sqlx.DB) error {
+	// If there is no timeout in parent context
+	// stop using hanging out on ping.
+	deadline, ok := ctx.Deadline()
+	if !ok {
+		deadline = time.Now().Add(time.Second)
+	}
+	ctx, cancel := context.WithDeadline(ctx, deadline)
+	defer cancel()
+
 	var pingError error
 	for attempts := 1; ; attempts++ {
 		pingError = db.Ping()
