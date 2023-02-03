@@ -16,8 +16,19 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// Set of order by fields for user specific ordering.
+var (
+	OrderByUserID  = order.MustParseField("user_id")
+	OrderByName    = order.MustParseField("name")
+	OrderByEmail   = order.MustParseField("email")
+	OrderByRoles   = order.MustParseField("roles")
+	OrderByEnabled = order.MustParseField("enabled")
+)
+
 // DefaultOrderBy represents the default way we sort.
-var DefaultOrderBy = order.NewBy(order.MustParseField("user_id"), order.ASC)
+var DefaultOrderBy = order.NewBy(OrderByUserID, order.ASC)
+
+// =============================================================================
 
 // Set of error variables for CRUD operations.
 var (

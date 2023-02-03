@@ -100,9 +100,9 @@ func NewFieldSet(fields ...Field) FieldSet {
 	}
 }
 
-// Field takes a field by string and validates it belongs to the set.
+// ParseField takes a field by string and validates it belongs to the set.
 // Then returns that field in its proper type.
-func (fs FieldSet) Field(field string) (Field, error) {
+func (fs FieldSet) ParseField(field string) (Field, error) {
 	f, exists := fs.fields[field]
 	if !exists {
 		return Field{}, fmt.Errorf("field %q not found", field)

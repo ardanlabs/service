@@ -14,11 +14,11 @@ import (
 
 // orderingFields maintains a set of fields allowed for ordering.
 var orderingFields = order.NewFieldSet(
-	order.MustParseField("user_id"),
-	order.MustParseField("name"),
-	order.MustParseField("email"),
-	order.MustParseField("roles"),
-	order.MustParseField("enabled"),
+	user.OrderByUserID,
+	user.OrderByName,
+	user.OrderByEmail,
+	user.OrderByRoles,
+	user.OrderByEnabled,
 )
 
 // =============================================================================

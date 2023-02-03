@@ -14,8 +14,21 @@ import (
 	"github.com/google/uuid"
 )
 
+// Set of order by fields for product specific ordering.
+var (
+	OrderByProdID   = order.MustParseField("product_id")
+	OrderByName     = order.MustParseField("name")
+	OrderByCost     = order.MustParseField("cost")
+	OrderByQuantity = order.MustParseField("quantity")
+	OrderBySold     = order.MustParseField("sold")
+	OrderByRevenue  = order.MustParseField("revenue")
+	OrderByUserID   = order.MustParseField("user_id")
+)
+
 // DefaultOrderBy represents the default way we sort.
-var DefaultOrderBy = order.NewBy(order.MustParseField("product_id"), order.ASC)
+var DefaultOrderBy = order.NewBy(OrderByProdID, order.ASC)
+
+// =============================================================================
 
 // Set of error variables for CRUD operations.
 var (

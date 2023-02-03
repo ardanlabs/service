@@ -10,13 +10,13 @@ import (
 
 // orderingFields maintains a set of fields allowed for ordering.
 var orderingFields = order.NewFieldSet(
-	order.MustParseField("product_id"),
-	order.MustParseField("name"),
-	order.MustParseField("cost"),
-	order.MustParseField("quantity"),
-	order.MustParseField("sold"),
-	order.MustParseField("revenue"),
-	order.MustParseField("user_id"),
+	product.OrderByProdID,
+	product.OrderByName,
+	product.OrderByCost,
+	product.OrderByQuantity,
+	product.OrderBySold,
+	product.OrderByRevenue,
+	product.OrderByUserID,
 )
 
 // =============================================================================

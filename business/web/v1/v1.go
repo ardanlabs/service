@@ -66,7 +66,7 @@ func ParseOrderBy(r *http.Request, orderingFields order.FieldSet, defaultOrder o
 	var by order.By
 	switch len(orderParts) {
 	case 1:
-		field, err := orderingFields.Field(strings.Trim(orderParts[0], " "))
+		field, err := orderingFields.ParseField(strings.Trim(orderParts[0], " "))
 		if err != nil {
 			return order.By{}, fmt.Errorf("parse field: %w", err)
 		}
@@ -74,7 +74,7 @@ func ParseOrderBy(r *http.Request, orderingFields order.FieldSet, defaultOrder o
 		by = order.NewBy(field, order.ASC)
 
 	case 2:
-		field, err := orderingFields.Field(strings.Trim(orderParts[0], " "))
+		field, err := orderingFields.ParseField(strings.Trim(orderParts[0], " "))
 		if err != nil {
 			return order.By{}, fmt.Errorf("parse field: %w", err)
 		}
