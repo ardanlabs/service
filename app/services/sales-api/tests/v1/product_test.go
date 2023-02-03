@@ -94,7 +94,7 @@ func (pt *ProductTests) postProduct400(t *testing.T) {
 				{Field: "name", Error: "name is a required field"},
 				{Field: "cost", Error: "cost is a required field"},
 				{Field: "quantity", Error: "quantity must be 1 or greater"},
-				{Field: "user_id", Error: "user_id is a required field"},
+				{Field: "userID", Error: "userID is a required field"},
 			}
 			exp := v1Web.ErrorResponse{
 				Error:  "data validation error",

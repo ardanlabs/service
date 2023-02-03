@@ -34,8 +34,6 @@ type dbUser struct {
 	DateUpdated  time.Time      `db:"date_updated"`
 }
 
-// =============================================================================
-
 func toDBUser(usr user.User) dbUser {
 	return dbUser{
 		ID:           usr.ID,

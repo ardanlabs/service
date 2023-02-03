@@ -21,8 +21,8 @@ type User struct {
 	Roles        []string     `json:"roles"`
 	PasswordHash []byte       `json:"-"`
 	Enabled      bool         `json:"enabled"`
-	DateCreated  time.Time    `json:"date_created"`
-	DateUpdated  time.Time    `json:"date_updated"`
+	DateCreated  time.Time    `json:"dateCreated"`
+	DateUpdated  time.Time    `json:"dateUpdated"`
 }
 
 // NewUser contains information needed to create a new User.
@@ -31,7 +31,7 @@ type NewUser struct {
 	Email           mail.Address `json:"email" validate:"required,email"`
 	Roles           []string     `json:"roles" validate:"required"`
 	Password        string       `json:"password" validate:"required"`
-	PasswordConfirm string       `json:"password_confirm" validate:"eqfield=Password"`
+	PasswordConfirm string       `json:"passwordConfirm" validate:"eqfield=Password"`
 }
 
 // UpdateUser defines what information may be provided to modify an existing
@@ -45,6 +45,6 @@ type UpdateUser struct {
 	Email           *mail.Address `json:"email" validate:"omitempty,email"`
 	Roles           []string      `json:"roles"`
 	Password        *string       `json:"password"`
-	PasswordConfirm *string       `json:"password_confirm" validate:"omitempty,eqfield=Password"`
+	PasswordConfirm *string       `json:"passwordConfirm" validate:"omitempty,eqfield=Password"`
 	Enabled         *bool         `json:"enabled"`
 }

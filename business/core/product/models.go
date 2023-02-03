@@ -8,15 +8,15 @@ import (
 
 // Product represents an individual product.
 type Product struct {
-	ID          uuid.UUID `json:"id"`           // Unique identifier.
-	Name        string    `json:"name"`         // Display name of the product.
-	Cost        int       `json:"cost"`         // Price for one item in cents.
-	Quantity    int       `json:"quantity"`     // Original number of items available.
-	Sold        int       `json:"sold"`         // Aggregate field showing number of items sold.
-	Revenue     int       `json:"revenue"`      // Aggregate field showing total cost of sold items.
-	UserID      uuid.UUID `json:"user_id"`      // ID of the user who created the product.
-	DateCreated time.Time `json:"date_created"` // When the product was added.
-	DateUpdated time.Time `json:"date_updated"` // When the product record was last modified.
+	ID          uuid.UUID `json:"id"`          // Unique identifier.
+	Name        string    `json:"name"`        // Display name of the product.
+	Cost        int       `json:"cost"`        // Price for one item in cents.
+	Quantity    int       `json:"quantity"`    // Original number of items available.
+	Sold        int       `json:"sold"`        // Aggregate field showing number of items sold.
+	Revenue     int       `json:"revenue"`     // Aggregate field showing total cost of sold items.
+	UserID      uuid.UUID `json:"userID"`      // ID of the user who created the product.
+	DateCreated time.Time `json:"dateCreated"` // When the product was added.
+	DateUpdated time.Time `json:"dateUpdated"` // When the product record was last modified.
 }
 
 // NewProduct is what we require from clients when adding a Product.
@@ -24,7 +24,7 @@ type NewProduct struct {
 	Name     string    `json:"name" validate:"required"`
 	Cost     int       `json:"cost" validate:"required,gte=0"`
 	Quantity int       `json:"quantity" validate:"gte=1"`
-	UserID   uuid.UUID `json:"user_id" validate:"required"`
+	UserID   uuid.UUID `json:"userID" validate:"required"`
 }
 
 // UpdateProduct defines what information may be provided to modify an
