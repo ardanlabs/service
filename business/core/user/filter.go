@@ -1,13 +1,19 @@
 package user
 
 import (
+	"errors"
 	"net/mail"
+	"regexp"
 
 	"github.com/google/uuid"
 )
 
-// QueryFilter holds the available fields filters to search
-// for schedules on the store.
+// Used to check for sql injection problems.
+var sqlInjection = regexp.MustCompile("^[A-Za-z0-9_]+$")
+
+// =============================================================================
+
+// QueryFilter holds the available fields a query can be filtered on.
 type QueryFilter struct {
 	ID    *uuid.UUID    `validate:"omitempty,uuid4"`
 	Name  *string       `validate:"omitempty,min=3"`
@@ -23,10 +29,16 @@ func (f *QueryFilter) ByID(id uuid.UUID) {
 }
 
 // ByName sets the Name field of the QueryFilter value.
-func (f *QueryFilter) ByName(name string) {
+func (f *QueryFilter) ByName(name string) error {
 	if name != "" {
+		if !sqlInjection.MatchString(name) {
+			return errors.New("invalid name format")
+		}
+
 		f.Name = &name
 	}
+
+	return nil
 }
 
 // ByEmail sets the Email field of the QueryFilter value.

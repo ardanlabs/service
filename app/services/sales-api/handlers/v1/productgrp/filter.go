@@ -6,15 +6,21 @@ import (
 	"strconv"
 
 	"github.com/ardanlabs/service/business/core/product"
+	"github.com/google/uuid"
 )
 
 func parseFilter(r *http.Request) (product.QueryFilter, error) {
-	var filter product.QueryFilter
-
 	values := r.URL.Query()
 
-	filter.ByID(values.Get("id"))
-	filter.ByName(values.Get("name"))
+	var filter product.QueryFilter
+
+	if id, err := uuid.Parse(values.Get("id")); err == nil {
+		filter.ByID(id)
+	}
+
+	if err := filter.ByName(values.Get("name")); err != nil {
+		return product.QueryFilter{}, err
+	}
 
 	cost := values.Get("cost")
 	if cost != "" {

@@ -40,7 +40,7 @@ func UserAdd(log *zap.SugaredLogger, cfg database.Config, name, email, password 
 		Email:           *addr,
 		Password:        password,
 		PasswordConfirm: password,
-		Roles:           []string{user.RoleAdmin, user.RoleUser},
+		Roles:           []user.Role{user.RoleAdmin, user.RoleUser},
 	}
 
 	usr, err := core.Create(ctx, nu)

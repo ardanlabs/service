@@ -114,7 +114,7 @@ func (s *Store) Query(ctx context.Context, filter product.QueryFilter, orderBy o
 
 	var wc []string
 	if filter.ID != nil {
-		data.ID = *filter.ID
+		data.ID = (*filter.ID).String()
 		wc = append(wc, "product_id = :product_id")
 	}
 	if filter.Name != nil {

@@ -35,11 +35,16 @@ type dbUser struct {
 }
 
 func toDBUser(usr user.User) dbUser {
+	roles := make([]string, len(usr.Roles))
+	for i, role := range usr.Roles {
+		roles[i] = role.Name()
+	}
+
 	return dbUser{
 		ID:           usr.ID,
 		Name:         usr.Name,
 		Email:        usr.Email.Address,
-		Roles:        usr.Roles,
+		Roles:        roles,
 		PasswordHash: usr.PasswordHash,
 		Enabled:      usr.Enabled,
 		DateCreated:  usr.DateCreated.UTC(),
@@ -52,11 +57,16 @@ func toCoreUser(dbUsr dbUser) user.User {
 		Address: dbUsr.Email,
 	}
 
+	roles := make([]user.Role, len(dbUsr.Roles))
+	for i, value := range dbUsr.Roles {
+		roles[i] = user.MustParseRole(value)
+	}
+
 	usr := user.User{
 		ID:           dbUsr.ID,
 		Name:         dbUsr.Name,
 		Email:        addr,
-		Roles:        dbUsr.Roles,
+		Roles:        roles,
 		PasswordHash: dbUsr.PasswordHash,
 		Enabled:      dbUsr.Enabled,
 		DateCreated:  dbUsr.DateCreated.In(time.Local),

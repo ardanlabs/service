@@ -8,7 +8,7 @@ import (
 )
 
 // Used to check for sql injection problems.
-var valid = regexp.MustCompile("^[A-Za-z0-9_]+$")
+var sqlInjection = regexp.MustCompile("^[A-Za-z0-9_]+$")
 
 // =============================================================================
 
@@ -18,9 +18,25 @@ var (
 	DESC = Direction{"DESC"}
 )
 
+// Set of known directions.
+var directions = map[string]Direction{
+	ASC.name:  ASC,
+	DESC.name: DESC,
+}
+
 // Direction defines an order direction.
 type Direction struct {
 	name string
+}
+
+// ParseDirection converts a string to a type Direction.
+func ParseDirection(value string) (Direction, error) {
+	direction, exists := directions[value]
+	if !exists {
+		return Direction{}, errors.New("invalid direction")
+	}
+
+	return direction, nil
 }
 
 // Name returns the name of the direction.
@@ -28,30 +44,21 @@ func (d Direction) Name() string {
 	return d.name
 }
 
-// MarshalText implement the marshal interface for JSON conversions.
-func (d Direction) MarshalText() ([]byte, error) {
-	return []byte(d.name), nil
-}
-
-// ParseDirection converts a string to a type Direction.
-func ParseDirection(direction string) (Direction, error) {
-	if !valid.MatchString(direction) {
-		return Direction{}, fmt.Errorf("invalid direction %q format", direction)
-	}
-
-	switch direction {
-	case ASC.name, DESC.name:
-		return Direction{direction}, nil
-	}
-
-	return Direction{}, errors.New("unknown role")
-}
-
 // =============================================================================
 
 // Field represents a field of database being managed.
 type Field struct {
 	name string
+}
+
+// ParseField constructs a Field value and checks for potential sql
+// injection issues.
+func ParseField(field string) (Field, error) {
+	if !sqlInjection.MatchString(field) {
+		return Field{}, fmt.Errorf("invalid field %q format", field)
+	}
+
+	return Field{field}, nil
 }
 
 // MustParseField constructs a Field value and checks for potential sql
@@ -63,16 +70,6 @@ func MustParseField(field string) Field {
 	}
 
 	return f
-}
-
-// ParseField constructs a Field value and checks for potential sql
-// injection issues.
-func ParseField(field string) (Field, error) {
-	if !valid.MatchString(field) {
-		return Field{}, fmt.Errorf("invalid field %q format", field)
-	}
-
-	return Field{field}, nil
 }
 
 // Name returns the name of the field.

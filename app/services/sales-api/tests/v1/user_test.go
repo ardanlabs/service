@@ -428,7 +428,7 @@ func (ut *UserTests) postUser201(t *testing.T) user.User {
 	nu := user.NewUser{
 		Name:            "Bill Kennedy",
 		Email:           *email,
-		Roles:           []string{user.RoleAdmin},
+		Roles:           []user.Role{user.RoleAdmin},
 		Password:        "gophers",
 		PasswordConfirm: "gophers",
 	}
@@ -472,7 +472,7 @@ func (ut *UserTests) postUser201(t *testing.T) user.User {
 			exp := got
 			exp.Name = "Bill Kennedy"
 			exp.Email = *email
-			exp.Roles = []string{user.RoleAdmin}
+			exp.Roles = []user.Role{user.RoleAdmin}
 
 			if diff := cmp.Diff(got, exp); diff != "" {
 				t.Fatalf("\t%s\tTest %d:\tShould get the expected result. Diff:\n%s", dbtest.Failed, testID, diff)
@@ -575,7 +575,7 @@ func (ut *UserTests) getUser200(t *testing.T, id uuid.UUID) {
 			exp.ID = id
 			exp.Name = "Bill Kennedy"
 			exp.Email = *email
-			exp.Roles = []string{user.RoleAdmin}
+			exp.Roles = []user.Role{user.RoleAdmin}
 
 			if diff := cmp.Diff(got, exp); diff != "" {
 				t.Fatalf("\t%s\tTest %d:\tShould get the expected result. Diff:\n%s", dbtest.Failed, testID, diff)

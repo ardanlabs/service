@@ -3,13 +3,14 @@ package auth
 import (
 	"context"
 
+	"github.com/ardanlabs/service/business/core/user"
 	"github.com/golang-jwt/jwt/v4"
 )
 
 // Claims represents the authorization claims transmitted via a JWT.
 type Claims struct {
 	jwt.RegisteredClaims
-	Roles []string `json:"roles"`
+	Roles []user.Role `json:"roles"`
 }
 
 // =============================================================================

@@ -9,15 +9,17 @@ import (
 )
 
 func parseFilter(r *http.Request) (user.QueryFilter, error) {
-	var filter user.QueryFilter
-
 	values := r.URL.Query()
+
+	var filter user.QueryFilter
 
 	if id, err := uuid.Parse(values.Get("id")); err == nil {
 		filter.ByID(id)
 	}
 
-	filter.ByName(values.Get("name"))
+	if err := filter.ByName(values.Get("name")); err != nil {
+		return user.QueryFilter{}, err
+	}
 
 	if email, err := mail.ParseAddress(values.Get("email")); err == nil {
 		filter.ByEmail(*email)
