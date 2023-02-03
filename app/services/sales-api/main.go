@@ -31,6 +31,7 @@ import (
 
 /*
 	Need to figure out timeouts for http service.
+	Look at pgx for database access and query execution.
 */
 
 var build = "develop"
