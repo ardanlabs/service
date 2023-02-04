@@ -6,10 +6,11 @@ import (
 
 // These the current set of rules we have for auth.
 const (
-	RuleAuthenticate = "auth"
-	RuleAny          = "allowAny"
-	RuleAdminOnly    = "allowOnlyAdmin"
-	RuleUserOnly     = "allowOnlyUser"
+	RuleAuthenticate   = "auth"
+	RuleAny            = "ruleAny"
+	RuleAdminOnly      = "ruleAdminOnly"
+	RuleUserOnly       = "ruleUserOnly"
+	RuleAdminOrSubject = "ruleAdminOrSubject"
 )
 
 // Package name of our rego code.

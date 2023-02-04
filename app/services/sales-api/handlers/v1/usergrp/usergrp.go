@@ -15,12 +15,6 @@ import (
 	v1Web "github.com/ardanlabs/service/business/web/v1"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/golang-jwt/jwt/v4"
-	"github.com/google/uuid"
-)
-
-// Set of error variables for handling user group errors.
-var (
-	ErrInvalidID = errors.New("ID is not in its proper form")
 )
 
 // Handlers manages the set of user endpoints.
@@ -54,15 +48,7 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 		return fmt.Errorf("unable to decode payload: %w", err)
 	}
 
-	userID, err := uuid.Parse(web.Param(r, "id"))
-	if err != nil {
-		return v1Web.NewRequestError(ErrInvalidID, http.StatusBadRequest)
-	}
-
-	claims := auth.GetClaims(ctx)
-	if claims.Subject != userID.String() && h.Auth.Authorize(ctx, claims, auth.RuleAdminOnly) != nil {
-		return auth.NewAuthError("auth failed")
-	}
+	userID := auth.GetUserID(ctx)
 
 	usr, err := h.User.QueryByID(ctx, userID)
 	if err != nil {
@@ -84,15 +70,7 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 
 // Delete removes a user from the system.
 func (h Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	userID, err := uuid.Parse(web.Param(r, "id"))
-	if err != nil {
-		return v1Web.NewRequestError(ErrInvalidID, http.StatusBadRequest)
-	}
-
-	claims := auth.GetClaims(ctx)
-	if claims.Subject != userID.String() && h.Auth.Authorize(ctx, claims, auth.RuleAdminOnly) != nil {
-		return auth.NewAuthError("auth failed")
-	}
+	userID := auth.GetUserID(ctx)
 
 	usr, err := h.User.QueryByID(ctx, userID)
 	if err != nil {
@@ -147,15 +125,7 @@ func (h Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Requ
 
 // QueryByID returns a user by its ID.
 func (h Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	userID, err := uuid.Parse(web.Param(r, "id"))
-	if err != nil {
-		return v1Web.NewRequestError(ErrInvalidID, http.StatusBadRequest)
-	}
-
-	claims := auth.GetClaims(ctx)
-	if claims.Subject != userID.String() && h.Auth.Authorize(ctx, claims, auth.RuleAdminOnly) != nil {
-		return auth.NewAuthError("auth failed")
-	}
+	userID := auth.GetUserID(ctx)
 
 	usr, err := h.User.QueryByID(ctx, userID)
 	if err != nil {

@@ -5,6 +5,7 @@ import (
 
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/google/uuid"
 )
 
 // Claims represents the authorization claims transmitted via a JWT.
@@ -19,18 +20,35 @@ type Claims struct {
 type ctxKey int
 
 // key is used to store/retrieve a Claims value from a context.Context.
-const key ctxKey = 1
+const claimKey ctxKey = 1
+
+// key is used to store/retrieve a user value from a context.Context.
+const userKey ctxKey = 2
 
 // SetClaims stores the claims in the context.
 func SetClaims(ctx context.Context, claims Claims) context.Context {
-	return context.WithValue(ctx, key, claims)
+	return context.WithValue(ctx, claimKey, claims)
 }
 
 // GetClaims returns the claims from the context.
 func GetClaims(ctx context.Context) Claims {
-	v, ok := ctx.Value(key).(Claims)
+	v, ok := ctx.Value(claimKey).(Claims)
 	if !ok {
 		return Claims{}
+	}
+	return v
+}
+
+// SetUserID stores the user id from the request in the context.
+func SetUserID(ctx context.Context, userID uuid.UUID) context.Context {
+	return context.WithValue(ctx, userKey, userID)
+}
+
+// GetUserID returns the claims from the context.
+func GetUserID(ctx context.Context) uuid.UUID {
+	v, ok := ctx.Value(userKey).(uuid.UUID)
+	if !ok {
+		return uuid.UUID{}
 	}
 	return v
 }

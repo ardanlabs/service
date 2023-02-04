@@ -144,9 +144,11 @@ func (a *Auth) Authenticate(ctx context.Context, bearerToken string) (Claims, er
 // Authorize attempts to authorize the user with the provided input roles, if
 // none of the input roles are within the user's claims, we return an error
 // otherwise the user is authorized.
-func (a *Auth) Authorize(ctx context.Context, claims Claims, rule string) error {
+func (a *Auth) Authorize(ctx context.Context, claims Claims, userID uuid.UUID, rule string) error {
 	input := map[string]any{
-		"Roles": claims.Roles,
+		"Roles":   claims.Roles,
+		"Subject": claims.Subject,
+		"UserID":  userID,
 	}
 
 	if err := a.opaPolicyEvaluation(ctx, opaAuthorization, rule, input); err != nil {

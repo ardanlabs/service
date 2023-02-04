@@ -1,27 +1,39 @@
 package ardan.rego
 
-default allowAny = false
-default allowOnlyUser = false
-default allowOnlyAdmin = false
+default ruleAny = false
+default ruleAdminOnly = false
+default ruleUserOnly = false
+default ruleAdminOrSubject = false
 
 roleUser := "USER"
 roleAdmin := "ADMIN"
 roleAll := {roleAdmin, roleUser}
 
-allowAny {
-	roles_from_claims := {role | role := input.Roles[_]}
-	input_role_is_in_claim := roleAll & roles_from_claims
-	count(input_role_is_in_claim) > 0
+ruleAny {
+	claim_roles := {role | role := input.Roles[_]}
+	input_roles := roleAll & claim_roles
+	count(input_roles) > 0
 }
 
-allowOnlyUser {
-	roles_from_claims := {role | role := input.Roles[_]}
-	input_role_is_in_claim := {roleUser} & roles_from_claims
-	count(input_role_is_in_claim) > 0
+ruleAdminOnly {
+	claim_roles := {role | role := input.Roles[_]}
+	input_admin := {roleAdmin} & claim_roles
+	count(input_admin) > 0
 }
 
-allowOnlyAdmin {
-	roles_from_claims := {role | role := input.Roles[_]}
-	input_role_is_in_claim := {roleAdmin} & roles_from_claims
-	count(input_role_is_in_claim) > 0
+ruleUserOnly {
+	claim_roles := {role | role := input.Roles[_]}
+	input_user := {roleUser} & claim_roles
+	count(input_user) > 0
+}
+
+ruleAdminOrSubject {
+	claim_roles := {role | role := input.Roles[_]}
+	input_admin := {roleAdmin} & claim_roles
+    count(input_admin) > 0
+} else {
+    claim_roles := {role | role := input.Roles[_]}
+	input_user := {roleUser} & claim_roles
+	count(input_user) > 0
+	input.UserID == input.Subject
 }

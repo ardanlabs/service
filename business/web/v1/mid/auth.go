@@ -2,10 +2,18 @@ package mid
 
 import (
 	"context"
+	"errors"
 	"net/http"
 
 	"github.com/ardanlabs/service/business/web/auth"
+	v1Web "github.com/ardanlabs/service/business/web/v1"
 	"github.com/ardanlabs/service/foundation/web"
+	"github.com/google/uuid"
+)
+
+// Set of error variables for handling user group errors.
+var (
+	ErrInvalidID = errors.New("ID is not in its proper form")
 )
 
 // Authenticate validates a JWT from the `Authorization` header.
@@ -38,7 +46,19 @@ func Authorize(a *auth.Auth, rule string) web.Middleware {
 				return auth.NewAuthError("authorize: you are not authorized for that action, no claims")
 			}
 
-			if err := a.Authorize(ctx, claims, rule); err != nil {
+			// I will use an zero valued user id if it doesn't exsit.
+			var userID uuid.UUID
+			id := web.Param(r, "userid")
+			if id != "" {
+				var err error
+				userID, err = uuid.Parse(id)
+				if err != nil {
+					return v1Web.NewRequestError(ErrInvalidID, http.StatusBadRequest)
+				}
+				ctx = auth.SetUserID(ctx, userID)
+			}
+
+			if err := a.Authorize(ctx, claims, userID, rule); err != nil {
 				return auth.NewAuthError("authorize: you are not authorized for that action, claims[%v] rule[%v]: %s", claims.Roles, rule, err)
 			}
 

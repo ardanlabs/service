@@ -12,6 +12,7 @@ import (
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/web/auth"
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -58,6 +59,7 @@ func Test_Auth(t *testing.T) {
 				},
 				Roles: []user.Role{user.RoleAdmin},
 			}
+			userID := uuid.MustParse(claims.Subject)
 
 			token, err := a.GenerateToken(kid, claims)
 			if err != nil {
@@ -71,18 +73,206 @@ func Test_Auth(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to authenticate the claims.", success, testID)
 
-			err = a.Authorize(context.Background(), parsedClaims, auth.RuleAdminOnly)
+			err = a.Authorize(context.Background(), parsedClaims, userID, auth.RuleAdminOnly)
 			if err != nil {
 				t.Errorf("\t%s\tTest %d:\tShould be able to authorize the RoleAdmin claims: %v", failed, testID, err)
 			} else {
 				t.Logf("\t%s\tTest %d:\tShould be able to authorize the RoleAdmin claims.", success, testID)
 			}
 
-			err = a.Authorize(context.Background(), parsedClaims, auth.RuleUserOnly)
+			err = a.Authorize(context.Background(), parsedClaims, userID, auth.RuleUserOnly)
 			if err == nil {
 				t.Errorf("\t%s\tTest %d:\tShould NOT be able to authorize the RoleUser claim.", failed, testID)
 			} else {
 				t.Logf("\t%s\tTest %d:\tShould NOT be able to authorize the RoleUser claims.", success, testID)
+			}
+
+			err = a.Authorize(context.Background(), parsedClaims, userID, auth.RuleAdminOrSubject)
+			if err != nil {
+				t.Errorf("\t%s\tTest %d:\tShould be able to authorize the RuleAdminOrSubject claim with RoleAdmin only: %v", failed, testID, err)
+			} else {
+				t.Logf("\t%s\tTest %d:\tShould be able to authorize the RuleAdminOrSubject claim with RoleAdmin only.", success, testID)
+			}
+
+			// =========================================================================================================
+
+			claims = auth.Claims{
+				RegisteredClaims: jwt.RegisteredClaims{
+					Issuer:    "service project",
+					Subject:   "5cf37266-3473-4006-984f-9325122678b7",
+					ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(time.Hour)),
+					IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
+				},
+				Roles: []user.Role{user.RoleUser},
+			}
+			userID = uuid.MustParse(claims.Subject)
+
+			token, err = a.GenerateToken(kid, claims)
+			if err != nil {
+				t.Fatalf("\t%s\tTest %d:\tShould be able to generate a JWT: %v", failed, testID, err)
+			}
+			t.Logf("\t%s\tTest %d:\tShould be able to generate a JWT.", success, testID)
+
+			parsedClaims, err = a.Authenticate(context.Background(), "Bearer "+token)
+			if err != nil {
+				t.Fatalf("\t%s\tTest %d:\tShould be able to authenticate the claims: %v", failed, testID, err)
+			}
+			t.Logf("\t%s\tTest %d:\tShould be able to authenticate the claims.", success, testID)
+
+			err = a.Authorize(context.Background(), parsedClaims, userID, auth.RuleUserOnly)
+			if err != nil {
+				t.Errorf("\t%s\tTest %d:\tShould be able to authorize the RuleUserOnly claim with RoleUser only: %v", failed, testID, err)
+			} else {
+				t.Logf("\t%s\tTest %d:\tShould be able to authorize the RuleUserOnly claim with RoleUser only.", success, testID)
+			}
+
+			err = a.Authorize(context.Background(), parsedClaims, userID, auth.RuleAdminOnly)
+			if err == nil {
+				t.Errorf("\t%s\tTest %d:\tShould NOT be able to authorize the RuleAdminOnly claim with RoleUser only.", failed, testID)
+			} else {
+				t.Logf("\t%s\tTest %d:\tShould NOT be able to authorize the RuleAdminOnly claim with RoleUser only.", success, testID)
+			}
+
+			err = a.Authorize(context.Background(), parsedClaims, userID, auth.RuleAdminOrSubject)
+			if err != nil {
+				t.Errorf("\t%s\tTest %d:\tShould be able to authorize the RuleAdminOrSubject claim with RoleUser only: %v", failed, testID, err)
+			} else {
+				t.Logf("\t%s\tTest %d:\tShould be able to authorize the RuleAdminOrSubject claim with RoleUser only.", success, testID)
+			}
+
+			err = a.Authorize(context.Background(), parsedClaims, userID, auth.RuleAny)
+			if err != nil {
+				t.Errorf("\t%s\tTest %d:\tShould be able to authorize the RuleAny any claim with RoleUser only: %v", failed, testID, err)
+			} else {
+				t.Logf("\t%s\tTest %d:\tShould be able to authorize the RuleAny any claim with RoleUser only.", success, testID)
+			}
+
+			// =========================================================================================================
+
+			claims = auth.Claims{
+				RegisteredClaims: jwt.RegisteredClaims{
+					Issuer:    "service project",
+					Subject:   "5cf37266-3473-4006-984f-9325122678b7",
+					ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(time.Hour)),
+					IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
+				},
+				Roles: []user.Role{user.RoleUser},
+			}
+			userID = uuid.MustParse("9e979baa-61c9-4b50-81f2-f216d53f5c15")
+
+			token, err = a.GenerateToken(kid, claims)
+			if err != nil {
+				t.Fatalf("\t%s\tTest %d:\tShould be able to generate a JWT: %v", failed, testID, err)
+			}
+			t.Logf("\t%s\tTest %d:\tShould be able to generate a JWT.", success, testID)
+
+			parsedClaims, err = a.Authenticate(context.Background(), "Bearer "+token)
+			if err != nil {
+				t.Fatalf("\t%s\tTest %d:\tShould be able to authenticate the claims: %v", failed, testID, err)
+			}
+			t.Logf("\t%s\tTest %d:\tShould be able to authenticate the claims.", success, testID)
+
+			err = a.Authorize(context.Background(), parsedClaims, userID, auth.RuleAdminOrSubject)
+			if err == nil {
+				t.Errorf("\t%s\tTest %d:\tShould NOT be able to authorize the RuleAdminOrSubject claim with RoleUser only and different userID.", failed, testID)
+			} else {
+				t.Logf("\t%s\tTest %d:\tShould NOT be able to authorize the RuleAdminOrSubject claim with RoleUser only and different userID.", success, testID)
+			}
+
+			// =========================================================================================================
+
+			claims = auth.Claims{
+				RegisteredClaims: jwt.RegisteredClaims{
+					Issuer:    "service project",
+					Subject:   "5cf37266-3473-4006-984f-9325122678b7",
+					ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(time.Hour)),
+					IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
+				},
+				Roles: []user.Role{user.RoleUser, user.RoleAdmin},
+			}
+			userID = uuid.MustParse("9e979baa-61c9-4b50-81f2-f216d53f5c15")
+
+			token, err = a.GenerateToken(kid, claims)
+			if err != nil {
+				t.Fatalf("\t%s\tTest %d:\tShould be able to generate a JWT: %v", failed, testID, err)
+			}
+			t.Logf("\t%s\tTest %d:\tShould be able to generate a JWT.", success, testID)
+
+			parsedClaims, err = a.Authenticate(context.Background(), "Bearer "+token)
+			if err != nil {
+				t.Fatalf("\t%s\tTest %d:\tShould be able to authenticate the claims: %v", failed, testID, err)
+			}
+			t.Logf("\t%s\tTest %d:\tShould be able to authenticate the claims.", success, testID)
+
+			err = a.Authorize(context.Background(), parsedClaims, userID, auth.RuleAny)
+			if err != nil {
+				t.Errorf("\t%s\tTest %d:\tShould be able to authorize the RuleAny any claim with RoleUser and RoleAdmin: %v", failed, testID, err)
+			} else {
+				t.Logf("\t%s\tTest %d:\tShould be able to authorize the RuleAny any claim with RoleUser and RoleAdmin.", success, testID)
+			}
+
+			// =========================================================================================================
+
+			claims = auth.Claims{
+				RegisteredClaims: jwt.RegisteredClaims{
+					Issuer:    "service project",
+					Subject:   "5cf37266-3473-4006-984f-9325122678b7",
+					ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(time.Hour)),
+					IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
+				},
+				Roles: []user.Role{user.RoleUser},
+			}
+			userID = uuid.MustParse("9e979baa-61c9-4b50-81f2-f216d53f5c15")
+
+			token, err = a.GenerateToken(kid, claims)
+			if err != nil {
+				t.Fatalf("\t%s\tTest %d:\tShould be able to generate a JWT: %v", failed, testID, err)
+			}
+			t.Logf("\t%s\tTest %d:\tShould be able to generate a JWT.", success, testID)
+
+			parsedClaims, err = a.Authenticate(context.Background(), "Bearer "+token)
+			if err != nil {
+				t.Fatalf("\t%s\tTest %d:\tShould be able to authenticate the claims: %v", failed, testID, err)
+			}
+			t.Logf("\t%s\tTest %d:\tShould be able to authenticate the claims.", success, testID)
+
+			err = a.Authorize(context.Background(), parsedClaims, userID, auth.RuleAny)
+			if err != nil {
+				t.Errorf("\t%s\tTest %d:\tShould be able to authorize the RuleAny any claim with RoleUser only: %v", failed, testID, err)
+			} else {
+				t.Logf("\t%s\tTest %d:\tShould be able to authorize the RuleAny any claim with RoleUser only.", success, testID)
+			}
+
+			// =========================================================================================================
+
+			claims = auth.Claims{
+				RegisteredClaims: jwt.RegisteredClaims{
+					Issuer:    "service project",
+					Subject:   "5cf37266-3473-4006-984f-9325122678b7",
+					ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(time.Hour)),
+					IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
+				},
+				Roles: []user.Role{user.RoleAdmin},
+			}
+			userID = uuid.MustParse("9e979baa-61c9-4b50-81f2-f216d53f5c15")
+
+			token, err = a.GenerateToken(kid, claims)
+			if err != nil {
+				t.Fatalf("\t%s\tTest %d:\tShould be able to generate a JWT: %v", failed, testID, err)
+			}
+			t.Logf("\t%s\tTest %d:\tShould be able to generate a JWT.", success, testID)
+
+			parsedClaims, err = a.Authenticate(context.Background(), "Bearer "+token)
+			if err != nil {
+				t.Fatalf("\t%s\tTest %d:\tShould be able to authenticate the claims: %v", failed, testID, err)
+			}
+			t.Logf("\t%s\tTest %d:\tShould be able to authenticate the claims.", success, testID)
+
+			err = a.Authorize(context.Background(), parsedClaims, userID, auth.RuleAny)
+			if err != nil {
+				t.Errorf("\t%s\tTest %d:\tShould be able to authorize the RuleAny any claim with RoleAdmin only: %v", failed, testID, err)
+			} else {
+				t.Logf("\t%s\tTest %d:\tShould be able to authorize the RuleAny any claim with RoleAdmin only.", success, testID)
 			}
 		}
 	}

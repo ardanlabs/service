@@ -65,11 +65,6 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 		}
 	}
 
-	claims := auth.GetClaims(ctx)
-	if claims.Subject != prd.UserID.String() && h.Auth.Authorize(ctx, claims, auth.RuleAdminOnly) != nil {
-		return auth.NewAuthError("auth failed")
-	}
-
 	prd, err = h.Product.Update(ctx, prd, upd)
 	if err != nil {
 		return fmt.Errorf("ID[%s] Product[%+v]: %w", prdID, &upd, err)
@@ -99,11 +94,6 @@ func (h Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Req
 		default:
 			return fmt.Errorf("querying product[%s]: %w", prdID, err)
 		}
-	}
-
-	claims := auth.GetClaims(ctx)
-	if claims.Subject != prd.UserID.String() && h.Auth.Authorize(ctx, claims, auth.RuleAdminOnly) != nil {
-		return auth.NewAuthError("auth failed")
 	}
 
 	if err := h.Product.Delete(ctx, prd); err != nil {
