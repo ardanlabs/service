@@ -22,6 +22,12 @@ import (
 // ErrForbidden is returned when a auth issue is identified.
 var ErrForbidden = errors.New("attempted action is not allowed")
 
+// Claims represents the authorization claims transmitted via a JWT.
+type Claims struct {
+	jwt.RegisteredClaims
+	Roles []user.Role `json:"roles"`
+}
+
 // KeyLookup declares a method set of behavior for looking up
 // private and public keys for JWT use.
 type KeyLookup interface {

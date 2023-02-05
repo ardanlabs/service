@@ -3,18 +3,8 @@ package auth
 import (
 	"context"
 
-	"github.com/ardanlabs/service/business/core/user"
-	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 )
-
-// Claims represents the authorization claims transmitted via a JWT.
-type Claims struct {
-	jwt.RegisteredClaims
-	Roles []user.Role `json:"roles"`
-}
-
-// =============================================================================
 
 // ctxKey represents the type of value for the context key.
 type ctxKey int
@@ -24,6 +14,8 @@ const claimKey ctxKey = 1
 
 // key is used to store/retrieve a user value from a context.Context.
 const userKey ctxKey = 2
+
+// =============================================================================
 
 // SetClaims stores the claims in the context.
 func SetClaims(ctx context.Context, claims Claims) context.Context {
