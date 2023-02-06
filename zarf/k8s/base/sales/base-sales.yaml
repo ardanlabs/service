@@ -86,10 +86,7 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: spec.nodeName
-        volumeMounts:
-          - name: vault
-            mountPath: /vault
-      
+
       - name: metrics
         image: metrics-image
         
