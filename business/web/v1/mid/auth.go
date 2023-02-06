@@ -20,7 +20,12 @@ var (
 func Authenticate(a *auth.Auth) web.Middleware {
 	m := func(handler web.Handler) web.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-			claims, err := a.Authenticate(ctx, r.Header.Get("authorization"))
+			hdr := r.Header.Get("authorization")
+			if hdr == "" {
+				r.Header.Get("Authorization")
+			}
+
+			claims, err := a.Authenticate(ctx, hdr)
 			if err != nil {
 				return auth.NewAuthError("authenticate: failed: %s", err)
 			}
