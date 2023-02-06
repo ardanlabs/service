@@ -43,6 +43,7 @@ func Test_Auth(t *testing.T) {
 				Log:       log,
 				DB:        db,
 				KeyLookup: &keyStore{},
+				Issuer:    "service project",
 			}
 			a, err := auth.New(cfg)
 			if err != nil {

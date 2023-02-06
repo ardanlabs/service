@@ -12,6 +12,6 @@ jwt_valid := valid {
 
 verify_jwt := io.jwt.decode_verify(input.Token, {
         "cert": input.Key,
-        "iss": "service project",
+        "iss": input.ISS,
 	}
 )

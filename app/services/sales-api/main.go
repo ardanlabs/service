@@ -75,10 +75,11 @@ func run(log *zap.SugaredLogger) error {
 			APIHost         string        `conf:"default:0.0.0.0:3000"`
 			DebugHost       string        `conf:"default:0.0.0.0:4000"`
 		}
-		// Auth struct {
-		// 	KeysFolder string `conf:"default:zarf/keys/"`
-		// 	ActiveKID  string `conf:"default:54bb2165-71e1-41a6-af3e-7da4a0e1e2c1"`
-		// }
+		Auth struct {
+			// KeysFolder string `conf:"default:zarf/keys/"`
+			// ActiveKID  string `conf:"default:54bb2165-71e1-41a6-af3e-7da4a0e1e2c1"`
+			Issuer string `conf:"default:service project"`
+		}
 		Vault struct {
 			Address   string `conf:"default:http://vault-service.sales-system.svc.cluster.local:8200"`
 			MountPath string `conf:"default:secret"`

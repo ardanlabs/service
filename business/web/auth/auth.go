@@ -40,6 +40,7 @@ type Config struct {
 	Log       *zap.SugaredLogger
 	DB        *sqlx.DB
 	KeyLookup KeyLookup
+	Issuer    string
 }
 
 // Auth is used to authenticate clients. It can generate a token for a
@@ -50,6 +51,7 @@ type Auth struct {
 	user      *user.Core
 	method    jwt.SigningMethod
 	parser    *jwt.Parser
+	issuer    string
 	mu        sync.RWMutex
 	cache     map[string]string
 }
@@ -70,6 +72,7 @@ func New(cfg Config) (*Auth, error) {
 		user:      usr,
 		method:    jwt.GetSigningMethod(jwt.SigningMethodRS256.Name),
 		parser:    jwt.NewParser(jwt.WithValidMethods([]string{jwt.SigningMethodRS256.Name})),
+		issuer:    cfg.Issuer,
 		cache:     make(map[string]string),
 	}
 
@@ -132,6 +135,7 @@ func (a *Auth) Authenticate(ctx context.Context, bearerToken string) (Claims, er
 	input := map[string]any{
 		"Key":   pem,
 		"Token": parts[1],
+		"ISS":   a.issuer,
 	}
 
 	if err := a.opaPolicyEvaluation(ctx, opaAuthentication, RuleAuthenticate, input); err != nil {
