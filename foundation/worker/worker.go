@@ -59,13 +59,13 @@ func (w *Worker) Shutdown(ctx context.Context) error {
 	close(w.isShutdown)
 
 	// Call the cancel function for all running goroutines.
-	w.mu.Lock()
+	w.mu.RLock()
 	{
 		for _, cancel := range w.running {
 			cancel()
 		}
 	}
-	w.mu.Unlock()
+	w.mu.RUnlock()
 
 	// Launch a goroutine to wait for all the worker goroutines
 	// to complete their work.
