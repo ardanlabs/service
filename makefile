@@ -221,7 +221,7 @@ dev-apply:
 	kustomize build zarf/k8s/dev/vault | kubectl apply -f -
 
 	kustomize build zarf/k8s/dev/database | kubectl apply -f -
-	kubectl wait --timeout=120s --namespace=sales-system --for=condition=Available deployment/database
+	kubectl wait pods --namespace=sales-system --selector app=database --for=condition=Ready
 	
 	kustomize build zarf/k8s/dev/zipkin | kubectl apply -f -
 	kubectl wait --timeout=120s --namespace=sales-system --for=condition=Available deployment/zipkin
@@ -293,9 +293,8 @@ dev-events-warn:
 dev-shell:
 	kubectl exec --namespace=sales-system -it $(shell kubectl get pods --namespace=sales-system | grep sales | cut -c1-26) --container sales-api -- /bin/sh
 
-dev-database:
-	# ./sales-admin --db-disable-tls=1 migrate
-	# ./sales-admin --db-disable-tls=1 seed
+dev-database-restart:
+	kubectl rollout restart statefulset database --namespace=sales-system
 
 # ==============================================================================
 # Administration

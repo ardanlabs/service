@@ -3,8 +3,20 @@ kind: Namespace
 metadata:
   name: sales-system
 ---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: database-data
+  namespace: sales-system
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: database
   namespace: sales-system
@@ -13,8 +25,6 @@ spec:
     matchLabels:
       app: database
   replicas: 1
-  strategy:
-    type: Recreate
   template:
     metadata:
       labels:
@@ -23,9 +33,16 @@ spec:
       dnsPolicy: ClusterFirstWithHostNet
       hostNetwork: true
       terminationGracePeriodSeconds: 60
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: database-data
       containers:
       - name: postgres
         image: postgres:15-alpine
+        volumeMounts:
+          - name: data
+            mountPath: /var/lib/postgresql/data
         resources:
           limits:
             cpu: "1000m" # Up to 1 full core

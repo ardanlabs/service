@@ -3,4 +3,3 @@ kind: Kustomization
 resources:
   - ./configmap.yaml
   - ./dev-vault.yaml
-  - ./statefulset.yaml
