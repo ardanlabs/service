@@ -99,8 +99,7 @@ func NewFS(fsys fs.FS) (*KeyStore, error) {
 	return ks, nil
 }
 
-// PrivateKey searches the key store for a given kid and returns
-// the private key.
+// PrivateKey searches the key store for a given kid and returns the private key.
 func (ks *KeyStore) PrivateKey(kid string) (string, error) {
 	privateKey, found := ks.store[kid]
 	if !found {
@@ -110,8 +109,7 @@ func (ks *KeyStore) PrivateKey(kid string) (string, error) {
 	return string(privateKey.PEM), nil
 }
 
-// PublicKey searches the key store for a given kid and returns
-// the public key.
+// PublicKey searches the key store for a given kid and returns the public key.
 func (ks *KeyStore) PublicKey(kid string) (string, error) {
 	privateKey, found := ks.store[kid]
 	if !found {

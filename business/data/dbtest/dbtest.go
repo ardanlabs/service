@@ -217,11 +217,11 @@ func IntPointer(i int) *int {
 
 type keyStore struct{}
 
-func (ks *keyStore) PrivateKeyPEM(kid string) (string, error) {
+func (ks *keyStore) PrivateKey(kid string) (string, error) {
 	return privateKeyPEM, nil
 }
 
-func (ks *keyStore) PublicKeyPEM(kid string) (string, error) {
+func (ks *keyStore) PublicKey(kid string) (string, error) {
 	return publicKeyPEM, nil
 }
 

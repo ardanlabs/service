@@ -79,7 +79,7 @@ func Test_Vault(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to put the PEM into Vault.", success, testID)
 
-			gotPEM, err := vault.PrivateKeyPEM(key)
+			gotPEM, err := vault.PrivateKey(key)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to pull the private key from Vault: %v", failed, testID, err)
 			}

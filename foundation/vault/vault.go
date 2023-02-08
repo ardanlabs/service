@@ -115,9 +115,9 @@ func (v *Vault) AddPrivateKey(ctx context.Context, kid string, pem []byte) error
 	return nil
 }
 
-// PrivateKeyPEM searches the key store for a given kid and returns
+// PrivateKey searches the key store for a given kid and returns
 // the private key in pem format.
-func (v *Vault) PrivateKeyPEM(kid string) (string, error) {
+func (v *Vault) PrivateKey(kid string) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -129,14 +129,14 @@ func (v *Vault) PrivateKeyPEM(kid string) (string, error) {
 	return privatePEM, nil
 }
 
-// PublicKeyPEM searches the key store for a given kid and returns
+// PublicKey searches the key store for a given kid and returns
 // the public key in pem format.
-func (v *Vault) PublicKeyPEM(kid string) (string, error) {
+func (v *Vault) PublicKey(kid string) (string, error) {
 	if pem, err := v.keyLookup(kid); err == nil {
 		return pem, nil
 	}
 
-	privatePEM, err := v.PrivateKeyPEM(kid)
+	privatePEM, err := v.PrivateKey(kid)
 	if err != nil {
 		return "", err
 	}

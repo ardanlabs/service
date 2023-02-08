@@ -29,10 +29,11 @@ type Claims struct {
 }
 
 // KeyLookup declares a method set of behavior for looking up
-// private and public keys for JWT use.
+// private and public keys for JWT use. The return could be a
+// PEM encoded string or a JWS based key.
 type KeyLookup interface {
-	PrivateKeyPEM(kid string) (pem string, err error)
-	PublicKeyPEM(kid string) (pem string, err error)
+	PrivateKey(kid string) (key string, err error)
+	PublicKey(kid string) (key string, err error)
 }
 
 // Config represents information required to initialize auth.
@@ -84,7 +85,7 @@ func (a *Auth) GenerateToken(kid string, claims Claims) (string, error) {
 	token := jwt.NewWithClaims(a.method, claims)
 	token.Header["kid"] = kid
 
-	privateKeyPEM, err := a.keyLookup.PrivateKeyPEM(kid)
+	privateKeyPEM, err := a.keyLookup.PrivateKey(kid)
 	if err != nil {
 		return "", fmt.Errorf("private key: %w", err)
 	}
@@ -144,7 +145,7 @@ func (a *Auth) Authenticate(ctx context.Context, bearerToken string) (Claims, er
 
 	// Check the database for this user to verify they are still enabled.
 
-	if !a.isUserEnabled(ctx, claims) {
+	if err := a.isUserEnabled(ctx, claims); err != nil {
 		return Claims{}, fmt.Errorf("user not enabled : %w", err)
 	}
 
@@ -186,7 +187,7 @@ func (a *Auth) publicKeyLookup(kid string) (string, error) {
 		return pem, nil
 	}
 
-	pem, err = a.keyLookup.PublicKeyPEM(kid)
+	pem, err = a.keyLookup.PublicKey(kid)
 	if err != nil {
 		return "", fmt.Errorf("fetching public key: %w", err)
 	}
@@ -230,20 +231,19 @@ func (a *Auth) opaPolicyEvaluation(ctx context.Context, opaPolicy string, rule s
 
 // isUserEnabled hits the database and checks the user is not disabled. If the
 // no database connection was provided, this check is skipped.
-func (a *Auth) isUserEnabled(ctx context.Context, claims Claims) bool {
+func (a *Auth) isUserEnabled(ctx context.Context, claims Claims) error {
 	if a.user == nil {
-		return true
+		return nil
 	}
 
 	userID, err := uuid.Parse(claims.Subject)
 	if err != nil {
-		return false
+		return fmt.Errorf("parse user: %w", err)
 	}
 
-	usr, err := a.user.QueryByID(ctx, userID)
-	if err != nil {
-		return false
+	if _, err := a.user.QueryByID(ctx, userID); err != nil {
+		return fmt.Errorf("query user: %w", err)
 	}
 
-	return usr.Enabled
+	return nil
 }
