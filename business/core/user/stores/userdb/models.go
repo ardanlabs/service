@@ -1,6 +1,7 @@
 package userdb
 
 import (
+	"database/sql"
 	"net/mail"
 	"time"
 
@@ -30,6 +31,7 @@ type dbUser struct {
 	Roles        pq.StringArray `db:"roles"`
 	PasswordHash []byte         `db:"password_hash"`
 	Enabled      bool           `db:"enabled"`
+	Department   sql.NullString `db:"department"`
 	DateCreated  time.Time      `db:"date_created"`
 	DateUpdated  time.Time      `db:"date_updated"`
 }
@@ -46,9 +48,13 @@ func toDBUser(usr user.User) dbUser {
 		Email:        usr.Email.Address,
 		Roles:        roles,
 		PasswordHash: usr.PasswordHash,
-		Enabled:      usr.Enabled,
-		DateCreated:  usr.DateCreated.UTC(),
-		DateUpdated:  usr.DateUpdated.UTC(),
+		Department: sql.NullString{
+			String: usr.Department,
+			Valid:  usr.Department != "",
+		},
+		Enabled:     usr.Enabled,
+		DateCreated: usr.DateCreated.UTC(),
+		DateUpdated: usr.DateUpdated.UTC(),
 	}
 }
 
@@ -69,6 +75,7 @@ func toCoreUser(dbUsr dbUser) user.User {
 		Roles:        roles,
 		PasswordHash: dbUsr.PasswordHash,
 		Enabled:      dbUsr.Enabled,
+		Department:   dbUsr.Department.String,
 		DateCreated:  dbUsr.DateCreated.In(time.Local),
 		DateUpdated:  dbUsr.DateUpdated.In(time.Local),
 	}

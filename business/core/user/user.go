@@ -88,6 +88,7 @@ func (c *Core) Create(ctx context.Context, nu NewUser) (User, error) {
 		Email:        nu.Email,
 		PasswordHash: hash,
 		Roles:        nu.Roles,
+		Department:   nu.Department,
 		Enabled:      true,
 		DateCreated:  now,
 		DateUpdated:  now,
@@ -129,6 +130,9 @@ func (c *Core) Update(ctx context.Context, usr User, uu UpdateUser) (User, error
 			return User{}, fmt.Errorf("generating password hash: %w", err)
 		}
 		usr.PasswordHash = pw
+	}
+	if uu.Department != nil {
+		usr.Department = *uu.Department
 	}
 	if uu.Enabled != nil {
 		usr.Enabled = *uu.Enabled

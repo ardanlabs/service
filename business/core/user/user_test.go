@@ -109,8 +109,9 @@ func Test_User(t *testing.T) {
 			t.Logf("\t%s\tTest %d:\tShould be able to parse email.", dbtest.Success, testID)
 
 			upd := user.UpdateUser{
-				Name:  dbtest.StringPointer("Jacob Walker"),
-				Email: email,
+				Name:       dbtest.StringPointer("Jacob Walker"),
+				Email:      email,
+				Department: dbtest.StringPointer("development"),
 			}
 
 			if _, err := core.Update(ctx, saved, upd); err != nil {
@@ -143,6 +144,14 @@ func Test_User(t *testing.T) {
 				t.Logf("\t\tTest %d:\tExp: %v", testID, *upd.Email)
 			} else {
 				t.Logf("\t%s\tTest %d:\tShould be able to see updates to Email.", dbtest.Success, testID)
+			}
+
+			if saved.Department != *upd.Department {
+				t.Errorf("\t%s\tTest %d:\tShould be able to see updates to Department.", dbtest.Failed, testID)
+				t.Logf("\t\tTest %d:\tGot: %v", testID, saved.Department)
+				t.Logf("\t\tTest %d:\tExp: %v", testID, *upd.Department)
+			} else {
+				t.Logf("\t%s\tTest %d:\tShould be able to see updates to Department.", dbtest.Success, testID)
 			}
 
 			if err := core.Delete(ctx, saved); err != nil {
