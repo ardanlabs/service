@@ -154,9 +154,9 @@ func (ut *UserTests) postUser400(t *testing.T) {
 			t.Logf("\t%s\tTest %d:\tShould be able to unmarshal the response to an error type.", dbtest.Success, testID)
 
 			fields := validate.FieldErrors{
-				{Field: "name", Error: "name is a required field"},
-				{Field: "roles", Error: "roles is a required field"},
-				{Field: "password", Error: "password is a required field"},
+				{Field: "name", Err: "name is a required field"},
+				{Field: "roles", Err: "roles is a required field"},
+				{Field: "password", Err: "password is a required field"},
 			}
 			exp := v1Web.ErrorResponse{
 				Error:  "data validation error",

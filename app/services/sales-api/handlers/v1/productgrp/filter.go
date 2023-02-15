@@ -1,11 +1,11 @@
 package productgrp
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/ardanlabs/service/business/core/product"
+	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/google/uuid"
 )
 
@@ -19,14 +19,14 @@ func parseFilter(r *http.Request) (product.QueryFilter, error) {
 	}
 
 	if err := filter.ByName(values.Get("name")); err != nil {
-		return product.QueryFilter{}, err
+		return product.QueryFilter{}, validate.NewFieldsError("name", err)
 	}
 
 	cost := values.Get("cost")
 	if cost != "" {
 		cst, err := strconv.ParseInt(cost, 10, 64)
 		if err != nil {
-			return product.QueryFilter{}, fmt.Errorf("invalid field filter cost format: %s", cost)
+			return product.QueryFilter{}, validate.NewFieldsError("cost", err)
 		}
 
 		filter.ByCost(int(cst))
@@ -36,7 +36,7 @@ func parseFilter(r *http.Request) (product.QueryFilter, error) {
 	if quantity != "" {
 		qua, err := strconv.ParseInt(quantity, 10, 64)
 		if err != nil {
-			return product.QueryFilter{}, fmt.Errorf("invalid field filter quantity format: %s", quantity)
+			return product.QueryFilter{}, validate.NewFieldsError("quantity", err)
 		}
 
 		filter.ByQuantity(int(qua))

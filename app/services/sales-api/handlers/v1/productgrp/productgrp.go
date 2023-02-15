@@ -9,6 +9,7 @@ import (
 	"strconv"
 
 	"github.com/ardanlabs/service/business/core/product"
+	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/ardanlabs/service/business/web/auth"
 	v1Web "github.com/ardanlabs/service/business/web/v1"
 	"github.com/ardanlabs/service/foundation/web"
@@ -50,7 +51,7 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 
 	prdID, err := uuid.Parse(web.Param(r, "id"))
 	if err != nil {
-		return v1Web.NewRequestError(ErrInvalidID, http.StatusBadRequest)
+		return validate.NewFieldsError("id", err)
 	}
 
 	prd, err := h.Product.QueryByID(ctx, prdID)
@@ -77,7 +78,7 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 func (h Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	prdID, err := uuid.Parse(web.Param(r, "id"))
 	if err != nil {
-		return v1Web.NewRequestError(ErrInvalidID, http.StatusBadRequest)
+		return validate.NewFieldsError("id", err)
 	}
 
 	prd, err := h.Product.QueryByID(ctx, prdID)
@@ -113,22 +114,22 @@ func (h Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Requ
 	page := web.Param(r, "page")
 	pageNumber, err := strconv.Atoi(page)
 	if err != nil {
-		return v1Web.NewRequestError(fmt.Errorf("invalid page format, page[%s]", page), http.StatusBadRequest)
+		return validate.NewFieldsError("page", err)
 	}
 	rows := web.Param(r, "rows")
 	rowsPerPage, err := strconv.Atoi(rows)
 	if err != nil {
-		return v1Web.NewRequestError(fmt.Errorf("invalid rows format, rows[%s]", rows), http.StatusBadRequest)
+		return validate.NewFieldsError("rows", err)
 	}
 
 	filter, err := parseFilter(r)
 	if err != nil {
-		return v1Web.NewRequestError(err, http.StatusBadRequest)
+		return err
 	}
 
 	orderBy, err := v1Web.ParseOrderBy(r, h.Product.OrderingFields(), product.DefaultOrderBy)
 	if err != nil {
-		return v1Web.NewRequestError(err, http.StatusBadRequest)
+		return err
 	}
 
 	products, err := h.Product.Query(ctx, filter, orderBy, pageNumber, rowsPerPage)
@@ -143,7 +144,7 @@ func (h Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Requ
 func (h Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	prdID, err := uuid.Parse(web.Param(r, "id"))
 	if err != nil {
-		return v1Web.NewRequestError(ErrInvalidID, http.StatusBadRequest)
+		return validate.NewFieldsError("id", err)
 	}
 
 	prod, err := h.Product.QueryByID(ctx, prdID)

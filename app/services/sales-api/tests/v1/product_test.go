@@ -91,10 +91,10 @@ func (pt *ProductTests) postProduct400(t *testing.T) {
 			t.Logf("\t%s\tTest %d:\tShould be able to unmarshal the response to an error type.", dbtest.Success, testID)
 
 			fields := validate.FieldErrors{
-				{Field: "name", Error: "name is a required field"},
-				{Field: "cost", Error: "cost is a required field"},
-				{Field: "quantity", Error: "quantity must be 1 or greater"},
-				{Field: "userID", Error: "userID is a required field"},
+				{Field: "name", Err: "name is a required field"},
+				{Field: "cost", Err: "cost is a required field"},
+				{Field: "quantity", Err: "quantity must be 1 or greater"},
+				{Field: "userID", Err: "userID is a required field"},
 			}
 			exp := v1Web.ErrorResponse{
 				Error:  "data validation error",
@@ -169,7 +169,7 @@ func (pt *ProductTests) getProduct400(t *testing.T) {
 			t.Logf("\t%s\tTest %d:\tShould receive a status code of 400 for the response.", dbtest.Success, testID)
 
 			got := w.Body.String()
-			exp := `{"error":"ID is not in its proper form"}`
+			exp := `{"error":"data validation error","fields":{"id":"invalid UUID length: 5"}}`
 			if got != exp {
 				t.Logf("\t\tTest %d:\tGot : %v", testID, got)
 				t.Logf("\t\tTest %d:\tExp: %v", testID, exp)

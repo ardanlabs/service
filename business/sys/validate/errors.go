@@ -8,11 +8,21 @@ import (
 // FieldError is used to indicate an error with a specific request field.
 type FieldError struct {
 	Field string `json:"field"`
-	Error string `json:"error"`
+	Err   string `json:"error"`
 }
 
 // FieldErrors represents a collection of field errors.
 type FieldErrors []FieldError
+
+// NewFieldsError creates an fields error.
+func NewFieldsError(field string, err error) error {
+	return FieldErrors{
+		{
+			Field: field,
+			Err:   err.Error(),
+		},
+	}
+}
 
 // Error implements the error interface.
 func (fe FieldErrors) Error() string {
@@ -27,7 +37,7 @@ func (fe FieldErrors) Error() string {
 func (fe FieldErrors) Fields() map[string]string {
 	m := make(map[string]string)
 	for _, fld := range fe {
-		m[fld.Field] = fld.Error
+		m[fld.Field] = fld.Err
 	}
 	return m
 }

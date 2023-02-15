@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/core/user"
+	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/ardanlabs/service/business/web/auth"
 	v1Web "github.com/ardanlabs/service/business/web/v1"
 	"github.com/ardanlabs/service/foundation/web"
@@ -94,22 +95,22 @@ func (h Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Requ
 	page := web.Param(r, "page")
 	pageNumber, err := strconv.Atoi(page)
 	if err != nil {
-		return v1Web.NewRequestError(fmt.Errorf("invalid page format [%s]", page), http.StatusBadRequest)
+		return validate.NewFieldsError("page", err)
 	}
 	rows := web.Param(r, "rows")
 	rowsPerPage, err := strconv.Atoi(rows)
 	if err != nil {
-		return v1Web.NewRequestError(fmt.Errorf("invalid rows format [%s]", rows), http.StatusBadRequest)
+		return validate.NewFieldsError("rows", err)
 	}
 
 	filter, err := parseFilter(r)
 	if err != nil {
-		return v1Web.NewRequestError(err, http.StatusBadRequest)
+		return err
 	}
 
 	orderBy, err := v1Web.ParseOrderBy(r, h.User.OrderingFields(), user.DefaultOrderBy)
 	if err != nil {
-		return v1Web.NewRequestError(err, http.StatusBadRequest)
+		return err
 	}
 
 	users, err := h.User.Query(ctx, filter, orderBy, pageNumber, rowsPerPage)
@@ -144,7 +145,7 @@ func (h Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http.
 func (h Handlers) Token(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	kid := web.Param(r, "kid")
 	if kid == "" {
-		return v1Web.NewRequestError(errors.New("missing kid"), http.StatusBadRequest)
+		return validate.NewFieldsError("kid", errors.New("missing kid"))
 	}
 
 	email, pass, ok := r.BasicAuth()

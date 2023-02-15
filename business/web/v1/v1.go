@@ -3,11 +3,11 @@ package v1
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"strings"
 
 	"github.com/ardanlabs/service/business/data/order"
+	"github.com/ardanlabs/service/business/sys/validate"
 )
 
 // ErrorResponse is the form used for API responses from failures in the API.
@@ -68,7 +68,7 @@ func ParseOrderBy(r *http.Request, orderingFields order.FieldSet, defaultOrder o
 	case 1:
 		field, err := orderingFields.ParseField(strings.Trim(orderParts[0], " "))
 		if err != nil {
-			return order.By{}, fmt.Errorf("parse field: %w", err)
+			return order.By{}, validate.NewFieldsError(v, errors.New("parsing fields"))
 		}
 
 		by = order.NewBy(field, order.ASC)
@@ -76,18 +76,18 @@ func ParseOrderBy(r *http.Request, orderingFields order.FieldSet, defaultOrder o
 	case 2:
 		field, err := orderingFields.ParseField(strings.Trim(orderParts[0], " "))
 		if err != nil {
-			return order.By{}, fmt.Errorf("parse field: %w", err)
+			return order.By{}, validate.NewFieldsError(v, errors.New("parsing fields"))
 		}
 
 		dir, err := order.ParseDirection(strings.Trim(orderParts[1], " "))
 		if err != nil {
-			return order.By{}, fmt.Errorf("parse direction: %w", err)
+			return order.By{}, validate.NewFieldsError(v, errors.New("parsing direction"))
 		}
 
 		by = order.NewBy(field, dir)
 
 	default:
-		return order.By{}, errors.New("invalid ordering information")
+		return order.By{}, validate.NewFieldsError(v, errors.New("unknown order field"))
 	}
 
 	return by, nil

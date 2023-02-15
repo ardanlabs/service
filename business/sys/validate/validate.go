@@ -53,7 +53,7 @@ func Check(val any) error {
 		for _, verror := range verrors {
 			field := FieldError{
 				Field: verror.Field(),
-				Error: verror.Translate(translator),
+				Err:   verror.Translate(translator),
 			}
 			fields = append(fields, field)
 		}
