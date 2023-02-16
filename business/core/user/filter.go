@@ -2,9 +2,11 @@ package user
 
 import (
 	"errors"
+	"fmt"
 	"net/mail"
 	"regexp"
 
+	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/google/uuid"
 )
 
@@ -20,31 +22,39 @@ type QueryFilter struct {
 	Email *mail.Address `validate:"omitempty,email"`
 }
 
+// Validate checks the data in the model is considered clean.
+func (qf *QueryFilter) Validate() error {
+	if err := validate.Check(qf); err != nil {
+		return fmt.Errorf("validate: %w", err)
+	}
+	return nil
+}
+
 // ByID sets the ID field of the QueryFilter value.
-func (f *QueryFilter) ByID(id uuid.UUID) {
+func (qf *QueryFilter) ByID(id uuid.UUID) {
 	var zero uuid.UUID
 	if id != zero {
-		f.ID = &id
+		qf.ID = &id
 	}
 }
 
 // ByName sets the Name field of the QueryFilter value.
-func (f *QueryFilter) ByName(name string) error {
+func (qf *QueryFilter) ByName(name string) error {
 	if name != "" {
 		if !sqlInjection.MatchString(name) {
 			return errors.New("invalid name format")
 		}
 
-		f.Name = &name
+		qf.Name = &name
 	}
 
 	return nil
 }
 
 // ByEmail sets the Email field of the QueryFilter value.
-func (f *QueryFilter) ByEmail(email mail.Address) {
+func (qf *QueryFilter) ByEmail(email mail.Address) {
 	var zero mail.Address
 	if email != zero {
-		f.Email = &email
+		qf.Email = &email
 	}
 }

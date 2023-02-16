@@ -28,7 +28,7 @@ type Handlers struct {
 func (h Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var nu user.NewUser
 	if err := web.Decode(r, &nu); err != nil {
-		return fmt.Errorf("unable to decode payload: %w", err)
+		return err
 	}
 
 	usr, err := h.User.Create(ctx, nu)
@@ -44,9 +44,9 @@ func (h Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Req
 
 // Update updates a user in the system.
 func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	var upd user.UpdateUser
-	if err := web.Decode(r, &upd); err != nil {
-		return fmt.Errorf("unable to decode payload: %w", err)
+	var uu user.UpdateUser
+	if err := web.Decode(r, &uu); err != nil {
+		return err
 	}
 
 	id := auth.GetUserID(ctx)
@@ -61,9 +61,9 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 		}
 	}
 
-	usr, err = h.User.Update(ctx, usr, upd)
+	usr, err = h.User.Update(ctx, usr, uu)
 	if err != nil {
-		return fmt.Errorf("update: id[%s] upd[%+v]: %w", id, upd, err)
+		return fmt.Errorf("update: id[%s] uu[%+v]: %w", id, uu, err)
 	}
 
 	return web.Respond(ctx, w, usr, http.StatusOK)
@@ -105,6 +105,10 @@ func (h Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Requ
 
 	filter, err := parseFilter(r)
 	if err != nil {
+		return err
+	}
+
+	if err := filter.Validate(); err != nil {
 		return err
 	}
 

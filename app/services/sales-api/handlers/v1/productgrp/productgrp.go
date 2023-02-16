@@ -31,7 +31,7 @@ type Handlers struct {
 func (h Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var np product.NewProduct
 	if err := web.Decode(r, &np); err != nil {
-		return fmt.Errorf("unable to decode payload: %w", err)
+		return err
 	}
 
 	prd, err := h.Product.Create(ctx, np)
@@ -44,9 +44,9 @@ func (h Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Req
 
 // Update updates a product in the system.
 func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	var upd product.UpdateProduct
-	if err := web.Decode(r, &upd); err != nil {
-		return fmt.Errorf("unable to decode payload: %w", err)
+	var up product.UpdateProduct
+	if err := web.Decode(r, &up); err != nil {
+		return err
 	}
 
 	id, err := uuid.Parse(web.Param(r, "id"))
@@ -64,9 +64,9 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 		}
 	}
 
-	prd, err = h.Product.Update(ctx, prd, upd)
+	prd, err = h.Product.Update(ctx, prd, up)
 	if err != nil {
-		return fmt.Errorf("update: id[%s] upd[%+v]: %w", id, upd, err)
+		return fmt.Errorf("update: id[%s] upd[%+v]: %w", id, up, err)
 	}
 
 	return web.Respond(ctx, w, prd, http.StatusOK)
@@ -115,6 +115,10 @@ func (h Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Requ
 
 	filter, err := parseFilter(r)
 	if err != nil {
+		return err
+	}
+
+	if err := filter.Validate(); err != nil {
 		return err
 	}
 

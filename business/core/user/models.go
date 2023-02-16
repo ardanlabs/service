@@ -1,9 +1,11 @@
 package user
 
 import (
+	"fmt"
 	"net/mail"
 	"time"
 
+	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/google/uuid"
 )
 
@@ -30,6 +32,14 @@ type NewUser struct {
 	PasswordConfirm string       `json:"passwordConfirm" validate:"eqfield=Password"`
 }
 
+// Validate checks the data in the model is considered clean.
+func (nu NewUser) Validate() error {
+	if err := validate.Check(nu); err != nil {
+		return err
+	}
+	return nil
+}
+
 // UpdateUser defines what information may be provided to modify an existing
 // User. All fields are optional so clients can send just the fields they want
 // changed. It uses pointer fields so we can differentiate between a field that
@@ -44,4 +54,12 @@ type UpdateUser struct {
 	Password        *string       `json:"password"`
 	PasswordConfirm *string       `json:"passwordConfirm" validate:"omitempty,eqfield=Password"`
 	Enabled         *bool         `json:"enabled"`
+}
+
+// Validate checks the data in the model is considered clean.
+func (uu UpdateUser) Validate() error {
+	if err := validate.Check(uu); err != nil {
+		return fmt.Errorf("validate: %w", err)
+	}
+	return nil
 }

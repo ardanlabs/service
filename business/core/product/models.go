@@ -3,6 +3,7 @@ package product
 import (
 	"time"
 
+	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/google/uuid"
 )
 
@@ -27,6 +28,14 @@ type NewProduct struct {
 	UserID   uuid.UUID `json:"userID" validate:"required"`
 }
 
+// Validate checks the data in the model is considered clean.
+func (np NewProduct) Validate() error {
+	if err := validate.Check(np); err != nil {
+		return err
+	}
+	return nil
+}
+
 // UpdateProduct defines what information may be provided to modify an
 // existing Product. All fields are optional so clients can send just the
 // fields they want changed. It uses pointer fields so we can differentiate
@@ -37,4 +46,12 @@ type UpdateProduct struct {
 	Name     *string `json:"name"`
 	Cost     *int    `json:"cost" validate:"omitempty,gte=0"`
 	Quantity *int    `json:"quantity" validate:"omitempty,gte=1"`
+}
+
+// Validate checks the data in the model is considered clean.
+func (up UpdateProduct) Validate() error {
+	if err := validate.Check(up); err != nil {
+		return err
+	}
+	return nil
 }

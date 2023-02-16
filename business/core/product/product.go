@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/data/order"
-	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/google/uuid"
 )
 
@@ -67,10 +66,6 @@ func (c *Core) OrderingFields() order.FieldSet {
 // Create adds a Product to the database. It returns the created Product with
 // fields like ID and DateCreated populated.
 func (c *Core) Create(ctx context.Context, np NewProduct) (Product, error) {
-	if err := validate.Check(np); err != nil {
-		return Product{}, fmt.Errorf("validate: %w", err)
-	}
-
 	now := time.Now()
 
 	prd := Product{
@@ -93,10 +88,6 @@ func (c *Core) Create(ctx context.Context, np NewProduct) (Product, error) {
 // Update modifies data about a Product. It will error if the specified ID is
 // invalid or does not reference an existing Product.
 func (c *Core) Update(ctx context.Context, prd Product, up UpdateProduct) (Product, error) {
-	if err := validate.Check(up); err != nil {
-		return Product{}, fmt.Errorf("validate: %w", err)
-	}
-
 	if up.Name != nil {
 		prd.Name = *up.Name
 	}
@@ -126,10 +117,6 @@ func (c *Core) Delete(ctx context.Context, prd Product) error {
 
 // Query gets all Products from the database.
 func (c *Core) Query(ctx context.Context, filter QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]Product, error) {
-	if err := validate.Check(filter); err != nil {
-		return nil, fmt.Errorf("validating filter: %w", err)
-	}
-
 	prds, err := c.storer.Query(ctx, filter, orderBy, pageNumber, rowsPerPage)
 	if err != nil {
 		return nil, fmt.Errorf("query: %w", err)

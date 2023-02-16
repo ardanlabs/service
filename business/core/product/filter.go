@@ -2,8 +2,10 @@ package product
 
 import (
 	"errors"
+	"fmt"
 	"regexp"
 
+	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/google/uuid"
 )
 
@@ -20,33 +22,41 @@ type QueryFilter struct {
 	Quantity *int       `validate:"omitempty,numeric"`
 }
 
+// Validate checks the data in the model is considered clean.
+func (qf *QueryFilter) Validate() error {
+	if err := validate.Check(qf); err != nil {
+		return fmt.Errorf("validate: %w", err)
+	}
+	return nil
+}
+
 // ByID sets the ID field of the QueryFilter value.
-func (f *QueryFilter) ByID(id uuid.UUID) {
+func (qf *QueryFilter) ByID(id uuid.UUID) {
 	var zero uuid.UUID
 	if id != zero {
-		f.ID = &id
+		qf.ID = &id
 	}
 }
 
 // ByName sets the Name field of the QueryFilter value.
-func (f *QueryFilter) ByName(name string) error {
+func (qf *QueryFilter) ByName(name string) error {
 	if name != "" {
 		if !sqlInjection.MatchString(name) {
 			return errors.New("invalid name format")
 		}
 
-		f.Name = &name
+		qf.Name = &name
 	}
 
 	return nil
 }
 
 // ByCost sets the Cost field of the QueryFilter value.
-func (f *QueryFilter) ByCost(cost int) {
-	f.Cost = &cost
+func (qf *QueryFilter) ByCost(cost int) {
+	qf.Cost = &cost
 }
 
 // ByQuantity sets the Quantity field of the QueryFilter value.
-func (f *QueryFilter) ByQuantity(quantity int) {
-	f.Quantity = &quantity
+func (qf *QueryFilter) ByQuantity(quantity int) {
+	qf.Quantity = &quantity
 }
