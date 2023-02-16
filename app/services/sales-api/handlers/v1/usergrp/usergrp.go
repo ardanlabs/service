@@ -109,7 +109,7 @@ func (h Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Requ
 		return err
 	}
 
-	orderBy, err := order.Parse(r, h.User.OrderingFields(), h.User.DefaultOrderBy)
+	orderBy, err := order.Parse(r, user.DefaultOrderBy)
 	if err != nil {
 		return err
 	}

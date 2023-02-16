@@ -37,7 +37,7 @@ func Users(log *zap.SugaredLogger, cfg database.Config, pageNumber string, rowsP
 
 	core := user.NewCore(userdb.NewStore(log, db))
 
-	users, err := core.Query(ctx, user.QueryFilter{}, core.DefaultOrderBy, page, rows)
+	users, err := core.Query(ctx, user.QueryFilter{}, user.DefaultOrderBy, page, rows)
 	if err != nil {
 		return fmt.Errorf("retrieve users: %w", err)
 	}

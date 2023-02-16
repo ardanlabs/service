@@ -4,22 +4,8 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/core/product"
-	"github.com/ardanlabs/service/business/data/order"
 	"github.com/google/uuid"
 )
-
-// orderingFields maintains a set of fields allowed for ordering.
-var orderingFields = order.NewFieldSet(
-	product.OrderByProdID.AddStorageField("product_id"),
-	product.OrderByName.AddStorageField("name"),
-	product.OrderByCost.AddStorageField("cost"),
-	product.OrderByQuantity.AddStorageField("quantity"),
-	product.OrderBySold.AddStorageField("sold"),
-	product.OrderByRevenue.AddStorageField("revenue"),
-	product.OrderByUserID.AddStorageField("user_id"),
-)
-
-// =============================================================================
 
 // dbProduct represents an individual product.
 type dbProduct struct {

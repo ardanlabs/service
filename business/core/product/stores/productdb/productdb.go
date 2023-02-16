@@ -16,6 +16,27 @@ import (
 	"go.uber.org/zap"
 )
 
+var orderByFields = map[string]string{
+	product.OrderByProdID:   "product_id",
+	product.OrderByName:     "name",
+	product.OrderByCost:     "cost",
+	product.OrderByQuantity: "quantity",
+	product.OrderBySold:     "sold",
+	product.OrderByRevenue:  "revenue",
+	product.OrderByUserID:   "user_id",
+}
+
+func orderByClause(orderBy order.By) (string, error) {
+	by, exists := orderByFields[orderBy.Field]
+	if !exists {
+		return "", fmt.Errorf("field %q does not exist", orderBy.Field)
+	}
+
+	return " ORDER BY " + by + " " + orderBy.Direction, nil
+}
+
+// =============================================================================
+
 // Store manages the set of APIs for product database access.
 type Store struct {
 	log *zap.SugaredLogger
@@ -28,11 +49,6 @@ func NewStore(log *zap.SugaredLogger, db *sqlx.DB) *Store {
 		log: log,
 		db:  db,
 	}
-}
-
-// OrderingFields returns the field set for this store.
-func (s *Store) OrderingFields() order.FieldSet {
-	return orderingFields
 }
 
 // Create adds a Product to the database. It returns the created Product with
@@ -107,7 +123,7 @@ func (s *Store) Query(ctx context.Context, filter product.QueryFilter, orderBy o
 		RowsPerPage: rowsPerPage,
 	}
 
-	orderByClause, err := orderBy.Clause()
+	orderByClause, err := orderByClause(orderBy)
 	if err != nil {
 		return nil, err
 	}
@@ -147,7 +163,6 @@ func (s *Store) Query(ctx context.Context, filter product.QueryFilter, orderBy o
 		buf.WriteString(strings.Join(wc, " AND "))
 	}
 	buf.WriteString(" GROUP BY p.product_id ")
-	buf.WriteString(" ORDER BY ")
 	buf.WriteString(orderByClause)
 	buf.WriteString(" OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY")
 

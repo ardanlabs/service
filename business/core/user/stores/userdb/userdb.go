@@ -17,6 +17,25 @@ import (
 	"go.uber.org/zap"
 )
 
+var orderByFields = map[string]string{
+	user.OrderByID:      "user_id",
+	user.OrderByName:    "name",
+	user.OrderByEmail:   "email",
+	user.OrderByRoles:   "roles",
+	user.OrderByEnabled: "enabled",
+}
+
+func orderByClause(orderBy order.By) (string, error) {
+	by, exists := orderByFields[orderBy.Field]
+	if !exists {
+		return "", fmt.Errorf("field %q does not exist", orderBy.Field)
+	}
+
+	return " ORDER BY " + by + " " + orderBy.Direction, nil
+}
+
+// =============================================================================
+
 // Store manages the set of APIs for user database access.
 type Store struct {
 	log    *zap.SugaredLogger
@@ -30,11 +49,6 @@ func NewStore(log *zap.SugaredLogger, db *sqlx.DB) *Store {
 		log: log,
 		db:  db,
 	}
-}
-
-// OrderingFields returns the field set for this store.
-func (s *Store) OrderingFields() order.FieldSet {
-	return orderingFields
 }
 
 // WithinTran runs passed function and do commit/rollback at the end.
@@ -131,7 +145,7 @@ func (s *Store) Query(ctx context.Context, filter user.QueryFilter, orderBy orde
 		RowsPerPage: rowsPerPage,
 	}
 
-	orderByClause, err := orderBy.Clause()
+	orderByClause, err := orderByClause(orderBy)
 	if err != nil {
 		return nil, err
 	}
@@ -162,7 +176,6 @@ func (s *Store) Query(ctx context.Context, filter user.QueryFilter, orderBy orde
 		buf.WriteString("WHERE ")
 		buf.WriteString(strings.Join(wc, " AND "))
 	}
-	buf.WriteString(" ORDER BY ")
 	buf.WriteString(orderByClause)
 	buf.WriteString(" OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY")
 

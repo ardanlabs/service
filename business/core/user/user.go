@@ -15,13 +15,17 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// Set of order by fields for user specific ordering.
-var (
-	OrderByUserID  = order.NewField("userid")
-	OrderByName    = order.NewField("name")
-	OrderByEmail   = order.NewField("email")
-	OrderByRoles   = order.NewField("roles")
-	OrderByEnabled = order.NewField("enabled")
+// DefaultOrderBy represents the default way we sort.
+var DefaultOrderBy = order.NewBy(OrderByID, order.ASC)
+
+// Set of fields that the results can be ordered by. These are the names
+// that should be used by the application layer.
+const (
+	OrderByID      = "userid"
+	OrderByName    = "name"
+	OrderByEmail   = "email"
+	OrderByRoles   = "roles"
+	OrderByEnabled = "enabled"
 )
 
 // =============================================================================
@@ -36,7 +40,6 @@ var (
 // Storer interface declares the behavior this package needs to perists and
 // retrieve data.
 type Storer interface {
-	OrderingFields() order.FieldSet
 	WithinTran(ctx context.Context, fn func(s Storer) error) error
 	Create(ctx context.Context, usr User) error
 	Update(ctx context.Context, usr User) error
@@ -48,21 +51,14 @@ type Storer interface {
 
 // Core manages the set of APIs for user access.
 type Core struct {
-	DefaultOrderBy order.By
-	storer         Storer
+	storer Storer
 }
 
 // NewCore constructs a core for user api access.
 func NewCore(storer Storer) *Core {
 	return &Core{
-		DefaultOrderBy: order.NewBy(OrderByUserID, order.ASC),
-		storer:         storer,
+		storer: storer,
 	}
-}
-
-// OrderingFields returns the field set defined by the store.
-func (c *Core) OrderingFields() order.FieldSet {
-	return c.storer.OrderingFields()
 }
 
 // Create inserts a new user into the database.

@@ -6,21 +6,9 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/core/user"
-	"github.com/ardanlabs/service/business/data/order"
 	"github.com/google/uuid"
 	"github.com/lib/pq"
 )
-
-// orderingFields maintains a set of fields allowed for ordering.
-var orderingFields = order.NewFieldSet(
-	user.OrderByUserID.AddStorageField("user_id"),
-	user.OrderByName.AddStorageField("name"),
-	user.OrderByEmail.AddStorageField("email"),
-	user.OrderByRoles.AddStorageField("roles"),
-	user.OrderByEnabled.AddStorageField("enabled"),
-)
-
-// =============================================================================
 
 // dbUser represent the structure we need for moving data
 // between the app and the database.

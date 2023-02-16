@@ -13,15 +13,19 @@ import (
 	"github.com/google/uuid"
 )
 
-// Set of order by fields for product specific ordering.
-var (
-	OrderByProdID   = order.NewField("productid")
-	OrderByName     = order.NewField("name")
-	OrderByCost     = order.NewField("cost")
-	OrderByQuantity = order.NewField("quantity")
-	OrderBySold     = order.NewField("sold")
-	OrderByRevenue  = order.NewField("revenue")
-	OrderByUserID   = order.NewField("userid")
+// DefaultOrderBy represents the default way we sort.
+var DefaultOrderBy = order.NewBy(OrderByProdID, order.ASC)
+
+// Set of fields that the results can be ordered by. These are the names
+// that should be used by the application layer.
+const (
+	OrderByProdID   = "productid"
+	OrderByName     = "name"
+	OrderByCost     = "cost"
+	OrderByQuantity = "quantity"
+	OrderBySold     = "sold"
+	OrderByRevenue  = "revenue"
+	OrderByUserID   = "userid"
 )
 
 // =============================================================================
@@ -34,7 +38,6 @@ var (
 // Storer interface declares the behavior this package needs to perists and
 // retrieve data.
 type Storer interface {
-	OrderingFields() order.FieldSet
 	Create(ctx context.Context, prd Product) error
 	Update(ctx context.Context, prd Product) error
 	Delete(ctx context.Context, prd Product) error
@@ -55,11 +58,6 @@ func NewCore(storer Storer) *Core {
 		DefaultOrderBy: order.NewBy(OrderByProdID, order.ASC),
 		storer:         storer,
 	}
-}
-
-// OrderingFields returns the field set defined by the store.
-func (c *Core) OrderingFields() order.FieldSet {
-	return c.storer.OrderingFields()
 }
 
 // Create adds a Product to the database. It returns the created Product with
