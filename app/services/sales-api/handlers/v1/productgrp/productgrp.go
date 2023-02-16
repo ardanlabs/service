@@ -34,12 +34,12 @@ func (h Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Req
 		return fmt.Errorf("unable to decode payload: %w", err)
 	}
 
-	prod, err := h.Product.Create(ctx, np)
+	prd, err := h.Product.Create(ctx, np)
 	if err != nil {
-		return fmt.Errorf("creating new product, np[%+v]: %w", np, err)
+		return fmt.Errorf("create: np[%+v]: %w", np, err)
 	}
 
-	return web.Respond(ctx, w, prod, http.StatusCreated)
+	return web.Respond(ctx, w, prd, http.StatusCreated)
 }
 
 // Update updates a product in the system.
@@ -49,26 +49,24 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 		return fmt.Errorf("unable to decode payload: %w", err)
 	}
 
-	prdID, err := uuid.Parse(web.Param(r, "id"))
+	id, err := uuid.Parse(web.Param(r, "id"))
 	if err != nil {
 		return validate.NewFieldsError("id", err)
 	}
 
-	prd, err := h.Product.QueryByID(ctx, prdID)
+	prd, err := h.Product.QueryByID(ctx, id)
 	if err != nil {
 		switch {
-		case errors.Is(err, product.ErrInvalidID):
-			return v1Web.NewRequestError(err, http.StatusBadRequest)
 		case errors.Is(err, product.ErrNotFound):
 			return v1Web.NewRequestError(err, http.StatusNotFound)
 		default:
-			return fmt.Errorf("querying product[%s]: %w", prdID, err)
+			return fmt.Errorf("querybyid: id[%s]: %w", id, err)
 		}
 	}
 
 	prd, err = h.Product.Update(ctx, prd, upd)
 	if err != nil {
-		return fmt.Errorf("ID[%s] Product[%+v]: %w", prdID, &upd, err)
+		return fmt.Errorf("update: id[%s] upd[%+v]: %w", id, upd, err)
 	}
 
 	return web.Respond(ctx, w, prd, http.StatusOK)
@@ -76,16 +74,14 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 
 // Delete removes a product from the system.
 func (h Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	prdID, err := uuid.Parse(web.Param(r, "id"))
+	id, err := uuid.Parse(web.Param(r, "id"))
 	if err != nil {
 		return validate.NewFieldsError("id", err)
 	}
 
-	prd, err := h.Product.QueryByID(ctx, prdID)
+	prd, err := h.Product.QueryByID(ctx, id)
 	if err != nil {
 		switch {
-		case errors.Is(err, product.ErrInvalidID):
-			return v1Web.NewRequestError(err, http.StatusBadRequest)
 		case errors.Is(err, product.ErrNotFound):
 
 			// Don't send StatusNotFound here since the call to Delete
@@ -93,17 +89,12 @@ func (h Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Req
 			// this because we are doing the Query for the UserID.
 			return v1Web.NewRequestError(err, http.StatusNoContent)
 		default:
-			return fmt.Errorf("querying product[%s]: %w", prdID, err)
+			return fmt.Errorf("querybyid: id[%s]: %w", id, err)
 		}
 	}
 
 	if err := h.Product.Delete(ctx, prd); err != nil {
-		switch {
-		case errors.Is(err, product.ErrInvalidID):
-			return v1Web.NewRequestError(err, http.StatusBadRequest)
-		default:
-			return fmt.Errorf("ID[%s]: %w", prdID, err)
-		}
+		return fmt.Errorf("delete: id[%s]: %w", id, err)
 	}
 
 	return web.Respond(ctx, w, nil, http.StatusNoContent)
@@ -134,7 +125,7 @@ func (h Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Requ
 
 	products, err := h.Product.Query(ctx, filter, orderBy, pageNumber, rowsPerPage)
 	if err != nil {
-		return fmt.Errorf("unable to query for products: %w", err)
+		return fmt.Errorf("query: %w", err)
 	}
 
 	return web.Respond(ctx, w, products, http.StatusOK)
@@ -142,20 +133,18 @@ func (h Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Requ
 
 // QueryByID returns a product by its ID.
 func (h Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	prdID, err := uuid.Parse(web.Param(r, "id"))
+	id, err := uuid.Parse(web.Param(r, "id"))
 	if err != nil {
 		return validate.NewFieldsError("id", err)
 	}
 
-	prod, err := h.Product.QueryByID(ctx, prdID)
+	prod, err := h.Product.QueryByID(ctx, id)
 	if err != nil {
 		switch {
-		case errors.Is(err, product.ErrInvalidID):
-			return v1Web.NewRequestError(err, http.StatusBadRequest)
 		case errors.Is(err, product.ErrNotFound):
 			return v1Web.NewRequestError(err, http.StatusNotFound)
 		default:
-			return fmt.Errorf("ID[%s]: %w", prdID, err)
+			return fmt.Errorf("querybyid: id[%s]: %w", id, err)
 		}
 	}
 

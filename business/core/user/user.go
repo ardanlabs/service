@@ -33,10 +33,8 @@ var DefaultOrderBy = order.NewBy(OrderByUserID, order.ASC)
 // Set of error variables for CRUD operations.
 var (
 	ErrNotFound              = errors.New("user not found")
-	ErrInvalidEmail          = errors.New("email is not valid")
 	ErrUniqueEmail           = errors.New("email is not unique")
 	ErrAuthenticationFailure = errors.New("authentication failed")
-	ErrInvalidOrder          = errors.New("validating order by")
 )
 
 // Storer interface declares the behavior this package needs to perists and
@@ -48,7 +46,7 @@ type Storer interface {
 	Update(ctx context.Context, usr User) error
 	Delete(ctx context.Context, usr User) error
 	Query(ctx context.Context, filter QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]User, error)
-	QueryByID(ctx context.Context, userID uuid.UUID) (User, error)
+	QueryByID(ctx context.Context, id uuid.UUID) (User, error)
 	QueryByEmail(ctx context.Context, email mail.Address) (User, error)
 }
 
@@ -72,12 +70,12 @@ func (c *Core) OrderingFields() order.FieldSet {
 // Create inserts a new user into the database.
 func (c *Core) Create(ctx context.Context, nu NewUser) (User, error) {
 	if err := validate.Check(nu); err != nil {
-		return User{}, fmt.Errorf("validating data: %w", err)
+		return User{}, fmt.Errorf("validate: %w", err)
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(nu.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return User{}, fmt.Errorf("generating password hash: %w", err)
+		return User{}, fmt.Errorf("generatefrompassword: %w", err)
 	}
 
 	now := time.Now()
@@ -112,7 +110,7 @@ func (c *Core) Create(ctx context.Context, nu NewUser) (User, error) {
 // Update replaces a user document in the database.
 func (c *Core) Update(ctx context.Context, usr User, uu UpdateUser) (User, error) {
 	if err := validate.Check(uu); err != nil {
-		return User{}, fmt.Errorf("validating data: %w", err)
+		return User{}, fmt.Errorf("validate: %w", err)
 	}
 
 	if uu.Name != nil {
@@ -127,7 +125,7 @@ func (c *Core) Update(ctx context.Context, usr User, uu UpdateUser) (User, error
 	if uu.Password != nil {
 		pw, err := bcrypt.GenerateFromPassword([]byte(*uu.Password), bcrypt.DefaultCost)
 		if err != nil {
-			return User{}, fmt.Errorf("generating password hash: %w", err)
+			return User{}, fmt.Errorf("generatefrompassword: %w", err)
 		}
 		usr.PasswordHash = pw
 	}
@@ -158,7 +156,7 @@ func (c *Core) Delete(ctx context.Context, usr User) error {
 // Query retrieves a list of existing users from the database.
 func (c *Core) Query(ctx context.Context, filter QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]User, error) {
 	if err := validate.Check(filter); err != nil {
-		return nil, fmt.Errorf("validating filter: %w", err)
+		return nil, fmt.Errorf("validate: %w", err)
 	}
 
 	users, err := c.storer.Query(ctx, filter, orderBy, pageNumber, rowsPerPage)
@@ -170,8 +168,8 @@ func (c *Core) Query(ctx context.Context, filter QueryFilter, orderBy order.By, 
 }
 
 // QueryByID gets the specified user from the database.
-func (c *Core) QueryByID(ctx context.Context, userID uuid.UUID) (User, error) {
-	user, err := c.storer.QueryByID(ctx, userID)
+func (c *Core) QueryByID(ctx context.Context, id uuid.UUID) (User, error) {
+	user, err := c.storer.QueryByID(ctx, id)
 	if err != nil {
 		return User{}, fmt.Errorf("query: %w", err)
 	}
@@ -199,7 +197,7 @@ func (c *Core) Authenticate(ctx context.Context, email mail.Address, password st
 	}
 
 	if err := bcrypt.CompareHashAndPassword(usr.PasswordHash, []byte(password)); err != nil {
-		return User{}, ErrAuthenticationFailure
+		return User{}, fmt.Errorf("comparehashandpassword: %w", ErrAuthenticationFailure)
 	}
 
 	return usr, nil

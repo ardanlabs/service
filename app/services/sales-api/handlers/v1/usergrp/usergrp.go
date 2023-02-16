@@ -36,7 +36,7 @@ func (h Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Req
 		if errors.Is(err, user.ErrUniqueEmail) {
 			return v1Web.NewRequestError(err, http.StatusConflict)
 		}
-		return fmt.Errorf("user[%+v]: %w", &usr, err)
+		return fmt.Errorf("create: usr[%+v]: %w", usr, err)
 	}
 
 	return web.Respond(ctx, w, usr, http.StatusCreated)
@@ -49,21 +49,21 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 		return fmt.Errorf("unable to decode payload: %w", err)
 	}
 
-	userID := auth.GetUserID(ctx)
+	id := auth.GetUserID(ctx)
 
-	usr, err := h.User.QueryByID(ctx, userID)
+	usr, err := h.User.QueryByID(ctx, id)
 	if err != nil {
 		switch {
 		case errors.Is(err, user.ErrNotFound):
 			return v1Web.NewRequestError(err, http.StatusNotFound)
 		default:
-			return fmt.Errorf("ID[%s]: %w", userID, err)
+			return fmt.Errorf("querybyid: id[%s]: %w", id, err)
 		}
 	}
 
 	usr, err = h.User.Update(ctx, usr, upd)
 	if err != nil {
-		return fmt.Errorf("ID[%s] User[%+v]: %w", userID, &upd, err)
+		return fmt.Errorf("update: id[%s] upd[%+v]: %w", id, upd, err)
 	}
 
 	return web.Respond(ctx, w, usr, http.StatusOK)
@@ -71,20 +71,20 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 
 // Delete removes a user from the system.
 func (h Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	userID := auth.GetUserID(ctx)
+	id := auth.GetUserID(ctx)
 
-	usr, err := h.User.QueryByID(ctx, userID)
+	usr, err := h.User.QueryByID(ctx, id)
 	if err != nil {
 		switch {
 		case errors.Is(err, user.ErrNotFound):
 			return web.Respond(ctx, w, nil, http.StatusNoContent)
 		default:
-			return fmt.Errorf("ID[%s]: %w", userID, err)
+			return fmt.Errorf("querybyid: id[%s]: %w", id, err)
 		}
 	}
 
 	if err := h.User.Delete(ctx, usr); err != nil {
-		return fmt.Errorf("ID[%s]: %w", userID, err)
+		return fmt.Errorf("delete: id[%s]: %w", id, err)
 	}
 
 	return web.Respond(ctx, w, nil, http.StatusNoContent)
@@ -115,10 +115,7 @@ func (h Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Requ
 
 	users, err := h.User.Query(ctx, filter, orderBy, pageNumber, rowsPerPage)
 	if err != nil {
-		if errors.Is(err, user.ErrInvalidOrder) {
-			return v1Web.NewRequestError(err, http.StatusBadRequest)
-		}
-		return fmt.Errorf("unable to query for users: %w", err)
+		return fmt.Errorf("query: %w", err)
 	}
 
 	return web.Respond(ctx, w, users, http.StatusOK)
@@ -126,15 +123,15 @@ func (h Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Requ
 
 // QueryByID returns a user by its ID.
 func (h Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	userID := auth.GetUserID(ctx)
+	id := auth.GetUserID(ctx)
 
-	usr, err := h.User.QueryByID(ctx, userID)
+	usr, err := h.User.QueryByID(ctx, id)
 	if err != nil {
 		switch {
 		case errors.Is(err, user.ErrNotFound):
 			return v1Web.NewRequestError(err, http.StatusNotFound)
 		default:
-			return fmt.Errorf("ID[%s]: %w", userID, err)
+			return fmt.Errorf("querybyid: id[%s]: %w", id, err)
 		}
 	}
 
@@ -166,7 +163,7 @@ func (h Handlers) Token(ctx context.Context, w http.ResponseWriter, r *http.Requ
 		case errors.Is(err, user.ErrAuthenticationFailure):
 			return auth.NewAuthError(err.Error())
 		default:
-			return fmt.Errorf("authenticating: %w", err)
+			return fmt.Errorf("authenticate: %w", err)
 		}
 	}
 
@@ -185,7 +182,7 @@ func (h Handlers) Token(ctx context.Context, w http.ResponseWriter, r *http.Requ
 	}
 	tkn.Token, err = h.Auth.GenerateToken(kid, claims)
 	if err != nil {
-		return fmt.Errorf("generating token: %w", err)
+		return fmt.Errorf("generatetoken: %w", err)
 	}
 
 	return web.Respond(ctx, w, tkn, http.StatusOK)

@@ -32,9 +32,7 @@ var DefaultOrderBy = order.NewBy(OrderByProdID, order.ASC)
 
 // Set of error variables for CRUD operations.
 var (
-	ErrNotFound     = errors.New("product not found")
-	ErrInvalidID    = errors.New("ID is not in its proper form")
-	ErrInvalidOrder = errors.New("validating order by")
+	ErrNotFound = errors.New("product not found")
 )
 
 // Storer interface declares the behavior this package needs to perists and
@@ -45,8 +43,8 @@ type Storer interface {
 	Update(ctx context.Context, prd Product) error
 	Delete(ctx context.Context, prd Product) error
 	Query(ctx context.Context, filter QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]Product, error)
-	QueryByID(ctx context.Context, productID uuid.UUID) (Product, error)
-	QueryByUserID(ctx context.Context, userID uuid.UUID) ([]Product, error)
+	QueryByID(ctx context.Context, id uuid.UUID) (Product, error)
+	QueryByUserID(ctx context.Context, id uuid.UUID) ([]Product, error)
 }
 
 // Core manages the set of APIs for product access.
@@ -70,7 +68,7 @@ func (c *Core) OrderingFields() order.FieldSet {
 // fields like ID and DateCreated populated.
 func (c *Core) Create(ctx context.Context, np NewProduct) (Product, error) {
 	if err := validate.Check(np); err != nil {
-		return Product{}, fmt.Errorf("validating data: %w", err)
+		return Product{}, fmt.Errorf("validate: %w", err)
 	}
 
 	now := time.Now()
@@ -96,7 +94,7 @@ func (c *Core) Create(ctx context.Context, np NewProduct) (Product, error) {
 // invalid or does not reference an existing Product.
 func (c *Core) Update(ctx context.Context, prd Product, up UpdateProduct) (Product, error) {
 	if err := validate.Check(up); err != nil {
-		return Product{}, fmt.Errorf("validating data: %w", err)
+		return Product{}, fmt.Errorf("validate: %w", err)
 	}
 
 	if up.Name != nil {

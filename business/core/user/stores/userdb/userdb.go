@@ -65,9 +65,9 @@ func (s *Store) Create(ctx context.Context, usr user.User) error {
 
 	if err := database.NamedExecContext(ctx, s.log, s.db, q, toDBUser(usr)); err != nil {
 		if errors.Is(err, database.ErrDBDuplicatedEntry) {
-			return fmt.Errorf("create: %w", user.ErrUniqueEmail)
+			return fmt.Errorf("namedexeccontext: %w", user.ErrUniqueEmail)
 		}
-		return fmt.Errorf("inserting user: %w", err)
+		return fmt.Errorf("namedexeccontext: %w", err)
 	}
 
 	return nil
@@ -91,7 +91,7 @@ func (s *Store) Update(ctx context.Context, usr user.User) error {
 		if errors.Is(err, database.ErrDBDuplicatedEntry) {
 			return user.ErrUniqueEmail
 		}
-		return fmt.Errorf("updating userID[%s]: %w", usr.ID, err)
+		return fmt.Errorf("namedexeccontext: %w", err)
 	}
 
 	return nil
@@ -112,7 +112,7 @@ func (s *Store) Delete(ctx context.Context, usr user.User) error {
 		user_id = :user_id`
 
 	if err := database.NamedExecContext(ctx, s.log, s.db, q, data); err != nil {
-		return fmt.Errorf("deleting userID[%s]: %w", usr.ID, err)
+		return fmt.Errorf("namedexeccontext: %w", err)
 	}
 
 	return nil
@@ -166,20 +166,20 @@ func (s *Store) Query(ctx context.Context, filter user.QueryFilter, orderBy orde
 	buf.WriteString(orderByClause)
 	buf.WriteString(" OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY")
 
-	var usrs []dbUser
-	if err := database.NamedQuerySlice(ctx, s.log, s.db, buf.String(), data, &usrs); err != nil {
-		return nil, fmt.Errorf("selecting users: %w", err)
+	var dbUsrs []dbUser
+	if err := database.NamedQuerySlice(ctx, s.log, s.db, buf.String(), data, &dbUsrs); err != nil {
+		return nil, fmt.Errorf("namedqueryslice: %w", err)
 	}
 
-	return toCoreUserSlice(usrs), nil
+	return toCoreUserSlice(dbUsrs), nil
 }
 
 // QueryByID gets the specified user from the database.
-func (s *Store) QueryByID(ctx context.Context, userID uuid.UUID) (user.User, error) {
+func (s *Store) QueryByID(ctx context.Context, id uuid.UUID) (user.User, error) {
 	data := struct {
-		UserID string `db:"user_id"`
+		ID string `db:"user_id"`
 	}{
-		UserID: userID.String(),
+		ID: id.String(),
 	}
 
 	const q = `
@@ -190,15 +190,15 @@ func (s *Store) QueryByID(ctx context.Context, userID uuid.UUID) (user.User, err
 	WHERE 
 		user_id = :user_id`
 
-	var usr dbUser
-	if err := database.NamedQueryStruct(ctx, s.log, s.db, q, data, &usr); err != nil {
+	var dbUsr dbUser
+	if err := database.NamedQueryStruct(ctx, s.log, s.db, q, data, &dbUsr); err != nil {
 		if errors.Is(err, database.ErrDBNotFound) {
-			return user.User{}, user.ErrNotFound
+			return user.User{}, fmt.Errorf("namedquerystruct: %w", user.ErrNotFound)
 		}
-		return user.User{}, fmt.Errorf("selecting userID[%q]: %w", userID, err)
+		return user.User{}, fmt.Errorf("namedquerystruct: %w", err)
 	}
 
-	return toCoreUser(usr), nil
+	return toCoreUser(dbUsr), nil
 }
 
 // QueryByEmail gets the specified user from the database by email.
@@ -217,13 +217,13 @@ func (s *Store) QueryByEmail(ctx context.Context, email mail.Address) (user.User
 	WHERE
 		email = :email`
 
-	var usr dbUser
-	if err := database.NamedQueryStruct(ctx, s.log, s.db, q, data, &usr); err != nil {
+	var dbUsr dbUser
+	if err := database.NamedQueryStruct(ctx, s.log, s.db, q, data, &dbUsr); err != nil {
 		if errors.Is(err, database.ErrDBNotFound) {
-			return user.User{}, user.ErrNotFound
+			return user.User{}, fmt.Errorf("namedquerystruct: %w", user.ErrNotFound)
 		}
-		return user.User{}, fmt.Errorf("selecting email[%q]: %w", email, err)
+		return user.User{}, fmt.Errorf("namedquerystruct: %w", err)
 	}
 
-	return toCoreUser(usr), nil
+	return toCoreUser(dbUsr), nil
 }

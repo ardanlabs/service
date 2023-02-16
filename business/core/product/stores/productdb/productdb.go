@@ -45,7 +45,7 @@ func (s *Store) Create(ctx context.Context, prd product.Product) error {
 		(:product_id, :user_id, :name, :cost, :quantity, :date_created, :date_updated)`
 
 	if err := database.NamedExecContext(ctx, s.log, s.db, q, toDBProduct(prd)); err != nil {
-		return fmt.Errorf("inserting product: %w", err)
+		return fmt.Errorf("namedexeccontext: %w", err)
 	}
 
 	return nil
@@ -66,7 +66,7 @@ func (s *Store) Update(ctx context.Context, prd product.Product) error {
 		product_id = :product_id`
 
 	if err := database.NamedExecContext(ctx, s.log, s.db, q, toDBProduct(prd)); err != nil {
-		return fmt.Errorf("updating product productID[%s]: %w", prd.ID, err)
+		return fmt.Errorf("namedexeccontext: %w", err)
 	}
 
 	return nil
@@ -75,9 +75,9 @@ func (s *Store) Update(ctx context.Context, prd product.Product) error {
 // Delete removes the product identified by a given ID.
 func (s *Store) Delete(ctx context.Context, prd product.Product) error {
 	data := struct {
-		ProductID string `db:"product_id"`
+		ID string `db:"product_id"`
 	}{
-		ProductID: prd.ID.String(),
+		ID: prd.ID.String(),
 	}
 
 	const q = `
@@ -87,7 +87,7 @@ func (s *Store) Delete(ctx context.Context, prd product.Product) error {
 		product_id = :product_id`
 
 	if err := database.NamedExecContext(ctx, s.log, s.db, q, data); err != nil {
-		return fmt.Errorf("deleting product productID[%s]: %w", prd.ID, err)
+		return fmt.Errorf("namedexeccontext: %w", err)
 	}
 
 	return nil
@@ -151,20 +151,20 @@ func (s *Store) Query(ctx context.Context, filter product.QueryFilter, orderBy o
 	buf.WriteString(orderByClause)
 	buf.WriteString(" OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY")
 
-	var prds []dbProduct
-	if err := database.NamedQuerySlice(ctx, s.log, s.db, buf.String(), data, &prds); err != nil {
-		return nil, fmt.Errorf("selecting products: %w", err)
+	var dbPrds []dbProduct
+	if err := database.NamedQuerySlice(ctx, s.log, s.db, buf.String(), data, &dbPrds); err != nil {
+		return nil, fmt.Errorf("namedqueryslice: %w", err)
 	}
 
-	return toCoreProductSlice(prds), nil
+	return toCoreProductSlice(dbPrds), nil
 }
 
 // QueryByID finds the product identified by a given ID.
-func (s *Store) QueryByID(ctx context.Context, productID uuid.UUID) (product.Product, error) {
+func (s *Store) QueryByID(ctx context.Context, id uuid.UUID) (product.Product, error) {
 	data := struct {
-		ProductID string `db:"product_id"`
+		ID string `db:"product_id"`
 	}{
-		ProductID: productID.String(),
+		ID: id.String(),
 	}
 
 	const q = `
@@ -181,23 +181,23 @@ func (s *Store) QueryByID(ctx context.Context, productID uuid.UUID) (product.Pro
 	GROUP BY
 		p.product_id`
 
-	var prd dbProduct
-	if err := database.NamedQueryStruct(ctx, s.log, s.db, q, data, &prd); err != nil {
+	var dbPrd dbProduct
+	if err := database.NamedQueryStruct(ctx, s.log, s.db, q, data, &dbPrd); err != nil {
 		if errors.Is(err, database.ErrDBNotFound) {
-			return product.Product{}, product.ErrNotFound
+			return product.Product{}, fmt.Errorf("namedquerystruct: %w", product.ErrNotFound)
 		}
-		return product.Product{}, fmt.Errorf("selecting product productID[%q]: %w", productID, err)
+		return product.Product{}, fmt.Errorf("namedquerystruct: %w", err)
 	}
 
-	return toCoreProduct(prd), nil
+	return toCoreProduct(dbPrd), nil
 }
 
 // QueryByUserID finds the product identified by a given User ID.
-func (s *Store) QueryByUserID(ctx context.Context, userID uuid.UUID) ([]product.Product, error) {
+func (s *Store) QueryByUserID(ctx context.Context, id uuid.UUID) ([]product.Product, error) {
 	data := struct {
-		UserID string `db:"user_id"`
+		ID string `db:"user_id"`
 	}{
-		UserID: userID.String(),
+		ID: id.String(),
 	}
 
 	const q = `
@@ -214,10 +214,10 @@ func (s *Store) QueryByUserID(ctx context.Context, userID uuid.UUID) ([]product.
 	GROUP BY
 		p.product_id`
 
-	var prds []dbProduct
-	if err := database.NamedQuerySlice(ctx, s.log, s.db, q, data, &prds); err != nil {
-		return nil, fmt.Errorf("selecting products userID[%s]: %w", userID, err)
+	var dbPrds []dbProduct
+	if err := database.NamedQuerySlice(ctx, s.log, s.db, q, data, &dbPrds); err != nil {
+		return nil, fmt.Errorf("namedquerystruct: %w", err)
 	}
 
-	return toCoreProductSlice(prds), nil
+	return toCoreProductSlice(dbPrds), nil
 }
