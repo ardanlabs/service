@@ -17,15 +17,12 @@ import (
 
 // Set of order by fields for user specific ordering.
 var (
-	OrderByUserID  = order.MustParseField("user_id")
-	OrderByName    = order.MustParseField("name")
-	OrderByEmail   = order.MustParseField("email")
-	OrderByRoles   = order.MustParseField("roles")
-	OrderByEnabled = order.MustParseField("enabled")
+	OrderByUserID  = order.NewField("userid")
+	OrderByName    = order.NewField("name")
+	OrderByEmail   = order.NewField("email")
+	OrderByRoles   = order.NewField("roles")
+	OrderByEnabled = order.NewField("enabled")
 )
-
-// DefaultOrderBy represents the default way we sort.
-var DefaultOrderBy = order.NewBy(OrderByUserID, order.ASC)
 
 // =============================================================================
 
@@ -51,13 +48,15 @@ type Storer interface {
 
 // Core manages the set of APIs for user access.
 type Core struct {
-	storer Storer
+	DefaultOrderBy order.By
+	storer         Storer
 }
 
 // NewCore constructs a core for user api access.
 func NewCore(storer Storer) *Core {
 	return &Core{
-		storer: storer,
+		DefaultOrderBy: order.NewBy(OrderByUserID, order.ASC),
+		storer:         storer,
 	}
 }
 

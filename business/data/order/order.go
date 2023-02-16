@@ -4,13 +4,11 @@ package order
 import (
 	"errors"
 	"fmt"
-	"regexp"
+	"net/http"
+	"strings"
+
+	"github.com/ardanlabs/service/business/sys/validate"
 )
-
-// Used to check for sql injection problems.
-var sqlInjection = regexp.MustCompile("^[A-Za-z0-9_]+$")
-
-// =============================================================================
 
 // Individual directions in the system.
 var (
@@ -29,8 +27,8 @@ type Direction struct {
 	name string
 }
 
-// ParseDirection converts a string to a type Direction.
-func ParseDirection(value string) (Direction, error) {
+// parseDirection converts a string to a type Direction.
+func parseDirection(value string) (Direction, error) {
 	direction, exists := directions[value]
 	if !exists {
 		return Direction{}, errors.New("invalid direction")
@@ -39,42 +37,27 @@ func ParseDirection(value string) (Direction, error) {
 	return direction, nil
 }
 
-// Name returns the name of the direction.
-func (d Direction) Name() string {
-	return d.name
-}
-
 // =============================================================================
 
 // Field represents a field of database being managed.
 type Field struct {
-	name string
+	name    string
+	storage string
 }
 
-// ParseField constructs a Field value and checks for potential sql
-// injection issues.
-func ParseField(field string) (Field, error) {
-	if !sqlInjection.MatchString(field) {
-		return Field{}, fmt.Errorf("invalid field %q format", field)
+// NewField constructs a new field for the system.
+func NewField(name string) Field {
+	return Field{
+		name: name,
 	}
-
-	return Field{field}, nil
 }
 
-// MustParseField constructs a Field value and checks for potential sql
+// AddStorageField constructs a Field value and checks for potential sql
 // injection issues. If there is an error it will panic.
-func MustParseField(field string) Field {
-	f, err := ParseField(field)
-	if err != nil {
-		panic(err)
-	}
+func (f *Field) AddStorageField(name string) Field {
+	f.storage = name
 
-	return f
-}
-
-// Name returns the name of the field.
-func (f Field) Name() string {
-	return f.name
+	return *f
 }
 
 // =============================================================================
@@ -89,7 +72,7 @@ func NewFieldSet(fields ...Field) FieldSet {
 	m := make(map[string]Field)
 
 	for _, field := range fields {
-		m[field.Name()] = field
+		m[field.name] = field
 	}
 
 	return FieldSet{
@@ -97,9 +80,9 @@ func NewFieldSet(fields ...Field) FieldSet {
 	}
 }
 
-// ParseField takes a field by string and validates it belongs to the set.
+// parseField takes a field by string and validates it belongs to the set.
 // Then returns that field in its proper type.
-func (fs FieldSet) ParseField(field string) (Field, error) {
+func (fs FieldSet) parseField(field string) (Field, error) {
 	f, exists := fs.fields[field]
 	if !exists {
 		return Field{}, fmt.Errorf("field %q not found", field)
@@ -126,17 +109,50 @@ func NewBy(field Field, direction Direction) By {
 	return by
 }
 
-// Field returns the field value.
-func (b By) Field() Field {
-	return b.field
-}
-
-// Direction returns the direction value.
-func (b By) Direction() Direction {
-	return b.direction
-}
-
 // Clause returns a sql string with the ordering information.
 func (b By) Clause() (string, error) {
-	return b.Field().Name() + " " + b.Direction().Name(), nil
+	return b.field.storage + " " + b.direction.name, nil
+}
+
+// =============================================================================
+
+// Parse constructs an order.By value by parsing a string in the form
+// of "field,direction" from the request.
+func Parse(r *http.Request, orderingFields FieldSet, defaultOrder By) (By, error) {
+	v := r.URL.Query().Get("orderBy")
+
+	if v == "" {
+		return defaultOrder, nil
+	}
+
+	orderParts := strings.Split(v, ",")
+
+	var by By
+	switch len(orderParts) {
+	case 1:
+		field, err := orderingFields.parseField(strings.Trim(orderParts[0], " "))
+		if err != nil {
+			return By{}, validate.NewFieldsError(v, errors.New("parsing fields"))
+		}
+
+		by = NewBy(field, ASC)
+
+	case 2:
+		field, err := orderingFields.parseField(strings.Trim(orderParts[0], " "))
+		if err != nil {
+			return By{}, validate.NewFieldsError(v, errors.New("parsing fields"))
+		}
+
+		dir, err := parseDirection(strings.Trim(orderParts[1], " "))
+		if err != nil {
+			return By{}, validate.NewFieldsError(v, errors.New("parsing direction"))
+		}
+
+		by = NewBy(field, dir)
+
+	default:
+		return By{}, validate.NewFieldsError(v, errors.New("unknown order field"))
+	}
+
+	return by, nil
 }

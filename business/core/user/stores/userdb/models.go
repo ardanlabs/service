@@ -13,11 +13,11 @@ import (
 
 // orderingFields maintains a set of fields allowed for ordering.
 var orderingFields = order.NewFieldSet(
-	user.OrderByUserID,
-	user.OrderByName,
-	user.OrderByEmail,
-	user.OrderByRoles,
-	user.OrderByEnabled,
+	user.OrderByUserID.AddStorageField("user_id"),
+	user.OrderByName.AddStorageField("name"),
+	user.OrderByEmail.AddStorageField("email"),
+	user.OrderByRoles.AddStorageField("roles"),
+	user.OrderByEnabled.AddStorageField("enabled"),
 )
 
 // =============================================================================

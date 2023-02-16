@@ -3,11 +3,6 @@ package v1
 
 import (
 	"errors"
-	"net/http"
-	"strings"
-
-	"github.com/ardanlabs/service/business/data/order"
-	"github.com/ardanlabs/service/business/sys/validate"
 )
 
 // ErrorResponse is the form used for API responses from failures in the API.
@@ -51,44 +46,3 @@ func GetRequestError(err error) *RequestError {
 }
 
 // =============================================================================
-
-// ParseOrderBy constructs an order.By value by parsing a string in the form
-// of "field,direction" from the request.
-func ParseOrderBy(r *http.Request, orderingFields order.FieldSet, defaultOrder order.By) (order.By, error) {
-	v := r.URL.Query().Get("orderBy")
-
-	if v == "" {
-		return defaultOrder, nil
-	}
-
-	orderParts := strings.Split(v, ",")
-
-	var by order.By
-	switch len(orderParts) {
-	case 1:
-		field, err := orderingFields.ParseField(strings.Trim(orderParts[0], " "))
-		if err != nil {
-			return order.By{}, validate.NewFieldsError(v, errors.New("parsing fields"))
-		}
-
-		by = order.NewBy(field, order.ASC)
-
-	case 2:
-		field, err := orderingFields.ParseField(strings.Trim(orderParts[0], " "))
-		if err != nil {
-			return order.By{}, validate.NewFieldsError(v, errors.New("parsing fields"))
-		}
-
-		dir, err := order.ParseDirection(strings.Trim(orderParts[1], " "))
-		if err != nil {
-			return order.By{}, validate.NewFieldsError(v, errors.New("parsing direction"))
-		}
-
-		by = order.NewBy(field, dir)
-
-	default:
-		return order.By{}, validate.NewFieldsError(v, errors.New("unknown order field"))
-	}
-
-	return by, nil
-}

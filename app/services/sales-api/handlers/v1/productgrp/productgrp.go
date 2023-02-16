@@ -9,6 +9,7 @@ import (
 	"strconv"
 
 	"github.com/ardanlabs/service/business/core/product"
+	"github.com/ardanlabs/service/business/data/order"
 	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/ardanlabs/service/business/web/auth"
 	v1Web "github.com/ardanlabs/service/business/web/v1"
@@ -122,7 +123,7 @@ func (h Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Requ
 		return err
 	}
 
-	orderBy, err := v1Web.ParseOrderBy(r, h.Product.OrderingFields(), product.DefaultOrderBy)
+	orderBy, err := order.Parse(r, h.Product.OrderingFields(), h.Product.DefaultOrderBy)
 	if err != nil {
 		return err
 	}

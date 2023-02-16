@@ -10,13 +10,13 @@ import (
 
 // orderingFields maintains a set of fields allowed for ordering.
 var orderingFields = order.NewFieldSet(
-	product.OrderByProdID,
-	product.OrderByName,
-	product.OrderByCost,
-	product.OrderByQuantity,
-	product.OrderBySold,
-	product.OrderByRevenue,
-	product.OrderByUserID,
+	product.OrderByProdID.AddStorageField("product_id"),
+	product.OrderByName.AddStorageField("name"),
+	product.OrderByCost.AddStorageField("cost"),
+	product.OrderByQuantity.AddStorageField("quantity"),
+	product.OrderBySold.AddStorageField("sold"),
+	product.OrderByRevenue.AddStorageField("revenue"),
+	product.OrderByUserID.AddStorageField("user_id"),
 )
 
 // =============================================================================

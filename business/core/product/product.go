@@ -15,17 +15,14 @@ import (
 
 // Set of order by fields for product specific ordering.
 var (
-	OrderByProdID   = order.MustParseField("product_id")
-	OrderByName     = order.MustParseField("name")
-	OrderByCost     = order.MustParseField("cost")
-	OrderByQuantity = order.MustParseField("quantity")
-	OrderBySold     = order.MustParseField("sold")
-	OrderByRevenue  = order.MustParseField("revenue")
-	OrderByUserID   = order.MustParseField("user_id")
+	OrderByProdID   = order.NewField("productid")
+	OrderByName     = order.NewField("name")
+	OrderByCost     = order.NewField("cost")
+	OrderByQuantity = order.NewField("quantity")
+	OrderBySold     = order.NewField("sold")
+	OrderByRevenue  = order.NewField("revenue")
+	OrderByUserID   = order.NewField("userid")
 )
-
-// DefaultOrderBy represents the default way we sort.
-var DefaultOrderBy = order.NewBy(OrderByProdID, order.ASC)
 
 // =============================================================================
 
@@ -48,13 +45,15 @@ type Storer interface {
 
 // Core manages the set of APIs for product access.
 type Core struct {
-	storer Storer
+	DefaultOrderBy order.By
+	storer         Storer
 }
 
 // NewCore constructs a core for product api access.
 func NewCore(storer Storer) *Core {
 	return &Core{
-		storer: storer,
+		DefaultOrderBy: order.NewBy(OrderByProdID, order.ASC),
+		storer:         storer,
 	}
 }
 
