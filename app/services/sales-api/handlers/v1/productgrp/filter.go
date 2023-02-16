@@ -42,5 +42,9 @@ func parseFilter(r *http.Request) (product.QueryFilter, error) {
 		filter.ByQuantity(int(qua))
 	}
 
+	if err := filter.Validate(); err != nil {
+		return product.QueryFilter{}, err
+	}
+
 	return filter, nil
 }

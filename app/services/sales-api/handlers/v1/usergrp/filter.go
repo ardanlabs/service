@@ -26,5 +26,9 @@ func parseFilter(r *http.Request) (user.QueryFilter, error) {
 		filter.ByEmail(*email)
 	}
 
+	if err := filter.Validate(); err != nil {
+		return user.QueryFilter{}, err
+	}
+
 	return filter, nil
 }
