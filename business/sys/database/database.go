@@ -202,11 +202,7 @@ func NamedQuerySliceUsingIn[T any](ctx context.Context, log *zap.SugaredLogger, 
 func namedQuerySlice[T any](ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext, query string, data any, dest *[]T, withIn bool) error {
 	q := queryString(query, data)
 
-	if _, ok := data.(struct{}); ok {
-		log.WithOptions(zap.AddCallerSkip(3)).Infow("database.NamedQuerySlice", "trace_id", web.GetTraceID(ctx), "query", q)
-	} else {
-		log.WithOptions(zap.AddCallerSkip(2)).Infow("database.NamedQuerySlice", "trace_id", web.GetTraceID(ctx), "query", q)
-	}
+	log.WithOptions(zap.AddCallerSkip(3)).Infow("database.NamedQuerySlice", "trace_id", web.GetTraceID(ctx), "query", q)
 
 	ctx, span := web.AddSpan(ctx, "business.sys.database.queryslice", attribute.String("query", q))
 	defer span.End()
@@ -278,11 +274,7 @@ func NamedQueryStructUsingIn(ctx context.Context, log *zap.SugaredLogger, db sql
 func namedQueryStruct(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext, query string, data any, dest any, withIn bool) error {
 	q := queryString(query, data)
 
-	if _, ok := data.(struct{}); ok {
-		log.WithOptions(zap.AddCallerSkip(3)).Infow("database.NamedQueryStruct", "trace_id", web.GetTraceID(ctx), "query", q)
-	} else {
-		log.WithOptions(zap.AddCallerSkip(2)).Infow("database.NamedQueryStruct", "trace_id", web.GetTraceID(ctx), "query", q)
-	}
+	log.WithOptions(zap.AddCallerSkip(3)).Infow("database.NamedQueryStruct", "trace_id", web.GetTraceID(ctx), "query", q)
 
 	ctx, span := web.AddSpan(ctx, "business.sys.database.query", attribute.String("query", q))
 	defer span.End()
