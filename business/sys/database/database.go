@@ -333,9 +333,9 @@ func queryString(query string, args any) string {
 		var value string
 		switch v := param.(type) {
 		case string:
-			value = fmt.Sprintf("%q", v)
+			value = fmt.Sprintf("'%s'", v)
 		case []byte:
-			value = fmt.Sprintf("%q", string(v))
+			value = fmt.Sprintf("'%s'", string(v))
 		default:
 			value = fmt.Sprintf("%v", v)
 		}
