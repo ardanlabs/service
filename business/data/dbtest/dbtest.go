@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/core/user/stores/userdb"
-	"github.com/ardanlabs/service/business/data/dbschema"
+	"github.com/ardanlabs/service/business/data/dbmigrate"
 	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/ardanlabs/service/business/web/auth"
 	"github.com/ardanlabs/service/foundation/docker"
@@ -97,12 +97,12 @@ func NewUnit(t *testing.T, c *docker.Container, dbName string) (*zap.SugaredLogg
 
 	t.Log("Migrate and seed database ...")
 
-	if err := dbschema.Migrate(ctx, db); err != nil {
+	if err := dbmigrate.Migrate(ctx, db); err != nil {
 		t.Logf("Logs for %s\n%s:", c.ID, docker.DumpContainerLogs(c.ID))
 		t.Fatalf("Migrating error: %s", err)
 	}
 
-	if err := dbschema.Seed(ctx, db); err != nil {
+	if err := dbmigrate.Seed(ctx, db); err != nil {
 		t.Logf("Logs for %s\n%s:", c.ID, docker.DumpContainerLogs(c.ID))
 		t.Fatalf("Seeding error: %s", err)
 	}

@@ -1,5 +1,5 @@
-// Package dbschema contains the database schema, migrations and seeding data.
-package dbschema
+// Package dbmigrate contains the database schema, migrations and seeding data.
+package dbmigrate
 
 import (
 	"context"
@@ -14,14 +14,11 @@ import (
 )
 
 var (
-	//go:embed sql/schema.sql
-	schemaDoc string
+	//go:embed sql/migrate.sql
+	migrateDoc string
 
 	//go:embed sql/seed.sql
 	seedDoc string
-
-	//go:embed sql/delete.sql
-	deleteDoc string
 )
 
 // Migrate attempts to bring the schema for db up to date with the migrations
@@ -36,7 +33,7 @@ func Migrate(ctx context.Context, db *sqlx.DB) error {
 		return fmt.Errorf("construct darwin driver: %w", err)
 	}
 
-	d := darwin.New(driver, darwin.ParseMigrations(schemaDoc))
+	d := darwin.New(driver, darwin.ParseMigrations(migrateDoc))
 	return d.Migrate()
 }
 
@@ -63,39 +60,6 @@ func Seed(ctx context.Context, db *sqlx.DB) (err error) {
 	}()
 
 	if _, err := tx.Exec(seedDoc); err != nil {
-		return fmt.Errorf("exec: %w", err)
-	}
-
-	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("commit: %w", err)
-	}
-
-	return nil
-}
-
-// DeleteAll runs the set of Drop-table queries against db. The queries are ran in a
-// transaction and rolled back if any fail.
-func DeleteAll(ctx context.Context, db *sqlx.DB) error {
-	if err := database.StatusCheck(ctx, db); err != nil {
-		return fmt.Errorf("status check database: %w", err)
-	}
-
-	tx, err := db.Begin()
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		if errTx := tx.Rollback(); errTx != nil {
-			if errors.Is(errTx, sql.ErrTxDone) {
-				return
-			}
-			err = fmt.Errorf("rollback: %w", errTx)
-			return
-		}
-	}()
-
-	if _, err := tx.Exec(deleteDoc); err != nil {
 		return fmt.Errorf("exec: %w", err)
 	}
 
