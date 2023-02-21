@@ -3,13 +3,13 @@ module github.com/ardanlabs/service
 go 1.18
 
 require (
-	github.com/ardanlabs/conf/v3 v3.1.3
+	github.com/ardanlabs/conf/v3 v3.1.4
 	github.com/ardanlabs/darwin/v2 v2.0.0
 	github.com/dimfeld/httptreemux/v5 v5.5.0
 	github.com/go-playground/locales v0.14.1
 	github.com/go-playground/universal-translator v0.18.1
 	github.com/go-playground/validator/v10 v10.11.2
-	github.com/golang-jwt/jwt/v4 v4.4.3
+	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/google/go-cmp v0.5.9
 	github.com/google/uuid v1.3.0
 	github.com/jmoiron/sqlx v1.3.5

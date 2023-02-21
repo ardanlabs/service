@@ -174,6 +174,9 @@ func getOptString(fld Field) string {
 	if fld.Options.Noprint {
 		opts = append(opts, "noprint")
 	}
+	if fld.Options.Mask {
+		fld.Options.DefaultVal = maskVal(fld.Options.DefaultVal)
+	}
 	if fld.Options.DefaultVal != "" {
 		opts = append(opts, fmt.Sprintf("default: %s", fld.Options.DefaultVal))
 	}

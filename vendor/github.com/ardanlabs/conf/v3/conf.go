@@ -87,15 +87,7 @@ func String(v interface{}) (string, error) {
 
 		switch {
 		case fld.Options.Mask:
-			if u, err := url.Parse(v); err == nil {
-				userPass := u.User.String()
-				if userPass != "" {
-					v = strings.Replace(v, userPass, "xxxxxx:xxxxxx", 1)
-					s.WriteString(v)
-					break
-				}
-			}
-			s.WriteString("xxxxxx")
+			s.WriteString(maskVal(v))
 
 		default:
 			s.WriteString(v)
@@ -107,6 +99,18 @@ func String(v interface{}) (string, error) {
 	}
 
 	return s.String(), nil
+}
+
+// maskVal masks an entire string or the user:password pair of a URL.
+func maskVal(v string) string {
+	mask := "xxxxxx"
+	if u, err := url.Parse(v); err == nil {
+		userPass := u.User.String()
+		if userPass != "" {
+			mask = strings.Replace(v, userPass, "xxxxxx:xxxxxx", 1)
+		}
+	}
+	return mask
 }
 
 // UsageInfo provides output to display the config usage on the command line.

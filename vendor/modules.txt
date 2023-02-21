@@ -4,7 +4,7 @@ github.com/OneOfOne/xxhash
 # github.com/agnivade/levenshtein v1.1.1
 ## explicit; go 1.13
 github.com/agnivade/levenshtein
-# github.com/ardanlabs/conf/v3 v3.1.3
+# github.com/ardanlabs/conf/v3 v3.1.4
 ## explicit; go 1.13
 github.com/ardanlabs/conf/v3
 # github.com/ardanlabs/darwin/v2 v2.0.0
@@ -48,7 +48,7 @@ github.com/gobwas/glob/syntax/ast
 github.com/gobwas/glob/syntax/lexer
 github.com/gobwas/glob/util/runes
 github.com/gobwas/glob/util/strings
-# github.com/golang-jwt/jwt/v4 v4.4.3
+# github.com/golang-jwt/jwt/v4 v4.5.0
 ## explicit; go 1.16
 github.com/golang-jwt/jwt/v4
 # github.com/google/go-cmp v0.5.9
