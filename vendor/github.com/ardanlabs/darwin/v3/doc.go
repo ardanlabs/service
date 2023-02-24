@@ -15,6 +15,7 @@ https://flywaydb.org/documentation/faq#rollback
 https://flywaydb.org/documentation/faq#hot-fixes
 
 Given this file:
+
 	-- Version: 1.1
 	-- Description: Create table users
 	CREATE TABLE users (
@@ -50,7 +51,9 @@ You can write this code:
 		"database/sql"
 		"log"
 
-		"github.com/ardanlabs/darwin"
+		"github.com/ardanlabs/darwin/v3"
+		"github.com/ardanlabs/darwin/v3/dialects/postgres"
+		"github.com/ardanlabs/darwin/v3/drivers/generic"
 		_ "github.com/go-sql-driver/mysql"
 	)
 
@@ -60,14 +63,14 @@ You can write this code:
 	)
 
 	func main() {
-		database, err := sql.Open("mysql", "root:@/darwin")
+		db, err := sql.Open("mysql", "root:@/darwin")
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		driver, err := darwin.NewGenericDriver(db.DB, darwin.PostgresDialect{})
+		driver, err := generic.New(db.DB, postgres.Dialect{})
 		if err != nil {
-			return err
+			return fmt.Errorf("construct darwin driver: %w", err)
 		}
 
 		d := darwin.New(driver, darwin.ParseMigrations(schemaDoc))

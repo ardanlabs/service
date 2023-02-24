@@ -29,11 +29,11 @@ type Driver struct {
 // New creates a new GenericDriver configured with db and dialect.
 func New(db *sql.DB, dialect Dialect) (*Driver, error) {
 	if db == nil {
-		return nil, errors.New("darwin: sql.DB is nil")
+		return nil, errors.New("darwin: db is nil")
 	}
 
 	if dialect == nil {
-		return nil, errors.New("darwin: sql.DB is nil")
+		return nil, errors.New("darwin: dialectis nil")
 	}
 
 	return &Driver{DB: db, Dialect: dialect}, nil
