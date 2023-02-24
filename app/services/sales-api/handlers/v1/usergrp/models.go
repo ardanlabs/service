@@ -76,7 +76,7 @@ func toCoreNewUser(app AppNewUser) (user.NewUser, error) {
 		return user.NewUser{}, fmt.Errorf("parsing email: %w", err)
 	}
 
-	nu := user.NewUser{
+	core := user.NewUser{
 		Name:            app.Name,
 		Email:           *addr,
 		Roles:           roles,
@@ -85,7 +85,7 @@ func toCoreNewUser(app AppNewUser) (user.NewUser, error) {
 		PasswordConfirm: app.PasswordConfirm,
 	}
 
-	return nu, nil
+	return core, nil
 }
 
 // Validate checks the data in the model is considered clean.

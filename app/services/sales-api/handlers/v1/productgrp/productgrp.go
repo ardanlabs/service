@@ -30,14 +30,19 @@ type Handlers struct {
 
 // Create adds a new product to the system.
 func (h Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	var np product.NewProduct
-	if err := web.Decode(r, &np); err != nil {
+	var app AppNewProduct
+	if err := web.Decode(r, &app); err != nil {
 		return err
+	}
+
+	np, err := toCoreNewProduct(app)
+	if err != nil {
+		return v1Web.NewRequestError(err, http.StatusBadRequest)
 	}
 
 	prd, err := h.Product.Create(ctx, np)
 	if err != nil {
-		return fmt.Errorf("create: np[%+v]: %w", np, err)
+		return fmt.Errorf("create: app[%+v]: %w", app, err)
 	}
 
 	return web.Respond(ctx, w, prd, http.StatusCreated)
@@ -45,8 +50,8 @@ func (h Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Req
 
 // Update updates a product in the system.
 func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	var up product.UpdateProduct
-	if err := web.Decode(r, &up); err != nil {
+	var app AppUpdateProduct
+	if err := web.Decode(r, &app); err != nil {
 		return err
 	}
 
@@ -65,9 +70,9 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 		}
 	}
 
-	prd, err = h.Product.Update(ctx, prd, up)
+	prd, err = h.Product.Update(ctx, prd, toCoreUpdateProduct(app))
 	if err != nil {
-		return fmt.Errorf("update: id[%s] upd[%+v]: %w", id, up, err)
+		return fmt.Errorf("update: id[%s] app[%+v]: %w", id, app, err)
 	}
 
 	return web.Respond(ctx, w, prd, http.StatusOK)
@@ -124,12 +129,12 @@ func (h Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Requ
 		return err
 	}
 
-	products, err := h.Product.Query(ctx, filter, orderBy, pageNumber, rowsPerPage)
+	prds, err := h.Product.Query(ctx, filter, orderBy, pageNumber, rowsPerPage)
 	if err != nil {
 		return fmt.Errorf("query: %w", err)
 	}
 
-	return web.Respond(ctx, w, products, http.StatusOK)
+	return web.Respond(ctx, w, toAppProducts(prds), http.StatusOK)
 }
 
 // QueryByID returns a product by its ID.
@@ -139,7 +144,7 @@ func (h Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http.
 		return validate.NewFieldsError("id", err)
 	}
 
-	prod, err := h.Product.QueryByID(ctx, id)
+	prd, err := h.Product.QueryByID(ctx, id)
 	if err != nil {
 		switch {
 		case errors.Is(err, product.ErrNotFound):
@@ -149,5 +154,5 @@ func (h Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http.
 		}
 	}
 
-	return web.Respond(ctx, w, prod, http.StatusOK)
+	return web.Respond(ctx, w, toAppProduct(prd), http.StatusOK)
 }
