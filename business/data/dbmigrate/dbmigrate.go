@@ -9,6 +9,8 @@ import (
 	"fmt"
 
 	"github.com/ardanlabs/darwin/v3"
+	"github.com/ardanlabs/darwin/v3/dialects/postgres"
+	"github.com/ardanlabs/darwin/v3/drivers/generic"
 	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/jmoiron/sqlx"
 )
@@ -28,7 +30,7 @@ func Migrate(ctx context.Context, db *sqlx.DB) error {
 		return fmt.Errorf("status check database: %w", err)
 	}
 
-	driver, err := darwin.NewGenericDriver(db.DB, darwin.PostgresDialect{})
+	driver, err := generic.New(db.DB, postgres.Dialect{})
 	if err != nil {
 		return fmt.Errorf("construct darwin driver: %w", err)
 	}

@@ -10,6 +10,8 @@ github.com/ardanlabs/conf/v3
 # github.com/ardanlabs/darwin/v3 v3.1.1
 ## explicit; go 1.16
 github.com/ardanlabs/darwin/v3
+github.com/ardanlabs/darwin/v3/dialects/postgres
+github.com/ardanlabs/darwin/v3/drivers/generic
 # github.com/dimfeld/httptreemux/v5 v5.5.0
 ## explicit; go 1.9
 github.com/dimfeld/httptreemux/v5
