@@ -27,12 +27,17 @@ type Handlers struct {
 
 // Create adds a new user to the system.
 func (h Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	var nu user.NewUser
-	if err := web.Decode(r, &nu); err != nil {
+	var app AppNewUser
+	if err := web.Decode(r, &app); err != nil {
 		return err
 	}
 
-	usr, err := h.User.Create(ctx, nu)
+	nc, err := toCoreNewUser(app)
+	if err != nil {
+		return v1Web.NewRequestError(err, http.StatusBadRequest)
+	}
+
+	usr, err := h.User.Create(ctx, nc)
 	if err != nil {
 		if errors.Is(err, user.ErrUniqueEmail) {
 			return v1Web.NewRequestError(err, http.StatusConflict)
@@ -45,8 +50,8 @@ func (h Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Req
 
 // Update updates a user in the system.
 func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	var uu user.UpdateUser
-	if err := web.Decode(r, &uu); err != nil {
+	var app AppUpdateUser
+	if err := web.Decode(r, &app); err != nil {
 		return err
 	}
 
@@ -60,6 +65,11 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 		default:
 			return fmt.Errorf("querybyid: id[%s]: %w", id, err)
 		}
+	}
+
+	uu, err := toCoreUpdateUser(app)
+	if err != nil {
+		return v1Web.NewRequestError(err, http.StatusBadRequest)
 	}
 
 	usr, err = h.User.Update(ctx, usr, uu)
@@ -119,7 +129,7 @@ func (h Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Requ
 		return fmt.Errorf("query: %w", err)
 	}
 
-	return web.Respond(ctx, w, users, http.StatusOK)
+	return web.Respond(ctx, w, toAppUsers(users), http.StatusOK)
 }
 
 // QueryByID returns a user by its ID.
@@ -136,7 +146,7 @@ func (h Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http.
 		}
 	}
 
-	return web.Respond(ctx, w, usr, http.StatusOK)
+	return web.Respond(ctx, w, toAppUser(usr), http.StatusOK)
 }
 
 // Token provides an API token for the authenticated user.

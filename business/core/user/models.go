@@ -9,27 +9,27 @@ import (
 	"github.com/google/uuid"
 )
 
-// User represents an individual user.
+// User represents information about an individual user.
 type User struct {
-	ID           uuid.UUID    `json:"id"`
-	Name         string       `json:"name"`
-	Email        mail.Address `json:"email"`
-	Roles        []Role       `json:"roles"`
-	PasswordHash []byte       `json:"-"`
-	Department   string       `json:"department"`
-	Enabled      bool         `json:"enabled"`
-	DateCreated  time.Time    `json:"dateCreated"`
-	DateUpdated  time.Time    `json:"dateUpdated"`
+	ID           uuid.UUID
+	Name         string
+	Email        mail.Address
+	Roles        []Role
+	PasswordHash []byte
+	Department   string
+	Enabled      bool
+	DateCreated  time.Time
+	DateUpdated  time.Time
 }
 
-// NewUser contains information needed to create a new User.
+// NewUser contains information needed to create a new user.
 type NewUser struct {
-	Name            string       `json:"name" validate:"required"`
-	Email           mail.Address `json:"email" validate:"required,email"`
-	Roles           []Role       `json:"roles" validate:"required"`
-	Department      string       `json:"department"`
-	Password        string       `json:"password" validate:"required"`
-	PasswordConfirm string       `json:"passwordConfirm" validate:"eqfield=Password"`
+	Name            string
+	Email           mail.Address
+	Roles           []Role
+	Department      string
+	Password        string
+	PasswordConfirm string
 }
 
 // Validate checks the data in the model is considered clean.
@@ -40,20 +40,15 @@ func (nu NewUser) Validate() error {
 	return nil
 }
 
-// UpdateUser defines what information may be provided to modify an existing
-// User. All fields are optional so clients can send just the fields they want
-// changed. It uses pointer fields so we can differentiate between a field that
-// was not provided and a field that was provided as explicitly blank. Normally
-// we do not want to use pointers to basic types but we make exceptions around
-// marshalling/unmarshalling.
+// UpdateUser contains information needed to update a user.
 type UpdateUser struct {
-	Name            *string       `json:"name"`
-	Email           *mail.Address `json:"email" validate:"omitempty,email"`
-	Roles           []Role        `json:"roles"`
-	Department      *string       `json:"department"`
-	Password        *string       `json:"password"`
-	PasswordConfirm *string       `json:"passwordConfirm" validate:"omitempty,eqfield=Password"`
-	Enabled         *bool         `json:"enabled"`
+	Name            *string
+	Email           *mail.Address
+	Roles           []Role
+	Department      *string
+	Password        *string
+	PasswordConfirm *string
+	Enabled         *bool
 }
 
 // Validate checks the data in the model is considered clean.

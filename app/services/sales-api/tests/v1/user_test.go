@@ -9,8 +9,10 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/ardanlabs/service/app/services/sales-api/handlers"
+	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/usergrp"
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/ardanlabs/service/business/sys/validate"
@@ -120,12 +122,10 @@ func (ut *UserTests) getToken200(t *testing.T) {
 // postUser400 validates a user can't be created with the endpoint
 // unless a valid user document is submitted.
 func (ut *UserTests) postUser400(t *testing.T) {
-	usr := user.NewUser{
-		Email: mail.Address{
-			Name:    "Bill",
-			Address: "bill@ardanlabs.com",
-		},
+	usr := usergrp.AppNewUser{
+		Email: "bill@ardanlabs.com",
 	}
+
 	body, err := json.Marshal(usr)
 	if err != nil {
 		t.Fatal(err)
@@ -180,7 +180,7 @@ func (ut *UserTests) postUser400(t *testing.T) {
 // postAdmin401 validates a user can't be created unless the calling user is
 // an admin. Regular users can't do this.
 func (ut *UserTests) postAdmin401(t *testing.T) {
-	body, err := json.Marshal(&user.NewUser{})
+	body, err := json.Marshal(&usergrp.AppNewUser{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -207,7 +207,7 @@ func (ut *UserTests) postAdmin401(t *testing.T) {
 // postUser401 validates a user can't be created unless the calling user is
 // authenticated.
 func (ut *UserTests) postUser401(t *testing.T) {
-	body, err := json.Marshal(&user.User{})
+	body, err := json.Marshal(&usergrp.AppNewUser{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -369,7 +369,7 @@ func (ut *UserTests) deleteUserNotFound(t *testing.T) {
 func (ut *UserTests) putUser404(t *testing.T) {
 	id := "3097c45e-780a-421b-9eae-43c2fda2bf14"
 
-	u := user.UpdateUser{
+	u := usergrp.AppUpdateUser{
 		Name: dbtest.StringPointer("Doesn't Exist"),
 	}
 	body, err := json.Marshal(&u)
@@ -419,16 +419,10 @@ func (ut *UserTests) crudUser(t *testing.T) {
 
 // postUser201 validates a user can be created with the endpoint.
 func (ut *UserTests) postUser201(t *testing.T) user.User {
-	email, err := mail.ParseAddress("bill@ardanlabs.com")
-	if err != nil {
-		t.Fatalf("\t%s\tTest %d:\tShould be able to parse email: %s.", dbtest.Failed, 0, err)
-	}
-	t.Logf("\t%s\tTest %d:\tShould be able to parse email.", dbtest.Success, 0)
-
-	nu := user.NewUser{
+	nu := usergrp.AppNewUser{
 		Name:            "Bill Kennedy",
-		Email:           *email,
-		Roles:           []user.Role{user.RoleAdmin},
+		Email:           "bill@ardanlabs.com",
+		Roles:           []string{user.RoleAdmin.Name()},
 		Password:        "gophers",
 		PasswordConfirm: "gophers",
 	}
@@ -486,10 +480,15 @@ func (ut *UserTests) postUser201(t *testing.T) user.User {
 
 // postUser409 validates a user email field is unique.
 func (ut *UserTests) postUser409(t *testing.T, usr user.User) {
-	nu := user.NewUser{
+	roles := make([]string, len(usr.Roles))
+	for i, role := range usr.Roles {
+		roles[i] = role.Name()
+	}
+
+	nu := usergrp.AppNewUser{
 		Name:            usr.Name,
-		Email:           usr.Email,
-		Roles:           usr.Roles,
+		Email:           usr.Email.Address,
+		Roles:           roles,
 		Password:        "gophers",
 		PasswordConfirm: "gophers",
 	}
@@ -558,7 +557,17 @@ func (ut *UserTests) getUser200(t *testing.T, id uuid.UUID) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould receive a status code of 200 for the response.", dbtest.Success, testID)
 
-			var got user.User
+			var got struct {
+				ID           string    `json:"id"`
+				Name         string    `json:"name"`
+				Email        string    `json:"email"`
+				Roles        []string  `json:"roles"`
+				PasswordHash []byte    `json:"-"`
+				Department   string    `json:"department"`
+				Enabled      bool      `json:"enabled"`
+				DateCreated  time.Time `json:"dateCreated"`
+				DateUpdated  time.Time `json:"dateUpdated"`
+			}
 			if err := json.NewDecoder(w.Body).Decode(&got); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to unmarshal the response : %v", dbtest.Failed, testID, err)
 			}
@@ -572,10 +581,10 @@ func (ut *UserTests) getUser200(t *testing.T, id uuid.UUID) {
 			// Define what we wanted to receive. We will just trust the generated
 			// fields like Dates so we copy p.
 			exp := got
-			exp.ID = id
+			exp.ID = id.String()
 			exp.Name = "Bill Kennedy"
-			exp.Email = *email
-			exp.Roles = []user.Role{user.RoleAdmin}
+			exp.Email = email.Address
+			exp.Roles = []string{user.RoleAdmin.Name()}
 
 			if diff := cmp.Diff(got, exp); diff != "" {
 				t.Fatalf("\t%s\tTest %d:\tShould get the expected result. Diff:\n%s", dbtest.Failed, testID, diff)
@@ -587,9 +596,15 @@ func (ut *UserTests) getUser200(t *testing.T, id uuid.UUID) {
 
 // putUser200 validates updating a user that does exist.
 func (ut *UserTests) putUser200(t *testing.T, id uuid.UUID) {
-	body := `{"name": "Jacob Walker"}`
+	u := usergrp.AppUpdateUser{
+		Name: dbtest.StringPointer("Bill Kennedy"),
+	}
+	body, err := json.Marshal(&u)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	r := httptest.NewRequest(http.MethodPut, "/v1/users/"+id.String(), strings.NewReader(body))
+	r := httptest.NewRequest(http.MethodPut, "/v1/users/"+id.String(), bytes.NewBuffer(body))
 	w := httptest.NewRecorder()
 
 	r.Header.Set("Authorization", "Bearer "+ut.adminToken)
@@ -616,13 +631,13 @@ func (ut *UserTests) putUser200(t *testing.T, id uuid.UUID) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould receive a status code of 200 for the retrieve.", dbtest.Success, testID)
 
-			var ru user.User
+			var ru usergrp.AppUser
 			if err := json.NewDecoder(w.Body).Decode(&ru); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to unmarshal the response : %v", dbtest.Failed, testID, err)
 			}
 
-			if ru.Name != "Jacob Walker" {
-				t.Fatalf("\t%s\tTest %d:\tShould see an updated Name : got %q want %q", dbtest.Failed, testID, ru.Name, "Jacob Walker")
+			if ru.Name != "Bill Kennedy" {
+				t.Fatalf("\t%s\tTest %d:\tShould see an updated Name : got %q want %q", dbtest.Failed, testID, ru.Name, "Bill Kennedy")
 			}
 			t.Logf("\t%s\tTest %d:\tShould see an updated Name.", dbtest.Success, testID)
 
@@ -632,7 +647,7 @@ func (ut *UserTests) putUser200(t *testing.T, id uuid.UUID) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to parse email.", dbtest.Success, testID)
 
-			if ru.Email != *email {
+			if ru.Email != email.Address {
 				t.Fatalf("\t%s\tTest %d:\tShould not affect other fields like Email : got %q want %q", dbtest.Failed, testID, ru.Email, "bill@ardanlabs.com")
 			}
 			t.Logf("\t%s\tTest %d:\tShould not affect other fields like Email.", dbtest.Success, testID)
@@ -642,9 +657,15 @@ func (ut *UserTests) putUser200(t *testing.T, id uuid.UUID) {
 
 // putUser401 validates that a user can't modify users unless they are an admin.
 func (ut *UserTests) putUser401(t *testing.T, id uuid.UUID) {
-	body := `{"name": "Anna Walker"}`
+	u := usergrp.AppUpdateUser{
+		Name: dbtest.StringPointer("Ale Kennedy"),
+	}
+	body, err := json.Marshal(&u)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	r := httptest.NewRequest(http.MethodPut, "/v1/users/"+id.String(), strings.NewReader(body))
+	r := httptest.NewRequest(http.MethodPut, "/v1/users/"+id.String(), bytes.NewBuffer(body))
 	w := httptest.NewRecorder()
 
 	r.Header.Set("Authorization", "Bearer "+ut.userToken)
