@@ -4,9 +4,10 @@ resources:
 - ./dev-sales-config.yaml
 - ../../base/sales/
 - ./dev-sales-vault.yaml
-patchesStrategicMerge:
-- ./dev-sales-patch.yaml
-- ./dev-sales-vault-patch.yaml
+patches:
+- path: ./dev-sales-patch-deploy.yaml
+- path: ./dev-sales-patch-service.yaml
+- path: ./dev-sales-vault-patch.yaml
 images:
 - name: metrics-image
   newName: metrics

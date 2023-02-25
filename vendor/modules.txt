@@ -76,8 +76,8 @@ github.com/leodido/go-urn
 github.com/lib/pq
 github.com/lib/pq/oid
 github.com/lib/pq/scram
-# github.com/open-policy-agent/opa v0.49.0
-## explicit; go 1.17
+# github.com/open-policy-agent/opa v0.49.2
+## explicit; go 1.18
 github.com/open-policy-agent/opa/ast
 github.com/open-policy-agent/opa/ast/internal/scanner
 github.com/open-policy-agent/opa/ast/internal/tokens

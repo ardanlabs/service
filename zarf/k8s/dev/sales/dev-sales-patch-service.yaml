@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: sales-service
+  namespace: sales-system
+
+spec:
+  selector:
+    app: sales
+  
+  type: ClusterIP
+  
+  ports:
+  - name: sales-api
+    port: 3000
+    targetPort: sales-api
+  - name: sales-api-debug
+    port: 4000
+    targetPort: sales-api-debug
+  - name: metrics
+    port: 3001
+    targetPort: metrics
+  - name: metrics-debug
+    port: 4001
+    targetPort: metrics-debug
