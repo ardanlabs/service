@@ -1,17 +1,17 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-- ./dev-sales-config.yaml
-- ../../base/sales/
-- ./dev-sales-vault.yaml
+  - ./dev-sales-config.yaml
+  - ../../base/sales/
+  - ./dev-sales-vault.yaml
 patches:
-- path: ./dev-sales-patch-deploy.yaml
-- path: ./dev-sales-patch-service.yaml
-- path: ./dev-sales-vault-patch.yaml
+  - path: ./dev-sales-patch-deploy.yaml
+  - path: ./dev-sales-patch-service.yaml
+  - path: ./dev-sales-vault-patch.yaml
 images:
-- name: metrics-image
-  newName: metrics
-  newTag: "1.0"
-- name: sales-api-image
-  newName: sales-api
-  newTag: "1.0"
+  - name: metrics-image
+    newName: metrics
+    newTag: "1.0"
+  - name: sales-api-image
+    newName: sales-api
+    newTag: "1.0"
