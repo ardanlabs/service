@@ -229,6 +229,10 @@ dev-apply:
 	kustomize build zarf/k8s/dev/sales | kubectl apply -f -
 	kubectl wait --timeout=120s --namespace=sales-system --for=condition=Available deployment/sales
 
+dev-apply-netmux:
+	kustomize build zarf/k8s/dev/netmux | kubectl apply -f -
+	kubectl wait --timeout=120s --namespace=netmux --for=condition=Available deployment/netmux
+
 dev-restart:
 	kubectl rollout restart deployment sales --namespace=sales-system
 

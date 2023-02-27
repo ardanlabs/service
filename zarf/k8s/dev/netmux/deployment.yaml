@@ -16,7 +16,7 @@ spec:
       hostname: netmux
       containers:
         - name: netmux
-          image: digitalcircle/netmux:amd64
+          image: digitalcircle/netmux:arm64
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
