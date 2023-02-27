@@ -1,0 +1,31 @@
+iface: lo0
+insecureSkipVerify: true
+contexts:
+  - name: ardan-service
+
+    # Point this to where you have exposed the service
+    # It may be a port forward or exposed by an Ingress
+    url: ws://localhost:18081
+    # If this is set as part of the deployment, it will be required here also
+    # refer to: zarf/k8s/dev/netmux/kustomization.yaml, line 4
+    key: This should be a secret matching your deployment!
+    services:
+      # The entry below will create a valid local DNS entry
+      # that will proxy the in cluster DB implementation, allowin local dev
+      # to connect to it without aditional stuff.
+      - name: tcp://postgres-incluster:5432
+        ep: tcp://database-service.sales-system:5432
+      # This entry will allow pods in the cluster to connect to services
+      # locally here.
+      # The idea here is simple, you create a service in the cluster and point
+      # it to any deployment of netmux.
+      # From there you connect your agent, and the tunnel will be created,
+      # Allowing remote cons to touch your local out-of-the-cluster services.
+      # Please refer to zarf/k8s/dev/netmux/sample-outbound-service.yaml
+      # as a sample service we created pointing to netmux
+      # The deployed service should be capable of reaching that service
+      # this network operability and name resolution should be observerd
+      # in case troubleshooting is required.
+      - name: tcp://postgres-outbound:5432
+        ep: tcp://:5432
+        reverse: true

@@ -1,0 +1,28 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: netmux
+  namespace: netmux
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: netmux
+  template:
+    metadata:
+      labels:
+        app: netmux
+    spec:
+      hostname: netmux
+      containers:
+        - name: netmux
+          image: digitalcircle/netmux:amd64
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          env:
+            - name: KEY
+              valueFrom:
+                secretKeyRef:
+                  key: netmux-secret-key
+                  name: netmux-key
