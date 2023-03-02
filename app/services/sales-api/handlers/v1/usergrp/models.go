@@ -11,15 +11,15 @@ import (
 
 // AppUser represents information about an individual user.
 type AppUser struct {
-	ID           string    `json:"id"`
-	Name         string    `json:"name"`
-	Email        string    `json:"email"`
-	Roles        []string  `json:"roles"`
-	PasswordHash []byte    `json:"-"`
-	Department   string    `json:"department"`
-	Enabled      bool      `json:"enabled"`
-	DateCreated  time.Time `json:"dateCreated"`
-	DateUpdated  time.Time `json:"dateUpdated"`
+	ID           string   `json:"id"`
+	Name         string   `json:"name"`
+	Email        string   `json:"email"`
+	Roles        []string `json:"roles"`
+	PasswordHash []byte   `json:"-"`
+	Department   string   `json:"department"`
+	Enabled      bool     `json:"enabled"`
+	DateCreated  string   `json:"dateCreated"`
+	DateUpdated  string   `json:"dateUpdated"`
 }
 
 func toAppUser(core user.User) AppUser {
@@ -36,8 +36,8 @@ func toAppUser(core user.User) AppUser {
 		PasswordHash: core.PasswordHash,
 		Department:   core.Department,
 		Enabled:      core.Enabled,
-		DateCreated:  core.DateCreated,
-		DateUpdated:  core.DateUpdated,
+		DateCreated:  core.DateCreated.Format(time.RFC3339),
+		DateUpdated:  core.DateUpdated.Format(time.RFC3339),
 	}
 }
 
@@ -130,6 +130,7 @@ func toCoreUpdateUser(app AppUpdateUser) (user.UpdateUser, error) {
 		Department:      app.Department,
 		Password:        app.Password,
 		PasswordConfirm: app.PasswordConfirm,
+		Enabled:         app.Enabled,
 	}
 
 	return nu, nil

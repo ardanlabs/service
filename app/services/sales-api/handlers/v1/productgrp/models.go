@@ -11,15 +11,15 @@ import (
 
 // AppProduct represents an individual product.
 type AppProduct struct {
-	ID          string    `json:"id"`
-	Name        string    `json:"name"`
-	Cost        int       `json:"cost"`
-	Quantity    int       `json:"quantity"`
-	Sold        int       `json:"sold"`
-	Revenue     int       `json:"revenue"`
-	UserID      string    `json:"userID"`
-	DateCreated time.Time `json:"dateCreated"`
-	DateUpdated time.Time `json:"dateUpdated"`
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Cost        int    `json:"cost"`
+	Quantity    int    `json:"quantity"`
+	Sold        int    `json:"sold"`
+	Revenue     int    `json:"revenue"`
+	UserID      string `json:"userID"`
+	DateCreated string `json:"dateCreated"`
+	DateUpdated string `json:"dateUpdated"`
 }
 
 func toAppProduct(core product.Product) AppProduct {
@@ -31,8 +31,8 @@ func toAppProduct(core product.Product) AppProduct {
 		Sold:        core.Sold,
 		Revenue:     core.Revenue,
 		UserID:      core.UserID.String(),
-		DateCreated: core.DateCreated,
-		DateUpdated: core.DateUpdated,
+		DateCreated: core.DateCreated.Format(time.RFC3339),
+		DateUpdated: core.DateUpdated.Format(time.RFC3339),
 	}
 }
 
