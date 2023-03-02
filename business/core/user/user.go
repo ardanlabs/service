@@ -15,21 +15,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// DefaultOrderBy represents the default way we sort.
-var DefaultOrderBy = order.NewBy(OrderByID, order.ASC)
-
-// Set of fields that the results can be ordered by. These are the names
-// that should be used by the application layer.
-const (
-	OrderByID      = "userid"
-	OrderByName    = "name"
-	OrderByEmail   = "email"
-	OrderByRoles   = "roles"
-	OrderByEnabled = "enabled"
-)
-
-// =============================================================================
-
 // Set of error variables for CRUD operations.
 var (
 	ErrNotFound              = errors.New("user not found")
