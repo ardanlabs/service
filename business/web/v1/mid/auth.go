@@ -48,7 +48,7 @@ func Authorize(a *auth.Auth, rule string) web.Middleware {
 
 			// I will use an zero valued user id if it doesn't exsit.
 			var userID uuid.UUID
-			id := web.Param(r, "userid")
+			id := web.Param(r, "user_id")
 			if id != "" {
 				var err error
 				userID, err = uuid.Parse(id)

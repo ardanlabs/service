@@ -171,9 +171,9 @@ func (pt *ProductTests) getProduct400(t *testing.T) {
 			t.Logf("\t%s\tTest %d:\tShould receive a status code of 400 for the response.", dbtest.Success, testID)
 
 			got := w.Body.String()
-			exp := `{"error":"data validation error","fields":{"id":"invalid UUID length: 5"}}`
+			exp := `{"error":"data validation error","fields":{"product_id":"invalid UUID length: 5"}}`
 			if got != exp {
-				t.Logf("\t\tTest %d:\tGot : %v", testID, got)
+				t.Logf("\t\tTest %d:\tGot: %v", testID, got)
 				t.Logf("\t\tTest %d:\tExp: %v", testID, exp)
 				t.Fatalf("\t%s\tTest %d:\tShould get the expected result.", dbtest.Failed, testID)
 			}

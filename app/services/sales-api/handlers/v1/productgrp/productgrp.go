@@ -55,9 +55,9 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 		return err
 	}
 
-	id, err := uuid.Parse(web.Param(r, "id"))
+	id, err := uuid.Parse(web.Param(r, "product_id"))
 	if err != nil {
-		return validate.NewFieldsError("id", err)
+		return validate.NewFieldsError("product_id", err)
 	}
 
 	prd, err := h.Product.QueryByID(ctx, id)
@@ -80,9 +80,9 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 
 // Delete removes a product from the system.
 func (h Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	id, err := uuid.Parse(web.Param(r, "id"))
+	id, err := uuid.Parse(web.Param(r, "product_id"))
 	if err != nil {
-		return validate.NewFieldsError("id", err)
+		return validate.NewFieldsError("product_id", err)
 	}
 
 	prd, err := h.Product.QueryByID(ctx, id)
@@ -165,9 +165,9 @@ func (h Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Requ
 
 // QueryByID returns a product by its ID.
 func (h Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	id, err := uuid.Parse(web.Param(r, "id"))
+	id, err := uuid.Parse(web.Param(r, "product_id"))
 	if err != nil {
-		return validate.NewFieldsError("id", err)
+		return validate.NewFieldsError("product_id", err)
 	}
 
 	prd, err := h.Product.QueryByID(ctx, id)

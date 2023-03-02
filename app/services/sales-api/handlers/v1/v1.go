@@ -40,18 +40,18 @@ func Routes(app *web.App, cfg Config) {
 	}
 	app.Handle(http.MethodGet, version, "/users/token/:kid", ugh.Token)
 	app.Handle(http.MethodGet, version, "/users", ugh.Query, authen, ruleAdmin)
-	app.Handle(http.MethodGet, version, "/users/:userid", ugh.QueryByID, authen, ruleAdminOrSubject)
+	app.Handle(http.MethodGet, version, "/users/:user_id", ugh.QueryByID, authen, ruleAdminOrSubject)
 	app.Handle(http.MethodPost, version, "/users", ugh.Create, authen, ruleAdmin)
-	app.Handle(http.MethodPut, version, "/users/:userid", ugh.Update, authen, ruleAdminOrSubject)
-	app.Handle(http.MethodDelete, version, "/users/:userid", ugh.Delete, authen, ruleAdminOrSubject)
+	app.Handle(http.MethodPut, version, "/users/:user_id", ugh.Update, authen, ruleAdminOrSubject)
+	app.Handle(http.MethodDelete, version, "/users/:user_id", ugh.Delete, authen, ruleAdminOrSubject)
 
 	pgh := productgrp.Handlers{
 		Product: product.NewCore(productdb.NewStore(cfg.Log, cfg.DB)),
 		Auth:    cfg.Auth,
 	}
 	app.Handle(http.MethodGet, version, "/products", pgh.Query, authen)
-	app.Handle(http.MethodGet, version, "/products/:id", pgh.QueryByID, authen)
+	app.Handle(http.MethodGet, version, "/products/:product_id", pgh.QueryByID, authen)
 	app.Handle(http.MethodPost, version, "/products", pgh.Create, authen)
-	app.Handle(http.MethodPut, version, "/products/:id", pgh.Update, authen)
-	app.Handle(http.MethodDelete, version, "/products/:id", pgh.Delete, authen)
+	app.Handle(http.MethodPut, version, "/products/:product_id", pgh.Update, authen)
+	app.Handle(http.MethodDelete, version, "/products/:product_id", pgh.Delete, authen)
 }
