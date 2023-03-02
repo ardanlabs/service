@@ -17,6 +17,7 @@ import (
 	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/ardanlabs/service/business/sys/validate"
 	v1Web "github.com/ardanlabs/service/business/web/v1"
+	"github.com/ardanlabs/service/business/web/v1/paging"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/google/uuid"
@@ -703,15 +704,15 @@ func (ut *UserTests) getUsers200(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould receive a status code of 200 for the response.", dbtest.Success, testID)
 
-			var qr v1Web.QueryResponse[usergrp.AppUser]
-			if err := json.Unmarshal(w.Body.Bytes(), &qr); err != nil {
+			var pr paging.Response[usergrp.AppUser]
+			if err := json.Unmarshal(w.Body.Bytes(), &pr); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to unmarshal the response : %s", dbtest.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to unmarshal the response.", dbtest.Success, testID)
 
-			if qr.Total != 2 || qr.Total != len(qr.Items) {
-				t.Log("tot:", qr.Total)
-				t.Log("len:", len(qr.Items))
+			if pr.Total != 2 || pr.Total != len(pr.Items) {
+				t.Log("tot:", pr.Total)
+				t.Log("len:", len(pr.Items))
 				t.Log("exp:", 2)
 				t.Fatalf("\t%s\tTest %d:\tShould get the right number of users.", dbtest.Failed, testID)
 			}

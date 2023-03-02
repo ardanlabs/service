@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/mail"
-	"strconv"
 	"time"
 
 	"github.com/ardanlabs/service/business/core/user"
@@ -15,6 +14,7 @@ import (
 	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/ardanlabs/service/business/web/auth"
 	v1Web "github.com/ardanlabs/service/business/web/v1"
+	"github.com/ardanlabs/service/business/web/v1/paging"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/golang-jwt/jwt/v4"
 )
@@ -103,24 +103,9 @@ func (h Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Req
 
 // Query returns a list of users with paging.
 func (h Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	values := r.URL.Query()
-
-	pageNumber := 1
-	if page := values.Get("page"); page != "" {
-		var err error
-		pageNumber, err = strconv.Atoi(page)
-		if err != nil {
-			return validate.NewFieldsError("page", err)
-		}
-	}
-
-	rowsPerPage := 10
-	if rows := values.Get("rows"); rows != "" {
-		var err error
-		rowsPerPage, err = strconv.Atoi(rows)
-		if err != nil {
-			return validate.NewFieldsError("rows", err)
-		}
+	page, err := paging.ParseRequest(r)
+	if err != nil {
+		return err
 	}
 
 	filter, err := parseFilter(r)
@@ -133,7 +118,7 @@ func (h Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Requ
 		return err
 	}
 
-	users, err := h.User.Query(ctx, filter, orderBy, pageNumber, rowsPerPage)
+	users, err := h.User.Query(ctx, filter, orderBy, page.Number, page.RowsPerPage)
 	if err != nil {
 		return fmt.Errorf("query: %w", err)
 	}
@@ -148,14 +133,7 @@ func (h Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Requ
 		return fmt.Errorf("count: %w", err)
 	}
 
-	qr := v1Web.QueryResponse[AppUser]{
-		Items:       items,
-		Total:       total,
-		Page:        pageNumber,
-		RowsPerPage: rowsPerPage,
-	}
-
-	return web.Respond(ctx, w, qr, http.StatusOK)
+	return web.Respond(ctx, w, paging.NewResponse(items, total, page.Number, page.RowsPerPage), http.StatusOK)
 }
 
 // QueryByID returns a user by its ID.
