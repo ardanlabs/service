@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/core/user"
-	"github.com/ardanlabs/service/business/data/order"
 	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/ardanlabs/service/business/web/auth"
 	v1Web "github.com/ardanlabs/service/business/web/v1"
@@ -113,7 +112,7 @@ func (h Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Requ
 		return err
 	}
 
-	orderBy, err := order.Parse(r, user.DefaultOrderBy)
+	orderBy, err := validateOrder(r)
 	if err != nil {
 		return err
 	}
