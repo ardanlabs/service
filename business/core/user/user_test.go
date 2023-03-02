@@ -194,8 +194,14 @@ func Test_PagingUser(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to retrieve user %q.", dbtest.Success, testID, name)
 
-			if len(users1) != 1 && users1[0].Name == name {
-				t.Fatalf("\t%s\tTest %d:\tShould have a single user for %q : %s.", dbtest.Failed, testID, name, err)
+			n, err := core.Count(ctx, user.QueryFilter{Name: &name})
+			if err != nil {
+				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve user count %q : %s.", dbtest.Failed, testID, name, err)
+			}
+			t.Logf("\t%s\tTest %d:\tShould be able to retrieve user count %q.", dbtest.Success, testID, name)
+
+			if len(users1) != n && users1[0].Name == name {
+				t.Fatalf("\t%s\tTest %d:\tShould have a single user for %q", dbtest.Failed, testID, name)
 			}
 			t.Logf("\t%s\tTest %d:\tShould have a single user.", dbtest.Success, testID)
 
@@ -206,8 +212,14 @@ func Test_PagingUser(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to retrieve users %q.", dbtest.Success, testID, name)
 
-			if len(users2) != 1 && users2[0].Name == name {
-				t.Fatalf("\t%s\tTest %d:\tShould have a single user for %q : %s.", dbtest.Failed, testID, name, err)
+			n, err = core.Count(ctx, user.QueryFilter{Name: &name})
+			if err != nil {
+				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve user count %q : %s.", dbtest.Failed, testID, name, err)
+			}
+			t.Logf("\t%s\tTest %d:\tShould be able to retrieve user count %q.", dbtest.Success, testID, name)
+
+			if len(users2) != n && users2[0].Name == name {
+				t.Fatalf("\t%s\tTest %d:\tShould have a single user for %q.", dbtest.Failed, testID, name)
 			}
 			t.Logf("\t%s\tTest %d:\tShould have a single user.", dbtest.Success, testID)
 
@@ -217,17 +229,23 @@ func Test_PagingUser(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to retrieve 2 users for page 1.", dbtest.Success, testID)
 
-			if len(users3) != 2 {
+			n, err = core.Count(ctx, user.QueryFilter{})
+			if err != nil {
+				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve user count %q : %s.", dbtest.Failed, testID, name, err)
+			}
+			t.Logf("\t%s\tTest %d:\tShould be able to retrieve user count %q.", dbtest.Success, testID, name)
+
+			if len(users3) != n {
 				t.Logf("\t\tTest %d:\tgot: %v", testID, len(users3))
-				t.Logf("\t\tTest %d:\texp: %v", testID, 2)
-				t.Fatalf("\t%s\tTest %d:\tShould have 2 users for page 1 : %s.", dbtest.Failed, testID, err)
+				t.Logf("\t\tTest %d:\texp: %v", testID, n)
+				t.Fatalf("\t%s\tTest %d:\tShould have 2 users for page 1.", dbtest.Failed, testID)
 			}
 			t.Logf("\t%s\tTest %d:\tShould have 2 users for page 1.", dbtest.Success, testID)
 
 			if users3[0].ID == users3[1].ID {
 				t.Logf("\t\tTest %d:\tUser1: %v", testID, users3[0].ID)
 				t.Logf("\t\tTest %d:\tUser2: %v", testID, users3[1].ID)
-				t.Fatalf("\t%s\tTest %d:\tShould have different users : %s.", dbtest.Failed, testID, err)
+				t.Fatalf("\t%s\tTest %d:\tShould have different users.", dbtest.Failed, testID)
 			}
 			t.Logf("\t%s\tTest %d:\tShould have different users.", dbtest.Success, testID)
 		}

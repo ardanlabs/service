@@ -111,39 +111,9 @@ func (s *Store) Delete(ctx context.Context, prd product.Product) error {
 
 // Query gets all Products from the database.
 func (s *Store) Query(ctx context.Context, filter product.QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]product.Product, error) {
-	data := struct {
-		ID          string `db:"product_id"`
-		Name        string `db:"name"`
-		Cost        int    `db:"cost"`
-		Quantity    int    `db:"quantity"`
-		Offset      int    `db:"offset"`
-		RowsPerPage int    `db:"rows_per_page"`
-	}{
-		Offset:      (pageNumber - 1) * rowsPerPage,
-		RowsPerPage: rowsPerPage,
-	}
-
-	orderByClause, err := orderByClause(orderBy)
-	if err != nil {
-		return nil, err
-	}
-
-	var wc []string
-	if filter.ID != nil {
-		data.ID = (*filter.ID).String()
-		wc = append(wc, "product_id = :product_id")
-	}
-	if filter.Name != nil {
-		data.Name = fmt.Sprintf("%%%s%%", *filter.Name)
-		wc = append(wc, "name LIKE :name")
-	}
-	if filter.Cost != nil {
-		data.Cost = *filter.Cost
-		wc = append(wc, "cost = :cost")
-	}
-	if filter.Quantity != nil {
-		data.Quantity = *filter.Quantity
-		wc = append(wc, "quantity = :quantity")
+	data := map[string]interface{}{
+		"offset":        (pageNumber - 1) * rowsPerPage,
+		"rows_per_page": rowsPerPage,
 	}
 
 	const q = `
@@ -154,15 +124,18 @@ func (s *Store) Query(ctx context.Context, filter product.QueryFilter, orderBy o
 	FROM
 		products AS p
 	LEFT JOIN
-		sales AS s ON p.product_id = s.product_id
-	`
-	buf := bytes.NewBufferString(q)
+		sales AS s ON p.product_id = s.product_id`
 
-	if len(wc) > 0 {
-		buf.WriteString("WHERE ")
-		buf.WriteString(strings.Join(wc, " AND "))
-	}
+	buf := bytes.NewBufferString(q)
+	s.applyFilter(filter, data, buf)
+
 	buf.WriteString(" GROUP BY p.product_id ")
+
+	orderByClause, err := orderByClause(orderBy)
+	if err != nil {
+		return nil, err
+	}
+
 	buf.WriteString(orderByClause)
 	buf.WriteString(" OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY")
 
@@ -172,6 +145,31 @@ func (s *Store) Query(ctx context.Context, filter product.QueryFilter, orderBy o
 	}
 
 	return toCoreProductSlice(dbPrds), nil
+}
+
+// Count returns the total number of users in the DB.
+func (s *Store) Count(ctx context.Context, filter product.QueryFilter) (int, error) {
+	data := map[string]interface{}{}
+
+	const q = `
+	SELECT
+		count(1)
+	FROM
+		products AS p`
+
+	buf := bytes.NewBufferString(q)
+	s.applyFilter(filter, data, buf)
+
+	var count struct {
+		Count   int `db:"count"`
+		Sold    int `db:"sold"`
+		Revenue int `db:"revenue"`
+	}
+	if err := database.NamedQueryStruct(ctx, s.log, s.db, buf.String(), data, &count); err != nil {
+		return 0, fmt.Errorf("namedquerystruct: %w", err)
+	}
+
+	return count.Count, nil
 }
 
 // QueryByID finds the product identified by a given ID.
@@ -235,4 +233,35 @@ func (s *Store) QueryByUserID(ctx context.Context, id uuid.UUID) ([]product.Prod
 	}
 
 	return toCoreProductSlice(dbPrds), nil
+}
+
+// =============================================================================
+
+func (s *Store) applyFilter(filter product.QueryFilter, data map[string]interface{}, buf *bytes.Buffer) {
+	var wc []string
+
+	if filter.ID != nil {
+		data["product_id"] = *filter.ID
+		wc = append(wc, "p.product_id = :product_id")
+	}
+
+	if filter.Name != nil {
+		data["name"] = fmt.Sprintf("%%%s%%", *filter.Name)
+		wc = append(wc, "p.name LIKE :name")
+	}
+
+	if filter.Cost != nil {
+		data["cost"] = *filter.Cost
+		wc = append(wc, "p.cost = :cost")
+	}
+
+	if filter.Quantity != nil {
+		data["quantity"] = *filter.Quantity
+		wc = append(wc, "p.quantity = :quantity")
+	}
+
+	if len(wc) > 0 {
+		buf.WriteString(" WHERE ")
+		buf.WriteString(strings.Join(wc, " AND "))
+	}
 }

@@ -5,6 +5,14 @@ import (
 	"errors"
 )
 
+// QueryResponse is what is returned when a query call is performed.
+type QueryResponse[T any] struct {
+	Items       []T `json:"items"`
+	Total       int `json:"total"`
+	Page        int `json:"page"`
+	RowsPerPage int `json:"rowsPerPage"`
+}
+
 // ErrorResponse is the form used for API responses from failures in the API.
 type ErrorResponse struct {
 	Error  string            `json:"error"`

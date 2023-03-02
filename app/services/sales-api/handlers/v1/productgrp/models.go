@@ -36,14 +36,6 @@ func toAppProduct(core product.Product) AppProduct {
 	}
 }
 
-func toAppProducts(cores []product.Product) []AppProduct {
-	apps := make([]AppProduct, len(cores))
-	for i, core := range cores {
-		apps[i] = toAppProduct(core)
-	}
-	return apps
-}
-
 // =============================================================================
 
 // AppNewProduct is what we require from clients when adding a Product.

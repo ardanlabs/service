@@ -41,14 +41,6 @@ func toAppUser(core user.User) AppUser {
 	}
 }
 
-func toAppUsers(cores []user.User) []AppUser {
-	apps := make([]AppUser, len(cores))
-	for i, core := range cores {
-		apps[i] = toAppUser(core)
-	}
-	return apps
-}
-
 // =============================================================================
 
 // AppNewUser contains information needed to create a new user.

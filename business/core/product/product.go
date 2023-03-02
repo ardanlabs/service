@@ -42,6 +42,7 @@ type Storer interface {
 	Update(ctx context.Context, prd Product) error
 	Delete(ctx context.Context, prd Product) error
 	Query(ctx context.Context, filter QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]Product, error)
+	Count(ctx context.Context, filter QueryFilter) (int, error)
 	QueryByID(ctx context.Context, id uuid.UUID) (Product, error)
 	QueryByUserID(ctx context.Context, id uuid.UUID) ([]Product, error)
 }
@@ -120,6 +121,11 @@ func (c *Core) Query(ctx context.Context, filter QueryFilter, orderBy order.By, 
 	}
 
 	return prds, nil
+}
+
+// Count returns the total number of products in the store.
+func (c *Core) Count(ctx context.Context, filter QueryFilter) (int, error) {
+	return c.storer.Count(ctx, filter)
 }
 
 // QueryByID finds the product identified by a given ID.

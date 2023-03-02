@@ -129,7 +129,24 @@ func (h Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Requ
 		return fmt.Errorf("query: %w", err)
 	}
 
-	return web.Respond(ctx, w, toAppUsers(users), http.StatusOK)
+	items := make([]AppUser, len(users))
+	for i, usr := range users {
+		items[i] = toAppUser(usr)
+	}
+
+	total, err := h.User.Count(ctx, filter)
+	if err != nil {
+		return fmt.Errorf("count: %w", err)
+	}
+
+	qr := v1Web.QueryResponse[AppUser]{
+		Items:       items,
+		Total:       total,
+		Page:        pageNumber,
+		RowsPerPage: rowsPerPage,
+	}
+
+	return web.Respond(ctx, w, qr, http.StatusOK)
 }
 
 // QueryByID returns a user by its ID.

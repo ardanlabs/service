@@ -208,10 +208,18 @@ func Test_PagingProduct(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to retrieve products %q.", dbtest.Success, testID, name)
 
-			if len(prd1) != 1 && prd1[0].Name == name {
-				t.Fatalf("\t%s\tTest %d:\tShould have a single products for %q : %s.", dbtest.Failed, testID, name, err)
+			n, err := core.Count(ctx, product.QueryFilter{Name: &name})
+			if err != nil {
+				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve product count %q : %s.", dbtest.Failed, testID, name, err)
 			}
-			t.Logf("\t%s\tTest %d:\tShould have a single products.", dbtest.Success, testID)
+			t.Logf("\t%s\tTest %d:\tShould be able to retrieve product count %q.", dbtest.Success, testID, name)
+
+			if len(prd1) != n && prd1[0].Name == name {
+				t.Log("len:", len(prd1))
+				t.Log("cnt:", n)
+				t.Fatalf("\t%s\tTest %d:\tShould have a single product for %q.", dbtest.Failed, testID, name)
+			}
+			t.Logf("\t%s\tTest %d:\tShould have a single product.", dbtest.Success, testID)
 
 			name = "McDonalds Toys"
 			prd2, err := core.Query(ctx, product.QueryFilter{Name: &name}, core.DefaultOrderBy, 1, 1)
@@ -220,10 +228,18 @@ func Test_PagingProduct(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to retrieve products %q.", dbtest.Success, testID, name)
 
-			if len(prd2) != 1 && prd2[0].Name == name {
-				t.Fatalf("\t%s\tTest %d:\tShould have a single products for %q : %s.", dbtest.Failed, testID, name, err)
+			n, err = core.Count(ctx, product.QueryFilter{Name: &name})
+			if err != nil {
+				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve product count %q : %s.", dbtest.Failed, testID, name, err)
 			}
-			t.Logf("\t%s\tTest %d:\tShould have a single products.", dbtest.Success, testID)
+			t.Logf("\t%s\tTest %d:\tShould be able to retrieve product count %q.", dbtest.Success, testID, name)
+
+			if len(prd2) != n && prd2[0].Name == name {
+				t.Log("len:", len(prd2))
+				t.Log("cnt:", n)
+				t.Fatalf("\t%s\tTest %d:\tShould have a single product for %q.", dbtest.Failed, testID, name)
+			}
+			t.Logf("\t%s\tTest %d:\tShould have a single product.", dbtest.Success, testID)
 
 			prd3, err := core.Query(ctx, product.QueryFilter{}, core.DefaultOrderBy, 1, 2)
 			if err != nil {
@@ -231,17 +247,23 @@ func Test_PagingProduct(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to retrieve 2 products for page 1.", dbtest.Success, testID)
 
-			if len(prd3) != 2 {
+			n, err = core.Count(ctx, product.QueryFilter{})
+			if err != nil {
+				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve product count %q : %s.", dbtest.Failed, testID, name, err)
+			}
+			t.Logf("\t%s\tTest %d:\tShould be able to retrieve product count %q.", dbtest.Success, testID, name)
+
+			if len(prd3) != n {
 				t.Logf("\t\tTest %d:\tgot: %v", testID, len(prd3))
-				t.Logf("\t\tTest %d:\texp: %v", testID, 2)
-				t.Fatalf("\t%s\tTest %d:\tShould have 2 products for page 1 : %s.", dbtest.Failed, testID, err)
+				t.Logf("\t\tTest %d:\texp: %v", testID, n)
+				t.Fatalf("\t%s\tTest %d:\tShould have 2 products for page 1.", dbtest.Failed, testID)
 			}
 			t.Logf("\t%s\tTest %d:\tShould have 2 products for page 1.", dbtest.Success, testID)
 
 			if prd3[0].ID == prd3[1].ID {
 				t.Logf("\t\tTest %d:\tproduct1: %v", testID, prd3[0].ID)
 				t.Logf("\t\tTest %d:\tproduct2: %v", testID, prd3[1].ID)
-				t.Fatalf("\t%s\tTest %d:\tShould have different products : %s.", dbtest.Failed, testID, err)
+				t.Fatalf("\t%s\tTest %d:\tShould have different products.", dbtest.Failed, testID)
 			}
 			t.Logf("\t%s\tTest %d:\tShould have different products.", dbtest.Success, testID)
 		}

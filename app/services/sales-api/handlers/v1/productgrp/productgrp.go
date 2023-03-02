@@ -134,7 +134,24 @@ func (h Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Requ
 		return fmt.Errorf("query: %w", err)
 	}
 
-	return web.Respond(ctx, w, toAppProducts(prds), http.StatusOK)
+	items := make([]AppProduct, len(prds))
+	for i, prd := range prds {
+		items[i] = toAppProduct(prd)
+	}
+
+	total, err := h.Product.Count(ctx, filter)
+	if err != nil {
+		return fmt.Errorf("count: %w", err)
+	}
+
+	qr := v1Web.QueryResponse[AppProduct]{
+		Items:       items,
+		Total:       total,
+		Page:        pageNumber,
+		RowsPerPage: rowsPerPage,
+	}
+
+	return web.Respond(ctx, w, qr, http.StatusOK)
 }
 
 // QueryByID returns a product by its ID.
