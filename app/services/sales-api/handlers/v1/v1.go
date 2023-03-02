@@ -39,7 +39,7 @@ func Routes(app *web.App, cfg Config) {
 		Auth: cfg.Auth,
 	}
 	app.Handle(http.MethodGet, version, "/users/token/:kid", ugh.Token)
-	app.Handle(http.MethodGet, version, "/users/:page/:rows", ugh.Query, authen, ruleAdmin)
+	app.Handle(http.MethodGet, version, "/users", ugh.Query, authen, ruleAdmin)
 	app.Handle(http.MethodGet, version, "/users/:userid", ugh.QueryByID, authen, ruleAdminOrSubject)
 	app.Handle(http.MethodPost, version, "/users", ugh.Create, authen, ruleAdmin)
 	app.Handle(http.MethodPut, version, "/users/:userid", ugh.Update, authen, ruleAdminOrSubject)
@@ -49,7 +49,7 @@ func Routes(app *web.App, cfg Config) {
 		Product: product.NewCore(productdb.NewStore(cfg.Log, cfg.DB)),
 		Auth:    cfg.Auth,
 	}
-	app.Handle(http.MethodGet, version, "/products/:page/:rows", pgh.Query, authen)
+	app.Handle(http.MethodGet, version, "/products", pgh.Query, authen)
 	app.Handle(http.MethodGet, version, "/products/:id", pgh.QueryByID, authen)
 	app.Handle(http.MethodPost, version, "/products", pgh.Create, authen)
 	app.Handle(http.MethodPut, version, "/products/:id", pgh.Update, authen)

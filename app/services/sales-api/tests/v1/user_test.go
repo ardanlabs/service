@@ -687,7 +687,7 @@ func (ut *UserTests) putUser401(t *testing.T, id uuid.UUID) {
 
 // getUsers200 validates a query request.
 func (ut *UserTests) getUsers200(t *testing.T) {
-	r := httptest.NewRequest(http.MethodGet, "/v1/users/1/2", nil)
+	r := httptest.NewRequest(http.MethodGet, "/v1/users?page=1&rows=2", nil)
 	w := httptest.NewRecorder()
 
 	r.Header.Set("Authorization", "Bearer "+ut.adminToken)

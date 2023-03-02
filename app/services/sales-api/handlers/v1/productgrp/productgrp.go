@@ -108,15 +108,24 @@ func (h Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Req
 
 // Query returns a list of products with paging.
 func (h Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	page := web.Param(r, "page")
-	pageNumber, err := strconv.Atoi(page)
-	if err != nil {
-		return validate.NewFieldsError("page", err)
+	values := r.URL.Query()
+
+	pageNumber := 1
+	if page := values.Get("page"); page != "" {
+		var err error
+		pageNumber, err = strconv.Atoi(page)
+		if err != nil {
+			return validate.NewFieldsError("page", err)
+		}
 	}
-	rows := web.Param(r, "rows")
-	rowsPerPage, err := strconv.Atoi(rows)
-	if err != nil {
-		return validate.NewFieldsError("rows", err)
+
+	rowsPerPage := 10
+	if rows := values.Get("rows"); rows != "" {
+		var err error
+		rowsPerPage, err = strconv.Atoi(rows)
+		if err != nil {
+			return validate.NewFieldsError("rows", err)
+		}
 	}
 
 	filter, err := parseFilter(r)

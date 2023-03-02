@@ -445,7 +445,7 @@ func (pt *ProductTests) putProduct200(t *testing.T, id uuid.UUID) {
 
 // getProducts200 validates a query request.
 func (pt *ProductTests) getProducts200(t *testing.T) {
-	r := httptest.NewRequest(http.MethodGet, "/v1/products/1/2", nil)
+	r := httptest.NewRequest(http.MethodGet, "/v1/products?page=1&rows=2", nil)
 	w := httptest.NewRecorder()
 
 	r.Header.Set("Authorization", "Bearer "+pt.userToken)
