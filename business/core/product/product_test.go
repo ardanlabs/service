@@ -10,6 +10,8 @@ import (
 
 	"github.com/ardanlabs/service/business/core/product"
 	"github.com/ardanlabs/service/business/core/product/stores/productdb"
+	"github.com/ardanlabs/service/business/core/user"
+	"github.com/ardanlabs/service/business/core/user/stores/userdb"
 	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/ardanlabs/service/foundation/docker"
 	"github.com/google/go-cmp/cmp"
@@ -40,7 +42,8 @@ func Test_Product(t *testing.T) {
 		teardown()
 	}()
 
-	core := product.NewCore(productdb.NewStore(log, db))
+	usrCore := user.NewCore(userdb.NewStore(log, db))
+	core := product.NewCore(usrCore, productdb.NewStore(log, db))
 
 	t.Log("Given the need to work with Product records.")
 	{
@@ -116,7 +119,7 @@ func Test_Product(t *testing.T) {
 				t.Fatalf("Should have a larger DateUpdated : sav %v, prd %v, dif %v", saved.DateUpdated, saved.DateUpdated, diff)
 			}
 
-			products, err := core.Query(ctx, product.QueryFilter{}, core.DefaultOrderBy, 1, 3)
+			products, err := core.Query(ctx, product.QueryFilter{}, user.DefaultOrderBy, 1, 3)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve updated product : %s.", dbtest.Failed, testID, err)
 			}
@@ -192,7 +195,8 @@ func Test_PagingProduct(t *testing.T) {
 		teardown()
 	}()
 
-	core := product.NewCore(productdb.NewStore(log, db))
+	usrCore := user.NewCore(userdb.NewStore(log, db))
+	core := product.NewCore(usrCore, productdb.NewStore(log, db))
 
 	t.Log("Given the need to page through product records.")
 	{
@@ -202,7 +206,7 @@ func Test_PagingProduct(t *testing.T) {
 			ctx := context.Background()
 
 			name := "Comic Books"
-			prd1, err := core.Query(ctx, product.QueryFilter{Name: &name}, core.DefaultOrderBy, 1, 1)
+			prd1, err := core.Query(ctx, product.QueryFilter{Name: &name}, user.DefaultOrderBy, 1, 1)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve products %q : %s.", dbtest.Failed, testID, name, err)
 			}
@@ -222,7 +226,7 @@ func Test_PagingProduct(t *testing.T) {
 			t.Logf("\t%s\tTest %d:\tShould have a single product.", dbtest.Success, testID)
 
 			name = "McDonalds Toys"
-			prd2, err := core.Query(ctx, product.QueryFilter{Name: &name}, core.DefaultOrderBy, 1, 1)
+			prd2, err := core.Query(ctx, product.QueryFilter{Name: &name}, user.DefaultOrderBy, 1, 1)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve products %q : %s.", dbtest.Failed, testID, name, err)
 			}
@@ -241,7 +245,7 @@ func Test_PagingProduct(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould have a single product.", dbtest.Success, testID)
 
-			prd3, err := core.Query(ctx, product.QueryFilter{}, core.DefaultOrderBy, 1, 2)
+			prd3, err := core.Query(ctx, product.QueryFilter{}, user.DefaultOrderBy, 1, 2)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve 2 products for page 1 : %s.", dbtest.Failed, testID, err)
 			}

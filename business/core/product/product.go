@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/data/order"
 	"github.com/google/uuid"
 )
@@ -32,15 +33,15 @@ type Storer interface {
 
 // Core manages the set of APIs for product access.
 type Core struct {
-	DefaultOrderBy order.By
-	storer         Storer
+	usrCore *user.Core
+	storer  Storer
 }
 
 // NewCore constructs a core for product api access.
-func NewCore(storer Storer) *Core {
+func NewCore(usrCore *user.Core, storer Storer) *Core {
 	return &Core{
-		DefaultOrderBy: order.NewBy(OrderByProdID, order.ASC),
-		storer:         storer,
+		usrCore: usrCore,
+		storer:  storer,
 	}
 }
 

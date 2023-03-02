@@ -30,12 +30,15 @@ type Config struct {
 func Routes(app *web.App, cfg Config) {
 	const version = "v1"
 
+	usrCore := user.NewCore(usercache.NewStore(cfg.Log, userdb.NewStore(cfg.Log, cfg.DB)))
+	prdCore := product.NewCore(usrCore, productdb.NewStore(cfg.Log, cfg.DB))
+
 	authen := mid.Authenticate(cfg.Auth)
 	ruleAdmin := mid.Authorize(cfg.Auth, auth.RuleAdminOnly)
 	ruleAdminOrSubject := mid.Authorize(cfg.Auth, auth.RuleAdminOrSubject)
 
 	ugh := usergrp.Handlers{
-		User: user.NewCore(usercache.NewStore(cfg.Log, userdb.NewStore(cfg.Log, cfg.DB))),
+		User: usrCore,
 		Auth: cfg.Auth,
 	}
 	app.Handle(http.MethodGet, version, "/users/token/:kid", ugh.Token)
@@ -46,7 +49,7 @@ func Routes(app *web.App, cfg Config) {
 	app.Handle(http.MethodDelete, version, "/users/:user_id", ugh.Delete, authen, ruleAdminOrSubject)
 
 	pgh := productgrp.Handlers{
-		Product: product.NewCore(productdb.NewStore(cfg.Log, cfg.DB)),
+		Product: prdCore,
 		Auth:    cfg.Auth,
 	}
 	app.Handle(http.MethodGet, version, "/products", pgh.Query, authen)
