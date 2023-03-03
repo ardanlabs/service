@@ -27,8 +27,8 @@ type Storer interface {
 	Delete(ctx context.Context, prd Product) error
 	Query(ctx context.Context, filter QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]Product, error)
 	Count(ctx context.Context, filter QueryFilter) (int, error)
-	QueryByID(ctx context.Context, id uuid.UUID) (Product, error)
-	QueryByUserID(ctx context.Context, id uuid.UUID) ([]Product, error)
+	QueryByID(ctx context.Context, productID uuid.UUID) (Product, error)
+	QueryByUserID(ctx context.Context, userID uuid.UUID) ([]Product, error)
 }
 
 // Core manages the set of APIs for product access.
@@ -116,7 +116,7 @@ func (c *Core) Count(ctx context.Context, filter QueryFilter) (int, error) {
 func (c *Core) QueryByID(ctx context.Context, productID uuid.UUID) (Product, error) {
 	prd, err := c.storer.QueryByID(ctx, productID)
 	if err != nil {
-		return Product{}, fmt.Errorf("query: %w", err)
+		return Product{}, fmt.Errorf("query: productID[%s]: %w", productID, err)
 	}
 
 	return prd, nil

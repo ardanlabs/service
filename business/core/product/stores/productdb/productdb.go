@@ -173,11 +173,11 @@ func (s *Store) Count(ctx context.Context, filter product.QueryFilter) (int, err
 }
 
 // QueryByID finds the product identified by a given ID.
-func (s *Store) QueryByID(ctx context.Context, id uuid.UUID) (product.Product, error) {
+func (s *Store) QueryByID(ctx context.Context, productID uuid.UUID) (product.Product, error) {
 	data := struct {
 		ID string `db:"product_id"`
 	}{
-		ID: id.String(),
+		ID: productID.String(),
 	}
 
 	const q = `
@@ -206,11 +206,11 @@ func (s *Store) QueryByID(ctx context.Context, id uuid.UUID) (product.Product, e
 }
 
 // QueryByUserID finds the product identified by a given User ID.
-func (s *Store) QueryByUserID(ctx context.Context, id uuid.UUID) ([]product.Product, error) {
+func (s *Store) QueryByUserID(ctx context.Context, userID uuid.UUID) ([]product.Product, error) {
 	data := struct {
 		ID string `db:"user_id"`
 	}{
-		ID: id.String(),
+		ID: userID.String(),
 	}
 
 	const q = `

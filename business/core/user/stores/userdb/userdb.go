@@ -188,11 +188,11 @@ func (s *Store) Count(ctx context.Context, filter user.QueryFilter) (int, error)
 }
 
 // QueryByID gets the specified user from the database.
-func (s *Store) QueryByID(ctx context.Context, id uuid.UUID) (user.User, error) {
+func (s *Store) QueryByID(ctx context.Context, userID uuid.UUID) (user.User, error) {
 	data := struct {
 		ID string `db:"user_id"`
 	}{
-		ID: id.String(),
+		ID: userID.String(),
 	}
 
 	const q = `
