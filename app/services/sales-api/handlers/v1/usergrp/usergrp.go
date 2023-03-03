@@ -54,15 +54,15 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 		return err
 	}
 
-	id := auth.GetUserID(ctx)
+	userID := auth.GetUserID(ctx)
 
-	usr, err := h.User.QueryByID(ctx, id)
+	usr, err := h.User.QueryByID(ctx, userID)
 	if err != nil {
 		switch {
 		case errors.Is(err, user.ErrNotFound):
 			return v1Web.NewRequestError(err, http.StatusNotFound)
 		default:
-			return fmt.Errorf("querybyid: id[%s]: %w", id, err)
+			return fmt.Errorf("querybyid: userID[%s]: %w", userID, err)
 		}
 	}
 
@@ -73,7 +73,7 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 
 	usr, err = h.User.Update(ctx, usr, uu)
 	if err != nil {
-		return fmt.Errorf("update: id[%s] uu[%+v]: %w", id, uu, err)
+		return fmt.Errorf("update: userID[%s] uu[%+v]: %w", userID, uu, err)
 	}
 
 	return web.Respond(ctx, w, usr, http.StatusOK)
@@ -81,20 +81,20 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 
 // Delete removes a user from the system.
 func (h Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	id := auth.GetUserID(ctx)
+	userID := auth.GetUserID(ctx)
 
-	usr, err := h.User.QueryByID(ctx, id)
+	usr, err := h.User.QueryByID(ctx, userID)
 	if err != nil {
 		switch {
 		case errors.Is(err, user.ErrNotFound):
 			return web.Respond(ctx, w, nil, http.StatusNoContent)
 		default:
-			return fmt.Errorf("querybyid: id[%s]: %w", id, err)
+			return fmt.Errorf("querybyid: userID[%s]: %w", userID, err)
 		}
 	}
 
 	if err := h.User.Delete(ctx, usr); err != nil {
-		return fmt.Errorf("delete: id[%s]: %w", id, err)
+		return fmt.Errorf("delete: userID[%s]: %w", userID, err)
 	}
 
 	return web.Respond(ctx, w, nil, http.StatusNoContent)

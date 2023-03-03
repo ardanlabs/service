@@ -54,24 +54,24 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 		return err
 	}
 
-	id, err := uuid.Parse(web.Param(r, "product_id"))
+	productID, err := uuid.Parse(web.Param(r, "product_id"))
 	if err != nil {
 		return validate.NewFieldsError("product_id", err)
 	}
 
-	prd, err := h.Product.QueryByID(ctx, id)
+	prd, err := h.Product.QueryByID(ctx, productID)
 	if err != nil {
 		switch {
 		case errors.Is(err, product.ErrNotFound):
 			return v1Web.NewRequestError(err, http.StatusNotFound)
 		default:
-			return fmt.Errorf("querybyid: id[%s]: %w", id, err)
+			return fmt.Errorf("querybyid: productID[%s]: %w", productID, err)
 		}
 	}
 
 	prd, err = h.Product.Update(ctx, prd, toCoreUpdateProduct(app))
 	if err != nil {
-		return fmt.Errorf("update: id[%s] app[%+v]: %w", id, app, err)
+		return fmt.Errorf("update: productID[%s] app[%+v]: %w", productID, app, err)
 	}
 
 	return web.Respond(ctx, w, prd, http.StatusOK)
@@ -79,12 +79,12 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 
 // Delete removes a product from the system.
 func (h Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	id, err := uuid.Parse(web.Param(r, "product_id"))
+	productID, err := uuid.Parse(web.Param(r, "product_id"))
 	if err != nil {
 		return validate.NewFieldsError("product_id", err)
 	}
 
-	prd, err := h.Product.QueryByID(ctx, id)
+	prd, err := h.Product.QueryByID(ctx, productID)
 	if err != nil {
 		switch {
 		case errors.Is(err, product.ErrNotFound):
@@ -94,12 +94,12 @@ func (h Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Req
 			// this because we are doing the Query for the UserID.
 			return v1Web.NewRequestError(err, http.StatusNoContent)
 		default:
-			return fmt.Errorf("querybyid: id[%s]: %w", id, err)
+			return fmt.Errorf("querybyid: productID[%s]: %w", productID, err)
 		}
 	}
 
 	if err := h.Product.Delete(ctx, prd); err != nil {
-		return fmt.Errorf("delete: id[%s]: %w", id, err)
+		return fmt.Errorf("delete: productID[%s]: %w", productID, err)
 	}
 
 	return web.Respond(ctx, w, nil, http.StatusNoContent)
@@ -142,18 +142,18 @@ func (h Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Requ
 
 // QueryByID returns a product by its ID.
 func (h Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	id, err := uuid.Parse(web.Param(r, "product_id"))
+	productID, err := uuid.Parse(web.Param(r, "product_id"))
 	if err != nil {
 		return validate.NewFieldsError("product_id", err)
 	}
 
-	prd, err := h.Product.QueryByID(ctx, id)
+	prd, err := h.Product.QueryByID(ctx, productID)
 	if err != nil {
 		switch {
 		case errors.Is(err, product.ErrNotFound):
 			return v1Web.NewRequestError(err, http.StatusNotFound)
 		default:
-			return fmt.Errorf("querybyid: id[%s]: %w", id, err)
+			return fmt.Errorf("querybyid: productID[%s]: %w", productID, err)
 		}
 	}
 
