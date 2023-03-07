@@ -28,7 +28,7 @@ type Handlers struct {
 }
 
 // Create adds a new product to the system.
-func (h Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (h *Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app AppNewProduct
 	if err := web.Decode(r, &app); err != nil {
 		return err
@@ -48,7 +48,7 @@ func (h Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Req
 }
 
 // Update updates a product in the system.
-func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (h *Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app AppUpdateProduct
 	if err := web.Decode(r, &app); err != nil {
 		return err
@@ -78,7 +78,7 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 }
 
 // Delete removes a product from the system.
-func (h Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (h *Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	productID, err := uuid.Parse(web.Param(r, "product_id"))
 	if err != nil {
 		return validate.NewFieldsError("product_id", err)
@@ -106,7 +106,7 @@ func (h Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Req
 }
 
 // Query returns a list of products with paging.
-func (h Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (h *Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	page, err := paging.ParseRequest(r)
 	if err != nil {
 		return err
@@ -141,7 +141,7 @@ func (h Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Requ
 }
 
 // QueryByID returns a product by its ID.
-func (h Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (h *Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	productID, err := uuid.Parse(web.Param(r, "product_id"))
 	if err != nil {
 		return validate.NewFieldsError("product_id", err)

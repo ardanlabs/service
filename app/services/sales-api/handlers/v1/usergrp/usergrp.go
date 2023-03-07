@@ -25,7 +25,7 @@ type Handlers struct {
 }
 
 // Create adds a new user to the system.
-func (h Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (h *Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app AppNewUser
 	if err := web.Decode(r, &app); err != nil {
 		return err
@@ -48,7 +48,7 @@ func (h Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Req
 }
 
 // Update updates a user in the system.
-func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (h *Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app AppUpdateUser
 	if err := web.Decode(r, &app); err != nil {
 		return err
@@ -80,7 +80,7 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 }
 
 // Delete removes a user from the system.
-func (h Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (h *Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	userID := auth.GetUserID(ctx)
 
 	usr, err := h.User.QueryByID(ctx, userID)
@@ -101,7 +101,7 @@ func (h Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Req
 }
 
 // Query returns a list of users with paging.
-func (h Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (h *Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	page, err := paging.ParseRequest(r)
 	if err != nil {
 		return err
@@ -136,7 +136,7 @@ func (h Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Requ
 }
 
 // QueryByID returns a user by its ID.
-func (h Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (h *Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	id := auth.GetUserID(ctx)
 
 	usr, err := h.User.QueryByID(ctx, id)
@@ -153,7 +153,7 @@ func (h Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http.
 }
 
 // Token provides an API token for the authenticated user.
-func (h Handlers) Token(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (h *Handlers) Token(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	kid := web.Param(r, "kid")
 	if kid == "" {
 		return validate.NewFieldsError("kid", errors.New("missing kid"))
