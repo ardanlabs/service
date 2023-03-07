@@ -14,11 +14,11 @@ func parseFilter(r *http.Request) (product.QueryFilter, error) {
 
 	var filter product.QueryFilter
 
-	if id, err := uuid.Parse(values.Get("id")); err == nil {
-		filter.ByID(id)
+	if id, err := uuid.Parse(values.Get("user_id")); err == nil {
+		filter.WithProductID(id)
 	}
 
-	if err := filter.ByName(values.Get("name")); err != nil {
+	if err := filter.WithName(values.Get("name")); err != nil {
 		return product.QueryFilter{}, validate.NewFieldsError("name", err)
 	}
 
@@ -29,7 +29,7 @@ func parseFilter(r *http.Request) (product.QueryFilter, error) {
 			return product.QueryFilter{}, validate.NewFieldsError("cost", err)
 		}
 
-		filter.ByCost(int(cst))
+		filter.WithCost(int(cst))
 	}
 
 	quantity := values.Get("quantity")
@@ -39,7 +39,7 @@ func parseFilter(r *http.Request) (product.QueryFilter, error) {
 			return product.QueryFilter{}, validate.NewFieldsError("quantity", err)
 		}
 
-		filter.ByQuantity(int(qua))
+		filter.WithQuantity(int(qua))
 	}
 
 	if err := filter.Validate(); err != nil {

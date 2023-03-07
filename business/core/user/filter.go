@@ -30,16 +30,16 @@ func (qf *QueryFilter) Validate() error {
 	return nil
 }
 
-// ByID sets the ID field of the QueryFilter value.
-func (qf *QueryFilter) ByID(id uuid.UUID) {
+// WithUserID sets the ID field of the QueryFilter value.
+func (qf *QueryFilter) WithUserID(userID uuid.UUID) {
 	var zero uuid.UUID
-	if id != zero {
-		qf.ID = &id
+	if userID != zero {
+		qf.ID = &userID
 	}
 }
 
-// ByName sets the Name field of the QueryFilter value.
-func (qf *QueryFilter) ByName(name string) error {
+// WithName sets the Name field of the QueryFilter value.
+func (qf *QueryFilter) WithName(name string) error {
 	if name != "" {
 		if !sqlInjection.MatchString(name) {
 			return errors.New("invalid name format")
@@ -51,8 +51,8 @@ func (qf *QueryFilter) ByName(name string) error {
 	return nil
 }
 
-// ByEmail sets the Email field of the QueryFilter value.
-func (qf *QueryFilter) ByEmail(email mail.Address) {
+// WithEmail sets the Email field of the QueryFilter value.
+func (qf *QueryFilter) WithEmail(email mail.Address) {
 	var zero mail.Address
 	if email != zero {
 		qf.Email = &email

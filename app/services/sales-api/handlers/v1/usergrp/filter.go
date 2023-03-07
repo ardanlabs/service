@@ -14,16 +14,16 @@ func parseFilter(r *http.Request) (user.QueryFilter, error) {
 
 	var filter user.QueryFilter
 
-	if id, err := uuid.Parse(values.Get("id")); err == nil {
-		filter.ByID(id)
+	if id, err := uuid.Parse(values.Get("product_id")); err == nil {
+		filter.WithUserID(id)
 	}
 
-	if err := filter.ByName(values.Get("name")); err != nil {
+	if err := filter.WithName(values.Get("name")); err != nil {
 		return user.QueryFilter{}, validate.NewFieldsError("name", err)
 	}
 
 	if email, err := mail.ParseAddress(values.Get("email")); err == nil {
-		filter.ByEmail(*email)
+		filter.WithEmail(*email)
 	}
 
 	if err := filter.Validate(); err != nil {

@@ -30,16 +30,16 @@ func (qf *QueryFilter) Validate() error {
 	return nil
 }
 
-// ByID sets the ID field of the QueryFilter value.
-func (qf *QueryFilter) ByID(id uuid.UUID) {
+// WithProductID sets the ID field of the QueryFilter value.
+func (qf *QueryFilter) WithProductID(productID uuid.UUID) {
 	var zero uuid.UUID
-	if id != zero {
-		qf.ID = &id
+	if productID != zero {
+		qf.ID = &productID
 	}
 }
 
-// ByName sets the Name field of the QueryFilter value.
-func (qf *QueryFilter) ByName(name string) error {
+// WithName sets the Name field of the QueryFilter value.
+func (qf *QueryFilter) WithName(name string) error {
 	if name != "" {
 		if !sqlInjection.MatchString(name) {
 			return errors.New("invalid name format")
@@ -51,12 +51,12 @@ func (qf *QueryFilter) ByName(name string) error {
 	return nil
 }
 
-// ByCost sets the Cost field of the QueryFilter value.
-func (qf *QueryFilter) ByCost(cost int) {
+// WithCost sets the Cost field of the QueryFilter value.
+func (qf *QueryFilter) WithCost(cost int) {
 	qf.Cost = &cost
 }
 
-// ByQuantity sets the Quantity field of the QueryFilter value.
-func (qf *QueryFilter) ByQuantity(quantity int) {
+// WithQuantity sets the Quantity field of the QueryFilter value.
+func (qf *QueryFilter) WithQuantity(quantity int) {
 	qf.Quantity = &quantity
 }
