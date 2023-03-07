@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"net/mail"
-	"strings"
 
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/data/order"
@@ -16,25 +15,6 @@ import (
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
 )
-
-var orderByFields = map[string]string{
-	user.OrderByID:      "user_id",
-	user.OrderByName:    "name",
-	user.OrderByEmail:   "email",
-	user.OrderByRoles:   "roles",
-	user.OrderByEnabled: "enabled",
-}
-
-func orderByClause(orderBy order.By) (string, error) {
-	by, exists := orderByFields[orderBy.Field]
-	if !exists {
-		return "", fmt.Errorf("field %q does not exist", orderBy.Field)
-	}
-
-	return " ORDER BY " + by + " " + orderBy.Direction, nil
-}
-
-// =============================================================================
 
 // Store manages the set of APIs for user database access.
 type Store struct {
@@ -239,30 +219,4 @@ func (s *Store) QueryByEmail(ctx context.Context, email mail.Address) (user.User
 	}
 
 	return toCoreUser(dbUsr), nil
-}
-
-// =============================================================================
-
-func (s *Store) applyFilter(filter user.QueryFilter, data map[string]interface{}, buf *bytes.Buffer) {
-	var wc []string
-
-	if filter.ID != nil {
-		data["user_id"] = *filter.ID
-		wc = append(wc, "user_id = :user_id")
-	}
-
-	if filter.Name != nil {
-		data["name"] = fmt.Sprintf("%%%s%%", *filter.Name)
-		wc = append(wc, "name LIKE :name")
-	}
-
-	if filter.Email != nil {
-		data["email"] = (*filter.Email).String()
-		wc = append(wc, "email = :email")
-	}
-
-	if len(wc) > 0 {
-		buf.WriteString(" WHERE ")
-		buf.WriteString(strings.Join(wc, " AND "))
-	}
 }

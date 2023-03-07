@@ -6,7 +6,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/ardanlabs/service/business/core/product"
 	"github.com/ardanlabs/service/business/data/order"
@@ -15,27 +14,6 @@ import (
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
 )
-
-var orderByFields = map[string]string{
-	product.OrderByProdID:   "product_id",
-	product.OrderByName:     "name",
-	product.OrderByCost:     "cost",
-	product.OrderByQuantity: "quantity",
-	product.OrderBySold:     "sold",
-	product.OrderByRevenue:  "revenue",
-	product.OrderByUserID:   "user_id",
-}
-
-func orderByClause(orderBy order.By) (string, error) {
-	by, exists := orderByFields[orderBy.Field]
-	if !exists {
-		return "", fmt.Errorf("field %q does not exist", orderBy.Field)
-	}
-
-	return " ORDER BY " + by + " " + orderBy.Direction, nil
-}
-
-// =============================================================================
 
 // Store manages the set of APIs for product database access.
 type Store struct {
@@ -233,35 +211,4 @@ func (s *Store) QueryByUserID(ctx context.Context, userID uuid.UUID) ([]product.
 	}
 
 	return toCoreProductSlice(dbPrds), nil
-}
-
-// =============================================================================
-
-func (s *Store) applyFilter(filter product.QueryFilter, data map[string]interface{}, buf *bytes.Buffer) {
-	var wc []string
-
-	if filter.ID != nil {
-		data["product_id"] = *filter.ID
-		wc = append(wc, "p.product_id = :product_id")
-	}
-
-	if filter.Name != nil {
-		data["name"] = fmt.Sprintf("%%%s%%", *filter.Name)
-		wc = append(wc, "p.name LIKE :name")
-	}
-
-	if filter.Cost != nil {
-		data["cost"] = *filter.Cost
-		wc = append(wc, "p.cost = :cost")
-	}
-
-	if filter.Quantity != nil {
-		data["quantity"] = *filter.Quantity
-		wc = append(wc, "p.quantity = :quantity")
-	}
-
-	if len(wc) > 0 {
-		buf.WriteString(" WHERE ")
-		buf.WriteString(strings.Join(wc, " AND "))
-	}
 }
