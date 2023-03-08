@@ -26,6 +26,11 @@ func (s *Store) applyFilter(filter user.QueryFilter, data map[string]interface{}
 		wc = append(wc, "email = :email")
 	}
 
+	if filter.DateCreated != nil {
+		data["date_created"] = *filter.DateCreated
+		wc = append(wc, "date_created = :date_created")
+	}
+
 	if len(wc) > 0 {
 		buf.WriteString(" WHERE ")
 		buf.WriteString(strings.Join(wc, " AND "))

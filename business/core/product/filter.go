@@ -1,18 +1,11 @@
 package product
 
 import (
-	"errors"
 	"fmt"
-	"regexp"
 
 	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/google/uuid"
 )
-
-// Used to check for sql injection problems.
-var sqlInjection = regexp.MustCompile("^[A-Za-z0-9_]+$")
-
-// =============================================================================
 
 // QueryFilter holds the available fields a query can be filtered on.
 type QueryFilter struct {
@@ -32,23 +25,14 @@ func (qf *QueryFilter) Validate() error {
 
 // WithProductID sets the ID field of the QueryFilter value.
 func (qf *QueryFilter) WithProductID(productID uuid.UUID) {
-	var zero uuid.UUID
-	if productID != zero {
-		qf.ID = &productID
-	}
+	qf.ID = &productID
 }
 
 // WithName sets the Name field of the QueryFilter value.
-func (qf *QueryFilter) WithName(name string) error {
+func (qf *QueryFilter) WithName(name string) {
 	if name != "" {
-		if !sqlInjection.MatchString(name) {
-			return errors.New("invalid name format")
-		}
-
 		qf.Name = &name
 	}
-
-	return nil
 }
 
 // WithCost sets the Cost field of the QueryFilter value.

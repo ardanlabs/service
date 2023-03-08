@@ -14,33 +14,31 @@ func parseFilter(r *http.Request) (product.QueryFilter, error) {
 
 	var filter product.QueryFilter
 
-	if id, err := uuid.Parse(values.Get("user_id")); err == nil {
+	if productID := values.Get("product_id"); productID != "" {
+		id, err := uuid.Parse(productID)
+		if err != nil {
+			return product.QueryFilter{}, validate.NewFieldsError("product_id", err)
+		}
 		filter.WithProductID(id)
 	}
 
-	if err := filter.WithName(values.Get("name")); err != nil {
-		return product.QueryFilter{}, validate.NewFieldsError("name", err)
-	}
-
-	cost := values.Get("cost")
-	if cost != "" {
+	if cost := values.Get("cost"); cost != "" {
 		cst, err := strconv.ParseInt(cost, 10, 64)
 		if err != nil {
 			return product.QueryFilter{}, validate.NewFieldsError("cost", err)
 		}
-
 		filter.WithCost(int(cst))
 	}
 
-	quantity := values.Get("quantity")
-	if quantity != "" {
+	if quantity := values.Get("quantity"); quantity != "" {
 		qua, err := strconv.ParseInt(quantity, 10, 64)
 		if err != nil {
 			return product.QueryFilter{}, validate.NewFieldsError("quantity", err)
 		}
-
 		filter.WithQuantity(int(qua))
 	}
+
+	filter.WithName(values.Get("name"))
 
 	if err := filter.Validate(); err != nil {
 		return product.QueryFilter{}, err
