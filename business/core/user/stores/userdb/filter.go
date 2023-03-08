@@ -26,9 +26,14 @@ func (s *Store) applyFilter(filter user.QueryFilter, data map[string]interface{}
 		wc = append(wc, "email = :email")
 	}
 
-	if filter.DateCreated != nil {
-		data["date_created"] = *filter.DateCreated
-		wc = append(wc, "date_created = :date_created")
+	if filter.StartCreatedDate != nil {
+		data["start_date_created"] = *filter.StartCreatedDate
+		wc = append(wc, "date_created >= :start_date_created")
+	}
+
+	if filter.EndCreatedDate != nil {
+		data["end_date_created"] = *filter.EndCreatedDate
+		wc = append(wc, "date_created <= :end_date_created")
 	}
 
 	if len(wc) > 0 {

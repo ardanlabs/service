@@ -11,10 +11,11 @@ import (
 
 // QueryFilter holds the available fields a query can be filtered on.
 type QueryFilter struct {
-	ID          *uuid.UUID    `validate:"omitempty,uuid4"`
-	Name        *string       `validate:"omitempty,min=3"`
-	Email       *mail.Address `validate:"omitempty,email"`
-	DateCreated *time.Time
+	ID               *uuid.UUID    `validate:"omitempty,uuid4"`
+	Name             *string       `validate:"omitempty,min=3"`
+	Email            *mail.Address `validate:"omitempty,email"`
+	StartCreatedDate *time.Time    `validate:"omitempty"`
+	EndCreatedDate   *time.Time    `validate:"omitempty"`
 }
 
 // Validate checks the data in the model is considered clean.
@@ -42,8 +43,14 @@ func (qf *QueryFilter) WithEmail(email mail.Address) {
 	qf.Email = &email
 }
 
-// WithDateCreated sets the DateCreated field of the QueryFilter value.
-func (qf *QueryFilter) WithDateCreated(dateCreated time.Time) {
-	d := dateCreated.UTC()
-	qf.DateCreated = &d
+// WithStartDateCreated sets the DateCreated field of the QueryFilter value.
+func (qf *QueryFilter) WithStartDateCreated(startDate time.Time) {
+	d := startDate.UTC()
+	qf.StartCreatedDate = &d
+}
+
+// WithEndCreatedDate sets the DateCreated field of the QueryFilter value.
+func (qf *QueryFilter) WithEndCreatedDate(endDate time.Time) {
+	d := endDate.UTC()
+	qf.EndCreatedDate = &d
 }

@@ -31,12 +31,20 @@ func parseFilter(r *http.Request) (user.QueryFilter, error) {
 		filter.WithEmail(*addr)
 	}
 
-	if createdDate := values.Get("created_date"); createdDate != "" {
+	if createdDate := values.Get("start_created_date"); createdDate != "" {
 		t, err := time.Parse(time.RFC3339, createdDate)
 		if err != nil {
-			return user.QueryFilter{}, validate.NewFieldsError("created_date", err)
+			return user.QueryFilter{}, validate.NewFieldsError("start_created_date", err)
 		}
-		filter.WithDateCreated(t)
+		filter.WithStartDateCreated(t)
+	}
+
+	if createdDate := values.Get("end_created_date"); createdDate != "" {
+		t, err := time.Parse(time.RFC3339, createdDate)
+		if err != nil {
+			return user.QueryFilter{}, validate.NewFieldsError("end_created_date", err)
+		}
+		filter.WithEndCreatedDate(t)
 	}
 
 	filter.WithName(values.Get("name"))
