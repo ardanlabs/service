@@ -31,7 +31,7 @@ import (
 
 /*
 	Need to figure out timeouts for http service.
-	Look at pgx for database access and query execution.
+	Add Category field and type to product.
 */
 
 var build = "develop"
