@@ -6,22 +6,22 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/core/user"
+	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/google/uuid"
-	"github.com/lib/pq"
 )
 
 // dbUser represent the structure we need for moving data
 // between the app and the database.
 type dbUser struct {
-	ID           uuid.UUID      `db:"user_id"`
-	Name         string         `db:"name"`
-	Email        string         `db:"email"`
-	Roles        pq.StringArray `db:"roles"`
-	PasswordHash []byte         `db:"password_hash"`
-	Enabled      bool           `db:"enabled"`
-	Department   sql.NullString `db:"department"`
-	DateCreated  time.Time      `db:"date_created"`
-	DateUpdated  time.Time      `db:"date_updated"`
+	ID           uuid.UUID            `db:"user_id"`
+	Name         string               `db:"name"`
+	Email        string               `db:"email"`
+	Roles        database.StringArray `db:"roles"`
+	PasswordHash []byte               `db:"password_hash"`
+	Enabled      bool                 `db:"enabled"`
+	Department   sql.NullString       `db:"department"`
+	DateCreated  time.Time            `db:"date_created"`
+	DateUpdated  time.Time            `db:"date_updated"`
 }
 
 func toDBUser(usr user.User) dbUser {

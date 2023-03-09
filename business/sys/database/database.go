@@ -11,14 +11,13 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/foundation/web"
+	"github.com/jackc/pgx/v5/pgconn"
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
-	"github.com/lib/pq" // Calls init function.
 	"go.opentelemetry.io/otel/attribute"
 	"go.uber.org/zap"
 )
 
-// lib/pq errorCodeNames
-// https://github.com/lib/pq/blob/master/error.go#L178
 const (
 	uniqueViolation = "23505"
 	undefinedTable  = "42P01"
@@ -65,7 +64,7 @@ func Open(cfg Config) (*sqlx.DB, error) {
 		RawQuery: q.Encode(),
 	}
 
-	db, err := sqlx.Open("postgres", u.String())
+	db, err := sqlx.Open("pgx", u.String())
 	if err != nil {
 		return nil, err
 	}
@@ -130,7 +129,7 @@ func WithinTran(ctx context.Context, log *zap.SugaredLogger, db *sqlx.DB, fn fun
 	}()
 
 	if err := fn(tx); err != nil {
-		if pqerr, ok := err.(*pq.Error); ok && pqerr.Code == uniqueViolation {
+		if pqerr, ok := err.(*pgconn.PgError); ok && pqerr.Code == uniqueViolation {
 			return ErrDBDuplicatedEntry
 		}
 		return fmt.Errorf("exec tran: %w", err)
@@ -165,7 +164,7 @@ func NamedExecContext(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtCo
 	defer span.End()
 
 	if _, err := sqlx.NamedExecContext(ctx, db, query, data); err != nil {
-		if pqerr, ok := err.(*pq.Error); ok {
+		if pqerr, ok := err.(*pgconn.PgError); ok {
 			switch pqerr.Code {
 			case undefinedTable:
 				return ErrUndefinedTable
@@ -232,7 +231,7 @@ func namedQuerySlice[T any](ctx context.Context, log *zap.SugaredLogger, db sqlx
 	}
 
 	if err != nil {
-		if pqerr, ok := err.(*pq.Error); ok && pqerr.Code == undefinedTable {
+		if pqerr, ok := err.(*pgconn.PgError); ok && pqerr.Code == undefinedTable {
 			return ErrUndefinedTable
 		}
 		return err
@@ -304,7 +303,7 @@ func namedQueryStruct(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtCo
 	}
 
 	if err != nil {
-		if pqerr, ok := err.(*pq.Error); ok && pqerr.Code == undefinedTable {
+		if pqerr, ok := err.(*pgconn.PgError); ok && pqerr.Code == undefinedTable {
 			return ErrUndefinedTable
 		}
 		return err
