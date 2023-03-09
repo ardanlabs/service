@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/core/user"
-	"github.com/ardanlabs/service/business/sys/database/array"
+	"github.com/ardanlabs/service/business/sys/database/dbarray"
 	"github.com/google/uuid"
 )
 
@@ -16,7 +16,7 @@ type dbUser struct {
 	ID           uuid.UUID      `db:"user_id"`
 	Name         string         `db:"name"`
 	Email        string         `db:"email"`
-	Roles        array.String   `db:"roles"`
+	Roles        dbarray.String `db:"roles"`
 	PasswordHash []byte         `db:"password_hash"`
 	Enabled      bool           `db:"enabled"`
 	Department   sql.NullString `db:"department"`
