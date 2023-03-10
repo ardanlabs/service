@@ -112,7 +112,7 @@ func (h *Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Req
 		return err
 	}
 
-	orderBy, err := validateOrder(r)
+	orderBy, err := parseOrder(r)
 	if err != nil {
 		return err
 	}
