@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/data/dbmigrate"
-	"github.com/ardanlabs/service/business/sys/database"
+	database "github.com/ardanlabs/service/business/sys/database/pgx"
 )
 
 // Seed loads test data into the database.

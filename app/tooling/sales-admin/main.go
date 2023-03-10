@@ -8,7 +8,7 @@ import (
 
 	"github.com/ardanlabs/conf/v3"
 	"github.com/ardanlabs/service/app/tooling/sales-admin/commands"
-	"github.com/ardanlabs/service/business/sys/database"
+	database "github.com/ardanlabs/service/business/sys/database/pgx"
 	"github.com/ardanlabs/service/foundation/vault"
 	"github.com/google/uuid"
 	"go.uber.org/zap"

@@ -93,6 +93,9 @@ github.com/jmoiron/sqlx/reflectx
 github.com/leodido/go-urn
 # github.com/lib/pq v1.10.7
 ## explicit; go 1.13
+github.com/lib/pq
+github.com/lib/pq/oid
+github.com/lib/pq/scram
 # github.com/open-policy-agent/opa v0.49.2
 ## explicit; go 1.18
 github.com/open-policy-agent/opa/ast
