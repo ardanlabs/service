@@ -34,7 +34,12 @@ func TestMain(m *testing.M) {
 }
 
 func Test_Product(t *testing.T) {
-	log, db, teardown := dbtest.NewUnit(t, c, "testuser")
+	t.Run("crud", crud)
+	t.Run("paging", paging)
+}
+
+func crud(t *testing.T) {
+	log, db, teardown := dbtest.NewUnit(t, c, "db1")
 	defer func() {
 		if r := recover(); r != nil {
 			t.Log(r)
@@ -46,20 +51,6 @@ func Test_Product(t *testing.T) {
 	usrCore := user.NewCore(usercache.NewStore(log, userdb.NewStore(log, db)))
 	prdCore := product.NewCore(usrCore, productdb.NewStore(log, db))
 
-	tests := productTests{
-		prdCore: prdCore,
-	}
-
-	t.Run("productCrud", tests.productCrud)
-	t.Run("productPaging", tests.productPaging)
-}
-
-// productTests holds methods for each user subtest.
-type productTests struct {
-	prdCore *product.Core
-}
-
-func (tt *productTests) productCrud(t *testing.T) {
 	t.Log("Given the need to work with Product records.")
 	{
 		testID := 0
@@ -74,13 +65,13 @@ func (tt *productTests) productCrud(t *testing.T) {
 				UserID:   uuid.MustParse("5cf37266-3473-4006-984f-9325122678b7"),
 			}
 
-			prd, err := tt.prdCore.Create(ctx, np)
+			prd, err := prdCore.Create(ctx, np)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to create a product : %s.", dbtest.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to create a product.", dbtest.Success, testID)
 
-			saved, err := tt.prdCore.QueryByID(ctx, prd.ID)
+			saved, err := prdCore.QueryByID(ctx, prd.ID)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve product by ID: %s.", dbtest.Failed, testID, err)
 			}
@@ -118,12 +109,12 @@ func (tt *productTests) productCrud(t *testing.T) {
 				Quantity: dbtest.IntPointer(40),
 			}
 
-			if _, err := tt.prdCore.Update(ctx, saved, upd); err != nil {
+			if _, err := prdCore.Update(ctx, saved, upd); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to update product : %s.", dbtest.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to update product.", dbtest.Success, testID)
 
-			saved, err = tt.prdCore.QueryByID(ctx, prd.ID)
+			saved, err = prdCore.QueryByID(ctx, prd.ID)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve updated product : %s.", dbtest.Failed, testID, err)
 			}
@@ -134,7 +125,7 @@ func (tt *productTests) productCrud(t *testing.T) {
 				t.Fatalf("Should have a larger DateUpdated : sav %v, prd %v, dif %v", saved.DateUpdated, saved.DateUpdated, diff)
 			}
 
-			products, err := tt.prdCore.Query(ctx, product.QueryFilter{}, user.DefaultOrderBy, 1, 3)
+			products, err := prdCore.Query(ctx, product.QueryFilter{}, user.DefaultOrderBy, 1, 3)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve updated product : %s.", dbtest.Failed, testID, err)
 			}
@@ -164,12 +155,12 @@ func (tt *productTests) productCrud(t *testing.T) {
 				Name: dbtest.StringPointer("Graphic Novels"),
 			}
 
-			if _, err := tt.prdCore.Update(ctx, saved, upd); err != nil {
+			if _, err := prdCore.Update(ctx, saved, upd); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to update just some fields of product : %s.", dbtest.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to update just some fields of product.", dbtest.Success, testID)
 
-			saved, err = tt.prdCore.QueryByID(ctx, prd.ID)
+			saved, err = prdCore.QueryByID(ctx, prd.ID)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve updated product : %s.", dbtest.Failed, testID, err)
 			}
@@ -186,12 +177,12 @@ func (tt *productTests) productCrud(t *testing.T) {
 				t.Logf("\t%s\tTest %d:\tShould be able to see updated Name field.", dbtest.Success, testID)
 			}
 
-			if err := tt.prdCore.Delete(ctx, saved); err != nil {
+			if err := prdCore.Delete(ctx, saved); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to delete product : %s.", dbtest.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to delete product.", dbtest.Success, testID)
 
-			_, err = tt.prdCore.QueryByID(ctx, prd.ID)
+			_, err = prdCore.QueryByID(ctx, prd.ID)
 			if !errors.Is(err, product.ErrNotFound) {
 				t.Fatalf("\t%s\tTest %d:\tShould NOT be able to retrieve deleted product : %s.", dbtest.Failed, testID, err)
 			}
@@ -200,7 +191,19 @@ func (tt *productTests) productCrud(t *testing.T) {
 	}
 }
 
-func (tt *productTests) productPaging(t *testing.T) {
+func paging(t *testing.T) {
+	log, db, teardown := dbtest.NewUnit(t, c, "db2")
+	defer func() {
+		if r := recover(); r != nil {
+			t.Log(r)
+			t.Error(string(debug.Stack()))
+		}
+		teardown()
+	}()
+
+	usrCore := user.NewCore(usercache.NewStore(log, userdb.NewStore(log, db)))
+	prdCore := product.NewCore(usrCore, productdb.NewStore(log, db))
+
 	t.Log("Given the need to page through product records.")
 	{
 		testID := 0
@@ -209,13 +212,13 @@ func (tt *productTests) productPaging(t *testing.T) {
 			ctx := context.Background()
 
 			name := "Comic Books"
-			prd1, err := tt.prdCore.Query(ctx, product.QueryFilter{Name: &name}, user.DefaultOrderBy, 1, 1)
+			prd1, err := prdCore.Query(ctx, product.QueryFilter{Name: &name}, user.DefaultOrderBy, 1, 1)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve products %q : %s.", dbtest.Failed, testID, name, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to retrieve products %q.", dbtest.Success, testID, name)
 
-			n, err := tt.prdCore.Count(ctx, product.QueryFilter{Name: &name})
+			n, err := prdCore.Count(ctx, product.QueryFilter{Name: &name})
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve product count %q : %s.", dbtest.Failed, testID, name, err)
 			}
@@ -229,13 +232,13 @@ func (tt *productTests) productPaging(t *testing.T) {
 			t.Logf("\t%s\tTest %d:\tShould have a single product.", dbtest.Success, testID)
 
 			name = "McDonalds Toys"
-			prd2, err := tt.prdCore.Query(ctx, product.QueryFilter{Name: &name}, user.DefaultOrderBy, 1, 1)
+			prd2, err := prdCore.Query(ctx, product.QueryFilter{Name: &name}, user.DefaultOrderBy, 1, 1)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve products %q : %s.", dbtest.Failed, testID, name, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to retrieve products %q.", dbtest.Success, testID, name)
 
-			n, err = tt.prdCore.Count(ctx, product.QueryFilter{Name: &name})
+			n, err = prdCore.Count(ctx, product.QueryFilter{Name: &name})
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve product count %q : %s.", dbtest.Failed, testID, name, err)
 			}
@@ -248,13 +251,13 @@ func (tt *productTests) productPaging(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould have a single product.", dbtest.Success, testID)
 
-			prd3, err := tt.prdCore.Query(ctx, product.QueryFilter{}, user.DefaultOrderBy, 1, 2)
+			prd3, err := prdCore.Query(ctx, product.QueryFilter{}, user.DefaultOrderBy, 1, 2)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve 2 products for page 1 : %s.", dbtest.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to retrieve 2 products for page 1.", dbtest.Success, testID)
 
-			n, err = tt.prdCore.Count(ctx, product.QueryFilter{})
+			n, err = prdCore.Count(ctx, product.QueryFilter{})
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve product count %q : %s.", dbtest.Failed, testID, name, err)
 			}
