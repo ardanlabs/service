@@ -222,16 +222,12 @@ dev-up-local:
 # here), start.
 uname_m := $(shell uname -m)
 dev-up-nx: #dev-up-local
-	cp ./zarf/netmux/config.yaml ~/.netmux.yaml
-	nx config set ~/.netmux.yaml
-	nx ctx install ardan-service $(uname_m)
-	sleep 60 # lets give sometime for the deployment to take place
-             # this will be improved in later versions
-	nx ctx login ardan-service -u nx -p nx # the password can be changed,
+	sudo nx agent autoinstall --ns=default --ctx=default --arch=""
+
+	nx ctx login default -u nx -p nx -on # the password can be changed,
                                            # keeps a token so login is not
                                            # required all the times.
-	nx ctx on ardan-service
-	nx status
+
 dev-up-tp: dev-up-local
 	telepresence --context=kind-$(KIND_CLUSTER) helm install
 	telepresence --context=kind-$(KIND_CLUSTER) connect
