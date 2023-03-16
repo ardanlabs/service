@@ -7,14 +7,13 @@ import (
 	"fmt"
 	"net/http"
 	"net/mail"
-	"strconv"
 	"time"
 
 	"github.com/ardanlabs/service/business/core/user"
-	"github.com/ardanlabs/service/business/data/order"
 	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/ardanlabs/service/business/web/auth"
 	v1Web "github.com/ardanlabs/service/business/web/v1"
+	"github.com/ardanlabs/service/business/web/v1/paging"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/golang-jwt/jwt/v4"
 )
@@ -26,7 +25,7 @@ type Handlers struct {
 }
 
 // Create adds a new user to the system.
-func (h Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (h *Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app AppNewUser
 	if err := web.Decode(r, &app); err != nil {
 		return err
@@ -49,21 +48,21 @@ func (h Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Req
 }
 
 // Update updates a user in the system.
-func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (h *Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app AppUpdateUser
 	if err := web.Decode(r, &app); err != nil {
 		return err
 	}
 
-	id := auth.GetUserID(ctx)
+	userID := auth.GetUserID(ctx)
 
-	usr, err := h.User.QueryByID(ctx, id)
+	usr, err := h.User.QueryByID(ctx, userID)
 	if err != nil {
 		switch {
 		case errors.Is(err, user.ErrNotFound):
 			return v1Web.NewRequestError(err, http.StatusNotFound)
 		default:
-			return fmt.Errorf("querybyid: id[%s]: %w", id, err)
+			return fmt.Errorf("querybyid: userID[%s]: %w", userID, err)
 		}
 	}
 
@@ -74,44 +73,38 @@ func (h Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Req
 
 	usr, err = h.User.Update(ctx, usr, uu)
 	if err != nil {
-		return fmt.Errorf("update: id[%s] uu[%+v]: %w", id, uu, err)
+		return fmt.Errorf("update: userID[%s] uu[%+v]: %w", userID, uu, err)
 	}
 
 	return web.Respond(ctx, w, usr, http.StatusOK)
 }
 
 // Delete removes a user from the system.
-func (h Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	id := auth.GetUserID(ctx)
+func (h *Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	userID := auth.GetUserID(ctx)
 
-	usr, err := h.User.QueryByID(ctx, id)
+	usr, err := h.User.QueryByID(ctx, userID)
 	if err != nil {
 		switch {
 		case errors.Is(err, user.ErrNotFound):
 			return web.Respond(ctx, w, nil, http.StatusNoContent)
 		default:
-			return fmt.Errorf("querybyid: id[%s]: %w", id, err)
+			return fmt.Errorf("querybyid: userID[%s]: %w", userID, err)
 		}
 	}
 
 	if err := h.User.Delete(ctx, usr); err != nil {
-		return fmt.Errorf("delete: id[%s]: %w", id, err)
+		return fmt.Errorf("delete: userID[%s]: %w", userID, err)
 	}
 
 	return web.Respond(ctx, w, nil, http.StatusNoContent)
 }
 
 // Query returns a list of users with paging.
-func (h Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	page := web.Param(r, "page")
-	pageNumber, err := strconv.Atoi(page)
+func (h *Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	page, err := paging.ParseRequest(r)
 	if err != nil {
-		return validate.NewFieldsError("page", err)
-	}
-	rows := web.Param(r, "rows")
-	rowsPerPage, err := strconv.Atoi(rows)
-	if err != nil {
-		return validate.NewFieldsError("rows", err)
+		return err
 	}
 
 	filter, err := parseFilter(r)
@@ -119,21 +112,31 @@ func (h Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Requ
 		return err
 	}
 
-	orderBy, err := order.Parse(r, user.DefaultOrderBy)
+	orderBy, err := parseOrder(r)
 	if err != nil {
 		return err
 	}
 
-	users, err := h.User.Query(ctx, filter, orderBy, pageNumber, rowsPerPage)
+	users, err := h.User.Query(ctx, filter, orderBy, page.Number, page.RowsPerPage)
 	if err != nil {
 		return fmt.Errorf("query: %w", err)
 	}
 
-	return web.Respond(ctx, w, toAppUsers(users), http.StatusOK)
+	items := make([]AppUser, len(users))
+	for i, usr := range users {
+		items[i] = toAppUser(usr)
+	}
+
+	total, err := h.User.Count(ctx, filter)
+	if err != nil {
+		return fmt.Errorf("count: %w", err)
+	}
+
+	return web.Respond(ctx, w, paging.NewResponse(items, total, page.Number, page.RowsPerPage), http.StatusOK)
 }
 
 // QueryByID returns a user by its ID.
-func (h Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (h *Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	id := auth.GetUserID(ctx)
 
 	usr, err := h.User.QueryByID(ctx, id)
@@ -150,7 +153,7 @@ func (h Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http.
 }
 
 // Token provides an API token for the authenticated user.
-func (h Handlers) Token(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (h *Handlers) Token(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	kid := web.Param(r, "kid")
 	if kid == "" {
 		return validate.NewFieldsError("kid", errors.New("missing kid"))

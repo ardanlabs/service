@@ -10,10 +10,12 @@ import (
 	"testing"
 
 	"github.com/ardanlabs/service/app/services/sales-api/handlers"
+	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/productgrp"
 	"github.com/ardanlabs/service/business/core/product"
 	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/ardanlabs/service/business/sys/validate"
 	v1Web "github.com/ardanlabs/service/business/web/v1"
+	"github.com/ardanlabs/service/business/web/v1/paging"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/google/uuid"
@@ -62,6 +64,7 @@ func Test_Products(t *testing.T) {
 	t.Run("deleteProductNotFound", tests.deleteProductNotFound)
 	t.Run("putProduct404", tests.putProduct404)
 	t.Run("crudProducts", tests.crudProduct)
+	t.Run("getProducts200", tests.getProducts200)
 }
 
 // postProduct400 validates a product can't be created with the endpoint
@@ -169,9 +172,9 @@ func (pt *ProductTests) getProduct400(t *testing.T) {
 			t.Logf("\t%s\tTest %d:\tShould receive a status code of 400 for the response.", dbtest.Success, testID)
 
 			got := w.Body.String()
-			exp := `{"error":"data validation error","fields":{"id":"invalid UUID length: 5"}}`
+			exp := `{"error":"data validation error","fields":{"product_id":"invalid UUID length: 5"}}`
 			if got != exp {
-				t.Logf("\t\tTest %d:\tGot : %v", testID, got)
+				t.Logf("\t\tTest %d:\tGot: %v", testID, got)
 				t.Logf("\t\tTest %d:\tExp: %v", testID, exp)
 				t.Fatalf("\t%s\tTest %d:\tShould get the expected result.", dbtest.Failed, testID)
 			}
@@ -437,6 +440,41 @@ func (pt *ProductTests) putProduct200(t *testing.T, id uuid.UUID) {
 				t.Fatalf("\t%s\tTest %d:\tShould see an updated Name : got %q want %q", dbtest.Failed, testID, ru.Name, "Graphic Novels")
 			}
 			t.Logf("\t%s\tTest %d:\tShould see an updated Name.", dbtest.Success, testID)
+		}
+	}
+}
+
+// getProducts200 validates a query request.
+func (pt *ProductTests) getProducts200(t *testing.T) {
+	r := httptest.NewRequest(http.MethodGet, "/v1/products?page=1&rows=2", nil)
+	w := httptest.NewRecorder()
+
+	r.Header.Set("Authorization", "Bearer "+pt.userToken)
+	pt.app.ServeHTTP(w, r)
+
+	t.Log("Given the need to validate getting products.")
+	{
+		testID := 0
+		t.Logf("\tTest %d:\tWhen querying users", testID)
+		{
+			if w.Code != http.StatusOK {
+				t.Fatalf("\t%s\tTest %d:\tShould receive a status code of 200 for the response : %v", dbtest.Failed, testID, w.Code)
+			}
+			t.Logf("\t%s\tTest %d:\tShould receive a status code of 200 for the response.", dbtest.Success, testID)
+
+			var pr paging.Response[productgrp.AppProduct]
+			if err := json.Unmarshal(w.Body.Bytes(), &pr); err != nil {
+				t.Fatalf("\t%s\tTest %d:\tShould be able to unmarshal the response : %s", dbtest.Failed, testID, err)
+			}
+			t.Logf("\t%s\tTest %d:\tShould be able to unmarshal the response.", dbtest.Success, testID)
+
+			if pr.Total != 2 || pr.Total != len(pr.Items) {
+				t.Log("tot:", pr.Total)
+				t.Log("len:", len(pr.Items))
+				t.Log("exp:", 2)
+				t.Fatalf("\t%s\tTest %d:\tShould get the right number of products.", dbtest.Failed, testID)
+			}
+			t.Logf("\t%s\tTest %d:\tShould get the right number of products.", dbtest.Success, testID)
 		}
 	}
 }

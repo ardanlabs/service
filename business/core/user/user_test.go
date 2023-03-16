@@ -32,7 +32,12 @@ func TestMain(m *testing.M) {
 }
 
 func Test_User(t *testing.T) {
-	log, db, teardown := dbtest.NewUnit(t, c, "testuser")
+	t.Run("crud", crud)
+	t.Run("paging", paging)
+}
+
+func crud(t *testing.T) {
+	log, db, teardown := dbtest.NewUnit(t, c, "db1")
 	defer func() {
 		if r := recover(); r != nil {
 			t.Log(r)
@@ -41,7 +46,7 @@ func Test_User(t *testing.T) {
 		teardown()
 	}()
 
-	core := user.NewCore(usercache.NewStore(log, userdb.NewStore(log, db)))
+	usrCore := user.NewCore(usercache.NewStore(log, userdb.NewStore(log, db)))
 
 	t.Log("Given the need to work with User records.")
 	{
@@ -64,13 +69,13 @@ func Test_User(t *testing.T) {
 				PasswordConfirm: "gophers",
 			}
 
-			usr, err := core.Create(ctx, nu)
+			usr, err := usrCore.Create(ctx, nu)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to create user : %s.", dbtest.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to create user.", dbtest.Success, testID)
 
-			saved, err := core.QueryByID(ctx, usr.ID)
+			saved, err := usrCore.QueryByID(ctx, usr.ID)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve user by ID: %s.", dbtest.Failed, testID, err)
 			}
@@ -114,12 +119,12 @@ func Test_User(t *testing.T) {
 				Department: dbtest.StringPointer("development"),
 			}
 
-			if _, err := core.Update(ctx, saved, upd); err != nil {
+			if _, err := usrCore.Update(ctx, saved, upd); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to update user : %s.", dbtest.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to update user.", dbtest.Success, testID)
 
-			saved, err = core.QueryByEmail(ctx, *upd.Email)
+			saved, err = usrCore.QueryByEmail(ctx, *upd.Email)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve user by Email : %s.", dbtest.Failed, testID, err)
 			}
@@ -154,12 +159,12 @@ func Test_User(t *testing.T) {
 				t.Logf("\t%s\tTest %d:\tShould be able to see updates to Department.", dbtest.Success, testID)
 			}
 
-			if err := core.Delete(ctx, saved); err != nil {
+			if err := usrCore.Delete(ctx, saved); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to delete user : %s.", dbtest.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to delete user.", dbtest.Success, testID)
 
-			_, err = core.QueryByID(ctx, saved.ID)
+			_, err = usrCore.QueryByID(ctx, saved.ID)
 			if !errors.Is(err, user.ErrNotFound) {
 				t.Fatalf("\t%s\tTest %d:\tShould NOT be able to retrieve user : %s.", dbtest.Failed, testID, err)
 			}
@@ -168,8 +173,8 @@ func Test_User(t *testing.T) {
 	}
 }
 
-func Test_PagingUser(t *testing.T) {
-	log, db, teardown := dbtest.NewUnit(t, c, "testpaging")
+func paging(t *testing.T) {
+	log, db, teardown := dbtest.NewUnit(t, c, "db2")
 	defer func() {
 		if r := recover(); r != nil {
 			t.Log(r)
@@ -178,7 +183,7 @@ func Test_PagingUser(t *testing.T) {
 		teardown()
 	}()
 
-	core := user.NewCore(userdb.NewStore(log, db))
+	usrCore := user.NewCore(usercache.NewStore(log, userdb.NewStore(log, db)))
 
 	t.Log("Given the need to page through User records.")
 	{
@@ -188,46 +193,64 @@ func Test_PagingUser(t *testing.T) {
 			ctx := context.Background()
 
 			name := "User Gopher"
-			users1, err := core.Query(ctx, user.QueryFilter{Name: &name}, user.DefaultOrderBy, 1, 1)
+			users1, err := usrCore.Query(ctx, user.QueryFilter{Name: &name}, user.DefaultOrderBy, 1, 1)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve user %q : %s.", dbtest.Failed, testID, name, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to retrieve user %q.", dbtest.Success, testID, name)
 
-			if len(users1) != 1 && users1[0].Name == name {
-				t.Fatalf("\t%s\tTest %d:\tShould have a single user for %q : %s.", dbtest.Failed, testID, name, err)
+			n, err := usrCore.Count(ctx, user.QueryFilter{Name: &name})
+			if err != nil {
+				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve user count %q : %s.", dbtest.Failed, testID, name, err)
+			}
+			t.Logf("\t%s\tTest %d:\tShould be able to retrieve user count %q.", dbtest.Success, testID, name)
+
+			if len(users1) != n && users1[0].Name == name {
+				t.Fatalf("\t%s\tTest %d:\tShould have a single user for %q", dbtest.Failed, testID, name)
 			}
 			t.Logf("\t%s\tTest %d:\tShould have a single user.", dbtest.Success, testID)
 
 			name = "Admin Gopher"
-			users2, err := core.Query(ctx, user.QueryFilter{Name: &name}, user.DefaultOrderBy, 1, 1)
+			users2, err := usrCore.Query(ctx, user.QueryFilter{Name: &name}, user.DefaultOrderBy, 1, 1)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve user %q : %s.", dbtest.Failed, testID, name, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to retrieve users %q.", dbtest.Success, testID, name)
 
-			if len(users2) != 1 && users2[0].Name == name {
-				t.Fatalf("\t%s\tTest %d:\tShould have a single user for %q : %s.", dbtest.Failed, testID, name, err)
+			n, err = usrCore.Count(ctx, user.QueryFilter{Name: &name})
+			if err != nil {
+				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve user count %q : %s.", dbtest.Failed, testID, name, err)
+			}
+			t.Logf("\t%s\tTest %d:\tShould be able to retrieve user count %q.", dbtest.Success, testID, name)
+
+			if len(users2) != n && users2[0].Name == name {
+				t.Fatalf("\t%s\tTest %d:\tShould have a single user for %q.", dbtest.Failed, testID, name)
 			}
 			t.Logf("\t%s\tTest %d:\tShould have a single user.", dbtest.Success, testID)
 
-			users3, err := core.Query(ctx, user.QueryFilter{}, user.DefaultOrderBy, 1, 2)
+			users3, err := usrCore.Query(ctx, user.QueryFilter{}, user.DefaultOrderBy, 1, 2)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve 2 users for page 1 : %s.", dbtest.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to retrieve 2 users for page 1.", dbtest.Success, testID)
 
-			if len(users3) != 2 {
+			n, err = usrCore.Count(ctx, user.QueryFilter{})
+			if err != nil {
+				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve user count %q : %s.", dbtest.Failed, testID, name, err)
+			}
+			t.Logf("\t%s\tTest %d:\tShould be able to retrieve user count %q.", dbtest.Success, testID, name)
+
+			if len(users3) != n {
 				t.Logf("\t\tTest %d:\tgot: %v", testID, len(users3))
-				t.Logf("\t\tTest %d:\texp: %v", testID, 2)
-				t.Fatalf("\t%s\tTest %d:\tShould have 2 users for page 1 : %s.", dbtest.Failed, testID, err)
+				t.Logf("\t\tTest %d:\texp: %v", testID, n)
+				t.Fatalf("\t%s\tTest %d:\tShould have 2 users for page 1.", dbtest.Failed, testID)
 			}
 			t.Logf("\t%s\tTest %d:\tShould have 2 users for page 1.", dbtest.Success, testID)
 
 			if users3[0].ID == users3[1].ID {
 				t.Logf("\t\tTest %d:\tUser1: %v", testID, users3[0].ID)
 				t.Logf("\t\tTest %d:\tUser2: %v", testID, users3[1].ID)
-				t.Fatalf("\t%s\tTest %d:\tShould have different users : %s.", dbtest.Failed, testID, err)
+				t.Fatalf("\t%s\tTest %d:\tShould have different users.", dbtest.Failed, testID)
 			}
 			t.Logf("\t%s\tTest %d:\tShould have different users.", dbtest.Success, testID)
 		}

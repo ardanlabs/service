@@ -7,7 +7,7 @@ import (
 
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/core/user/stores/userdb"
-	"github.com/ardanlabs/service/business/sys/database"
+	database "github.com/ardanlabs/service/business/sys/database/pgx"
 	"github.com/ardanlabs/service/business/web/auth"
 	"github.com/ardanlabs/service/foundation/vault"
 	"github.com/golang-jwt/jwt/v4"

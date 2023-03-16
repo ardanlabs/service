@@ -17,6 +17,7 @@ import (
 	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/ardanlabs/service/business/sys/validate"
 	v1Web "github.com/ardanlabs/service/business/web/v1"
+	"github.com/ardanlabs/service/business/web/v1/paging"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/google/uuid"
@@ -66,6 +67,7 @@ func Test_Users(t *testing.T) {
 	t.Run("deleteUserNotFound", tests.deleteUserNotFound)
 	t.Run("putUser404", tests.putUser404)
 	t.Run("crudUsers", tests.crudUser)
+	t.Run("getUsers200", tests.getUsers200)
 }
 
 // getToken401 ensures an unknown user can't generate a token.
@@ -680,6 +682,41 @@ func (ut *UserTests) putUser401(t *testing.T, id uuid.UUID) {
 				t.Fatalf("\t%s\tTest %d:\tShould receive a status code of 401 for the response : %v", dbtest.Failed, testID, w.Code)
 			}
 			t.Logf("\t%s\tTest %d:\tShould receive a status code of 401 for the response.", dbtest.Success, testID)
+		}
+	}
+}
+
+// getUsers200 validates a query request.
+func (ut *UserTests) getUsers200(t *testing.T) {
+	r := httptest.NewRequest(http.MethodGet, "/v1/users?page=1&rows=2", nil)
+	w := httptest.NewRecorder()
+
+	r.Header.Set("Authorization", "Bearer "+ut.adminToken)
+	ut.app.ServeHTTP(w, r)
+
+	t.Log("Given the need to validate getting users.")
+	{
+		testID := 0
+		t.Logf("\tTest %d:\tWhen querying users", testID)
+		{
+			if w.Code != http.StatusOK {
+				t.Fatalf("\t%s\tTest %d:\tShould receive a status code of 200 for the response : %v", dbtest.Failed, testID, w.Code)
+			}
+			t.Logf("\t%s\tTest %d:\tShould receive a status code of 200 for the response.", dbtest.Success, testID)
+
+			var pr paging.Response[usergrp.AppUser]
+			if err := json.Unmarshal(w.Body.Bytes(), &pr); err != nil {
+				t.Fatalf("\t%s\tTest %d:\tShould be able to unmarshal the response : %s", dbtest.Failed, testID, err)
+			}
+			t.Logf("\t%s\tTest %d:\tShould be able to unmarshal the response.", dbtest.Success, testID)
+
+			if pr.Total != 2 || pr.Total != len(pr.Items) {
+				t.Log("tot:", pr.Total)
+				t.Log("len:", len(pr.Items))
+				t.Log("exp:", 2)
+				t.Fatalf("\t%s\tTest %d:\tShould get the right number of users.", dbtest.Failed, testID)
+			}
+			t.Logf("\t%s\tTest %d:\tShould get the right number of users.", dbtest.Success, testID)
 		}
 	}
 }

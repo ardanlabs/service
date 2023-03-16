@@ -25,7 +25,7 @@ func Test_Vault(t *testing.T) {
 	const token = "mytoken"
 	const mountPath = "secret"
 	const key = "54bb2165-71e1-41a6-af3e-7da4a0e1e2c1"
-	const image = "hashicorp/vault:1.12"
+	const image = "hashicorp/vault:1.13"
 	const port = "8200"
 
 	args := []string{"-e", "VAULT_DEV_ROOT_TOKEN_ID=" + token, "-e", "VAULT_DEV_LISTEN_ADDRESS=" + address}

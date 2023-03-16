@@ -14,7 +14,7 @@ import (
 
 	"github.com/ardanlabs/conf/v3"
 	"github.com/ardanlabs/service/app/services/sales-api/handlers"
-	"github.com/ardanlabs/service/business/sys/database"
+	database "github.com/ardanlabs/service/business/sys/database/pgx"
 	"github.com/ardanlabs/service/business/web/auth"
 	"github.com/ardanlabs/service/business/web/v1/debug"
 	"github.com/ardanlabs/service/foundation/logger"
@@ -31,7 +31,7 @@ import (
 
 /*
 	Need to figure out timeouts for http service.
-	Look at pgx for database access and query execution.
+	Add Category field and type to product.
 */
 
 var build = "develop"

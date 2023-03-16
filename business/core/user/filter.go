@@ -1,25 +1,21 @@
 package user
 
 import (
-	"errors"
 	"fmt"
 	"net/mail"
-	"regexp"
+	"time"
 
 	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/google/uuid"
 )
 
-// Used to check for sql injection problems.
-var sqlInjection = regexp.MustCompile("^[A-Za-z0-9_]+$")
-
-// =============================================================================
-
 // QueryFilter holds the available fields a query can be filtered on.
 type QueryFilter struct {
-	ID    *uuid.UUID    `validate:"omitempty,uuid4"`
-	Name  *string       `validate:"omitempty,min=3"`
-	Email *mail.Address `validate:"omitempty,email"`
+	ID               *uuid.UUID    `validate:"omitempty,uuid4"`
+	Name             *string       `validate:"omitempty,min=3"`
+	Email            *mail.Address `validate:"omitempty,email"`
+	StartCreatedDate *time.Time    `validate:"omitempty"`
+	EndCreatedDate   *time.Time    `validate:"omitempty"`
 }
 
 // Validate checks the data in the model is considered clean.
@@ -30,31 +26,31 @@ func (qf *QueryFilter) Validate() error {
 	return nil
 }
 
-// ByID sets the ID field of the QueryFilter value.
-func (qf *QueryFilter) ByID(id uuid.UUID) {
-	var zero uuid.UUID
-	if id != zero {
-		qf.ID = &id
-	}
+// WithUserID sets the ID field of the QueryFilter value.
+func (qf *QueryFilter) WithUserID(userID uuid.UUID) {
+	qf.ID = &userID
 }
 
-// ByName sets the Name field of the QueryFilter value.
-func (qf *QueryFilter) ByName(name string) error {
+// WithName sets the Name field of the QueryFilter value.
+func (qf *QueryFilter) WithName(name string) {
 	if name != "" {
-		if !sqlInjection.MatchString(name) {
-			return errors.New("invalid name format")
-		}
-
 		qf.Name = &name
 	}
-
-	return nil
 }
 
-// ByEmail sets the Email field of the QueryFilter value.
-func (qf *QueryFilter) ByEmail(email mail.Address) {
-	var zero mail.Address
-	if email != zero {
-		qf.Email = &email
-	}
+// WithEmail sets the Email field of the QueryFilter value.
+func (qf *QueryFilter) WithEmail(email mail.Address) {
+	qf.Email = &email
+}
+
+// WithStartDateCreated sets the DateCreated field of the QueryFilter value.
+func (qf *QueryFilter) WithStartDateCreated(startDate time.Time) {
+	d := startDate.UTC()
+	qf.StartCreatedDate = &d
+}
+
+// WithEndCreatedDate sets the DateCreated field of the QueryFilter value.
+func (qf *QueryFilter) WithEndCreatedDate(endDate time.Time) {
+	d := endDate.UTC()
+	qf.EndCreatedDate = &d
 }

@@ -7,34 +7,14 @@ import (
 	"errors"
 	"fmt"
 	"net/mail"
-	"strings"
 
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/data/order"
-	"github.com/ardanlabs/service/business/sys/database"
+	database "github.com/ardanlabs/service/business/sys/database/pgx"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
 )
-
-var orderByFields = map[string]string{
-	user.OrderByID:      "user_id",
-	user.OrderByName:    "name",
-	user.OrderByEmail:   "email",
-	user.OrderByRoles:   "roles",
-	user.OrderByEnabled: "enabled",
-}
-
-func orderByClause(orderBy order.By) (string, error) {
-	by, exists := orderByFields[orderBy.Field]
-	if !exists {
-		return "", fmt.Errorf("field %q does not exist", orderBy.Field)
-	}
-
-	return " ORDER BY " + by + " " + orderBy.Direction, nil
-}
-
-// =============================================================================
 
 // Store manages the set of APIs for user database access.
 type Store struct {
@@ -134,34 +114,9 @@ func (s *Store) Delete(ctx context.Context, usr user.User) error {
 
 // Query retrieves a list of existing users from the database.
 func (s *Store) Query(ctx context.Context, filter user.QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]user.User, error) {
-	data := struct {
-		ID          string `db:"user_id"`
-		Name        string `db:"name"`
-		Email       string `db:"email"`
-		Offset      int    `db:"offset"`
-		RowsPerPage int    `db:"rows_per_page"`
-	}{
-		Offset:      (pageNumber - 1) * rowsPerPage,
-		RowsPerPage: rowsPerPage,
-	}
-
-	orderByClause, err := orderByClause(orderBy)
-	if err != nil {
-		return nil, err
-	}
-
-	var wc []string
-	if filter.ID != nil {
-		data.ID = (*filter.ID).String()
-		wc = append(wc, "user_id = :user_id")
-	}
-	if filter.Name != nil {
-		data.Name = fmt.Sprintf("%%%s%%", *filter.Name)
-		wc = append(wc, "name LIKE :name")
-	}
-	if filter.Email != nil {
-		data.Email = (*filter.Email).String()
-		wc = append(wc, "email = :email")
+	data := map[string]interface{}{
+		"offset":        (pageNumber - 1) * rowsPerPage,
+		"rows_per_page": rowsPerPage,
 	}
 
 	const q = `
@@ -171,11 +126,13 @@ func (s *Store) Query(ctx context.Context, filter user.QueryFilter, orderBy orde
 		users
 	`
 	buf := bytes.NewBufferString(q)
+	s.applyFilter(filter, data, buf)
 
-	if len(wc) > 0 {
-		buf.WriteString("WHERE ")
-		buf.WriteString(strings.Join(wc, " AND "))
+	orderByClause, err := orderByClause(orderBy)
+	if err != nil {
+		return nil, err
 	}
+
 	buf.WriteString(orderByClause)
 	buf.WriteString(" OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY")
 
@@ -187,12 +144,35 @@ func (s *Store) Query(ctx context.Context, filter user.QueryFilter, orderBy orde
 	return toCoreUserSlice(dbUsrs), nil
 }
 
+// Count returns the total number of users in the DB.
+func (s *Store) Count(ctx context.Context, filter user.QueryFilter) (int, error) {
+	data := map[string]interface{}{}
+
+	const q = `
+	SELECT
+		count(1)
+	FROM
+		users`
+
+	buf := bytes.NewBufferString(q)
+	s.applyFilter(filter, data, buf)
+
+	var count struct {
+		Count int `db:"count"`
+	}
+	if err := database.NamedQueryStruct(ctx, s.log, s.db, buf.String(), data, &count); err != nil {
+		return 0, fmt.Errorf("namedquerystruct: %w", err)
+	}
+
+	return count.Count, nil
+}
+
 // QueryByID gets the specified user from the database.
-func (s *Store) QueryByID(ctx context.Context, id uuid.UUID) (user.User, error) {
+func (s *Store) QueryByID(ctx context.Context, userID uuid.UUID) (user.User, error) {
 	data := struct {
 		ID string `db:"user_id"`
 	}{
-		ID: id.String(),
+		ID: userID.String(),
 	}
 
 	const q = `

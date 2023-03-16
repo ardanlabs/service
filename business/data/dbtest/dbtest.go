@@ -12,7 +12,7 @@ import (
 
 	"github.com/ardanlabs/service/business/core/user/stores/userdb"
 	"github.com/ardanlabs/service/business/data/dbmigrate"
-	"github.com/ardanlabs/service/business/sys/database"
+	database "github.com/ardanlabs/service/business/sys/database/pgx"
 	"github.com/ardanlabs/service/business/web/auth"
 	"github.com/ardanlabs/service/foundation/docker"
 	"github.com/golang-jwt/jwt/v4"

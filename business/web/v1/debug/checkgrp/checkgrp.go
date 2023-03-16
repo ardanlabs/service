@@ -8,7 +8,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/ardanlabs/service/business/sys/database"
+	database "github.com/ardanlabs/service/business/sys/database/pgx"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
 )

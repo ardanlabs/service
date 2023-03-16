@@ -72,6 +72,11 @@ func (s *Store) Query(ctx context.Context, filter user.QueryFilter, orderBy orde
 	return s.storer.Query(ctx, filter, orderBy, pageNumber, rowsPerPage)
 }
 
+// Count returns the total number of cards in the DB.
+func (s *Store) Count(ctx context.Context, filter user.QueryFilter) (int, error) {
+	return s.storer.Count(ctx, filter)
+}
+
 // QueryByID gets the specified user from the database.
 func (s *Store) QueryByID(ctx context.Context, userID uuid.UUID) (user.User, error) {
 	cachedUsr, ok := s.readCache(userID.String())

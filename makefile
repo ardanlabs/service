@@ -143,8 +143,8 @@ GOLANG       := golang:1.20
 ALPINE       := alpine:3.17
 KIND         := kindest/node:v1.25.3
 POSTGRES     := postgres:15-alpine
-VAULT        := hashicorp/vault:1.12
-ZIPKIN       := openzipkin/zipkin:2.23
+VAULT        := hashicorp/vault:1.13
+ZIPKIN       := openzipkin/zipkin:2.24
 TELEPRESENCE := docker.io/datawire/tel2:2.11.0
 
 dev-brew-common:
@@ -409,16 +409,16 @@ test-token:
 # export TOKEN="COPY TOKEN STRING FROM LAST CALL"
 
 test-users-local:
-	curl -il -H "Authorization: Bearer ${TOKEN}" http://localhost:3000/v1/users/1/2
+	curl -il -H "Authorization: Bearer ${TOKEN}" http://localhost:3000/v1/users?page=1&rows=2
 
 test-users:
-	curl -il -H "Authorization: Bearer ${TOKEN}" http://sales-service.sales-system.svc.cluster.local:3000/v1/users/1/2
+	curl -il -H "Authorization: Bearer ${TOKEN}" http://sales-service.sales-system.svc.cluster.local:3000/v1/users?page=1&rows=2
 
 test-load-local:
-	hey -m GET -c 100 -n 10000 -H "Authorization: Bearer ${TOKEN}" http://localhost:3000/v1/users/1/2
+	hey -m GET -c 100 -n 10000 -H "Authorization: Bearer ${TOKEN}" http://localhost:3000/v1/users?page=1&rows=2
 
 test-load:
-	hey -m GET -c 100 -n 10000 -H "Authorization: Bearer ${TOKEN}" http://sales-service.sales-system.svc.cluster.local:3000/v1/users/1/2
+	hey -m GET -c 100 -n 10000 -H "Authorization: Bearer ${TOKEN}" http://sales-service.sales-system.svc.cluster.local:3000/v1/users?page=1&rows=2
 
 # ==============================================================================
 # Modules support

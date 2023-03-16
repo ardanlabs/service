@@ -9,26 +9,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/data/order"
 	"github.com/google/uuid"
 )
-
-// DefaultOrderBy represents the default way we sort.
-var DefaultOrderBy = order.NewBy(OrderByProdID, order.ASC)
-
-// Set of fields that the results can be ordered by. These are the names
-// that should be used by the application layer.
-const (
-	OrderByProdID   = "productid"
-	OrderByName     = "name"
-	OrderByCost     = "cost"
-	OrderByQuantity = "quantity"
-	OrderBySold     = "sold"
-	OrderByRevenue  = "revenue"
-	OrderByUserID   = "userid"
-)
-
-// =============================================================================
 
 // Set of error variables for CRUD operations.
 var (
@@ -42,21 +26,22 @@ type Storer interface {
 	Update(ctx context.Context, prd Product) error
 	Delete(ctx context.Context, prd Product) error
 	Query(ctx context.Context, filter QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]Product, error)
-	QueryByID(ctx context.Context, id uuid.UUID) (Product, error)
-	QueryByUserID(ctx context.Context, id uuid.UUID) ([]Product, error)
+	Count(ctx context.Context, filter QueryFilter) (int, error)
+	QueryByID(ctx context.Context, productID uuid.UUID) (Product, error)
+	QueryByUserID(ctx context.Context, userID uuid.UUID) ([]Product, error)
 }
 
 // Core manages the set of APIs for product access.
 type Core struct {
-	DefaultOrderBy order.By
-	storer         Storer
+	usrCore *user.Core
+	storer  Storer
 }
 
 // NewCore constructs a core for product api access.
-func NewCore(storer Storer) *Core {
+func NewCore(usrCore *user.Core, storer Storer) *Core {
 	return &Core{
-		DefaultOrderBy: order.NewBy(OrderByProdID, order.ASC),
-		storer:         storer,
+		usrCore: usrCore,
+		storer:  storer,
 	}
 }
 
@@ -122,11 +107,16 @@ func (c *Core) Query(ctx context.Context, filter QueryFilter, orderBy order.By, 
 	return prds, nil
 }
 
+// Count returns the total number of products in the store.
+func (c *Core) Count(ctx context.Context, filter QueryFilter) (int, error) {
+	return c.storer.Count(ctx, filter)
+}
+
 // QueryByID finds the product identified by a given ID.
 func (c *Core) QueryByID(ctx context.Context, productID uuid.UUID) (Product, error) {
 	prd, err := c.storer.QueryByID(ctx, productID)
 	if err != nil {
-		return Product{}, fmt.Errorf("query: %w", err)
+		return Product{}, fmt.Errorf("query: productID[%s]: %w", productID, err)
 	}
 
 	return prd, nil
