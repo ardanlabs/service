@@ -61,9 +61,29 @@ SHELL := /bin/bash
 # ==============================================================================
 # Starting The Project
 #
-#	If you want to use telepresence (recommended):
-#	$ make dev-up
-#	$ make dev-update-apply 
+#	If you want to use netmux:
+#
+#	Download the binary from here: #Note to Bill: will be improved later using brew, etc.
+#
+#   https://drive.google.com/drive/folders/11Lbbv2R2Rda52pi3PaePWNS0KOwJq4ej?usp=share_link
+#
+#   Once downloaded, run sudo nx agent install and it will be running on your
+#   machine from /usr/local/bin/nx. A daemon will be installed as well
+#
+#
+#	Please make sure you got the right os and architecture version.
+#
+#	Once installed:
+#	$ make dev-up-nx
+#
+#   ==================
+#
+#	If you want to use telepresence (plan B, in case you dont like Netmux - but
+#                                    it works in all platforms):
+#	$ make dev-up-tp
+#	$ make dev-update-apply
+#
+#   ==================
 #
 #	If telepresence is not working for you:
 #	$ make dev-up-local
@@ -197,7 +217,22 @@ dev-up-local:
 	kind load docker-image $(VAULT) --name $(KIND_CLUSTER)
 	kind load docker-image $(ZIPKIN) --name $(KIND_CLUSTER)
 
-dev-up: dev-up-local
+# NOTE TO BILL: please note we have more lines here but we are not using helm.
+# There lines are covering install, login (important we use users and passwords
+# here), start.
+uname_m := $(shell uname -m)
+dev-up-nx: #dev-up-local
+	cp ./zarf/netmux/config.yaml ~/.netmux.yaml
+	nx config set ~/.netmux.yaml
+	nx ctx install ardan-service $(uname_m)
+	sleep 60 # lets give sometime for the deployment to take place
+             # this will be improved in later versions
+	nx ctx login ardan-service -u nx -p nx # the password can be changed,
+                                           # keeps a token so login is not
+                                           # required all the times.
+	nx ctx on ardan-service
+	nx status
+dev-up-tp: dev-up-local
 	telepresence --context=kind-$(KIND_CLUSTER) helm install
 	telepresence --context=kind-$(KIND_CLUSTER) connect
 

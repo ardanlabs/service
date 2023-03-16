@@ -8,6 +8,12 @@ kind: Deployment
 metadata:
   name: zipkin
   namespace: sales-system
+  annotations:
+    nx: |-
+      - name: zipkin-service
+        remoteAddr: zipkin-service.sales-system
+        localAddr: zipkin-service
+        auto: true
 spec:
   selector:
     matchLabels:

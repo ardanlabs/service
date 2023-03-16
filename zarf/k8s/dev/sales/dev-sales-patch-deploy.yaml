@@ -3,6 +3,11 @@ kind: Deployment
 metadata:
   name: sales
   namespace: sales-system
+  annotations:
+    nx: |-
+      - name: sales-service
+        remoteAddr: sales-service.sales-system
+        localAddr: sales-service
 
 spec:
   selector:
@@ -24,20 +29,20 @@ spec:
       hostNetwork: true
 
       containers:
-      - name: sales-api
-        resources:
-          limits:
-            cpu: "2000m" # Up to 2 full cores
-          requests:
-            cpu: "1000m" # Use 1 full cores
+        - name: sales-api
+          resources:
+            limits:
+              cpu: "2000m" # Up to 2 full cores
+            requests:
+              cpu: "1000m" # Use 1 full cores
 
-        volumeMounts:
-          - name: vault
-            mountPath: /vault
+          volumeMounts:
+            - name: vault
+              mountPath: /vault
 
-      - name: metrics
-        resources:
-          limits:
-            cpu: "500m" # Up to 1/2 full core
-          requests:
-            cpu: "250m" # Use 1/4 full core
+        - name: metrics
+          resources:
+            limits:
+              cpu: "500m" # Up to 1/2 full core
+            requests:
+              cpu: "250m" # Use 1/4 full core

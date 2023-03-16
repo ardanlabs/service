@@ -20,6 +20,12 @@ kind: StatefulSet
 metadata:
   name: database
   namespace: sales-system
+  annotations:
+    nx: |-
+      - name: database-service
+        localAddr: database-service
+        remoteAddr: database-service.sales-system
+        auto: true
 spec:
   selector:
     matchLabels:
@@ -38,42 +44,43 @@ spec:
           persistentVolumeClaim:
             claimName: database-data
       containers:
-      - name: postgres
-        image: postgres:15-alpine
-        volumeMounts:
-          - name: data
-            mountPath: /var/lib/postgresql/data
-        resources:
-          limits:
-            cpu: "1000m" # Up to 1 full core
-          requests:
-            cpu: "1000m" # Use 1 full core
-        env:
-        - name: POSTGRES_PASSWORD
-          value: postgres
-        ports:
         - name: postgres
-          containerPort: 5432
-        livenessProbe:
-          exec:
-            command:
-            - pg_isready
-            - -h
-            - localhost
-            - -U
-            - postgres
-          initialDelaySeconds: 30
-          timeoutSeconds: 5
-        readinessProbe:
-          exec:
-            command:
-            - pg_isready
-            - -h
-            - localhost
-            - -U
-            - postgres
-          initialDelaySeconds: 5
-          timeoutSeconds: 1
+          image: postgres:15-alpine
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+          resources:
+            limits:
+              cpu: "1000m" # Up to 1 full core
+            requests:
+              cpu: "1000m" # Use 1 full core
+          env:
+            - name: POSTGRES_PASSWORD
+              value: postgres
+          ports:
+            - name: postgres
+              containerPort: 5432
+          livenessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -h
+                - localhost
+                - -U
+                - postgres
+            initialDelaySeconds: 30
+            timeoutSeconds: 5
+          readinessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -h
+                - localhost
+                - -U
+                - postgres
+            initialDelaySeconds: 5
+            timeoutSeconds: 1
+  serviceName: database-service
 ---
 apiVersion: v1
 kind: Service
@@ -85,6 +92,6 @@ spec:
   selector:
     app: database
   ports:
-  - name: postgres
-    port: 5432
-    targetPort: postgres
+    - name: postgres
+      port: 5432
+      targetPort: postgres
