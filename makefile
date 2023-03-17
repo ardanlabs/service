@@ -224,7 +224,7 @@ uname_m := $(shell uname -m)
 dev-up-nx: #dev-up-local
 	sudo nx agent autoinstall --ns=default --ctx=default --arch=""
 
-	nx ctx login default -u nx -p nx -on # the password can be changed,
+	nx ctx login default -u nx -p nx --on # the password can be changed,
                                            # keeps a token so login is not
                                            # required all the times.
 
