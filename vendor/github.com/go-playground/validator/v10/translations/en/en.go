@@ -1282,6 +1282,11 @@ func RegisterDefaultTranslations(v *validator.Validate, trans ut.Translator) (er
 			override:    false,
 		},
 		{
+			tag:         "cron",
+			translation: "{0} must be a valid cron expression",
+			override:    false,
+		},
+		{
 			tag:         "oneof",
 			translation: "{0} must be one of [{1}]",
 			override:    false,
@@ -1359,6 +1364,11 @@ func RegisterDefaultTranslations(v *validator.Validate, trans ut.Translator) (er
 		{
 			tag:         "boolean",
 			translation: "{0} must be a valid boolean value",
+			override:    false,
+		},
+		{
+			tag:         "cve",
+			translation: "{0} must be a valid cve identifier",
 			override:    false,
 		},
 	}
