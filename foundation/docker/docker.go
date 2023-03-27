@@ -33,6 +33,7 @@ func StartContainer(image string, port string, args ...string) (*Container, erro
 	id := out.String()[:12]
 	hostIP, hostPort, err := extractIPPort(id, port)
 	if err != nil {
+		StopContainer(id)
 		return nil, fmt.Errorf("could not extract ip/port: %w", err)
 	}
 
