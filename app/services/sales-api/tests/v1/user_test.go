@@ -36,7 +36,7 @@ type UserTests struct {
 func Test_Users(t *testing.T) {
 	t.Parallel()
 
-	test := dbtest.NewIntegration(t, c, "inttestusers")
+	test := dbtest.NewIntegration(t, c)
 	defer func() {
 		if r := recover(); r != nil {
 			t.Error(r)

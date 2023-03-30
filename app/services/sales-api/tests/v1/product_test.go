@@ -38,7 +38,7 @@ type ProductTests struct {
 func Test_Products(t *testing.T) {
 	t.Parallel()
 
-	test := dbtest.NewIntegration(t, c, "inttestprods")
+	test := dbtest.NewIntegration(t, c)
 	defer func() {
 		if r := recover(); r != nil {
 			t.Error(r)

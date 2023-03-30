@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"math/rand"
 	"net/mail"
 	"testing"
 	"time"
@@ -54,7 +55,7 @@ func StopDB(c *docker.Container) {
 // NewUnit creates a test database inside a Docker container. It creates the
 // required table structure but the database is otherwise empty. It returns
 // the database to use as well as a function to call at the end of the test.
-func NewUnit(t *testing.T, c *docker.Container, dbName string) (*zap.SugaredLogger, *sqlx.DB, func()) {
+func NewUnit(t *testing.T, c *docker.Container) (*zap.SugaredLogger, *sqlx.DB, func()) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -75,12 +76,19 @@ func NewUnit(t *testing.T, c *docker.Container, dbName string) (*zap.SugaredLogg
 		t.Fatalf("status check database: %v", err)
 	}
 
-	t.Log("Database ready")
+	const letterBytes = "abcdefghijklmnopqrstuvwxyz"
+	b := make([]byte, 4)
+	for i := range b {
+		b[i] = letterBytes[rand.Intn(len(letterBytes))]
+	}
+	dbName := string(b)
 
 	if _, err := dbM.ExecContext(context.Background(), "CREATE DATABASE "+dbName); err != nil {
 		t.Fatalf("creating database %s: %v", dbName, err)
 	}
 	dbM.Close()
+
+	t.Log("Database ready")
 
 	// =========================================================================
 
@@ -145,8 +153,8 @@ type Test struct {
 }
 
 // NewIntegration creates a database, seeds it, constructs an authenticator.
-func NewIntegration(t *testing.T, c *docker.Container, dbName string) *Test {
-	log, db, teardown := NewUnit(t, c, dbName)
+func NewIntegration(t *testing.T, c *docker.Container) *Test {
+	log, db, teardown := NewUnit(t, c)
 
 	cfg := auth.Config{
 		Log:       log,

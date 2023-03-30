@@ -39,7 +39,7 @@ func Test_Product(t *testing.T) {
 }
 
 func crud(t *testing.T) {
-	log, db, teardown := dbtest.NewUnit(t, c, "db1")
+	log, db, teardown := dbtest.NewUnit(t, c)
 	defer func() {
 		if r := recover(); r != nil {
 			t.Log(r)
@@ -192,7 +192,7 @@ func crud(t *testing.T) {
 }
 
 func paging(t *testing.T) {
-	log, db, teardown := dbtest.NewUnit(t, c, "db2")
+	log, db, teardown := dbtest.NewUnit(t, c)
 	defer func() {
 		if r := recover(); r != nil {
 			t.Log(r)
