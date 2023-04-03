@@ -80,7 +80,7 @@ SHELL := /bin/bash
 # CLASS NOTES
 #
 # Kind
-# 	For full Kind v0.17 release notes: https://github.com/kubernetes-sigs/kind/releases/tag/v0.17.0
+# 	For full Kind v0.18 release notes: https://github.com/kubernetes-sigs/kind/releases/tag/v0.18.0
 #
 # RSA Keys
 # 	To generate a private/public key PEM file.
@@ -121,7 +121,7 @@ SHELL := /bin/bash
 
 GOLANG       := golang:1.20
 ALPINE       := alpine:3.17
-KIND         := kindest/node:v1.25.3
+KIND         := kindest/node:v1.26.3
 POSTGRES     := postgres:15-alpine
 VAULT        := hashicorp/vault:1.13
 ZIPKIN       := openzipkin/zipkin:2.24
@@ -186,12 +186,12 @@ KIND_CLUSTER := ardan-starter-cluster
 
 dev-up-local:
 	kind create cluster \
-		--image kindest/node:v1.25.3@sha256:f52781bc0d7a19fb6c405c2af83abfeb311f130707a0e219175677e366cc45d1 \
+		--image kindest/node:v1.26.3@sha256:61b92f38dff6ccc29969e7aa154d34e38b89443af1a2c14e6cfbd2df6419c66f \
 		--name $(KIND_CLUSTER) \
 		--config zarf/k8s/dev/kind-config.yaml
 	
 	kubectl wait --timeout=120s --namespace=local-path-storage --for=condition=Available deployment/local-path-provisioner
-	
+
 	kind load docker-image $(TELEPRESENCE) --name $(KIND_CLUSTER)
 	kind load docker-image $(POSTGRES) --name $(KIND_CLUSTER)
 	kind load docker-image $(VAULT) --name $(KIND_CLUSTER)
