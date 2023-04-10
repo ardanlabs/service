@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/ardanlabs/service/business/core/event"
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/core/user/stores/userdb"
 	database "github.com/ardanlabs/service/business/sys/database/pgx"
@@ -35,7 +36,8 @@ func Users(log *zap.SugaredLogger, cfg database.Config, pageNumber string, rowsP
 		return fmt.Errorf("converting rows per page: %w", err)
 	}
 
-	core := user.NewCore(userdb.NewStore(log, db))
+	evnCore := event.NewCore(log)
+	core := user.NewCore(evnCore, userdb.NewStore(log, db))
 
 	users, err := core.Query(ctx, user.QueryFilter{}, user.DefaultOrderBy, page, rows)
 	if err != nil {

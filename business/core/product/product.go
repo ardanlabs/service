@@ -9,9 +9,11 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/ardanlabs/service/business/core/event"
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/data/order"
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 )
 
 // Set of error variables for CRUD operations.
@@ -33,16 +35,24 @@ type Storer interface {
 
 // Core manages the set of APIs for product access.
 type Core struct {
+	log     *zap.SugaredLogger
+	evnCore *event.Core
 	usrCore *user.Core
 	storer  Storer
 }
 
 // NewCore constructs a core for product api access.
-func NewCore(usrCore *user.Core, storer Storer) *Core {
-	return &Core{
+func NewCore(log *zap.SugaredLogger, evnCore *event.Core, usrCore *user.Core, storer Storer) *Core {
+	core := Core{
+		log:     log,
+		evnCore: evnCore,
 		usrCore: usrCore,
 		storer:  storer,
 	}
+
+	core.registerEventHandlers(evnCore)
+
+	return &core
 }
 
 // Create adds a Product to the database. It returns the created Product with

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/ardanlabs/service/business/core/event"
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/core/user/stores/userdb"
 	database "github.com/ardanlabs/service/business/sys/database/pgx"
@@ -31,7 +32,8 @@ func GenToken(log *zap.SugaredLogger, dbConfig database.Config, vaultConfig vaul
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	core := user.NewCore(userdb.NewStore(log, db))
+	evnCore := event.NewCore(log)
+	core := user.NewCore(evnCore, userdb.NewStore(log, db))
 
 	usr, err := core.QueryByID(ctx, userID)
 	if err != nil {

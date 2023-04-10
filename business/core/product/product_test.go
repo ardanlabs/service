@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ardanlabs/service/business/core/event"
 	"github.com/ardanlabs/service/business/core/product"
 	"github.com/ardanlabs/service/business/core/product/stores/productdb"
 	"github.com/ardanlabs/service/business/core/user"
@@ -48,8 +49,9 @@ func crud(t *testing.T) {
 		teardown()
 	}()
 
-	usrCore := user.NewCore(usercache.NewStore(log, userdb.NewStore(log, db)))
-	prdCore := product.NewCore(usrCore, productdb.NewStore(log, db))
+	evnCore := event.NewCore(log)
+	usrCore := user.NewCore(evnCore, usercache.NewStore(log, userdb.NewStore(log, db)))
+	prdCore := product.NewCore(log, evnCore, usrCore, productdb.NewStore(log, db))
 
 	t.Log("Given the need to work with Product records.")
 	{
@@ -201,8 +203,9 @@ func paging(t *testing.T) {
 		teardown()
 	}()
 
-	usrCore := user.NewCore(usercache.NewStore(log, userdb.NewStore(log, db)))
-	prdCore := product.NewCore(usrCore, productdb.NewStore(log, db))
+	evnCore := event.NewCore(log)
+	usrCore := user.NewCore(evnCore, usercache.NewStore(log, userdb.NewStore(log, db)))
+	prdCore := product.NewCore(log, evnCore, usrCore, productdb.NewStore(log, db))
 
 	t.Log("Given the need to page through product records.")
 	{

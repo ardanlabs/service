@@ -10,6 +10,7 @@ import (
 	"net/mail"
 	"time"
 
+	"github.com/ardanlabs/service/business/core/event"
 	"github.com/ardanlabs/service/business/data/order"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -37,13 +38,15 @@ type Storer interface {
 
 // Core manages the set of APIs for user access.
 type Core struct {
-	storer Storer
+	storer  Storer
+	evnCore *event.Core
 }
 
 // NewCore constructs a core for user api access.
-func NewCore(storer Storer) *Core {
+func NewCore(evnCore *event.Core, storer Storer) *Core {
 	return &Core{
-		storer: storer,
+		storer:  storer,
+		evnCore: evnCore,
 	}
 }
 
@@ -111,6 +114,10 @@ func (c *Core) Update(ctx context.Context, usr User, uu UpdateUser) (User, error
 
 	if err := c.storer.Update(ctx, usr); err != nil {
 		return User{}, fmt.Errorf("update: %w", err)
+	}
+
+	if err := c.evnCore.SendEvent(ctx, uu.UpdatedEvent(usr.ID)); err != nil {
+		return User{}, fmt.Errorf("failed to send a `%s` event: %w", EventUpdated, err)
 	}
 
 	return usr, nil

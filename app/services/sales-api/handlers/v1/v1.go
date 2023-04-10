@@ -7,6 +7,7 @@ import (
 
 	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/productgrp"
 	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/usergrp"
+	"github.com/ardanlabs/service/business/core/event"
 	"github.com/ardanlabs/service/business/core/product"
 	"github.com/ardanlabs/service/business/core/product/stores/productdb"
 	"github.com/ardanlabs/service/business/core/user"
@@ -30,8 +31,9 @@ type Config struct {
 func Routes(app *web.App, cfg Config) {
 	const version = "v1"
 
-	usrCore := user.NewCore(usercache.NewStore(cfg.Log, userdb.NewStore(cfg.Log, cfg.DB)))
-	prdCore := product.NewCore(usrCore, productdb.NewStore(cfg.Log, cfg.DB))
+	envCore := event.NewCore(cfg.Log)
+	usrCore := user.NewCore(envCore, usercache.NewStore(cfg.Log, userdb.NewStore(cfg.Log, cfg.DB)))
+	prdCore := product.NewCore(cfg.Log, envCore, usrCore, productdb.NewStore(cfg.Log, cfg.DB))
 
 	authen := mid.Authenticate(cfg.Auth)
 	ruleAdmin := mid.Authorize(cfg.Auth, auth.RuleAdminOnly)
