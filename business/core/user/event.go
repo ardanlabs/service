@@ -19,8 +19,8 @@ const (
 
 // EventParamsUpdated is the event parameters for the updated event.
 type EventParamsUpdated struct {
-	UserID  uuid.UUID `json:"id"`
-	Enabled *bool     `json:"enabled"`
+	UserID uuid.UUID
+	UpdateUser
 }
 
 // String returns a string representation of the event parameters.
@@ -30,11 +30,6 @@ func (p *EventParamsUpdated) String() string {
 
 // Marshal returns the event parameters encoded as JSON.
 func (p *EventParamsUpdated) Marshal() ([]byte, error) {
-	return json.Marshal(p)
-}
-
-// JSON returns the event parameters encoded as JSON.
-func (p *EventParamsUpdated) JSON() (json.RawMessage, error) {
 	return json.Marshal(p)
 }
 

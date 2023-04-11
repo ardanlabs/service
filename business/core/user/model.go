@@ -45,8 +45,10 @@ type UpdateUser struct {
 // UpdatedEvent constructs an event for when a user is updated.
 func (uu UpdateUser) UpdatedEvent(userID uuid.UUID) event.Event {
 	params := EventParamsUpdated{
-		UserID:  userID,
-		Enabled: uu.Enabled,
+		UserID: userID,
+		UpdateUser: UpdateUser{
+			Enabled: uu.Enabled,
+		},
 	}
 
 	rawParams, err := params.Marshal()
