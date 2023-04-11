@@ -4,7 +4,7 @@ package dbmigrate
 import (
 	"context"
 	"database/sql"
-	_ "embed" // Calls init function.
+	_ "embed"
 	"errors"
 	"fmt"
 

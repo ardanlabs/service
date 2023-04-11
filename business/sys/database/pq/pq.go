@@ -12,7 +12,7 @@ import (
 
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/jmoiron/sqlx"
-	"github.com/lib/pq" // Calls init function.
+	"github.com/lib/pq"
 	"go.opentelemetry.io/otel/attribute"
 	"go.uber.org/zap"
 )

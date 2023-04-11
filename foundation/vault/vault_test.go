@@ -5,7 +5,7 @@ import (
 	"context"
 	"crypto/rand"
 	"crypto/rsa"
-	"crypto/x509" // Calls init function.
+	"crypto/x509"
 	"encoding/pem"
 	"testing"
 	"time"

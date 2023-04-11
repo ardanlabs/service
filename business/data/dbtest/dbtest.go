@@ -5,6 +5,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	_ "embed"
 	"fmt"
 	"math/rand"
 	"net/mail"
@@ -20,6 +21,11 @@ import (
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+)
+
+var (
+	//go:embed sql/seed.sql
+	seedDoc string
 )
 
 // Success and failure markers.
@@ -111,6 +117,11 @@ func NewUnit(t *testing.T, c *docker.Container) (*zap.SugaredLogger, *sqlx.DB, f
 	}
 
 	if err := dbmigrate.Seed(ctx, db); err != nil {
+		t.Logf("Logs for %s\n%s:", c.ID, docker.DumpContainerLogs(c.ID))
+		t.Fatalf("Seeding error: %s", err)
+	}
+
+	if err := dbmigrate.SeedCustom(ctx, db, seedDoc); err != nil {
 		t.Logf("Logs for %s\n%s:", c.ID, docker.DumpContainerLogs(c.ID))
 		t.Fatalf("Seeding error: %s", err)
 	}
