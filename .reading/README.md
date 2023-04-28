@@ -19,12 +19,16 @@ Occasionally we run into material that we feel is important. This is a section p
 [Introduction to Terraform - A Practical Approach](https://www.youtube.com/watch?v=H0EQR3LGRz0) - Matthew Sanabria  
 
 ### Site Reliability Engineering
-
 [Site Reliability Engineering for Kubernetes](https://tammybutow.medium.com/site-reliability-engineering-for-kubernetes-b52877c70fb7) - Tammy Bryant Butow  
 [Site Reliability Engineering](https://landing.google.com/sre/book.html) - Google  
 [SLI, SLO, SLA](https://landing.google.com/sre/book/chapters/service-level-objectives.html) - Google  
 [SLIs, SLOs, SLAs, oh my!](https://www.youtube.com/watch?v=tEylFyxbDLE) - Liz Fong-Jones and Seth Vargo  
 
 ### Authentication / Authorization
-
 [How to correctly use Basic Authentication in Go](https://www.alexedwards.net/blog/basic-authentication-in-go) - Alex Edwards  
+
+### CPU Quotas
+[CFS Bandwidth Control](https://www.kernel.org/doc/html/v5.6/scheduler/sched-bwc.html) - kernel.org  
+[How Kubernetes applies resource requests and limits](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#how-pods-with-resource-limits-are-run) - kubernetes.io  
+[Using cgroups-v2 to control distribution of CPU time for applications](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html/managing_monitoring_and_updating_the_kernel/using-cgroups-v2-to-control-distribution-of-cpu-time-for-applications_managing-monitoring-and-updating-the-kernel) - redhat.com  
+[73,000 Pods a Day, Lessons From Misadventures In Multi-Tenant](https://www.youtube.com/watch?v=NqtfDy_KAqg) - Shane Corbett and Wil Reed  
