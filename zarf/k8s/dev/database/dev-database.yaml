@@ -45,9 +45,11 @@ spec:
             mountPath: /var/lib/postgresql/data
         resources:
           requests:
-            cpu: "250m"  # 1/4 core
+            cpu: "250m" # quarter as much CPU time
+            memory: 500Mi
           limits:
-            cpu: "1000m" # 1 core
+            cpu: "250m" # quarter as much CPU time
+            memory: 500Mi
         env:
         - name: POSTGRES_PASSWORD
           value: postgres

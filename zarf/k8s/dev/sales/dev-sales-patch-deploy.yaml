@@ -27,9 +27,11 @@ spec:
       - name: sales-api
         resources:
           requests:
-            cpu: "250m" # 1/4 core
+            cpu: "250m" # quarter as much CPU time
+            memory: 500Mi
           limits:
-            cpu: "1000m" # 1 full core
+            cpu: "250m" # quarter as much CPU time
+            memory: 500Mi
 
         volumeMounts:
           - name: vault
@@ -38,6 +40,8 @@ spec:
       - name: metrics
         resources:
           requests:
-            cpu: "125m" # 1/8 core
+            cpu: "125m" # eighth as much CPU time
+            memory: 250Mi
           limits:
-            cpu: "250m" # 1/4 core
+            cpu: "125m" # eighth as much CPU time
+            memory: 250Mi
