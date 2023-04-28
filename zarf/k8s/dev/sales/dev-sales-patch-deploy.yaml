@@ -26,10 +26,10 @@ spec:
       containers:
       - name: sales-api
         resources:
-          limits:
-            cpu: "2000m" # Up to 2 full cores
           requests:
-            cpu: "1000m" # Use 1 full cores
+            cpu: "250m" # 1/4 core
+          limits:
+            cpu: "1000m" # 1 full core
 
         volumeMounts:
           - name: vault
@@ -37,7 +37,7 @@ spec:
 
       - name: metrics
         resources:
-          limits:
-            cpu: "500m" # Up to 1/2 full core
           requests:
-            cpu: "250m" # Use 1/4 full core
+            cpu: "125m" # 1/8 core
+          limits:
+            cpu: "250m" # 1/4 core

@@ -44,10 +44,10 @@ spec:
           - name: data
             mountPath: /var/lib/postgresql/data
         resources:
-          limits:
-            cpu: "1000m" # Up to 1 full core
           requests:
-            cpu: "1000m" # Use 1 full core
+            cpu: "250m"  # 1/4 core
+          limits:
+            cpu: "1000m" # 1 core
         env:
         - name: POSTGRES_PASSWORD
           value: postgres

@@ -31,10 +31,10 @@ spec:
         - name: zipkin
           containerPort: 9411
         resources:
-          limits:
-            cpu: "500m" # Up to 1/2 full core
           requests:
-            cpu: "250m" # Use 1/4 full core
+            cpu: "250m" # 1/4 core
+          limits:
+            cpu: "250m" # 1/4 core
 ---
 apiVersion: v1
 kind: Service

@@ -51,6 +51,11 @@ spec:
         - name: vault          
           image: hashicorp/vault:1.13
           imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: "250m" # 1/4 core
+            limits:
+              cpu: "250m" # 1/4 core
           command:
           - "/bin/sh"
           - "-ec"
