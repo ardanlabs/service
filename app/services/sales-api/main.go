@@ -25,7 +25,6 @@ import (
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
-	"go.uber.org/automaxprocs/maxprocs"
 	"go.uber.org/zap"
 )
 
@@ -52,15 +51,6 @@ func main() {
 }
 
 func run(log *zap.SugaredLogger) error {
-
-	// =========================================================================
-	// GOMAXPROCS
-
-	opt := maxprocs.Logger(log.Infof)
-	if _, err := maxprocs.Set(opt); err != nil {
-		return fmt.Errorf("maxprocs: %w", err)
-	}
-	log.Infow("startup", "GOMAXPROCS", runtime.GOMAXPROCS(0))
 
 	// =========================================================================
 	// Configuration
@@ -119,7 +109,7 @@ func run(log *zap.SugaredLogger) error {
 	// =========================================================================
 	// App Starting
 
-	log.Infow("starting service", "version", build)
+	log.Infow("starting service", "version", build, "GOMAXPROCS", runtime.GOMAXPROCS(0))
 	defer log.Infow("shutdown complete")
 
 	out, err := conf.String(&cfg)
