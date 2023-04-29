@@ -27,10 +27,10 @@ spec:
       - name: sales-api
         resources:
           requests:
-            cpu: "250m" # 25ms for every 100ms on a single core
+            cpu: "1000m" # I need access to 1 core on the node.
             memory: 500Mi
           limits:
-            cpu: "250m" # 25ms for every 100ms on a single core
+            cpu: "1000m" # Execute instructions 100ms/100ms on my 1 core.
             memory: 500Mi
 
         volumeMounts:
@@ -40,8 +40,8 @@ spec:
       - name: metrics
         resources:
           requests:
-            cpu: "125m" # 12.5ms for every 100ms on a single core
+            cpu: "500m" # I need access to 1/2 core on the node.
             memory: 250Mi
           limits:
-            cpu: "125m" # 12.5ms for every 100ms on a single core
+            cpu: "500m" # Execute instructions 50ms/100ms on my 1/2 core.
             memory: 250Mi

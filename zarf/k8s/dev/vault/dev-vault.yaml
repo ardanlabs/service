@@ -16,6 +16,7 @@ spec:
   replicas: 1
   selector:
     matchLabels:
+      app: vault
       app.kubernetes.io/name: vault
       app.kubernetes.io/instance: vault
       component: server
@@ -31,6 +32,7 @@ spec:
   template:
     metadata:
       labels:
+        app: vault
         app.kubernetes.io/name: vault
         app.kubernetes.io/instance: vault
         component: server
@@ -53,10 +55,10 @@ spec:
           imagePullPolicy: IfNotPresent
           resources:
             requests:
-              cpu: "250m" # 25ms for every 100ms on a single core
+              cpu: "500m" # I need access to 1/2 core on the node.
               memory: 500Mi
             limits:
-              cpu: "250m" # 25ms for every 100ms on a single core
+              cpu: "500m" # Execute instructions 50ms/100ms on my 1/2 core.
               memory: 500Mi
           command:
           - "/bin/sh"
