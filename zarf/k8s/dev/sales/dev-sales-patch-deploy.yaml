@@ -27,10 +27,10 @@ spec:
       - name: sales-api
         resources:
           requests:
-            cpu: "250m" # 25ms for every 100ms per core
+            cpu: "250m" # 25ms for every 100ms on a single core
             memory: 500Mi
           limits:
-            cpu: "250m" # 25ms for every 100ms per core
+            cpu: "250m" # 25ms for every 100ms on a single core
             memory: 500Mi
 
         volumeMounts:
@@ -40,8 +40,8 @@ spec:
       - name: metrics
         resources:
           requests:
-            cpu: "125m" # 12.5ms for every 100ms per core
+            cpu: "125m" # 12.5ms for every 100ms on a single core
             memory: 250Mi
           limits:
-            cpu: "125m" # 12.5ms for every 100ms per core
+            cpu: "125m" # 12.5ms for every 100ms on a single core
             memory: 250Mi

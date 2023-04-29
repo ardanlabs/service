@@ -53,10 +53,10 @@ spec:
           imagePullPolicy: IfNotPresent
           resources:
             requests:
-              cpu: "250m" # 25ms for every 100ms per core
+              cpu: "250m" # 25ms for every 100ms on a single core
               memory: 500Mi
             limits:
-              cpu: "250m" # 25ms for every 100ms per core
+              cpu: "250m" # 25ms for every 100ms on a single core
               memory: 500Mi
           command:
           - "/bin/sh"
