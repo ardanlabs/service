@@ -32,3 +32,4 @@ Occasionally we run into material that we feel is important. This is a section p
 [How Kubernetes applies resource requests and limits](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#how-pods-with-resource-limits-are-run) - kubernetes.io  
 [Using cgroups-v2 to control distribution of CPU time for applications](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html/managing_monitoring_and_updating_the_kernel/using-cgroups-v2-to-control-distribution-of-cpu-time-for-applications_managing-monitoring-and-updating-the-kernel) - redhat.com  
 [73,000 Pods a Day, Lessons From Misadventures In Multi-Tenant](https://www.youtube.com/watch?v=NqtfDy_KAqg) - Shane Corbett and Wil Reed  
+[Using Prometheus to Avoid Disasters with Kubernetes CPU Limits](https://aws.amazon.com/blogs/containers/using-prometheus-to-avoid-disasters-with-kubernetes-cpu-limits/) - Shane Corbett  
