@@ -40,7 +40,7 @@ spec:
 # 100ms per cycle. You can imagine it gets to share a CPU half the time with
 # some other container.
 #
-# So there are two points on view on these CPU quotas.
+# There are two points of view on these CPU quotas.
 #
 # Set the request to match the limit. The idea is if the container is requesting
 # 1/2 a CPU, then limit the execution time to 1/2 a CPU as well. This balances
