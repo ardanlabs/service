@@ -74,6 +74,10 @@ spec:
 # of a sudden does not get the “usual” over reservation cycles anymore. A
 # situation that usually happens during load spikes. Or outages, etc. Leave the
 # burst capable options to batch jobs.
+#
+# In the end, your tasks are a small player in a bigger game. Lifting the whole,
+# enabling the whole, is usually more important than optimizing just your workload.
+# Hence the 1/3 to 1/4 max core counts.
 
       containers:
       - name: sales-api
