@@ -61,13 +61,13 @@ spec:
 # Nutty Swiss
 #
 # I’ve naively put jobs into roughly two buckets. The ones where access to CPU
-# cycles matter and the ones where throttling is ok. For the former, toss them a
-# decent number of cores. But not too much, allow for mobility of tasks within
-# the cluster.
+# cycles matter (CPU bound) and the ones where throttling is ok (IO Bound). For
+# CPU bound work, toss the Go program a decent number of cores, but not too much.
+# Allow for mobility of tasks within the cluster. For the IO bound work, toss
+# the Go program about a core, maybe less.
 #
-# For the latter, toss them about a core, maybe less. In both cases, give the
-# runtime one extra core. To let them indicate to the OS that they’re CPU bound
-# and let auto scaling take effect.
+# In both cases, give the Go runtime a core (limit + 1) since your Go program is
+# CPU bound. Then let auto scaling take effect.
 #
 # Ideally you’d give tasks a reservation and no limit. However, I’ve never seen
 # anyone actually write software that deals with the situation where the job all
