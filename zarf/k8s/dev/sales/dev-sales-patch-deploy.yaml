@@ -58,6 +58,23 @@ spec:
 # the containers to determine when a new POD needs to be created on a different
 # node to handle the perceived load. This is a whole other conversation :)
 
+# Nutty Swiss
+#
+# So I’ve naively put jobs into roughly two buckets. The ones where access to CPU
+# cycles matter and the ones where throttling is ok. For the former, toss them a
+# decent number of cores. But not too much, allow for mobility of tasks within
+# the cluster.
+#
+# For the latter, toss them about a core, maybe less. In both cases, give the
+# runtime one extra core. To let them indicate to the OS that they’re CPU bound
+# and let auto scaling take effect.
+#
+# Ideally you’d give tasks a reservation and no limit. However, I’ve never seen
+# anyone actually write software that deals with the situation where the job all
+# of a sudden does not get the “usual” over reservation cycles anymore. A
+# situation that usually happens during load spikes. Or outages, etc. Leave the
+# burst capable options to batch jobs.
+
       containers:
       - name: sales-api
         resources:
