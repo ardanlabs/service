@@ -44,7 +44,7 @@ spec:
 #
 # Set the request to match the limit. The idea is if the container is requesting
 # 1/2 a CPU, then limit the execution time to 1/2 a CPU as well. This balances
-# the amount of CPU on the node and the amount of execution time. The drawback
+# the amount of CPU on the node with the amount of execution time. The drawback
 # is the container can't handle a burst of traffic because it might have used
 # it's allotted time and now it has to wait for the next 100ms cycle.
 #
@@ -60,7 +60,7 @@ spec:
 
 # Nutty Swiss
 #
-# So I’ve naively put jobs into roughly two buckets. The ones where access to CPU
+# I’ve naively put jobs into roughly two buckets. The ones where access to CPU
 # cycles matter and the ones where throttling is ok. For the former, toss them a
 # decent number of cores. But not too much, allow for mobility of tasks within
 # the cluster.
