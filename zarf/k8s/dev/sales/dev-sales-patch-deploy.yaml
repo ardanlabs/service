@@ -23,7 +23,7 @@ spec:
       dnsPolicy: ClusterFirstWithHostNet
       hostNetwork: true
 
-# CPU QUOTAS
+# Compute Resource Quotas
 #
 # The request value helps K8s determine what node a POD can be run on by making
 # sure the number of requesting cores for the sum of all PODs are never greater
@@ -31,14 +31,14 @@ spec:
 # core (1000m), then a node of 8 cores can run those 8 PODs. If you have 16 PODs
 # each requesting 1/2 core (500m), then a node of 8 cores can run those 16 PODs.
 #
-# The limit value helps the scheduler determine which containers (configured in a
-# POD running on the node) can use a CPU and for how long. This is measured in
-# time where 100ms represents a unit of execution time. If a limit of 1000m is
-# requested, that means the container wants the full 100ms of time all the time.
-# There is no CPU affinity, but you can imagine the container is given a full
-# CPU to use on their own. A limit of 500m means the container wants 50ms of the
-# 100ms per cycle. You can imagine it gets to share a CPU half the time with
-# some other container.
+# The limit value helps the container runtime to determine which containers
+# (configured in a POD running on the node) can use a CPU and for how long. This
+# is measured in time where 100ms represents a unit of execution time. If a limit
+# of 1000m is requested, that means the container wants the full 100ms of time
+# all the time. There is no CPU affinity, but you can imagine the container is
+# given a full CPU to use on their own. A limit of 500m means the container wants
+# 50ms of the 100ms per cycle. You can imagine it gets to share a CPU half the
+# time with some other container.
 #
 # There are two points of view on these CPU quotas.
 #
@@ -56,7 +56,9 @@ spec:
 #
 # Determining the strategy depends on how you are measuring the performance of
 # the containers to determine when a new POD needs to be created on a different
-# node to handle the perceived load. This is a whole other conversation :)
+# node to handle the perceived load. Clusters have multiple dimensions of
+# autoscaling: Horizontal Pod Autoscaling, Vertical Pod Autoscaling, Autoscaling
+# of Nodes within a Node Group, Autoscaling of Node Groups themselves.
 
 # Nutty Swiss
 #
@@ -78,6 +80,13 @@ spec:
 # In the end, your tasks are a small player in a bigger game. Lifting the whole,
 # enabling the whole, is usually more important than optimizing just your workload.
 # Hence the 1/3 to 1/4 max core counts.
+
+# Nick Stogner
+#
+# Requests are separate from Limits b/c setting requests lower than limits allows
+# for more efficient resource utilization when you start packing multiple PODs
+# onto a given Node. Limits are there to prevent noisy neighbor conditions with
+# colocated PODs.
 
       containers:
       - name: sales-api
