@@ -68,8 +68,8 @@ spec:
 # Allow for mobility of tasks within the cluster. For the IO bound work, toss
 # the Go program about a core, maybe less.
 #
-# In both cases, give the Go runtime a core (limit + 1) since your Go program is
-# CPU bound. Then let auto scaling take effect.
+# In both cases, give the Go runtime a core and set your limit to (limit += 1)
+# since your Go program is CPU bound. Then let auto scaling take effect.
 #
 # Ideally you’d give tasks a reservation and no limit. However, I’ve never seen
 # anyone actually write software that deals with the situation where the job all
