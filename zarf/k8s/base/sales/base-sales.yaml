@@ -15,34 +15,34 @@ spec:
   selector:
     matchLabels:
       app: sales
-  
+
   template:
     metadata:
       labels:
         app: sales
-    
+
     spec:
       terminationGracePeriodSeconds: 60
-      
+
       initContainers:
       - name: init-migrate
-        image: sales-api-image
+        image: service-image
         command: ['./sales-admin', 'migrate']
-      
+
       - name: init-seed
-        image: sales-api-image
+        image: service-image
         command: ['./sales-admin', 'seed']
-      
+
       containers:
       - name: sales-api
-        image: sales-api-image
-        
+        image: service-image
+
         ports:
         - name: sales-api
           containerPort: 3000
         - name: sales-api-debug
           containerPort: 4000
-        
+
         readinessProbe: # readiness probes mark the service available to accept traffic.
           httpGet:
             path: /debug/readiness
@@ -52,7 +52,7 @@ spec:
           timeoutSeconds: 5
           successThreshold: 1
           failureThreshold: 2
-        
+
         livenessProbe: # liveness probes mark the service alive or dead (to be restarted).
           httpGet:
             path: /debug/liveness
@@ -62,7 +62,7 @@ spec:
           timeoutSeconds: 5
           successThreshold: 1
           failureThreshold: 2
-        
+
         env:
         - name: SALES_DB_HOST
           valueFrom:
@@ -89,7 +89,7 @@ spec:
 
       - name: metrics
         image: metrics-image
-        
+
         ports:
         - name: metrics
           containerPort: 3001
@@ -99,5 +99,5 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: sales-service
+  name: sales-api
   namespace: sales-system
