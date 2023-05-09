@@ -11,6 +11,6 @@ images:
 - name: metrics-image
   newName: metrics
   newTag: "1.0"
-- name: sales-api-image
+- name: service-image
   newName: sales-api
   newTag: "1.0"

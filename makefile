@@ -1,4 +1,6 @@
-SHELL := /bin/bash
+# Check to see if we can use ash, in Alpine images, or default to BASH.
+SHELL_PATH = /bin/ash
+SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 
 # Deploy First Mentality
 
@@ -38,7 +40,7 @@ SHELL := /bin/bash
 # 	Restart your wsl environment.
 
 # ==============================================================================
-# Install Tooling and Dependencies 
+# Install Tooling and Dependencies
 #
 #	If you are running a mac or linux machine with brew, run these commands:
 #	$ make dev-brew
@@ -63,7 +65,7 @@ SHELL := /bin/bash
 #
 #	If you want to use telepresence (recommended):
 #	$ make dev-up
-#	$ make dev-update-apply 
+#	$ make dev-update-apply
 #
 #	If telepresence is not working for you:
 #	$ make dev-up-local
@@ -119,13 +121,39 @@ SHELL := /bin/bash
 # ==============================================================================
 # Install dependencies
 
-GOLANG       := golang:1.20
-ALPINE       := alpine:3.17
-KIND         := kindest/node:v1.26.3
-POSTGRES     := postgres:15-alpine
-VAULT        := hashicorp/vault:1.13
-ZIPKIN       := openzipkin/zipkin:2.24
-TELEPRESENCE := docker.io/datawire/tel2:2.13.1
+GOLANG       := golang:1.20.4-alpine3.17@sha256:4ee203ff3933e7a6f18d3574fd6661a73b58c60f028d2927274400f4774aaa41
+ALPINE       := alpine:3.17.3@sha256:b6ca290b6b4cdcca5b3db3ffa338ee0285c11744b4a6abaa9627746ee3291d8d
+KIND         := kindest/node:v1.27.1@sha256:f957f0636f30b105e15ed00932b25d175eaf08d5d11735e8d6ec73325ebd5b02
+POSTGRES     := postgres:15.2-alpine3.17@sha256:07ec36ad2d5ab9250f38c8ef749239b662cf15d03c9ddb7167422edbbdf71156
+VAULT        := hashicorp/vault:1.13.2@sha256:05929f692a3fcae567b477262cf1b5c8aaa3ede39de5f48387181345f9e2026e
+ZIPKIN       := openzipkin/zipkin:2.24@sha256:ce67907d4a8154fa9e431da9546b466b8fdb909b0734615eccd616cdddd41259
+TELEPRESENCE := datawire/tel2:2.13.1@sha256:b291574fe79056ecc76465ff3a0e2039457f58371ed4cd1e803c42f46abbae54
+
+SERVICE_NAME := "sales-api"
+NAMESPACE    := "sales-system"
+APP          := "sales"
+SERVICE_PORT := "8080"
+DEBUG_PORT   := "4000"
+
+BASE_IMAGE_NAME ?= "github.com/ardanlabs/service"
+IMAGE_NAME      ?= "sales-api"
+VERSION         ?= "0.0.1-$(shell git rev-parse --short HEAD)"
+
+KIND_CLUSTER := ardan-starter-cluster
+
+SERVICE_IMAGE := "$(BASE_IMAGE_NAME)/$(IMAGE_NAME):$(VERSION)"
+METRICS_IMAGE := "$(BASE_IMAGE_NAME)/$(IMAGE_NAME)-metrics:$(VERSION)"
+
+
+# ==============================================================================
+# Install dependencies
+
+dev-gotooling:
+	go install github.com/divan/expvarmon@8e0b3d2
+	go install github.com/rakyll/hey@8985827
+	go install honnef.co/go/tools/cmd/staticcheck@v0.4.3
+	go install golang.org/x/vuln/cmd/govulncheck@v0.1.0
+	go install golang.org/x/tools/cmd/goimports@v0.8.0
 
 dev-brew-common:
 	brew update
@@ -151,22 +179,15 @@ dev-docker:
 	docker pull $(ZIPKIN)
 	docker pull $(TELEPRESENCE)
 
-dev-gotooling:
-	go install github.com/divan/expvarmon@latest
-	go install github.com/rakyll/hey@latest
-
 # ==============================================================================
 # Building containers
 
-# Example: $(shell git rev-parse --short HEAD)
-VERSION := 1.0
+all: service metrics
 
-all: sales metrics
-
-sales:
+service:
 	docker build \
-		-f zarf/docker/dockerfile.sales-api \
-		-t sales-api:$(VERSION) \
+		-f zarf/docker/dockerfile.service \
+		-t $(SERVICE_IMAGE) \
 		--build-arg BUILD_REF=$(VERSION) \
 		--build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
 		.
@@ -174,7 +195,7 @@ sales:
 metrics:
 	docker build \
 		-f zarf/docker/dockerfile.metrics \
-		-t metrics:$(VERSION) \
+		-t $(METRICS_IMAGE) \
 		--build-arg BUILD_REF=$(VERSION) \
 		--build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
 		.
@@ -182,14 +203,12 @@ metrics:
 # ==============================================================================
 # Running from within k8s/kind
 
-KIND_CLUSTER := ardan-starter-cluster
-
 dev-up-local:
 	kind create cluster \
-		--image kindest/node:v1.26.3@sha256:61b92f38dff6ccc29969e7aa154d34e38b89443af1a2c14e6cfbd2df6419c66f \
+		--image $(KIND) \
 		--name $(KIND_CLUSTER) \
 		--config zarf/k8s/dev/kind-config.yaml
-	
+
 	kubectl wait --timeout=120s --namespace=local-path-storage --for=condition=Available deployment/local-path-provisioner
 
 	kind load docker-image $(TELEPRESENCE) --name $(KIND_CLUSTER)
@@ -211,26 +230,26 @@ dev-down:
 # ------------------------------------------------------------------------------
 
 dev-load:
-	cd zarf/k8s/dev/sales; kustomize edit set image sales-api-image=sales-api:$(VERSION)
-	kind load docker-image sales-api:$(VERSION) --name $(KIND_CLUSTER)
+	cd zarf/k8s/dev/sales; kustomize edit set image service-image=$(SERVICE_IMAGE)
+	kind load docker-image $(SERVICE_IMAGE) --name $(KIND_CLUSTER)
 
-	cd zarf/k8s/dev/sales; kustomize edit set image metrics-image=metrics:$(VERSION)
-	kind load docker-image metrics:$(VERSION) --name $(KIND_CLUSTER)
+	cd zarf/k8s/dev/sales; kustomize edit set image metrics-image=$(METRICS_IMAGE)
+	kind load docker-image $(METRICS_IMAGE) --name $(KIND_CLUSTER)
 
 dev-apply:
 	kustomize build zarf/k8s/dev/vault | kubectl apply -f -
 
 	kustomize build zarf/k8s/dev/database | kubectl apply -f -
-	kubectl rollout status --namespace=sales-system --watch --timeout=120s sts/database
+	kubectl rollout status --namespace=$(NAMESPACE) --watch --timeout=120s sts/database
 
 	kustomize build zarf/k8s/dev/zipkin | kubectl apply -f -
-	kubectl wait pods --namespace=sales-system --selector app=zipkin --for=condition=Ready
-	
+	kubectl wait pods --namespace=$(NAMESPACE) --selector app=zipkin --for=condition=Ready
+
 	kustomize build zarf/k8s/dev/sales | kubectl apply -f -
-	kubectl wait pods --namespace=sales-system --selector app=sales --for=condition=Ready
+	kubectl wait pods --namespace=$(NAMESPACE) --selector app=$(APP) --for=condition=Ready
 
 dev-restart:
-	kubectl rollout restart deployment sales --namespace=sales-system
+	kubectl rollout restart deployment $(APP) --namespace=$(NAMESPACE)
 
 dev-update: all dev-load dev-restart
 
@@ -239,13 +258,13 @@ dev-update-apply: all dev-load dev-apply
 # ------------------------------------------------------------------------------
 
 dev-logs:
-	kubectl logs --namespace=sales-system -l app=sales --all-containers=true -f --tail=100 --max-log-requests=6 | go run app/tooling/logfmt/main.go -service=SALES-API
+	kubectl logs --namespace=$(NAMESPACE) -l app=$(APP) --all-containers=true -f --tail=100 --max-log-requests=6 | go run app/tooling/logfmt/main.go -service=$(SERVICE_NAME)
 
 dev-logs-init:
-	kubectl logs --namespace=sales-system -l app=sales -f --tail=100 -c init-vault-system
-	kubectl logs --namespace=sales-system -l app=sales -f --tail=100 -c init-vault-loadkeys
-	kubectl logs --namespace=sales-system -l app=sales -f --tail=100 -c init-migrate
-	kubectl logs --namespace=sales-system -l app=sales -f --tail=100 -c init-seed
+	kubectl logs --namespace=$(NAMESPACE) -l app=$(APP) -f --tail=100 -c init-vault-system
+	kubectl logs --namespace=$(NAMESPACE) -l app=$(APP) -f --tail=100 -c init-vault-loadkeys
+	kubectl logs --namespace=$(NAMESPACE) -l app=$(APP) -f --tail=100 -c init-migrate
+	kubectl logs --namespace=$(NAMESPACE) -l app=$(APP) -f --tail=100 -c init-seed
 
 dev-status:
 	kubectl get nodes -o wide
@@ -257,21 +276,21 @@ dev-describe:
 	kubectl describe svc
 
 dev-describe-deployment:
-	kubectl describe deployment --namespace=sales-system sales
+	kubectl describe deployment --namespace=$(NAMESPACE) $(APP)
 
 dev-describe-sales:
-	kubectl describe pod --namespace=sales-system -l app=sales
+	kubectl describe pod --namespace=$(NAMESPACE) -l app=$(APP)
 
 # ------------------------------------------------------------------------------
 
 dev-logs-vault:
-	kubectl logs --namespace=sales-system -l app=vault --all-containers=true -f --tail=100
+	kubectl logs --namespace=$(NAMESPACE) -l app=vault --all-containers=true -f --tail=100
 
 dev-logs-db:
-	kubectl logs --namespace=sales-system -l app=database --all-containers=true -f --tail=100
+	kubectl logs --namespace=$(NAMESPACE) -l app=database --all-containers=true -f --tail=100
 
 dev-logs-zipkin:
-	kubectl logs --namespace=sales-system -l app=zipkin --all-containers=true -f --tail=100
+	kubectl logs --namespace=$(NAMESPACE) -l app=zipkin --all-containers=true -f --tail=100
 
 # ------------------------------------------------------------------------------
 
@@ -282,7 +301,7 @@ dev-services-delete:
 
 dev-describe-replicaset:
 	kubectl get rs
-	kubectl describe rs --namespace=sales-system -l app=sales
+	kubectl describe rs --namespace=$(NAMESPACE) -l app=$(APP)
 
 dev-events:
 	kubectl get ev --sort-by metadata.creationTimestamp
@@ -291,10 +310,10 @@ dev-events-warn:
 	kubectl get ev --field-selector type=Warning --sort-by metadata.creationTimestamp
 
 dev-shell:
-	kubectl exec --namespace=sales-system -it $(shell kubectl get pods --namespace=sales-system | grep sales | cut -c1-26) --container sales-api -- /bin/sh
+	kubectl exec --namespace=$(NAMESPACE) -it $(shell kubectl get pods --namespace=$(NAMESPACE) | grep sales | cut -c1-26) --container sales-api -- /bin/sh
 
 dev-database-restart:
-	kubectl rollout restart statefulset database --namespace=sales-system
+	kubectl rollout restart statefulset database --namespace=$(NAMESPACE)
 
 # ==============================================================================
 # Administration
@@ -315,19 +334,19 @@ pgcli-local:
 	pgcli postgresql://postgres:postgres@localhost
 
 pgcli:
-	pgcli postgresql://postgres:postgres@database-service.sales-system.svc.cluster.local
+	pgcli postgresql://postgres:postgres@database-service.$(NAMESPACE).svc.cluster.local
 
 liveness-local:
 	curl -il http://localhost:4000/debug/liveness
 
 liveness:
-	curl -il http://sales-service.sales-system.svc.cluster.local:4000/debug/liveness
+	curl -il http://$(SERVICE_NAME).$(NAMESPACE).svc.cluster.local:4000/debug/liveness
 
 readiness-local:
 	curl -il http://localhost:4000/debug/readiness
 
 readiness:
-	curl -il http://sales-service.sales-system.svc.cluster.local:4000/debug/readiness
+	curl -il http://$(SERVICE_NAME).$(NAMESPACE).svc.cluster.local:4000/debug/readiness
 
 # ==============================================================================
 # Metrics and Tracing
@@ -336,36 +355,43 @@ metrics-view-local-sc:
 	expvarmon -ports="localhost:4000" -vars="build,requests,goroutines,errors,panics,mem:memstats.Alloc"
 
 metrics-view-sc:
-	expvarmon -ports="sales-service.sales-system.svc.cluster.local:4000" -vars="build,requests,goroutines,errors,panics,mem:memstats.Alloc"
+	expvarmon -ports="$(SERVICE_NAME).$(NAMESPACE).svc.cluster.local:4000" -vars="build,requests,goroutines,errors,panics,mem:memstats.Alloc"
 
 metrics-view-local:
 	expvarmon -ports="localhost:3001" -endpoint="/metrics" -vars="build,requests,goroutines,errors,panics,mem:memstats.Alloc"
 
 metrics-view:
-	expvarmon -ports="sales-service.sales-system.svc.cluster.local:3001" -endpoint="/metrics" -vars="build,requests,goroutines,errors,panics,mem:memstats.Alloc"
+	expvarmon -ports="$(SERVICE_NAME).$(NAMESPACE).svc.cluster.local:3001" -endpoint="/metrics" -vars="build,requests,goroutines,errors,panics,mem:memstats.Alloc"
 
 zipkin-local:
 	open -a "Google Chrome" http://localhost:9411/zipkin/
 
 zipkin:
-	open -a "Google Chrome" http://zipkin-service.sales-system.svc.cluster.local:9411/zipkin/
+	open -a "Google Chrome" http://zipkin-service.$(NAMESPACE).svc.cluster.local:9411/zipkin/
 
 # ==============================================================================
 # Running tests within the local computer
-# go install honnef.co/go/tools/cmd/staticcheck@latest
-# go install golang.org/x/vuln/cmd/govulncheck@latest
+
+test-race:
+	CGO_ENABLED=1 go test -race -count=1 ./...
 
 test:
 	CGO_ENABLED=0 go test -count=1 ./...
+
+lint:
 	CGO_ENABLED=0 go vet ./...
 	staticcheck -checks=all ./...
+
+vuln-check:
 	govulncheck ./...
+
+test-all: lint test-race vuln-check
 
 test-token-local:
 	curl -il --user "admin@example.com:gophers" http://localhost:3000/v1/users/token/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
 
 test-token:
-	curl -il --user "admin@example.com:gophers" http://sales-service.sales-system.svc.cluster.local:3000/v1/users/token/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
+	curl -il --user "admin@example.com:gophers" http://$(SERVICE_NAME).$(NAMESPACE).svc.cluster.local:3000/v1/users/token/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
 
 # export TOKEN="COPY TOKEN STRING FROM LAST CALL"
 
@@ -373,13 +399,13 @@ test-users-local:
 	curl -il -H "Authorization: Bearer ${TOKEN}" http://localhost:3000/v1/users?page=1&rows=2
 
 test-users:
-	curl -il -H "Authorization: Bearer ${TOKEN}" http://sales-service.sales-system.svc.cluster.local:3000/v1/users?page=1&rows=2
+	curl -il -H "Authorization: Bearer ${TOKEN}" http://$(SERVICE_NAME).$(NAMESPACE).svc.cluster.local:3000/v1/users?page=1&rows=2
 
 test-load-local:
 	hey -m GET -c 100 -n 10000 -H "Authorization: Bearer ${TOKEN}" http://localhost:3000/v1/users?page=1&rows=2
 
 test-load:
-	hey -m GET -c 100 -n 10000 -H "Authorization: Bearer ${TOKEN}" http://sales-service.sales-system.svc.cluster.local:3000/v1/users?page=1&rows=2
+	hey -m GET -c 100 -n 10000 -H "Authorization: Bearer ${TOKEN}" http://$(SERVICE_NAME).$(NAMESPACE).svc.cluster.local:3000/v1/users?page=1&rows=2
 
 # ==============================================================================
 # Modules support
