@@ -70,6 +70,12 @@ spec:
               name: app-config
               key: db_host
               optional: true
+
+        - name: GOMAXPROCS
+          valueFrom:
+            resourceFieldRef:
+              resource: limits.cpu
+
         - name: KUBERNETES_NAMESPACE
           valueFrom:
             fieldRef:
@@ -86,10 +92,6 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: spec.nodeName
-        - name: GOMAXPROCS
-          valueFrom:
-            resourceFieldRef:
-              resource: limits.cpu
 
       - name: metrics
         image: metrics-image

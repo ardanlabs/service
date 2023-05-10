@@ -55,10 +55,10 @@ spec:
           imagePullPolicy: IfNotPresent
           resources:
             requests:
-              cpu: "500m" # I need access to 1/2 core on the node.
+              cpu: "250m" # I need access to 1/4 core on the node.
               memory: 500Mi
             limits:
-              cpu: "500m" # Execute instructions 50ms/100ms on my 1/2 core.
+              cpu: "250m" # Execute instructions 25ms/100ms on my 1/2 core.
               memory: 500Mi
           command:
           - "/bin/sh"
