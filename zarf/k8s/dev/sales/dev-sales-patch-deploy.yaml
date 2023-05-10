@@ -95,7 +95,7 @@ spec:
             cpu: "1000m" # I need access to 1 core on the node.
             memory: 500Mi
           limits:
-            cpu: "100m" # Execute instructions 100ms/100ms on my 1 core.
+            cpu: "1000m" # Execute instructions 100ms/100ms on my 1 core.
             memory: 500Mi
 
         volumeMounts:
