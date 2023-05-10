@@ -1565,16 +1565,14 @@ func (p *Planner) planComprehension(body ast.Body, closureIter planiter, target 
 	// below.
 	p.vars.Push(map[ast.Var]ir.Local{})
 	prev := p.curr
-	p.curr = &ir.Block{}
+	block := &ir.Block{}
+	p.curr = block
 	ploc := p.loc
 
-	if err := p.planQuery(body, 0, func() error {
-		return closureIter()
-	}); err != nil {
+	if err := p.planQuery(body, 0, closureIter); err != nil {
 		return err
 	}
 
-	block := p.curr
 	p.curr = prev
 	p.loc = ploc
 	p.vars.Pop()
@@ -1737,11 +1735,12 @@ func (p *Planner) planRefData(virtual *ruletrie, base *baseptr, ref ast.Ref, ind
 					}},
 				}}
 				p.curr = outerBlock
-				return p.planRefRec(ref, index+1, func() error { // rest of the ref
-					p.curr = prev
-					p.appendStmt(&ir.BlockStmt{Blocks: []*ir.Block{outerBlock}})
-					return iter()
-				})
+				if err := p.planRefRec(ref, index+1, iter); err != nil { // rest of the ref
+					return err
+				}
+				p.curr = prev
+				p.appendStmt(&ir.BlockStmt{Blocks: []*ir.Block{outerBlock}})
+				return nil
 			})
 		}
 	}
@@ -2236,6 +2235,7 @@ func (p *Planner) optimizeLookup(t *ruletrie, ref ast.Ref) ([][]*ast.Rule, []ir.
 	var index int
 
 	// ref[0] is data, ignore
+outer:
 	for i := 1; i < len(ref); i++ {
 		index = i
 		r := ref[i]
@@ -2259,7 +2259,7 @@ func (p *Planner) optimizeLookup(t *ruletrie, ref ast.Ref) ([][]*ast.Rule, []ir.
 				}
 			}
 		case ast.String:
-			// take matching children
+			// take all children that either match or have a var key
 			for _, node := range nodes {
 				if node := node.Get(r); node != nil {
 					nextNodes = append(nextNodes, node)
@@ -2272,14 +2272,25 @@ func (p *Planner) optimizeLookup(t *ruletrie, ref ast.Ref) ([][]*ast.Rule, []ir.
 
 		nodes = nextNodes
 
-		// if all nodes have 0 children, abort ref check and optimize
-		all := true
+		// if all nodes have rules() > 0, abort ref check and optimize
+		// NOTE(sr): for a.b[c] = ... and a.b.d = ..., we stop at a.b, as its rules()
+		// will collect the children rules
+		// We keep the "all nodes have 0 children" check since it's cheaper and might
+		// let us break, too.
+		all := 0
 		for _, node := range nodes {
-			all = all && len(node.Children()) == 0
+			all += node.ChildrenCount()
 		}
-		if all {
+		if all == 0 {
 			p.debugf("ref %s: all nodes have 0 children, break", ref[0:index+1])
 			break
+		}
+
+		for _, node := range nodes {
+			if len(node.Rules()) > 0 {
+				p.debugf("ref %s: at least one rule has 1+ rules, break", ref[0:index+1])
+				break outer
+			}
 		}
 	}
 
@@ -2295,7 +2306,7 @@ func (p *Planner) optimizeLookup(t *ruletrie, ref ast.Ref) ([][]*ast.Rule, []ir.
 	for _, node := range nodes {
 		// we're done with ref, check if there's only ruleset leaves; collect rules
 		if index == len(ref)-1 {
-			if len(node.Rules()) == 0 && len(node.Children()) > 0 {
+			if len(node.Rules()) == 0 && node.ChildrenCount() > 0 {
 				p.debugf("no optimization of %s: unbalanced ruletrie", ref)
 				return dont()
 			}
