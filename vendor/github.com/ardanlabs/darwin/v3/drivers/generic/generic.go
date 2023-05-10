@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/ardanlabs/darwin/v3"
@@ -112,6 +113,19 @@ func (d *Driver) All() ([]darwin.MigrationRecord, error) {
 	}
 
 	rows.Close()
+
+	// The PGX driver did not provide float values that we absolute at the
+	// precision of a 64 bit float. This fixes that, but does restrict the
+	// versioning to 5 decimal points.
+	for i := range entries {
+		f := fmt.Sprintf("%5f", entries[i].Version)
+
+		var err error
+		entries[i].Version, err = strconv.ParseFloat(f, 64)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	return entries, nil
 }

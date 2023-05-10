@@ -8,8 +8,8 @@ github.com/arbovm/levenshtein v0.0.0-20160628152529-48b4e1c0c4d0 h1:jfIu9sQUG6Ig
 github.com/arbovm/levenshtein v0.0.0-20160628152529-48b4e1c0c4d0/go.mod h1:t2tdKJDJF9BV14lnkjHmOQgcvEKgtqs5a1N3LNdJhGE=
 github.com/ardanlabs/conf/v3 v3.1.5 h1:G6df2AxKnGHAK+ur2p50Ys8Vo1HnKcsvqSj9lxVeczk=
 github.com/ardanlabs/conf/v3 v3.1.5/go.mod h1:zclexWKe0NVj6LHQ8NgDDZ7bQ1spE0KeKPFficdtAjU=
-github.com/ardanlabs/darwin/v3 v3.2.0 h1:F5p0B2wk0BaYKV8b8AL8Xwzh0biSdvetCEs8rKk4rNk=
-github.com/ardanlabs/darwin/v3 v3.2.0/go.mod h1:dnfiwJYj15gfm/2XltdAmLxhK/7h1eFs7rc4yaaXC0A=
+github.com/ardanlabs/darwin/v3 v3.3.0 h1:8QfL3CjA5qWzvt8FVFSMKIVYMwWy8xjdr0b1f5RGylU=
+github.com/ardanlabs/darwin/v3 v3.3.0/go.mod h1:dnfiwJYj15gfm/2XltdAmLxhK/7h1eFs7rc4yaaXC0A=
 github.com/benbjohnson/clock v1.1.0 h1:Q92kusRqC1XV2MjkWETPvjJVqKetz1OzxZB7mHJLju8=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=
 github.com/bytecodealliance/wasmtime-go/v3 v3.0.2 h1:3uZCA/BLTIu+DqCfguByNMJa2HVHpXvjfy0Dy7g6fuA=
