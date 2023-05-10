@@ -98,6 +98,10 @@ spec:
             cpu: "1000m" # Execute instructions 100ms/100ms on my 1 core.
             memory: 500Mi
 
+        env:
+        - name: GOMAXPROCS
+          value: "1"
+
         volumeMounts:
           - name: vault
             mountPath: /vault
@@ -110,3 +114,7 @@ spec:
           limits:
             cpu: "500m" # Execute instructions 50ms/100ms on my 1/2 core.
             memory: 250Mi
+
+        env:
+        - name: GOMAXPROCS
+          value: "1"
