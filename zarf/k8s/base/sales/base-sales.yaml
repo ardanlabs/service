@@ -26,16 +26,16 @@ spec:
 
       initContainers:
       - name: init-migrate
-        image: sales-api-image
+        image: service-image
         command: ['./sales-admin', 'migrate']
 
       - name: init-seed
-        image: sales-api-image
+        image: service-image
         command: ['./sales-admin', 'seed']
 
       containers:
       - name: sales-api
-        image: sales-api-image
+        image: service-image
 
         ports:
         - name: sales-api
@@ -111,5 +111,5 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: sales-service
+  name: sales-api
   namespace: sales-system

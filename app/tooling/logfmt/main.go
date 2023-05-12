@@ -21,6 +21,8 @@ func main() {
 	flag.Parse()
 	var b strings.Builder
 
+	service := strings.ToLower(service)
+
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
 		s := scanner.Text()
@@ -35,7 +37,7 @@ func main() {
 		}
 
 		// If a service filter was provided, check.
-		if service != "" && m["service"] != service {
+		if service != "" && strings.ToLower(m["service"].(string)) != service {
 			continue
 		}
 

@@ -9,8 +9,8 @@ patches:
 - path: ./dev-sales-vault-patch.yaml
 images:
 - name: metrics-image
-  newName: metrics
-  newTag: "1.0"
-- name: sales-api-image
-  newName: sales-api
-  newTag: "1.0"
+  newName: ardanlabs/service/sales-api-metrics
+  newTag: 0.0.1
+- name: service-image
+  newName: ardanlabs/service/sales-api
+  newTag: 0.0.1

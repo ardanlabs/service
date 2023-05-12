@@ -39,7 +39,7 @@ spec:
             claimName: database-data
       containers:
       - name: postgres
-        image: postgres:15-alpine
+        image: postgres:15.3
         volumeMounts:
           - name: data
             mountPath: /var/lib/postgresql/data
