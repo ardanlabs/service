@@ -12,6 +12,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ardanlabs/service/business/core/event"
+	"github.com/ardanlabs/service/business/core/product"
+	"github.com/ardanlabs/service/business/core/product/stores/productdb"
+	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/core/user/stores/userdb"
 	"github.com/ardanlabs/service/business/data/dbmigrate"
 	database "github.com/ardanlabs/service/business/sys/database/pgx"
@@ -21,17 +25,6 @@ import (
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-)
-
-var (
-	//go:embed sql/seed.sql
-	seedDoc string
-)
-
-// Success and failure markers.
-const (
-	Success = "\u2713"
-	Failed  = "\u2717"
 )
 
 // StartDB starts a database instance.
@@ -58,10 +51,22 @@ func StopDB(c *docker.Container) {
 	fmt.Println("Stopped:", c.ID)
 }
 
-// NewUnit creates a test database inside a Docker container. It creates the
+// =============================================================================
+
+// Test owns state for running and shutting down tests.
+type Test struct {
+	DB       *sqlx.DB
+	Log      *zap.SugaredLogger
+	Auth     *auth.Auth
+	CoreAPIs CoreAPIs
+	Teardown func()
+	t        *testing.T
+}
+
+// NewTest creates a test database inside a Docker container. It creates the
 // required table structure but the database is otherwise empty. It returns
 // the database to use as well as a function to call at the end of the test.
-func NewUnit(t *testing.T, c *docker.Container) (*zap.SugaredLogger, *sqlx.DB, func()) {
+func NewTest(t *testing.T, c *docker.Container) *Test {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -96,7 +101,7 @@ func NewUnit(t *testing.T, c *docker.Container) (*zap.SugaredLogger, *sqlx.DB, f
 
 	t.Log("Database ready")
 
-	// =========================================================================
+	// -------------------------------------------------------------------------
 
 	db, err := database.Open(database.Config{
 		User:       "postgres",
@@ -121,12 +126,7 @@ func NewUnit(t *testing.T, c *docker.Container) (*zap.SugaredLogger, *sqlx.DB, f
 		t.Fatalf("Seeding error: %s", err)
 	}
 
-	if err := dbmigrate.SeedCustom(ctx, db, seedDoc); err != nil {
-		t.Logf("Logs for %s\n%s:", c.ID, docker.DumpContainerLogs(c.ID))
-		t.Fatalf("Seeding error: %s", err)
-	}
-
-	t.Log("Ready for testing ...")
+	// -------------------------------------------------------------------------
 
 	var buf bytes.Buffer
 	encoder := zapcore.NewConsoleEncoder(zap.NewDevelopmentEncoderConfig())
@@ -135,6 +135,24 @@ func NewUnit(t *testing.T, c *docker.Container) (*zap.SugaredLogger, *sqlx.DB, f
 		zapcore.NewCore(encoder, zapcore.AddSync(writer), zapcore.DebugLevel),
 		zap.WithCaller(true),
 	).Sugar()
+
+	coreAPIs := newCoreAPIs(log, db)
+
+	t.Log("Ready for testing ...")
+
+	// -------------------------------------------------------------------------
+
+	cfg := auth.Config{
+		Log:       log,
+		DB:        db,
+		KeyLookup: &keyStore{},
+	}
+	a, err := auth.New(cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// -------------------------------------------------------------------------
 
 	// teardown is the function that should be invoked when the caller is done
 	// with the database.
@@ -150,39 +168,13 @@ func NewUnit(t *testing.T, c *docker.Container) (*zap.SugaredLogger, *sqlx.DB, f
 		fmt.Println("******************** LOGS ********************")
 	}
 
-	return log, db, teardown
-}
-
-// Test owns state for running and shutting down tests.
-type Test struct {
-	DB       *sqlx.DB
-	Log      *zap.SugaredLogger
-	Auth     *auth.Auth
-	Teardown func()
-
-	t *testing.T
-}
-
-// NewIntegration creates a database, seeds it, constructs an authenticator.
-func NewIntegration(t *testing.T, c *docker.Container) *Test {
-	log, db, teardown := NewUnit(t, c)
-
-	cfg := auth.Config{
-		Log:       log,
-		DB:        db,
-		KeyLookup: &keyStore{},
-	}
-	a, err := auth.New(cfg)
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	test := Test{
 		DB:       db,
 		Log:      log,
 		Auth:     a,
-		t:        t,
+		CoreAPIs: coreAPIs,
 		Teardown: teardown,
+		t:        t,
 	}
 
 	return &test
@@ -218,6 +210,8 @@ func (test *Test) Token(email string, pass string) string {
 	return token
 }
 
+// =============================================================================
+
 // StringPointer is a helper to get a *string from a string. It is in the tests
 // package because we normally don't want to deal with pointers to basic types
 // but it's useful in some tests.
@@ -230,6 +224,25 @@ func StringPointer(s string) *string {
 // useful in some tests.
 func IntPointer(i int) *int {
 	return &i
+}
+
+// =============================================================================
+
+// CoreAPIs represents all the core api's needed for testing.
+type CoreAPIs struct {
+	User    *user.Core
+	Product *product.Core
+}
+
+func newCoreAPIs(log *zap.SugaredLogger, db *sqlx.DB) CoreAPIs {
+	evnCore := event.NewCore(log)
+	usrCore := user.NewCore(evnCore, userdb.NewStore(log, db))
+	prdCore := product.NewCore(log, evnCore, usrCore, productdb.NewStore(log, db))
+
+	return CoreAPIs{
+		User:    usrCore,
+		Product: prdCore,
+	}
 }
 
 // =============================================================================

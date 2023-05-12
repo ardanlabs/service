@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math/rand"
 	"time"
 
 	"github.com/ardanlabs/service/business/core/event"
@@ -137,6 +138,31 @@ func (c *Core) QueryByUserID(ctx context.Context, userID uuid.UUID) ([]Product, 
 	prds, err := c.storer.QueryByUserID(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("query: %w", err)
+	}
+
+	return prds, nil
+}
+
+// GenerateFakeProducts is a helper method for testing.
+func (c *Core) GenerateFakeProducts(n int, userID uuid.UUID) ([]Product, error) {
+	prds := make([]Product, n)
+
+	for i := 0; i < n; i++ {
+		idx := rand.Intn(10000)
+
+		nc := NewProduct{
+			Name:     fmt.Sprintf("Name%d", idx),
+			Cost:     rand.Intn(500),
+			Quantity: rand.Intn(50),
+			UserID:   userID,
+		}
+
+		prd, err := c.Create(context.Background(), nc)
+		if err != nil {
+			return nil, fmt.Errorf("seeding card: idx: %d : %w", i, err)
+		}
+
+		prds[i] = prd
 	}
 
 	return prds, nil

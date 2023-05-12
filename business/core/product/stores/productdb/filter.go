@@ -13,22 +13,22 @@ func (s *Store) applyFilter(filter product.QueryFilter, data map[string]interfac
 
 	if filter.ID != nil {
 		data["product_id"] = *filter.ID
-		wc = append(wc, "p.product_id = :product_id")
+		wc = append(wc, "product_id = :product_id")
 	}
 
 	if filter.Name != nil {
 		data["name"] = fmt.Sprintf("%%%s%%", *filter.Name)
-		wc = append(wc, "p.name LIKE :name")
+		wc = append(wc, "name LIKE :name")
 	}
 
 	if filter.Cost != nil {
 		data["cost"] = *filter.Cost
-		wc = append(wc, "p.cost = :cost")
+		wc = append(wc, "cost = :cost")
 	}
 
 	if filter.Quantity != nil {
 		data["quantity"] = *filter.Quantity
-		wc = append(wc, "p.quantity = :quantity")
+		wc = append(wc, "quantity = :quantity")
 	}
 
 	if len(wc) > 0 {

@@ -96,18 +96,12 @@ func (s *Store) Query(ctx context.Context, filter product.QueryFilter, orderBy o
 
 	const q = `
 	SELECT
-		p.*,
-		COALESCE(SUM(s.quantity) ,0) AS sold,
-		COALESCE(SUM(s.paid), 0) AS revenue
+		*
 	FROM
-		products AS p
-	LEFT JOIN
-		sales AS s ON p.product_id = s.product_id`
+		products`
 
 	buf := bytes.NewBufferString(q)
 	s.applyFilter(filter, data, buf)
-
-	buf.WriteString(" GROUP BY p.product_id ")
 
 	orderByClause, err := orderByClause(orderBy)
 	if err != nil {
@@ -133,7 +127,7 @@ func (s *Store) Count(ctx context.Context, filter product.QueryFilter) (int, err
 	SELECT
 		count(1)
 	FROM
-		products AS p`
+		products`
 
 	buf := bytes.NewBufferString(q)
 	s.applyFilter(filter, data, buf)
@@ -160,17 +154,11 @@ func (s *Store) QueryByID(ctx context.Context, productID uuid.UUID) (product.Pro
 
 	const q = `
 	SELECT
-		p.*,
-		COALESCE(SUM(s.quantity), 0) AS sold,
-		COALESCE(SUM(s.paid), 0) AS revenue
+		*
 	FROM
-		products AS p
-	LEFT JOIN
-		sales AS s ON p.product_id = s.product_id
+		products
 	WHERE
-		p.product_id = :product_id
-	GROUP BY
-		p.product_id`
+		product_id = :product_id`
 
 	var dbPrd dbProduct
 	if err := database.NamedQueryStruct(ctx, s.log, s.db, q, data, &dbPrd); err != nil {
@@ -193,17 +181,11 @@ func (s *Store) QueryByUserID(ctx context.Context, userID uuid.UUID) ([]product.
 
 	const q = `
 	SELECT
-		p.*,
-		COALESCE(SUM(s.quantity), 0) AS sold,
-		COALESCE(SUM(s.paid), 0) AS revenue
+		*
 	FROM
-		products AS p
-	LEFT JOIN
-		sales AS s ON p.product_id = s.product_id
+		products
 	WHERE
-		p.user_id = :user_id
-	GROUP BY
-		p.product_id`
+		user_id = :user_id`
 
 	var dbPrds []dbProduct
 	if err := database.NamedQuerySlice(ctx, s.log, s.db, q, data, &dbPrds); err != nil {
