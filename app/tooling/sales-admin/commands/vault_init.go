@@ -27,7 +27,7 @@ func VaultInit(vaultConfig vault.Config) error {
 		return fmt.Errorf("constructing vault: %w", err)
 	}
 
-	// =========================================================================
+	// -------------------------------------------------------------------------
 
 	log.Println("Check system is already initialized")
 
@@ -44,7 +44,7 @@ func VaultInit(vaultConfig vault.Config) error {
 		}
 	}
 
-	// =========================================================================
+	// -------------------------------------------------------------------------
 
 	log.Println("Initializing vault")
 
@@ -75,7 +75,7 @@ func VaultInit(vaultConfig vault.Config) error {
 		return nil
 	}
 
-	// =========================================================================
+	// -------------------------------------------------------------------------
 
 	log.Println("Unsealing vault")
 
@@ -87,7 +87,7 @@ func VaultInit(vaultConfig vault.Config) error {
 		return fmt.Errorf("error unsealing vault: %w", err)
 	}
 
-	// =========================================================================
+	// -------------------------------------------------------------------------
 
 	log.Println("Mounting path in vault")
 
@@ -99,7 +99,7 @@ func VaultInit(vaultConfig vault.Config) error {
 		return fmt.Errorf("error unsealing vault: %w", err)
 	}
 
-	// =========================================================================
+	// -------------------------------------------------------------------------
 
 	log.Println("Creating sales-api policy")
 
@@ -108,7 +108,7 @@ func VaultInit(vaultConfig vault.Config) error {
 		return fmt.Errorf("unable to create policy: %w", err)
 	}
 
-	// =========================================================================
+	// -------------------------------------------------------------------------
 
 	log.Printf("Generating sales-api token: %s", vaultConfig.Token)
 

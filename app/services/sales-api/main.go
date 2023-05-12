@@ -52,12 +52,12 @@ func main() {
 
 func run(log *zap.SugaredLogger) error {
 
-	// =========================================================================
+	// -------------------------------------------------------------------------
 	// GOMAXPROCS
 
 	log.Infow("startup", "GOMAXPROCS", runtime.GOMAXPROCS(0))
 
-	// =========================================================================
+	// -------------------------------------------------------------------------
 	// Configuration
 
 	cfg := struct {
@@ -111,7 +111,7 @@ func run(log *zap.SugaredLogger) error {
 		return fmt.Errorf("parsing config: %w", err)
 	}
 
-	// =========================================================================
+	// -------------------------------------------------------------------------
 	// App Starting
 
 	log.Infow("starting service", "version", build)
@@ -125,7 +125,7 @@ func run(log *zap.SugaredLogger) error {
 
 	expvar.NewString("build").Set(build)
 
-	// =========================================================================
+	// -------------------------------------------------------------------------
 	// Database Support
 
 	log.Infow("startup", "status", "initializing database support", "host", cfg.DB.Host)
@@ -147,7 +147,7 @@ func run(log *zap.SugaredLogger) error {
 		db.Close()
 	}()
 
-	// =========================================================================
+	// -------------------------------------------------------------------------
 	// Initialize authentication support
 
 	log.Infow("startup", "status", "initializing authentication support")
@@ -178,7 +178,7 @@ func run(log *zap.SugaredLogger) error {
 		return fmt.Errorf("constructing auth: %w", err)
 	}
 
-	// =========================================================================
+	// -------------------------------------------------------------------------
 	// Start Tracing Support
 
 	log.Infow("startup", "status", "initializing OT/Zipkin tracing support")
@@ -195,7 +195,7 @@ func run(log *zap.SugaredLogger) error {
 
 	tracer := traceProvider.Tracer("service")
 
-	// =========================================================================
+	// -------------------------------------------------------------------------
 	// Start Debug Service
 
 	log.Infow("startup", "status", "debug v1 router started", "host", cfg.Web.DebugHost)
@@ -206,7 +206,7 @@ func run(log *zap.SugaredLogger) error {
 		}
 	}()
 
-	// =========================================================================
+	// -------------------------------------------------------------------------
 	// Start API Service
 
 	log.Infow("startup", "status", "initializing V1 API support")
@@ -238,7 +238,7 @@ func run(log *zap.SugaredLogger) error {
 		serverErrors <- api.ListenAndServe()
 	}()
 
-	// =========================================================================
+	// -------------------------------------------------------------------------
 	// Shutdown
 
 	select {
