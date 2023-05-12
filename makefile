@@ -146,9 +146,9 @@ METRICS_IMAGE   := $(BASE_IMAGE_NAME)/$(SERVICE_NAME)-metrics:$(VERSION)
 dev-gotooling:
 	go install github.com/divan/expvarmon@8e0b3d2
 	go install github.com/rakyll/hey@8985827
-	go install honnef.co/go/tools/cmd/staticcheck@v0.4.3
-	go install golang.org/x/vuln/cmd/govulncheck@v0.1.0
-	go install golang.org/x/tools/cmd/goimports@v0.8.0
+	go install honnef.co/go/tools/cmd/staticcheck@latest
+	go install golang.org/x/vuln/cmd/govulncheck@latest
+	go install golang.org/x/tools/cmd/goimports@latest
 
 dev-brew-common:
 	brew update
