@@ -46,7 +46,7 @@ func crud(t *testing.T) {
 			return nil, fmt.Errorf("seeding users : %w", err)
 		}
 
-		prds, err := prdCore.GenerateFakeProducts(1, usrs[0].ID)
+		prds, err := product.TestGenerateSeedProducts(1, prdCore, usrs[0].ID)
 		if err != nil {
 			return nil, fmt.Errorf("seeding products : %w", err)
 		}
@@ -197,7 +197,7 @@ func paging(t *testing.T) {
 			return nil, fmt.Errorf("seeding products : %w", err)
 		}
 
-		prds, err := prdCore.GenerateFakeProducts(2, usrs[0].ID)
+		prds, err := product.TestGenerateSeedProducts(2, prdCore, usrs[0].ID)
 		if err != nil {
 			return nil, fmt.Errorf("seeding products : %w", err)
 		}

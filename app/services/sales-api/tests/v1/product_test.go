@@ -70,7 +70,7 @@ func Test_Products(t *testing.T) {
 			return nil, fmt.Errorf("seeding users : %w", err)
 		}
 
-		prds, err := prdCore.GenerateFakeProducts(10, usrs[0].ID)
+		prds, err := product.TestGenerateSeedProducts(10, prdCore, usrs[0].ID)
 		if err != nil {
 			return nil, fmt.Errorf("seeding products : %w", err)
 		}
