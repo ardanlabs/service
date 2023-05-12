@@ -119,31 +119,26 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 # 	https://www.openpolicyagent.org/docs/latest/policy-reference/
 
 # ==============================================================================
-# Install dependencies
+# Define dependencies
 
-GOLANG       := golang:1.20.4-alpine3.17@sha256:4ee203ff3933e7a6f18d3574fd6661a73b58c60f028d2927274400f4774aaa41
-ALPINE       := alpine:3.17.3@sha256:b6ca290b6b4cdcca5b3db3ffa338ee0285c11744b4a6abaa9627746ee3291d8d
-KIND         := kindest/node:v1.27.1@sha256:f957f0636f30b105e15ed00932b25d175eaf08d5d11735e8d6ec73325ebd5b02
-POSTGRES     := postgres:15.2-alpine3.17@sha256:07ec36ad2d5ab9250f38c8ef749239b662cf15d03c9ddb7167422edbbdf71156
-VAULT        := hashicorp/vault:1.13.2@sha256:05929f692a3fcae567b477262cf1b5c8aaa3ede39de5f48387181345f9e2026e
-ZIPKIN       := openzipkin/zipkin:2.24@sha256:ce67907d4a8154fa9e431da9546b466b8fdb909b0734615eccd616cdddd41259
-TELEPRESENCE := datawire/tel2:2.13.1@sha256:b291574fe79056ecc76465ff3a0e2039457f58371ed4cd1e803c42f46abbae54
+GOLANG          := golang:1.20
+ALPINE          := alpine:3.18
+KIND            := kindest/node:v1.27.1
+POSTGRES        := postgres:15.3
+VAULT           := hashicorp/vault:1.13
+ZIPKIN          := openzipkin/zipkin:2.24
+TELEPRESENCE    := datawire/tel2:2.13.1
 
-SERVICE_NAME := "sales-api"
-NAMESPACE    := "sales-system"
-APP          := "sales"
-SERVICE_PORT := "8080"
-DEBUG_PORT   := "4000"
+KIND_CLUSTER    := ardan-starter-cluster
+NAMESPACE       := sales-system
+APP             := sales
+BASE_IMAGE_NAME := ardanlabs/service
+SERVICE_NAME    := sales-api
+VERSION         := 0.0.1
+SERVICE_IMAGE   := $(BASE_IMAGE_NAME)/$(SERVICE_NAME):$(VERSION)
+METRICS_IMAGE   := $(BASE_IMAGE_NAME)/$(SERVICE_NAME)-metrics:$(VERSION)
 
-BASE_IMAGE_NAME ?= "github.com/ardanlabs/service"
-IMAGE_NAME      ?= "sales-api"
-VERSION         ?= "0.0.1-$(shell git rev-parse --short HEAD)"
-
-KIND_CLUSTER := ardan-starter-cluster
-
-SERVICE_IMAGE := "$(BASE_IMAGE_NAME)/$(IMAGE_NAME):$(VERSION)"
-METRICS_IMAGE := "$(BASE_IMAGE_NAME)/$(IMAGE_NAME)-metrics:$(VERSION)"
-
+# VERSION       := "0.0.1-$(shell git rev-parse --short HEAD)"
 
 # ==============================================================================
 # Install dependencies
