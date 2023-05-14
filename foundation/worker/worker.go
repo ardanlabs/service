@@ -112,9 +112,7 @@ func (w *Worker) Start(ctx context.Context, fn JobFunc) (string, error) {
 	ctx, cancel := context.WithDeadline(context.Background(), deadline)
 
 	// Register this new G as running.
-	w.mu.Lock()
-	defer w.mu.Unlock()
-	w.running[workKey] = cancel
+	w.trackWork(workKey, cancel)
 
 	// Launch a goroutine to perform the work.
 	w.wg.Add(1)
@@ -142,8 +140,8 @@ func (w *Worker) Start(ctx context.Context, fn JobFunc) (string, error) {
 
 // Stop is used to cancel an existing job that is running.
 func (w *Worker) Stop(workKey string) error {
-	w.mu.Lock()
-	defer w.mu.Unlock()
+	w.mu.RLock()
+	defer w.mu.RUnlock()
 
 	cancel, exists := w.running[workKey]
 	if !exists {
@@ -154,6 +152,13 @@ func (w *Worker) Stop(workKey string) error {
 	cancel()
 
 	return nil
+}
+
+func (w *Worker) trackWork(workKey string, cancel context.CancelFunc) {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+
+	w.running[workKey] = cancel
 }
 
 // Convenience function to remove work from the running list.
