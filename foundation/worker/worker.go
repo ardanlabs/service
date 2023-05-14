@@ -154,6 +154,8 @@ func (w *Worker) Stop(workKey string) error {
 	return nil
 }
 
+// =============================================================================
+
 func (w *Worker) trackWork(workKey string, cancel context.CancelFunc) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
@@ -161,7 +163,6 @@ func (w *Worker) trackWork(workKey string, cancel context.CancelFunc) {
 	w.running[workKey] = cancel
 }
 
-// Convenience function to remove work from the running list.
 func (w *Worker) removeWork(workKey string) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
