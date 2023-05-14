@@ -1,3 +1,5 @@
+// Package usersummary provides an example of a core business API that
+// is based on a view.
 package usersummary
 
 import (

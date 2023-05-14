@@ -12,15 +12,6 @@ type dbSummary struct {
 	TotalCost  float64   `db:"total_cost"`
 }
 
-func toDBSummary(smm usersummary.Summary) dbSummary {
-	return dbSummary{
-		UserID:     smm.UserID,
-		UserName:   smm.UserName,
-		TotalCount: smm.TotalCount,
-		TotalCost:  smm.TotalCost,
-	}
-}
-
 func toCoreSummary(dbSmm dbSummary) usersummary.Summary {
 	usr := usersummary.Summary{
 		UserID:     dbSmm.UserID,

@@ -1,3 +1,4 @@
+// Package usersummarydb contains product related CRUD functionality.
 package usersummarydb
 
 import (
@@ -14,9 +15,8 @@ import (
 
 // Store manages the set of APIs for user database access.
 type Store struct {
-	log    *zap.SugaredLogger
-	db     sqlx.ExtContext
-	inTran bool
+	log *zap.SugaredLogger
+	db  sqlx.ExtContext
 }
 
 // NewStore constructs the api for data access.

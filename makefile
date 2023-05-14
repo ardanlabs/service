@@ -380,26 +380,31 @@ lint:
 vuln-check:
 	govulncheck ./...
 
-test-all: lint test-race vuln-check
+test-all: test lint vuln-check
 
-test-token-local:
+test-all-race: test-race lint vuln-check
+
+# ==============================================================================
+# Hitting endpoints
+
+token-local:
 	curl -il --user "admin@example.com:gophers" http://localhost:3000/v1/users/token/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
 
-test-token:
+token:
 	curl -il --user "admin@example.com:gophers" http://$(SERVICE_NAME).$(NAMESPACE).svc.cluster.local:3000/v1/users/token/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
 
 # export TOKEN="COPY TOKEN STRING FROM LAST CALL"
 
-test-users-local:
+users-local:
 	curl -il -H "Authorization: Bearer ${TOKEN}" http://localhost:3000/v1/users?page=1&rows=2
 
-test-users:
+users:
 	curl -il -H "Authorization: Bearer ${TOKEN}" http://$(SERVICE_NAME).$(NAMESPACE).svc.cluster.local:3000/v1/users?page=1&rows=2
 
-test-load-local:
+load-local:
 	hey -m GET -c 100 -n 10000 -H "Authorization: Bearer ${TOKEN}" http://localhost:3000/v1/users?page=1&rows=2
 
-test-load:
+load:
 	hey -m GET -c 100 -n 10000 -H "Authorization: Bearer ${TOKEN}" http://$(SERVICE_NAME).$(NAMESPACE).svc.cluster.local:3000/v1/users?page=1&rows=2
 
 # ==============================================================================
