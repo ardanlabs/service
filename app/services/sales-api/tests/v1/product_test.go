@@ -17,6 +17,7 @@ import (
 	"github.com/ardanlabs/service/business/core/product"
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/data/dbtest"
+	"github.com/ardanlabs/service/business/data/order"
 	"github.com/ardanlabs/service/business/sys/validate"
 	v1Web "github.com/ardanlabs/service/business/web/v1"
 	"github.com/ardanlabs/service/business/web/v1/paging"
@@ -62,18 +63,24 @@ func Test_Products(t *testing.T) {
 	// -------------------------------------------------------------------------
 
 	seed := func(ctx context.Context, usrCore *user.Core, prdCore *product.Core) ([]product.Product, error) {
-		var filter user.QueryFilter
-		filter.WithName("Admin Gopher")
-
-		usrs, err := usrCore.Query(ctx, filter, user.DefaultOrderBy, 1, 1)
+		usrs, err := usrCore.Query(ctx, user.QueryFilter{}, order.By{Field: user.OrderByName, Direction: order.ASC}, 1, 2)
 		if err != nil {
 			return nil, fmt.Errorf("seeding users : %w", err)
 		}
 
-		prds, err := product.TestGenerateSeedProducts(10, prdCore, usrs[0].ID)
+		prds1, err := product.TestGenerateSeedProducts(5, prdCore, usrs[0].ID)
 		if err != nil {
 			return nil, fmt.Errorf("seeding products : %w", err)
 		}
+
+		prds2, err := product.TestGenerateSeedProducts(5, prdCore, usrs[1].ID)
+		if err != nil {
+			return nil, fmt.Errorf("seeding products : %w", err)
+		}
+
+		var prds []product.Product
+		prds = append(prds, prds1...)
+		prds = append(prds, prds2...)
 
 		return prds, nil
 	}
@@ -264,7 +271,7 @@ func (pt *ProductTests) putProduct404() func(t *testing.T) {
 // getProducts200 validates a query request.
 func (pt *ProductTests) getProducts200(prds []product.Product) func(t *testing.T) {
 	return func(t *testing.T) {
-		url := "/v1/products?page=1&rows=2"
+		url := "/v1/products?page=1&rows=10&orderBy=userid,DESC"
 
 		r := httptest.NewRequest(http.MethodGet, url, nil)
 		w := httptest.NewRecorder()
@@ -276,9 +283,13 @@ func (pt *ProductTests) getProducts200(prds []product.Product) func(t *testing.T
 			t.Fatalf("Should receive a status code of 200 for the response : %d", w.Code)
 		}
 
-		var pr paging.Response[productgrp.AppProduct]
+		var pr paging.Response[productgrp.AppProductDetails]
 		if err := json.Unmarshal(w.Body.Bytes(), &pr); err != nil {
 			t.Fatalf("Should be able to unmarshal the response : %s", err)
+		}
+
+		for _, i := range pr.Items {
+			fmt.Println(i.Name, i.UserName)
 		}
 
 		if pr.Total != len(prds) {
@@ -287,10 +298,22 @@ func (pt *ProductTests) getProducts200(prds []product.Product) func(t *testing.T
 			t.Error("Should get the right total")
 		}
 
-		if len(pr.Items) != 2 {
+		if len(pr.Items) != 10 {
 			t.Log("got:", len(pr.Items))
-			t.Log("exp:", 2)
+			t.Log("exp:", 10)
 			t.Error("Should get the right number of products")
+		}
+
+		if pr.Items[0].UserName != "Admin Gopher" {
+			t.Log("got:", pr.Items[0].UserName)
+			t.Log("exp:", "Admin Gopher")
+			t.Error("Should get the right username")
+		}
+
+		if pr.Items[9].UserName != "User Gopher" {
+			t.Log("got:", pr.Items[9].UserName)
+			t.Log("exp:", "User Gopher")
+			t.Error("Should get the right username")
 		}
 	}
 }
@@ -306,7 +329,7 @@ func (pt *ProductTests) crudProduct() func(t *testing.T) {
 }
 
 // postProduct201 validates a product can be created with the endpoint.
-func (pt *ProductTests) postProduct201(t *testing.T) product.Product {
+func (pt *ProductTests) postProduct201(t *testing.T) productgrp.AppProduct {
 	np := product.NewProduct{
 		Name:     "Comic Books",
 		Cost:     25,
@@ -325,12 +348,11 @@ func (pt *ProductTests) postProduct201(t *testing.T) product.Product {
 	r.Header.Set("Authorization", "Bearer "+pt.userToken)
 	pt.app.ServeHTTP(w, r)
 
-	var newPrd product.Product
-
 	if w.Code != http.StatusCreated {
 		t.Fatalf("Should receive a status code of 201 for the response : %d", w.Code)
 	}
 
+	var newPrd productgrp.AppProduct
 	if err := json.NewDecoder(w.Body).Decode(&newPrd); err != nil {
 		t.Fatalf("Should be able to unmarshal the response : %s", err)
 	}
@@ -348,7 +370,7 @@ func (pt *ProductTests) postProduct201(t *testing.T) product.Product {
 }
 
 // deleteProduct200 validates deleting a product that does exist.
-func (pt *ProductTests) deleteProduct204(t *testing.T, id uuid.UUID) {
+func (pt *ProductTests) deleteProduct204(t *testing.T, id string) {
 	url := fmt.Sprintf("/v1/products/%s", id)
 
 	r := httptest.NewRequest(http.MethodDelete, url, nil)
@@ -362,7 +384,7 @@ func (pt *ProductTests) deleteProduct204(t *testing.T, id uuid.UUID) {
 	}
 }
 
-func (pt *ProductTests) getProduct200(t *testing.T, id uuid.UUID) {
+func (pt *ProductTests) getProduct200(t *testing.T, id string) {
 	url := fmt.Sprintf("/v1/products/%s", id)
 
 	r := httptest.NewRequest(http.MethodGet, url, nil)
@@ -375,7 +397,7 @@ func (pt *ProductTests) getProduct200(t *testing.T, id uuid.UUID) {
 		t.Fatalf("Should receive a status code of 200 for the response : %d", w.Code)
 	}
 
-	var got product.Product
+	var got productgrp.AppProduct
 	if err := json.NewDecoder(w.Body).Decode(&got); err != nil {
 		t.Fatalf("Should be able to unmarshal the response : %s", err)
 	}
@@ -392,7 +414,7 @@ func (pt *ProductTests) getProduct200(t *testing.T, id uuid.UUID) {
 }
 
 // putProduct200 validates updating a product that does exist.
-func (pt *ProductTests) putProduct200(t *testing.T, id uuid.UUID) {
+func (pt *ProductTests) putProduct200(t *testing.T, id string) {
 	body := `{"name": "Graphic Novels", "cost": 100}`
 
 	url := fmt.Sprintf("/v1/products/%s", id)
@@ -407,7 +429,7 @@ func (pt *ProductTests) putProduct200(t *testing.T, id uuid.UUID) {
 		t.Fatalf("Should receive a status code of 204 for the response : %d", w.Code)
 	}
 
-	r = httptest.NewRequest(http.MethodGet, "/v1/products/"+id.String(), nil)
+	r = httptest.NewRequest(http.MethodGet, "/v1/products/"+id, nil)
 	w = httptest.NewRecorder()
 
 	r.Header.Set("Authorization", "Bearer "+pt.userToken)
@@ -417,7 +439,7 @@ func (pt *ProductTests) putProduct200(t *testing.T, id uuid.UUID) {
 		t.Fatalf("Should receive a status code of 200 for the retrieve : %d", w.Code)
 	}
 
-	var ru product.Product
+	var ru productgrp.AppProduct
 	if err := json.NewDecoder(w.Body).Decode(&ru); err != nil {
 		t.Fatalf("Should be able to unmarshal the response : %s", err)
 	}

@@ -47,7 +47,9 @@ func parseFilter(r *http.Request) (user.QueryFilter, error) {
 		filter.WithEndCreatedDate(t)
 	}
 
-	filter.WithName(values.Get("name"))
+	if name := values.Get("name"); name != "" {
+		filter.WithName(name)
+	}
 
 	if err := filter.Validate(); err != nil {
 		return user.QueryFilter{}, err

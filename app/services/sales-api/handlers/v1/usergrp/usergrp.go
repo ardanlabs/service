@@ -44,7 +44,7 @@ func (h *Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Re
 		return fmt.Errorf("create: usr[%+v]: %w", usr, err)
 	}
 
-	return web.Respond(ctx, w, usr, http.StatusCreated)
+	return web.Respond(ctx, w, toAppUser(usr), http.StatusCreated)
 }
 
 // Update updates a user in the system.
@@ -76,7 +76,7 @@ func (h *Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Re
 		return fmt.Errorf("update: userID[%s] uu[%+v]: %w", userID, uu, err)
 	}
 
-	return web.Respond(ctx, w, usr, http.StatusOK)
+	return web.Respond(ctx, w, toAppUser(usr), http.StatusOK)
 }
 
 // Delete removes a user from the system.

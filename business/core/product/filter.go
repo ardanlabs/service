@@ -30,9 +30,7 @@ func (qf *QueryFilter) WithProductID(productID uuid.UUID) {
 
 // WithName sets the Name field of the QueryFilter value.
 func (qf *QueryFilter) WithName(name string) {
-	if name != "" {
-		qf.Name = &name
-	}
+	qf.Name = &name
 }
 
 // WithCost sets the Cost field of the QueryFilter value.

@@ -25,7 +25,6 @@ import (
 	"github.com/ardanlabs/service/business/web/v1/paging"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/google/uuid"
 )
 
 // UserTests holds methods for each user subtest. This type allows passing
@@ -402,7 +401,7 @@ func (ut *UserTests) crudUser() func(t *testing.T) {
 	}
 }
 
-func (ut *UserTests) postUser201(t *testing.T) user.User {
+func (ut *UserTests) postUser201(t *testing.T) usergrp.AppUser {
 	nu := usergrp.AppNewUser{
 		Name:            "Bill Kennedy",
 		Email:           "bill@ardanlabs.com",
@@ -426,7 +425,7 @@ func (ut *UserTests) postUser201(t *testing.T) user.User {
 		t.Fatalf("Should receive a status code of 201 for the response : %d", w.Code)
 	}
 
-	var newUsr user.User
+	var newUsr usergrp.AppUser
 	if err := json.NewDecoder(w.Body).Decode(&newUsr); err != nil {
 		t.Fatalf("Should be able to unmarshal the response : %s", err)
 	}
@@ -438,8 +437,8 @@ func (ut *UserTests) postUser201(t *testing.T) user.User {
 
 	exp := newUsr
 	exp.Name = "Bill Kennedy"
-	exp.Email = *email
-	exp.Roles = []user.Role{user.RoleAdmin}
+	exp.Email = email.Address
+	exp.Roles = []string{user.RoleAdmin.Name()}
 
 	if diff := cmp.Diff(newUsr, exp); diff != "" {
 		t.Fatalf("Should get the expected result, diff:\n%s", diff)
@@ -448,16 +447,25 @@ func (ut *UserTests) postUser201(t *testing.T) user.User {
 	return newUsr
 }
 
-func (ut *UserTests) postUser409(t *testing.T, usr user.User) {
-	roles := make([]string, len(usr.Roles))
-	for i, role := range usr.Roles {
-		roles[i] = role.Name()
-	}
+func (ut *UserTests) deleteUser204(t *testing.T, id string) {
+	url := fmt.Sprintf("/v1/users/%s", id)
 
+	r := httptest.NewRequest(http.MethodDelete, url, nil)
+	w := httptest.NewRecorder()
+
+	r.Header.Set("Authorization", "Bearer "+ut.adminToken)
+	ut.app.ServeHTTP(w, r)
+
+	if w.Code != http.StatusNoContent {
+		t.Fatalf("Should receive a status code of 204 for the response : %d", w.Code)
+	}
+}
+
+func (ut *UserTests) postUser409(t *testing.T, usr usergrp.AppUser) {
 	nu := usergrp.AppNewUser{
 		Name:            usr.Name,
-		Email:           usr.Email.Address,
-		Roles:           roles,
+		Email:           usr.Email,
+		Roles:           usr.Roles,
 		Password:        "gophers",
 		PasswordConfirm: "gophers",
 	}
@@ -478,21 +486,7 @@ func (ut *UserTests) postUser409(t *testing.T, usr user.User) {
 	}
 }
 
-func (ut *UserTests) deleteUser204(t *testing.T, id uuid.UUID) {
-	url := fmt.Sprintf("/v1/users/%s", id)
-
-	r := httptest.NewRequest(http.MethodDelete, url, nil)
-	w := httptest.NewRecorder()
-
-	r.Header.Set("Authorization", "Bearer "+ut.adminToken)
-	ut.app.ServeHTTP(w, r)
-
-	if w.Code != http.StatusNoContent {
-		t.Fatalf("Should receive a status code of 204 for the response : %d", w.Code)
-	}
-}
-
-func (ut *UserTests) getUser200(t *testing.T, id uuid.UUID) {
+func (ut *UserTests) getUser200(t *testing.T, id string) {
 	url := fmt.Sprintf("/v1/users/%s", id)
 
 	r := httptest.NewRequest(http.MethodGet, url, nil)
@@ -526,7 +520,7 @@ func (ut *UserTests) getUser200(t *testing.T, id uuid.UUID) {
 	}
 
 	exp := got
-	exp.ID = id.String()
+	exp.ID = id
 	exp.Name = "Bill Kennedy"
 	exp.Email = email.Address
 	exp.Roles = []string{user.RoleAdmin.Name()}
@@ -536,7 +530,7 @@ func (ut *UserTests) getUser200(t *testing.T, id uuid.UUID) {
 	}
 }
 
-func (ut *UserTests) putUser200(t *testing.T, id uuid.UUID) {
+func (ut *UserTests) putUser200(t *testing.T, id string) {
 	u := usergrp.AppUpdateUser{
 		Name: dbtest.StringPointer("Bill Kennedy"),
 	}
@@ -557,7 +551,7 @@ func (ut *UserTests) putUser200(t *testing.T, id uuid.UUID) {
 		t.Fatalf("Should receive a status code of 200 for the response : %d", w.Code)
 	}
 
-	r = httptest.NewRequest(http.MethodGet, "/v1/users/"+id.String(), nil)
+	r = httptest.NewRequest(http.MethodGet, "/v1/users/"+id, nil)
 	w = httptest.NewRecorder()
 
 	r.Header.Set("Authorization", "Bearer "+ut.adminToken)
@@ -586,7 +580,7 @@ func (ut *UserTests) putUser200(t *testing.T, id uuid.UUID) {
 	}
 }
 
-func (ut *UserTests) putUser401(t *testing.T, id uuid.UUID) {
+func (ut *UserTests) putUser401(t *testing.T, id string) {
 	u := usergrp.AppUpdateUser{
 		Name: dbtest.StringPointer("Ale Kennedy"),
 	}

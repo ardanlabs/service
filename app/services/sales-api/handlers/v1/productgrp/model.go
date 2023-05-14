@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/core/product"
+	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/google/uuid"
 )
@@ -22,18 +23,58 @@ type AppProduct struct {
 	DateUpdated string  `json:"dateUpdated"`
 }
 
-func toAppProduct(core product.Product) AppProduct {
+func toAppProduct(prd product.Product) AppProduct {
 	return AppProduct{
-		ID:          core.ID.String(),
-		Name:        core.Name,
-		Cost:        core.Cost,
-		Quantity:    core.Quantity,
-		Sold:        core.Sold,
-		Revenue:     core.Revenue,
-		UserID:      core.UserID.String(),
-		DateCreated: core.DateCreated.Format(time.RFC3339),
-		DateUpdated: core.DateUpdated.Format(time.RFC3339),
+		ID:          prd.ID.String(),
+		Name:        prd.Name,
+		Cost:        prd.Cost,
+		Quantity:    prd.Quantity,
+		Sold:        prd.Sold,
+		Revenue:     prd.Revenue,
+		UserID:      prd.UserID.String(),
+		DateCreated: prd.DateCreated.Format(time.RFC3339),
+		DateUpdated: prd.DateUpdated.Format(time.RFC3339),
 	}
+}
+
+// =============================================================================
+
+// AppProductDetails represents an individual product.
+type AppProductDetails struct {
+	ID          string  `json:"id"`
+	Name        string  `json:"name"`
+	Cost        float64 `json:"cost"`
+	Quantity    int     `json:"quantity"`
+	Sold        int     `json:"sold"`
+	Revenue     int     `json:"revenue"`
+	UserID      string  `json:"userID"`
+	UserName    string  `json:"userName"`
+	DateCreated string  `json:"dateCreated"`
+	DateUpdated string  `json:"dateUpdated"`
+}
+
+func toAppProductDetails(prd product.Product, usr user.User) AppProductDetails {
+	return AppProductDetails{
+		ID:          prd.ID.String(),
+		Name:        prd.Name,
+		Cost:        prd.Cost,
+		Quantity:    prd.Quantity,
+		Sold:        prd.Sold,
+		Revenue:     prd.Revenue,
+		UserID:      prd.UserID.String(),
+		UserName:    usr.Name,
+		DateCreated: prd.DateCreated.Format(time.RFC3339),
+		DateUpdated: prd.DateUpdated.Format(time.RFC3339),
+	}
+}
+
+func toAppProductsDetails(prds []product.Product, usrs map[uuid.UUID]user.User) []AppProductDetails {
+	items := make([]AppProductDetails, len(prds))
+	for i, prd := range prds {
+		items[i] = toAppProductDetails(prd, usrs[prd.UserID])
+	}
+
+	return items
 }
 
 // =============================================================================
@@ -52,14 +93,14 @@ func toCoreNewProduct(app AppNewProduct) (product.NewProduct, error) {
 		return product.NewProduct{}, fmt.Errorf("parsing userid: %w", err)
 	}
 
-	core := product.NewProduct{
+	prd := product.NewProduct{
 		Name:     app.Name,
 		Cost:     app.Cost,
 		Quantity: app.Quantity,
 		UserID:   userID,
 	}
 
-	return core, nil
+	return prd, nil
 }
 
 // Validate checks the data in the model is considered clean.

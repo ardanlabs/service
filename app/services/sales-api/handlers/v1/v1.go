@@ -50,10 +50,8 @@ func Routes(app *web.App, cfg Config) {
 	app.Handle(http.MethodPut, version, "/users/:user_id", ugh.Update, authen, ruleAdminOrSubject)
 	app.Handle(http.MethodDelete, version, "/users/:user_id", ugh.Delete, authen, ruleAdminOrSubject)
 
-	pgh := productgrp.Handlers{
-		Product: prdCore,
-		Auth:    cfg.Auth,
-	}
+	pgh := productgrp.New(prdCore, usrCore, cfg.Auth)
+
 	app.Handle(http.MethodGet, version, "/products", pgh.Query, authen)
 	app.Handle(http.MethodGet, version, "/products/:product_id", pgh.QueryByID, authen)
 	app.Handle(http.MethodPost, version, "/products", pgh.Create, authen)

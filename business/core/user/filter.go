@@ -33,9 +33,7 @@ func (qf *QueryFilter) WithUserID(userID uuid.UUID) {
 
 // WithName sets the Name field of the QueryFilter value.
 func (qf *QueryFilter) WithName(name string) {
-	if name != "" {
-		qf.Name = &name
-	}
+	qf.Name = &name
 }
 
 // WithEmail sets the Email field of the QueryFilter value.
