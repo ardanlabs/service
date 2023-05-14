@@ -17,7 +17,7 @@ func TestGenerateNewProducts(n int, userID uuid.UUID) []NewProduct {
 
 		np := NewProduct{
 			Name:     fmt.Sprintf("Name%d", idx),
-			Cost:     rand.Intn(500),
+			Cost:     float64(rand.Intn(500)),
 			Quantity: rand.Intn(50),
 			UserID:   userID,
 		}

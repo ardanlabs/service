@@ -111,7 +111,7 @@ func crud(t *testing.T) {
 
 	upd := product.UpdateProduct{
 		Name:     dbtest.StringPointer("Comics"),
-		Cost:     dbtest.IntPointer(50),
+		Cost:     dbtest.FloatPointer(50),
 		Quantity: dbtest.IntPointer(40),
 	}
 

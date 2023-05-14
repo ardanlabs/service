@@ -11,7 +11,7 @@ import (
 type dbProduct struct {
 	ID          uuid.UUID `db:"product_id"`   // Unique identifier.
 	Name        string    `db:"name"`         // Display name of the product.
-	Cost        int       `db:"cost"`         // Price for one item in cents.
+	Cost        float64   `db:"cost"`         // Price for one item in cents.
 	Quantity    int       `db:"quantity"`     // Original number of items available.
 	Sold        int       `db:"sold"`         // Aggregate field showing number of items sold.
 	Revenue     int       `db:"revenue"`      // Aggregate field showing total cost of sold items.

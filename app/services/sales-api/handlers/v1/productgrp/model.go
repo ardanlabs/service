@@ -11,15 +11,15 @@ import (
 
 // AppProduct represents an individual product.
 type AppProduct struct {
-	ID          string `json:"id"`
-	Name        string `json:"name"`
-	Cost        int    `json:"cost"`
-	Quantity    int    `json:"quantity"`
-	Sold        int    `json:"sold"`
-	Revenue     int    `json:"revenue"`
-	UserID      string `json:"userID"`
-	DateCreated string `json:"dateCreated"`
-	DateUpdated string `json:"dateUpdated"`
+	ID          string  `json:"id"`
+	Name        string  `json:"name"`
+	Cost        float64 `json:"cost"`
+	Quantity    int     `json:"quantity"`
+	Sold        int     `json:"sold"`
+	Revenue     int     `json:"revenue"`
+	UserID      string  `json:"userID"`
+	DateCreated string  `json:"dateCreated"`
+	DateUpdated string  `json:"dateUpdated"`
 }
 
 func toAppProduct(core product.Product) AppProduct {
@@ -40,10 +40,10 @@ func toAppProduct(core product.Product) AppProduct {
 
 // AppNewProduct is what we require from clients when adding a Product.
 type AppNewProduct struct {
-	Name     string `json:"name" validate:"required"`
-	Cost     int    `json:"cost" validate:"required,gte=0"`
-	Quantity int    `json:"quantity" validate:"gte=1"`
-	UserID   string `json:"userID" validate:"required"`
+	Name     string  `json:"name" validate:"required"`
+	Cost     float64 `json:"cost" validate:"required,gte=0"`
+	Quantity int     `json:"quantity" validate:"gte=1"`
+	UserID   string  `json:"userID" validate:"required"`
 }
 
 func toCoreNewProduct(app AppNewProduct) (product.NewProduct, error) {
@@ -74,9 +74,9 @@ func (app AppNewProduct) Validate() error {
 
 // AppUpdateProduct contains information needed to update a product.
 type AppUpdateProduct struct {
-	Name     *string `json:"name"`
-	Cost     *int    `json:"cost" validate:"omitempty,gte=0"`
-	Quantity *int    `json:"quantity" validate:"omitempty,gte=1"`
+	Name     *string  `json:"name"`
+	Cost     *float64 `json:"cost" validate:"omitempty,gte=0"`
+	Quantity *int     `json:"quantity" validate:"omitempty,gte=1"`
 }
 
 func toCoreUpdateProduct(app AppUpdateProduct) product.UpdateProduct {

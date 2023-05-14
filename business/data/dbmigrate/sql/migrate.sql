@@ -17,13 +17,13 @@ CREATE TABLE users (
 -- Version: 1.02
 -- Description: Create table products
 CREATE TABLE products (
-	product_id   UUID      NOT NULL,
-	name         TEXT      NOT NULL,
-	cost         INT       NOT NULL,
-	quantity     INT       NOT NULL,
-	user_id      UUID      NOT NULL,
-	date_created TIMESTAMP NOT NULL,
-	date_updated TIMESTAMP NOT NULL,
+	product_id   UUID           NOT NULL,
+	name         TEXT           NOT NULL,
+	cost         NUMERIC(10, 2) NOT NULL,
+	quantity     INT            NOT NULL,
+	user_id      UUID           NOT NULL,
+	date_created TIMESTAMP      NOT NULL,
+	date_updated TIMESTAMP      NOT NULL,
 
 	PRIMARY KEY (product_id),
 	FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE

@@ -10,7 +10,7 @@ import (
 type Product struct {
 	ID          uuid.UUID
 	Name        string
-	Cost        int
+	Cost        float64
 	Quantity    int
 	Sold        int
 	Revenue     int
@@ -22,7 +22,7 @@ type Product struct {
 // NewProduct is what we require from clients when adding a Product.
 type NewProduct struct {
 	Name     string
-	Cost     int
+	Cost     float64
 	Quantity int
 	UserID   uuid.UUID
 }
@@ -35,6 +35,6 @@ type NewProduct struct {
 // we make exceptions around marshalling/unmarshalling.
 type UpdateProduct struct {
 	Name     *string
-	Cost     *int
+	Cost     *float64
 	Quantity *int
 }

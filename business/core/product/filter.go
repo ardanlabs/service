@@ -11,7 +11,7 @@ import (
 type QueryFilter struct {
 	ID       *uuid.UUID `validate:"omitempty,uuid4"`
 	Name     *string    `validate:"omitempty,min=3"`
-	Cost     *int       `validate:"omitempty,numeric"`
+	Cost     *float64   `validate:"omitempty,numeric"`
 	Quantity *int       `validate:"omitempty,numeric"`
 }
 
@@ -36,7 +36,7 @@ func (qf *QueryFilter) WithName(name string) {
 }
 
 // WithCost sets the Cost field of the QueryFilter value.
-func (qf *QueryFilter) WithCost(cost int) {
+func (qf *QueryFilter) WithCost(cost float64) {
 	qf.Cost = &cost
 }
 

@@ -226,6 +226,13 @@ func IntPointer(i int) *int {
 	return &i
 }
 
+// FloatPointer is a helper to get a *float64 from a float64. It is in the tests
+// package because we normally don't want to deal with pointers to basic types
+// but it's useful in some tests.
+func FloatPointer(f float64) *float64 {
+	return &f
+}
+
 // =============================================================================
 
 // CoreAPIs represents all the core api's needed for testing.
