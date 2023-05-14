@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/core/user"
+	"github.com/ardanlabs/service/business/cview/usersummary"
 	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/ardanlabs/service/business/web/auth"
 	v1Web "github.com/ardanlabs/service/business/web/v1"
@@ -20,8 +21,18 @@ import (
 
 // Handlers manages the set of user endpoints.
 type Handlers struct {
-	User *user.Core
-	Auth *auth.Auth
+	user        *user.Core
+	userSummary *usersummary.Core
+	auth        *auth.Auth
+}
+
+// New constructs a handlers for route access.
+func New(user *user.Core, userSummary *usersummary.Core, auth *auth.Auth) *Handlers {
+	return &Handlers{
+		user:        user,
+		userSummary: userSummary,
+		auth:        auth,
+	}
 }
 
 // Create adds a new user to the system.
@@ -36,7 +47,7 @@ func (h *Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Re
 		return v1Web.NewRequestError(err, http.StatusBadRequest)
 	}
 
-	usr, err := h.User.Create(ctx, nc)
+	usr, err := h.user.Create(ctx, nc)
 	if err != nil {
 		if errors.Is(err, user.ErrUniqueEmail) {
 			return v1Web.NewRequestError(err, http.StatusConflict)
@@ -56,7 +67,7 @@ func (h *Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Re
 
 	userID := auth.GetUserID(ctx)
 
-	usr, err := h.User.QueryByID(ctx, userID)
+	usr, err := h.user.QueryByID(ctx, userID)
 	if err != nil {
 		switch {
 		case errors.Is(err, user.ErrNotFound):
@@ -71,7 +82,7 @@ func (h *Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Re
 		return v1Web.NewRequestError(err, http.StatusBadRequest)
 	}
 
-	usr, err = h.User.Update(ctx, usr, uu)
+	usr, err = h.user.Update(ctx, usr, uu)
 	if err != nil {
 		return fmt.Errorf("update: userID[%s] uu[%+v]: %w", userID, uu, err)
 	}
@@ -83,7 +94,7 @@ func (h *Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Re
 func (h *Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	userID := auth.GetUserID(ctx)
 
-	usr, err := h.User.QueryByID(ctx, userID)
+	usr, err := h.user.QueryByID(ctx, userID)
 	if err != nil {
 		switch {
 		case errors.Is(err, user.ErrNotFound):
@@ -93,7 +104,7 @@ func (h *Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Re
 		}
 	}
 
-	if err := h.User.Delete(ctx, usr); err != nil {
+	if err := h.user.Delete(ctx, usr); err != nil {
 		return fmt.Errorf("delete: userID[%s]: %w", userID, err)
 	}
 
@@ -117,7 +128,7 @@ func (h *Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Req
 		return err
 	}
 
-	users, err := h.User.Query(ctx, filter, orderBy, page.Number, page.RowsPerPage)
+	users, err := h.user.Query(ctx, filter, orderBy, page.Number, page.RowsPerPage)
 	if err != nil {
 		return fmt.Errorf("query: %w", err)
 	}
@@ -127,7 +138,7 @@ func (h *Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Req
 		items[i] = toAppUser(usr)
 	}
 
-	total, err := h.User.Count(ctx, filter)
+	total, err := h.user.Count(ctx, filter)
 	if err != nil {
 		return fmt.Errorf("count: %w", err)
 	}
@@ -139,7 +150,7 @@ func (h *Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Req
 func (h *Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	id := auth.GetUserID(ctx)
 
-	usr, err := h.User.QueryByID(ctx, id)
+	usr, err := h.user.QueryByID(ctx, id)
 	if err != nil {
 		switch {
 		case errors.Is(err, user.ErrNotFound):
@@ -150,6 +161,41 @@ func (h *Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http
 	}
 
 	return web.Respond(ctx, w, toAppUser(usr), http.StatusOK)
+}
+
+// QuerySummary returns a list of user summary data with paging.
+func (h *Handlers) QuerySummary(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	page, err := paging.ParseRequest(r)
+	if err != nil {
+		return err
+	}
+
+	filter, err := parseSummaryFilter(r)
+	if err != nil {
+		return err
+	}
+
+	orderBy, err := parseSummaryOrder(r)
+	if err != nil {
+		return err
+	}
+
+	smms, err := h.userSummary.Query(ctx, filter, orderBy, page.Number, page.RowsPerPage)
+	if err != nil {
+		return fmt.Errorf("query: %w", err)
+	}
+
+	items := make([]AppSummary, len(smms))
+	for i, smm := range smms {
+		items[i] = toAppSummary(smm)
+	}
+
+	total, err := h.userSummary.Count(ctx, filter)
+	if err != nil {
+		return fmt.Errorf("count: %w", err)
+	}
+
+	return web.Respond(ctx, w, paging.NewResponse(items, total, page.Number, page.RowsPerPage), http.StatusOK)
 }
 
 // Token provides an API token for the authenticated user.
@@ -169,7 +215,7 @@ func (h *Handlers) Token(ctx context.Context, w http.ResponseWriter, r *http.Req
 		return auth.NewAuthError("invalid email format")
 	}
 
-	usr, err := h.User.Authenticate(ctx, *addr, pass)
+	usr, err := h.user.Authenticate(ctx, *addr, pass)
 	if err != nil {
 		switch {
 		case errors.Is(err, user.ErrNotFound):
@@ -194,7 +240,7 @@ func (h *Handlers) Token(ctx context.Context, w http.ResponseWriter, r *http.Req
 	var tkn struct {
 		Token string `json:"token"`
 	}
-	tkn.Token, err = h.Auth.GenerateToken(kid, claims)
+	tkn.Token, err = h.auth.GenerateToken(kid, claims)
 	if err != nil {
 		return fmt.Errorf("generatetoken: %w", err)
 	}

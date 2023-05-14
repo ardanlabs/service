@@ -28,3 +28,18 @@ CREATE TABLE products (
 	PRIMARY KEY (product_id),
 	FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
+
+-- Version: 1.03
+-- Description: Add user_summary view.
+CREATE OR REPLACE VIEW user_summary AS
+SELECT
+    u.user_id   AS user_id,
+	u.name      AS user_name,
+    COUNT(p.*)  AS total_count,
+    SUM(p.cost) AS total_cost
+FROM
+    users AS u
+JOIN
+    products AS p ON p.user_id = u.user_id
+GROUP BY
+    u.user_id

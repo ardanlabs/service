@@ -127,8 +127,8 @@ func (s *Store) Query(ctx context.Context, filter user.QueryFilter, orderBy orde
 	SELECT
 		*
 	FROM
-		users
-	`
+		users`
+
 	buf := bytes.NewBufferString(q)
 	s.applyFilter(filter, data, buf)
 

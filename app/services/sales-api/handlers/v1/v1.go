@@ -13,6 +13,8 @@ import (
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/core/user/stores/usercache"
 	"github.com/ardanlabs/service/business/core/user/stores/userdb"
+	"github.com/ardanlabs/service/business/cview/usersummary"
+	"github.com/ardanlabs/service/business/cview/usersummary/stores/usersummarydb"
 	"github.com/ardanlabs/service/business/web/auth"
 	"github.com/ardanlabs/service/business/web/v1/mid"
 	"github.com/ardanlabs/service/foundation/web"
@@ -34,21 +36,25 @@ func Routes(app *web.App, cfg Config) {
 	envCore := event.NewCore(cfg.Log)
 	usrCore := user.NewCore(envCore, usercache.NewStore(cfg.Log, userdb.NewStore(cfg.Log, cfg.DB)))
 	prdCore := product.NewCore(cfg.Log, envCore, usrCore, productdb.NewStore(cfg.Log, cfg.DB))
+	usrSmmCore := usersummary.NewCore(usersummarydb.NewStore(cfg.Log, cfg.DB))
 
 	authen := mid.Authenticate(cfg.Auth)
 	ruleAdmin := mid.Authorize(cfg.Auth, auth.RuleAdminOnly)
 	ruleAdminOrSubject := mid.Authorize(cfg.Auth, auth.RuleAdminOrSubject)
 
-	ugh := usergrp.Handlers{
-		User: usrCore,
-		Auth: cfg.Auth,
-	}
+	// -------------------------------------------------------------------------
+
+	ugh := usergrp.New(usrCore, usrSmmCore, cfg.Auth)
+
 	app.Handle(http.MethodGet, version, "/users/token/:kid", ugh.Token)
 	app.Handle(http.MethodGet, version, "/users", ugh.Query, authen, ruleAdmin)
 	app.Handle(http.MethodGet, version, "/users/:user_id", ugh.QueryByID, authen, ruleAdminOrSubject)
+	app.Handle(http.MethodGet, version, "/users/summary", ugh.QuerySummary, authen, ruleAdmin)
 	app.Handle(http.MethodPost, version, "/users", ugh.Create, authen, ruleAdmin)
 	app.Handle(http.MethodPut, version, "/users/:user_id", ugh.Update, authen, ruleAdminOrSubject)
 	app.Handle(http.MethodDelete, version, "/users/:user_id", ugh.Delete, authen, ruleAdminOrSubject)
+
+	// -------------------------------------------------------------------------
 
 	pgh := productgrp.New(prdCore, usrCore, cfg.Auth)
 

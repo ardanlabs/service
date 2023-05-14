@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/core/user"
+	"github.com/ardanlabs/service/business/cview/usersummary"
 	"github.com/ardanlabs/service/business/sys/validate"
 )
 
@@ -142,4 +143,23 @@ func (app AppUpdateUser) Validate() error {
 		return fmt.Errorf("validate: %w", err)
 	}
 	return nil
+}
+
+// =============================================================================
+
+// AppSummary represents information about an individual user and their products.
+type AppSummary struct {
+	UserID     string  `json:"userID"`
+	UserName   string  `json:"userName"`
+	TotalCount int     `json:"totalCount"`
+	TotalCost  float64 `json:"totalCost"`
+}
+
+func toAppSummary(smm usersummary.Summary) AppSummary {
+	return AppSummary{
+		UserID:     smm.UserID.String(),
+		UserName:   smm.UserName,
+		TotalCount: smm.TotalCount,
+		TotalCost:  smm.TotalCost,
+	}
 }
