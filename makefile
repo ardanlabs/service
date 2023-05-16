@@ -40,17 +40,37 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 # 	Restart your wsl environment.
 
 # ==============================================================================
+# Linux Users ONLY - Install Telepresence
+#
+#   https://www.telepresence.io/docs/latest/quick-start/?os=gnu-linux
+
+# ==============================================================================
+# M1 Mac Users ONLY - Install Telepresence
+#
+#   If you install the Intel version of Telepresence, this is how you remove it.
+#   $ sudo rm -rf /Library/Developer/CommandLineTools
+#   $ sudo xcode-select --install
+#   Then it installed with brew (arm64)
+
+# ==============================================================================
 # Install Tooling and Dependencies
 #
-#	If you are running a mac or linux machine with brew, run these commands:
-#	$ make dev-brew
+#	If you are running a mac machine with brew, run these commands:
+#	$ make dev-brew  or  make dev-brew-arm64
 #	$ make dev-docker
 #	$ make dev-gotooling
 #
-#	If you are a windows user and have installed brew, run these commands:
+#	If you are running a linux machine with brew, run these commands:
 #	$ make dev-brew-common
 #	$ make dev-docker
 #	$ make dev-gotooling
+#   Follow instructions above for Telepresence.
+#
+#	If you are a windows user with brew, run these commands:
+#	$ make dev-brew-common
+#	$ make dev-docker
+#	$ make dev-gotooling
+#   Follow instructions above for Telepresence.
 
 # ==============================================================================
 # Running Test

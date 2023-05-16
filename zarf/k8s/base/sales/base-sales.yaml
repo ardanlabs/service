@@ -107,7 +107,9 @@ spec:
             valueFrom:
               resourceFieldRef:
                 resource: limits.cpu
+
 ---
+
 apiVersion: v1
 kind: Service
 metadata:
