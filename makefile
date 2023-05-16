@@ -144,8 +144,8 @@ METRICS_IMAGE   := $(BASE_IMAGE_NAME)/$(SERVICE_NAME)-metrics:$(VERSION)
 # Install dependencies
 
 dev-gotooling:
-	go install github.com/divan/expvarmon@8e0b3d2
-	go install github.com/rakyll/hey@8985827
+	go install github.com/divan/expvarmon@latest
+	go install github.com/rakyll/hey@latest
 	go install honnef.co/go/tools/cmd/staticcheck@latest
 	go install golang.org/x/vuln/cmd/govulncheck@latest
 	go install golang.org/x/tools/cmd/goimports@latest
