@@ -11,7 +11,7 @@ import (
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/ardanlabs/service/business/web/auth"
-	v1Web "github.com/ardanlabs/service/business/web/v1"
+	v1 "github.com/ardanlabs/service/business/web/v1"
 	"github.com/ardanlabs/service/business/web/v1/paging"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/google/uuid"
@@ -47,7 +47,7 @@ func (h *Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Re
 
 	np, err := toCoreNewProduct(app)
 	if err != nil {
-		return v1Web.NewRequestError(err, http.StatusBadRequest)
+		return v1.NewRequestError(err, http.StatusBadRequest)
 	}
 
 	prd, err := h.product.Create(ctx, np)
@@ -74,7 +74,7 @@ func (h *Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Re
 	if err != nil {
 		switch {
 		case errors.Is(err, product.ErrNotFound):
-			return v1Web.NewRequestError(err, http.StatusNotFound)
+			return v1.NewRequestError(err, http.StatusNotFound)
 		default:
 			return fmt.Errorf("querybyid: productID[%s]: %w", productID, err)
 		}
@@ -103,7 +103,7 @@ func (h *Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Re
 			// Don't send StatusNotFound here since the call to Delete
 			// below won't if this product is not found. We only know
 			// this because we are doing the Query for the UserID.
-			return v1Web.NewRequestError(err, http.StatusNoContent)
+			return v1.NewRequestError(err, http.StatusNoContent)
 		default:
 			return fmt.Errorf("querybyid: productID[%s]: %w", productID, err)
 		}
@@ -183,7 +183,7 @@ func (h *Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http
 	if err != nil {
 		switch {
 		case errors.Is(err, product.ErrNotFound):
-			return v1Web.NewRequestError(err, http.StatusNotFound)
+			return v1.NewRequestError(err, http.StatusNotFound)
 		default:
 			return fmt.Errorf("querybyid: productID[%s]: %w", productID, err)
 		}

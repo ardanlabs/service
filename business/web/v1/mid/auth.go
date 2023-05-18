@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/ardanlabs/service/business/web/auth"
-	v1Web "github.com/ardanlabs/service/business/web/v1"
+	v1 "github.com/ardanlabs/service/business/web/v1"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/google/uuid"
 )
@@ -53,7 +53,7 @@ func Authorize(a *auth.Auth, rule string) web.Middleware {
 				var err error
 				userID, err = uuid.Parse(id)
 				if err != nil {
-					return v1Web.NewRequestError(ErrInvalidID, http.StatusBadRequest)
+					return v1.NewRequestError(ErrInvalidID, http.StatusBadRequest)
 				}
 				ctx = auth.SetUserID(ctx, userID)
 			}

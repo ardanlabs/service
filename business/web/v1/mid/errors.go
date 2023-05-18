@@ -6,7 +6,7 @@ import (
 
 	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/ardanlabs/service/business/web/auth"
-	v1Web "github.com/ardanlabs/service/business/web/v1"
+	v1 "github.com/ardanlabs/service/business/web/v1"
 	"github.com/ardanlabs/service/foundation/web"
 	"go.uber.org/zap"
 )
@@ -24,32 +24,33 @@ func Errors(log *zap.SugaredLogger) web.Middleware {
 				span.RecordError(err)
 				span.End()
 
-				var er v1Web.ErrorResponse
+				var er v1.ErrorResponse
 				var status int
+
 				switch {
 				case validate.IsFieldErrors(err):
 					fieldErrors := validate.GetFieldErrors(err)
-					er = v1Web.ErrorResponse{
+					er = v1.ErrorResponse{
 						Error:  "data validation error",
 						Fields: fieldErrors.Fields(),
 					}
 					status = http.StatusBadRequest
 
-				case v1Web.IsRequestError(err):
-					reqErr := v1Web.GetRequestError(err)
-					er = v1Web.ErrorResponse{
+				case v1.IsRequestError(err):
+					reqErr := v1.GetRequestError(err)
+					er = v1.ErrorResponse{
 						Error: reqErr.Error(),
 					}
 					status = reqErr.Status
 
 				case auth.IsAuthError(err):
-					er = v1Web.ErrorResponse{
+					er = v1.ErrorResponse{
 						Error: http.StatusText(http.StatusUnauthorized),
 					}
 					status = http.StatusUnauthorized
 
 				default:
-					er = v1Web.ErrorResponse{
+					er = v1.ErrorResponse{
 						Error: http.StatusText(http.StatusInternalServerError),
 					}
 					status = http.StatusInternalServerError

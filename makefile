@@ -102,7 +102,7 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 # CLASS NOTES
 #
 # Kind
-# 	For full Kind v0.18 release notes: https://github.com/kubernetes-sigs/kind/releases/tag/v0.18.0
+# 	For full Kind v0.19 release notes: https://github.com/kubernetes-sigs/kind/releases/tag/v0.19.0
 #
 # RSA Keys
 # 	To generate a private/public key PEM file.
@@ -147,7 +147,7 @@ KIND            := kindest/node:v1.27.1
 POSTGRES        := postgres:15.3
 VAULT           := hashicorp/vault:1.13
 ZIPKIN          := openzipkin/zipkin:2.24
-TELEPRESENCE    := datawire/tel2:2.13.1
+TELEPRESENCE    := datawire/tel2:2.13.2
 
 KIND_CLUSTER    := ardan-starter-cluster
 NAMESPACE       := sales-system

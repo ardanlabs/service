@@ -13,7 +13,7 @@ import (
 	"github.com/ardanlabs/service/business/cview/usersummary"
 	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/ardanlabs/service/business/web/auth"
-	v1Web "github.com/ardanlabs/service/business/web/v1"
+	v1 "github.com/ardanlabs/service/business/web/v1"
 	"github.com/ardanlabs/service/business/web/v1/paging"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/golang-jwt/jwt/v4"
@@ -44,13 +44,13 @@ func (h *Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Re
 
 	nc, err := toCoreNewUser(app)
 	if err != nil {
-		return v1Web.NewRequestError(err, http.StatusBadRequest)
+		return v1.NewRequestError(err, http.StatusBadRequest)
 	}
 
 	usr, err := h.user.Create(ctx, nc)
 	if err != nil {
 		if errors.Is(err, user.ErrUniqueEmail) {
-			return v1Web.NewRequestError(err, http.StatusConflict)
+			return v1.NewRequestError(err, http.StatusConflict)
 		}
 		return fmt.Errorf("create: usr[%+v]: %w", usr, err)
 	}
@@ -71,7 +71,7 @@ func (h *Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Re
 	if err != nil {
 		switch {
 		case errors.Is(err, user.ErrNotFound):
-			return v1Web.NewRequestError(err, http.StatusNotFound)
+			return v1.NewRequestError(err, http.StatusNotFound)
 		default:
 			return fmt.Errorf("querybyid: userID[%s]: %w", userID, err)
 		}
@@ -79,7 +79,7 @@ func (h *Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Re
 
 	uu, err := toCoreUpdateUser(app)
 	if err != nil {
-		return v1Web.NewRequestError(err, http.StatusBadRequest)
+		return v1.NewRequestError(err, http.StatusBadRequest)
 	}
 
 	usr, err = h.user.Update(ctx, usr, uu)
@@ -154,7 +154,7 @@ func (h *Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http
 	if err != nil {
 		switch {
 		case errors.Is(err, user.ErrNotFound):
-			return v1Web.NewRequestError(err, http.StatusNotFound)
+			return v1.NewRequestError(err, http.StatusNotFound)
 		default:
 			return fmt.Errorf("querybyid: id[%s]: %w", id, err)
 		}
@@ -219,7 +219,7 @@ func (h *Handlers) Token(ctx context.Context, w http.ResponseWriter, r *http.Req
 	if err != nil {
 		switch {
 		case errors.Is(err, user.ErrNotFound):
-			return v1Web.NewRequestError(err, http.StatusNotFound)
+			return v1.NewRequestError(err, http.StatusNotFound)
 		case errors.Is(err, user.ErrAuthenticationFailure):
 			return auth.NewAuthError(err.Error())
 		default:

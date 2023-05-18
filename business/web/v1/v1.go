@@ -44,5 +44,3 @@ func GetRequestError(err error) *RequestError {
 	}
 	return re
 }
-
-// =============================================================================
