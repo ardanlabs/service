@@ -184,7 +184,7 @@ func (c *Core) QueryByEmail(ctx context.Context, email mail.Address) (User, erro
 // success it returns a Claims User representing this user. The claims can be
 // used to generate a token for future authentication.
 func (c *Core) Authenticate(ctx context.Context, email mail.Address, password string) (User, error) {
-	usr, err := c.storer.QueryByEmail(ctx, email)
+	usr, err := c.QueryByEmail(ctx, email)
 	if err != nil {
 		return User{}, fmt.Errorf("query: email[%s]: %w", email, err)
 	}
