@@ -74,6 +74,7 @@ func (a *App) Handle(method string, group string, path string, handler Handler, 
 		ctx := r.Context()
 
 		span := trace.SpanFromContext(ctx)
+		defer span.End()
 
 		v := Values{
 			TraceID: span.SpanContext().TraceID().String(),
@@ -81,6 +82,9 @@ func (a *App) Handle(method string, group string, path string, handler Handler, 
 			Now:     time.Now().UTC(),
 		}
 		ctx = context.WithValue(ctx, key, &v)
+
+		ctx, span = AddSpan(ctx, "foundation.app.handle")
+		defer span.End()
 
 		if err := handler(ctx, w, r); err != nil {
 			if validateShutdown(err) {

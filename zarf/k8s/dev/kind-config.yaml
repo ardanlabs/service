@@ -7,6 +7,8 @@ nodes:
     hostPort: 3000
   - containerPort: 4000
     hostPort: 4000
+  - containerPort: 3100
+    hostPort: 3100
   - containerPort: 8200
     hostPort: 8200
   - containerPort: 5432
