@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ardanlabs/service/business/cview/usersummary"
+	"github.com/ardanlabs/service/business/core/usersummary"
 )
 
 func (s *Store) applyFilter(filter usersummary.QueryFilter, data map[string]interface{}, buf *bytes.Buffer) {

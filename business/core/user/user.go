@@ -23,6 +23,8 @@ var (
 	ErrAuthenticationFailure = errors.New("authentication failed")
 )
 
+// =============================================================================
+
 // Storer interface declares the behavior this package needs to perists and
 // retrieve data.
 type Storer interface {
@@ -36,6 +38,8 @@ type Storer interface {
 	QueryByIDs(ctx context.Context, userID []uuid.UUID) ([]User, error)
 	QueryByEmail(ctx context.Context, email mail.Address) (User, error)
 }
+
+// =============================================================================
 
 // Core manages the set of APIs for user access.
 type Core struct {

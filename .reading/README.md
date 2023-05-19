@@ -27,6 +27,9 @@ Occasionally we run into material that we feel is important. This is a section p
 ### Authentication / Authorization
 [How to correctly use Basic Authentication in Go](https://www.alexedwards.net/blog/basic-authentication-in-go) - Alex Edwards  
 
+### Liveness Probes
+[Liveness Probes are Dangerous](https://srcco.de/posts/kubernetes-liveness-probes-are-dangerous.html) - srcco.de  
+
 ### CPU Quotas
 [CFS Bandwidth Control](https://www.kernel.org/doc/html/v5.6/scheduler/sched-bwc.html) - kernel.org  
 [How Kubernetes applies resource requests and limits](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#how-pods-with-resource-limits-are-run) - kubernetes.io  

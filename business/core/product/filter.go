@@ -9,7 +9,7 @@ import (
 
 // QueryFilter holds the available fields a query can be filtered on.
 type QueryFilter struct {
-	ID       *uuid.UUID `validate:"omitempty,uuid4"`
+	ID       *uuid.UUID `validate:"omitempty"`
 	Name     *string    `validate:"omitempty,min=3"`
 	Cost     *float64   `validate:"omitempty,numeric"`
 	Quantity *int       `validate:"omitempty,numeric"`

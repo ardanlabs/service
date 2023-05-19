@@ -5,6 +5,7 @@ package v1
 import (
 	"net/http"
 
+	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/checkgrp"
 	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/productgrp"
 	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/usergrp"
 	"github.com/ardanlabs/service/business/core/event"
@@ -13,8 +14,8 @@ import (
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/core/user/stores/usercache"
 	"github.com/ardanlabs/service/business/core/user/stores/userdb"
-	"github.com/ardanlabs/service/business/cview/usersummary"
-	"github.com/ardanlabs/service/business/cview/usersummary/stores/usersummarydb"
+	"github.com/ardanlabs/service/business/core/usersummary"
+	"github.com/ardanlabs/service/business/core/usersummary/stores/usersummarydb"
 	"github.com/ardanlabs/service/business/web/auth"
 	"github.com/ardanlabs/service/business/web/v1/mid"
 	"github.com/ardanlabs/service/foundation/web"
@@ -24,9 +25,10 @@ import (
 
 // Config contains all the mandatory systems required by handlers.
 type Config struct {
-	Log  *zap.SugaredLogger
-	Auth *auth.Auth
-	DB   *sqlx.DB
+	Build string
+	Log   *zap.SugaredLogger
+	Auth  *auth.Auth
+	DB    *sqlx.DB
 }
 
 // Routes binds all the version 1 routes.
@@ -41,6 +43,13 @@ func Routes(app *web.App, cfg Config) {
 	authen := mid.Authenticate(cfg.Auth)
 	ruleAdmin := mid.Authorize(cfg.Auth, auth.RuleAdminOnly)
 	ruleAdminOrSubject := mid.Authorize(cfg.Auth, auth.RuleAdminOrSubject)
+
+	// -------------------------------------------------------------------------
+
+	cgh := checkgrp.New(cfg.Build, cfg.DB)
+
+	app.Handle(http.MethodGet, version, "/readiness", cgh.Readiness)
+	app.Handle(http.MethodGet, version, "/liveness", cgh.Liveness)
 
 	// -------------------------------------------------------------------------
 

@@ -3,7 +3,7 @@ package usersummarydb
 import (
 	"fmt"
 
-	"github.com/ardanlabs/service/business/cview/usersummary"
+	"github.com/ardanlabs/service/business/core/usersummary"
 	"github.com/ardanlabs/service/business/data/order"
 )
 

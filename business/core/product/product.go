@@ -18,8 +18,11 @@ import (
 
 // Set of error variables for CRUD operations.
 var (
-	ErrNotFound = errors.New("product not found")
+	ErrNotFound    = errors.New("product not found")
+	ErrInvalidUser = errors.New("user not valid")
 )
+
+// =============================================================================
 
 // Storer interface declares the behavior this package needs to perists and
 // retrieve data.
@@ -33,16 +36,24 @@ type Storer interface {
 	QueryByUserID(ctx context.Context, userID uuid.UUID) ([]Product, error)
 }
 
+// UserCore interface declares the behavior this package needs from the user
+// core domain.
+type UserCore interface {
+	QueryByID(ctx context.Context, userID uuid.UUID) (user.User, error)
+}
+
+// =============================================================================
+
 // Core manages the set of APIs for product access.
 type Core struct {
 	log     *zap.SugaredLogger
 	evnCore *event.Core
-	usrCore *user.Core
+	usrCore UserCore
 	storer  Storer
 }
 
 // NewCore constructs a core for product api access.
-func NewCore(log *zap.SugaredLogger, evnCore *event.Core, usrCore *user.Core, storer Storer) *Core {
+func NewCore(log *zap.SugaredLogger, evnCore *event.Core, usrCore UserCore, storer Storer) *Core {
 	core := Core{
 		log:     log,
 		evnCore: evnCore,
@@ -58,6 +69,15 @@ func NewCore(log *zap.SugaredLogger, evnCore *event.Core, usrCore *user.Core, st
 // Create adds a Product to the database. It returns the created Product with
 // fields like ID and DateCreated populated.
 func (c *Core) Create(ctx context.Context, np NewProduct) (Product, error) {
+	usr, err := c.usrCore.QueryByID(ctx, np.UserID)
+	if err != nil {
+		return Product{}, fmt.Errorf("user.querybyid: %s: %w", np.UserID, err)
+	}
+
+	if !usr.Enabled {
+		return Product{}, ErrInvalidUser
+	}
+
 	now := time.Now()
 
 	prd := Product{

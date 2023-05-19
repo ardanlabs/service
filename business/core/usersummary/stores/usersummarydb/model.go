@@ -1,7 +1,7 @@
 package usersummarydb
 
 import (
-	"github.com/ardanlabs/service/business/cview/usersummary"
+	"github.com/ardanlabs/service/business/core/usersummary"
 	"github.com/google/uuid"
 )
 

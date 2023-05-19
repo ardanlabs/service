@@ -6,7 +6,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/ardanlabs/service/business/cview/usersummary"
+	"github.com/ardanlabs/service/business/core/usersummary"
 	"github.com/ardanlabs/service/business/data/order"
 	database "github.com/ardanlabs/service/business/sys/database/pq"
 	"github.com/jmoiron/sqlx"
