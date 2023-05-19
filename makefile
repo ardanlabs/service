@@ -426,7 +426,7 @@ token:
 # export TOKEN="COPY TOKEN STRING FROM LAST CALL"
 
 users-local:
-	curl -il -H "Authorization: Bearer ${TOKEN}" http://localhost:3010/v1/users?page=1&rows=2
+	curl -il -H "Authorization: Bearer ${TOKEN}" http://localhost:3000/v1/users?page=1&rows=2
 
 users:
 	curl -il -H "Authorization: Bearer ${TOKEN}" http://$(SERVICE_NAME).$(NAMESPACE).svc.cluster.local:3000/v1/users?page=1&rows=2
