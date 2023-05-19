@@ -1,0 +1,126 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: sales-system
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-conf
+  namespace: sales-system
+data:
+  tempo.yaml: |
+    apiVersion: 1
+    
+    deleteDatasources:
+      - name: Tempo
+        orgId: 1
+    
+    datasources:
+      - name: Tempo
+        type: tempo
+        url: http://tempo.sales-system.svc:3200
+        access: proxy
+        isDefault: true
+        jsonData:
+          nodeGraph:
+            enabled: true
+          search:
+            hide: false
+          spanBar:
+            type: 'Tag'
+            tag: 'http.path'
+        version: 1
+        editable: true
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: sales-system
+  labels:
+    app: grafana
+spec:
+  selector:
+    matchLabels:
+      app: grafana
+  replicas: 1
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 0
+  template:
+    metadata:
+      namespace: sales-system
+      labels:
+        app: grafana
+    spec:
+      dnsPolicy: ClusterFirstWithHostNet
+      hostNetwork: true
+      terminationGracePeriodSeconds: 60
+      containers:
+        - name: grafana
+          image: grafana/grafana:9.5.2
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: GF_ANALYTICS_REPORTING_ENABLED
+              value: 'false'
+            - name: GF_ANALYTICS_CHECK_FOR_UPDATES
+              value: 'false'
+            - name: GF_ANALYTICS_CHECK_FOR_PLUGIN_UPDATES
+              value: 'false'
+            - name: GF_FEATURE_TOGGLES_ENABLE
+              value: 'traceqlEditor'
+            - name: GF_SERVER_HTTP_PORT
+              value: '3100'
+            - name: GF_AUTH_DISABLE_LOGIN_FORM
+              value: 'true'
+            - name: GF_AUTH_ANONYMOUS_ENABLED
+              value: 'true'
+            - name: GF_AUTH_ANONYMOUS_ORG_ROLE
+              value: 'Admin'
+          ports:
+            - containerPort: 3100
+              name: http-grafana
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /robots.txt
+              port: http-grafana
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            successThreshold: 1
+            timeoutSeconds: 2
+          livenessProbe:
+            failureThreshold: 3
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            successThreshold: 1
+            tcpSocket:
+              port: http-grafana
+            timeoutSeconds: 1
+          resources:
+            requests:
+              cpu: 250m
+              memory: 750Mi
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/grafana/provisioning/datasources
+      volumes:
+        - name: config-volume
+          configMap:
+            name: grafana-conf
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana-service
+  namespace: sales-system
+spec:
+  type: ClusterIP
+  selector:
+    app: grafana
+  ports:
+    - name: http-grafana
+      port: 3100
+      targetPort: http-grafana

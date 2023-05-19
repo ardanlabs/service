@@ -146,7 +146,8 @@ ALPINE          := alpine:3.18
 KIND            := kindest/node:v1.27.1
 POSTGRES        := postgres:15.3
 VAULT           := hashicorp/vault:1.13
-ZIPKIN          := openzipkin/zipkin:2.24
+GRAFANA         := grafana/grafana:9.5.2
+TEMPO           := grafana/tempo:2.1.1
 TELEPRESENCE    := datawire/tel2:2.13.2
 
 KIND_CLUSTER    := ardan-starter-cluster
@@ -191,7 +192,8 @@ dev-docker:
 	docker pull $(KIND)
 	docker pull $(POSTGRES)
 	docker pull $(VAULT)
-	docker pull $(ZIPKIN)
+	docker pull $(GRAFANA)
+	docker pull $(TEMPO)
 	docker pull $(TELEPRESENCE)
 
 # ==============================================================================
@@ -229,7 +231,8 @@ dev-up-local:
 	kind load docker-image $(TELEPRESENCE) --name $(KIND_CLUSTER)
 	kind load docker-image $(POSTGRES) --name $(KIND_CLUSTER)
 	kind load docker-image $(VAULT) --name $(KIND_CLUSTER)
-	kind load docker-image $(ZIPKIN) --name $(KIND_CLUSTER)
+	kind load docker-image $(GRAFANA) --name $(KIND_CLUSTER)
+	kind load docker-image $(TEMPO) --name $(KIND_CLUSTER)
 
 dev-up: dev-up-local
 	telepresence --context=kind-$(KIND_CLUSTER) helm install
@@ -257,8 +260,11 @@ dev-apply:
 	kustomize build zarf/k8s/dev/database | kubectl apply -f -
 	kubectl rollout status --namespace=$(NAMESPACE) --watch --timeout=120s sts/database
 
-	kustomize build zarf/k8s/dev/zipkin | kubectl apply -f -
-	kubectl wait pods --namespace=$(NAMESPACE) --selector app=zipkin --for=condition=Ready
+	kustomize build zarf/k8s/dev/grafana | kubectl apply -f -
+	kubectl wait pods --namespace=$(NAMESPACE) --selector app=grafana --timeout=120s --for=condition=Ready
+
+	kustomize build zarf/k8s/dev/tempo | kubectl apply -f -
+	kubectl wait pods --namespace=$(NAMESPACE) --selector app=tempo --timeout=120s --for=condition=Ready
 
 	kustomize build zarf/k8s/dev/sales | kubectl apply -f -
 	kubectl wait pods --namespace=$(NAMESPACE) --selector app=$(APP) --for=condition=Ready
@@ -304,14 +310,18 @@ dev-logs-vault:
 dev-logs-db:
 	kubectl logs --namespace=$(NAMESPACE) -l app=database --all-containers=true -f --tail=100
 
-dev-logs-zipkin:
-	kubectl logs --namespace=$(NAMESPACE) -l app=zipkin --all-containers=true -f --tail=100
+dev-logs-grafana:
+	kubectl logs --namespace=$(NAMESPACE) -l app=grafana --all-containers=true -f --tail=100
+
+dev-logs-tempo:
+	kubectl logs --namespace=$(NAMESPACE) -l app=tempo --all-containers=true -f --tail=100
 
 # ------------------------------------------------------------------------------
 
 dev-services-delete:
 	kustomize build zarf/k8s/dev/sales | kubectl delete -f -
-	kustomize build zarf/k8s/dev/zipkin | kubectl delete -f -
+	kustomize build zarf/k8s/dev/grafana | kubectl delete -f -
+	kustomize build zarf/k8s/dev/tempo | kubectl delete -f -
 	kustomize build zarf/k8s/dev/database | kubectl delete -f -
 
 dev-describe-replicaset:
@@ -378,11 +388,11 @@ metrics-view-local:
 metrics-view:
 	expvarmon -ports="$(SERVICE_NAME).$(NAMESPACE).svc.cluster.local:3001" -endpoint="/metrics" -vars="build,requests,goroutines,errors,panics,mem:memstats.Alloc"
 
-zipkin-local:
-	open -a "Google Chrome" http://localhost:9411/zipkin/
+grafana-local:
+	open -a "Google Chrome" http://localhost:3100/
 
-zipkin:
-	open -a "Google Chrome" http://zipkin-service.$(NAMESPACE).svc.cluster.local:9411/zipkin/
+grafana:
+	open -a "Google Chrome" http://grafana-service.$(NAMESPACE).svc.cluster.local:3100/
 
 # ==============================================================================
 # Running tests within the local computer
@@ -422,10 +432,10 @@ users:
 	curl -il -H "Authorization: Bearer ${TOKEN}" http://$(SERVICE_NAME).$(NAMESPACE).svc.cluster.local:3000/v1/users?page=1&rows=2
 
 load-local:
-	hey -m GET -c 100 -n 10000 -H "Authorization: Bearer ${TOKEN}" http://localhost:3000/v1/users?page=1&rows=2
+	hey -m GET -c 100 -n 10000 -H "Authorization: Bearer ${TOKEN}" "http://localhost:3000/v1/users?page=1&rows=2"
 
 load:
-	hey -m GET -c 100 -n 10000 -H "Authorization: Bearer ${TOKEN}" http://$(SERVICE_NAME).$(NAMESPACE).svc.cluster.local:3000/v1/users?page=1&rows=2
+	hey -m GET -c 100 -n 10000 -H "Authorization: Bearer ${TOKEN}" "http://$(SERVICE_NAME).$(NAMESPACE).svc.cluster.local:3000/v1/users?page=1&rows=2"
 
 # ==============================================================================
 # Modules support

@@ -33,6 +33,9 @@ func (h *Handlers) Readiness(ctx context.Context, w http.ResponseWriter, r *http
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 
+	ctx, span := web.AddSpan(ctx, "v1.readiness")
+	defer span.End()
+
 	status := "ok"
 	statusCode := http.StatusOK
 	if err := database.StatusCheck(ctx, h.db); err != nil {
