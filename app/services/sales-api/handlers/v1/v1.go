@@ -14,8 +14,8 @@ import (
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/core/user/stores/usercache"
 	"github.com/ardanlabs/service/business/core/user/stores/userdb"
-	"github.com/ardanlabs/service/business/core/usersummary"
-	"github.com/ardanlabs/service/business/core/usersummary/stores/usersummarydb"
+	"github.com/ardanlabs/service/business/cview/user/summary"
+	"github.com/ardanlabs/service/business/cview/user/summary/stores/summarydb"
 	"github.com/ardanlabs/service/business/web/auth"
 	"github.com/ardanlabs/service/business/web/v1/mid"
 	"github.com/ardanlabs/service/foundation/web"
@@ -38,7 +38,7 @@ func Routes(app *web.App, cfg Config) {
 	envCore := event.NewCore(cfg.Log)
 	usrCore := user.NewCore(envCore, usercache.NewStore(cfg.Log, userdb.NewStore(cfg.Log, cfg.DB)))
 	prdCore := product.NewCore(cfg.Log, envCore, usrCore, productdb.NewStore(cfg.Log, cfg.DB))
-	usrSmmCore := usersummary.NewCore(usersummarydb.NewStore(cfg.Log, cfg.DB))
+	smmCore := summary.NewCore(summarydb.NewStore(cfg.Log, cfg.DB))
 
 	authen := mid.Authenticate(cfg.Auth)
 	ruleAdmin := mid.Authorize(cfg.Auth, auth.RuleAdminOnly)
@@ -53,7 +53,7 @@ func Routes(app *web.App, cfg Config) {
 
 	// -------------------------------------------------------------------------
 
-	ugh := usergrp.New(usrCore, usrSmmCore, cfg.Auth)
+	ugh := usergrp.New(usrCore, smmCore, cfg.Auth)
 
 	app.Handle(http.MethodGet, version, "/users/token/:kid", ugh.Token)
 	app.Handle(http.MethodGet, version, "/users", ugh.Query, authen, ruleAdmin)

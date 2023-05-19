@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/core/user"
-	"github.com/ardanlabs/service/business/core/usersummary"
+	"github.com/ardanlabs/service/business/cview/user/summary"
 	"github.com/ardanlabs/service/business/sys/validate"
 )
 
@@ -155,7 +155,7 @@ type AppSummary struct {
 	TotalCost  float64 `json:"totalCost"`
 }
 
-func toAppSummary(smm usersummary.Summary) AppSummary {
+func toAppSummary(smm summary.Summary) AppSummary {
 	return AppSummary{
 		UserID:     smm.UserID.String(),
 		UserName:   smm.UserName,

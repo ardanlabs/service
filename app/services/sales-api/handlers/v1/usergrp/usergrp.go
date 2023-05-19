@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/core/user"
-	"github.com/ardanlabs/service/business/core/usersummary"
+	"github.com/ardanlabs/service/business/cview/user/summary"
 	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/ardanlabs/service/business/web/auth"
 	v1 "github.com/ardanlabs/service/business/web/v1"
@@ -21,17 +21,17 @@ import (
 
 // Handlers manages the set of user endpoints.
 type Handlers struct {
-	user        *user.Core
-	userSummary *usersummary.Core
-	auth        *auth.Auth
+	user    *user.Core
+	summary *summary.Core
+	auth    *auth.Auth
 }
 
 // New constructs a handlers for route access.
-func New(user *user.Core, userSummary *usersummary.Core, auth *auth.Auth) *Handlers {
+func New(user *user.Core, summary *summary.Core, auth *auth.Auth) *Handlers {
 	return &Handlers{
-		user:        user,
-		userSummary: userSummary,
-		auth:        auth,
+		user:    user,
+		summary: summary,
+		auth:    auth,
 	}
 }
 
@@ -180,7 +180,7 @@ func (h *Handlers) QuerySummary(ctx context.Context, w http.ResponseWriter, r *h
 		return err
 	}
 
-	smms, err := h.userSummary.Query(ctx, filter, orderBy, page.Number, page.RowsPerPage)
+	smms, err := h.summary.Query(ctx, filter, orderBy, page.Number, page.RowsPerPage)
 	if err != nil {
 		return fmt.Errorf("query: %w", err)
 	}
@@ -190,7 +190,7 @@ func (h *Handlers) QuerySummary(ctx context.Context, w http.ResponseWriter, r *h
 		items[i] = toAppSummary(smm)
 	}
 
-	total, err := h.userSummary.Count(ctx, filter)
+	total, err := h.summary.Count(ctx, filter)
 	if err != nil {
 		return fmt.Errorf("count: %w", err)
 	}
