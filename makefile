@@ -352,16 +352,16 @@ pgcli:
 	pgcli postgresql://postgres:postgres@database-service.$(NAMESPACE).svc.cluster.local
 
 liveness-local:
-	curl -il http://localhost:4000/debug/liveness
+	curl -il http://localhost:3000/v1/liveness
 
 liveness:
-	curl -il http://$(SERVICE_NAME).$(NAMESPACE).svc.cluster.local:4000/debug/liveness
+	curl -il http://$(SERVICE_NAME).$(NAMESPACE).svc.cluster.local:3000/v1/liveness
 
 readiness-local:
-	curl -il http://localhost:4000/debug/readiness
+	curl -il http://localhost:3000/v1/readiness
 
 readiness:
-	curl -il http://$(SERVICE_NAME).$(NAMESPACE).svc.cluster.local:4000/debug/readiness
+	curl -il http://$(SERVICE_NAME).$(NAMESPACE).svc.cluster.local:3000/v1/readiness
 
 # ==============================================================================
 # Metrics and Tracing

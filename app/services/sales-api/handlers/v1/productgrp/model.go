@@ -13,12 +13,10 @@ import (
 // AppProduct represents an individual product.
 type AppProduct struct {
 	ID          string  `json:"id"`
+	UserID      string  `json:"userID"`
 	Name        string  `json:"name"`
 	Cost        float64 `json:"cost"`
 	Quantity    int     `json:"quantity"`
-	Sold        int     `json:"sold"`
-	Revenue     int     `json:"revenue"`
-	UserID      string  `json:"userID"`
 	DateCreated string  `json:"dateCreated"`
 	DateUpdated string  `json:"dateUpdated"`
 }
@@ -26,12 +24,10 @@ type AppProduct struct {
 func toAppProduct(prd product.Product) AppProduct {
 	return AppProduct{
 		ID:          prd.ID.String(),
+		UserID:      prd.UserID.String(),
 		Name:        prd.Name,
 		Cost:        prd.Cost,
 		Quantity:    prd.Quantity,
-		Sold:        prd.Sold,
-		Revenue:     prd.Revenue,
-		UserID:      prd.UserID.String(),
 		DateCreated: prd.DateCreated.Format(time.RFC3339),
 		DateUpdated: prd.DateUpdated.Format(time.RFC3339),
 	}
@@ -42,12 +38,10 @@ func toAppProduct(prd product.Product) AppProduct {
 // AppProductDetails represents an individual product.
 type AppProductDetails struct {
 	ID          string  `json:"id"`
+	UserID      string  `json:"userID"`
 	Name        string  `json:"name"`
 	Cost        float64 `json:"cost"`
 	Quantity    int     `json:"quantity"`
-	Sold        int     `json:"sold"`
-	Revenue     int     `json:"revenue"`
-	UserID      string  `json:"userID"`
 	UserName    string  `json:"userName"`
 	DateCreated string  `json:"dateCreated"`
 	DateUpdated string  `json:"dateUpdated"`
@@ -59,8 +53,6 @@ func toAppProductDetails(prd product.Product, usr user.User) AppProductDetails {
 		Name:        prd.Name,
 		Cost:        prd.Cost,
 		Quantity:    prd.Quantity,
-		Sold:        prd.Sold,
-		Revenue:     prd.Revenue,
 		UserID:      prd.UserID.String(),
 		UserName:    usr.Name,
 		DateCreated: prd.DateCreated.Format(time.RFC3339),
@@ -81,10 +73,10 @@ func toAppProductsDetails(prds []product.Product, usrs map[uuid.UUID]user.User) 
 
 // AppNewProduct is what we require from clients when adding a Product.
 type AppNewProduct struct {
+	UserID   string  `json:"userID" validate:"required"`
 	Name     string  `json:"name" validate:"required"`
 	Cost     float64 `json:"cost" validate:"required,gte=0"`
 	Quantity int     `json:"quantity" validate:"gte=1"`
-	UserID   string  `json:"userID" validate:"required"`
 }
 
 func toCoreNewProduct(app AppNewProduct) (product.NewProduct, error) {
@@ -94,10 +86,10 @@ func toCoreNewProduct(app AppNewProduct) (product.NewProduct, error) {
 	}
 
 	prd := product.NewProduct{
+		UserID:   userID,
 		Name:     app.Name,
 		Cost:     app.Cost,
 		Quantity: app.Quantity,
-		UserID:   userID,
 	}
 
 	return prd, nil
