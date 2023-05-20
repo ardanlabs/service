@@ -39,8 +39,9 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.15.2 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
-	github.com/klauspost/compress v1.15.11 // indirect
+	github.com/klauspost/compress v1.15.13 // indirect
 	github.com/leodido/go-urn v1.2.4 // indirect
+	github.com/mattn/go-sqlite3 v1.14.12 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/sirupsen/logrus v1.9.2 // indirect
 	github.com/tchap/go-patricia/v2 v2.3.1 // indirect
