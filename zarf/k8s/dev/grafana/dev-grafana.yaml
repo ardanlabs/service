@@ -23,6 +23,31 @@ data:
         access: proxy
         isDefault: true
         jsonData:
+          tracesToMetrics:
+          datasourceUid: 'Prometheus'
+          tags: [{ key: 'service.name', value: 'service' }, { key: 'job' }]
+          queries:
+            - name: 'Sample query'
+              query: 'sum(rate(traces_spanmetrics_latency_bucket{$__tags}[5m]))'
+          serviceMap:
+            datasourceUid: 'Prometheus'
+          nodeGraph:
+            enabled: true
+          search:
+            hide: false
+          spanBar:
+            type: 'Tag'
+            tag: 'http.path'
+        version: 1
+        editable: true
+      - name: Prometheus
+        type: prometheus
+        url: http://prometheus.sales-system.svc:9090
+        access: proxy
+        jsonData:
+          httpMethod: POST
+          prometheusType: Prometheus
+          prometheusVersion: 2.44.0
           nodeGraph:
             enabled: true
           search:

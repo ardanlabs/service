@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/dimfeld/httptreemux/v5"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 )
 
@@ -37,6 +38,9 @@ func New(log *zap.SugaredLogger, host string, route string, readTimeout, writeTi
 	}
 
 	mux.Handle("GET", route, exp.handler)
+	mux.Handle("GET", route+"-native", func(w http.ResponseWriter, r *http.Request, m map[string]string) {
+		promhttp.Handler().ServeHTTP(w, r)
+	})
 
 	go func() {
 		log.Infow("expvar", "status", "API listening", "host", host)
