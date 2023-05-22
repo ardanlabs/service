@@ -6,7 +6,7 @@ metadata:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: grafana-conf
+  name: grafana-conf-datasources
   namespace: sales-system
 data:
   tempo.yaml: |
@@ -32,6 +32,143 @@ data:
             tag: 'http.path'
         version: 1
         editable: true
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-conf-dashboards
+  namespace: sales-system
+data:
+  dashboards.yaml: |
+    apiVersion: 1
+    
+    providers:
+      - name: dashboards
+        type: file
+        updateIntervalSeconds: 30
+        options:
+          path: /etc/dashboards
+          foldersFromFilesStructure: true
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  namespace: sales-system
+data:
+  sales-api.json: |
+    {
+      "annotations": {
+        "list": [
+          {
+            "builtIn": 1,
+            "datasource": {
+              "type": "grafana",
+              "uid": "-- Grafana --"
+            },
+            "enable": true,
+            "hide": true,
+            "iconColor": "rgba(0, 211, 255, 1)",
+            "name": "Annotations & Alerts",
+            "type": "dashboard"
+          }
+        ]
+      },
+      "description": "All requests to Sales API",
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 0,
+      "id": 1,
+      "links": [],
+      "liveNow": false,
+      "panels": [
+        {
+          "datasource": {
+            "type": "tempo",
+            "uid": "P214B5B846CF3925F"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                },
+                "inspect": false
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 0
+          },
+          "id": 1,
+          "options": {
+            "cellHeight": "sm",
+            "footer": {
+              "countRows": false,
+              "fields": "",
+              "reducer": [
+                "sum"
+              ],
+              "show": false
+            },
+            "showHeader": true
+          },
+          "pluginVersion": "9.5.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "tempo",
+                "uid": "P214B5B846CF3925F"
+              },
+              "key": "Q-9fc3b403-aa1a-4311-978b-cda05474ac3e-0",
+              "limit": 20,
+              "queryType": "nativeSearch",
+              "refId": "A",
+              "serviceName": "sales-api"
+            }
+          ],
+          "title": "All Requests",
+          "type": "table"
+        }
+      ],
+      "refresh": "30s",
+      "schemaVersion": 38,
+      "style": "dark",
+      "tags": [],
+      "templating": {
+        "list": []
+      },
+      "time": {
+        "from": "now-1h",
+        "to": "now"
+      },
+      "timepicker": {},
+      "timezone": "",
+      "title": "Sales API - All Requests",
+      "uid": "ccad8cb7-1592-4328-b38b-b4226a5d00a6",
+      "version": 1,
+      "weekStart": ""
+    }
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -78,6 +215,8 @@ spec:
               value: 'true'
             - name: GF_AUTH_ANONYMOUS_ORG_ROLE
               value: 'Admin'
+            - name: GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH
+              value: "/etc/dashboards/sales-api.json"
           ports:
             - containerPort: 3100
               name: http-grafana
@@ -104,12 +243,22 @@ spec:
               cpu: 250m
               memory: 750Mi
           volumeMounts:
-            - name: config-volume
+            - name: config-datasources
               mountPath: /etc/grafana/provisioning/datasources
+            - name: config-dashboards
+              mountPath: /etc/grafana/provisioning/dashboards
+            - name: dashboards
+              mountPath: /etc/dashboards
       volumes:
-        - name: config-volume
+        - name: config-datasources
           configMap:
-            name: grafana-conf
+            name: grafana-conf-datasources
+        - name: config-dashboards
+          configMap:
+            name: grafana-conf-dashboards
+        - name: dashboards
+          configMap:
+            name: grafana-dashboards
 ---
 apiVersion: v1
 kind: Service
