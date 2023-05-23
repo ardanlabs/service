@@ -31,9 +31,10 @@ import (
 func StartDB() (*docker.Container, error) {
 	image := "postgres:15.3"
 	port := "5432"
-	args := []string{"-e", "POSTGRES_PASSWORD=postgres"}
+	dockerArgs := []string{"-e", "POSTGRES_PASSWORD=postgres"}
+	appArgs := []string{"-c", "log_statement=all"}
 
-	c, err := docker.StartContainer(image, port, args...)
+	c, err := docker.StartContainer(image, port, dockerArgs, appArgs)
 	if err != nil {
 		return nil, fmt.Errorf("starting container: %w", err)
 	}
