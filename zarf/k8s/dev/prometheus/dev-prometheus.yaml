@@ -21,7 +21,7 @@ data:
         scrape_interval: 5s
         scrape_timeout: 2s
         static_configs:
-          - targets: [ "sales-api.sales-system.svc:4000" ]
+          - targets: [ "sales-api.sales-system.svc:3002" ]
 ---
 apiVersion: apps/v1
 kind: Deployment
