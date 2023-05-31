@@ -1,3 +1,4 @@
+// Package prometheus provides suppoert for sending metrics to prometheus.
 package prometheus
 
 import (
@@ -13,6 +14,7 @@ import (
 	"go.uber.org/zap"
 )
 
+// Exporter implements the prometheus exporter support.
 type Exporter struct {
 	log    *zap.SugaredLogger
 	server http.Server
@@ -20,8 +22,10 @@ type Exporter struct {
 	mu     sync.Mutex
 }
 
+// New constructs an Exporter for use.
 func New(log *zap.SugaredLogger, host string, route string, readTimeout, writeTimeout time.Duration, idleTimeout time.Duration) *Exporter {
-	mux := httptreemux.New()
+	mux := httptreemux.NewContextMux()
+
 	exp := Exporter{
 		log: log,
 		server: http.Server{
@@ -34,10 +38,11 @@ func New(log *zap.SugaredLogger, host string, route string, readTimeout, writeTi
 		},
 	}
 
-	mux.Handle("GET", route, exp.handler)
+	mux.Handle(http.MethodGet, route, exp.handler)
 
 	go func() {
 		log.Infow("prometheus", "status", "API listening", "host", host)
+
 		if err := exp.server.ListenAndServe(); err != nil {
 			log.Errorw("ERROR", zap.Error(err))
 		}
@@ -46,7 +51,34 @@ func New(log *zap.SugaredLogger, host string, route string, readTimeout, writeTi
 	return &exp
 }
 
-func (exp *Exporter) handler(w http.ResponseWriter, r *http.Request, m map[string]string) {
+// Publish stores a deep copy of the data for publishing.
+func (exp *Exporter) Publish(data map[string]any) {
+	exp.mu.Lock()
+	defer exp.mu.Unlock()
+
+	exp.data = deepCopyMap(data)
+}
+
+// Stop turns off all the prometheus support.
+func (exp *Exporter) Stop(shutdownTimeout time.Duration) {
+	exp.log.Infow("prometheus", "status", "start shutdown...")
+	defer exp.log.Infow("prometheus: Completed")
+
+	ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
+	defer cancel()
+
+	if err := exp.server.Shutdown(ctx); err != nil {
+		exp.log.Errorw("prometheus", "status", "graceful shutdown did not complete", "ERROR", err, "shutdownTimeout", shutdownTimeout)
+
+		if err := exp.server.Close(); err != nil {
+			exp.log.Errorw("prometheus", "status", "could not stop http server", "ERROR", err)
+		}
+	}
+}
+
+// =============================================================================
+
+func (exp *Exporter) handler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; version=0.0.4")
 	w.WriteHeader(http.StatusOK)
 
@@ -66,63 +98,31 @@ func (exp *Exporter) handler(w http.ResponseWriter, r *http.Request, m map[strin
 	)
 }
 
-func (exp *Exporter) Publish(data map[string]any) {
-	exp.mu.Lock()
-	{
-		exp.data = deepCopyMap(data)
-	}
-	exp.mu.Unlock()
-}
-
-func (exp *Exporter) Stop(shutdownTimeout time.Duration) {
-	exp.log.Infow("prometheus", "status", "start shutdown...")
-	defer exp.log.Infow("prometheus: Completed")
-
-	// Create context for Shutdown call.
-	ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
-	defer cancel()
-
-	// Asking listener to shut down and load shed.
-	if err := exp.server.Shutdown(ctx); err != nil {
-		exp.log.Errorw("prometheus", "status", "graceful shutdown did not complete", "ERROR", err, "shutdownTimeout", shutdownTimeout)
-		if err := exp.server.Close(); err != nil {
-			exp.log.Errorw("prometheus", "status", "could not stop http server", "ERROR", err)
-		}
-	}
-}
+// =============================================================================
 
 func deepCopyMap(source map[string]any) map[string]any {
 	result := make(map[string]any)
-	for k, v := range source {
-		vm, ok := v.(map[string]any)
-		if ok {
-			result[k] = deepCopyMap(vm)
-		} else {
-			val, err := toFloat64(v)
-			if err != nil {
-				continue
-			}
 
-			result[k] = val
+	for k, v := range source {
+		switch vm := v.(type) {
+		case map[string]any:
+			result[k] = deepCopyMap(vm)
+
+		case int64:
+			result[k] = float64(vm)
+
+		case float64:
+			result[k] = vm
+
+		case bool:
+			result[k] = 0.0
+			if vm {
+				result[k] = 1.0
+			}
 		}
 	}
 
 	return result
-}
-
-func toFloat64(v interface{}) (float64, error) {
-	switch v := v.(type) {
-	case int64:
-		return float64(v), nil
-	case float64:
-		return v, nil
-	case bool:
-		if v {
-			return 1.0, nil
-		}
-		return 0.0, nil
-	}
-	return 0, fmt.Errorf("unexpected value type: %#v", v)
 }
 
 func out(w io.Writer, prefix string, data map[string]any) {
@@ -130,15 +130,18 @@ func out(w io.Writer, prefix string, data map[string]any) {
 		prefix += "_"
 	}
 
-	for key, val := range data {
-		writeKey := fmt.Sprintf("%s%s", prefix, key)
-		switch val.(type) {
+	for k, v := range data {
+		writeKey := fmt.Sprintf("%s%s", prefix, k)
+
+		switch vm := v.(type) {
 		case float64:
-			fmt.Fprintf(w, fmt.Sprintf("%s %.f\n", writeKey, val))
+			fmt.Fprintf(w, "%s %.f\n", writeKey, vm)
+
 		case map[string]any:
-			out(w, writeKey, val.(map[string]any))
+			out(w, writeKey, vm)
+
 		default:
-			// Discard stuff
+			// Discard this value.
 		}
 	}
 }
