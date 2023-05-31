@@ -9,7 +9,7 @@ nodes:
   # Debug port of our service
   - containerPort: 4000
     hostPort: 4000
-    # Grafana
+  # Grafana
   - containerPort: 3100
     hostPort: 3100
   # Vault
@@ -18,9 +18,9 @@ nodes:
   # Postgres
   - containerPort: 5432
     hostPort: 5432
-    # Prometheus
+  # Prometheus
   - containerPort: 9090
     hostPort: 9090
-    # Tempo (tracing)
+  # Tempo (tracing)
   - containerPort: 9411
     hostPort: 9411
