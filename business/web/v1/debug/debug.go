@@ -5,8 +5,6 @@ import (
 	"expvar"
 	"net/http"
 	"net/http/pprof"
-
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 // Mux registers all the debug routes from the standard library into a new mux
@@ -14,9 +12,6 @@ import (
 // be a security risk since a dependency could inject a handler into our service
 // without us knowing it.
 func Mux() *http.ServeMux {
-	c := &c{}
-	prometheus.MustRegister(c)
-
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/debug/pprof/", pprof.Index)
