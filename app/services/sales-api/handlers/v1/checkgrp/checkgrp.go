@@ -57,6 +57,9 @@ func (h *Handlers) Readiness(ctx context.Context, w http.ResponseWriter, r *http
 // namespace details via the Downward API. The Kubernetes environment variables
 // need to be set within your Pod/Deployment manifest.
 func (h *Handlers) Liveness(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	ctx, span := web.AddSpan(ctx, "v1.liveness")
+	defer span.End()
+
 	host, err := os.Hostname()
 	if err != nil {
 		host = "unavailable"

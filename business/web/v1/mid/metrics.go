@@ -16,10 +16,6 @@ func Metrics() web.Middleware {
 
 			err := handler(ctx, w, r)
 
-			if r.URL.Path == "/v1/liveness" || r.URL.Path == "/v1/readiness" {
-				return err
-			}
-
 			metrics.AddRequests(ctx)
 			metrics.AddGoroutines(ctx)
 

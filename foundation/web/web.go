@@ -64,12 +64,24 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	a.otmux.ServeHTTP(w, r)
 }
 
+// HandleNoMiddleware sets a handler function for a given HTTP method and path pair
+// to the application server mux. Does not include the application middleware.
+func (a *App) HandleNoMiddleware(method string, group string, path string, handler Handler) {
+	a.handle(method, group, path, handler)
+}
+
 // Handle sets a handler function for a given HTTP method and path pair
 // to the application server mux.
 func (a *App) Handle(method string, group string, path string, handler Handler, mw ...Middleware) {
 	handler = wrapMiddleware(mw, handler)
 	handler = wrapMiddleware(a.mw, handler)
 
+	a.handle(method, group, path, handler)
+}
+
+// Handle sets a handler function for a given HTTP method and path pair
+// to the application server mux.
+func (a *App) handle(method string, group string, path string, handler Handler) {
 	h := func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
