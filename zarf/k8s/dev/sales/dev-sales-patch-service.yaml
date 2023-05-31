@@ -20,6 +20,6 @@ spec:
   - name: metrics
     port: 3001
     targetPort: metrics
-  - name: metrics-debug
-    port: 4001
-    targetPort: metrics-debug
+  - name: prometheus
+    port: 3002
+    targetPort: prometheus

@@ -73,7 +73,7 @@ func (a *App) Handle(method string, group string, path string, handler Handler, 
 	h := func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
-		span := trace.SpanFromContext(ctx)
+		ctx, span := AddSpan(ctx, "foundation.app.handle")
 		defer span.End()
 
 		v := Values{
@@ -82,9 +82,6 @@ func (a *App) Handle(method string, group string, path string, handler Handler, 
 			Now:     time.Now().UTC(),
 		}
 		ctx = context.WithValue(ctx, key, &v)
-
-		ctx, span = AddSpan(ctx, "foundation.app.handle")
-		defer span.End()
 
 		if err := handler(ctx, w, r); err != nil {
 			if validateShutdown(err) {

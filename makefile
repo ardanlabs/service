@@ -147,6 +147,7 @@ KIND            := kindest/node:v1.27.1
 POSTGRES        := postgres:15.3
 VAULT           := hashicorp/vault:1.13
 GRAFANA         := grafana/grafana:9.5.2
+PROMETHEUS      := prom/prometheus:v2.44.0
 TEMPO           := grafana/tempo:2.1.1
 TELEPRESENCE    := datawire/tel2:2.13.2
 
@@ -193,6 +194,7 @@ dev-docker:
 	docker pull $(POSTGRES)
 	docker pull $(VAULT)
 	docker pull $(GRAFANA)
+	docker pull $(PROMETHEUS)
 	docker pull $(TEMPO)
 	docker pull $(TELEPRESENCE)
 
@@ -262,6 +264,9 @@ dev-apply:
 
 	kustomize build zarf/k8s/dev/grafana | kubectl apply -f -
 	kubectl wait pods --namespace=$(NAMESPACE) --selector app=grafana --timeout=120s --for=condition=Ready
+
+	kustomize build zarf/k8s/dev/prometheus | kubectl apply -f -
+	kubectl wait pods --namespace=$(NAMESPACE) --selector app=prometheus --timeout=120s --for=condition=Ready
 
 	kustomize build zarf/k8s/dev/tempo | kubectl apply -f -
 	kubectl wait pods --namespace=$(NAMESPACE) --selector app=tempo --timeout=120s --for=condition=Ready
@@ -446,6 +451,7 @@ deps-reset:
 	go mod vendor
 
 tidy:
+	rm -rf vendor
 	go mod tidy
 	go mod vendor
 

@@ -16,6 +16,7 @@ import (
 	"github.com/ardanlabs/service/app/services/metrics/collector"
 	"github.com/ardanlabs/service/app/services/metrics/publisher"
 	expvarsrv "github.com/ardanlabs/service/app/services/metrics/publisher/expvar"
+	prometheussrv "github.com/ardanlabs/service/app/services/metrics/publisher/prometheus"
 	"github.com/ardanlabs/service/foundation/logger"
 	"go.uber.org/zap"
 )
@@ -54,6 +55,14 @@ func run(log *zap.SugaredLogger) error {
 		}
 		Expvar struct {
 			Host            string        `conf:"default:0.0.0.0:3001"`
+			Route           string        `conf:"default:/metrics"`
+			ReadTimeout     time.Duration `conf:"default:5s"`
+			WriteTimeout    time.Duration `conf:"default:10s"`
+			IdleTimeout     time.Duration `conf:"default:120s"`
+			ShutdownTimeout time.Duration `conf:"default:5s"`
+		}
+		Prometheus struct {
+			Host            string        `conf:"default:0.0.0.0:3002"`
 			Route           string        `conf:"default:/metrics"`
 			ReadTimeout     time.Duration `conf:"default:5s"`
 			WriteTimeout    time.Duration `conf:"default:10s"`
@@ -116,6 +125,12 @@ func run(log *zap.SugaredLogger) error {
 	}()
 
 	// -------------------------------------------------------------------------
+	// Start Prometheus Service
+
+	prom := prometheussrv.New(log, cfg.Prometheus.Host, cfg.Prometheus.Route, cfg.Prometheus.ReadTimeout, cfg.Prometheus.WriteTimeout, cfg.Prometheus.IdleTimeout)
+	defer prom.Stop(cfg.Prometheus.ShutdownTimeout)
+
+	// -------------------------------------------------------------------------
 	// Start expvar Service
 
 	exp := expvarsrv.New(log, cfg.Expvar.Host, cfg.Expvar.Route, cfg.Expvar.ReadTimeout, cfg.Expvar.WriteTimeout, cfg.Expvar.IdleTimeout)
@@ -131,7 +146,7 @@ func run(log *zap.SugaredLogger) error {
 
 	stdout := publisher.NewStdout(log)
 
-	publish, err := publisher.New(log, collector, cfg.Publish.Interval, exp.Publish, stdout.Publish)
+	publish, err := publisher.New(log, collector, cfg.Publish.Interval, prom.Publish, exp.Publish, stdout.Publish)
 	if err != nil {
 		return fmt.Errorf("starting publisher: %w", err)
 	}

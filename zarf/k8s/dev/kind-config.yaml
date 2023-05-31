@@ -3,15 +3,24 @@ apiVersion: kind.x-k8s.io/v1alpha4
 nodes:
 - role: control-plane
   extraPortMappings:
+  # Our service
   - containerPort: 3000
     hostPort: 3000
+  # Debug port of our service
   - containerPort: 4000
     hostPort: 4000
+  # Grafana
   - containerPort: 3100
     hostPort: 3100
+  # Vault
   - containerPort: 8200
     hostPort: 8200
+  # Postgres
   - containerPort: 5432
     hostPort: 5432
+  # Prometheus
+  - containerPort: 9090
+    hostPort: 9090
+  # Tempo (tracing)
   - containerPort: 9411
     hostPort: 9411

@@ -99,8 +99,8 @@ spec:
         ports:
         - name: metrics
           containerPort: 3001
-        - name: metrics-debug
-          containerPort: 4001
+        - name: prometheus
+          containerPort: 3002
 
         env:
           - name: GOMAXPROCS
