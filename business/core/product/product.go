@@ -13,7 +13,7 @@ import (
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/data/order"
 	"github.com/google/uuid"
-	"go.uber.org/zap"
+	"golang.org/x/exp/slog"
 )
 
 // Set of error variables for CRUD operations.
@@ -46,14 +46,14 @@ type UserCore interface {
 
 // Core manages the set of APIs for product access.
 type Core struct {
-	log     *zap.SugaredLogger
+	log     *slog.Logger
 	evnCore *event.Core
 	usrCore UserCore
 	storer  Storer
 }
 
 // NewCore constructs a core for product api access.
-func NewCore(log *zap.SugaredLogger, evnCore *event.Core, usrCore UserCore, storer Storer) *Core {
+func NewCore(log *slog.Logger, evnCore *event.Core, usrCore UserCore, storer Storer) *Core {
 	core := Core{
 		log:     log,
 		evnCore: evnCore,

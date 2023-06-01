@@ -10,19 +10,19 @@ import (
 	"time"
 
 	"github.com/dimfeld/httptreemux/v5"
-	"go.uber.org/zap"
+	"golang.org/x/exp/slog"
 )
 
 // Expvar provide our basic publishing.
 type Expvar struct {
-	log    *zap.SugaredLogger
+	log    *slog.Logger
 	server http.Server
 	data   map[string]any
 	mu     sync.Mutex
 }
 
 // New starts a service for consuming the raw expvar stats.
-func New(log *zap.SugaredLogger, host string, route string, readTimeout, writeTimeout time.Duration, idleTimeout time.Duration) *Expvar {
+func New(log *slog.Logger, host string, route string, readTimeout, writeTimeout time.Duration, idleTimeout time.Duration) *Expvar {
 	mux := httptreemux.New()
 	exp := Expvar{
 		log: log,
@@ -32,16 +32,15 @@ func New(log *zap.SugaredLogger, host string, route string, readTimeout, writeTi
 			ReadTimeout:  readTimeout,
 			WriteTimeout: writeTimeout,
 			IdleTimeout:  idleTimeout,
-			ErrorLog:     zap.NewStdLog(log.Desugar()),
 		},
 	}
 
 	mux.Handle("GET", route, exp.handler)
 
 	go func() {
-		log.Infow("expvar", "status", "API listening", "host", host)
+		log.Info("expvar", "status", "API listening", "host", host)
 		if err := exp.server.ListenAndServe(); err != nil {
-			log.Errorw("ERROR", zap.Error(err))
+			log.Info("expvar", "ERROR", err)
 		}
 	}()
 
@@ -50,8 +49,8 @@ func New(log *zap.SugaredLogger, host string, route string, readTimeout, writeTi
 
 // Stop shuts down the service.
 func (exp *Expvar) Stop(shutdownTimeout time.Duration) {
-	exp.log.Infow("expvar", "status", "start shutdown...")
-	defer exp.log.Infow("expvar: Completed")
+	exp.log.Info("expvar", "status", "start shutdown...")
+	defer exp.log.Info("expvar: Completed")
 
 	// Create context for Shutdown call.
 	ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
@@ -59,9 +58,9 @@ func (exp *Expvar) Stop(shutdownTimeout time.Duration) {
 
 	// Asking listener to shut down and load shed.
 	if err := exp.server.Shutdown(ctx); err != nil {
-		exp.log.Errorw("expvar", "status", "graceful shutdown did not complete", "ERROR", err, "shutdownTimeout", shutdownTimeout)
+		exp.log.Info("expvar", "status", "graceful shutdown did not complete", "ERROR", err, "shutdownTimeout", shutdownTimeout)
 		if err := exp.server.Close(); err != nil {
-			exp.log.Errorw("expvar", "status", "could not stop http server", "ERROR", err)
+			exp.log.Info("expvar", "status", "could not stop http server", "ERROR", err)
 		}
 	}
 }
@@ -88,7 +87,7 @@ func (exp *Expvar) handler(w http.ResponseWriter, r *http.Request, params map[st
 	exp.mu.Unlock()
 
 	if err := json.NewEncoder(w).Encode(data); err != nil {
-		exp.log.Errorw("expvar", "status", "encoding data", "ERROR", err)
+		exp.log.Info("expvar", "status", "encoding data", "ERROR", err)
 	}
 
 	log.Printf("expvar : (%d) : %s %s -> %s",

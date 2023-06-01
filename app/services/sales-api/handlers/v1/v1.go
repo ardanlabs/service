@@ -20,13 +20,13 @@ import (
 	"github.com/ardanlabs/service/business/web/v1/mid"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/jmoiron/sqlx"
-	"go.uber.org/zap"
+	"golang.org/x/exp/slog"
 )
 
 // Config contains all the mandatory systems required by handlers.
 type Config struct {
 	Build string
-	Log   *zap.SugaredLogger
+	Log   *slog.Logger
 	Auth  *auth.Auth
 	DB    *sqlx.DB
 }

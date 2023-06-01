@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"go.uber.org/zap"
+	"golang.org/x/exp/slog"
 )
 
 // Set of possible publisher types.
@@ -32,7 +32,7 @@ type Publisher func(map[string]any)
 // Publish provides the ability to receive metrics
 // on an interval.
 type Publish struct {
-	log       *zap.SugaredLogger
+	log       *slog.Logger
 	collector Collector
 	publisher []Publisher
 	wg        sync.WaitGroup
@@ -41,7 +41,7 @@ type Publish struct {
 }
 
 // New creates a Publish for consuming and publishing metrics.
-func New(log *zap.SugaredLogger, collector Collector, interval time.Duration, publisher ...Publisher) (*Publish, error) {
+func New(log *slog.Logger, collector Collector, interval time.Duration, publisher ...Publisher) (*Publish, error) {
 	p := Publish{
 		log:       log,
 		collector: collector,
@@ -77,7 +77,7 @@ func (p *Publish) Stop() {
 func (p *Publish) update() {
 	data, err := p.collector.Collect()
 	if err != nil {
-		p.log.Errorw("publish", "status", "collect data", "ERROR", err)
+		p.log.Info("publish", "status", "collect data", "ERROR", err)
 		return
 	}
 
@@ -90,11 +90,11 @@ func (p *Publish) update() {
 
 // Stdout provide our basic publishing.
 type Stdout struct {
-	log *zap.SugaredLogger
+	log *slog.Logger
 }
 
 // NewStdout initializes stdout for publishing metrics.
-func NewStdout(log *zap.SugaredLogger) *Stdout {
+func NewStdout(log *slog.Logger) *Stdout {
 	return &Stdout{log}
 }
 
@@ -102,13 +102,13 @@ func NewStdout(log *zap.SugaredLogger) *Stdout {
 func (s *Stdout) Publish(data map[string]any) {
 	rawJSON, err := json.Marshal(data)
 	if err != nil {
-		s.log.Errorw("stdout", "status", "marshal data", "ERROR", err)
+		s.log.Info("stdout", "status", "marshal data", "ERROR", err)
 		return
 	}
 
 	var d map[string]any
 	if err := json.Unmarshal(rawJSON, &d); err != nil {
-		s.log.Errorw("stdout", "status", "unmarshal data", "ERROR", err)
+		s.log.Info("stdout", "status", "unmarshal data", "ERROR", err)
 		return
 	}
 
@@ -126,5 +126,5 @@ func (s *Stdout) Publish(data map[string]any) {
 	if err != nil {
 		return
 	}
-	s.log.Infow("stdout", "data", string(out))
+	s.log.Info("stdout", "data", string(out))
 }

@@ -9,19 +9,19 @@ import (
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/data/order"
 	"github.com/google/uuid"
-	"go.uber.org/zap"
+	"golang.org/x/exp/slog"
 )
 
 // Store manages the set of APIs for user data and caching.
 type Store struct {
-	log    *zap.SugaredLogger
+	log    *slog.Logger
 	storer user.Storer
 	cache  map[string]*user.User
 	mu     sync.RWMutex
 }
 
 // NewStore constructs the api for data and caching access.
-func NewStore(log *zap.SugaredLogger, storer user.Storer) *Store {
+func NewStore(log *slog.Logger, storer user.Storer) *Store {
 	return &Store{
 		log:    log,
 		storer: storer,
