@@ -12,17 +12,17 @@ import (
 	database "github.com/ardanlabs/service/business/sys/database/pgx"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
-	"go.uber.org/zap"
+	"golang.org/x/exp/slog"
 )
 
 // Store manages the set of APIs for product database access.
 type Store struct {
-	log *zap.SugaredLogger
+	log *slog.Logger
 	db  sqlx.ExtContext
 }
 
 // NewStore constructs the api for data access.
-func NewStore(log *zap.SugaredLogger, db *sqlx.DB) *Store {
+func NewStore(log *slog.Logger, db *sqlx.DB) *Store {
 	return &Store{
 		log: log,
 		db:  db,

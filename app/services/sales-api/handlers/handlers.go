@@ -12,7 +12,7 @@ import (
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/jmoiron/sqlx"
 	"go.opentelemetry.io/otel/trace"
-	"go.uber.org/zap"
+	"golang.org/x/exp/slog"
 )
 
 // Options represent optional parameters.
@@ -31,7 +31,7 @@ func WithCORS(origin string) func(opts *Options) {
 type APIMuxConfig struct {
 	Build    string
 	Shutdown chan os.Signal
-	Log      *zap.SugaredLogger
+	Log      *slog.Logger
 	Auth     *auth.Auth
 	DB       *sqlx.DB
 	Tracer   trace.Tracer

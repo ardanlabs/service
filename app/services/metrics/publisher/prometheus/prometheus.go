@@ -5,25 +5,24 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"sync"
 	"time"
 
 	"github.com/dimfeld/httptreemux/v5"
-	"go.uber.org/zap"
+	"golang.org/x/exp/slog"
 )
 
 // Exporter implements the prometheus exporter support.
 type Exporter struct {
-	log    *zap.SugaredLogger
+	log    *slog.Logger
 	server http.Server
 	data   map[string]any
 	mu     sync.Mutex
 }
 
 // New constructs an Exporter for use.
-func New(log *zap.SugaredLogger, host string, route string, readTimeout, writeTimeout time.Duration, idleTimeout time.Duration) *Exporter {
+func New(log *slog.Logger, host string, route string, readTimeout, writeTimeout time.Duration, idleTimeout time.Duration) *Exporter {
 	mux := httptreemux.NewContextMux()
 
 	exp := Exporter{
@@ -34,17 +33,16 @@ func New(log *zap.SugaredLogger, host string, route string, readTimeout, writeTi
 			ReadTimeout:  readTimeout,
 			WriteTimeout: writeTimeout,
 			IdleTimeout:  idleTimeout,
-			ErrorLog:     zap.NewStdLog(log.Desugar()),
 		},
 	}
 
 	mux.Handle(http.MethodGet, route, exp.handler)
 
 	go func() {
-		log.Infow("prometheus", "status", "API listening", "host", host)
+		log.Info("prometheus", "status", "API listening", "host", host)
 
 		if err := exp.server.ListenAndServe(); err != nil {
-			log.Errorw("ERROR", zap.Error(err))
+			log.Info("prometheus", "ERROR", err)
 		}
 	}()
 
@@ -61,17 +59,17 @@ func (exp *Exporter) Publish(data map[string]any) {
 
 // Stop turns off all the prometheus support.
 func (exp *Exporter) Stop(shutdownTimeout time.Duration) {
-	exp.log.Infow("prometheus", "status", "start shutdown...")
-	defer exp.log.Infow("prometheus: Completed")
+	exp.log.Info("prometheus", "status", "start shutdown...")
+	defer exp.log.Info("prometheus: Completed")
 
 	ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
 	defer cancel()
 
 	if err := exp.server.Shutdown(ctx); err != nil {
-		exp.log.Errorw("prometheus", "status", "graceful shutdown did not complete", "ERROR", err, "shutdownTimeout", shutdownTimeout)
+		exp.log.Info("prometheus", "status", "graceful shutdown did not complete", "ERROR", err, "shutdownTimeout", shutdownTimeout)
 
 		if err := exp.server.Close(); err != nil {
-			exp.log.Errorw("prometheus", "status", "could not stop http server", "ERROR", err)
+			exp.log.Info("prometheus", "status", "could not stop http server", "ERROR", err)
 		}
 	}
 }
@@ -91,11 +89,11 @@ func (exp *Exporter) handler(w http.ResponseWriter, r *http.Request) {
 
 	out(w, "", data)
 
-	log.Printf("prometheus: (%d) : %s %s -> %s",
+	exp.log.Info(fmt.Sprintf("prometheus: (%d) : %s %s -> %s",
 		http.StatusOK,
 		r.Method, r.URL.Path,
 		r.RemoteAddr,
-	)
+	))
 }
 
 // =============================================================================

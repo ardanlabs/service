@@ -2,6 +2,7 @@
 package main
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"os"
@@ -11,7 +12,7 @@ import (
 	database "github.com/ardanlabs/service/business/sys/database/pgx"
 	"github.com/ardanlabs/service/foundation/vault"
 	"github.com/google/uuid"
-	"go.uber.org/zap"
+	"golang.org/x/exp/slog"
 )
 
 var build = "develop"
@@ -37,7 +38,10 @@ type config struct {
 }
 
 func main() {
-	if err := run(zap.NewNop().Sugar()); err != nil {
+	var buf bytes.Buffer
+	log := slog.New(slog.NewJSONHandler(&buf, nil))
+
+	if err := run(log); err != nil {
 		if !errors.Is(err, commands.ErrHelp) {
 			fmt.Println("ERROR", err)
 		}
@@ -45,7 +49,7 @@ func main() {
 	}
 }
 
-func run(log *zap.SugaredLogger) error {
+func run(log *slog.Logger) error {
 	cfg := config{
 		Version: conf.Version{
 			Build: build,
@@ -65,7 +69,7 @@ func run(log *zap.SugaredLogger) error {
 		if err != nil {
 			return fmt.Errorf("generating config for output: %w", err)
 		}
-		log.Infow("startup", "config", out)
+		log.Info("startup", "config", out)
 
 		return fmt.Errorf("parsing config: %w", err)
 	}
@@ -75,7 +79,7 @@ func run(log *zap.SugaredLogger) error {
 
 // processCommands handles the execution of the commands specified on
 // the command line.
-func processCommands(args conf.Args, log *zap.SugaredLogger, cfg config) error {
+func processCommands(args conf.Args, log *slog.Logger, cfg config) error {
 	dbConfig := database.Config{
 		User:         cfg.DB.User,
 		Password:     cfg.DB.Password,

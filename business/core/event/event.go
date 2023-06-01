@@ -5,17 +5,17 @@ import (
 	"context"
 
 	"github.com/ardanlabs/service/foundation/web"
-	"go.uber.org/zap"
+	"golang.org/x/exp/slog"
 )
 
 // Core manages the set of APIs for event access.
 type Core struct {
-	log      *zap.SugaredLogger
+	log      *slog.Logger
 	handlers map[string]map[string][]HandleFunc
 }
 
 // NewCore constructs a core for event api access.
-func NewCore(log *zap.SugaredLogger) *Core {
+func NewCore(log *slog.Logger) *Core {
 	return &Core{
 		log:      log,
 		handlers: map[string]map[string][]HandleFunc{},
@@ -24,16 +24,16 @@ func NewCore(log *zap.SugaredLogger) *Core {
 
 // SendEvent sends event to all handlers registered for the specified event.
 func (c *Core) SendEvent(ctx context.Context, event Event) error {
-	c.log.Infow("sendevent", "trace_id", web.GetTraceID(ctx), "status", "started", "source", event.Source, "type", event.Type, "params", event.RawParams)
-	defer c.log.Infow("sendevent", "trace_id", web.GetTraceID(ctx), "status", "completed")
+	c.log.Info("sendevent", "trace_id", web.GetTraceID(ctx), "status", "started", "source", event.Source, "type", event.Type, "params", event.RawParams)
+	defer c.log.Info("sendevent", "trace_id", web.GetTraceID(ctx), "status", "completed")
 
 	if m, ok := c.handlers[event.Source]; ok {
 		if hfs, ok := m[event.Type]; ok {
 			for _, hf := range hfs {
-				c.log.Infow("sendevent", "trace_id", web.GetTraceID(ctx), "status", "sending")
+				c.log.Info("sendevent", "trace_id", web.GetTraceID(ctx), "status", "sending")
 
 				if err := hf(ctx, event); err != nil {
-					c.log.Infof("sendevent", "trace_id", web.GetTraceID(ctx), "ERROR", err)
+					c.log.Info("sendevent", "trace_id", web.GetTraceID(ctx), "ERROR", err)
 				}
 			}
 		}

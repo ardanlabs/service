@@ -13,11 +13,11 @@ import (
 	"github.com/ardanlabs/service/foundation/vault"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
-	"go.uber.org/zap"
+	"golang.org/x/exp/slog"
 )
 
 // GenToken generates a JWT for the specified user.
-func GenToken(log *zap.SugaredLogger, dbConfig database.Config, vaultConfig vault.Config, userID uuid.UUID, kid string) error {
+func GenToken(log *slog.Logger, dbConfig database.Config, vaultConfig vault.Config, userID uuid.UUID, kid string) error {
 	if kid == "" {
 		fmt.Println("help: gentoken <user_id> <kid>")
 		return ErrHelp

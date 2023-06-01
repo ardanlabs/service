@@ -10,11 +10,11 @@ import (
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/core/user/stores/userdb"
 	database "github.com/ardanlabs/service/business/sys/database/pgx"
-	"go.uber.org/zap"
+	"golang.org/x/exp/slog"
 )
 
 // UserAdd adds new users into the database.
-func UserAdd(log *zap.SugaredLogger, cfg database.Config, name, email, password string) error {
+func UserAdd(log *slog.Logger, cfg database.Config, name, email, password string) error {
 	if name == "" || email == "" || password == "" {
 		fmt.Println("help: useradd <name> <email> <password>")
 		return ErrHelp

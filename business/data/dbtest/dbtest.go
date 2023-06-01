@@ -2,7 +2,6 @@
 package dbtest
 
 import (
-	"bufio"
 	"bytes"
 	"context"
 	_ "embed"
@@ -25,8 +24,7 @@ import (
 	"github.com/ardanlabs/service/foundation/docker"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/jmoiron/sqlx"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
+	"golang.org/x/exp/slog"
 )
 
 // StartDB starts a database instance.
@@ -58,7 +56,7 @@ func StopDB(c *docker.Container) {
 // Test owns state for running and shutting down tests.
 type Test struct {
 	DB       *sqlx.DB
-	Log      *zap.SugaredLogger
+	Log      *slog.Logger
 	Auth     *auth.Auth
 	CoreAPIs CoreAPIs
 	Teardown func()
@@ -131,12 +129,7 @@ func NewTest(t *testing.T, c *docker.Container) *Test {
 	// -------------------------------------------------------------------------
 
 	var buf bytes.Buffer
-	encoder := zapcore.NewConsoleEncoder(zap.NewDevelopmentEncoderConfig())
-	writer := bufio.NewWriter(&buf)
-	log := zap.New(
-		zapcore.NewCore(encoder, zapcore.AddSync(writer), zapcore.DebugLevel),
-		zap.WithCaller(true),
-	).Sugar()
+	log := slog.New(slog.NewJSONHandler(&buf, nil))
 
 	coreAPIs := newCoreAPIs(log, db)
 
@@ -162,9 +155,6 @@ func NewTest(t *testing.T, c *docker.Container) *Test {
 		t.Helper()
 		db.Close()
 
-		log.Sync()
-
-		writer.Flush()
 		fmt.Println("******************** LOGS ********************")
 		fmt.Print(buf.String())
 		fmt.Println("******************** LOGS ********************")
@@ -249,7 +239,7 @@ type CoreAPIs struct {
 	UserViews UserViews
 }
 
-func newCoreAPIs(log *zap.SugaredLogger, db *sqlx.DB) CoreAPIs {
+func newCoreAPIs(log *slog.Logger, db *sqlx.DB) CoreAPIs {
 	evnCore := event.NewCore(log)
 	usrCore := user.NewCore(evnCore, userdb.NewStore(log, db))
 	prdCore := product.NewCore(log, evnCore, usrCore, productdb.NewStore(log, db))

@@ -17,7 +17,6 @@ import (
 	database "github.com/ardanlabs/service/business/sys/database/pgx"
 	"github.com/ardanlabs/service/business/web/auth"
 	"github.com/ardanlabs/service/business/web/v1/debug"
-	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/vault"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
@@ -25,7 +24,7 @@ import (
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
-	"go.uber.org/zap"
+	"golang.org/x/exp/slog"
 )
 
 /*
@@ -36,26 +35,21 @@ import (
 var build = "develop"
 
 func main() {
-	log, err := logger.New("SALES-API")
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	defer log.Sync()
+	log := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	log = log.With("service", "SALES-API")
 
 	if err := run(log); err != nil {
-		log.Errorw("startup", "ERROR", err)
-		log.Sync()
+		log.Info("startup", "ERROR", err)
 		os.Exit(1)
 	}
 }
 
-func run(log *zap.SugaredLogger) error {
+func run(log *slog.Logger) error {
 
 	// -------------------------------------------------------------------------
 	// GOMAXPROCS
 
-	log.Infow("startup", "GOMAXPROCS", runtime.GOMAXPROCS(0))
+	log.Info("startup", "GOMAXPROCS", runtime.GOMAXPROCS(0))
 
 	// -------------------------------------------------------------------------
 	// Configuration
@@ -114,21 +108,21 @@ func run(log *zap.SugaredLogger) error {
 	// -------------------------------------------------------------------------
 	// App Starting
 
-	log.Infow("starting service", "version", build)
-	defer log.Infow("shutdown complete")
+	log.Info("starting service", "version", build)
+	defer log.Info("shutdown complete")
 
 	out, err := conf.String(&cfg)
 	if err != nil {
 		return fmt.Errorf("generating config for output: %w", err)
 	}
-	log.Infow("startup", "config", out)
+	log.Info("startup", "config", out)
 
 	expvar.NewString("build").Set(build)
 
 	// -------------------------------------------------------------------------
 	// Database Support
 
-	log.Infow("startup", "status", "initializing database support", "host", cfg.DB.Host)
+	log.Info("startup", "status", "initializing database support", "host", cfg.DB.Host)
 
 	db, err := database.Open(database.Config{
 		User:         cfg.DB.User,
@@ -143,14 +137,14 @@ func run(log *zap.SugaredLogger) error {
 		return fmt.Errorf("connecting to db: %w", err)
 	}
 	defer func() {
-		log.Infow("shutdown", "status", "stopping database support", "host", cfg.DB.Host)
+		log.Info("shutdown", "status", "stopping database support", "host", cfg.DB.Host)
 		db.Close()
 	}()
 
 	// -------------------------------------------------------------------------
 	// Initialize authentication support
 
-	log.Infow("startup", "status", "initializing authentication support")
+	log.Info("startup", "status", "initializing authentication support")
 
 	// Simple keystore versus using Vault.
 	// ks, err := keystore.NewFS(os.DirFS(cfg.Auth.KeysFolder))
@@ -181,7 +175,7 @@ func run(log *zap.SugaredLogger) error {
 	// -------------------------------------------------------------------------
 	// Start Tracing Support
 
-	log.Infow("startup", "status", "initializing OT/Tempo tracing support")
+	log.Info("startup", "status", "initializing OT/Tempo tracing support")
 
 	traceProvider, err := startTracing(
 		cfg.Tempo.ServiceName,
@@ -199,17 +193,17 @@ func run(log *zap.SugaredLogger) error {
 	// Start Debug Service
 
 	go func() {
-		log.Infow("startup", "status", "debug v1 router started", "host", cfg.Web.DebugHost)
+		log.Info("startup", "status", "debug v1 router started", "host", cfg.Web.DebugHost)
 
 		if err := http.ListenAndServe(cfg.Web.DebugHost, debug.Mux()); err != nil {
-			log.Errorw("shutdown", "status", "debug v1 router closed", "host", cfg.Web.DebugHost, "ERROR", err)
+			log.Info("shutdown", "status", "debug v1 router closed", "host", cfg.Web.DebugHost, "ERROR", err)
 		}
 	}()
 
 	// -------------------------------------------------------------------------
 	// Start API Service
 
-	log.Infow("startup", "status", "initializing V1 API support")
+	log.Info("startup", "status", "initializing V1 API support")
 
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
@@ -229,13 +223,12 @@ func run(log *zap.SugaredLogger) error {
 		ReadTimeout:  cfg.Web.ReadTimeout,
 		WriteTimeout: cfg.Web.WriteTimeout,
 		IdleTimeout:  cfg.Web.IdleTimeout,
-		ErrorLog:     zap.NewStdLog(log.Desugar()),
 	}
 
 	serverErrors := make(chan error, 1)
 
 	go func() {
-		log.Infow("startup", "status", "api router started", "host", api.Addr)
+		log.Info("startup", "status", "api router started", "host", api.Addr)
 
 		serverErrors <- api.ListenAndServe()
 	}()
@@ -248,8 +241,8 @@ func run(log *zap.SugaredLogger) error {
 		return fmt.Errorf("server error: %w", err)
 
 	case sig := <-shutdown:
-		log.Infow("shutdown", "status", "shutdown started", "signal", sig)
-		defer log.Infow("shutdown", "status", "shutdown complete", "signal", sig)
+		log.Info("shutdown", "status", "shutdown started", "signal", sig)
+		defer log.Info("shutdown", "status", "shutdown complete", "signal", sig)
 
 		ctx, cancel := context.WithTimeout(context.Background(), cfg.Web.ShutdownTimeout)
 		defer cancel()

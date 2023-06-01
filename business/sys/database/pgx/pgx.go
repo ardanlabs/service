@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"runtime"
 	"strings"
 	"time"
 
@@ -15,7 +16,7 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
 	"go.opentelemetry.io/otel/attribute"
-	"go.uber.org/zap"
+	"golang.org/x/exp/slog"
 )
 
 const (
@@ -107,10 +108,10 @@ func StatusCheck(ctx context.Context, db *sqlx.DB) error {
 }
 
 // WithinTran runs passed function and do commit/rollback at the end.
-func WithinTran(ctx context.Context, log *zap.SugaredLogger, db *sqlx.DB, fn func(*sqlx.Tx) error) error {
+func WithinTran(ctx context.Context, log *slog.Logger, db *sqlx.DB, fn func(*sqlx.Tx) error) error {
 	traceID := web.GetTraceID(ctx)
 
-	log.Infow("begin tran")
+	log.Info("begin tran")
 	tx, err := db.Beginx()
 	if err != nil {
 		return fmt.Errorf("begin tran: %w", err)
@@ -123,9 +124,9 @@ func WithinTran(ctx context.Context, log *zap.SugaredLogger, db *sqlx.DB, fn fun
 			if errors.Is(err, sql.ErrTxDone) {
 				return
 			}
-			log.Errorw("unable to rollback tran", "trace_id", traceID, "ERROR", err)
+			log.Info("unable to rollback tran", "trace_id", traceID, "ERROR", err)
 		}
-		log.Infow("rollback tran", "trace_id", traceID)
+		log.Info("rollback tran", "trace_id", traceID)
 	}()
 
 	if err := fn(tx); err != nil {
@@ -138,26 +139,26 @@ func WithinTran(ctx context.Context, log *zap.SugaredLogger, db *sqlx.DB, fn fun
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("commit tran: %w", err)
 	}
-	log.Infow("commit tran", "trace_id", traceID)
+	log.Info("commit tran", "trace_id", traceID)
 
 	return nil
 }
 
 // ExecContext is a helper function to execute a CUD operation with
 // logging and tracing.
-func ExecContext(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext, query string) error {
+func ExecContext(ctx context.Context, log *slog.Logger, db sqlx.ExtContext, query string) error {
 	return NamedExecContext(ctx, log, db, query, struct{}{})
 }
 
 // NamedExecContext is a helper function to execute a CUD operation with
 // logging and tracing where field replacement is necessary.
-func NamedExecContext(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext, query string, data any) error {
+func NamedExecContext(ctx context.Context, log *slog.Logger, db sqlx.ExtContext, query string, data any) error {
 	q := queryString(query, data)
 
 	if _, ok := data.(struct{}); ok {
-		log.WithOptions(zap.AddCallerSkip(3)).Infow("database.NamedExecContext", "trace_id", web.GetTraceID(ctx), "query", q)
+		logCaller(log, 3, "database.NamedExecContext", "trace_id", web.GetTraceID(ctx), "query", q)
 	} else {
-		log.WithOptions(zap.AddCallerSkip(2)).Infow("database.NamedExecContext", "trace_id", web.GetTraceID(ctx), "query", q)
+		logCaller(log, 2, "database.NamedExecContext", "trace_id", web.GetTraceID(ctx), "query", q)
 	}
 
 	ctx, span := web.AddSpan(ctx, "business.sys.database.exec", attribute.String("query", q))
@@ -180,28 +181,28 @@ func NamedExecContext(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtCo
 
 // QuerySlice is a helper function for executing queries that return a
 // collection of data to be unmarshalled into a slice.
-func QuerySlice[T any](ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext, query string, dest *[]T) error {
+func QuerySlice[T any](ctx context.Context, log *slog.Logger, db sqlx.ExtContext, query string, dest *[]T) error {
 	return namedQuerySlice(ctx, log, db, query, struct{}{}, dest, false)
 }
 
 // NamedQuerySlice is a helper function for executing queries that return a
 // collection of data to be unmarshalled into a slice where field replacement is
 // necessary.
-func NamedQuerySlice[T any](ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext, query string, data any, dest *[]T) error {
+func NamedQuerySlice[T any](ctx context.Context, log *slog.Logger, db sqlx.ExtContext, query string, data any, dest *[]T) error {
 	return namedQuerySlice(ctx, log, db, query, data, dest, false)
 }
 
 // NamedQuerySliceUsingIn is a helper function for executing queries that return
 // a collection of data to be unmarshalled into a slice where field replacement
 // is necessary. Use this if the query has an IN clause.
-func NamedQuerySliceUsingIn[T any](ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext, query string, data any, dest *[]T) error {
+func NamedQuerySliceUsingIn[T any](ctx context.Context, log *slog.Logger, db sqlx.ExtContext, query string, data any, dest *[]T) error {
 	return namedQuerySlice(ctx, log, db, query, data, dest, true)
 }
 
-func namedQuerySlice[T any](ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext, query string, data any, dest *[]T, withIn bool) error {
+func namedQuerySlice[T any](ctx context.Context, log *slog.Logger, db sqlx.ExtContext, query string, data any, dest *[]T, withIn bool) error {
 	q := queryString(query, data)
 
-	log.WithOptions(zap.AddCallerSkip(3)).Infow("database.NamedQuerySlice", "trace_id", web.GetTraceID(ctx), "query", q)
+	logCaller(log, 3, "database.NamedQuerySlice", "trace_id", web.GetTraceID(ctx), "query", q)
 
 	ctx, span := web.AddSpan(ctx, "business.sys.database.queryslice", attribute.String("query", q))
 	defer span.End()
@@ -253,27 +254,27 @@ func namedQuerySlice[T any](ctx context.Context, log *zap.SugaredLogger, db sqlx
 
 // QueryStruct is a helper function for executing queries that return a
 // single value to be unmarshalled into a struct type where field replacement is necessary.
-func QueryStruct(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext, query string, dest any) error {
+func QueryStruct(ctx context.Context, log *slog.Logger, db sqlx.ExtContext, query string, dest any) error {
 	return namedQueryStruct(ctx, log, db, query, struct{}{}, dest, false)
 }
 
 // NamedQueryStruct is a helper function for executing queries that return a
 // single value to be unmarshalled into a struct type where field replacement is necessary.
-func NamedQueryStruct(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext, query string, data any, dest any) error {
+func NamedQueryStruct(ctx context.Context, log *slog.Logger, db sqlx.ExtContext, query string, data any, dest any) error {
 	return namedQueryStruct(ctx, log, db, query, data, dest, false)
 }
 
 // NamedQueryStructUsingIn is a helper function for executing queries that return
 // a single value to be unmarshalled into a struct type where field replacement
 // is necessary. Use this if the query has an IN clause.
-func NamedQueryStructUsingIn(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext, query string, data any, dest any) error {
+func NamedQueryStructUsingIn(ctx context.Context, log *slog.Logger, db sqlx.ExtContext, query string, data any, dest any) error {
 	return namedQueryStruct(ctx, log, db, query, data, dest, true)
 }
 
-func namedQueryStruct(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext, query string, data any, dest any, withIn bool) error {
+func namedQueryStruct(ctx context.Context, log *slog.Logger, db sqlx.ExtContext, query string, data any, dest any, withIn bool) error {
 	q := queryString(query, data)
 
-	log.WithOptions(zap.AddCallerSkip(3)).Infow("database.NamedQueryStruct", "trace_id", web.GetTraceID(ctx), "query", q)
+	logCaller(log, 3, "database.NamedQueryStruct", "trace_id", web.GetTraceID(ctx), "query", q)
 
 	ctx, span := web.AddSpan(ctx, "business.sys.database.query", attribute.String("query", q))
 	defer span.End()
@@ -345,4 +346,16 @@ func queryString(query string, args any) string {
 	query = strings.ReplaceAll(query, "\n", " ")
 
 	return strings.Trim(query, " ")
+}
+
+// =============================================================================
+
+// logCaller is a function that wraps slog. The log record contains the source
+// position of the caller of Info.
+func logCaller(logger *slog.Logger, caller int, msg string, args ...any) {
+	var pcs [1]uintptr
+	runtime.Callers(2, pcs[:]) // skip [Callers, Infof]
+	r := slog.NewRecord(time.Now(), slog.LevelInfo, msg, pcs[0])
+	r.Add(args...)
+	_ = logger.Handler().Handle(context.Background(), r)
 }

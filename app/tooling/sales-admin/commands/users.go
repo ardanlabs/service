@@ -12,11 +12,11 @@ import (
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/core/user/stores/userdb"
 	database "github.com/ardanlabs/service/business/sys/database/pgx"
-	"go.uber.org/zap"
+	"golang.org/x/exp/slog"
 )
 
 // Users retrieves all users from the database.
-func Users(log *zap.SugaredLogger, cfg database.Config, pageNumber string, rowsPerPage string) error {
+func Users(log *slog.Logger, cfg database.Config, pageNumber string, rowsPerPage string) error {
 	db, err := database.Open(cfg)
 	if err != nil {
 		return fmt.Errorf("connect database: %w", err)

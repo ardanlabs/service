@@ -1,7 +1,6 @@
 package auth_test
 
 import (
-	"bufio"
 	"bytes"
 	"context"
 	"fmt"
@@ -14,8 +13,7 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
+	"golang.org/x/exp/slog"
 )
 
 func Test_Auth(t *testing.T) {
@@ -233,23 +231,15 @@ func Test_Auth(t *testing.T) {
 
 // =============================================================================
 
-func newUnit(t *testing.T) (*zap.SugaredLogger, *sqlx.DB, func()) {
+func newUnit(t *testing.T) (*slog.Logger, *sqlx.DB, func()) {
 	var buf bytes.Buffer
-	encoder := zapcore.NewConsoleEncoder(zap.NewDevelopmentEncoderConfig())
-	writer := bufio.NewWriter(&buf)
-	log := zap.New(
-		zapcore.NewCore(encoder, zapcore.AddSync(writer), zapcore.DebugLevel),
-		zap.WithCaller(true),
-	).Sugar()
+	log := slog.New(slog.NewJSONHandler(&buf, nil))
 
 	// teardown is the function that should be invoked when the caller is done
 	// with the database.
 	teardown := func() {
 		t.Helper()
 
-		log.Sync()
-
-		writer.Flush()
 		fmt.Println("******************** LOGS ********************")
 		fmt.Print(buf.String())
 		fmt.Println("******************** LOGS ********************")

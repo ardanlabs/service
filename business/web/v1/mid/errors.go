@@ -8,17 +8,17 @@ import (
 	"github.com/ardanlabs/service/business/web/auth"
 	v1 "github.com/ardanlabs/service/business/web/v1"
 	"github.com/ardanlabs/service/foundation/web"
-	"go.uber.org/zap"
+	"golang.org/x/exp/slog"
 )
 
 // Errors handles errors coming out of the call chain. It detects normal
 // application errors which are used to respond to the client in a uniform way.
 // Unexpected errors (status >= 500) are logged.
-func Errors(log *zap.SugaredLogger) web.Middleware {
+func Errors(log *slog.Logger) web.Middleware {
 	m := func(handler web.Handler) web.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 			if err := handler(ctx, w, r); err != nil {
-				log.Errorw("ERROR", "trace_id", web.GetTraceID(ctx), "message", err)
+				log.Info("ERROR", "trace_id", web.GetTraceID(ctx), "message", err)
 
 				ctx, span := web.AddSpan(ctx, "business.web.v1.mid.error")
 				span.RecordError(err)
