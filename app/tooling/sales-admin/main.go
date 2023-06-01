@@ -2,14 +2,15 @@
 package main
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/ardanlabs/conf/v3"
 	"github.com/ardanlabs/service/app/tooling/sales-admin/commands"
 	database "github.com/ardanlabs/service/business/sys/database/pgx"
+	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/vault"
 	"github.com/google/uuid"
 	"golang.org/x/exp/slog"
@@ -38,8 +39,7 @@ type config struct {
 }
 
 func main() {
-	var buf bytes.Buffer
-	log := slog.New(slog.NewJSONHandler(&buf, nil))
+	log := logger.New(io.Discard, "ADMIN")
 
 	if err := run(log); err != nil {
 		if !errors.Is(err, commands.ErrHelp) {

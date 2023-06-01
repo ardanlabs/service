@@ -52,9 +52,10 @@ func main() {
 		// Build out the know portions of the log in the order
 		// I want them in.
 		b.Reset()
-		b.WriteString(fmt.Sprintf("%s: %s: %s: %s: %s: ",
+		b.WriteString(fmt.Sprintf("%s: %s: %s: %s: %s: %s: ",
 			m["service"],
 			m["time"],
+			m["file"],
 			m["level"],
 			traceID,
 			m["msg"],
@@ -64,7 +65,7 @@ func main() {
 		// added for the log.
 		for k, v := range m {
 			switch k {
-			case "service", "time", "level", "trace_id", "msg":
+			case "service", "time", "file", "level", "trace_id", "msg":
 				continue
 			}
 

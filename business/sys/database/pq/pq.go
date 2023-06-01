@@ -7,10 +7,10 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
-	"runtime"
 	"strings"
 	"time"
 
+	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
@@ -157,9 +157,9 @@ func NamedExecContext(ctx context.Context, log *slog.Logger, db sqlx.ExtContext,
 	q := queryString(query, data)
 
 	if _, ok := data.(struct{}); ok {
-		logCaller(log, 3, "database.NamedExecContext", "trace_id", web.GetTraceID(ctx), "query", q)
+		logger.WithCaller(log, 4, "database.NamedExecContext", "trace_id", web.GetTraceID(ctx), "query", q)
 	} else {
-		logCaller(log, 2, "database.NamedExecContext", "trace_id", web.GetTraceID(ctx), "query", q)
+		logger.WithCaller(log, 3, "database.NamedExecContext", "trace_id", web.GetTraceID(ctx), "query", q)
 	}
 
 	ctx, span := web.AddSpan(ctx, "business.sys.database.exec", attribute.String("query", q))
@@ -203,7 +203,7 @@ func NamedQuerySliceUsingIn[T any](ctx context.Context, log *slog.Logger, db sql
 func namedQuerySlice[T any](ctx context.Context, log *slog.Logger, db sqlx.ExtContext, query string, data any, dest *[]T, withIn bool) error {
 	q := queryString(query, data)
 
-	logCaller(log, 3, "database.NamedQuerySlice", "trace_id", web.GetTraceID(ctx), "query", q)
+	logger.WithCaller(log, 4, "database.NamedQuerySlice", "trace_id", web.GetTraceID(ctx), "query", q)
 
 	ctx, span := web.AddSpan(ctx, "business.sys.database.queryslice", attribute.String("query", q))
 	defer span.End()
@@ -275,7 +275,7 @@ func NamedQueryStructUsingIn(ctx context.Context, log *slog.Logger, db sqlx.ExtC
 func namedQueryStruct(ctx context.Context, log *slog.Logger, db sqlx.ExtContext, query string, data any, dest any, withIn bool) error {
 	q := queryString(query, data)
 
-	logCaller(log, 3, "database.NamedQueryStruct", "trace_id", web.GetTraceID(ctx), "query", q)
+	logger.WithCaller(log, 4, "database.NamedQueryStruct", "trace_id", web.GetTraceID(ctx), "query", q)
 
 	ctx, span := web.AddSpan(ctx, "business.sys.database.query", attribute.String("query", q))
 	defer span.End()
@@ -347,16 +347,4 @@ func queryString(query string, args any) string {
 	query = strings.ReplaceAll(query, "\n", " ")
 
 	return strings.Trim(query, " ")
-}
-
-// =============================================================================
-
-// logCaller is a function that wraps slog. The log record contains the source
-// position of the caller of Info.
-func logCaller(logger *slog.Logger, caller int, msg string, args ...any) {
-	var pcs [1]uintptr
-	runtime.Callers(2, pcs[:]) // skip [Callers, Infof]
-	r := slog.NewRecord(time.Now(), slog.LevelInfo, msg, pcs[0])
-	r.Add(args...)
-	_ = logger.Handler().Handle(context.Background(), r)
 }

@@ -22,6 +22,7 @@ import (
 	database "github.com/ardanlabs/service/business/sys/database/pgx"
 	"github.com/ardanlabs/service/business/web/auth"
 	"github.com/ardanlabs/service/foundation/docker"
+	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/jmoiron/sqlx"
 	"golang.org/x/exp/slog"
@@ -129,7 +130,7 @@ func NewTest(t *testing.T, c *docker.Container) *Test {
 	// -------------------------------------------------------------------------
 
 	var buf bytes.Buffer
-	log := slog.New(slog.NewJSONHandler(&buf, nil))
+	log := logger.New(&buf, "TEST")
 
 	coreAPIs := newCoreAPIs(log, db)
 

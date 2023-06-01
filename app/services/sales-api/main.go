@@ -17,6 +17,7 @@ import (
 	database "github.com/ardanlabs/service/business/sys/database/pgx"
 	"github.com/ardanlabs/service/business/web/auth"
 	"github.com/ardanlabs/service/business/web/v1/debug"
+	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/vault"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
@@ -35,8 +36,7 @@ import (
 var build = "develop"
 
 func main() {
-	log := slog.New(slog.NewJSONHandler(os.Stdout, nil))
-	log = log.With("service", "SALES-API")
+	log := logger.New(os.Stdout, "SALES-API")
 
 	if err := run(log); err != nil {
 		log.Info("startup", "ERROR", err)
@@ -91,7 +91,7 @@ func run(log *slog.Logger) error {
 	}{
 		Version: conf.Version{
 			Build: build,
-			Desc:  "copyright information here",
+			Desc:  "BILL KENNEDY",
 		},
 	}
 

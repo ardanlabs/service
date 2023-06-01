@@ -17,14 +17,14 @@ import (
 	"github.com/ardanlabs/service/app/services/metrics/publisher"
 	expvarsrv "github.com/ardanlabs/service/app/services/metrics/publisher/expvar"
 	prometheussrv "github.com/ardanlabs/service/app/services/metrics/publisher/prometheus"
+	"github.com/ardanlabs/service/foundation/logger"
 	"golang.org/x/exp/slog"
 )
 
 var build = "develop"
 
 func main() {
-	log := slog.New(slog.NewJSONHandler(os.Stdout, nil))
-	log = log.With("service", "METRICS")
+	log := logger.New(os.Stdout, "METRICS")
 
 	if err := run(log); err != nil {
 		log.Info("startup", "ERROR", err)
