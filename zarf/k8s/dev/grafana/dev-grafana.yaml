@@ -109,43 +109,43 @@ data:
       "panels": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
+            "uid": "PBFA97CFB590B2093",
+            "type": "prometheus"
           },
           "fieldConfig": {
             "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
               "custom": {
-                "axisCenteredZero": false,
-                "axisColorMode": "text",
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
                 "drawStyle": "line",
+                "lineInterpolation": "linear",
+                "barAlignment": 0,
+                "lineWidth": 1,
                 "fillOpacity": 0,
                 "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
+                "spanNulls": false,
+                "showPoints": "auto",
                 "pointSize": 5,
+                "stacking": {
+                  "mode": "none",
+                  "group": "A"
+                },
+                "axisPlacement": "auto",
+                "axisLabel": "",
+                "axisColorMode": "text",
                 "scaleDistribution": {
                   "type": "linear"
                 },
-                "showPoints": "auto",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
+                "axisCenteredZero": false,
+                "hideFrom": {
+                  "tooltip": false,
+                  "viz": false,
+                  "legend": false
                 },
                 "thresholdsStyle": {
                   "mode": "off"
                 }
+              },
+              "color": {
+                "mode": "palette-classic"
               },
               "mappings": [],
               "thresholds": {
@@ -165,40 +165,75 @@ data:
             "overrides": []
           },
           "gridPos": {
-            "h": 8,
+            "h": 10,
             "w": 12,
             "x": 0,
             "y": 0
           },
           "id": 2,
           "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
             "tooltip": {
               "mode": "single",
               "sort": "none"
+            },
+            "legend": {
+              "showLegend": true,
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
             }
           },
           "targets": [
             {
               "datasource": {
-                "type": "prometheus",
-                "uid": "PBFA97CFB590B2093"
+                "uid": "PBFA97CFB590B2093",
+                "type": "prometheus"
               },
+              "refId": "A",
+              "hide": false,
               "editorMode": "builder",
               "expr": "requests{job=\"sales-api\"}",
-              "instant": true,
-              "key": "Q-eb72fdb4-db82-4d6d-860e-f4711ad858de-0",
               "legendFormat": "__auto",
-              "range": true,
-              "refId": "A"
+              "range": true
+            },
+            {
+              "datasource": {
+                "uid": "PBFA97CFB590B2093",
+                "type": "prometheus"
+              },
+              "refId": "B",
+              "hide": false,
+              "editorMode": "builder",
+              "expr": "errors{job=\"sales-api\"}",
+              "legendFormat": "__auto",
+              "range": true
+            },
+            {
+              "datasource": {
+                "uid": "PBFA97CFB590B2093",
+                "type": "prometheus"
+              },
+              "refId": "C",
+              "hide": false,
+              "editorMode": "builder",
+              "expr": "goroutines{job=\"sales-api\"}",
+              "legendFormat": "__auto",
+              "range": true
+            },
+            {
+              "datasource": {
+                "uid": "PBFA97CFB590B2093",
+                "type": "prometheus"
+              },
+              "refId": "D",
+              "hide": false,
+              "editorMode": "builder",
+              "expr": "panics{job=\"sales-api\"}",
+              "legendFormat": "__auto",
+              "range": true
             }
           ],
-          "title": "New Panel",
+          "title": "Sales API - Metrics",
           "type": "timeseries"
         },
         {
@@ -265,7 +300,7 @@ data:
               "serviceName": "sales-api"
             }
           ],
-          "title": "All Requests",
+          "title": "Sales API - Traces",
           "type": "table"
         }
       ],
@@ -282,7 +317,7 @@ data:
       },
       "timepicker": {},
       "timezone": "",
-      "title": "Sales API - All Requests",
+      "title": "Sales API",
       "uid": "ccad8cb7-1592-4328-b38b-b4226a5d00a6",
       "version": 1,
       "weekStart": ""
