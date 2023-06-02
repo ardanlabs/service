@@ -143,13 +143,13 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 
 GOLANG          := golang:1.20
 ALPINE          := alpine:3.18
-KIND            := kindest/node:v1.27.1
+KIND            := kindest/node:v1.27.2
 POSTGRES        := postgres:15.3
 VAULT           := hashicorp/vault:1.13
 GRAFANA         := grafana/grafana:9.5.2
 PROMETHEUS      := prom/prometheus:v2.44.0
 TEMPO           := grafana/tempo:2.1.1
-TELEPRESENCE    := datawire/tel2:2.13.2
+TELEPRESENCE    := datawire/tel2:2.13.3
 
 KIND_CLUSTER    := ardan-starter-cluster
 NAMESPACE       := sales-system
@@ -234,6 +234,7 @@ dev-up-local:
 	kind load docker-image $(POSTGRES) --name $(KIND_CLUSTER)
 	kind load docker-image $(VAULT) --name $(KIND_CLUSTER)
 	kind load docker-image $(GRAFANA) --name $(KIND_CLUSTER)
+	kind load docker-image $(PROMETHEUS) --name $(KIND_CLUSTER)
 	kind load docker-image $(TEMPO) --name $(KIND_CLUSTER)
 
 dev-up: dev-up-local
