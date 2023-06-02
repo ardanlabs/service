@@ -12,8 +12,13 @@ import (
 	"golang.org/x/exp/slog"
 )
 
+// Logger represents a logger for logging information.
+type Logger struct {
+	*slog.Logger
+}
+
 // New constructs a new log for application use.
-func New(w io.Writer, serviceName string) *slog.Logger {
+func New(w io.Writer, serviceName string) *Logger {
 
 	// Convert the file and line number to a single attribute.
 	f := func(groups []string, a slog.Attr) slog.Attr {
@@ -33,12 +38,13 @@ func New(w io.Writer, serviceName string) *slog.Logger {
 		log = log.With("service", serviceName)
 	}
 
-	return log
+	return &Logger{
+		Logger: log,
+	}
 }
 
-// WithCaller is a function that wraps slog. The log record contains the source
-// position of the caller of Info.
-func WithCaller(log *slog.Logger, caller int, msg string, args ...any) {
+// Infoc logs the information at the specified call stack position.
+func (log *Logger) Infoc(caller int, msg string, args ...any) {
 	var pcs [1]uintptr
 	runtime.Callers(caller, pcs[:]) // skip [Callers, Infof]
 

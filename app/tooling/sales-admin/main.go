@@ -13,7 +13,6 @@ import (
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/vault"
 	"github.com/google/uuid"
-	"golang.org/x/exp/slog"
 )
 
 var build = "develop"
@@ -49,7 +48,7 @@ func main() {
 	}
 }
 
-func run(log *slog.Logger) error {
+func run(log *logger.Logger) error {
 	cfg := config{
 		Version: conf.Version{
 			Build: build,
@@ -79,7 +78,7 @@ func run(log *slog.Logger) error {
 
 // processCommands handles the execution of the commands specified on
 // the command line.
-func processCommands(args conf.Args, log *slog.Logger, cfg config) error {
+func processCommands(args conf.Args, log *logger.Logger, cfg config) error {
 	dbConfig := database.Config{
 		User:         cfg.DB.User,
 		Password:     cfg.DB.Password,

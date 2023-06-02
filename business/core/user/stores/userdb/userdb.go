@@ -14,20 +14,20 @@ import (
 	"github.com/ardanlabs/service/business/data/order"
 	database "github.com/ardanlabs/service/business/sys/database/pgx"
 	"github.com/ardanlabs/service/business/sys/database/pgx/dbarray"
+	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
-	"golang.org/x/exp/slog"
 )
 
 // Store manages the set of APIs for user database access.
 type Store struct {
-	log    *slog.Logger
+	log    *logger.Logger
 	db     sqlx.ExtContext
 	inTran bool
 }
 
 // NewStore constructs the api for data access.
-func NewStore(log *slog.Logger, db *sqlx.DB) *Store {
+func NewStore(log *logger.Logger, db *sqlx.DB) *Store {
 	return &Store{
 		log: log,
 		db:  db,

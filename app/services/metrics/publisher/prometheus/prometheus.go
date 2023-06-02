@@ -9,20 +9,20 @@ import (
 	"sync"
 	"time"
 
+	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/dimfeld/httptreemux/v5"
-	"golang.org/x/exp/slog"
 )
 
 // Exporter implements the prometheus exporter support.
 type Exporter struct {
-	log    *slog.Logger
+	log    *logger.Logger
 	server http.Server
 	data   map[string]any
 	mu     sync.Mutex
 }
 
 // New constructs an Exporter for use.
-func New(log *slog.Logger, host string, route string, readTimeout, writeTimeout time.Duration, idleTimeout time.Duration) *Exporter {
+func New(log *logger.Logger, host string, route string, readTimeout, writeTimeout time.Duration, idleTimeout time.Duration) *Exporter {
 	mux := httptreemux.NewContextMux()
 
 	exp := Exporter{

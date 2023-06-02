@@ -18,15 +18,15 @@ import (
 	"github.com/ardanlabs/service/business/cview/user/summary/stores/summarydb"
 	"github.com/ardanlabs/service/business/web/auth"
 	"github.com/ardanlabs/service/business/web/v1/mid"
+	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/jmoiron/sqlx"
-	"golang.org/x/exp/slog"
 )
 
 // Config contains all the mandatory systems required by handlers.
 type Config struct {
 	Build string
-	Log   *slog.Logger
+	Log   *logger.Logger
 	Auth  *auth.Auth
 	DB    *sqlx.DB
 }

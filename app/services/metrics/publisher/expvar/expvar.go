@@ -9,20 +9,20 @@ import (
 	"sync"
 	"time"
 
+	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/dimfeld/httptreemux/v5"
-	"golang.org/x/exp/slog"
 )
 
 // Expvar provide our basic publishing.
 type Expvar struct {
-	log    *slog.Logger
+	log    *logger.Logger
 	server http.Server
 	data   map[string]any
 	mu     sync.Mutex
 }
 
 // New starts a service for consuming the raw expvar stats.
-func New(log *slog.Logger, host string, route string, readTimeout, writeTimeout time.Duration, idleTimeout time.Duration) *Expvar {
+func New(log *logger.Logger, host string, route string, readTimeout, writeTimeout time.Duration, idleTimeout time.Duration) *Expvar {
 	mux := httptreemux.New()
 	exp := Expvar{
 		log: log,

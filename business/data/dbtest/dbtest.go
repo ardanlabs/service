@@ -25,7 +25,6 @@ import (
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/jmoiron/sqlx"
-	"golang.org/x/exp/slog"
 )
 
 // StartDB starts a database instance.
@@ -57,7 +56,7 @@ func StopDB(c *docker.Container) {
 // Test owns state for running and shutting down tests.
 type Test struct {
 	DB       *sqlx.DB
-	Log      *slog.Logger
+	Log      *logger.Logger
 	Auth     *auth.Auth
 	CoreAPIs CoreAPIs
 	Teardown func()
@@ -240,7 +239,7 @@ type CoreAPIs struct {
 	UserViews UserViews
 }
 
-func newCoreAPIs(log *slog.Logger, db *sqlx.DB) CoreAPIs {
+func newCoreAPIs(log *logger.Logger, db *sqlx.DB) CoreAPIs {
 	evnCore := event.NewCore(log)
 	usrCore := user.NewCore(evnCore, userdb.NewStore(log, db))
 	prdCore := product.NewCore(log, evnCore, usrCore, productdb.NewStore(log, db))

@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"golang.org/x/exp/slog"
+	"github.com/ardanlabs/service/foundation/logger"
 )
 
 // Set of possible publisher types.
@@ -32,7 +32,7 @@ type Publisher func(map[string]any)
 // Publish provides the ability to receive metrics
 // on an interval.
 type Publish struct {
-	log       *slog.Logger
+	log       *logger.Logger
 	collector Collector
 	publisher []Publisher
 	wg        sync.WaitGroup
@@ -41,7 +41,7 @@ type Publish struct {
 }
 
 // New creates a Publish for consuming and publishing metrics.
-func New(log *slog.Logger, collector Collector, interval time.Duration, publisher ...Publisher) (*Publish, error) {
+func New(log *logger.Logger, collector Collector, interval time.Duration, publisher ...Publisher) (*Publish, error) {
 	p := Publish{
 		log:       log,
 		collector: collector,
@@ -90,11 +90,11 @@ func (p *Publish) update() {
 
 // Stdout provide our basic publishing.
 type Stdout struct {
-	log *slog.Logger
+	log *logger.Logger
 }
 
 // NewStdout initializes stdout for publishing metrics.
-func NewStdout(log *slog.Logger) *Stdout {
+func NewStdout(log *logger.Logger) *Stdout {
 	return &Stdout{log}
 }
 

@@ -4,18 +4,18 @@ package event
 import (
 	"context"
 
+	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/web"
-	"golang.org/x/exp/slog"
 )
 
 // Core manages the set of APIs for event access.
 type Core struct {
-	log      *slog.Logger
+	log      *logger.Logger
 	handlers map[string]map[string][]HandleFunc
 }
 
 // NewCore constructs a core for event api access.
-func NewCore(log *slog.Logger) *Core {
+func NewCore(log *logger.Logger) *Core {
 	return &Core{
 		log:      log,
 		handlers: map[string]map[string][]HandleFunc{},

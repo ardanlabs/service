@@ -13,11 +13,11 @@ import (
 	"github.com/ardanlabs/service/business/core/event"
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/core/user/stores/userdb"
+	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/open-policy-agent/opa/rego"
-	"golang.org/x/exp/slog"
 )
 
 // ErrForbidden is returned when a auth issue is identified.
@@ -39,7 +39,7 @@ type KeyLookup interface {
 
 // Config represents information required to initialize auth.
 type Config struct {
-	Log       *slog.Logger
+	Log       *logger.Logger
 	DB        *sqlx.DB
 	KeyLookup KeyLookup
 	Issuer    string
@@ -48,7 +48,7 @@ type Config struct {
 // Auth is used to authenticate clients. It can generate a token for a
 // set of user claims and recreate the claims by parsing the token.
 type Auth struct {
-	log       *slog.Logger
+	log       *logger.Logger
 	keyLookup KeyLookup
 	userCore  *user.Core
 	method    jwt.SigningMethod

@@ -25,7 +25,6 @@ import (
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
-	"golang.org/x/exp/slog"
 )
 
 /*
@@ -44,7 +43,7 @@ func main() {
 	}
 }
 
-func run(log *slog.Logger) error {
+func run(log *logger.Logger) error {
 
 	// -------------------------------------------------------------------------
 	// GOMAXPROCS

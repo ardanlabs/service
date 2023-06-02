@@ -6,12 +6,12 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/web"
-	"golang.org/x/exp/slog"
 )
 
 // Logger writes information about the request to the logs.
-func Logger(log *slog.Logger) web.Middleware {
+func Logger(log *logger.Logger) web.Middleware {
 	m := func(handler web.Handler) web.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 			v := web.GetValues(ctx)

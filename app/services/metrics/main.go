@@ -18,7 +18,6 @@ import (
 	expvarsrv "github.com/ardanlabs/service/app/services/metrics/publisher/expvar"
 	prometheussrv "github.com/ardanlabs/service/app/services/metrics/publisher/prometheus"
 	"github.com/ardanlabs/service/foundation/logger"
-	"golang.org/x/exp/slog"
 )
 
 var build = "develop"
@@ -32,7 +31,7 @@ func main() {
 	}
 }
 
-func run(log *slog.Logger) error {
+func run(log *logger.Logger) error {
 
 	// -------------------------------------------------------------------------
 	// GOMAXPROCS

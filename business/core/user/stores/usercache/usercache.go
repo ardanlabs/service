@@ -8,20 +8,20 @@ import (
 
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/data/order"
+	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/google/uuid"
-	"golang.org/x/exp/slog"
 )
 
 // Store manages the set of APIs for user data and caching.
 type Store struct {
-	log    *slog.Logger
+	log    *logger.Logger
 	storer user.Storer
 	cache  map[string]*user.User
 	mu     sync.RWMutex
 }
 
 // NewStore constructs the api for data and caching access.
-func NewStore(log *slog.Logger, storer user.Storer) *Store {
+func NewStore(log *logger.Logger, storer user.Storer) *Store {
 	return &Store{
 		log:    log,
 		storer: storer,

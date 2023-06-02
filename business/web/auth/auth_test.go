@@ -10,10 +10,10 @@ import (
 
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/web/auth"
+	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
-	"golang.org/x/exp/slog"
 )
 
 func Test_Auth(t *testing.T) {
@@ -231,9 +231,9 @@ func Test_Auth(t *testing.T) {
 
 // =============================================================================
 
-func newUnit(t *testing.T) (*slog.Logger, *sqlx.DB, func()) {
+func newUnit(t *testing.T) (*logger.Logger, *sqlx.DB, func()) {
 	var buf bytes.Buffer
-	log := slog.New(slog.NewJSONHandler(&buf, nil))
+	log := logger.New(&buf, "TEST")
 
 	// teardown is the function that should be invoked when the caller is done
 	// with the database.

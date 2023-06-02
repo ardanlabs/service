@@ -10,14 +10,14 @@ import (
 	"github.com/ardanlabs/service/business/core/user/stores/userdb"
 	database "github.com/ardanlabs/service/business/sys/database/pgx"
 	"github.com/ardanlabs/service/business/web/auth"
+	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/vault"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
-	"golang.org/x/exp/slog"
 )
 
 // GenToken generates a JWT for the specified user.
-func GenToken(log *slog.Logger, dbConfig database.Config, vaultConfig vault.Config, userID uuid.UUID, kid string) error {
+func GenToken(log *logger.Logger, dbConfig database.Config, vaultConfig vault.Config, userID uuid.UUID, kid string) error {
 	if kid == "" {
 		fmt.Println("help: gentoken <user_id> <kid>")
 		return ErrHelp
