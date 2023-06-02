@@ -100,7 +100,7 @@ data:
           }
         ]
       },
-      "description": "All requests to Sales API",
+      "description": "Sales API",
       "editable": true,
       "fiscalYearStartMonth": 0,
       "graphTooltip": 0,
@@ -268,7 +268,7 @@ data:
             "overrides": []
           },
           "gridPos": {
-            "h": 8,
+            "h": 10,
             "w": 12,
             "x": 12,
             "y": 0
@@ -304,7 +304,7 @@ data:
           "type": "table"
         }
       ],
-      "refresh": "10s",
+      "refresh": "15s",
       "schemaVersion": 38,
       "style": "dark",
       "tags": [],
