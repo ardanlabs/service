@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log"
 	"path/filepath"
 	"runtime"
 	"time"
@@ -16,6 +17,10 @@ import (
 type Logger struct {
 	*slog.Logger
 }
+
+type Level = slog.Level
+
+const LevelError Level = slog.LevelError
 
 // New constructs a new log for application use.
 func New(w io.Writer, serviceName string) *Logger {
@@ -52,4 +57,9 @@ func (log *Logger) Infoc(caller int, msg string, args ...any) {
 	r.Add(args...)
 
 	log.Handler().Handle(context.Background(), r)
+}
+
+// NewLogLogger returns a log.Logger that wraps the Logger
+func NewLogLogger(logger *Logger, level Level) *log.Logger {
+	return slog.NewLogLogger(logger.Handler(), slog.Level(level))
 }

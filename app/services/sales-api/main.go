@@ -222,6 +222,7 @@ func run(log *logger.Logger) error {
 		ReadTimeout:  cfg.Web.ReadTimeout,
 		WriteTimeout: cfg.Web.WriteTimeout,
 		IdleTimeout:  cfg.Web.IdleTimeout,
+		ErrorLog:     logger.NewLogLogger(log, logger.LevelError),
 	}
 
 	serverErrors := make(chan error, 1)
