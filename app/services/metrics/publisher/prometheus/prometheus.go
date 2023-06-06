@@ -33,6 +33,7 @@ func New(log *logger.Logger, host string, route string, readTimeout, writeTimeou
 			ReadTimeout:  readTimeout,
 			WriteTimeout: writeTimeout,
 			IdleTimeout:  idleTimeout,
+			ErrorLog:     logger.NewStdLogger(log, logger.LevelError),
 		},
 	}
 

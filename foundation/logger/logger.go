@@ -13,14 +13,23 @@ import (
 	"golang.org/x/exp/slog"
 )
 
+// Level represents different logging levels.
+type Level slog.Level
+
+// A set of possible logging levels.
+const (
+	LevelDebug = Level(slog.LevelDebug)
+	LevelInfo  = Level(slog.LevelInfo)
+	LevelWarn  = Level(slog.LevelWarn)
+	LevelError = Level(slog.LevelError)
+)
+
+// =============================================================================
+
 // Logger represents a logger for logging information.
 type Logger struct {
 	*slog.Logger
 }
-
-type Level = slog.Level
-
-const LevelError Level = slog.LevelError
 
 // New constructs a new log for application use.
 func New(w io.Writer, serviceName string) *Logger {
@@ -48,6 +57,11 @@ func New(w io.Writer, serviceName string) *Logger {
 	}
 }
 
+// NewStdLogger returns a standard library Logger that wraps the slog Logger.
+func NewStdLogger(logger *Logger, level Level) *log.Logger {
+	return slog.NewLogLogger(logger.Handler(), slog.Level(level))
+}
+
 // Infoc logs the information at the specified call stack position.
 func (log *Logger) Infoc(caller int, msg string, args ...any) {
 	var pcs [1]uintptr
@@ -57,9 +71,4 @@ func (log *Logger) Infoc(caller int, msg string, args ...any) {
 	r.Add(args...)
 
 	log.Handler().Handle(context.Background(), r)
-}
-
-// NewLogLogger returns a log.Logger that wraps the Logger
-func NewLogLogger(logger *Logger, level Level) *log.Logger {
-	return slog.NewLogLogger(logger.Handler(), slog.Level(level))
 }
