@@ -218,8 +218,8 @@ github.com/mattn/go-sqlite3 v1.14.12/go.mod h1:NyWgC/yNuGj7Q9rpYnZvas74GogHl5/Z4
 github.com/matttproud/golang_protobuf_extensions v1.0.4 h1:mmDVorXM7PCGKw94cs5zkfA9PSy5pEvNWRP0ET0TIVo=
 github.com/matttproud/golang_protobuf_extensions v1.0.4/go.mod h1:BSXmuO+STAnVfrANrmjBb36TMTDstsz7MSK+HVaYKv4=
 github.com/miekg/dns v1.1.43 h1:JKfpVSCB84vrAmHzyrsxB5NAr5kLoMXZArPSw7Qlgyg=
-github.com/open-policy-agent/opa v0.53.0 h1:zC/0sI+Gof5/oiFNS3DmoJa11D0m0InZeDhZyzi+l6E=
-github.com/open-policy-agent/opa v0.53.0/go.mod h1:j3wl8FqSz/+u33Scl72Ms2wxkZx4yZPdqSCrOqBqdsA=
+github.com/open-policy-agent/opa v0.53.1 h1:APN8iA7Txgel13kSkc6S8dbUulydiPojXt6iyubmB7Q=
+github.com/open-policy-agent/opa v0.53.1/go.mod h1:j3wl8FqSz/+u33Scl72Ms2wxkZx4yZPdqSCrOqBqdsA=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=

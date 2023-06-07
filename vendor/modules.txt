@@ -137,7 +137,7 @@ github.com/lib/pq/scram
 # github.com/matttproud/golang_protobuf_extensions v1.0.4
 ## explicit; go 1.9
 github.com/matttproud/golang_protobuf_extensions/pbutil
-# github.com/open-policy-agent/opa v0.53.0
+# github.com/open-policy-agent/opa v0.53.1
 ## explicit; go 1.18
 github.com/open-policy-agent/opa/ast
 github.com/open-policy-agent/opa/ast/internal/scanner
