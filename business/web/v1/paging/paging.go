@@ -16,7 +16,7 @@ type Response[T any] struct {
 	RowsPerPage int `json:"rowsPerPage"`
 }
 
-// NewResponse constructs a reponse value for a web response.
+// NewResponse constructs a response value for a web response.
 func NewResponse[T any](items []T, total int, page int, rowsPrePage int) Response[T] {
 	return Response[T]{
 		Items:       items,

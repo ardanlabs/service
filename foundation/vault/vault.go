@@ -159,7 +159,7 @@ func (v *Vault) PublicKey(kid string) (string, error) {
 
 // Error variables for this set of API calls.
 var (
-	ErrAlreadyInitialized = errors.New("already initalized")
+	ErrAlreadyInitialized = errors.New("already initialized")
 	ErrBadRequest         = errors.New("bad request")
 	ErrPathInUse          = errors.New("path in use")
 )
