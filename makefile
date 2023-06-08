@@ -45,7 +45,7 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 #   https://www.telepresence.io/docs/latest/quick-start/?os=gnu-linux
 
 # ==============================================================================
-# M1 Mac Users ONLY - Install Telepresence
+# M1 Mac Users ONLY - Uninstall Telepresence
 #
 #   If you install the Intel version of Telepresence, this is how you remove it.
 #   $ sudo rm -rf /Library/Developer/CommandLineTools
