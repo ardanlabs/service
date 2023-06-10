@@ -124,12 +124,12 @@ type Logger struct {
 
 // New constructs a new log for application use.
 func New(w io.Writer, minLevel Level, serviceName string) *Logger {
-	return new(w, minLevel, serviceName, nil)
+	return new(w, minLevel, serviceName, Events{})
 }
 
 // NewWithEvents constructs a new log for application use with events.
 func NewWithEvents(w io.Writer, minLevel Level, serviceName string, events Events) *Logger {
-	return new(w, minLevel, serviceName, &events)
+	return new(w, minLevel, serviceName, events)
 }
 
 // NewStdLogger returns a standard library Logger that wraps the slog Logger.
@@ -150,7 +150,7 @@ func (log *Logger) Infoc(caller int, msg string, args ...any) {
 
 // =============================================================================
 
-func new(w io.Writer, minLevel Level, serviceName string, events *Events) *Logger {
+func new(w io.Writer, minLevel Level, serviceName string, events Events) *Logger {
 
 	// Convert the file name to just the name.ext when this key/value will
 	// be logged.
@@ -170,8 +170,8 @@ func new(w io.Writer, minLevel Level, serviceName string, events *Events) *Logge
 
 	// If events are to be processed, wrap the JSON handler around the custom
 	// event handler.
-	if events != nil {
-		handler = newEventHandler(handler, *events)
+	if events.Debug != nil || events.Info != nil || events.Warn != nil || events.Error != nil {
+		handler = newEventHandler(handler, events)
 	}
 
 	// Construct a logger.
