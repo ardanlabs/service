@@ -139,27 +139,27 @@ func NewStdLogger(logger *Logger, level Level) *log.Logger {
 }
 
 // Debug logs at LevelDebug with the given context.
-func (l *Logger) Debug(ctx context.Context, msg string, args ...any) {
+func (log *Logger) Debug(ctx context.Context, msg string, args ...any) {
 	args = append(args, "trace_id", web.GetTraceID(ctx))
-	l.Logger.Debug(msg, args...)
+	log.Logger.Debug(msg, args...)
 }
 
 // Info logs at LevelInfo with the given context.
-func (l *Logger) Info(ctx context.Context, msg string, args ...any) {
+func (log *Logger) Info(ctx context.Context, msg string, args ...any) {
 	args = append(args, "trace_id", web.GetTraceID(ctx))
-	l.Logger.Info(msg, args...)
+	log.Logger.Info(msg, args...)
 }
 
 // Warn logs at LevelWarn with the given context.
-func (l *Logger) Warn(ctx context.Context, msg string, args ...any) {
+func (log *Logger) Warn(ctx context.Context, msg string, args ...any) {
 	args = append(args, "trace_id", web.GetTraceID(ctx))
-	l.Logger.Warn(msg, args...)
+	log.Logger.Warn(msg, args...)
 }
 
 // Error logs at LevelError with the given context.
-func (l *Logger) Error(ctx context.Context, msg string, args ...any) {
+func (log *Logger) Error(ctx context.Context, msg string, args ...any) {
 	args = append(args, "trace_id", web.GetTraceID(ctx))
-	l.Logger.Error(msg, args...)
+	log.Logger.Error(msg, args...)
 }
 
 // Infoc logs the information at the specified call stack position.
