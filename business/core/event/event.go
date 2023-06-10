@@ -33,7 +33,7 @@ func (c *Core) SendEvent(ctx context.Context, event Event) error {
 				c.log.Info("sendevent", "trace_id", web.GetTraceID(ctx), "status", "sending")
 
 				if err := hf(ctx, event); err != nil {
-					c.log.Info("sendevent", "trace_id", web.GetTraceID(ctx), "ERROR", err)
+					c.log.Error("sendevent", "trace_id", web.GetTraceID(ctx), "ERROR", err)
 				}
 			}
 		}

@@ -43,7 +43,7 @@ func New(log *logger.Logger, host string, route string, readTimeout, writeTimeou
 		log.Info("prometheus", "status", "API listening", "host", host)
 
 		if err := exp.server.ListenAndServe(); err != nil {
-			log.Info("prometheus", "ERROR", err)
+			log.Error("prometheus", "ERROR", err)
 		}
 	}()
 
@@ -67,10 +67,10 @@ func (exp *Exporter) Stop(shutdownTimeout time.Duration) {
 	defer cancel()
 
 	if err := exp.server.Shutdown(ctx); err != nil {
-		exp.log.Info("prometheus", "status", "graceful shutdown did not complete", "ERROR", err, "shutdownTimeout", shutdownTimeout)
+		exp.log.Error("prometheus", "status", "graceful shutdown did not complete", "ERROR", err, "shutdownTimeout", shutdownTimeout)
 
 		if err := exp.server.Close(); err != nil {
-			exp.log.Info("prometheus", "status", "could not stop http server", "ERROR", err)
+			exp.log.Error("prometheus", "status", "could not stop http server", "ERROR", err)
 		}
 	}
 }

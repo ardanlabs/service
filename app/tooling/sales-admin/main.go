@@ -38,7 +38,7 @@ type config struct {
 }
 
 func main() {
-	log := logger.New(io.Discard, "ADMIN")
+	log := logger.New(io.Discard, logger.LevelInfo, "ADMIN")
 
 	if err := run(log); err != nil {
 		if !errors.Is(err, commands.ErrHelp) {

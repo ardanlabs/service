@@ -18,7 +18,7 @@ func Errors(log *logger.Logger) web.Middleware {
 	m := func(handler web.Handler) web.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 			if err := handler(ctx, w, r); err != nil {
-				log.Info("ERROR", "trace_id", web.GetTraceID(ctx), "message", err)
+				log.Error("ERROR", "trace_id", web.GetTraceID(ctx), "message", err)
 
 				ctx, span := web.AddSpan(ctx, "business.web.v1.mid.error")
 				span.RecordError(err)

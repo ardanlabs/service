@@ -77,7 +77,7 @@ func (p *Publish) Stop() {
 func (p *Publish) update() {
 	data, err := p.collector.Collect()
 	if err != nil {
-		p.log.Info("publish", "status", "collect data", "ERROR", err)
+		p.log.Error("publish", "status", "collect data", "ERROR", err)
 		return
 	}
 
@@ -102,13 +102,13 @@ func NewStdout(log *logger.Logger) *Stdout {
 func (s *Stdout) Publish(data map[string]any) {
 	rawJSON, err := json.Marshal(data)
 	if err != nil {
-		s.log.Info("stdout", "status", "marshal data", "ERROR", err)
+		s.log.Error("stdout", "status", "marshal data", "ERROR", err)
 		return
 	}
 
 	var d map[string]any
 	if err := json.Unmarshal(rawJSON, &d); err != nil {
-		s.log.Info("stdout", "status", "unmarshal data", "ERROR", err)
+		s.log.Error("stdout", "status", "unmarshal data", "ERROR", err)
 		return
 	}
 

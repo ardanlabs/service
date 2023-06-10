@@ -35,10 +35,13 @@ import (
 var build = "develop"
 
 func main() {
-	log := logger.New(os.Stdout, "SALES-API")
+	events := logger.Events{
+		Error: func(r logger.Record) { fmt.Println("******* SEND ALERT ******") },
+	}
+	log := logger.NewWithEvents(os.Stdout, logger.LevelInfo, "SALES-API", events)
 
 	if err := run(log); err != nil {
-		log.Info("startup", "ERROR", err)
+		log.Error("startup", "ERROR", err)
 		os.Exit(1)
 	}
 }
@@ -195,7 +198,7 @@ func run(log *logger.Logger) error {
 		log.Info("startup", "status", "debug v1 router started", "host", cfg.Web.DebugHost)
 
 		if err := http.ListenAndServe(cfg.Web.DebugHost, debug.Mux()); err != nil {
-			log.Info("shutdown", "status", "debug v1 router closed", "host", cfg.Web.DebugHost, "ERROR", err)
+			log.Error("shutdown", "status", "debug v1 router closed", "host", cfg.Web.DebugHost, "ERROR", err)
 		}
 	}()
 

@@ -23,10 +23,13 @@ import (
 var build = "develop"
 
 func main() {
-	log := logger.New(os.Stdout, "METRICS")
+	events := logger.Events{
+		Error: func(r logger.Record) { fmt.Println("******* SEND ALERT ******") },
+	}
+	log := logger.NewWithEvents(os.Stdout, logger.LevelInfo, "METRICS", events)
 
 	if err := run(log); err != nil {
-		log.Info("startup", "ERROR", err)
+		log.Error("startup", "ERROR", err)
 		os.Exit(1)
 	}
 }
@@ -113,7 +116,7 @@ func run(log *logger.Logger) error {
 
 	go func() {
 		if err := http.ListenAndServe(cfg.Web.DebugHost, mux); err != nil {
-			log.Info("shutdown", "status", "debug router closed", "host", cfg.Web.DebugHost, "ERROR", err)
+			log.Error("shutdown", "status", "debug router closed", "host", cfg.Web.DebugHost, "ERROR", err)
 		}
 	}()
 

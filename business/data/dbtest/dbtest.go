@@ -129,7 +129,7 @@ func NewTest(t *testing.T, c *docker.Container) *Test {
 	// -------------------------------------------------------------------------
 
 	var buf bytes.Buffer
-	log := logger.New(&buf, "TEST")
+	log := logger.New(&buf, logger.LevelInfo, "TEST")
 
 	coreAPIs := newCoreAPIs(log, db)
 

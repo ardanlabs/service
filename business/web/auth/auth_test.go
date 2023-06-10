@@ -233,7 +233,7 @@ func Test_Auth(t *testing.T) {
 
 func newUnit(t *testing.T) (*logger.Logger, *sqlx.DB, func()) {
 	var buf bytes.Buffer
-	log := logger.New(&buf, "TEST")
+	log := logger.New(&buf, logger.LevelInfo, "TEST")
 
 	// teardown is the function that should be invoked when the caller is done
 	// with the database.

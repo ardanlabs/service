@@ -123,7 +123,7 @@ func WithinTran(ctx context.Context, log *logger.Logger, db *sqlx.DB, fn func(*s
 			if errors.Is(err, sql.ErrTxDone) {
 				return
 			}
-			log.Info("unable to rollback tran", "trace_id", traceID, "ERROR", err)
+			log.Error("unable to rollback tran", "trace_id", traceID, "ERROR", err)
 		}
 		log.Info("rollback tran", "trace_id", traceID)
 	}()
