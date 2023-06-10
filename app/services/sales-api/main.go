@@ -43,7 +43,7 @@ func main() {
 	log := logger.NewWithEvents(os.Stdout, logger.LevelInfo, "SALES-API", events)
 
 	if err := run(ctx, log); err != nil {
-		log.Error(ctx, "startup", "ERROR", err)
+		log.Error(ctx, "startup", "msg", err)
 		os.Exit(1)
 	}
 }
@@ -200,7 +200,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 		log.Info(ctx, "startup", "status", "debug v1 router started", "host", cfg.Web.DebugHost)
 
 		if err := http.ListenAndServe(cfg.Web.DebugHost, debug.Mux()); err != nil {
-			log.Error(ctx, "shutdown", "status", "debug v1 router closed", "host", cfg.Web.DebugHost, "ERROR", err)
+			log.Error(ctx, "shutdown", "status", "debug v1 router closed", "host", cfg.Web.DebugHost, "msg", err)
 		}
 	}()
 

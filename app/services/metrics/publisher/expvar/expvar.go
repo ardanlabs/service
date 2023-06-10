@@ -43,7 +43,7 @@ func New(log *logger.Logger, host string, route string, readTimeout, writeTimeou
 
 		log.Info(ctx, "expvar", "status", "API listening", "host", host)
 		if err := exp.server.ListenAndServe(); err != nil {
-			log.Error(ctx, "expvar", "ERROR", err)
+			log.Error(ctx, "expvar", "msg", err)
 		}
 	}()
 
@@ -59,9 +59,9 @@ func (exp *Expvar) Stop(shutdownTimeout time.Duration) {
 	defer exp.log.Info(ctx, "expvar: Completed")
 
 	if err := exp.server.Shutdown(ctx); err != nil {
-		exp.log.Error(ctx, "expvar", "status", "graceful shutdown did not complete", "ERROR", err, "shutdownTimeout", shutdownTimeout)
+		exp.log.Error(ctx, "expvar", "status", "graceful shutdown did not complete", "msg", err, "shutdownTimeout", shutdownTimeout)
 		if err := exp.server.Close(); err != nil {
-			exp.log.Error(ctx, "expvar", "status", "could not stop http server", "ERROR", err)
+			exp.log.Error(ctx, "expvar", "status", "could not stop http server", "msg", err)
 		}
 	}
 }
@@ -90,7 +90,7 @@ func (exp *Expvar) handler(w http.ResponseWriter, r *http.Request, params map[st
 	exp.mu.Unlock()
 
 	if err := json.NewEncoder(w).Encode(data); err != nil {
-		exp.log.Error(ctx, "expvar", "status", "encoding data", "ERROR", err)
+		exp.log.Error(ctx, "expvar", "status", "encoding data", "msg", err)
 	}
 
 	exp.log.Info(ctx, "expvar", "metrics", fmt.Sprintf("(%d) : %s %s -> %s", http.StatusOK, r.Method, r.URL.Path, r.RemoteAddr))

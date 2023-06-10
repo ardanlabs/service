@@ -32,7 +32,7 @@ func (c *Core) SendEvent(ctx context.Context, event Event) error {
 				c.log.Info(ctx, "sendevent", "status", "sending")
 
 				if err := hf(ctx, event); err != nil {
-					c.log.Error(ctx, "sendevent", "ERROR", err)
+					c.log.Error(ctx, "sendevent", "msg", err)
 				}
 			}
 		}

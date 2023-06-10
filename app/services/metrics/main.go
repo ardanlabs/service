@@ -32,7 +32,7 @@ func main() {
 	log := logger.NewWithEvents(os.Stdout, logger.LevelInfo, "METRICS", events)
 
 	if err := run(ctx, log); err != nil {
-		log.Error(ctx, "startup", "ERROR", err)
+		log.Error(ctx, "startup", "msg", err)
 		os.Exit(1)
 	}
 }
@@ -119,7 +119,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 
 	go func() {
 		if err := http.ListenAndServe(cfg.Web.DebugHost, mux); err != nil {
-			log.Error(ctx, "shutdown", "status", "debug router closed", "host", cfg.Web.DebugHost, "ERROR", err)
+			log.Error(ctx, "shutdown", "status", "debug router closed", "host", cfg.Web.DebugHost, "msg", err)
 		}
 	}()
 

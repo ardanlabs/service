@@ -43,7 +43,7 @@ func main() {
 
 	if err := run(log); err != nil {
 		if !errors.Is(err, commands.ErrHelp) {
-			fmt.Println("ERROR", err)
+			fmt.Println("msg", err)
 		}
 		os.Exit(1)
 	}
