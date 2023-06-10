@@ -14,110 +14,6 @@ import (
 	"golang.org/x/exp/slog"
 )
 
-// Level represents different logging levels.
-type Level slog.Level
-
-// A set of possible logging levels.
-const (
-	LevelDebug = Level(slog.LevelDebug)
-	LevelInfo  = Level(slog.LevelInfo)
-	LevelWarn  = Level(slog.LevelWarn)
-	LevelError = Level(slog.LevelError)
-)
-
-// =============================================================================
-
-// Record represents the data that is being logged.
-type Record struct {
-	Time    time.Time
-	Message string
-	Level   Level
-}
-
-func toRecord(r slog.Record) Record {
-	return Record{
-		Time:    r.Time,
-		Message: r.Message,
-		Level:   Level(r.Level),
-	}
-}
-
-// EventFunc is a function to be executed when configured against a log level.
-type EventFunc func(r Record)
-
-// Events contains an assignment of an event function to a log level.
-type Events struct {
-	Debug EventFunc
-	Info  EventFunc
-	Warn  EventFunc
-	Error EventFunc
-}
-
-// =============================================================================
-
-// logHandler provides a wrapper around the slog handler to capture which
-// log level is being logged for event handling.
-type logHandler struct {
-	handler slog.Handler
-	events  Events
-}
-
-func newLogHandler(handler slog.Handler, events Events) *logHandler {
-	return &logHandler{
-		handler: handler,
-		events:  events,
-	}
-}
-
-// Enabled reports whether the handler handles records at the given level.
-// The handler ignores records whose level is lower.
-func (h *logHandler) Enabled(ctx context.Context, level slog.Level) bool {
-	return h.handler.Enabled(ctx, level)
-}
-
-// WithAttrs returns a new JSONHandler whose attributes consists
-// of h's attributes followed by attrs.
-func (h *logHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
-	return &logHandler{handler: h.handler.WithAttrs(attrs), events: h.events}
-}
-
-// WithGroup returns a new Handler with the given group appended to the receiver's
-// existing groups. The keys of all subsequent attributes, whether added by With
-// or in a Record, should be qualified by the sequence of group names.
-func (h *logHandler) WithGroup(name string) slog.Handler {
-	return &logHandler{handler: h.handler.WithGroup(name), events: h.events}
-}
-
-// Handle looks to see if an event function needs to be executed for a given
-// log level and then formats its argument Record.
-func (h *logHandler) Handle(ctx context.Context, r slog.Record) error {
-	switch r.Level {
-	case slog.LevelDebug:
-		if h.events.Debug != nil {
-			h.events.Debug(toRecord(r))
-		}
-
-	case slog.LevelError:
-		if h.events.Error != nil {
-			h.events.Error(toRecord(r))
-		}
-
-	case slog.LevelWarn:
-		if h.events.Warn != nil {
-			h.events.Warn(toRecord(r))
-		}
-
-	case slog.LevelInfo:
-		if h.events.Info != nil {
-			h.events.Info(toRecord(r))
-		}
-	}
-
-	return h.handler.Handle(ctx, r)
-}
-
-// =============================================================================
-
 // Logger represents a logger for logging information.
 type Logger struct {
 	*slog.Logger
@@ -140,39 +36,60 @@ func NewStdLogger(logger *Logger, level Level) *log.Logger {
 
 // Debug logs at LevelDebug with the given context.
 func (log *Logger) Debug(ctx context.Context, msg string, args ...any) {
-	args = append(args, "trace_id", web.GetTraceID(ctx))
-	log.Logger.Debug(msg, args...)
+	log.write(ctx, LevelDebug, 3, msg, args...)
+}
+
+// Debugc logs the information at the specified call stack position.
+func (log *Logger) Debugc(ctx context.Context, caller int, msg string, args ...any) {
+	log.write(ctx, LevelDebug, caller, msg, args...)
 }
 
 // Info logs at LevelInfo with the given context.
 func (log *Logger) Info(ctx context.Context, msg string, args ...any) {
-	args = append(args, "trace_id", web.GetTraceID(ctx))
-	log.Logger.Info(msg, args...)
-}
-
-// Warn logs at LevelWarn with the given context.
-func (log *Logger) Warn(ctx context.Context, msg string, args ...any) {
-	args = append(args, "trace_id", web.GetTraceID(ctx))
-	log.Logger.Warn(msg, args...)
-}
-
-// Error logs at LevelError with the given context.
-func (log *Logger) Error(ctx context.Context, msg string, args ...any) {
-	args = append(args, "trace_id", web.GetTraceID(ctx))
-	log.Logger.Error(msg, args...)
+	log.write(ctx, LevelInfo, 3, msg, args...)
 }
 
 // Infoc logs the information at the specified call stack position.
 func (log *Logger) Infoc(ctx context.Context, caller int, msg string, args ...any) {
-	args = append(args, "trace_id", web.GetTraceID(ctx))
+	log.write(ctx, LevelInfo, caller, msg, args...)
+}
+
+// Warn logs at LevelWarn with the given context.
+func (log *Logger) Warn(ctx context.Context, msg string, args ...any) {
+	log.write(ctx, LevelWarn, 3, msg, args...)
+}
+
+// Warnc logs the information at the specified call stack position.
+func (log *Logger) Warnc(ctx context.Context, caller int, msg string, args ...any) {
+	log.write(ctx, LevelWarn, caller, msg, args...)
+}
+
+// Error logs at LevelError with the given context.
+func (log *Logger) Error(ctx context.Context, msg string, args ...any) {
+	log.write(ctx, LevelError, 3, msg, args...)
+}
+
+// Errorc logs the information at the specified call stack position.
+func (log *Logger) Errorc(ctx context.Context, caller int, msg string, args ...any) {
+	log.write(ctx, LevelError, caller, msg, args...)
+}
+
+func (log *Logger) write(ctx context.Context, level Level, caller int, msg string, args ...any) {
+	slogLevel := slog.Level(level)
+
+	if !log.Enabled(ctx, slogLevel) {
+		return
+	}
 
 	var pcs [1]uintptr
-	runtime.Callers(caller, pcs[:]) // skip [Callers, Infof]
+	runtime.Callers(caller, pcs[:])
 
-	r := slog.NewRecord(time.Now(), slog.LevelInfo, msg, pcs[0])
+	r := slog.NewRecord(time.Now(), slogLevel, msg, pcs[0])
+
+	args = append(args, "trace_id", web.GetTraceID(ctx))
 	r.Add(args...)
 
-	log.Handler().Handle(context.Background(), r)
+	log.Handler().Handle(ctx, r)
 }
 
 // =============================================================================
