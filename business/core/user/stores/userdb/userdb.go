@@ -14,7 +14,7 @@ import (
 	"github.com/ardanlabs/service/business/data/order"
 	database "github.com/ardanlabs/service/business/sys/database/pgx"
 	"github.com/ardanlabs/service/business/sys/database/pgx/dbarray"
-	"github.com/ardanlabs/service/foundation/logger"
+	"github.com/ardanlabs/service/business/sys/logger"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 )

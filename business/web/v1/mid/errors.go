@@ -4,10 +4,10 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/ardanlabs/service/business/sys/logger"
 	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/ardanlabs/service/business/web/auth"
 	v1 "github.com/ardanlabs/service/business/web/v1"
-	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/web"
 )
 
@@ -18,7 +18,7 @@ func Errors(log *logger.Logger) web.Middleware {
 	m := func(handler web.Handler) web.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 			if err := handler(ctx, w, r); err != nil {
-				log.Error("ERROR", "trace_id", web.GetTraceID(ctx), "message", err)
+				log.Error(ctx, "message", "ERROR", err)
 
 				ctx, span := web.AddSpan(ctx, "business.web.v1.mid.error")
 				span.RecordError(err)

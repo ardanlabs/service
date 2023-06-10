@@ -16,9 +16,9 @@ import (
 	"github.com/ardanlabs/service/business/core/user/stores/userdb"
 	"github.com/ardanlabs/service/business/cview/user/summary"
 	"github.com/ardanlabs/service/business/cview/user/summary/stores/summarydb"
+	"github.com/ardanlabs/service/business/sys/logger"
 	"github.com/ardanlabs/service/business/web/auth"
 	"github.com/ardanlabs/service/business/web/v1/mid"
-	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/jmoiron/sqlx"
 )

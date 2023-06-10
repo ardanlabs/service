@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ardanlabs/service/foundation/logger"
+	"github.com/ardanlabs/service/business/sys/logger"
 	"github.com/ardanlabs/service/foundation/web"
 )
 
@@ -21,12 +21,12 @@ func Logger(log *logger.Logger) web.Middleware {
 				path = fmt.Sprintf("%s?%s", path, r.URL.RawQuery)
 			}
 
-			log.Info("request started", "trace_id", v.TraceID, "method", r.Method, "path", path,
+			log.Info(ctx, "request started", "method", r.Method, "path", path,
 				"remoteaddr", r.RemoteAddr)
 
 			err := handler(ctx, w, r)
 
-			log.Info("request completed", "trace_id", v.TraceID, "method", r.Method, "path", path,
+			log.Info(ctx, "request completed", "method", r.Method, "path", path,
 				"remoteaddr", r.RemoteAddr, "statuscode", v.StatusCode, "since", time.Since(v.Now))
 
 			return err

@@ -10,6 +10,7 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/ardanlabs/service/foundation/web"
 	"golang.org/x/exp/slog"
 )
 
@@ -54,15 +55,15 @@ type Events struct {
 
 // =============================================================================
 
-// eventHandler provides a wrapper around the slog handler to capture which
+// logHandler provides a wrapper around the slog handler to capture which
 // log level is being logged for event handling.
-type eventHandler struct {
+type logHandler struct {
 	handler slog.Handler
 	events  Events
 }
 
-func newEventHandler(handler slog.Handler, events Events) *eventHandler {
-	return &eventHandler{
+func newLogHandler(handler slog.Handler, events Events) *logHandler {
+	return &logHandler{
 		handler: handler,
 		events:  events,
 	}
@@ -70,26 +71,26 @@ func newEventHandler(handler slog.Handler, events Events) *eventHandler {
 
 // Enabled reports whether the handler handles records at the given level.
 // The handler ignores records whose level is lower.
-func (h *eventHandler) Enabled(ctx context.Context, level slog.Level) bool {
+func (h *logHandler) Enabled(ctx context.Context, level slog.Level) bool {
 	return h.handler.Enabled(ctx, level)
 }
 
 // WithAttrs returns a new JSONHandler whose attributes consists
 // of h's attributes followed by attrs.
-func (h *eventHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
-	return &eventHandler{handler: h.handler.WithAttrs(attrs), events: h.events}
+func (h *logHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
+	return &logHandler{handler: h.handler.WithAttrs(attrs), events: h.events}
 }
 
 // WithGroup returns a new Handler with the given group appended to the receiver's
 // existing groups. The keys of all subsequent attributes, whether added by With
 // or in a Record, should be qualified by the sequence of group names.
-func (h *eventHandler) WithGroup(name string) slog.Handler {
-	return &eventHandler{handler: h.handler.WithGroup(name), events: h.events}
+func (h *logHandler) WithGroup(name string) slog.Handler {
+	return &logHandler{handler: h.handler.WithGroup(name), events: h.events}
 }
 
 // Handle looks to see if an event function needs to be executed for a given
 // log level and then formats its argument Record.
-func (h *eventHandler) Handle(ctx context.Context, r slog.Record) error {
+func (h *logHandler) Handle(ctx context.Context, r slog.Record) error {
 	switch r.Level {
 	case slog.LevelDebug:
 		if h.events.Debug != nil {
@@ -137,8 +138,34 @@ func NewStdLogger(logger *Logger, level Level) *log.Logger {
 	return slog.NewLogLogger(logger.Handler(), slog.Level(level))
 }
 
+// Debug logs at LevelDebug with the given context.
+func (l *Logger) Debug(ctx context.Context, msg string, args ...any) {
+	args = append(args, "trace_id", web.GetTraceID(ctx))
+	l.Logger.Debug(msg, args...)
+}
+
+// Info logs at LevelInfo with the given context.
+func (l *Logger) Info(ctx context.Context, msg string, args ...any) {
+	args = append(args, "trace_id", web.GetTraceID(ctx))
+	l.Logger.Info(msg, args...)
+}
+
+// Warn logs at LevelWarn with the given context.
+func (l *Logger) Warn(ctx context.Context, msg string, args ...any) {
+	args = append(args, "trace_id", web.GetTraceID(ctx))
+	l.Logger.Warn(msg, args...)
+}
+
+// Error logs at LevelError with the given context.
+func (l *Logger) Error(ctx context.Context, msg string, args ...any) {
+	args = append(args, "trace_id", web.GetTraceID(ctx))
+	l.Logger.Error(msg, args...)
+}
+
 // Infoc logs the information at the specified call stack position.
-func (log *Logger) Infoc(caller int, msg string, args ...any) {
+func (log *Logger) Infoc(ctx context.Context, caller int, msg string, args ...any) {
+	args = append(args, "trace_id", web.GetTraceID(ctx))
+
 	var pcs [1]uintptr
 	runtime.Callers(caller, pcs[:]) // skip [Callers, Infof]
 
@@ -169,9 +196,9 @@ func new(w io.Writer, minLevel Level, serviceName string, events Events) *Logger
 	handler := slog.Handler(slog.NewJSONHandler(w, &slog.HandlerOptions{AddSource: true, Level: slog.Level(minLevel), ReplaceAttr: f}))
 
 	// If events are to be processed, wrap the JSON handler around the custom
-	// event handler.
+	// log handler.
 	if events.Debug != nil || events.Info != nil || events.Warn != nil || events.Error != nil {
-		handler = newEventHandler(handler, events)
+		handler = newLogHandler(handler, events)
 	}
 
 	// Construct a logger.

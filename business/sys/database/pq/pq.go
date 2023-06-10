@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ardanlabs/service/foundation/logger"
+	"github.com/ardanlabs/service/business/sys/logger"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
@@ -109,9 +109,7 @@ func StatusCheck(ctx context.Context, db *sqlx.DB) error {
 
 // WithinTran runs passed function and do commit/rollback at the end.
 func WithinTran(ctx context.Context, log *logger.Logger, db *sqlx.DB, fn func(*sqlx.Tx) error) error {
-	traceID := web.GetTraceID(ctx)
-
-	log.Info("begin tran")
+	log.Info(ctx, "begin tran")
 	tx, err := db.Beginx()
 	if err != nil {
 		return fmt.Errorf("begin tran: %w", err)
@@ -124,9 +122,9 @@ func WithinTran(ctx context.Context, log *logger.Logger, db *sqlx.DB, fn func(*s
 			if errors.Is(err, sql.ErrTxDone) {
 				return
 			}
-			log.Error("unable to rollback tran", "trace_id", traceID, "ERROR", err)
+			log.Error(ctx, "unable to rollback tran", "ERROR", err)
 		}
-		log.Info("rollback tran", "trace_id", traceID)
+		log.Info(ctx, "rollback tran")
 	}()
 
 	if err := fn(tx); err != nil {
@@ -139,7 +137,7 @@ func WithinTran(ctx context.Context, log *logger.Logger, db *sqlx.DB, fn func(*s
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("commit tran: %w", err)
 	}
-	log.Info("commit tran", "trace_id", traceID)
+	log.Info(ctx, "commit tran")
 
 	return nil
 }
@@ -156,9 +154,9 @@ func NamedExecContext(ctx context.Context, log *logger.Logger, db sqlx.ExtContex
 	q := queryString(query, data)
 
 	if _, ok := data.(struct{}); ok {
-		log.Infoc(4, "database.NamedExecContext", "trace_id", web.GetTraceID(ctx), "query", q)
+		log.Infoc(ctx, 4, "database.NamedExecContext", "query", q)
 	} else {
-		log.Infoc(3, "database.NamedExecContext", "trace_id", web.GetTraceID(ctx), "query", q)
+		log.Infoc(ctx, 3, "database.NamedExecContext", "query", q)
 	}
 
 	ctx, span := web.AddSpan(ctx, "business.sys.database.exec", attribute.String("query", q))
@@ -202,7 +200,7 @@ func NamedQuerySliceUsingIn[T any](ctx context.Context, log *logger.Logger, db s
 func namedQuerySlice[T any](ctx context.Context, log *logger.Logger, db sqlx.ExtContext, query string, data any, dest *[]T, withIn bool) error {
 	q := queryString(query, data)
 
-	log.Infoc(4, "database.NamedQuerySlice", "trace_id", web.GetTraceID(ctx), "query", q)
+	log.Infoc(ctx, 4, "database.NamedQuerySlice", "query", q)
 
 	ctx, span := web.AddSpan(ctx, "business.sys.database.queryslice", attribute.String("query", q))
 	defer span.End()
@@ -274,7 +272,7 @@ func NamedQueryStructUsingIn(ctx context.Context, log *logger.Logger, db sqlx.Ex
 func namedQueryStruct(ctx context.Context, log *logger.Logger, db sqlx.ExtContext, query string, data any, dest any, withIn bool) error {
 	q := queryString(query, data)
 
-	log.Infoc(4, "database.NamedQueryStruct", "trace_id", web.GetTraceID(ctx), "query", q)
+	log.Infoc(ctx, 4, "database.NamedQueryStruct", "query", q)
 
 	ctx, span := web.AddSpan(ctx, "business.sys.database.query", attribute.String("query", q))
 	defer span.End()

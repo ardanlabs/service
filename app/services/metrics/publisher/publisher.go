@@ -2,11 +2,12 @@
 package publisher
 
 import (
+	"context"
 	"encoding/json"
 	"sync"
 	"time"
 
-	"github.com/ardanlabs/service/foundation/logger"
+	"github.com/ardanlabs/service/business/sys/logger"
 )
 
 // Set of possible publisher types.
@@ -77,7 +78,7 @@ func (p *Publish) Stop() {
 func (p *Publish) update() {
 	data, err := p.collector.Collect()
 	if err != nil {
-		p.log.Error("publish", "status", "collect data", "ERROR", err)
+		p.log.Error(context.Background(), "publish", "status", "collect data", "ERROR", err)
 		return
 	}
 
@@ -100,15 +101,17 @@ func NewStdout(log *logger.Logger) *Stdout {
 
 // Publish publishers for writing to stdout.
 func (s *Stdout) Publish(data map[string]any) {
+	ctx := context.Background()
+
 	rawJSON, err := json.Marshal(data)
 	if err != nil {
-		s.log.Error("stdout", "status", "marshal data", "ERROR", err)
+		s.log.Error(ctx, "stdout", "status", "marshal data", "ERROR", err)
 		return
 	}
 
 	var d map[string]any
 	if err := json.Unmarshal(rawJSON, &d); err != nil {
-		s.log.Error("stdout", "status", "unmarshal data", "ERROR", err)
+		s.log.Error(ctx, "stdout", "status", "unmarshal data", "ERROR", err)
 		return
 	}
 
@@ -126,5 +129,5 @@ func (s *Stdout) Publish(data map[string]any) {
 	if err != nil {
 		return
 	}
-	s.log.Info("stdout", "data", string(out))
+	s.log.Info(ctx, "stdout", "data", string(out))
 }

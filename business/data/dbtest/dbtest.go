@@ -20,9 +20,9 @@ import (
 	"github.com/ardanlabs/service/business/cview/user/summary/stores/summarydb"
 	"github.com/ardanlabs/service/business/data/dbmigrate"
 	database "github.com/ardanlabs/service/business/sys/database/pgx"
+	"github.com/ardanlabs/service/business/sys/logger"
 	"github.com/ardanlabs/service/business/web/auth"
 	"github.com/ardanlabs/service/foundation/docker"
-	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/jmoiron/sqlx"
 )

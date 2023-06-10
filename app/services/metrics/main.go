@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"expvar"
 	"fmt"
@@ -17,29 +18,31 @@ import (
 	"github.com/ardanlabs/service/app/services/metrics/publisher"
 	expvarsrv "github.com/ardanlabs/service/app/services/metrics/publisher/expvar"
 	prometheussrv "github.com/ardanlabs/service/app/services/metrics/publisher/prometheus"
-	"github.com/ardanlabs/service/foundation/logger"
+	"github.com/ardanlabs/service/business/sys/logger"
 )
 
 var build = "develop"
 
 func main() {
+	ctx := context.Background()
+
 	events := logger.Events{
 		Error: func(r logger.Record) { fmt.Println("******* SEND ALERT ******") },
 	}
 	log := logger.NewWithEvents(os.Stdout, logger.LevelInfo, "METRICS", events)
 
-	if err := run(log); err != nil {
-		log.Error("startup", "ERROR", err)
+	if err := run(ctx, log); err != nil {
+		log.Error(ctx, "startup", "ERROR", err)
 		os.Exit(1)
 	}
 }
 
-func run(log *logger.Logger) error {
+func run(ctx context.Context, log *logger.Logger) error {
 
 	// -------------------------------------------------------------------------
 	// GOMAXPROCS
 
-	log.Info("startup", "GOMAXPROCS", runtime.GOMAXPROCS(0))
+	log.Info(ctx, "startup", "GOMAXPROCS", runtime.GOMAXPROCS(0))
 
 	// -------------------------------------------------------------------------
 	// Configuration
@@ -92,19 +95,19 @@ func run(log *logger.Logger) error {
 	// -------------------------------------------------------------------------
 	// App Starting
 
-	log.Info("starting service", "version", build)
-	defer log.Info("shutdown complete")
+	log.Info(ctx, "starting service", "version", build)
+	defer log.Info(ctx, "shutdown complete")
 
 	out, err := conf.String(&cfg)
 	if err != nil {
 		return fmt.Errorf("generating config for output: %w", err)
 	}
-	log.Info("startup", "config", out)
+	log.Info(ctx, "startup", "config", out)
 
 	// -------------------------------------------------------------------------
 	// Start Debug Service
 
-	log.Info("startup", "status", "debug router started", "host", cfg.Web.DebugHost)
+	log.Info(ctx, "startup", "status", "debug router started", "host", cfg.Web.DebugHost)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/debug/pprof/", pprof.Index)
@@ -116,7 +119,7 @@ func run(log *logger.Logger) error {
 
 	go func() {
 		if err := http.ListenAndServe(cfg.Web.DebugHost, mux); err != nil {
-			log.Error("shutdown", "status", "debug router closed", "host", cfg.Web.DebugHost, "ERROR", err)
+			log.Error(ctx, "shutdown", "status", "debug router closed", "host", cfg.Web.DebugHost, "ERROR", err)
 		}
 	}()
 
@@ -155,8 +158,8 @@ func run(log *logger.Logger) error {
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
 	<-shutdown
 
-	log.Info("shutdown", "status", "shutdown started")
-	defer log.Info("shutdown", "status", "shutdown complete")
+	log.Info(ctx, "shutdown", "status", "shutdown started")
+	defer log.Info(ctx, "shutdown", "status", "shutdown complete")
 
 	return nil
 }

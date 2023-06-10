@@ -4,12 +4,12 @@ package expvar
 import (
 	"context"
 	"encoding/json"
-	"log"
+	"fmt"
 	"net/http"
 	"sync"
 	"time"
 
-	"github.com/ardanlabs/service/foundation/logger"
+	"github.com/ardanlabs/service/business/sys/logger"
 	"github.com/dimfeld/httptreemux/v5"
 )
 
@@ -39,9 +39,11 @@ func New(log *logger.Logger, host string, route string, readTimeout, writeTimeou
 	mux.Handle("GET", route, exp.handler)
 
 	go func() {
-		log.Info("expvar", "status", "API listening", "host", host)
+		ctx := context.Background()
+
+		log.Info(ctx, "expvar", "status", "API listening", "host", host)
 		if err := exp.server.ListenAndServe(); err != nil {
-			log.Error("expvar", "ERROR", err)
+			log.Error(ctx, "expvar", "ERROR", err)
 		}
 	}()
 
@@ -50,18 +52,16 @@ func New(log *logger.Logger, host string, route string, readTimeout, writeTimeou
 
 // Stop shuts down the service.
 func (exp *Expvar) Stop(shutdownTimeout time.Duration) {
-	exp.log.Info("expvar", "status", "start shutdown...")
-	defer exp.log.Info("expvar: Completed")
-
-	// Create context for Shutdown call.
 	ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
 	defer cancel()
 
-	// Asking listener to shut down and load shed.
+	exp.log.Info(ctx, "expvar", "status", "start shutdown...")
+	defer exp.log.Info(ctx, "expvar: Completed")
+
 	if err := exp.server.Shutdown(ctx); err != nil {
-		exp.log.Error("expvar", "status", "graceful shutdown did not complete", "ERROR", err, "shutdownTimeout", shutdownTimeout)
+		exp.log.Error(ctx, "expvar", "status", "graceful shutdown did not complete", "ERROR", err, "shutdownTimeout", shutdownTimeout)
 		if err := exp.server.Close(); err != nil {
-			exp.log.Error("expvar", "status", "could not stop http server", "ERROR", err)
+			exp.log.Error(ctx, "expvar", "status", "could not stop http server", "ERROR", err)
 		}
 	}
 }
@@ -77,6 +77,8 @@ func (exp *Expvar) Publish(data map[string]any) {
 
 // handler is what consumers call to get the raw stats.
 func (exp *Expvar) handler(w http.ResponseWriter, r *http.Request, params map[string]string) {
+	ctx := context.Background()
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
@@ -88,12 +90,8 @@ func (exp *Expvar) handler(w http.ResponseWriter, r *http.Request, params map[st
 	exp.mu.Unlock()
 
 	if err := json.NewEncoder(w).Encode(data); err != nil {
-		exp.log.Error("expvar", "status", "encoding data", "ERROR", err)
+		exp.log.Error(ctx, "expvar", "status", "encoding data", "ERROR", err)
 	}
 
-	log.Printf("expvar : (%d) : %s %s -> %s",
-		http.StatusOK,
-		r.Method, r.URL.Path,
-		r.RemoteAddr,
-	)
+	exp.log.Info(ctx, "expvar", "metrics", fmt.Sprintf("(%d) : %s %s -> %s", http.StatusOK, r.Method, r.URL.Path, r.RemoteAddr))
 }

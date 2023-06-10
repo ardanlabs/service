@@ -9,7 +9,7 @@ import (
 	"github.com/ardanlabs/service/business/cview/user/summary"
 	"github.com/ardanlabs/service/business/data/order"
 	database "github.com/ardanlabs/service/business/sys/database/pq"
-	"github.com/ardanlabs/service/foundation/logger"
+	"github.com/ardanlabs/service/business/sys/logger"
 	"github.com/jmoiron/sqlx"
 )
 

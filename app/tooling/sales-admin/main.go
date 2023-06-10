@@ -2,6 +2,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -10,7 +11,7 @@ import (
 	"github.com/ardanlabs/conf/v3"
 	"github.com/ardanlabs/service/app/tooling/sales-admin/commands"
 	database "github.com/ardanlabs/service/business/sys/database/pgx"
-	"github.com/ardanlabs/service/foundation/logger"
+	"github.com/ardanlabs/service/business/sys/logger"
 	"github.com/ardanlabs/service/foundation/vault"
 	"github.com/google/uuid"
 )
@@ -68,7 +69,7 @@ func run(log *logger.Logger) error {
 		if err != nil {
 			return fmt.Errorf("generating config for output: %w", err)
 		}
-		log.Info("startup", "config", out)
+		log.Info(context.Background(), "startup", "config", out)
 
 		return fmt.Errorf("parsing config: %w", err)
 	}

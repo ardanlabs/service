@@ -12,7 +12,7 @@ import (
 	"github.com/ardanlabs/service/business/core/event"
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/data/order"
-	"github.com/ardanlabs/service/foundation/logger"
+	"github.com/ardanlabs/service/business/sys/logger"
 	"github.com/google/uuid"
 )
 

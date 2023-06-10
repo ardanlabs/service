@@ -4,8 +4,7 @@ package event
 import (
 	"context"
 
-	"github.com/ardanlabs/service/foundation/logger"
-	"github.com/ardanlabs/service/foundation/web"
+	"github.com/ardanlabs/service/business/sys/logger"
 )
 
 // Core manages the set of APIs for event access.
@@ -24,16 +23,16 @@ func NewCore(log *logger.Logger) *Core {
 
 // SendEvent sends event to all handlers registered for the specified event.
 func (c *Core) SendEvent(ctx context.Context, event Event) error {
-	c.log.Info("sendevent", "trace_id", web.GetTraceID(ctx), "status", "started", "source", event.Source, "type", event.Type, "params", event.RawParams)
-	defer c.log.Info("sendevent", "trace_id", web.GetTraceID(ctx), "status", "completed")
+	c.log.Info(ctx, "sendevent", "status", "started", "source", event.Source, "type", event.Type, "params", event.RawParams)
+	defer c.log.Info(ctx, "sendevent", "status", "completed")
 
 	if m, ok := c.handlers[event.Source]; ok {
 		if hfs, ok := m[event.Type]; ok {
 			for _, hf := range hfs {
-				c.log.Info("sendevent", "trace_id", web.GetTraceID(ctx), "status", "sending")
+				c.log.Info(ctx, "sendevent", "status", "sending")
 
 				if err := hf(ctx, event); err != nil {
-					c.log.Error("sendevent", "trace_id", web.GetTraceID(ctx), "ERROR", err)
+					c.log.Error(ctx, "sendevent", "ERROR", err)
 				}
 			}
 		}

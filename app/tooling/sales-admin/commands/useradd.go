@@ -10,7 +10,7 @@ import (
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/core/user/stores/userdb"
 	database "github.com/ardanlabs/service/business/sys/database/pgx"
-	"github.com/ardanlabs/service/foundation/logger"
+	"github.com/ardanlabs/service/business/sys/logger"
 )
 
 // UserAdd adds new users into the database.

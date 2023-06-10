@@ -15,9 +15,9 @@ import (
 	"github.com/ardanlabs/conf/v3"
 	"github.com/ardanlabs/service/app/services/sales-api/handlers"
 	database "github.com/ardanlabs/service/business/sys/database/pgx"
+	"github.com/ardanlabs/service/business/sys/logger"
 	"github.com/ardanlabs/service/business/web/auth"
 	"github.com/ardanlabs/service/business/web/v1/debug"
-	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/vault"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
@@ -35,23 +35,25 @@ import (
 var build = "develop"
 
 func main() {
+	ctx := context.Background()
+
 	events := logger.Events{
 		Error: func(r logger.Record) { fmt.Println("******* SEND ALERT ******") },
 	}
 	log := logger.NewWithEvents(os.Stdout, logger.LevelInfo, "SALES-API", events)
 
-	if err := run(log); err != nil {
-		log.Error("startup", "ERROR", err)
+	if err := run(ctx, log); err != nil {
+		log.Error(ctx, "startup", "ERROR", err)
 		os.Exit(1)
 	}
 }
 
-func run(log *logger.Logger) error {
+func run(ctx context.Context, log *logger.Logger) error {
 
 	// -------------------------------------------------------------------------
 	// GOMAXPROCS
 
-	log.Info("startup", "GOMAXPROCS", runtime.GOMAXPROCS(0))
+	log.Info(ctx, "startup", "GOMAXPROCS", runtime.GOMAXPROCS(0))
 
 	// -------------------------------------------------------------------------
 	// Configuration
@@ -110,21 +112,21 @@ func run(log *logger.Logger) error {
 	// -------------------------------------------------------------------------
 	// App Starting
 
-	log.Info("starting service", "version", build)
-	defer log.Info("shutdown complete")
+	log.Info(ctx, "starting service", "version", build)
+	defer log.Info(ctx, "shutdown complete")
 
 	out, err := conf.String(&cfg)
 	if err != nil {
 		return fmt.Errorf("generating config for output: %w", err)
 	}
-	log.Info("startup", "config", out)
+	log.Info(ctx, "startup", "config", out)
 
 	expvar.NewString("build").Set(build)
 
 	// -------------------------------------------------------------------------
 	// Database Support
 
-	log.Info("startup", "status", "initializing database support", "host", cfg.DB.Host)
+	log.Info(ctx, "startup", "status", "initializing database support", "host", cfg.DB.Host)
 
 	db, err := database.Open(database.Config{
 		User:         cfg.DB.User,
@@ -139,14 +141,14 @@ func run(log *logger.Logger) error {
 		return fmt.Errorf("connecting to db: %w", err)
 	}
 	defer func() {
-		log.Info("shutdown", "status", "stopping database support", "host", cfg.DB.Host)
+		log.Info(ctx, "shutdown", "status", "stopping database support", "host", cfg.DB.Host)
 		db.Close()
 	}()
 
 	// -------------------------------------------------------------------------
 	// Initialize authentication support
 
-	log.Info("startup", "status", "initializing authentication support")
+	log.Info(ctx, "startup", "status", "initializing authentication support")
 
 	// Simple keystore versus using Vault.
 	// ks, err := keystore.NewFS(os.DirFS(cfg.Auth.KeysFolder))
@@ -177,7 +179,7 @@ func run(log *logger.Logger) error {
 	// -------------------------------------------------------------------------
 	// Start Tracing Support
 
-	log.Info("startup", "status", "initializing OT/Tempo tracing support")
+	log.Info(ctx, "startup", "status", "initializing OT/Tempo tracing support")
 
 	traceProvider, err := startTracing(
 		cfg.Tempo.ServiceName,
@@ -195,17 +197,17 @@ func run(log *logger.Logger) error {
 	// Start Debug Service
 
 	go func() {
-		log.Info("startup", "status", "debug v1 router started", "host", cfg.Web.DebugHost)
+		log.Info(ctx, "startup", "status", "debug v1 router started", "host", cfg.Web.DebugHost)
 
 		if err := http.ListenAndServe(cfg.Web.DebugHost, debug.Mux()); err != nil {
-			log.Error("shutdown", "status", "debug v1 router closed", "host", cfg.Web.DebugHost, "ERROR", err)
+			log.Error(ctx, "shutdown", "status", "debug v1 router closed", "host", cfg.Web.DebugHost, "ERROR", err)
 		}
 	}()
 
 	// -------------------------------------------------------------------------
 	// Start API Service
 
-	log.Info("startup", "status", "initializing V1 API support")
+	log.Info(ctx, "startup", "status", "initializing V1 API support")
 
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
@@ -231,7 +233,7 @@ func run(log *logger.Logger) error {
 	serverErrors := make(chan error, 1)
 
 	go func() {
-		log.Info("startup", "status", "api router started", "host", api.Addr)
+		log.Info(ctx, "startup", "status", "api router started", "host", api.Addr)
 
 		serverErrors <- api.ListenAndServe()
 	}()
@@ -244,8 +246,8 @@ func run(log *logger.Logger) error {
 		return fmt.Errorf("server error: %w", err)
 
 	case sig := <-shutdown:
-		log.Info("shutdown", "status", "shutdown started", "signal", sig)
-		defer log.Info("shutdown", "status", "shutdown complete", "signal", sig)
+		log.Info(ctx, "shutdown", "status", "shutdown started", "signal", sig)
+		defer log.Info(ctx, "shutdown", "status", "shutdown complete", "signal", sig)
 
 		ctx, cancel := context.WithTimeout(context.Background(), cfg.Web.ShutdownTimeout)
 		defer cancel()
