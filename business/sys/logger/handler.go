@@ -45,22 +45,22 @@ func (h *logHandler) Handle(ctx context.Context, r slog.Record) error {
 	switch r.Level {
 	case slog.LevelDebug:
 		if h.events.Debug != nil {
-			h.events.Debug(toRecord(r))
+			h.events.Debug(ctx, toRecord(r))
 		}
 
 	case slog.LevelError:
 		if h.events.Error != nil {
-			h.events.Error(toRecord(r))
+			h.events.Error(ctx, toRecord(r))
 		}
 
 	case slog.LevelWarn:
 		if h.events.Warn != nil {
-			h.events.Warn(toRecord(r))
+			h.events.Warn(ctx, toRecord(r))
 		}
 
 	case slog.LevelInfo:
 		if h.events.Info != nil {
-			h.events.Info(toRecord(r))
+			h.events.Info(ctx, toRecord(r))
 		}
 	}
 

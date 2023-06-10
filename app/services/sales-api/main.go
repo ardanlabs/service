@@ -35,12 +35,17 @@ import (
 var build = "develop"
 
 func main() {
-	ctx := context.Background()
+	var log *logger.Logger
 
 	events := logger.Events{
-		Error: func(r logger.Record) { fmt.Println("******* SEND ALERT ******") },
+		Error: func(ctx context.Context, r logger.Record) { log.Info(ctx, "******* SEND ALERT ******") },
 	}
-	log := logger.NewWithEvents(os.Stdout, logger.LevelInfo, "SALES-API", events)
+
+	log = logger.NewWithEvents(os.Stdout, logger.LevelInfo, "SALES-API", events)
+
+	// -------------------------------------------------------------------------
+
+	ctx := context.Background()
 
 	if err := run(ctx, log); err != nil {
 		log.Error(ctx, "startup", "msg", err)
