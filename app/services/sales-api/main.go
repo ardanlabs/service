@@ -38,7 +38,9 @@ func main() {
 	var log *logger.Logger
 
 	events := logger.Events{
-		Error: func(ctx context.Context, r logger.Record) { log.Info(ctx, "******* SEND ALERT ******") },
+		Error: func(ctx context.Context, r logger.Record) {
+			log.Info(ctx, "******* SEND ALERT ******")
+		},
 	}
 
 	log = logger.NewWithEvents(os.Stdout, logger.LevelInfo, "SALES-API", events)
@@ -58,7 +60,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 	// -------------------------------------------------------------------------
 	// GOMAXPROCS
 
-	log.Info(ctx, "startup", "GOMAXPROCS", runtime.GOMAXPROCS(0))
+	log.Error(ctx, "startup", "GOMAXPROCS", runtime.GOMAXPROCS(0))
 
 	// -------------------------------------------------------------------------
 	// Configuration
