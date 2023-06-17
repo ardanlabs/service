@@ -6,7 +6,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"strings"
 	"unicode"
 	"unicode/utf8"
 
@@ -43,7 +42,7 @@ func (h *Hstore) Scan(src any) error {
 
 	switch src := src.(type) {
 	case string:
-		return scanPlanTextAnyToHstoreScanner{}.Scan([]byte(src), h)
+		return scanPlanTextAnyToHstoreScanner{}.scanString(src, h)
 	}
 
 	return fmt.Errorf("cannot scan %T", src)
@@ -137,13 +136,20 @@ func (encodePlanHstoreCodecText) Encode(value any, buf []byte) (newBuf []byte, e
 			buf = append(buf, ',')
 		}
 
-		buf = append(buf, quoteHstoreElementIfNeeded(k)...)
+		// unconditionally quote hstore keys/values like Postgres does
+		// this avoids a Mac OS X Postgres hstore parsing bug:
+		// https://www.postgresql.org/message-id/CA%2BHWA9awUW0%2BRV_gO9r1ABZwGoZxPztcJxPy8vMFSTbTfi4jig%40mail.gmail.com
+		buf = append(buf, '"')
+		buf = append(buf, quoteArrayReplacer.Replace(k)...)
+		buf = append(buf, '"')
 		buf = append(buf, "=>"...)
 
 		if v == nil {
 			buf = append(buf, "NULL"...)
 		} else {
-			buf = append(buf, quoteHstoreElementIfNeeded(*v)...)
+			buf = append(buf, '"')
+			buf = append(buf, quoteArrayReplacer.Replace(*v)...)
+			buf = append(buf, '"')
 		}
 	}
 
@@ -174,7 +180,7 @@ func (scanPlanBinaryHstoreToHstoreScanner) Scan(src []byte, dst any) error {
 	scanner := (dst).(HstoreScanner)
 
 	if src == nil {
-		return scanner.ScanHstore(Hstore{})
+		return scanner.ScanHstore(Hstore(nil))
 	}
 
 	rp := 0
@@ -230,14 +236,18 @@ func (scanPlanBinaryHstoreToHstoreScanner) Scan(src []byte, dst any) error {
 
 type scanPlanTextAnyToHstoreScanner struct{}
 
-func (scanPlanTextAnyToHstoreScanner) Scan(src []byte, dst any) error {
+func (s scanPlanTextAnyToHstoreScanner) Scan(src []byte, dst any) error {
 	scanner := (dst).(HstoreScanner)
 
 	if src == nil {
-		return scanner.ScanHstore(Hstore{})
+		return scanner.ScanHstore(Hstore(nil))
 	}
+	return s.scanString(string(src), scanner)
+}
 
-	keys, values, err := parseHstore(string(src))
+// scanString does not return nil hstore values because string cannot be nil.
+func (scanPlanTextAnyToHstoreScanner) scanString(src string, scanner HstoreScanner) error {
+	keys, values, err := parseHstore(src)
 	if err != nil {
 		return err
 	}
@@ -269,19 +279,6 @@ func (c HstoreCodec) DecodeValue(m *Map, oid uint32, format int16, src []byte) (
 		return nil, err
 	}
 	return hstore, nil
-}
-
-var quoteHstoreReplacer = strings.NewReplacer(`\`, `\\`, `"`, `\"`)
-
-func quoteHstoreElement(src string) string {
-	return `"` + quoteArrayReplacer.Replace(src) + `"`
-}
-
-func quoteHstoreElementIfNeeded(src string) string {
-	if src == "" || (len(src) == 4 && strings.ToLower(src) == "null") || strings.ContainsAny(src, ` {},"\=>`) {
-		return quoteArrayElement(src)
-	}
-	return src
 }
 
 const (
@@ -434,12 +431,21 @@ func parseHstore(s string) (k []string, v []Text, err error) {
 				r, end = p.Consume()
 				switch {
 				case end:
-					err = errors.New("Found EOS after ',', expcting space")
+					err = errors.New("Found EOS after ',', expecting space")
 				case (unicode.IsSpace(r)):
+					// after space is a doublequote to start the key
 					r, end = p.Consume()
+					if end {
+						err = errors.New("Found EOS after space, expecting \"")
+						return
+					}
+					if r != '"' {
+						err = fmt.Errorf("Invalid character '%c' after space, expecting \"", r)
+						return
+					}
 					state = hsKey
 				default:
-					err = fmt.Errorf("Invalid character '%c' after ', ', expecting \"", r)
+					err = fmt.Errorf("Invalid character '%c' after ',', expecting space", r)
 				}
 			} else {
 				err = fmt.Errorf("Invalid character '%c' after value, expecting ','", r)
