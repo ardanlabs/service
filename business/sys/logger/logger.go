@@ -16,7 +16,7 @@ import (
 
 // Logger represents a logger for logging information.
 type Logger struct {
-	slog *slog.Logger
+	handler slog.Handler
 }
 
 // New constructs a new log for application use.
@@ -31,7 +31,7 @@ func NewWithEvents(w io.Writer, minLevel Level, serviceName string, events Event
 
 // NewStdLogger returns a standard library Logger that wraps the slog Logger.
 func NewStdLogger(logger *Logger, level Level) *log.Logger {
-	return slog.NewLogLogger(logger.slog.Handler(), slog.Level(level))
+	return slog.NewLogLogger(logger.handler, slog.Level(level))
 }
 
 // Debug logs at LevelDebug with the given context.
@@ -77,7 +77,7 @@ func (log *Logger) Errorc(ctx context.Context, caller int, msg string, args ...a
 func (log *Logger) write(ctx context.Context, level Level, caller int, msg string, args ...any) {
 	slogLevel := slog.Level(level)
 
-	if !log.slog.Enabled(ctx, slogLevel) {
+	if !log.handler.Enabled(ctx, slogLevel) {
 		return
 	}
 
@@ -89,7 +89,7 @@ func (log *Logger) write(ctx context.Context, level Level, caller int, msg strin
 	args = append(args, "trace_id", web.GetTraceID(ctx))
 	r.Add(args...)
 
-	log.slog.Handler().Handle(ctx, r)
+	log.handler.Handle(ctx, r)
 }
 
 // =============================================================================
@@ -118,15 +118,15 @@ func new(w io.Writer, minLevel Level, serviceName string, events Events) *Logger
 		handler = newLogHandler(handler, events)
 	}
 
-	// Construct a logger.
-	log := slog.New(handler)
-
-	// Add the service name to the list of key/value pairs for each log line.
-	if serviceName != "" {
-		log = log.With("service", serviceName)
+	// Attributes to add to every log.
+	attrs := []slog.Attr{
+		{Key: "service", Value: slog.StringValue(serviceName)},
 	}
 
+	// Add those attributes and capture the final handler.
+	handler = handler.WithAttrs(attrs)
+
 	return &Logger{
-		slog: log,
+		handler: handler,
 	}
 }
