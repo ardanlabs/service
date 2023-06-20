@@ -286,7 +286,7 @@ data:
             },
             "showHeader": true
           },
-          "pluginVersion": "9.5.2",
+          "pluginVersion": "9.5.3",
           "targets": [
             {
               "datasource": {
@@ -349,7 +349,7 @@ spec:
       terminationGracePeriodSeconds: 60
       containers:
         - name: grafana
-          image: grafana/grafana:9.5.2
+          image: grafana/grafana:9.5.3
           imagePullPolicy: IfNotPresent
           env:
             - name: GF_ANALYTICS_REPORTING_ENABLED

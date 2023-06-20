@@ -150,7 +150,6 @@ GRAFANA         := grafana/grafana:9.5.3
 PROMETHEUS      := prom/prometheus:v2.44.0
 TEMPO           := grafana/tempo:2.1.1
 TELEPRESENCE    := datawire/ambassador-telepresence-manager:2.14.0
-CURL            := curlimages/curl:8.1.1
 
 KIND_CLUSTER    := ardan-starter-cluster
 NAMESPACE       := sales-system
@@ -198,7 +197,6 @@ dev-docker:
 	docker pull $(PROMETHEUS)
 	docker pull $(TEMPO)
 	docker pull $(TELEPRESENCE)
-	docker pull $(CURL)
 
 # ==============================================================================
 # Building containers
@@ -233,7 +231,6 @@ dev-up-local:
 	kubectl wait --timeout=120s --namespace=local-path-storage --for=condition=Available deployment/local-path-provisioner
 
 	kind load docker-image $(TELEPRESENCE) --name $(KIND_CLUSTER)
-	kind load docker-image $(CURL) --name $(KIND_CLUSTER)
 	kind load docker-image $(POSTGRES) --name $(KIND_CLUSTER)
 	kind load docker-image $(VAULT) --name $(KIND_CLUSTER)
 	kind load docker-image $(GRAFANA) --name $(KIND_CLUSTER)
