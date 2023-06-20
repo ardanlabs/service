@@ -149,7 +149,7 @@ VAULT           := hashicorp/vault:1.13
 GRAFANA         := grafana/grafana:9.5.3
 PROMETHEUS      := prom/prometheus:v2.44.0
 TEMPO           := grafana/tempo:2.1.1
-TELEPRESENCE    := datawire/tel2:2.14.0
+TELEPRESENCE    := datawire/ambassador-telepresence-manager:2.14.0
 
 KIND_CLUSTER    := ardan-starter-cluster
 NAMESPACE       := sales-system
