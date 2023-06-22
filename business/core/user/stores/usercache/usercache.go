@@ -16,7 +16,7 @@ import (
 type Store struct {
 	log    *logger.Logger
 	storer user.Storer
-	cache  map[string]*user.User
+	cache  map[string]user.User
 	mu     sync.RWMutex
 }
 
@@ -25,7 +25,7 @@ func NewStore(log *logger.Logger, storer user.Storer) *Store {
 	return &Store{
 		log:    log,
 		storer: storer,
-		cache:  map[string]*user.User{},
+		cache:  map[string]user.User{},
 	}
 }
 
@@ -133,7 +133,7 @@ func (s *Store) readCache(key string) (user.User, bool) {
 		return user.User{}, false
 	}
 
-	return *usr, true
+	return usr, true
 }
 
 // writeCache performs a safe write to the cache for the specified user.
@@ -141,8 +141,8 @@ func (s *Store) writeCache(usr user.User) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	s.cache[usr.ID.String()] = &usr
-	s.cache[usr.Email.Address] = &usr
+	s.cache[usr.ID.String()] = usr
+	s.cache[usr.Email.Address] = usr
 }
 
 // deleteCache performs a safe removal from the cache for the specified user.
