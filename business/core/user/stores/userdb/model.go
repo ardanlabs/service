@@ -2,6 +2,7 @@ package userdb
 
 import (
 	"database/sql"
+	"fmt"
 	"net/mail"
 	"time"
 
@@ -46,14 +47,18 @@ func toDBUser(usr user.User) dbUser {
 	}
 }
 
-func toCoreUser(dbUsr dbUser) user.User {
+func toCoreUser(dbUsr dbUser) (user.User, error) {
 	addr := mail.Address{
 		Address: dbUsr.Email,
 	}
 
 	roles := make([]user.Role, len(dbUsr.Roles))
 	for i, value := range dbUsr.Roles {
-		roles[i] = user.MustParseRole(value)
+		var err error
+		roles[i], err = user.ParseRole(value)
+		if err != nil {
+			return user.User{}, fmt.Errorf("parse role: %w", err)
+		}
 	}
 
 	usr := user.User{
@@ -68,13 +73,17 @@ func toCoreUser(dbUsr dbUser) user.User {
 		DateUpdated:  dbUsr.DateUpdated.In(time.Local),
 	}
 
-	return usr
+	return usr, nil
 }
 
-func toCoreUserSlice(dbUsers []dbUser) []user.User {
+func toCoreUserSlice(dbUsers []dbUser) ([]user.User, error) {
 	usrs := make([]user.User, len(dbUsers))
 	for i, dbUsr := range dbUsers {
-		usrs[i] = toCoreUser(dbUsr)
+		var err error
+		usrs[i], err = toCoreUser(dbUsr)
+		if err != nil {
+			return nil, err
+		}
 	}
-	return usrs
+	return usrs, nil
 }

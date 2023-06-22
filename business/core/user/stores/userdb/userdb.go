@@ -145,7 +145,12 @@ func (s *Store) Query(ctx context.Context, filter user.QueryFilter, orderBy orde
 		return nil, fmt.Errorf("namedqueryslice: %w", err)
 	}
 
-	return toCoreUserSlice(dbUsrs), nil
+	usrs, err := toCoreUserSlice(dbUsrs)
+	if err != nil {
+		return nil, err
+	}
+
+	return usrs, nil
 }
 
 // Count returns the total number of users in the DB.
@@ -195,7 +200,12 @@ func (s *Store) QueryByID(ctx context.Context, userID uuid.UUID) (user.User, err
 		return user.User{}, fmt.Errorf("namedquerystruct: %w", err)
 	}
 
-	return toCoreUser(dbUsr), nil
+	usr, err := toCoreUser(dbUsr)
+	if err != nil {
+		return user.User{}, err
+	}
+
+	return usr, nil
 }
 
 // QueryByIDs gets the specified users from the database.
@@ -222,15 +232,20 @@ func (s *Store) QueryByIDs(ctx context.Context, userIDs []uuid.UUID) ([]user.Use
 	WHERE
 		user_id = ANY(:user_id)`
 
-	var usrs []dbUser
-	if err := database.NamedQuerySlice(ctx, s.log, s.db, q, data, &usrs); err != nil {
+	var dbUsrs []dbUser
+	if err := database.NamedQuerySlice(ctx, s.log, s.db, q, data, &dbUsrs); err != nil {
 		if errors.Is(err, database.ErrDBNotFound) {
 			return nil, user.ErrNotFound
 		}
 		return nil, fmt.Errorf("namedquerystruct: %w", err)
 	}
 
-	return toCoreUserSlice(usrs), nil
+	usrs, err := toCoreUserSlice(dbUsrs)
+	if err != nil {
+		return nil, err
+	}
+
+	return usrs, nil
 }
 
 // QueryByEmail gets the specified user from the database by email.
@@ -257,5 +272,10 @@ func (s *Store) QueryByEmail(ctx context.Context, email mail.Address) (user.User
 		return user.User{}, fmt.Errorf("namedquerystruct: %w", err)
 	}
 
-	return toCoreUser(dbUsr), nil
+	usr, err := toCoreUser(dbUsr)
+	if err != nil {
+		return user.User{}, err
+	}
+
+	return usr, nil
 }
