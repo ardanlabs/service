@@ -79,7 +79,7 @@ variable and command line flag overrides.
 	}
 
 There is also YAML support using the yaml package that is part of
-this modeule.
+this module.
 
 	var yamlData = `
 	a: Easy!
