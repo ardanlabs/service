@@ -51,7 +51,7 @@ spec:
           emptyDir: {}
       containers:
         - name: vault          
-          image: hashicorp/vault:1.13
+          image: hashicorp/vault:1.14
           imagePullPolicy: IfNotPresent
           resources:
             requests:
