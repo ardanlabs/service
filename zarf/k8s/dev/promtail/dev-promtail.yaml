@@ -1,4 +1,10 @@
----
+# Promtail reads the logs and dumps them into Loki. Then Grafana reads them from
+# Loki and displays them in the dashboard. Promtail reads the logs by mounting
+# the host /var/log directory into the pods, it requires the right permissions
+# for that see ServiceAccount, ClusterRole, and ClusterRoleBinding together
+# with serviceAccountName, enableServiceLinks, and securityContext flags in
+# the Deployment of the pod.
+
 apiVersion: v1
 kind: Namespace
 metadata:
