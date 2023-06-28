@@ -9,7 +9,7 @@ metadata:
   name: grafana-conf-datasources
   namespace: sales-system
 data:
-  tempo.yaml: |
+  sources.yaml: |
     apiVersion: 1
     
     deleteDatasources:
@@ -57,6 +57,12 @@ data:
             tag: 'http.path'
         version: 1
         editable: true
+      - name: Loki
+        type: loki
+        access: proxy
+        url: http://loki.sales-system.svc:3101
+        jsonData:
+          maxLines: 1000
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -104,48 +110,49 @@ data:
       "editable": true,
       "fiscalYearStartMonth": 0,
       "graphTooltip": 0,
+      "id": 1,
       "links": [],
       "liveNow": false,
       "panels": [
         {
           "datasource": {
-            "uid": "PBFA97CFB590B2093",
-            "type": "prometheus"
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
           },
           "fieldConfig": {
             "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
               "custom": {
-                "drawStyle": "line",
-                "lineInterpolation": "linear",
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
                 "barAlignment": 0,
-                "lineWidth": 1,
+                "drawStyle": "line",
                 "fillOpacity": 0,
                 "gradientMode": "none",
-                "spanNulls": false,
-                "showPoints": "auto",
-                "pointSize": 5,
-                "stacking": {
-                  "mode": "none",
-                  "group": "A"
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
                 },
-                "axisPlacement": "auto",
-                "axisLabel": "",
-                "axisColorMode": "text",
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
                 "scaleDistribution": {
                   "type": "linear"
                 },
-                "axisCenteredZero": false,
-                "hideFrom": {
-                  "tooltip": false,
-                  "viz": false,
-                  "legend": false
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
                 },
                 "thresholdsStyle": {
                   "mode": "off"
                 }
-              },
-              "color": {
-                "mode": "palette-classic"
               },
               "mappings": [],
               "thresholds": {
@@ -172,65 +179,65 @@ data:
           },
           "id": 2,
           "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
             "tooltip": {
               "mode": "single",
               "sort": "none"
-            },
-            "legend": {
-              "showLegend": true,
-              "displayMode": "list",
-              "placement": "bottom",
-              "calcs": []
             }
           },
           "targets": [
             {
               "datasource": {
-                "uid": "PBFA97CFB590B2093",
-                "type": "prometheus"
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
               },
-              "refId": "A",
-              "hide": false,
               "editorMode": "builder",
               "expr": "requests{job=\"sales-api\"}",
+              "hide": false,
               "legendFormat": "__auto",
-              "range": true
+              "range": true,
+              "refId": "A"
             },
             {
               "datasource": {
-                "uid": "PBFA97CFB590B2093",
-                "type": "prometheus"
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
               },
-              "refId": "B",
-              "hide": false,
               "editorMode": "builder",
               "expr": "errors{job=\"sales-api\"}",
+              "hide": false,
               "legendFormat": "__auto",
-              "range": true
+              "range": true,
+              "refId": "B"
             },
             {
               "datasource": {
-                "uid": "PBFA97CFB590B2093",
-                "type": "prometheus"
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
               },
-              "refId": "C",
-              "hide": false,
               "editorMode": "builder",
               "expr": "goroutines{job=\"sales-api\"}",
+              "hide": false,
               "legendFormat": "__auto",
-              "range": true
+              "range": true,
+              "refId": "C"
             },
             {
               "datasource": {
-                "uid": "PBFA97CFB590B2093",
-                "type": "prometheus"
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
               },
-              "refId": "D",
-              "hide": false,
               "editorMode": "builder",
               "expr": "panics{job=\"sales-api\"}",
+              "hide": false,
               "legendFormat": "__auto",
-              "range": true
+              "range": true,
+              "refId": "D"
             }
           ],
           "title": "Sales API - Metrics",
@@ -302,9 +309,47 @@ data:
           ],
           "title": "Sales API - Traces",
           "type": "table"
+        },
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "P8E80F9AEF21F6940"
+          },
+          "gridPos": {
+            "h": 19,
+            "w": 24,
+            "x": 0,
+            "y": 10
+          },
+          "id": 3,
+          "options": {
+            "dedupStrategy": "none",
+            "enableLogDetails": true,
+            "prettifyLogMessage": false,
+            "showCommonLabels": true,
+            "showLabels": false,
+            "showTime": false,
+            "sortOrder": "Descending",
+            "wrapLogMessage": false
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "loki",
+                "uid": "P8E80F9AEF21F6940"
+              },
+              "editorMode": "builder",
+              "expr": "{app=\"sales\", container=\"sales-api\"} | json",
+              "key": "Q-844e3db6-67df-45db-8abb-dc8d357d6ce2-0",
+              "queryType": "range",
+              "refId": "A"
+            }
+          ],
+          "title": "Sales API - Logs",
+          "type": "logs"
         }
       ],
-      "refresh": "15s",
+      "refresh": "5s",
       "schemaVersion": 38,
       "style": "dark",
       "tags": [],
@@ -393,7 +438,7 @@ spec:
             timeoutSeconds: 1
           resources:
             requests:
-              cpu: 250m
+              cpu: 150m
               memory: 750Mi
           volumeMounts:
             - name: config-datasources

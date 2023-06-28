@@ -1,0 +1,121 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: sales-system
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: loki-conf
+  namespace: sales-system
+data:
+  loki.yaml: |
+    analytics:
+      reporting_enabled: false
+
+    auth_enabled: false
+
+    server:
+      http_listen_port: 3101
+
+    distributor:
+      ring:
+        kvstore:
+          store: memberlist
+
+    ingester:
+      lifecycler:
+        ring:
+          kvstore:
+            store: memberlist
+          replication_factor: 1
+        final_sleep: 0s
+      chunk_idle_period: 5m
+      chunk_retain_period: 30s
+    
+    common:
+      ring:
+        instance_addr: 127.0.0.1
+        kvstore:
+          store: inmemory
+      replication_factor: 1
+      path_prefix: /tmp/loki
+
+    schema_config:
+      configs:
+        - from: 2020-05-15
+          store: boltdb-shipper
+          object_store: filesystem
+          schema: v11
+          index:
+            prefix: index_
+            period: 24h
+
+    storage_config:
+      boltdb_shipper:
+        active_index_directory: /tmp/index
+        cache_location: /tmp/index_cache
+
+    limits_config:
+      enforce_metric_name: false
+      reject_old_samples: true
+      reject_old_samples_max_age: 168h
+
+    compactor:
+      working_directory: /tmp/compactor
+      compaction_interval: 5m
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loki
+  namespace: sales-system
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 0
+  selector:
+    matchLabels:
+      app: loki
+  template:
+    metadata:
+      labels:
+        app: loki
+    spec:
+      restartPolicy: Always
+      containers:
+        - image: grafana/loki:2.8.2
+          name: loki
+          ports:
+            - name: "loki"
+              containerPort: 3101
+              hostPort: 3101
+          args:
+            - -config.file=/loki-conf/loki.yaml
+            - -config.expand-env
+          resources:
+            requests:
+              cpu: 150m
+              memory: 500Mi
+          volumeMounts:
+            - name: config-volume
+              mountPath: /loki-conf
+      volumes:
+        - name: config-volume
+          configMap:
+            name: loki-conf
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: loki
+  namespace: sales-system
+spec:
+  ports:
+    - name: "loki"
+      port: 3101
+      targetPort: "loki"
+  selector:
+    app: loki

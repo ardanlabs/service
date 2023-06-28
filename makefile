@@ -148,6 +148,8 @@ VAULT           := hashicorp/vault:1.14
 GRAFANA         := grafana/grafana:9.5.3
 PROMETHEUS      := prom/prometheus:v2.44.0
 TEMPO           := grafana/tempo:2.1.1
+LOKI            := grafana/loki:2.8.2
+PROMTAIL        := grafana/promtail:2.8.2
 TELEPRESENCE    := datawire/ambassador-telepresence-manager:2.14.0
 
 KIND_CLUSTER    := ardan-starter-cluster
@@ -195,6 +197,8 @@ dev-docker:
 	docker pull $(GRAFANA)
 	docker pull $(PROMETHEUS)
 	docker pull $(TEMPO)
+	docker pull $(LOKI)
+	docker pull $(PROMTAIL)
 	docker pull $(TELEPRESENCE)
 
 # ==============================================================================
@@ -235,6 +239,8 @@ dev-up-local:
 	kind load docker-image $(GRAFANA) --name $(KIND_CLUSTER)
 	kind load docker-image $(PROMETHEUS) --name $(KIND_CLUSTER)
 	kind load docker-image $(TEMPO) --name $(KIND_CLUSTER)
+	kind load docker-image $(LOKI) --name $(KIND_CLUSTER)
+	kind load docker-image $(PROMTAIL) --name $(KIND_CLUSTER)
 
 dev-up: dev-up-local
 	telepresence --context=kind-$(KIND_CLUSTER) helm install
@@ -270,6 +276,12 @@ dev-apply:
 
 	kustomize build zarf/k8s/dev/tempo | kubectl apply -f -
 	kubectl wait pods --namespace=$(NAMESPACE) --selector app=tempo --timeout=120s --for=condition=Ready
+
+	kustomize build zarf/k8s/dev/loki | kubectl apply -f -
+	kubectl wait pods --namespace=$(NAMESPACE) --selector app=loki --timeout=120s --for=condition=Ready
+
+	kustomize build zarf/k8s/dev/promtail | kubectl apply -f -
+	kubectl wait pods --namespace=$(NAMESPACE) --selector app=promtail --timeout=120s --for=condition=Ready
 
 	kustomize build zarf/k8s/dev/sales | kubectl apply -f -
 	kubectl wait pods --namespace=$(NAMESPACE) --selector app=$(APP) --for=condition=Ready
@@ -321,12 +333,20 @@ dev-logs-grafana:
 dev-logs-tempo:
 	kubectl logs --namespace=$(NAMESPACE) -l app=tempo --all-containers=true -f --tail=100
 
+dev-logs-loki:
+	kubectl logs --namespace=$(NAMESPACE) -l app=loki --all-containers=true -f --tail=100
+
+dev-logs-promtail:
+	kubectl logs --namespace=$(NAMESPACE) -l app=promtail --all-containers=true -f --tail=100
+
 # ------------------------------------------------------------------------------
 
 dev-services-delete:
 	kustomize build zarf/k8s/dev/sales | kubectl delete -f -
 	kustomize build zarf/k8s/dev/grafana | kubectl delete -f -
 	kustomize build zarf/k8s/dev/tempo | kubectl delete -f -
+	kustomize build zarf/k8s/dev/loki | kubectl delete -f -
+	kustomize build zarf/k8s/dev/promtail | kubectl delete -f -
 	kustomize build zarf/k8s/dev/database | kubectl delete -f -
 
 dev-describe-replicaset:

@@ -56,7 +56,7 @@ spec:
               hostPort: 9090
           resources:
             requests:
-              cpu: 500m
+              cpu: 150m
               memory: 256M
             limits:
               cpu: "1"
