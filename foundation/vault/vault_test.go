@@ -22,9 +22,9 @@ func Test_Vault(t *testing.T) {
 	const image = "hashicorp/vault:1.14"
 	const port = "8200"
 
-	args := []string{"-e", "VAULT_DEV_ROOT_TOKEN_ID=" + token, "-e", "VAULT_DEV_LISTEN_ADDRESS=" + address}
+	dockerArgs := []string{"-e", "VAULT_DEV_ROOT_TOKEN_ID=" + token, "-e", "VAULT_DEV_LISTEN_ADDRESS=" + address}
 
-	c, err := docker.StartContainer(image, port, args...)
+	c, err := docker.StartContainer(image, port, dockerArgs, nil)
 	if err != nil {
 		t.Fatalf("starting container: %s", err)
 	}
