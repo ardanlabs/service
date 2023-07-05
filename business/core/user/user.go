@@ -12,6 +12,8 @@ import (
 
 	"github.com/ardanlabs/service/business/core/event"
 	"github.com/ardanlabs/service/business/data/order"
+	"github.com/ardanlabs/service/business/sys/logger"
+	"github.com/ardanlabs/service/foundation/core"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -28,7 +30,7 @@ var (
 // Storer interface declares the behavior this package needs to perists and
 // retrieve data.
 type Storer interface {
-	WithinTran(ctx context.Context, fn func(s Storer) error) error
+	// WithinTran(ctx context.Context, fn func(s Storer) error) error
 	Create(ctx context.Context, usr User) error
 	Update(ctx context.Context, usr User) error
 	Delete(ctx context.Context, usr User) error
@@ -37,6 +39,9 @@ type Storer interface {
 	QueryByID(ctx context.Context, userID uuid.UUID) (User, error)
 	QueryByIDs(ctx context.Context, userID []uuid.UUID) ([]User, error)
 	QueryByEmail(ctx context.Context, email mail.Address) (User, error)
+	Begin() (core.Transactor, error)
+	InTran(tr core.Transactor) (Storer, error)
+	IsInTran() bool
 }
 
 // =============================================================================
@@ -45,14 +50,31 @@ type Storer interface {
 type Core struct {
 	storer  Storer
 	evnCore *event.Core
+	log     *logger.Logger
 }
 
 // NewCore constructs a core for user api access.
-func NewCore(evnCore *event.Core, storer Storer) *Core {
+func NewCore(log *logger.Logger, evnCore *event.Core, storer Storer) *Core {
 	return &Core{
 		storer:  storer,
 		evnCore: evnCore,
+		log:     log,
 	}
+}
+
+func (c *Core) Begin() (core.Transactor, error) {
+	return c.storer.Begin()
+}
+
+func (c *Core) InTran(tr core.Transactor) (*Core, error) {
+	trS, err := c.storer.InTran(tr)
+	if err != nil {
+		return nil, err
+	}
+	return &Core{
+		storer:  trS,
+		evnCore: c.evnCore,
+	}, nil
 }
 
 // Create inserts a new user into the database.
@@ -84,7 +106,7 @@ func (c *Core) Create(ctx context.Context, nu NewUser) (User, error) {
 		return nil
 	}
 
-	if err := c.storer.WithinTran(ctx, tran); err != nil {
+	if err := core.WithinTranStore[Storer](ctx, c.log, c.storer, c.storer, tran); err != nil {
 		return User{}, fmt.Errorf("tran: %w", err)
 	}
 

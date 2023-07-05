@@ -11,14 +11,16 @@ import (
 	"github.com/ardanlabs/service/business/data/order"
 	database "github.com/ardanlabs/service/business/sys/database/pgx"
 	"github.com/ardanlabs/service/business/sys/logger"
+	"github.com/ardanlabs/service/foundation/core"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 )
 
 // Store manages the set of APIs for product database access.
 type Store struct {
-	log *logger.Logger
-	db  sqlx.ExtContext
+	log    *logger.Logger
+	db     sqlx.ExtContext
+	inTran bool
 }
 
 // NewStore constructs the api for data access.
@@ -27,6 +29,27 @@ func NewStore(log *logger.Logger, db *sqlx.DB) *Store {
 		log: log,
 		db:  db,
 	}
+}
+
+func (s *Store) Begin() (core.Transactor, error) {
+	return s.db.(*sqlx.DB).Beginx()
+
+}
+
+func (s *Store) InTran(tr core.Transactor) (product.Storer, error) {
+	if s.inTran {
+		return s, nil
+	}
+	tx, ok := tr.(sqlx.ExtContext)
+	if !ok {
+		return nil, fmt.Errorf("Transactor(%T) not of a type *sql.Tx", tr)
+	}
+
+	return &Store{
+		log:    s.log,
+		db:     tx,
+		inTran: true,
+	}, nil
 }
 
 // Create adds a Product to the database. It returns the created Product with

@@ -13,6 +13,7 @@ import (
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/data/order"
 	"github.com/ardanlabs/service/business/sys/logger"
+	"github.com/ardanlabs/service/foundation/core"
 	"github.com/google/uuid"
 )
 
@@ -20,6 +21,7 @@ import (
 var (
 	ErrNotFound    = errors.New("product not found")
 	ErrInvalidUser = errors.New("user not valid")
+	ErrInvalidCost = errors.New("cost not valid")
 )
 
 // =============================================================================
@@ -34,12 +36,15 @@ type Storer interface {
 	Count(ctx context.Context, filter QueryFilter) (int, error)
 	QueryByID(ctx context.Context, productID uuid.UUID) (Product, error)
 	QueryByUserID(ctx context.Context, userID uuid.UUID) ([]Product, error)
+	Begin() (core.Transactor, error)
+	InTran(tr core.Transactor) (Storer, error)
 }
 
 // UserCore interface declares the behavior this package needs from the user
 // core domain.
 type UserCore interface {
 	QueryByID(ctx context.Context, userID uuid.UUID) (user.User, error)
+	InTran(tr core.Transactor) (*user.Core, error)
 }
 
 // =============================================================================
@@ -66,12 +71,37 @@ func NewCore(log *logger.Logger, evnCore *event.Core, usrCore UserCore, storer S
 	return &core
 }
 
+func (c *Core) Begin() (core.Transactor, error) {
+	return c.storer.Begin()
+}
+
+func (c *Core) InTran(tr core.Transactor) (*Core, error) {
+	trS, err := c.storer.InTran(tr)
+	if err != nil {
+		return nil, err
+	}
+	usrCore, err := c.usrCore.InTran(tr)
+	if err != nil {
+		return nil, err
+	}
+	return &Core{
+		storer:  trS,
+		evnCore: c.evnCore,
+		usrCore: usrCore,
+		log:     c.log,
+	}, nil
+}
+
 // Create adds a Product to the database. It returns the created Product with
 // fields like ID and DateCreated populated.
 func (c *Core) Create(ctx context.Context, np NewProduct) (Product, error) {
 	usr, err := c.usrCore.QueryByID(ctx, np.UserID)
 	if err != nil {
 		return Product{}, fmt.Errorf("user.querybyid: %s: %w", np.UserID, err)
+	}
+
+	if np.Cost < 0 {
+		return Product{}, ErrInvalidCost
 	}
 
 	if !usr.Enabled {

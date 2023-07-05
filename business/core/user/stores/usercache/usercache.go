@@ -9,6 +9,7 @@ import (
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/data/order"
 	"github.com/ardanlabs/service/business/sys/logger"
+	"github.com/ardanlabs/service/foundation/core"
 	"github.com/google/uuid"
 )
 
@@ -29,9 +30,17 @@ func NewStore(log *logger.Logger, storer user.Storer) *Store {
 	}
 }
 
-// WithinTran runs passed function and do commit/rollback at the end.
-func (s *Store) WithinTran(ctx context.Context, fn func(s user.Storer) error) error {
-	return s.storer.WithinTran(ctx, fn)
+func (s *Store) IsInTran() bool {
+	return s.storer.IsInTran()
+}
+
+func (s *Store) Begin() (core.Transactor, error) {
+	return s.storer.Begin()
+
+}
+
+func (s *Store) InTran(tr core.Transactor) (user.Storer, error) {
+	return s.storer.InTran(tr)
 }
 
 // Create inserts a new user into the database.

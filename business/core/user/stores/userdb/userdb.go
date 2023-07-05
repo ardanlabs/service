@@ -15,6 +15,7 @@ import (
 	database "github.com/ardanlabs/service/business/sys/database/pgx"
 	"github.com/ardanlabs/service/business/sys/database/pgx/dbarray"
 	"github.com/ardanlabs/service/business/sys/logger"
+	"github.com/ardanlabs/service/foundation/core"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 )
@@ -34,22 +35,29 @@ func NewStore(log *logger.Logger, db *sqlx.DB) *Store {
 	}
 }
 
-// WithinTran runs passed function and do commit/rollback at the end.
-func (s *Store) WithinTran(ctx context.Context, fn func(s user.Storer) error) error {
+func (s *Store) IsInTran() bool {
+	return s.inTran
+}
+
+func (s *Store) Begin() (core.Transactor, error) {
+	return s.db.(*sqlx.DB).Beginx()
+
+}
+
+func (s *Store) InTran(tr core.Transactor) (user.Storer, error) {
 	if s.inTran {
-		return fn(s)
+		return s, nil
+	}
+	tx, ok := tr.(sqlx.ExtContext)
+	if !ok {
+		return nil, fmt.Errorf("Transactor(%T) not of a type *sql.Tx", tr)
 	}
 
-	f := func(tx *sqlx.Tx) error {
-		s := &Store{
-			log:    s.log,
-			db:     tx,
-			inTran: true,
-		}
-		return fn(s)
-	}
-
-	return database.WithinTran(ctx, s.log, s.db.(*sqlx.DB), f)
+	return &Store{
+		log:    s.log,
+		db:     tx,
+		inTran: true,
+	}, nil
 }
 
 // Create inserts a new user into the database.

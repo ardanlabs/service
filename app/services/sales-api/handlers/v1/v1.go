@@ -36,7 +36,7 @@ func Routes(app *web.App, cfg Config) {
 	const version = "v1"
 
 	envCore := event.NewCore(cfg.Log)
-	usrCore := user.NewCore(envCore, usercache.NewStore(cfg.Log, userdb.NewStore(cfg.Log, cfg.DB)))
+	usrCore := user.NewCore(cfg.Log, envCore, usercache.NewStore(cfg.Log, userdb.NewStore(cfg.Log, cfg.DB)))
 	prdCore := product.NewCore(cfg.Log, envCore, usrCore, productdb.NewStore(cfg.Log, cfg.DB))
 	smmCore := summary.NewCore(summarydb.NewStore(cfg.Log, cfg.DB))
 

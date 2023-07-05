@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/core/event"
+	"github.com/ardanlabs/service/business/core/foobar"
 	"github.com/ardanlabs/service/business/core/product"
 	"github.com/ardanlabs/service/business/core/product/stores/productdb"
 	"github.com/ardanlabs/service/business/core/user"
@@ -237,17 +238,20 @@ type UserViews struct {
 type CoreAPIs struct {
 	User      *user.Core
 	Product   *product.Core
+	Foobar    *foobar.Core
 	UserViews UserViews
 }
 
 func newCoreAPIs(log *logger.Logger, db *sqlx.DB) CoreAPIs {
 	evnCore := event.NewCore(log)
-	usrCore := user.NewCore(evnCore, userdb.NewStore(log, db))
+	usrCore := user.NewCore(log, evnCore, userdb.NewStore(log, db))
 	prdCore := product.NewCore(log, evnCore, usrCore, productdb.NewStore(log, db))
+	fbrCore := foobar.NewCore(log, usrCore, prdCore)
 
 	return CoreAPIs{
 		User:    usrCore,
 		Product: prdCore,
+		Foobar:  fbrCore,
 		UserViews: UserViews{
 			Summary: summary.NewCore(summarydb.NewStore(log, db)),
 		},
