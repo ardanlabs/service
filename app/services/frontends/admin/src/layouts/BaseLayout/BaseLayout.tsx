@@ -6,8 +6,16 @@ import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import Copyright from '@/components/CopyRight/Copyright'
 import NavBar from '@/components/NavBar/NavBar'
+import UsersDataTable from '@/components/Users/UsersDataTable'
+import ProductsDataTable from '@/components/Products/ProductsDataTable'
 
-export default function Users() {
+interface BaseLayout {
+  title: string
+  children?: React.ReactNode
+}
+
+export default function BaseLayout(props: BaseLayout) {
+  const { title, children } = props
   return (
     <Container maxWidth="xl" disableGutters sx={{ height: '100%' }}>
       <NavBar />
@@ -21,7 +29,8 @@ export default function Users() {
           alignItems: 'start',
         }}
       >
-        <Typography variant="h4">{'Users'}</Typography>
+        <Typography variant="h4">{title}</Typography>
+        {children}
         <Copyright />
       </Box>
     </Container>

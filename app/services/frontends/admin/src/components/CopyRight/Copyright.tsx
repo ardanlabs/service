@@ -12,9 +12,7 @@ export default function Copyright() {
       align="center"
       sx={{ alignSelf: 'center', justifySelf: 'flex-end' }}
     >
-      <Link color="inherit" href="https://ardanlabs.com/">
-        Ardan Labs
-      </Link>
+      <Link color="inherit">Ardan Labs</Link>
       {' Copyrights © '}
       {new Date().getFullYear()}.
     </Typography>
