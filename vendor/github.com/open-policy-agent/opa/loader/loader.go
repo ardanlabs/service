@@ -8,6 +8,7 @@ package loader
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -20,7 +21,6 @@ import (
 	"github.com/open-policy-agent/opa/bundle"
 	fileurl "github.com/open-policy-agent/opa/internal/file/url"
 	"github.com/open-policy-agent/opa/internal/merge"
-	"github.com/open-policy-agent/opa/loader/extension"
 	"github.com/open-policy-agent/opa/loader/filter"
 	"github.com/open-policy-agent/opa/metrics"
 	"github.com/open-policy-agent/opa/storage"
@@ -92,6 +92,7 @@ type FileLoader interface {
 	All(paths []string) (*Result, error)
 	Filtered(paths []string, filter Filter) (*Result, error)
 	AsBundle(path string) (*bundle.Bundle, error)
+	WithReader(io.Reader) FileLoader
 	WithFS(fs.FS) FileLoader
 	WithMetrics(metrics.Metrics) FileLoader
 	WithFilter(Filter) FileLoader
@@ -118,6 +119,7 @@ type fileLoader struct {
 	files      map[string]bundle.FileInfo
 	opts       ast.ParserOptions
 	fsys       fs.FS
+	reader     io.Reader
 }
 
 // WithFS provides an fs.FS to use for loading files. You can pass nil to
@@ -125,6 +127,14 @@ type fileLoader struct {
 // behaviour.
 func (fl *fileLoader) WithFS(fsys fs.FS) FileLoader {
 	fl.fsys = fsys
+	return fl
+}
+
+// WithReader provides an io.Reader to use for loading the bundle tarball.
+// An io.Reader passed via WithReader takes precedence over an fs.FS passed
+// via WithFS.
+func (fl *fileLoader) WithReader(rdr io.Reader) FileLoader {
+	fl.reader = rdr
 	return fl
 }
 
@@ -220,7 +230,14 @@ func (fl fileLoader) AsBundle(path string) (*bundle.Bundle, error) {
 	if err != nil {
 		return nil, err
 	}
-	bundleLoader, isDir, err := GetBundleDirectoryLoaderFS(fl.fsys, path, fl.filter)
+
+	var bundleLoader bundle.DirectoryLoader
+	var isDir bool
+	if fl.reader != nil {
+		bundleLoader = bundle.NewTarballLoaderWithBaseURL(fl.reader, path).WithFilter(fl.filter)
+	} else {
+		bundleLoader, isDir, err = GetBundleDirectoryLoaderFS(fl.fsys, path, fl.filter)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -732,14 +749,8 @@ func loadRego(path string, bs []byte, m metrics.Metrics, opts ast.ParserOptions)
 
 func loadJSON(path string, bs []byte, m metrics.Metrics) (interface{}, error) {
 	m.Timer(metrics.RegoDataParse).Start()
-	var err error
 	var x interface{}
-	if handler := extension.FindExtension(".json"); handler != nil {
-		x, err = handler(bs)
-	} else {
-		buf := bytes.NewBuffer(bs)
-		err = util.NewJSONDecoder(buf).Decode(&x)
-	}
+	err := util.UnmarshalJSON(bs, &x)
 	m.Timer(metrics.RegoDataParse).Stop()
 
 	if err != nil {
