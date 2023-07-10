@@ -104,7 +104,6 @@ spec:
           resources:
             requests:
               cpu: 150m
-              memory: 500Mi
           volumeMounts:
             - name: config-volume
               mountPath: /loki-conf

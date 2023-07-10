@@ -115,7 +115,6 @@ spec:
           resources:
             requests:
               cpu: 150m
-              memory: 256M
       volumes:
         - name: config-volume
           configMap:
