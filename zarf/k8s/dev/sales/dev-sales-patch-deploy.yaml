@@ -93,10 +93,8 @@ spec:
         resources:
           requests:
             cpu: "1000m" # I need access to 1 cores on the node.
-            memory: 500Mi
           limits:
             cpu: "1000m" # Execute instructions 100ms/100ms on my 1 core.
-            memory: 500Mi
 
         volumeMounts:
           - name: vault
@@ -106,7 +104,5 @@ spec:
         resources:
           requests:
             cpu: "500m" # I need access to 1/2 core on the node.
-            memory: 250Mi
           limits:
             cpu: "500m" # Execute instructions 50ms/100ms on my 1/2 core.
-            memory: 250Mi

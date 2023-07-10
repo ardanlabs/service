@@ -46,10 +46,8 @@ spec:
         resources:
           requests:
             cpu: "500m" # I need access to 1/2 core on the node.
-            memory: 500Mi
           limits:
             cpu: "500m" # Execute instructions 50ms/100ms on my 1/2 core.
-            memory: 500Mi
         env:
         - name: POSTGRES_PASSWORD
           value: postgres

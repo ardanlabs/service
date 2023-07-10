@@ -57,10 +57,8 @@ spec:
           resources:
             requests:
               cpu: 150m
-              memory: 256M
             limits:
               cpu: "1"
-              memory: 1Gi
           volumeMounts:
             - name: config-volume
               mountPath: /prom-conf/
