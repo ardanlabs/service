@@ -80,6 +80,7 @@ func (c *Core) InTran(tr core.Transactor) (*Core, error) {
 	if err != nil {
 		return nil, err
 	}
+	c.log.Info(context.Background(), "calling user inIntran from product")
 	usrCore, err := c.usrCore.InTran(tr)
 	if err != nil {
 		return nil, err

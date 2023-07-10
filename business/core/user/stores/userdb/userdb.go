@@ -45,12 +45,13 @@ func (s *Store) Begin() (core.Transactor, error) {
 }
 
 func (s *Store) InTran(tr core.Transactor) (user.Storer, error) {
+	fmt.Println("user store in tran")
 	if s.inTran {
 		return s, nil
 	}
 	tx, ok := tr.(sqlx.ExtContext)
 	if !ok {
-		return nil, fmt.Errorf("Transactor(%T) not of a type *sql.Tx", tr)
+		return nil, fmt.Errorf("User Transactor(%T) not of a type *sql.Tx", tr)
 	}
 
 	return &Store{

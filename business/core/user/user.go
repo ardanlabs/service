@@ -67,6 +67,8 @@ func (c *Core) Begin() (core.Transactor, error) {
 }
 
 func (c *Core) InTran(tr core.Transactor) (*Core, error) {
+	fmt.Println("user in tran")
+	c.log.Info(context.Background(), "calling user inIntran", "tr", tr, "tr2", fmt.Sprintf("tr: %T", tr))
 	trS, err := c.storer.InTran(tr)
 	if err != nil {
 		return nil, err

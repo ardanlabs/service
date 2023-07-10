@@ -86,3 +86,16 @@ func WithinTranFn(ctx context.Context, log *logger.Logger, tr Transactor, fn fun
 	}
 	return nil
 }
+
+type ctxKey int
+
+const trKey ctxKey = 2
+
+func SetTransactor(ctx context.Context, tr Transactor) context.Context {
+	return context.WithValue(ctx, trKey, tr)
+}
+
+func GetTransactor(ctx context.Context) (Transactor, bool) {
+	v, ok := ctx.Value(trKey).(Transactor)
+	return v, ok
+}
