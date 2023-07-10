@@ -219,14 +219,15 @@ func run(ctx context.Context, log *logger.Logger) error {
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
 
-	apiMux := handlers.APIMux(handlers.APIMuxConfig{
+	cfgMux := handlers.APIMuxConfig{
 		Build:    build,
 		Shutdown: shutdown,
 		Log:      log,
 		Auth:     auth,
 		DB:       db,
 		Tracer:   tracer,
-	})
+	}
+	apiMux := handlers.APIMux(cfgMux, handlers.WithCORS("*"))
 
 	api := http.Server{
 		Addr:         cfg.Web.APIHost,
