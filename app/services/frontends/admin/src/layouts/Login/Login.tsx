@@ -7,25 +7,10 @@ import Box from '@mui/material/Box'
 import Copyright from '@/components/CopyRight/Copyright'
 import TextField from '@mui/material/TextField'
 import Button from '@mui/material/Button'
-import FilledInput from '@mui/material/FilledInput'
-import FormControl from '@mui/material/FormControl'
-import IconButton from '@mui/material/IconButton'
-import InputAdornment from '@mui/material/InputAdornment'
-import InputLabel from '@mui/material/InputLabel'
-import VisibilityOff from '@mui/icons-material/VisibilityOff'
-import Visibility from '@mui/icons-material/Visibility'
+import PasswordTextField from '@/components/PasswordTextField/PasswordTextField'
 
 export default function Login() {
   const [formData, setFormData] = React.useState({ username: '', password: '' })
-  const [showPassword, setShowPassword] = React.useState(false)
-
-  const handleClickShowPassword = () => setShowPassword((show) => !show)
-
-  const handleMouseDownPassword = (
-    event: React.MouseEvent<HTMLButtonElement>,
-  ) => {
-    event.preventDefault()
-  }
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target
@@ -48,7 +33,6 @@ export default function Login() {
     }
   }
 
-  React.useEffect(() => {}, [formData])
   return (
     <Container maxWidth="xl" disableGutters>
       <Box sx={{ pt: 4 }}>
@@ -91,35 +75,11 @@ export default function Login() {
               }}
               onChange={handleChange}
             />
-            <FormControl
-              sx={{
-                my: 2,
-                backgroundColor: '#FFFFFF',
-                borderRadius: '4px',
-              }}
-              variant="filled"
-            >
-              <InputLabel htmlFor="outlined-adornment-password">
-                Password
-              </InputLabel>
-              <FilledInput
-                id="outlined-adornment-password"
-                type={showPassword ? 'text' : 'password'}
-                endAdornment={
-                  <InputAdornment position="end">
-                    <IconButton
-                      aria-label="toggle password visibility"
-                      onClick={handleClickShowPassword}
-                      onMouseDown={handleMouseDownPassword}
-                      edge="end"
-                    >
-                      {showPassword ? <VisibilityOff /> : <Visibility />}
-                    </IconButton>
-                  </InputAdornment>
-                }
-                label="Password"
-              />
-            </FormControl>
+            <PasswordTextField
+              label="Password"
+              name="password"
+              handleOnChange={handleChange}
+            />
             <Button
               type="submit"
               variant="contained"

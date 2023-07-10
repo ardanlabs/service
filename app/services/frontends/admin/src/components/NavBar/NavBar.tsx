@@ -13,6 +13,7 @@ import { NavBarProps } from './types'
 import Button from '@mui/material/Button'
 import { AvailableMenus } from '@/utils/access'
 import { CSSObject, Theme, styled, useTheme } from '@mui/material'
+import Link from 'next/link'
 
 const drawerWidth = 200
 
@@ -89,33 +90,38 @@ export default function NavBar(props: NavBarProps) {
       <Box sx={{ overflow: 'auto' }}>
         <List>
           {AvailableMenus.map((menu, index) => (
-            <ListItem key={menu.text} disablePadding>
-              <ListItemButton
-                href={menu.href}
-                sx={{
-                  padding: 0,
-                  overflowX: 'hidden',
-                }}
-              >
-                <Box
+            <Link
+              key={menu.text}
+              href={menu.href}
+              style={{ textDecoration: 'none', color: 'black' }}
+            >
+              <ListItem disablePadding>
+                <ListItemButton
                   sx={{
-                    width: '24px',
-                    height: '32px',
-                    marginLeft: `calc(${theme.spacing(2)} + 4px)`,
-                    marginRight: `calc(${theme.spacing(2)} + 4px)`,
-                    alignItems: 'center',
-                    display: 'flex',
+                    padding: 0,
+                    overflowX: 'hidden',
                   }}
                 >
-                  <ListItemIcon>
-                    {React.createElement(menu.icon, {
-                      key: index,
-                    })}
-                  </ListItemIcon>
-                </Box>
-                <ListItemText primary={menu.text} />
-              </ListItemButton>
-            </ListItem>
+                  <Box
+                    sx={{
+                      width: '24px',
+                      height: '32px',
+                      marginLeft: `calc(${theme.spacing(2)} + 4px)`,
+                      marginRight: `calc(${theme.spacing(2)} + 4px)`,
+                      alignItems: 'center',
+                      display: 'flex',
+                    }}
+                  >
+                    <ListItemIcon>
+                      {React.createElement(menu.icon, {
+                        key: index,
+                      })}
+                    </ListItemIcon>
+                  </Box>
+                  <ListItemText primary={menu.text} />
+                </ListItemButton>
+              </ListItem>
+            </Link>
           ))}
         </List>
       </Box>

@@ -1,5 +1,4 @@
 import * as React from 'react'
-import Checkbox from '@mui/material/Checkbox'
 import Table from '@mui/material/Table'
 import Box from '@mui/material/Box'
 import TableBody from '@mui/material/TableBody'
@@ -115,7 +114,7 @@ export default function DataTable(props: PropsWithChildren<DataTableProps>) {
           </Table>
         </TableContainer>
         <TablePagination
-          rowsPerPageOptions={rowsPerPageOptions}
+          rowsPerPageOptions={rowsPerPageOptions || [10, 20, 50]}
           component="div"
           count={serverItemsLength}
           rowsPerPage={rowsPerPage}

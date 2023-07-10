@@ -3,6 +3,7 @@ export interface HeadCell {
   id: string
   label: string
   numeric: boolean
+  sortable: boolean
 }
 
 type Order = 'asc' | 'desc' | undefined

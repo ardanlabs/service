@@ -1,3 +1,4 @@
+import * as React from 'react'
 import prettyDate from '@/utils/prettyDate'
 import { TableCell } from '@mui/material'
 

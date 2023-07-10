@@ -2,91 +2,34 @@
 
 import * as React from 'react'
 import DataTable from '@/components/DataTable/DataTable'
-import { GenericProps, HeadCell } from '@/components/DataTable/types'
+import { GenericProps } from '@/components/DataTable/types'
 import Checkbox from '@mui/material/Checkbox'
 import TableRow from '@mui/material/TableRow'
 import TableCell from '@mui/material/TableCell'
 import { DateCell } from '@/components/DataTable/Items/DateCell'
-
-const headCells: readonly HeadCell[] = [
-  { id: 'id', numeric: false, disablePadding: false, label: 'ID' },
-  { id: 'name', numeric: false, disablePadding: false, label: 'Name' },
-  { id: 'email', numeric: false, disablePadding: false, label: 'Email' },
-  { id: 'roles', numeric: false, disablePadding: false, label: 'Roles' },
-  {
-    id: 'department',
-    numeric: false,
-    disablePadding: false,
-    label: 'Department',
-  },
-  { id: 'enabled', numeric: false, disablePadding: false, label: 'Enabled' },
-  {
-    id: 'dateCreated',
-    numeric: false,
-    disablePadding: false,
-    label: 'Date Created',
-  },
-  {
-    id: 'dateUpdated',
-    numeric: false,
-    disablePadding: false,
-    label: 'Date Updated',
-  },
-]
-
-interface Data {
-  id: string
-  name: string
-  email: string
-  roles: string[]
-  department: string
-  enabled: boolean
-  dateCreated: string
-  dateUpdated: string
-}
-
-function createData(
-  id: string,
-  name: string,
-  email: string,
-  roles: string[],
-  department: string,
-  enabled: boolean,
-  dateCreated: string,
-  dateUpdated: string,
-): Data {
-  return {
-    id,
-    name,
-    email,
-    roles,
-    department,
-    enabled,
-    dateCreated,
-    dateUpdated,
-  }
-}
-const data: Data[] = [
-  createData(
-    'sasd',
-    'asd',
-    'asd',
-    ['asd'],
-    'asd',
-    true,
-    'Thu Jan 13 2022 01:03:23',
-    'Thu Jan 13 2022 01:03:23',
-  ),
-]
+import { DefaultAPIResponse } from '@/utils/types'
+import { User, headCells } from './constants'
 
 export default function UsersDataTable() {
   const [selected, setSelected] = React.useState<readonly string[]>([])
   const [serverItemsLength, setServerItemsLength] = React.useState(0)
-  const [rows, setRows] = React.useState<Data[]>([])
+  const [rows, setRows] = React.useState<User[]>([])
 
-  function getData(props: GenericProps) {
-    setServerItemsLength(data.length)
-    setRows(data)
+  async function getData(props: GenericProps) {
+    const fetchCall = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_API_URL}/users?page=1&rows=2`,
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.NEXT_PUBLIC_TOKEN}`,
+        },
+      },
+    )
+    if (fetchCall.ok) {
+      const fetchData: DefaultAPIResponse<User> = await fetchCall.json()
+      setServerItemsLength(fetchData.total)
+      setRows(fetchData.items)
+      return
+    }
   }
   // handleRowSelectAllClick selects all rows when the checkbox is clicked
   const handleRowSelectAllClick = (
