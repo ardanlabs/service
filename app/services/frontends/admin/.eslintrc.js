@@ -30,6 +30,7 @@ module.exports = {
     '@typescript-eslint/no-unused-vars': 'error',
     '@typescript-eslint/no-explicit-any': 'error',
     'prefer-const': 'error',
+    'react/prop-types': { enabled: false },
   },
   settings: {
     'import/resolver': {

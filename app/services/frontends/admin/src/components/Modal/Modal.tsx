@@ -1,6 +1,5 @@
 import * as React from 'react'
 import Button from '@mui/material/Button'
-import Box from '@mui/material/Box'
 import 'react-responsive-modal/styles.css'
 import { Modal as ResponsiveModal } from 'react-responsive-modal'
 
@@ -15,6 +14,7 @@ interface ModalProps {
 const modalContainerStyles = {
   modal: {
     minWidth: '600px',
+    borderRadius: '4px',
   },
 }
 

@@ -488,3 +488,20 @@ deps-cleancache:
 
 list:
 	go list -mod=mod all
+
+# ==============================================================================
+# Admin Frontend
+
+ADMIN_FRONTEND_PREFIX := ./app/services/frontends/admin
+
+admin-gui-install:
+	npm install --prefix ${ADMIN_FRONTEND_PREFIX}
+
+admin-gui-dev: admin-gui-install
+	npm run dev --prefix ${ADMIN_FRONTEND_PREFIX}
+
+admin-gui-build: admind-gui-install
+	npm run build --prefix ${ADMIN_FRONTEND_PREFIX}
+
+admin-gui-start-build: adming-gui-build
+	npm run start --prefix ${ADMIN_FRONTEND_PREFIX}

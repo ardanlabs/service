@@ -13,21 +13,21 @@ export const headCells: readonly HeadCell[] = [
     numeric: false,
     disablePadding: false,
     label: 'Name',
-    sortable: false,
+    sortable: true,
   },
   {
     id: 'email',
     numeric: false,
     disablePadding: false,
     label: 'Email',
-    sortable: false,
+    sortable: true,
   },
   {
     id: 'roles',
     numeric: false,
     disablePadding: false,
     label: 'Roles',
-    sortable: false,
+    sortable: true,
   },
   {
     id: 'department',
@@ -41,7 +41,7 @@ export const headCells: readonly HeadCell[] = [
     numeric: false,
     disablePadding: false,
     label: 'Enabled',
-    sortable: false,
+    sortable: true,
   },
   {
     id: 'dateCreated',

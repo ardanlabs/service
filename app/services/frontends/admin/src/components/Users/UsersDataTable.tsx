@@ -2,22 +2,33 @@
 
 import * as React from 'react'
 import DataTable from '@/components/DataTable/DataTable'
-import { GenericProps } from '@/components/DataTable/types'
 import Checkbox from '@mui/material/Checkbox'
 import TableRow from '@mui/material/TableRow'
 import TableCell from '@mui/material/TableCell'
 import { DateCell } from '@/components/DataTable/Items/DateCell'
 import { DefaultAPIResponse } from '@/utils/types'
 import { User, headCells } from './constants'
+import { GenericProps } from '../DataTable/types'
 
-export default function UsersDataTable() {
+interface UsersDataTableProps {
+  needsUpdate?: boolean
+  setNeedsUpdate?: React.Dispatch<React.SetStateAction<boolean>>
+}
+
+export default function UsersDataTable(props: UsersDataTableProps) {
+  const { needsUpdate, setNeedsUpdate } = props
   const [selected, setSelected] = React.useState<readonly string[]>([])
   const [serverItemsLength, setServerItemsLength] = React.useState(0)
   const [rows, setRows] = React.useState<User[]>([])
 
   async function getData(props: GenericProps) {
+    const { page, rows, order, direction } = props
+
+    const orderString =
+      order && direction ? `&orderBy=${order},${direction?.toUpperCase()}&` : ''
+
     const fetchCall = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_API_URL}/users?page=1&rows=2`,
+      `${process.env.NEXT_PUBLIC_BASE_API_URL}/users?page=${page}&rows=${rows}${orderString}`,
       {
         headers: {
           Authorization: `Bearer ${process.env.NEXT_PUBLIC_TOKEN}`,
@@ -32,9 +43,7 @@ export default function UsersDataTable() {
     }
   }
   // handleRowSelectAllClick selects all rows when the checkbox is clicked
-  const handleRowSelectAllClick = (
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) => {
+  function handleRowSelectAllClick(event: React.ChangeEvent<HTMLInputElement>) {
     if (event.target.checked) {
       const newSelected = rows.map((n) => n.id)
       setSelected(newSelected)
@@ -44,7 +53,7 @@ export default function UsersDataTable() {
   }
 
   // handleClick selects and unselects a row when clicked
-  const handleClick = (event: React.MouseEvent<unknown>, id: string) => {
+  function handleClick(event: React.MouseEvent<unknown>, id: string) {
     const selectedIndex = selected.indexOf(id)
     let newSelected: readonly string[] = []
 
@@ -65,7 +74,9 @@ export default function UsersDataTable() {
   }
 
   // isSelected checks if a row is selected
-  const isSelected = (id: string) => selected.indexOf(id) !== -1
+  function isSelected(id: string) {
+    return selected.indexOf(id) !== -1
+  }
 
   return (
     <DataTable
@@ -75,6 +86,8 @@ export default function UsersDataTable() {
       selectable={true}
       selectedCount={selected.length}
       headCells={headCells}
+      needsUpdate={needsUpdate}
+      setNeedsUpdate={setNeedsUpdate}
       getData={getData}
     >
       {rows.map((row, index) => {
@@ -104,7 +117,7 @@ export default function UsersDataTable() {
             <TableCell id={labelId}>{row.id}</TableCell>
             <TableCell> {row.name} </TableCell>
             <TableCell> {row.email} </TableCell>
-            <TableCell> {row.roles} </TableCell>
+            <TableCell> {row.roles.join(', ')} </TableCell>
             <TableCell> {row.department} </TableCell>
             <TableCell> {`${row.enabled}`} </TableCell>
             <DateCell value={row.dateCreated} />

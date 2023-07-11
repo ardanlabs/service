@@ -8,15 +8,17 @@ import Box from '@mui/system/Box'
 import AddUser from './users/Add'
 
 export default function RootPage() {
+  const [needsUpdate, setNeedsUpdate] = React.useState(false)
+
   return (
     <BaseLayout>
       <Box
         sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}
       >
         <Typography variant="h4">{'Users'}</Typography>
-        <AddUser />
+        <AddUser setNeedsUpdate={setNeedsUpdate} />
       </Box>
-      <UsersDataTable />
+      <UsersDataTable needsUpdate={needsUpdate} />
     </BaseLayout>
   )
 }

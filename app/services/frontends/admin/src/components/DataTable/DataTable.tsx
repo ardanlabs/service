@@ -30,6 +30,8 @@ export default function DataTable(props: PropsWithChildren<DataTableProps>) {
     serverItemsLength,
     handleSelectAllClick,
     children,
+    needsUpdate,
+    setNeedsUpdate,
   } = props
   // Set init states.
   const [orderDirection, setOrderDirection] = React.useState<Order>(
@@ -38,7 +40,7 @@ export default function DataTable(props: PropsWithChildren<DataTableProps>) {
 
   const [orderBy, setOrderBy] = React.useState(defaultOrder || '')
   const [page, setPage] = React.useState(pageProp || 0)
-  const [rowsPerPage, setRowsPerPage] = React.useState(rowsPerPageProp || 5)
+  const [rowsPerPage, setRowsPerPage] = React.useState(rowsPerPageProp || 10)
 
   // handleSelectAllClick handles the sorting changes
   const handleRequestSort = (
@@ -62,7 +64,7 @@ export default function DataTable(props: PropsWithChildren<DataTableProps>) {
 
   // handleChangePage handles page selection.
   const handleChangePage = (event: unknown, newPage: number) => {
-    setPage(newPage)
+    if (newPage) setPage(newPage)
   }
 
   // handleChangeRowsPerPage handles rowsPerPage selection.
@@ -75,8 +77,14 @@ export default function DataTable(props: PropsWithChildren<DataTableProps>) {
 
   // This effect gets the data from the API everytime any of the order or pages changes
   React.useEffect(() => {
-    getData({ page, rowsPerPage, orderBy, orderDirection })
-  }, [page, rowsPerPage, orderBy, orderDirection])
+    getData({
+      page: page + 1,
+      rows: rowsPerPage,
+      order: orderBy,
+      direction: orderDirection,
+    })
+    if (setNeedsUpdate) setNeedsUpdate(false)
+  }, [page, rowsPerPage, orderBy, orderDirection, needsUpdate])
 
   return (
     <Box sx={{ width: '100%', my: 2 }}>
