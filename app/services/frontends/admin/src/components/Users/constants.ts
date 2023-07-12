@@ -57,6 +57,13 @@ export const headCells: readonly HeadCell[] = [
     label: 'Date Updated',
     sortable: false,
   },
+  {
+    id: 'actions',
+    numeric: false,
+    disablePadding: false,
+    label: 'Actions',
+    sortable: false,
+  },
 ]
 
 export interface User {

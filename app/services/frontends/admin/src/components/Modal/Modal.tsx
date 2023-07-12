@@ -9,6 +9,7 @@ interface ModalProps {
   handleClose: () => void
   buttonText: string
   children: React.ReactNode
+  actionButton?: React.ReactNode
 }
 
 const modalContainerStyles = {
@@ -19,12 +20,17 @@ const modalContainerStyles = {
 }
 
 export function Modal(props: ModalProps) {
-  const { open, handleOpen, handleClose, buttonText, children } = props
+  const { open, handleOpen, handleClose, buttonText, children, actionButton } =
+    props
   return (
     <>
-      <Button onClick={handleOpen} variant="contained">
-        {buttonText}
-      </Button>
+      {actionButton ? (
+        actionButton
+      ) : (
+        <Button onClick={handleOpen} variant="contained">
+          {buttonText}
+        </Button>
+      )}
 
       <ResponsiveModal
         styles={modalContainerStyles}

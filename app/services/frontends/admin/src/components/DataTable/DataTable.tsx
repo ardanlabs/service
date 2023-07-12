@@ -9,7 +9,6 @@ import TableRow from '@mui/material/TableRow'
 import Paper from '@mui/material/Paper'
 import { DataTableProps, Order } from './types'
 import EnhancedTableHead from './EnhancedTableHead'
-import EnhancedTableToolbar from './EnhancedTableToolbar'
 
 type PropsWithChildren<P> = P & { children?: React.ReactNode }
 
@@ -83,21 +82,24 @@ export default function DataTable(props: PropsWithChildren<DataTableProps>) {
       order: orderBy,
       direction: orderDirection,
     })
-    if (setNeedsUpdate) setNeedsUpdate(false)
+
+    if (setNeedsUpdate) {
+      setNeedsUpdate(false)
+    }
   }, [page, rowsPerPage, orderBy, orderDirection, needsUpdate])
 
   return (
     <Box sx={{ width: '100%', my: 2 }}>
       <Paper sx={{ width: '100%', mb: 2 }}>
-        <EnhancedTableToolbar numSelected={selectedCount} />
         <TableContainer>
           <Table
             sx={{ minWidth: 750 }}
             aria-labelledby="tableTitle"
             size={dense ? 'small' : 'medium'}
+            className="data-table"
           >
             <EnhancedTableHead
-              numSelected={selectedCount}
+              numSelected={selectedCount || 0}
               order={orderDirection}
               orderBy={orderBy}
               onSelectAllClick={handleSelectAllClick}

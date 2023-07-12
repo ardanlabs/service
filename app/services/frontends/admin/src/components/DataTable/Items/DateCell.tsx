@@ -1,6 +1,6 @@
 import * as React from 'react'
 import prettyDate from '@/utils/prettyDate'
-import { TableCell } from '@mui/material'
+import TableCell from '@mui/material/TableCell'
 
 export function DateCell(props: { value?: string }) {
   const formatedDate = props.value ? prettyDate(props.value) : '-'

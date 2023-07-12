@@ -2,13 +2,21 @@
 
 import * as React from 'react'
 import DataTable from '@/components/DataTable/DataTable'
-import Checkbox from '@mui/material/Checkbox'
 import TableRow from '@mui/material/TableRow'
 import TableCell from '@mui/material/TableCell'
 import { DateCell } from '@/components/DataTable/Items/DateCell'
 import { DefaultAPIResponse } from '@/utils/types'
 import { User, headCells } from './constants'
 import { GenericProps } from '../DataTable/types'
+import IconButton from '@mui/material/IconButton'
+import DeleteIcon from '@mui/icons-material/Delete'
+import EditIcon from '@mui/icons-material/Edit'
+import ActionsCell from '@/components/DataTable/Items/ActionsCell'
+import { Modal } from '../Modal/Modal'
+import ApiError from '../ApiError/ApiError'
+import Box from '@mui/system/Box'
+import Button from '@mui/material/Button'
+import Typography from '@mui/material/Typography'
 
 interface UsersDataTableProps {
   needsUpdate?: boolean
@@ -17,9 +25,13 @@ interface UsersDataTableProps {
 
 export default function UsersDataTable(props: UsersDataTableProps) {
   const { needsUpdate, setNeedsUpdate } = props
-  const [selected, setSelected] = React.useState<readonly string[]>([])
   const [serverItemsLength, setServerItemsLength] = React.useState(0)
   const [rows, setRows] = React.useState<User[]>([])
+  const [open, setOpen] = React.useState(false)
+  const handleOpen = () => setOpen(true)
+  const handleClose = () => setOpen(false)
+  const [rowDelete, setRowDelete] = React.useState('')
+  const [fetchError, setFetchError] = React.useState('')
 
   async function getData(props: GenericProps) {
     const { page, rows, order, direction } = props
@@ -42,89 +54,156 @@ export default function UsersDataTable(props: UsersDataTableProps) {
       return
     }
   }
-  // handleRowSelectAllClick selects all rows when the checkbox is clicked
-  function handleRowSelectAllClick(event: React.ChangeEvent<HTMLInputElement>) {
-    if (event.target.checked) {
-      const newSelected = rows.map((n) => n.id)
-      setSelected(newSelected)
+
+  function handleEdit(event: React.MouseEvent<unknown>, id: string) {
+    event.stopPropagation()
+  }
+
+  async function deleteUser() {
+    if (!rowDelete) return
+
+    handleClose()
+    if (setNeedsUpdate) {
+      handleClose()
+      setNeedsUpdate(true)
+    }
+
+    const userDelete = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_API_URL}/users/${rowDelete}`,
+      {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${process.env.NEXT_PUBLIC_TOKEN}`,
+        },
+      },
+    )
+
+    if (userDelete.ok) {
+      setRowDelete('')
+      if (setNeedsUpdate) {
+        handleClose()
+        setNeedsUpdate(true)
+      }
       return
     }
-    setSelected([])
+
+    const error: { error: string } = await userDelete.json()
+
+    setFetchError(error.error)
+    setRowDelete('')
   }
 
-  // handleClick selects and unselects a row when clicked
-  function handleClick(event: React.MouseEvent<unknown>, id: string) {
-    const selectedIndex = selected.indexOf(id)
-    let newSelected: readonly string[] = []
+  function handleDelete(event: React.MouseEvent<unknown>, id: string): void {
+    event.stopPropagation()
+    setRowDelete(id)
 
-    if (selectedIndex === -1) {
-      newSelected = newSelected.concat(selected, id)
-    } else if (selectedIndex === 0) {
-      newSelected = newSelected.concat(selected.slice(1))
-    } else if (selectedIndex === selected.length - 1) {
-      newSelected = newSelected.concat(selected.slice(0, -1))
-    } else if (selectedIndex > 0) {
-      newSelected = newSelected.concat(
-        selected.slice(0, selectedIndex),
-        selected.slice(selectedIndex + 1),
-      )
-    }
-
-    setSelected(newSelected)
+    setOpen(true)
   }
-
-  // isSelected checks if a row is selected
-  function isSelected(id: string) {
-    return selected.indexOf(id) !== -1
-  }
-
   return (
-    <DataTable
-      serverItemsLength={serverItemsLength}
-      rowCount={rows.length}
-      handleSelectAllClick={handleRowSelectAllClick}
-      selectable={true}
-      selectedCount={selected.length}
-      headCells={headCells}
-      needsUpdate={needsUpdate}
-      setNeedsUpdate={setNeedsUpdate}
-      getData={getData}
-    >
-      {rows.map((row, index) => {
-        const isItemSelected = isSelected(row.id)
-        const labelId = `enhanced-table-checkbox-${index}`
+    <>
+      <DataTable
+        serverItemsLength={serverItemsLength}
+        rowCount={rows.length}
+        headCells={headCells}
+        needsUpdate={needsUpdate}
+        setNeedsUpdate={setNeedsUpdate}
+        getData={getData}
+      >
+        {rows.map((row, index) => {
+          const labelId = `enhanced-table-checkbox-${index}`
 
-        return (
-          <TableRow
-            hover
-            onClick={(event) => handleClick(event, row.id)}
-            role="checkbox"
-            aria-checked={isItemSelected}
-            tabIndex={-1}
-            key={row.id}
-            selected={isItemSelected}
-            sx={{ cursor: 'pointer' }}
-          >
-            <TableCell padding="checkbox">
-              <Checkbox
-                color="primary"
-                checked={isItemSelected}
-                inputProps={{
-                  'aria-labelledby': labelId,
-                }}
-              />
-            </TableCell>
-            <TableCell id={labelId}>{row.id}</TableCell>
-            <TableCell> {row.name} </TableCell>
-            <TableCell> {row.email} </TableCell>
-            <TableCell> {row.roles.join(', ')} </TableCell>
-            <TableCell> {row.department} </TableCell>
-            <TableCell> {`${row.enabled}`} </TableCell>
-            <DateCell value={row.dateCreated} />
-            <DateCell value={row.dateUpdated} />
-          </TableRow>
-        )
-      })}
-    </DataTable>
+          return (
+            <TableRow
+              hover
+              role="checkbox"
+              tabIndex={-1}
+              key={row.id}
+              id={row.id}
+              sx={{ cursor: 'pointer' }}
+            >
+              <TableCell id={labelId}>{row.id}</TableCell>
+              <TableCell> {row.name} </TableCell>
+              <TableCell> {row.email} </TableCell>
+              <TableCell> {row.roles.join(', ')} </TableCell>
+              <TableCell> {row.department} </TableCell>
+              <TableCell> {`${row.enabled}`} </TableCell>
+              <DateCell value={row.dateCreated} />
+              <DateCell value={row.dateUpdated} />
+              <ActionsCell>
+                <IconButton onClick={(event) => handleEdit(event, row.id)}>
+                  <EditIcon />
+                </IconButton>
+                <Modal
+                  buttonText="Delete User"
+                  handleOpen={handleOpen}
+                  handleClose={handleClose}
+                  open={open}
+                  actionButton={
+                    <IconButton
+                      onClick={(event) => handleDelete(event, row.id)}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  }
+                >
+                  {fetchError ? (
+                    <ApiError
+                      message={fetchError}
+                      clearError={() => setFetchError('')}
+                    />
+                  ) : (
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignContent: 'center',
+                        justifyContent: 'center',
+                        flexDirection: 'column',
+                        textAlign: 'center',
+                      }}
+                    >
+                      <Typography
+                        id="modal-modal-title"
+                        sx={{ fontWeight: 500, my: 4 }}
+                        variant="h3"
+                        component="h3"
+                      >
+                        DELETE USER
+                      </Typography>
+                      <Typography
+                        id="modal-modal-title"
+                        sx={{ my: 4 }}
+                        variant="h6"
+                        component="h6"
+                      >
+                        Are you sure you want to delete this user?
+                      </Typography>
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                        }}
+                      >
+                        <Button
+                          sx={{ m: 2 }}
+                          size="large"
+                          onClick={handleClose}
+                        >
+                          Cancel
+                        </Button>
+                        <Button sx={{ m: 2 }} size="large" onClick={deleteUser}>
+                          Confirm
+                        </Button>
+                      </Box>
+                    </Box>
+                  )}
+                </Modal>
+              </ActionsCell>
+            </TableRow>
+          )
+        })}
+      </DataTable>
+    </>
   )
 }

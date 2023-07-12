@@ -18,7 +18,10 @@ export default function RootPage() {
         <Typography variant="h4">{'Users'}</Typography>
         <AddUser setNeedsUpdate={setNeedsUpdate} />
       </Box>
-      <UsersDataTable needsUpdate={needsUpdate} />
+      <UsersDataTable
+        needsUpdate={needsUpdate}
+        setNeedsUpdate={setNeedsUpdate}
+      />
     </BaseLayout>
   )
 }

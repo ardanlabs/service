@@ -27,8 +27,8 @@ export interface DataTableProps {
   selectable?: boolean
   rowCount: number
   serverItemsLength: number
-  selectedCount: number
-  handleSelectAllClick: (event: React.ChangeEvent<HTMLInputElement>) => void
+  selectedCount?: number
+  handleSelectAllClick?: (event: React.ChangeEvent<HTMLInputElement>) => void
   needsUpdate?: boolean
   setNeedsUpdate?: React.Dispatch<React.SetStateAction<boolean>>
 }

@@ -20,6 +20,7 @@ export default function AddUser(props: AddUserProps) {
   const [open, setOpen] = React.useState(false)
   const handleOpen = () => setOpen(true)
   const handleClose = () => setOpen(false)
+  const [fetchError, setFetchError] = React.useState('')
 
   interface formDataInterface {
     name: string
@@ -58,8 +59,6 @@ export default function AddUser(props: AddUserProps) {
     password: { value: false, message: '' },
     passwordConfirm: { value: false, message: '' },
   })
-
-  const [fetchError, setFetchError] = React.useState('')
 
   function emailRule(): dataError {
     if (!formData.email.length) {
