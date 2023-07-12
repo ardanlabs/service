@@ -39,9 +39,8 @@ type Storer interface {
 	QueryByID(ctx context.Context, userID uuid.UUID) (User, error)
 	QueryByIDs(ctx context.Context, userID []uuid.UUID) ([]User, error)
 	QueryByEmail(ctx context.Context, email mail.Address) (User, error)
-	Begin() (core.Transactor, error)
+	Begin() (core.Transactor, bool, error)
 	InTran(tr core.Transactor) (Storer, error)
-	IsInTran() bool
 }
 
 // =============================================================================
@@ -62,7 +61,7 @@ func NewCore(log *logger.Logger, evnCore *event.Core, storer Storer) *Core {
 	}
 }
 
-func (c *Core) Begin() (core.Transactor, error) {
+func (c *Core) Begin() (core.Transactor, bool, error) {
 	return c.storer.Begin()
 }
 
@@ -74,6 +73,7 @@ func (c *Core) InTran(tr core.Transactor) (*Core, error) {
 		return nil, err
 	}
 	return &Core{
+		log:     c.log,
 		storer:  trS,
 		evnCore: c.evnCore,
 	}, nil
@@ -100,16 +100,8 @@ func (c *Core) Create(ctx context.Context, nu NewUser) (User, error) {
 		DateUpdated:  now,
 	}
 
-	// This provides an example of how to execute a transaction if required.
-	tran := func(s Storer) error {
-		if err := s.Create(ctx, usr); err != nil {
-			return fmt.Errorf("create: %w", err)
-		}
-		return nil
-	}
-
-	if err := core.WithinTranStore[Storer](ctx, c.log, c.storer, c.storer, tran); err != nil {
-		return User{}, fmt.Errorf("tran: %w", err)
+	if err := c.storer.Create(ctx, usr); err != nil {
+		return User{}, fmt.Errorf("create: %w", err)
 	}
 
 	return usr, nil

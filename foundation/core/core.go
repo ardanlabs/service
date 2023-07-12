@@ -15,18 +15,13 @@ type Transactor interface {
 }
 
 type Beginner[T any] interface {
-	Begin() (Transactor, error)
+	Begin() (Transactor, bool, error)
 	InTran(Transactor) (T, error)
-}
-
-type StoreBeginner[T any] interface {
-	Begin() (Transactor, error)
-	InTran(Transactor) (T, error)
-	IsInTran() bool
 }
 
 func WithinTranCore[T any](ctx context.Context, log *logger.Logger, b Beginner[T], fn func(c T) error) error {
-	tr, err := b.Begin()
+	fmt.Println("doing beginx in WithinCore")
+	tr, created, err := b.Begin()
 	if err != nil {
 		return err
 	}
@@ -41,29 +36,10 @@ func WithinTranCore[T any](ctx context.Context, log *logger.Logger, b Beginner[T
 		}
 		return nil
 	}
-	return WithinTranFn(ctx, log, tr, tran)
-}
-
-func WithinTranStore[T any](ctx context.Context, log *logger.Logger, b StoreBeginner[T], s T, fn func(s T) error) error {
-	if b.IsInTran() {
-		return fn(s)
+	if created {
+		return WithinTranFn(ctx, log, tr, tran)
 	}
-	tr, err := b.Begin()
-	if err != nil {
-		return err
-	}
-
-	tran := func(tr Transactor) error {
-		trS, err := b.InTran(tr)
-		if err != nil {
-			return err
-		}
-		if err := fn(trS); err != nil {
-			return err
-		}
-		return nil
-	}
-	return WithinTranFn(ctx, log, tr, tran)
+	return tran(tr)
 }
 
 func WithinTranFn(ctx context.Context, log *logger.Logger, tr Transactor, fn func(tr Transactor) error) error {
@@ -81,6 +57,7 @@ func WithinTranFn(ctx context.Context, log *logger.Logger, tr Transactor, fn fun
 		return fmt.Errorf("exec tran: %w", err)
 	}
 
+	fmt.Println("doing commit in WithinCore")
 	if err := tr.Commit(); err != nil {
 		return fmt.Errorf("commit tran: %w", err)
 	}

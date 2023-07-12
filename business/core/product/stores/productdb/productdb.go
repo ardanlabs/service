@@ -32,6 +32,9 @@ func NewStore(log *logger.Logger, db *sqlx.DB) *Store {
 }
 
 func (s *Store) Begin() (core.Transactor, error) {
+	if s.inTran {
+		return s.db.(core.Transactor), nil
+	}
 	return s.db.(*sqlx.DB).Beginx()
 
 }

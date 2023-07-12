@@ -30,11 +30,7 @@ func NewStore(log *logger.Logger, storer user.Storer) *Store {
 	}
 }
 
-func (s *Store) IsInTran() bool {
-	return s.storer.IsInTran()
-}
-
-func (s *Store) Begin() (core.Transactor, error) {
+func (s *Store) Begin() (core.Transactor, bool, error) {
 	return s.storer.Begin()
 
 }

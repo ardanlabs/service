@@ -6,9 +6,11 @@ import (
 	"net/http"
 
 	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/checkgrp"
+	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/foobargrp"
 	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/productgrp"
 	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/usergrp"
 	"github.com/ardanlabs/service/business/core/event"
+	"github.com/ardanlabs/service/business/core/foobar"
 	"github.com/ardanlabs/service/business/core/product"
 	"github.com/ardanlabs/service/business/core/product/stores/productdb"
 	"github.com/ardanlabs/service/business/core/user"
@@ -31,10 +33,6 @@ type Config struct {
 	DB    *sqlx.DB
 }
 
-func Begin(db *sqlx.DB, handler web.Handler) web.Handler {
-	return handler
-}
-
 // Routes binds all the version 1 routes.
 func Routes(app *web.App, cfg Config) {
 	const version = "v1"
@@ -43,6 +41,7 @@ func Routes(app *web.App, cfg Config) {
 	usrCore := user.NewCore(cfg.Log, envCore, usercache.NewStore(cfg.Log, userdb.NewStore(cfg.Log, cfg.DB)))
 	prdCore := product.NewCore(cfg.Log, envCore, usrCore, productdb.NewStore(cfg.Log, cfg.DB))
 	smmCore := summary.NewCore(summarydb.NewStore(cfg.Log, cfg.DB))
+	foobarCore := foobar.NewCore(cfg.Log, usrCore, prdCore)
 
 	authen := mid.Authenticate(cfg.Auth)
 	ruleAdmin := mid.Authorize(cfg.Auth, auth.RuleAdminOnly)
@@ -77,4 +76,8 @@ func Routes(app *web.App, cfg Config) {
 	app.Handle(http.MethodPost, version, "/products", pgh.Create, authen, tran)
 	app.Handle(http.MethodPut, version, "/products/:product_id", pgh.Update, authen, tran)
 	app.Handle(http.MethodDelete, version, "/products/:product_id", pgh.Delete, authen, tran)
+
+	fbgh := foobargrp.New(foobarCore, cfg.Auth)
+	app.Handle(http.MethodPost, version, "/foobar", fbgh.Create, authen, tran)
+
 }

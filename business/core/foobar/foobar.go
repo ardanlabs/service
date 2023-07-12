@@ -14,6 +14,7 @@ type Core struct {
 	log     *logger.Logger
 	usrCore *user.Core
 	prdCore *product.Core
+	tr      core.Transactor
 }
 
 // NewCore constructs a core for product api access.
@@ -27,11 +28,18 @@ func NewCore(log *logger.Logger, usrCore *user.Core, prdCore *product.Core) *Cor
 	return &core
 }
 
-func (c *Core) Begin() (core.Transactor, error) {
+func (c *Core) Begin() (core.Transactor, bool, error) {
+	if c.tr != nil {
+		return c.tr, false, nil
+	}
 	return c.usrCore.Begin()
 }
 
 func (c *Core) InTran(tr core.Transactor) (*Core, error) {
+	if c.tr != nil {
+		return c, nil
+	}
+	c.tr = tr
 	usrCore, err := c.usrCore.InTran(tr)
 	if err != nil {
 		return nil, err

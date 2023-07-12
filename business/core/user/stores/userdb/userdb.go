@@ -35,12 +35,12 @@ func NewStore(log *logger.Logger, db *sqlx.DB) *Store {
 	}
 }
 
-func (s *Store) IsInTran() bool {
-	return s.inTran
-}
-
-func (s *Store) Begin() (core.Transactor, error) {
-	return s.db.(*sqlx.DB).Beginx()
+func (s *Store) Begin() (core.Transactor, bool, error) {
+	if s.inTran {
+		return s.db.(core.Transactor), false, nil
+	}
+	tr, err := s.db.(*sqlx.DB).Beginx()
+	return tr, true, err
 
 }
 
