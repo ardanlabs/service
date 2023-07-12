@@ -5,7 +5,7 @@ import UsersDataTable from '@/components/Users/UsersDataTable'
 import BaseLayout from '@/layouts/BaseLayout/BaseLayout'
 import Typography from '@mui/material/Typography'
 import Box from '@mui/system/Box'
-import AddUser from './users/Add'
+import AddUser from '@/components/Users/Add'
 
 export default function RootPage() {
   const [needsUpdate, setNeedsUpdate] = React.useState(false)

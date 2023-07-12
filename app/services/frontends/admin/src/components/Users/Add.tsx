@@ -10,17 +10,36 @@ import Autocomplete from '@mui/material/Autocomplete'
 import PasswordTextField from '@/components/PasswordTextField/PasswordTextField'
 import Chip from '@mui/material/Chip'
 import ApiError from '@/components/ApiError/ApiError'
+import { User } from './constants'
 
 interface AddUserProps {
   setNeedsUpdate?: React.Dispatch<React.SetStateAction<boolean>>
+  isEdit?: boolean
+  user?: User
+  actionButton?: React.ReactNode
 }
 
+const availableRoles = ['USER', 'ADMIN']
+
 export default function AddUser(props: AddUserProps) {
-  const { setNeedsUpdate } = props
+  const { setNeedsUpdate, isEdit, user, actionButton } = props
   const [open, setOpen] = React.useState(false)
   const handleOpen = () => setOpen(true)
   const handleClose = () => setOpen(false)
   const [fetchError, setFetchError] = React.useState('')
+
+  React.useEffect(() => {
+    if (user) {
+      const tempUser: Partial<User> = { ...user }
+
+      delete tempUser.dateCreated
+      delete tempUser.dateUpdated
+      delete tempUser.enabled
+      delete tempUser.id
+
+      setFormData((prevFormData) => ({ ...prevFormData, ...tempUser }))
+    }
+  }, [user])
 
   interface formDataInterface {
     name: string
@@ -123,8 +142,6 @@ export default function AddUser(props: AddUserProps) {
     return isValid
   }
 
-  const availableRoles = ['USER', 'ADMIN']
-
   function handleRolesChange(_event: React.SyntheticEvent, newValue: string[]) {
     setFormData((prevFormData) => ({ ...prevFormData, roles: newValue }))
   }
@@ -140,11 +157,12 @@ export default function AddUser(props: AddUserProps) {
     const isValid = validate(formData)
 
     if (isValid) {
+      const editURL = isEdit && user ? `/${user.id}` : ''
       try {
         const userPost = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_API_URL}/users`,
+          `${process.env.NEXT_PUBLIC_BASE_API_URL}/users${editURL}`,
           {
-            method: 'POST',
+            method: isEdit ? 'PUT' : 'POST',
             body: JSON.stringify(formData),
             headers: {
               'Content-Type': 'application/json',
@@ -179,10 +197,15 @@ export default function AddUser(props: AddUserProps) {
   }
   return (
     <Modal
-      buttonText="Add User"
+      buttonText={isEdit ? 'Edit User' : 'Add User'}
       handleOpen={handleOpen}
       handleClose={handleClose}
       open={open}
+      actionButton={
+        actionButton ? (
+          <div onClick={handleOpen}>{actionButton}</div>
+        ) : undefined
+      }
     >
       {fetchError ? (
         <ApiError message={fetchError} clearError={() => setFetchError('')} />
@@ -196,7 +219,7 @@ export default function AddUser(props: AddUserProps) {
           }}
         >
           <Typography id="modal-modal-title" variant="h6" component="h2">
-            Add User
+            {isEdit ? 'Edit User' : 'Add User'}
           </Typography>
           <form>
             <Box
@@ -215,6 +238,7 @@ export default function AddUser(props: AddUserProps) {
                 label="Name"
                 name="name"
                 variant="filled"
+                value={formData.name}
                 error={errors.name.value}
                 helperText={errors.name.message}
                 sx={{
@@ -230,6 +254,7 @@ export default function AddUser(props: AddUserProps) {
                 label="Email"
                 name="email"
                 variant="filled"
+                value={formData.email}
                 error={errors.email.value}
                 helperText={errors.email.message}
                 sx={{
@@ -281,6 +306,7 @@ export default function AddUser(props: AddUserProps) {
                 label="Department"
                 name="department"
                 variant="filled"
+                value={formData.department}
                 sx={{
                   backgroundColor: '#FFFFFF',
                   borderRadius: '4px',
@@ -291,6 +317,7 @@ export default function AddUser(props: AddUserProps) {
               <PasswordTextField
                 label="Password*"
                 name="password"
+                value={formData.password}
                 error={errors.password.value}
                 helperText={errors.password.message}
                 styles={{ m: 1 }}
@@ -299,6 +326,7 @@ export default function AddUser(props: AddUserProps) {
               <PasswordTextField
                 label="Confirm Password*"
                 name="passwordConfirm"
+                value={formData.passwordConfirm}
                 error={errors.passwordConfirm.value}
                 helperText={errors.passwordConfirm.message}
                 styles={{ m: 1 }}
@@ -313,7 +341,7 @@ export default function AddUser(props: AddUserProps) {
             sx={{ my: 2, alignSelf: 'end' }}
             onClick={handleSubmit}
           >
-            Add
+            {isEdit ? 'Edit' : 'Add'}
           </Button>
         </Box>
       )}

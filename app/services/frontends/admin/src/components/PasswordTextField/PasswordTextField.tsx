@@ -17,11 +17,13 @@ interface PasswordTextFieldProps {
   styles?: SxProps<Theme>
   error?: boolean
   helperText?: string
+  value?: string
   handleOnChange: (event: React.ChangeEvent<HTMLInputElement>) => void
 }
 
 export default function PasswordTextField(props: PasswordTextFieldProps) {
-  const { label, handleOnChange, name, styles, error, helperText } = props
+  const { label, handleOnChange, name, styles, error, helperText, value } =
+    props
   const [showPassword, setShowPassword] = React.useState(false)
 
   const handleClickShowPassword = () => setShowPassword((show) => !show)
@@ -49,6 +51,7 @@ export default function PasswordTextField(props: PasswordTextFieldProps) {
         name={name}
         type={showPassword ? 'text' : 'password'}
         error={error}
+        value={value}
         onChange={handleOnChange}
         endAdornment={
           <InputAdornment position="end">
