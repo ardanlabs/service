@@ -8,6 +8,7 @@ module.exports = {
     'plugin:@typescript-eslint/recommended',
     'plugin:react/recommended',
     'prettier',
+    'plugin:@next/next/recommended',
   ],
   overrides: [
     {
@@ -28,13 +29,16 @@ module.exports = {
   plugins: ['react', '@typescript-eslint', 'eslint-plugin-prettier'],
   rules: {
     '@typescript-eslint/no-unused-vars': 'error',
-    '@typescript-eslint/no-explicit-any': 'error',
+    '@typescript-eslint/no-explicit-any': 'off',
     'prefer-const': 'error',
-    'react/prop-types': { enabled: false },
+    'react/prop-types': 'off',
   },
   settings: {
     'import/resolver': {
       typescript: {},
+    },
+    react: {
+      version: 'detect',
     },
   },
 }

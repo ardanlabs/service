@@ -1,3 +1,4 @@
+import * as React from 'react'
 import { Modal } from '../Modal/Modal'
 import ApiError from '../ApiError/ApiError'
 import Box from '@mui/system/Box'

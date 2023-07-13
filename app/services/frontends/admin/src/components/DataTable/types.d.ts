@@ -17,7 +17,7 @@ export interface GenericProps {
 
 export interface DataTableProps {
   headCells: readonly HeadCell[]
-  getData: (GenericProps) => any
+  getData: (props: GenericProps) => any
   dense?: boolean
   defaultOrder?: string
   defaultOrderDirection?: Order

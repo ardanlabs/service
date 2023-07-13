@@ -34,7 +34,7 @@ export default function DataTable(props: PropsWithChildren<DataTableProps>) {
   } = props
   // Set init states.
   const [orderDirection, setOrderDirection] = React.useState<Order>(
-    defaultOrderDirection || 'asc',
+    defaultOrderDirection,
   )
 
   const [orderBy, setOrderBy] = React.useState(defaultOrder || '')
@@ -83,7 +83,7 @@ export default function DataTable(props: PropsWithChildren<DataTableProps>) {
       direction: orderDirection,
     })
 
-    if (setNeedsUpdate) {
+    if (setNeedsUpdate && needsUpdate) {
       setNeedsUpdate(false)
     }
   }, [page, rowsPerPage, orderBy, orderDirection, needsUpdate])

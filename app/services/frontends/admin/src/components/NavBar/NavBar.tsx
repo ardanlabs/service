@@ -9,11 +9,11 @@ import ListItem from '@mui/material/ListItem'
 import ListItemButton from '@mui/material/ListItemButton'
 import ListItemIcon from '@mui/material/ListItemIcon'
 import ListItemText from '@mui/material/ListItemText'
-import { NavBarProps } from '@/components/NavBar/types'
 import Button from '@mui/material/Button'
 import { AvailableMenus } from '@/utils/access'
 import { CSSObject, Theme, styled, useTheme } from '@mui/material'
 import Link from 'next/link'
+import Image from 'next/image'
 
 const drawerWidth = 200
 
@@ -55,14 +55,13 @@ const Drawer = styled(MuiDrawer, {
   }),
 }))
 
-export default function NavBar(props: NavBarProps) {
+export default function NavBar() {
   const theme = useTheme()
   const [drawerOpened, setDrawerOpened] = React.useState(false)
 
-  const toggleDrawer =
-    (open: boolean) => (event: React.KeyboardEvent | React.MouseEvent) => {
-      setDrawerOpened(open)
-    }
+  const toggleDrawer = (open: boolean) => () => {
+    setDrawerOpened(open)
+  }
 
   return (
     <Drawer
@@ -81,7 +80,7 @@ export default function NavBar(props: NavBarProps) {
         }}
       >
         <Button component="a" href="#">
-          <img
+          <Image
             src="https://www.ardanlabs.com/images/ardanlabs-logo.svg"
             alt="Ardan Labs"
           />

@@ -504,8 +504,8 @@ admin-gui-install:
 admin-gui-dev: admin-gui-install
 	npm run dev --prefix ${ADMIN_FRONTEND_PREFIX}
 
-admin-gui-build: admind-gui-install
+admin-gui-build: admin-gui-install
 	npm run build --prefix ${ADMIN_FRONTEND_PREFIX}
 
-admin-gui-start-build: adming-gui-build
+admin-gui-start-build: admin-gui-build
 	npm run start --prefix ${ADMIN_FRONTEND_PREFIX}

@@ -21,6 +21,7 @@ _NOTE:_ This assumes you had clone the [Service Repository](https://github.com/a
 And entered the /code folder.
 
 ```
+*Note* The first command only needs to be run if you don't have a token set.
 $ make write-token-to-env
 $ make admin-gui-dev
 $ Navigate to localhost:3001 in your browser to see the site
@@ -29,8 +30,9 @@ $ Navigate to localhost:3001 in your browser to see the site
 _NOTE:_ This will install and run the server on a dev environment. For building the envrionment you have to use the following instructions.
 
 ```
+*Note* The first command only needs to be run if you don't have a token set.
 $ make write-token-to-env
-$ admin-gui-start-build
+$ make admin-gui-start-build
 $ Navigate to localhost:3001 in your browser to see the site
 ```
 
