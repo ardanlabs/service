@@ -7,19 +7,18 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/ardanlabs/service/foundation/core"
+	"github.com/ardanlabs/service/business/sys/core"
 	"github.com/ardanlabs/service/foundation/web"
-	"github.com/jmoiron/sqlx"
 )
 
-func InTran(db *sqlx.DB) web.Middleware {
+// func InTran(db *sqlx.DB) web.Middleware {
+func InTran(f core.BeginnerFactory) web.Middleware {
 	m := func(handler web.Handler) web.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-			tx, err := db.Beginx()
+			tx, err := f.Begin()
 			if err != nil {
 				return err
 			}
-			nr := &core.NestedTransaction{Tr: tx}
 			defer func() {
 				if err := tx.Rollback(); err != nil {
 					if errors.Is(err, sql.ErrTxDone) {
@@ -27,7 +26,7 @@ func InTran(db *sqlx.DB) web.Middleware {
 					}
 				}
 			}()
-			ctx = core.SetTransactor(ctx, nr)
+			ctx = core.SetTransactor(ctx, tx)
 			err = handler(ctx, w, r)
 			if err != nil {
 				return err

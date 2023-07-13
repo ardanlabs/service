@@ -12,10 +12,10 @@ import (
 
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/data/order"
+	"github.com/ardanlabs/service/business/sys/core"
 	database "github.com/ardanlabs/service/business/sys/database/pgx"
 	"github.com/ardanlabs/service/business/sys/database/pgx/dbarray"
 	"github.com/ardanlabs/service/business/sys/logger"
-	"github.com/ardanlabs/service/foundation/core"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 )
@@ -35,34 +35,10 @@ func NewStore(log *logger.Logger, db *sqlx.DB) *Store {
 	}
 }
 
-func (s *Store) Begin() (core.NestedTransactor, error) {
-	if s.inTran {
-		nr := &core.NestedTransaction{
-			Tr:     s.db.(core.Transactor),
-			Nested: true,
-		}
-		return nr, nil
-	}
-	tr, err := s.db.(*sqlx.DB).Beginx()
+func (s *Store) InTran(tr core.Transactor) (user.Storer, error) {
+	tx, err := database.GetTx(tr)
 	if err != nil {
 		return nil, err
-	}
-	nr := &core.NestedTransaction{
-		Tr:     tr,
-		Nested: false,
-	}
-	return nr, nil
-
-}
-
-func (s *Store) InTran(tr core.Transactor) (user.Storer, error) {
-	nr, ok := tr.(*core.NestedTransaction)
-	if !ok {
-		return nil, fmt.Errorf("User Transactor(%T) not of a type NestedTransactor", tr)
-	}
-	tx, ok := nr.Tr.(sqlx.ExtContext)
-	if !ok {
-		return nil, fmt.Errorf("User Transactor(%T) not of a type *sql.Tx", tr)
 	}
 
 	return &Store{

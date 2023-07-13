@@ -9,9 +9,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ardanlabs/service/business/core/foobar"
 	"github.com/ardanlabs/service/business/core/product"
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/data/dbtest"
+	"github.com/ardanlabs/service/business/sys/core"
 	"github.com/ardanlabs/service/foundation/docker"
 )
 
@@ -66,10 +68,20 @@ func transaction(t *testing.T) {
 		PasswordConfirm: "some",
 	}
 
-	_, err = api.Foobar.Create(ctx, np, nu)
+	tx, err := test.DB.Beginx()
+	if err != nil {
+		t.Fatalf("Should NOT to begin transaction: %s.", err)
+	}
+
+	tran := func(c *foobar.Core) error {
+		_, err = c.Create(ctx, np, nu)
+		return err
+	}
+	err = core.WithinTranCore[*foobar.Core](ctx, test.Log, tx, api.Foobar, tran)
 	if !errors.Is(err, product.ErrInvalidCost) {
 		t.Fatalf("Should NOT be able to add product : %s.", err)
 	}
+
 	usr, err := api.User.QueryByEmail(ctx, nu.Email)
 	if err == nil {
 		t.Fatalf("Should NOT be able to retrieve user but got: %+v.", usr)

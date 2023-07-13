@@ -9,9 +9,9 @@ import (
 
 	"github.com/ardanlabs/service/business/core/product"
 	"github.com/ardanlabs/service/business/data/order"
+	"github.com/ardanlabs/service/business/sys/core"
 	database "github.com/ardanlabs/service/business/sys/database/pgx"
 	"github.com/ardanlabs/service/business/sys/logger"
-	"github.com/ardanlabs/service/foundation/core"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 )
@@ -31,22 +31,10 @@ func NewStore(log *logger.Logger, db *sqlx.DB) *Store {
 	}
 }
 
-func (s *Store) Begin() (core.Transactor, error) {
-	if s.inTran {
-		return s.db.(core.Transactor), nil
-	}
-	return s.db.(*sqlx.DB).Beginx()
-
-}
-
 func (s *Store) InTran(tr core.Transactor) (product.Storer, error) {
-	nr, ok := tr.(*core.NestedTransaction)
-	if !ok {
-		return nil, fmt.Errorf("User Transactor(%T) not of a type NestedTransactor", tr)
-	}
-	tx, ok := nr.Tr.(sqlx.ExtContext)
-	if !ok {
-		return nil, fmt.Errorf("Transactor(%T) not of a type *sql.Tx", tr)
+	tx, err := database.GetTx(tr)
+	if err != nil {
+		return nil, err
 	}
 
 	return &Store{

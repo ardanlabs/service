@@ -8,8 +8,8 @@ import (
 
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/data/order"
+	"github.com/ardanlabs/service/business/sys/core"
 	"github.com/ardanlabs/service/business/sys/logger"
-	"github.com/ardanlabs/service/foundation/core"
 	"github.com/google/uuid"
 )
 
@@ -28,11 +28,6 @@ func NewStore(log *logger.Logger, storer user.Storer) *Store {
 		storer: storer,
 		cache:  map[string]user.User{},
 	}
-}
-
-func (s *Store) Begin() (core.NestedTransactor, error) {
-	return s.storer.Begin()
-
 }
 
 func (s *Store) InTran(tr core.Transactor) (user.Storer, error) {

@@ -14,22 +14,15 @@ type Transactor interface {
 	Rollback() error
 }
 
-type NestedTransactor interface {
-	Transactor
-	IsNested() bool
-}
-
-type Beginner[T any] interface {
-	Begin() (NestedTransactor, error)
+type InTraner[T any] interface {
 	InTran(Transactor) (T, error)
 }
 
-func WithinTranCore[T any](ctx context.Context, log *logger.Logger, b Beginner[T], fn func(c T) error) error {
-	tr, err := b.Begin()
-	if err != nil {
-		return err
-	}
+type BeginnerFactory interface {
+	Begin() (Transactor, error)
+}
 
+func WithinTranCore[T any](ctx context.Context, log *logger.Logger, tr Transactor, b InTraner[T], fn func(c T) error) error {
 	tran := func(tr Transactor) error {
 		trCore, err := b.InTran(tr)
 		if err != nil {
@@ -40,10 +33,7 @@ func WithinTranCore[T any](ctx context.Context, log *logger.Logger, b Beginner[T
 		}
 		return nil
 	}
-	if !tr.IsNested() {
-		return WithinTranFn(ctx, log, tr, tran)
-	}
-	return tran(tr)
+	return WithinTranFn(ctx, log, tr, tran)
 }
 
 func WithinTranFn(ctx context.Context, log *logger.Logger, tr Transactor, fn func(tr Transactor) error) error {
@@ -78,21 +68,4 @@ func SetTransactor(ctx context.Context, tr Transactor) context.Context {
 func GetTransactor(ctx context.Context) (Transactor, bool) {
 	v, ok := ctx.Value(trKey).(Transactor)
 	return v, ok
-}
-
-type NestedTransaction struct {
-	Tr     Transactor
-	Nested bool
-}
-
-func (nr *NestedTransaction) Commit() error {
-	return nr.Tr.Commit()
-}
-
-func (nr *NestedTransaction) Rollback() error {
-	return nr.Tr.Rollback()
-}
-
-func (nr *NestedTransaction) IsNested() bool {
-	return nr.Nested
 }

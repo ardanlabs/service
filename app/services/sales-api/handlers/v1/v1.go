@@ -18,6 +18,7 @@ import (
 	"github.com/ardanlabs/service/business/core/user/stores/userdb"
 	"github.com/ardanlabs/service/business/cview/user/summary"
 	"github.com/ardanlabs/service/business/cview/user/summary/stores/summarydb"
+	database "github.com/ardanlabs/service/business/sys/database/pgx"
 	"github.com/ardanlabs/service/business/sys/logger"
 	"github.com/ardanlabs/service/business/web/auth"
 	"github.com/ardanlabs/service/business/web/v1/mid"
@@ -46,7 +47,8 @@ func Routes(app *web.App, cfg Config) {
 	authen := mid.Authenticate(cfg.Auth)
 	ruleAdmin := mid.Authorize(cfg.Auth, auth.RuleAdminOnly)
 	ruleAdminOrSubject := mid.Authorize(cfg.Auth, auth.RuleAdminOrSubject)
-	tran := mid.InTran(cfg.DB)
+	beginner := database.NewBeginnerFactory(cfg.DB)
+	tran := mid.InTran(beginner)
 
 	// -------------------------------------------------------------------------
 

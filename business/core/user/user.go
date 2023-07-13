@@ -12,8 +12,8 @@ import (
 
 	"github.com/ardanlabs/service/business/core/event"
 	"github.com/ardanlabs/service/business/data/order"
+	"github.com/ardanlabs/service/business/sys/core"
 	"github.com/ardanlabs/service/business/sys/logger"
-	"github.com/ardanlabs/service/foundation/core"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -30,7 +30,6 @@ var (
 // Storer interface declares the behavior this package needs to perists and
 // retrieve data.
 type Storer interface {
-	// WithinTran(ctx context.Context, fn func(s Storer) error) error
 	Create(ctx context.Context, usr User) error
 	Update(ctx context.Context, usr User) error
 	Delete(ctx context.Context, usr User) error
@@ -39,7 +38,6 @@ type Storer interface {
 	QueryByID(ctx context.Context, userID uuid.UUID) (User, error)
 	QueryByIDs(ctx context.Context, userID []uuid.UUID) ([]User, error)
 	QueryByEmail(ctx context.Context, email mail.Address) (User, error)
-	Begin() (core.NestedTransactor, error)
 	InTran(tr core.Transactor) (Storer, error)
 }
 
@@ -61,12 +59,7 @@ func NewCore(log *logger.Logger, evnCore *event.Core, storer Storer) *Core {
 	}
 }
 
-func (c *Core) Begin() (core.NestedTransactor, error) {
-	return c.storer.Begin()
-}
-
 func (c *Core) InTran(tr core.Transactor) (*Core, error) {
-	c.log.Info(context.Background(), "calling user inIntran", "tr", tr, "tr2", fmt.Sprintf("tr: %T", tr))
 	trS, err := c.storer.InTran(tr)
 	if err != nil {
 		return nil, err

@@ -12,8 +12,8 @@ import (
 	"github.com/ardanlabs/service/business/core/event"
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/data/order"
+	"github.com/ardanlabs/service/business/sys/core"
 	"github.com/ardanlabs/service/business/sys/logger"
-	"github.com/ardanlabs/service/foundation/core"
 	"github.com/google/uuid"
 )
 
@@ -36,7 +36,6 @@ type Storer interface {
 	Count(ctx context.Context, filter QueryFilter) (int, error)
 	QueryByID(ctx context.Context, productID uuid.UUID) (Product, error)
 	QueryByUserID(ctx context.Context, userID uuid.UUID) ([]Product, error)
-	Begin() (core.Transactor, error)
 	InTran(tr core.Transactor) (Storer, error)
 }
 
@@ -71,16 +70,11 @@ func NewCore(log *logger.Logger, evnCore *event.Core, usrCore UserCore, storer S
 	return &core
 }
 
-func (c *Core) Begin() (core.Transactor, error) {
-	return c.storer.Begin()
-}
-
 func (c *Core) InTran(tr core.Transactor) (*Core, error) {
 	trS, err := c.storer.InTran(tr)
 	if err != nil {
 		return nil, err
 	}
-	c.log.Info(context.Background(), "calling user inIntran from product")
 	usrCore, err := c.usrCore.InTran(tr)
 	if err != nil {
 		return nil, err
