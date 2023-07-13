@@ -30,8 +30,10 @@ func NewStore(log *logger.Logger, storer user.Storer) *Store {
 	}
 }
 
-func (s *Store) InTran(tr core.Transactor) (user.Storer, error) {
-	return s.storer.InTran(tr)
+// ExecuteUnderTransaction constructs a new Store value replacing the sqlx DB
+// value with a sqlx DB value that is currently inside a transaction.
+func (s *Store) ExecuteUnderTransaction(tr core.Transactor) (user.Storer, error) {
+	return s.storer.ExecuteUnderTransaction(tr)
 }
 
 // Create inserts a new user into the database.

@@ -36,28 +36,29 @@ func New(user *user.Core, summary *summary.Core, auth *auth.Auth) *Handlers {
 	}
 }
 
-func (h *Handlers) InTran(ctx context.Context) (*Handlers, error) {
-	if tr, ok := core.GetTransactor(ctx); ok {
-		u, err := h.user.InTran(tr)
+// executeUnderTransaction constructs a new Handlers value with the core apis
+// using a store transaction that was created via middleware.
+func (h *Handlers) executeUnderTransaction(ctx context.Context) (*Handlers, error) {
+	if tr, ok := core.GetTransaction(ctx); ok {
+		u, err := h.user.ExecuteUnderTransaction(tr)
 		if err != nil {
 			return nil, err
 		}
-		return &Handlers{
+
+		h = &Handlers{
 			user:    u,
 			summary: h.summary,
 			auth:    h.auth,
-		}, nil
+		}
+
+		return h, nil
 	}
+
 	return h, nil
 }
 
 // Create adds a new user to the system.
 func (h *Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	var err error
-	h, err = h.InTran(ctx)
-	if err != nil {
-		return err
-	}
 	var app AppNewUser
 	if err := web.Decode(r, &app); err != nil {
 		return err
@@ -81,11 +82,11 @@ func (h *Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Re
 
 // Update updates a user in the system.
 func (h *Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	var err error
-	h, err = h.InTran(ctx)
+	h, err := h.executeUnderTransaction(ctx)
 	if err != nil {
 		return err
 	}
+
 	var app AppUpdateUser
 	if err := web.Decode(r, &app); err != nil {
 		return err
@@ -118,12 +119,12 @@ func (h *Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Re
 
 // Delete removes a user from the system.
 func (h *Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	var err error
-	h, err = h.InTran(ctx)
+	userID := auth.GetUserID(ctx)
+
+	h, err := h.executeUnderTransaction(ctx)
 	if err != nil {
 		return err
 	}
-	userID := auth.GetUserID(ctx)
 
 	usr, err := h.user.QueryByID(ctx, userID)
 	if err != nil {

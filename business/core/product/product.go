@@ -29,6 +29,7 @@ var (
 // Storer interface declares the behavior this package needs to perists and
 // retrieve data.
 type Storer interface {
+	ExecuteUnderTransaction(tr core.Transactor) (Storer, error)
 	Create(ctx context.Context, prd Product) error
 	Update(ctx context.Context, prd Product) error
 	Delete(ctx context.Context, prd Product) error
@@ -36,14 +37,13 @@ type Storer interface {
 	Count(ctx context.Context, filter QueryFilter) (int, error)
 	QueryByID(ctx context.Context, productID uuid.UUID) (Product, error)
 	QueryByUserID(ctx context.Context, userID uuid.UUID) ([]Product, error)
-	InTran(tr core.Transactor) (Storer, error)
 }
 
 // UserCore interface declares the behavior this package needs from the user
 // core domain.
 type UserCore interface {
+	ExecuteUnderTransaction(tr core.Transactor) (*user.Core, error)
 	QueryByID(ctx context.Context, userID uuid.UUID) (user.User, error)
-	InTran(tr core.Transactor) (*user.Core, error)
 }
 
 // =============================================================================
@@ -70,21 +70,27 @@ func NewCore(log *logger.Logger, evnCore *event.Core, usrCore UserCore, storer S
 	return &core
 }
 
-func (c *Core) InTran(tr core.Transactor) (*Core, error) {
-	trS, err := c.storer.InTran(tr)
+// ExecuteUnderTransaction constructs a new Core value that will use the
+// specified transaction in any store related calls.
+func (c *Core) ExecuteUnderTransaction(tr core.Transactor) (*Core, error) {
+	storer, err := c.storer.ExecuteUnderTransaction(tr)
 	if err != nil {
 		return nil, err
 	}
-	usrCore, err := c.usrCore.InTran(tr)
+
+	usrCore, err := c.usrCore.ExecuteUnderTransaction(tr)
 	if err != nil {
 		return nil, err
 	}
-	return &Core{
-		storer:  trS,
+
+	c = &Core{
+		storer:  storer,
 		evnCore: c.evnCore,
 		usrCore: usrCore,
 		log:     c.log,
-	}, nil
+	}
+
+	return c, nil
 }
 
 // Create adds a Product to the database. It returns the created Product with

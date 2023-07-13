@@ -11,14 +11,14 @@ import (
 	"github.com/ardanlabs/service/foundation/web"
 )
 
-// func InTran(db *sqlx.DB) web.Middleware {
-func InTran(f core.BeginnerFactory) web.Middleware {
+func ExecuteInTransation(trn core.Transaction) web.Middleware {
 	m := func(handler web.Handler) web.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-			tx, err := f.Begin()
+			tx, err := trn.Begin()
 			if err != nil {
 				return err
 			}
+
 			defer func() {
 				if err := tx.Rollback(); err != nil {
 					if errors.Is(err, sql.ErrTxDone) {
@@ -26,15 +26,17 @@ func InTran(f core.BeginnerFactory) web.Middleware {
 					}
 				}
 			}()
-			ctx = core.SetTransactor(ctx, tx)
-			err = handler(ctx, w, r)
-			if err != nil {
+
+			ctx = core.SetTransaction(ctx, tx)
+
+			if err := handler(ctx, w, r); err != nil {
 				return err
 			}
 
 			if err := tx.Commit(); err != nil {
 				return fmt.Errorf("commit tran: %w", err)
 			}
+
 			return nil
 		}
 

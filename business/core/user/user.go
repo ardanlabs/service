@@ -30,6 +30,7 @@ var (
 // Storer interface declares the behavior this package needs to perists and
 // retrieve data.
 type Storer interface {
+	ExecuteUnderTransaction(tr core.Transactor) (Storer, error)
 	Create(ctx context.Context, usr User) error
 	Update(ctx context.Context, usr User) error
 	Delete(ctx context.Context, usr User) error
@@ -38,7 +39,6 @@ type Storer interface {
 	QueryByID(ctx context.Context, userID uuid.UUID) (User, error)
 	QueryByIDs(ctx context.Context, userID []uuid.UUID) ([]User, error)
 	QueryByEmail(ctx context.Context, email mail.Address) (User, error)
-	InTran(tr core.Transactor) (Storer, error)
 }
 
 // =============================================================================
@@ -59,16 +59,21 @@ func NewCore(log *logger.Logger, evnCore *event.Core, storer Storer) *Core {
 	}
 }
 
-func (c *Core) InTran(tr core.Transactor) (*Core, error) {
-	trS, err := c.storer.InTran(tr)
+// ExecuteUnderTransaction constructs a new Core value that will use the
+// specified transaction in any store related calls.
+func (c *Core) ExecuteUnderTransaction(tr core.Transactor) (*Core, error) {
+	trS, err := c.storer.ExecuteUnderTransaction(tr)
 	if err != nil {
 		return nil, err
 	}
-	return &Core{
+
+	c = &Core{
 		log:     c.log,
 		storer:  trS,
 		evnCore: c.evnCore,
-	}, nil
+	}
+
+	return c, nil
 }
 
 // Create inserts a new user into the database.

@@ -1,4 +1,4 @@
-package foobargrp
+package trangrp
 
 import (
 	"fmt"
@@ -10,10 +10,39 @@ import (
 	"github.com/ardanlabs/service/business/sys/validate"
 )
 
-type AppNewFoobar struct {
+// AppProduct represents an individual product.
+type AppProduct struct {
+	ID          string  `json:"id"`
+	UserID      string  `json:"userID"`
+	Name        string  `json:"name"`
+	Cost        float64 `json:"cost"`
+	Quantity    int     `json:"quantity"`
+	DateCreated string  `json:"dateCreated"`
+	DateUpdated string  `json:"dateUpdated"`
+}
+
+func toAppProduct(prd product.Product) AppProduct {
+	return AppProduct{
+		ID:          prd.ID.String(),
+		UserID:      prd.UserID.String(),
+		Name:        prd.Name,
+		Cost:        prd.Cost,
+		Quantity:    prd.Quantity,
+		DateCreated: prd.DateCreated.Format(time.RFC3339),
+		DateUpdated: prd.DateUpdated.Format(time.RFC3339),
+	}
+}
+
+// =============================================================================
+
+// AppNewTran represents an example of cross domain transaction at the
+// application layer.
+type AppNewTran struct {
 	Product AppNewProduct `json:"product"`
 	User    AppNewUser    `json:"user"`
 }
+
+// =============================================================================
 
 // AppNewUser contains information needed to create a new user.
 type AppNewUser struct {
@@ -60,6 +89,8 @@ func (app AppNewUser) Validate() error {
 	return nil
 }
 
+// =============================================================================
+
 // AppNewProduct is what we require from clients when adding a Product.
 type AppNewProduct struct {
 	Name     string  `json:"name" validate:"required"`
@@ -83,27 +114,4 @@ func (app AppNewProduct) Validate() error {
 		return err
 	}
 	return nil
-}
-
-// AppProduct represents an individual product.
-type AppProduct struct {
-	ID          string  `json:"id"`
-	UserID      string  `json:"userID"`
-	Name        string  `json:"name"`
-	Cost        float64 `json:"cost"`
-	Quantity    int     `json:"quantity"`
-	DateCreated string  `json:"dateCreated"`
-	DateUpdated string  `json:"dateUpdated"`
-}
-
-func toAppProduct(prd product.Product) AppProduct {
-	return AppProduct{
-		ID:          prd.ID.String(),
-		UserID:      prd.UserID.String(),
-		Name:        prd.Name,
-		Cost:        prd.Cost,
-		Quantity:    prd.Quantity,
-		DateCreated: prd.DateCreated.Format(time.RFC3339),
-		DateUpdated: prd.DateUpdated.Format(time.RFC3339),
-	}
 }

@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ardanlabs/service/business/sys/core"
 	"github.com/ardanlabs/service/business/sys/logger"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -105,28 +104,6 @@ func StatusCheck(ctx context.Context, db *sqlx.DB) error {
 	const q = `SELECT true`
 	var tmp bool
 	return db.QueryRowContext(ctx, q).Scan(&tmp)
-}
-
-type Beginner struct {
-	db *sqlx.DB
-}
-
-func (b *Beginner) Begin() (core.Transactor, error) {
-	return b.db.Beginx()
-}
-
-func NewBeginnerFactory(db *sqlx.DB) *Beginner {
-	return &Beginner{
-		db: db,
-	}
-}
-
-func GetTx(tr core.Transactor) (sqlx.ExtContext, error) {
-	tx, ok := tr.(sqlx.ExtContext)
-	if !ok {
-		return nil, fmt.Errorf("Transactor(%T) not of a type *sql.Tx", tr)
-	}
-	return tx, nil
 }
 
 // WithinTran runs passed function and do commit/rollback at the end.

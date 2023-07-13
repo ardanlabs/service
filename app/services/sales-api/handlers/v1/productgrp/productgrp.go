@@ -11,7 +11,6 @@ import (
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/sys/core"
 	"github.com/ardanlabs/service/business/sys/validate"
-	"github.com/ardanlabs/service/business/web/auth"
 	v1 "github.com/ardanlabs/service/business/web/v1"
 	"github.com/ardanlabs/service/business/web/v1/paging"
 	"github.com/ardanlabs/service/foundation/web"
@@ -27,44 +26,43 @@ var (
 type Handlers struct {
 	product *product.Core
 	user    *user.Core
-	auth    *auth.Auth
 }
 
 // New constructs a handlers for route access.
-func New(product *product.Core, user *user.Core, auth *auth.Auth) *Handlers {
+func New(product *product.Core, user *user.Core) *Handlers {
 	return &Handlers{
 		product: product,
 		user:    user,
-		auth:    auth,
 	}
 }
 
-func (h *Handlers) InTran(ctx context.Context) (*Handlers, error) {
-	if tr, ok := core.GetTransactor(ctx); ok {
-		u, err := h.user.InTran(tr)
+// executeUnderTransaction constructs a new Handlers value with the core apis
+// using a store transaction that was created via middleware.
+func (h *Handlers) executeUnderTransaction(ctx context.Context) (*Handlers, error) {
+	if tr, ok := core.GetTransaction(ctx); ok {
+		u, err := h.user.ExecuteUnderTransaction(tr)
 		if err != nil {
 			return nil, err
 		}
-		p, err := h.product.InTran(tr)
+
+		p, err := h.product.ExecuteUnderTransaction(tr)
 		if err != nil {
 			return nil, err
 		}
-		return &Handlers{
+
+		h = &Handlers{
 			user:    u,
 			product: p,
-			auth:    h.auth,
-		}, nil
+		}
+
+		return h, nil
 	}
+
 	return h, nil
 }
 
 // Create adds a new product to the system.
 func (h *Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	var err error
-	h, err = h.InTran(ctx)
-	if err != nil {
-		return err
-	}
 	var app AppNewProduct
 	if err := web.Decode(r, &app); err != nil {
 		return err
@@ -85,11 +83,11 @@ func (h *Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Re
 
 // Update updates a product in the system.
 func (h *Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	var err error
-	h, err = h.InTran(ctx)
+	h, err := h.executeUnderTransaction(ctx)
 	if err != nil {
 		return err
 	}
+
 	var app AppUpdateProduct
 	if err := web.Decode(r, &app); err != nil {
 		return err
@@ -120,11 +118,11 @@ func (h *Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Re
 
 // Delete removes a product from the system.
 func (h *Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	var err error
-	h, err = h.InTran(ctx)
+	h, err := h.executeUnderTransaction(ctx)
 	if err != nil {
 		return err
 	}
+
 	productID, err := uuid.Parse(web.Param(r, "product_id"))
 	if err != nil {
 		return validate.NewFieldsError("product_id", err)

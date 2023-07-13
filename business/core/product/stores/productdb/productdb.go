@@ -18,9 +18,8 @@ import (
 
 // Store manages the set of APIs for product database access.
 type Store struct {
-	log    *logger.Logger
-	db     sqlx.ExtContext
-	inTran bool
+	log *logger.Logger
+	db  sqlx.ExtContext
 }
 
 // NewStore constructs the api for data access.
@@ -31,17 +30,20 @@ func NewStore(log *logger.Logger, db *sqlx.DB) *Store {
 	}
 }
 
-func (s *Store) InTran(tr core.Transactor) (product.Storer, error) {
-	tx, err := database.GetTx(tr)
+// ExecuteUnderTransaction constructs a new Store value replacing the sqlx DB
+// value with a sqlx DB value that is currently inside a transaction.
+func (s *Store) ExecuteUnderTransaction(tr core.Transactor) (product.Storer, error) {
+	tx, err := database.GetExtContext(tr)
 	if err != nil {
 		return nil, err
 	}
 
-	return &Store{
-		log:    s.log,
-		db:     tx,
-		inTran: true,
-	}, nil
+	s = &Store{
+		log: s.log,
+		db:  tx,
+	}
+
+	return s, nil
 }
 
 // Create adds a Product to the database. It returns the created Product with
