@@ -1,3 +1,4 @@
+// The default service API response.
 export interface DefaultAPIResponse<T> {
   page: number
   rowsPerPage: number

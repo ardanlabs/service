@@ -1,6 +1,7 @@
 import { createTheme, ThemeOptions } from '@mui/material/styles'
 import { foundations } from '@/components/Theme/foundations'
 
+// ThemeOptions are set for the MUI framework.
 const themeOptions: ThemeOptions = {
   ...foundations,
 }

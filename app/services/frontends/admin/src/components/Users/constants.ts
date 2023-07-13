@@ -1,5 +1,6 @@
 import { HeadCell } from '@/components/DataTable/types'
 
+// Headers for the Users table
 export const headCells: readonly HeadCell[] = [
   {
     id: 'id',

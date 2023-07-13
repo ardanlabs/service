@@ -28,6 +28,7 @@ export default function AddUser(props: AddUserProps) {
   const handleClose = () => setOpen(false)
   const [fetchError, setFetchError] = React.useState('')
 
+  // Sets the user if the modal is used as Edit
   React.useEffect(() => {
     if (user) {
       const tempUser: Partial<User> = { ...user }
@@ -146,9 +147,9 @@ export default function AddUser(props: AddUserProps) {
     setFormData((prevFormData) => ({ ...prevFormData, roles: newValue }))
   }
 
+  // Sets the data for changes inside the form
   function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
     const { name, value } = event.target
-    if (name === 'email') emailRule()
     setFormData((prevFormData) => ({ ...prevFormData, [name]: value }))
   }
 
@@ -170,6 +171,7 @@ export default function AddUser(props: AddUserProps) {
             },
           },
         )
+
         if (userPost.ok) {
           setFormData({
             name: '',

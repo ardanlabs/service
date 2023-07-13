@@ -1,18 +1,21 @@
 'use client'
 
 import * as React from 'react'
-import DataTable from '@/components/DataTable/DataTable'
 import TableRow from '@mui/material/TableRow'
 import TableCell from '@mui/material/TableCell'
-import { DateCell } from '@/components/DataTable/Items/DateCell'
-import { DefaultAPIResponse } from '@/utils/types'
-import { User, headCells } from './constants'
-import { GenericProps } from '../DataTable/types'
-import ActionsCell from '@/components/DataTable/Items/ActionsCell'
-import AddUser from '@/components/Users/Add'
-import DeleteUser from '@/components/Users/Delete'
 import IconButton from '@mui/material/IconButton'
 import EditIcon from '@mui/icons-material/Edit'
+
+import DataTable from '@/components/DataTable/DataTable'
+import DateCell from '@/components/DataTable/Items/DateCell'
+import ActionsCell from '@/components/DataTable/Items/ActionsCell'
+import parseOrderBy from '@/components/DataTable/parseOrderBy'
+import { GenericProps } from '@/components/DataTable/types'
+
+import AddUser from '@/components/Users/Add'
+import DeleteUser from '@/components/Users/Delete'
+import { DefaultAPIResponse } from '@/utils/types'
+import { User, headCells } from '@/components/Users/constants'
 
 interface UsersDataTableProps {
   needsUpdate?: boolean
@@ -27,8 +30,7 @@ export default function UsersDataTable(props: UsersDataTableProps) {
   async function getData(props: GenericProps) {
     const { page, rows, order, direction } = props
 
-    const orderString =
-      order && direction ? `&orderBy=${order},${direction?.toUpperCase()}&` : ''
+    const orderString = parseOrderBy(order, direction)
 
     const fetchCall = await fetch(
       `${process.env.NEXT_PUBLIC_BASE_API_URL}/users?page=${page}&rows=${rows}${orderString}`,
@@ -44,11 +46,6 @@ export default function UsersDataTable(props: UsersDataTableProps) {
       setRows(fetchData.items)
       return
     }
-  }
-  async function editClient() {}
-
-  function handleEdit(event: React.MouseEvent<unknown>, id: string) {
-    event.stopPropagation()
   }
 
   return (

@@ -1,12 +1,18 @@
-'use client';
+'use client'
 
-import * as React from 'react';
-import { ThemeProvider } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
-import { NextAppDirEmotionCacheProvider } from '@/components/Theme/ThemeRegistry/EmotionCache';
-import theme from './theme';
+import * as React from 'react'
+import { ThemeProvider } from '@mui/material/styles'
+import CssBaseline from '@mui/material/CssBaseline'
+import { NextAppDirEmotionCacheProvider } from '@/components/Theme/ThemeRegistry/EmotionCache'
+import theme from './theme'
 
-export default function ThemeRegistry({ children }: { children: React.ReactNode }) {
+// ThemeRegistry provides a cache control for the MUI framework.
+// It also implements the ThemeProvider needed for theme configuration of MUI.
+export default function ThemeRegistry({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   return (
     <NextAppDirEmotionCacheProvider options={{ key: 'mui' }}>
       <ThemeProvider theme={theme}>
@@ -15,5 +21,5 @@ export default function ThemeRegistry({ children }: { children: React.ReactNode 
         {children}
       </ThemeProvider>
     </NextAppDirEmotionCacheProvider>
-  );
+  )
 }

@@ -1,17 +1,14 @@
 import * as React from 'react'
-import { Modal } from '../Modal/Modal'
-import ApiError from '../ApiError/ApiError'
-import Box from '@mui/system/Box'
-import Button from '@mui/material/Button'
-import Typography from '@mui/material/Typography'
 import IconButton from '@mui/material/IconButton'
 import DeleteIcon from '@mui/icons-material/Delete'
+import ConfirmationModal from '../ConfirmationModal/ConfirmationModal'
 
 interface DeleteUserProps {
   rowId: string
   setNeedsUpdate?: React.Dispatch<React.SetStateAction<boolean>>
 }
 
+// Delete user displays a confirmation modal that lets you delete a user.
 export default function DeleteUser(props: DeleteUserProps) {
   const { rowId, setNeedsUpdate } = props
   const [fetchError, setFetchError] = React.useState('')
@@ -57,61 +54,23 @@ export default function DeleteUser(props: DeleteUserProps) {
   }
 
   return (
-    <Modal
+    <ConfirmationModal
       buttonText="Delete User"
-      handleOpen={handleOpenDelete}
-      handleClose={handleCloseDelete}
+      handleOpenModal={handleOpenDelete}
+      handleCloseModal={handleCloseDelete}
       open={open}
       actionButton={
         <IconButton onClick={handleDelete}>
           <DeleteIcon />
         </IconButton>
       }
-    >
-      {fetchError ? (
-        <ApiError message={fetchError} clearError={() => setFetchError('')} />
-      ) : (
-        <Box
-          sx={{
-            display: 'flex',
-            alignContent: 'center',
-            justifyContent: 'center',
-            flexDirection: 'column',
-            textAlign: 'center',
-          }}
-        >
-          <Typography
-            id="modal-modal-title"
-            sx={{ fontWeight: 500, my: 4 }}
-            variant="h3"
-            component="h3"
-          >
-            DELETE USER
-          </Typography>
-          <Typography
-            id="modal-modal-title"
-            sx={{ my: 4 }}
-            variant="h6"
-            component="h6"
-          >
-            Are you sure you want to delete this user?
-          </Typography>
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-            }}
-          >
-            <Button sx={{ m: 2 }} size="large" onClick={handleCloseDelete}>
-              Cancel
-            </Button>
-            <Button sx={{ m: 2 }} size="large" onClick={deleteUser}>
-              Confirm
-            </Button>
-          </Box>
-        </Box>
-      )}
-    </Modal>
+      error={fetchError}
+      clearError={() => setFetchError('')}
+      confirmAction={deleteUser}
+      title="DELETE USER"
+      subtitle="Are you sure you want to delete this user?"
+      cancelButtonText="Cancel"
+      confirmButtonText="Confirm"
+    />
   )
 }
