@@ -45,7 +45,7 @@ func Routes(app *web.App, cfg Config) {
 	authen := mid.Authenticate(cfg.Auth)
 	ruleAdmin := mid.Authorize(cfg.Auth, auth.RuleAdminOnly)
 	ruleAdminOrSubject := mid.Authorize(cfg.Auth, auth.RuleAdminOrSubject)
-	tran := mid.ExecuteInTransation(database.NewCoreDB(cfg.DB))
+	tran := mid.ExecuteInTransation(cfg.Log, database.NewBeginner(cfg.DB))
 
 	// -------------------------------------------------------------------------
 

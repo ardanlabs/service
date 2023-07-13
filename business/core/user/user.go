@@ -12,7 +12,7 @@ import (
 
 	"github.com/ardanlabs/service/business/core/event"
 	"github.com/ardanlabs/service/business/data/order"
-	"github.com/ardanlabs/service/business/sys/core"
+	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/ardanlabs/service/business/sys/logger"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -30,7 +30,7 @@ var (
 // Storer interface declares the behavior this package needs to perists and
 // retrieve data.
 type Storer interface {
-	ExecuteUnderTransaction(tr core.Transactor) (Storer, error)
+	ExecuteUnderTransaction(tx database.Transaction) (Storer, error)
 	Create(ctx context.Context, usr User) error
 	Update(ctx context.Context, usr User) error
 	Delete(ctx context.Context, usr User) error
@@ -61,8 +61,8 @@ func NewCore(log *logger.Logger, evnCore *event.Core, storer Storer) *Core {
 
 // ExecuteUnderTransaction constructs a new Core value that will use the
 // specified transaction in any store related calls.
-func (c *Core) ExecuteUnderTransaction(tr core.Transactor) (*Core, error) {
-	trS, err := c.storer.ExecuteUnderTransaction(tr)
+func (c *Core) ExecuteUnderTransaction(tx database.Transaction) (*Core, error) {
+	trS, err := c.storer.ExecuteUnderTransaction(tx)
 	if err != nil {
 		return nil, err
 	}

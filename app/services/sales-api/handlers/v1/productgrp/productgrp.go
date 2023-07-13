@@ -9,7 +9,7 @@ import (
 
 	"github.com/ardanlabs/service/business/core/product"
 	"github.com/ardanlabs/service/business/core/user"
-	"github.com/ardanlabs/service/business/sys/core"
+	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/ardanlabs/service/business/sys/validate"
 	v1 "github.com/ardanlabs/service/business/web/v1"
 	"github.com/ardanlabs/service/business/web/v1/paging"
@@ -39,20 +39,20 @@ func New(product *product.Core, user *user.Core) *Handlers {
 // executeUnderTransaction constructs a new Handlers value with the core apis
 // using a store transaction that was created via middleware.
 func (h *Handlers) executeUnderTransaction(ctx context.Context) (*Handlers, error) {
-	if tr, ok := core.GetTransaction(ctx); ok {
-		u, err := h.user.ExecuteUnderTransaction(tr)
+	if tx, ok := database.GetTransaction(ctx); ok {
+		user, err := h.user.ExecuteUnderTransaction(tx)
 		if err != nil {
 			return nil, err
 		}
 
-		p, err := h.product.ExecuteUnderTransaction(tr)
+		product, err := h.product.ExecuteUnderTransaction(tx)
 		if err != nil {
 			return nil, err
 		}
 
 		h = &Handlers{
-			user:    u,
-			product: p,
+			user:    user,
+			product: product,
 		}
 
 		return h, nil

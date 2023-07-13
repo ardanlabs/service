@@ -1,0 +1,72 @@
+// Package database provides support for common database related functionality.
+package database
+
+import (
+	"context"
+	"database/sql"
+	"errors"
+	"fmt"
+
+	"github.com/ardanlabs/service/business/sys/logger"
+)
+
+// Transaction represents a value that can commit or rollback a transaction.
+type Transaction interface {
+	Commit() error
+	Rollback() error
+}
+
+// Beginner represents a value that can begin a transaction.
+type Beginner interface {
+	Begin() (Transaction, error)
+}
+
+// =============================================================================
+
+type ctxKey int
+
+const trKey ctxKey = 2
+
+// SetTransaction stores a value that can manage a transaction.
+func SetTransaction(ctx context.Context, tx Transaction) context.Context {
+	return context.WithValue(ctx, trKey, tx)
+}
+
+// GetTransaction retrieves the value that can manage a transaction.
+func GetTransaction(ctx context.Context) (Transaction, bool) {
+	v, ok := ctx.Value(trKey).(Transaction)
+	return v, ok
+}
+
+// =============================================================================
+
+// ExecuteUnderTransaction is a helper function that can be used in tests and
+// other apps to execute the core APIs under a transaction.
+func ExecuteUnderTransaction(ctx context.Context, log *logger.Logger, bgn Beginner, fn func(tx Transaction) error) error {
+	log.Info(ctx, "BEGIN TRANSACTION")
+	tx, err := bgn.Begin()
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		log.Info(ctx, "CHECKING FOR ROLLBACK")
+		if err := tx.Rollback(); err != nil {
+			if errors.Is(err, sql.ErrTxDone) {
+				return
+			}
+			log.Info(ctx, "ROLLBACK TRANSACTION", "ERROR", err)
+		}
+	}()
+
+	if err := fn(tx); err != nil {
+		return fmt.Errorf("exec tran: %w", err)
+	}
+
+	log.Info(ctx, "COMMIT TRANSACTION")
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("commit tran: %w", err)
+	}
+
+	return nil
+}

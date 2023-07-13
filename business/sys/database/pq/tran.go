@@ -1,31 +1,38 @@
-package database
+package db
 
 import (
 	"fmt"
 
-	"github.com/ardanlabs/service/business/sys/core"
+	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/jmoiron/sqlx"
 )
 
-type CoreDB struct {
+// dbBeginner implements the core coreTransaction interface,
+type dbBeginner struct {
 	sqlxDB *sqlx.DB
 }
 
-func NewCoreDB(sqlxDB *sqlx.DB) *CoreDB {
-	return &CoreDB{
+// NewBeginner constructs a value that implements the database
+// beginner interface.
+func NewBeginner(sqlxDB *sqlx.DB) database.Beginner {
+	return &dbBeginner{
 		sqlxDB: sqlxDB,
 	}
 }
 
-func (db *CoreDB) Begin() (core.Transactor, error) {
+// Begin start a transaction and returns a value that implements
+// the core transactor interface.
+func (db *dbBeginner) Begin() (database.Transaction, error) {
 	return db.sqlxDB.Beginx()
 }
 
-func GetExtContext(tr core.Transactor) (sqlx.ExtContext, error) {
-	tx, ok := tr.(sqlx.ExtContext)
+// GetExtContext is a helper function that extracts the sqlx value
+// from the core transactor interface for transactional use.
+func GetExtContext(tx database.Transaction) (sqlx.ExtContext, error) {
+	ec, ok := tx.(sqlx.ExtContext)
 	if !ok {
-		return nil, fmt.Errorf("Transactor(%T) not of a type *sql.Tx", tr)
+		return nil, fmt.Errorf("Transactor(%T) not of a type *sql.Tx", tx)
 	}
 
-	return tx, nil
+	return ec, nil
 }

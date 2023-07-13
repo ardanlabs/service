@@ -7,42 +7,42 @@ import (
 
 	"github.com/ardanlabs/service/business/core/product"
 	"github.com/ardanlabs/service/business/core/user"
-	"github.com/ardanlabs/service/business/sys/core"
+	"github.com/ardanlabs/service/business/sys/database"
 	v1 "github.com/ardanlabs/service/business/web/v1"
 	"github.com/ardanlabs/service/foundation/web"
 )
 
 // Handlers manages the set of product endpoints.
 type Handlers struct {
-	usrCore *user.Core
-	prdCore *product.Core
+	user    *user.Core
+	product *product.Core
 }
 
 // New constructs a handlers for route access.
-func New(usrCore *user.Core, prdCore *product.Core) *Handlers {
+func New(user *user.Core, product *product.Core) *Handlers {
 	return &Handlers{
-		usrCore: usrCore,
-		prdCore: prdCore,
+		user:    user,
+		product: product,
 	}
 }
 
 // executeUnderTransaction constructs a new Handlers value with the core apis
 // using a store transaction that was created via middleware.
 func (h *Handlers) executeUnderTransaction(ctx context.Context) (*Handlers, error) {
-	if tr, ok := core.GetTransaction(ctx); ok {
-		usrCore, err := h.usrCore.ExecuteUnderTransaction(tr)
+	if tx, ok := database.GetTransaction(ctx); ok {
+		user, err := h.user.ExecuteUnderTransaction(tx)
 		if err != nil {
 			return nil, err
 		}
 
-		prdCore, err := h.prdCore.ExecuteUnderTransaction(tr)
+		product, err := h.product.ExecuteUnderTransaction(tx)
 		if err != nil {
 			return nil, err
 		}
 
 		h = &Handlers{
-			usrCore: usrCore,
-			prdCore: prdCore,
+			user:    user,
+			product: product,
 		}
 
 		return h, nil
@@ -73,14 +73,14 @@ func (h *Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Re
 		return v1.NewRequestError(err, http.StatusBadRequest)
 	}
 
-	usr, err := h.usrCore.Create(ctx, nu)
+	usr, err := h.user.Create(ctx, nu)
 	if err != nil {
 		return err
 	}
 
 	np.UserID = usr.ID
 
-	prd, err := h.prdCore.Create(ctx, np)
+	prd, err := h.product.Create(ctx, np)
 	if err != nil {
 		return err
 	}
