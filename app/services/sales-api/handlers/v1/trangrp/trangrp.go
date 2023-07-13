@@ -1,3 +1,4 @@
+// Package trangrp maintains the group of handlers for transaction example.
 package trangrp
 
 import (

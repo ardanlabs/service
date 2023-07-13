@@ -1,3 +1,4 @@
+// Package core provides support for common core related functionality.
 package core
 
 import (
