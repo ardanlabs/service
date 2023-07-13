@@ -14,14 +14,18 @@ type Transactor interface {
 	Rollback() error
 }
 
+type NestedTransactor interface {
+	Transactor
+	IsNested() bool
+}
+
 type Beginner[T any] interface {
-	Begin() (Transactor, bool, error)
+	Begin() (NestedTransactor, error)
 	InTran(Transactor) (T, error)
 }
 
 func WithinTranCore[T any](ctx context.Context, log *logger.Logger, b Beginner[T], fn func(c T) error) error {
-	fmt.Println("doing beginx in WithinCore")
-	tr, created, err := b.Begin()
+	tr, err := b.Begin()
 	if err != nil {
 		return err
 	}
@@ -36,7 +40,7 @@ func WithinTranCore[T any](ctx context.Context, log *logger.Logger, b Beginner[T
 		}
 		return nil
 	}
-	if created {
+	if !tr.IsNested() {
 		return WithinTranFn(ctx, log, tr, tran)
 	}
 	return tran(tr)
@@ -57,7 +61,6 @@ func WithinTranFn(ctx context.Context, log *logger.Logger, tr Transactor, fn fun
 		return fmt.Errorf("exec tran: %w", err)
 	}
 
-	fmt.Println("doing commit in WithinCore")
 	if err := tr.Commit(); err != nil {
 		return fmt.Errorf("commit tran: %w", err)
 	}
@@ -75,4 +78,21 @@ func SetTransactor(ctx context.Context, tr Transactor) context.Context {
 func GetTransactor(ctx context.Context) (Transactor, bool) {
 	v, ok := ctx.Value(trKey).(Transactor)
 	return v, ok
+}
+
+type NestedTransaction struct {
+	Tr     Transactor
+	Nested bool
+}
+
+func (nr *NestedTransaction) Commit() error {
+	return nr.Tr.Commit()
+}
+
+func (nr *NestedTransaction) Rollback() error {
+	return nr.Tr.Rollback()
+}
+
+func (nr *NestedTransaction) IsNested() bool {
+	return nr.Nested
 }

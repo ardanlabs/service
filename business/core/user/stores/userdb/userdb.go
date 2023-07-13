@@ -35,21 +35,32 @@ func NewStore(log *logger.Logger, db *sqlx.DB) *Store {
 	}
 }
 
-func (s *Store) Begin() (core.Transactor, bool, error) {
+func (s *Store) Begin() (core.NestedTransactor, error) {
 	if s.inTran {
-		return s.db.(core.Transactor), false, nil
+		nr := &core.NestedTransaction{
+			Tr:     s.db.(core.Transactor),
+			Nested: true,
+		}
+		return nr, nil
 	}
 	tr, err := s.db.(*sqlx.DB).Beginx()
-	return tr, true, err
+	if err != nil {
+		return nil, err
+	}
+	nr := &core.NestedTransaction{
+		Tr:     tr,
+		Nested: false,
+	}
+	return nr, nil
 
 }
 
 func (s *Store) InTran(tr core.Transactor) (user.Storer, error) {
-	fmt.Println("user store in tran")
-	if s.inTran {
-		return s, nil
+	nr, ok := tr.(*core.NestedTransaction)
+	if !ok {
+		return nil, fmt.Errorf("User Transactor(%T) not of a type NestedTransactor", tr)
 	}
-	tx, ok := tr.(sqlx.ExtContext)
+	tx, ok := nr.Tr.(sqlx.ExtContext)
 	if !ok {
 		return nil, fmt.Errorf("User Transactor(%T) not of a type *sql.Tx", tr)
 	}

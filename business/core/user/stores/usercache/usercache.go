@@ -30,7 +30,7 @@ func NewStore(log *logger.Logger, storer user.Storer) *Store {
 	}
 }
 
-func (s *Store) Begin() (core.Transactor, bool, error) {
+func (s *Store) Begin() (core.NestedTransactor, error) {
 	return s.storer.Begin()
 
 }

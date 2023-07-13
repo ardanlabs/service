@@ -39,7 +39,7 @@ type Storer interface {
 	QueryByID(ctx context.Context, userID uuid.UUID) (User, error)
 	QueryByIDs(ctx context.Context, userID []uuid.UUID) ([]User, error)
 	QueryByEmail(ctx context.Context, email mail.Address) (User, error)
-	Begin() (core.Transactor, bool, error)
+	Begin() (core.NestedTransactor, error)
 	InTran(tr core.Transactor) (Storer, error)
 }
 
@@ -61,12 +61,11 @@ func NewCore(log *logger.Logger, evnCore *event.Core, storer Storer) *Core {
 	}
 }
 
-func (c *Core) Begin() (core.Transactor, bool, error) {
+func (c *Core) Begin() (core.NestedTransactor, error) {
 	return c.storer.Begin()
 }
 
 func (c *Core) InTran(tr core.Transactor) (*Core, error) {
-	fmt.Println("user in tran")
 	c.log.Info(context.Background(), "calling user inIntran", "tr", tr, "tr2", fmt.Sprintf("tr: %T", tr))
 	trS, err := c.storer.InTran(tr)
 	if err != nil {

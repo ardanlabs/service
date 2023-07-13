@@ -40,10 +40,11 @@ func (s *Store) Begin() (core.Transactor, error) {
 }
 
 func (s *Store) InTran(tr core.Transactor) (product.Storer, error) {
-	if s.inTran {
-		return s, nil
+	nr, ok := tr.(*core.NestedTransaction)
+	if !ok {
+		return nil, fmt.Errorf("User Transactor(%T) not of a type NestedTransactor", tr)
 	}
-	tx, ok := tr.(sqlx.ExtContext)
+	tx, ok := nr.Tr.(sqlx.ExtContext)
 	if !ok {
 		return nil, fmt.Errorf("Transactor(%T) not of a type *sql.Tx", tr)
 	}

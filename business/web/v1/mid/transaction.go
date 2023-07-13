@@ -15,11 +15,11 @@ import (
 func InTran(db *sqlx.DB) web.Middleware {
 	m := func(handler web.Handler) web.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-			fmt.Println("doing beginx in middleware")
 			tx, err := db.Beginx()
 			if err != nil {
 				return err
 			}
+			nr := &core.NestedTransaction{Tr: tx}
 			defer func() {
 				if err := tx.Rollback(); err != nil {
 					if errors.Is(err, sql.ErrTxDone) {
@@ -27,13 +27,12 @@ func InTran(db *sqlx.DB) web.Middleware {
 					}
 				}
 			}()
-			ctx = core.SetTransactor(ctx, tx)
+			ctx = core.SetTransactor(ctx, nr)
 			err = handler(ctx, w, r)
 			if err != nil {
 				return err
 			}
 
-			fmt.Println("doing commit in middleware")
 			if err := tx.Commit(); err != nil {
 				return fmt.Errorf("commit tran: %w", err)
 			}
