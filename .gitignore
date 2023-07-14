@@ -4,6 +4,9 @@ app/services/metrics/metrics
 app/tooling/sales-admin/sales-admin
 app/tooling/sales-admin/logfmt
 
+# Environment
+app/frontends/admin/.env
+
 # Mac
 .DS_Store
 
