@@ -495,11 +495,11 @@ list:
 # ==============================================================================
 # Admin Frontend
 
-ADMIN_FRONTEND_PREFIX := ./app/services/frontends/admin
+ADMIN_FRONTEND_PREFIX := ./app/frontends/admin
 
 write-token-to-env:
-	echo "NEXT_PUBLIC_BASE_API_URL=http://localhost:3000/v1" > app/services/frontends/admin/.env
-	make token | grep -o '"ey.*"' | awk '{print "NEXT_PUBLIC_TOKEN="$$1}' >> app/services/frontends/admin/.env
+	echo "NEXT_PUBLIC_BASE_API_URL=http://localhost:3000/v1" > ${ADMIN_FRONTEND_PREFIX}/.env
+	make token | grep -o '"ey.*"' | awk '{print "NEXT_PUBLIC_TOKEN="$$1}' >> ${ADMIN_FRONTEND_PREFIX}/.env
 
 admin-gui-install:
 	npm install --prefix ${ADMIN_FRONTEND_PREFIX}
