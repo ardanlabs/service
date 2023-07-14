@@ -12,6 +12,8 @@ import (
 
 	"github.com/ardanlabs/service/business/core/event"
 	"github.com/ardanlabs/service/business/data/order"
+	"github.com/ardanlabs/service/business/sys/database"
+	"github.com/ardanlabs/service/business/sys/logger"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -28,7 +30,7 @@ var (
 // Storer interface declares the behavior this package needs to perists and
 // retrieve data.
 type Storer interface {
-	WithinTran(ctx context.Context, fn func(s Storer) error) error
+	ExecuteUnderTransaction(tx database.Transaction) (Storer, error)
 	Create(ctx context.Context, usr User) error
 	Update(ctx context.Context, usr User) error
 	Delete(ctx context.Context, usr User) error
@@ -45,14 +47,33 @@ type Storer interface {
 type Core struct {
 	storer  Storer
 	evnCore *event.Core
+	log     *logger.Logger
 }
 
 // NewCore constructs a core for user api access.
-func NewCore(evnCore *event.Core, storer Storer) *Core {
+func NewCore(log *logger.Logger, evnCore *event.Core, storer Storer) *Core {
 	return &Core{
 		storer:  storer,
 		evnCore: evnCore,
+		log:     log,
 	}
+}
+
+// ExecuteUnderTransaction constructs a new Core value that will use the
+// specified transaction in any store related calls.
+func (c *Core) ExecuteUnderTransaction(tx database.Transaction) (*Core, error) {
+	trS, err := c.storer.ExecuteUnderTransaction(tx)
+	if err != nil {
+		return nil, err
+	}
+
+	c = &Core{
+		log:     c.log,
+		storer:  trS,
+		evnCore: c.evnCore,
+	}
+
+	return c, nil
 }
 
 // Create inserts a new user into the database.
@@ -76,16 +97,8 @@ func (c *Core) Create(ctx context.Context, nu NewUser) (User, error) {
 		DateUpdated:  now,
 	}
 
-	// This provides an example of how to execute a transaction if required.
-	tran := func(s Storer) error {
-		if err := s.Create(ctx, usr); err != nil {
-			return fmt.Errorf("create: %w", err)
-		}
-		return nil
-	}
-
-	if err := c.storer.WithinTran(ctx, tran); err != nil {
-		return User{}, fmt.Errorf("tran: %w", err)
+	if err := c.storer.Create(ctx, usr); err != nil {
+		return User{}, fmt.Errorf("create: %w", err)
 	}
 
 	return usr, nil

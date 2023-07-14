@@ -30,7 +30,7 @@ func UserAdd(log *logger.Logger, cfg database.Config, name, email, password stri
 	defer cancel()
 
 	evnCore := event.NewCore(log)
-	core := user.NewCore(evnCore, userdb.NewStore(log, db))
+	core := user.NewCore(log, evnCore, userdb.NewStore(log, db))
 
 	addr, err := mail.ParseAddress(email)
 	if err != nil {

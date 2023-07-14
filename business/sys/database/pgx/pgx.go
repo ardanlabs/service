@@ -1,5 +1,5 @@
-// Package database provides support for access the database.
-package database
+// Package db provides support for access the database.
+package db
 
 import (
 	"context"
@@ -104,41 +104,6 @@ func StatusCheck(ctx context.Context, db *sqlx.DB) error {
 	const q = `SELECT true`
 	var tmp bool
 	return db.QueryRowContext(ctx, q).Scan(&tmp)
-}
-
-// WithinTran runs passed function and do commit/rollback at the end.
-func WithinTran(ctx context.Context, log *logger.Logger, db *sqlx.DB, fn func(*sqlx.Tx) error) error {
-	log.Info(ctx, "begin tran")
-	tx, err := db.Beginx()
-	if err != nil {
-		return fmt.Errorf("begin tran: %w", err)
-	}
-
-	// We can defer the rollback since the code checks if the transaction
-	// has already been committed.
-	defer func() {
-		if err := tx.Rollback(); err != nil {
-			if errors.Is(err, sql.ErrTxDone) {
-				return
-			}
-			log.Error(ctx, "unable to rollback tran", "msg", err)
-		}
-		log.Info(ctx, "rollback tran")
-	}()
-
-	if err := fn(tx); err != nil {
-		if pqerr, ok := err.(*pgconn.PgError); ok && pqerr.Code == uniqueViolation {
-			return ErrDBDuplicatedEntry
-		}
-		return fmt.Errorf("exec tran: %w", err)
-	}
-
-	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("commit tran: %w", err)
-	}
-	log.Info(ctx, "commit tran")
-
-	return nil
 }
 
 // ExecContext is a helper function to execute a CUD operation with

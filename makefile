@@ -150,7 +150,7 @@ PROMETHEUS      := prom/prometheus:v2.44.0
 TEMPO           := grafana/tempo:2.1.1
 LOKI            := grafana/loki:2.8.2
 PROMTAIL        := grafana/promtail:2.8.2
-TELEPRESENCE    := datawire/ambassador-telepresence-manager:2.14.0
+TELEPRESENCE    := datawire/ambassador-telepresence-manager:2.14.1
 
 KIND_CLUSTER    := ardan-starter-cluster
 NAMESPACE       := sales-system
@@ -291,7 +291,7 @@ dev-restart:
 
 dev-update: all dev-load dev-restart
 
-dev-update-apply: all dev-load dev-apply
+dev-update-apply: all dev-load dev-apply dev-restart
 
 # ------------------------------------------------------------------------------
 
@@ -318,6 +318,9 @@ dev-describe-deployment:
 
 dev-describe-sales:
 	kubectl describe pod --namespace=$(NAMESPACE) -l app=$(APP)
+
+dev-describe-telepresence:
+	kubectl describe pod --namespace=ambassador -l app=traffic-manager
 
 # ------------------------------------------------------------------------------
 
