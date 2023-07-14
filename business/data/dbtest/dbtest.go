@@ -242,7 +242,7 @@ type CoreAPIs struct {
 
 func newCoreAPIs(log *logger.Logger, db *sqlx.DB) CoreAPIs {
 	evnCore := event.NewCore(log)
-	usrCore := user.NewCore(evnCore, userdb.NewStore(log, db))
+	usrCore := user.NewCore(log, evnCore, userdb.NewStore(log, db))
 	prdCore := product.NewCore(log, evnCore, usrCore, productdb.NewStore(log, db))
 
 	return CoreAPIs{

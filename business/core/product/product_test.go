@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/mail"
 	"runtime/debug"
 	"testing"
 	"time"
@@ -11,6 +12,8 @@ import (
 	"github.com/ardanlabs/service/business/core/product"
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/data/dbtest"
+	"github.com/ardanlabs/service/business/sys/database"
+	db "github.com/ardanlabs/service/business/sys/database/pgx"
 	"github.com/ardanlabs/service/foundation/docker"
 	"github.com/google/go-cmp/cmp"
 )
@@ -32,6 +35,7 @@ func TestMain(m *testing.M) {
 func Test_Product(t *testing.T) {
 	t.Run("crud", crud)
 	t.Run("paging", paging)
+	t.Run("transaction", transaction)
 }
 
 // =============================================================================
@@ -284,5 +288,169 @@ func paging(t *testing.T) {
 		t.Logf("product1: %v", prd3[0].ID)
 		t.Logf("product2: %v", prd3[1].ID)
 		t.Fatalf("Should have different product")
+	}
+}
+
+func transaction(t *testing.T) {
+	test := dbtest.NewTest(t, c)
+	defer func() {
+		if r := recover(); r != nil {
+			t.Log(r)
+			t.Error(string(debug.Stack()))
+		}
+		test.Teardown()
+	}()
+
+	api := test.CoreAPIs
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	// -------------------------------------------------------------------------
+	// Execute under a transaction with rollback
+
+	tran := func(tx database.Transaction) error {
+		usrCore, err := api.User.ExecuteUnderTransaction(tx)
+		if err != nil {
+			t.Fatalf("Should be able to create new user core: %s.", err)
+		}
+
+		prdCore, err := api.Product.ExecuteUnderTransaction(tx)
+		if err != nil {
+			t.Fatalf("Should be able to create new product core: %s.", err)
+		}
+
+		email, err := mail.ParseAddress("test@test.com")
+		if err != nil {
+			t.Fatalf("Should be able to parse email: %s.", err)
+		}
+
+		nu := user.NewUser{
+			Name:            "test user",
+			Email:           *email,
+			Roles:           []user.Role{user.RoleAdmin},
+			Department:      "some",
+			Password:        "some",
+			PasswordConfirm: "some",
+		}
+
+		usr, err := usrCore.Create(ctx, nu)
+		if err != nil {
+			return err
+		}
+
+		np := product.NewProduct{
+			UserID:   usr.ID,
+			Name:     "test product",
+			Cost:     -1.0,
+			Quantity: 1,
+		}
+
+		_, err = prdCore.Create(ctx, np)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	err := database.ExecuteUnderTransaction(ctx, test.Log, db.NewBeginner(test.DB), tran)
+	if !errors.Is(err, product.ErrInvalidCost) {
+		t.Fatalf("Should NOT be able to add product : %s.", err)
+	}
+
+	// -------------------------------------------------------------------------
+	// Validate rollback
+
+	email, err := mail.ParseAddress("test@test.com")
+	if err != nil {
+		t.Fatalf("Should be able to parse email: %s.", err)
+	}
+
+	usr, err := api.User.QueryByEmail(ctx, *email)
+	if err == nil {
+		t.Fatalf("Should NOT be able to retrieve user but got: %+v.", usr)
+	}
+	if !errors.Is(err, user.ErrNotFound) {
+		t.Fatalf("Should get ErrNotFound but got: %s.", err)
+	}
+
+	count, err := api.Product.Count(ctx, product.QueryFilter{})
+	if err != nil {
+		t.Fatalf("Should be able to count products: %s.", err)
+	}
+
+	if count > 0 {
+		t.Fatalf("Should have no products in the DB, but have: %d.", count)
+	}
+
+	// -------------------------------------------------------------------------
+	// Good transaction
+
+	tran = func(tx database.Transaction) error {
+		usrCore, err := api.User.ExecuteUnderTransaction(tx)
+		if err != nil {
+			t.Fatalf("Should be able to create new user core: %s.", err)
+		}
+
+		prdCore, err := api.Product.ExecuteUnderTransaction(tx)
+		if err != nil {
+			t.Fatalf("Should be able to create new product core: %s.", err)
+		}
+
+		email, err := mail.ParseAddress("test@test.com")
+		if err != nil {
+			t.Fatalf("Should be able to parse email: %s.", err)
+		}
+
+		nu := user.NewUser{
+			Name:            "test user",
+			Email:           *email,
+			Roles:           []user.Role{user.RoleAdmin},
+			Department:      "some",
+			Password:        "some",
+			PasswordConfirm: "some",
+		}
+
+		usr, err := usrCore.Create(ctx, nu)
+		if err != nil {
+			return err
+		}
+
+		np := product.NewProduct{
+			UserID:   usr.ID,
+			Name:     "test product",
+			Cost:     1.0,
+			Quantity: 1,
+		}
+
+		_, err = prdCore.Create(ctx, np)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	err = database.ExecuteUnderTransaction(ctx, test.Log, db.NewBeginner(test.DB), tran)
+	if errors.Is(err, product.ErrInvalidCost) {
+		t.Fatalf("Should be able to add product : %s.", err)
+	}
+
+	// -------------------------------------------------------------------------
+	// Validate
+
+	usr, err = api.User.QueryByEmail(ctx, *email)
+	if err != nil {
+		t.Fatalf("Should be able to retrieve user but got: %+v.", usr)
+	}
+
+	count, err = api.Product.Count(ctx, product.QueryFilter{})
+	if err != nil {
+		t.Fatalf("Should be able to count products: %s.", err)
+	}
+
+	if count == 0 {
+		t.Fatal("Should have products in the DB.")
 	}
 }

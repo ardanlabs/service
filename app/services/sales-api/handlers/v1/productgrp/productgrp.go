@@ -9,8 +9,8 @@ import (
 
 	"github.com/ardanlabs/service/business/core/product"
 	"github.com/ardanlabs/service/business/core/user"
+	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/ardanlabs/service/business/sys/validate"
-	"github.com/ardanlabs/service/business/web/auth"
 	v1 "github.com/ardanlabs/service/business/web/v1"
 	"github.com/ardanlabs/service/business/web/v1/paging"
 	"github.com/ardanlabs/service/foundation/web"
@@ -26,16 +26,39 @@ var (
 type Handlers struct {
 	product *product.Core
 	user    *user.Core
-	auth    *auth.Auth
 }
 
 // New constructs a handlers for route access.
-func New(product *product.Core, user *user.Core, auth *auth.Auth) *Handlers {
+func New(product *product.Core, user *user.Core) *Handlers {
 	return &Handlers{
 		product: product,
 		user:    user,
-		auth:    auth,
 	}
+}
+
+// executeUnderTransaction constructs a new Handlers value with the core apis
+// using a store transaction that was created via middleware.
+func (h *Handlers) executeUnderTransaction(ctx context.Context) (*Handlers, error) {
+	if tx, ok := database.GetTransaction(ctx); ok {
+		user, err := h.user.ExecuteUnderTransaction(tx)
+		if err != nil {
+			return nil, err
+		}
+
+		product, err := h.product.ExecuteUnderTransaction(tx)
+		if err != nil {
+			return nil, err
+		}
+
+		h = &Handlers{
+			user:    user,
+			product: product,
+		}
+
+		return h, nil
+	}
+
+	return h, nil
 }
 
 // Create adds a new product to the system.
@@ -60,6 +83,11 @@ func (h *Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Re
 
 // Update updates a product in the system.
 func (h *Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	h, err := h.executeUnderTransaction(ctx)
+	if err != nil {
+		return err
+	}
+
 	var app AppUpdateProduct
 	if err := web.Decode(r, &app); err != nil {
 		return err
@@ -90,6 +118,11 @@ func (h *Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Re
 
 // Delete removes a product from the system.
 func (h *Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	h, err := h.executeUnderTransaction(ctx)
+	if err != nil {
+		return err
+	}
+
 	productID, err := uuid.Parse(web.Param(r, "product_id"))
 	if err != nil {
 		return validate.NewFieldsError("product_id", err)

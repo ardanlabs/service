@@ -12,7 +12,8 @@ import (
 
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/data/order"
-	database "github.com/ardanlabs/service/business/sys/database/pgx"
+	"github.com/ardanlabs/service/business/sys/database"
+	db "github.com/ardanlabs/service/business/sys/database/pgx"
 	"github.com/ardanlabs/service/business/sys/database/pgx/dbarray"
 	"github.com/ardanlabs/service/business/sys/logger"
 	"github.com/google/uuid"
@@ -21,9 +22,8 @@ import (
 
 // Store manages the set of APIs for user database access.
 type Store struct {
-	log    *logger.Logger
-	db     sqlx.ExtContext
-	inTran bool
+	log *logger.Logger
+	db  sqlx.ExtContext
 }
 
 // NewStore constructs the api for data access.
@@ -34,22 +34,20 @@ func NewStore(log *logger.Logger, db *sqlx.DB) *Store {
 	}
 }
 
-// WithinTran runs passed function and do commit/rollback at the end.
-func (s *Store) WithinTran(ctx context.Context, fn func(s user.Storer) error) error {
-	if s.inTran {
-		return fn(s)
+// ExecuteUnderTransaction constructs a new Store value replacing the sqlx DB
+// value with a sqlx DB value that is currently inside a transaction.
+func (s *Store) ExecuteUnderTransaction(tx database.Transaction) (user.Storer, error) {
+	ec, err := db.GetExtContext(tx)
+	if err != nil {
+		return nil, err
 	}
 
-	f := func(tx *sqlx.Tx) error {
-		s := &Store{
-			log:    s.log,
-			db:     tx,
-			inTran: true,
-		}
-		return fn(s)
+	s = &Store{
+		log: s.log,
+		db:  ec,
 	}
 
-	return database.WithinTran(ctx, s.log, s.db.(*sqlx.DB), f)
+	return s, nil
 }
 
 // Create inserts a new user into the database.
@@ -60,8 +58,8 @@ func (s *Store) Create(ctx context.Context, usr user.User) error {
 	VALUES
 		(:user_id, :name, :email, :password_hash, :roles, :enabled, :department, :date_created, :date_updated)`
 
-	if err := database.NamedExecContext(ctx, s.log, s.db, q, toDBUser(usr)); err != nil {
-		if errors.Is(err, database.ErrDBDuplicatedEntry) {
+	if err := db.NamedExecContext(ctx, s.log, s.db, q, toDBUser(usr)); err != nil {
+		if errors.Is(err, db.ErrDBDuplicatedEntry) {
 			return fmt.Errorf("namedexeccontext: %w", user.ErrUniqueEmail)
 		}
 		return fmt.Errorf("namedexeccontext: %w", err)
@@ -85,8 +83,8 @@ func (s *Store) Update(ctx context.Context, usr user.User) error {
 	WHERE
 		user_id = :user_id`
 
-	if err := database.NamedExecContext(ctx, s.log, s.db, q, toDBUser(usr)); err != nil {
-		if errors.Is(err, database.ErrDBDuplicatedEntry) {
+	if err := db.NamedExecContext(ctx, s.log, s.db, q, toDBUser(usr)); err != nil {
+		if errors.Is(err, db.ErrDBDuplicatedEntry) {
 			return user.ErrUniqueEmail
 		}
 		return fmt.Errorf("namedexeccontext: %w", err)
@@ -109,7 +107,7 @@ func (s *Store) Delete(ctx context.Context, usr user.User) error {
 	WHERE
 		user_id = :user_id`
 
-	if err := database.NamedExecContext(ctx, s.log, s.db, q, data); err != nil {
+	if err := db.NamedExecContext(ctx, s.log, s.db, q, data); err != nil {
 		return fmt.Errorf("namedexeccontext: %w", err)
 	}
 
@@ -141,7 +139,7 @@ func (s *Store) Query(ctx context.Context, filter user.QueryFilter, orderBy orde
 	buf.WriteString(" OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY")
 
 	var dbUsrs []dbUser
-	if err := database.NamedQuerySlice(ctx, s.log, s.db, buf.String(), data, &dbUsrs); err != nil {
+	if err := db.NamedQuerySlice(ctx, s.log, s.db, buf.String(), data, &dbUsrs); err != nil {
 		return nil, fmt.Errorf("namedqueryslice: %w", err)
 	}
 
@@ -169,7 +167,7 @@ func (s *Store) Count(ctx context.Context, filter user.QueryFilter) (int, error)
 	var count struct {
 		Count int `db:"count"`
 	}
-	if err := database.NamedQueryStruct(ctx, s.log, s.db, buf.String(), data, &count); err != nil {
+	if err := db.NamedQueryStruct(ctx, s.log, s.db, buf.String(), data, &count); err != nil {
 		return 0, fmt.Errorf("namedquerystruct: %w", err)
 	}
 
@@ -193,8 +191,8 @@ func (s *Store) QueryByID(ctx context.Context, userID uuid.UUID) (user.User, err
 		user_id = :user_id`
 
 	var dbUsr dbUser
-	if err := database.NamedQueryStruct(ctx, s.log, s.db, q, data, &dbUsr); err != nil {
-		if errors.Is(err, database.ErrDBNotFound) {
+	if err := db.NamedQueryStruct(ctx, s.log, s.db, q, data, &dbUsr); err != nil {
+		if errors.Is(err, db.ErrDBNotFound) {
 			return user.User{}, fmt.Errorf("namedquerystruct: %w", user.ErrNotFound)
 		}
 		return user.User{}, fmt.Errorf("namedquerystruct: %w", err)
@@ -233,8 +231,8 @@ func (s *Store) QueryByIDs(ctx context.Context, userIDs []uuid.UUID) ([]user.Use
 		user_id = ANY(:user_id)`
 
 	var dbUsrs []dbUser
-	if err := database.NamedQuerySlice(ctx, s.log, s.db, q, data, &dbUsrs); err != nil {
-		if errors.Is(err, database.ErrDBNotFound) {
+	if err := db.NamedQuerySlice(ctx, s.log, s.db, q, data, &dbUsrs); err != nil {
+		if errors.Is(err, db.ErrDBNotFound) {
 			return nil, user.ErrNotFound
 		}
 		return nil, fmt.Errorf("namedquerystruct: %w", err)
@@ -265,8 +263,8 @@ func (s *Store) QueryByEmail(ctx context.Context, email mail.Address) (user.User
 		email = :email`
 
 	var dbUsr dbUser
-	if err := database.NamedQueryStruct(ctx, s.log, s.db, q, data, &dbUsr); err != nil {
-		if errors.Is(err, database.ErrDBNotFound) {
+	if err := db.NamedQueryStruct(ctx, s.log, s.db, q, data, &dbUsr); err != nil {
+		if errors.Is(err, db.ErrDBNotFound) {
 			return user.User{}, fmt.Errorf("namedquerystruct: %w", user.ErrNotFound)
 		}
 		return user.User{}, fmt.Errorf("namedquerystruct: %w", err)

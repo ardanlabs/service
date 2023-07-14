@@ -12,6 +12,7 @@ import (
 	"github.com/ardanlabs/service/business/core/event"
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/data/order"
+	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/ardanlabs/service/business/sys/logger"
 	"github.com/google/uuid"
 )
@@ -20,6 +21,7 @@ import (
 var (
 	ErrNotFound    = errors.New("product not found")
 	ErrInvalidUser = errors.New("user not valid")
+	ErrInvalidCost = errors.New("cost not valid")
 )
 
 // =============================================================================
@@ -27,6 +29,7 @@ var (
 // Storer interface declares the behavior this package needs to perists and
 // retrieve data.
 type Storer interface {
+	ExecuteUnderTransaction(tx database.Transaction) (Storer, error)
 	Create(ctx context.Context, prd Product) error
 	Update(ctx context.Context, prd Product) error
 	Delete(ctx context.Context, prd Product) error
@@ -39,6 +42,7 @@ type Storer interface {
 // UserCore interface declares the behavior this package needs from the user
 // core domain.
 type UserCore interface {
+	ExecuteUnderTransaction(tx database.Transaction) (*user.Core, error)
 	QueryByID(ctx context.Context, userID uuid.UUID) (user.User, error)
 }
 
@@ -66,12 +70,39 @@ func NewCore(log *logger.Logger, evnCore *event.Core, usrCore UserCore, storer S
 	return &core
 }
 
+// ExecuteUnderTransaction constructs a new Core value that will use the
+// specified transaction in any store related calls.
+func (c *Core) ExecuteUnderTransaction(tx database.Transaction) (*Core, error) {
+	storer, err := c.storer.ExecuteUnderTransaction(tx)
+	if err != nil {
+		return nil, err
+	}
+
+	usrCore, err := c.usrCore.ExecuteUnderTransaction(tx)
+	if err != nil {
+		return nil, err
+	}
+
+	c = &Core{
+		storer:  storer,
+		evnCore: c.evnCore,
+		usrCore: usrCore,
+		log:     c.log,
+	}
+
+	return c, nil
+}
+
 // Create adds a Product to the database. It returns the created Product with
 // fields like ID and DateCreated populated.
 func (c *Core) Create(ctx context.Context, np NewProduct) (Product, error) {
 	usr, err := c.usrCore.QueryByID(ctx, np.UserID)
 	if err != nil {
 		return Product{}, fmt.Errorf("user.querybyid: %s: %w", np.UserID, err)
+	}
+
+	if np.Cost < 0 {
+		return Product{}, ErrInvalidCost
 	}
 
 	if !usr.Enabled {

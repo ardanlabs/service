@@ -291,7 +291,7 @@ dev-restart:
 
 dev-update: all dev-load dev-restart
 
-dev-update-apply: all dev-load dev-apply
+dev-update-apply: all dev-load dev-apply dev-restart
 
 # ------------------------------------------------------------------------------
 

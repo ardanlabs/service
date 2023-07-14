@@ -37,7 +37,7 @@ func Users(log *logger.Logger, cfg database.Config, pageNumber string, rowsPerPa
 	}
 
 	evnCore := event.NewCore(log)
-	core := user.NewCore(evnCore, userdb.NewStore(log, db))
+	core := user.NewCore(log, evnCore, userdb.NewStore(log, db))
 
 	users, err := core.Query(ctx, user.QueryFilter{}, user.DefaultOrderBy, page, rows)
 	if err != nil {

@@ -66,7 +66,7 @@ func New(cfg Config) (*Auth, error) {
 	var usrCore *user.Core
 	if cfg.DB != nil {
 		evnCore := event.NewCore(cfg.Log)
-		usrCore = user.NewCore(evnCore, userdb.NewStore(cfg.Log, cfg.DB))
+		usrCore = user.NewCore(cfg.Log, evnCore, userdb.NewStore(cfg.Log, cfg.DB))
 	}
 
 	a := Auth{

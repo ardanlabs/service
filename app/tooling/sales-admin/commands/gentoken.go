@@ -33,7 +33,7 @@ func GenToken(log *logger.Logger, dbConfig database.Config, vaultConfig vault.Co
 	defer cancel()
 
 	evnCore := event.NewCore(log)
-	core := user.NewCore(evnCore, userdb.NewStore(log, db))
+	core := user.NewCore(log, evnCore, userdb.NewStore(log, db))
 
 	usr, err := core.QueryByID(ctx, userID)
 	if err != nil {
