@@ -78,6 +78,10 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 #	dependencies properly.
 #
 #	$ make test
+#
+#	To run the tests, linter, vet, and the vuln check.
+#
+#	# make test-all
 
 # ==============================================================================
 # Starting The Project
@@ -495,11 +499,14 @@ list:
 # ==============================================================================
 # Admin Frontend
 
-ADMIN_FRONTEND_PREFIX := ./app/services/frontends/admin
+# Check out the README.md file for more information about the frontend
+# app/frontends/admin/README.md
+
+ADMIN_FRONTEND_PREFIX := ./app/frontends/admin
 
 write-token-to-env:
-	echo "NEXT_PUBLIC_BASE_API_URL=http://localhost:3000/v1" > app/services/frontends/admin/.env
-	make token | grep -o '"ey.*"' | awk '{print "NEXT_PUBLIC_TOKEN="$$1}' >> app/services/frontends/admin/.env
+	echo "NEXT_PUBLIC_BASE_API_URL=http://localhost:3000/v1" > app/frontends/admin/.env
+	make token | grep -o '"ey.*"' | awk '{print "NEXT_PUBLIC_TOKEN="$$1}' >> app/frontends/admin/.env
 
 admin-gui-install:
 	npm install --prefix ${ADMIN_FRONTEND_PREFIX}
@@ -512,3 +519,5 @@ admin-gui-build: admin-gui-install
 
 admin-gui-start-build: admin-gui-build
 	npm run start --prefix ${ADMIN_FRONTEND_PREFIX}
+
+admin-gui-run: write-token-to-env admin-gui-start-build
