@@ -491,3 +491,24 @@ deps-cleancache:
 
 list:
 	go list -mod=mod all
+
+# ==============================================================================
+# Admin Frontend
+
+ADMIN_FRONTEND_PREFIX := ./app/services/frontends/admin
+
+write-token-to-env:
+	echo "NEXT_PUBLIC_BASE_API_URL=http://localhost:3000/v1" > app/services/frontends/admin/.env
+	make token | grep -o '"ey.*"' | awk '{print "NEXT_PUBLIC_TOKEN="$$1}' >> app/services/frontends/admin/.env
+
+admin-gui-install:
+	npm install --prefix ${ADMIN_FRONTEND_PREFIX}
+
+admin-gui-dev: admin-gui-install
+	npm run dev --prefix ${ADMIN_FRONTEND_PREFIX}
+
+admin-gui-build: admin-gui-install
+	npm run build --prefix ${ADMIN_FRONTEND_PREFIX}
+
+admin-gui-start-build: admin-gui-build
+	npm run start --prefix ${ADMIN_FRONTEND_PREFIX}
