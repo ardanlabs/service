@@ -60,7 +60,7 @@ func (h *Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Re
 
 	var app AppNewTran
 	if err := web.Decode(r, &app); err != nil {
-		return err
+		return v1.NewRequestError(err, http.StatusBadRequest)
 	}
 
 	np, err := toCoreNewProduct(app.Product)

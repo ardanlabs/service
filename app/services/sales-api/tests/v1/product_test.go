@@ -187,7 +187,7 @@ func (pt *ProductTests) getProduct400() func(t *testing.T) {
 		}
 
 		got := w.Body.String()
-		exp := `{"error":"data validation error","fields":{"product_id":"invalid UUID length: 5"}}`
+		exp := `{"error":"ID is not in its proper form"}`
 		if got != exp {
 			t.Logf("got: %v", got)
 			t.Logf("exp: %v", exp)

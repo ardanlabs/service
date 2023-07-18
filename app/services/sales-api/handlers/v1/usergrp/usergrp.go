@@ -61,7 +61,7 @@ func (h *Handlers) executeUnderTransaction(ctx context.Context) (*Handlers, erro
 func (h *Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app AppNewUser
 	if err := web.Decode(r, &app); err != nil {
-		return err
+		return v1.NewRequestError(err, http.StatusBadRequest)
 	}
 
 	nc, err := toCoreNewUser(app)
@@ -89,7 +89,7 @@ func (h *Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Re
 
 	var app AppUpdateUser
 	if err := web.Decode(r, &app); err != nil {
-		return err
+		return v1.NewRequestError(err, http.StatusBadRequest)
 	}
 
 	userID := auth.GetUserID(ctx)

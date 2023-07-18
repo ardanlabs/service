@@ -10,7 +10,6 @@ import (
 	"github.com/ardanlabs/service/business/core/product"
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/sys/database"
-	"github.com/ardanlabs/service/business/sys/validate"
 	v1 "github.com/ardanlabs/service/business/web/v1"
 	"github.com/ardanlabs/service/business/web/v1/paging"
 	"github.com/ardanlabs/service/foundation/web"
@@ -65,7 +64,7 @@ func (h *Handlers) executeUnderTransaction(ctx context.Context) (*Handlers, erro
 func (h *Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app AppNewProduct
 	if err := web.Decode(r, &app); err != nil {
-		return err
+		return v1.NewRequestError(err, http.StatusBadRequest)
 	}
 
 	np, err := toCoreNewProduct(app)
@@ -90,12 +89,12 @@ func (h *Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Re
 
 	var app AppUpdateProduct
 	if err := web.Decode(r, &app); err != nil {
-		return err
+		return v1.NewRequestError(err, http.StatusBadRequest)
 	}
 
 	productID, err := uuid.Parse(web.Param(r, "product_id"))
 	if err != nil {
-		return validate.NewFieldsError("product_id", err)
+		return v1.NewRequestError(ErrInvalidID, http.StatusBadRequest)
 	}
 
 	prd, err := h.product.QueryByID(ctx, productID)
@@ -125,7 +124,7 @@ func (h *Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Re
 
 	productID, err := uuid.Parse(web.Param(r, "product_id"))
 	if err != nil {
-		return validate.NewFieldsError("product_id", err)
+		return v1.NewRequestError(ErrInvalidID, http.StatusBadRequest)
 	}
 
 	prd, err := h.product.QueryByID(ctx, productID)
@@ -209,7 +208,7 @@ func (h *Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Req
 func (h *Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	productID, err := uuid.Parse(web.Param(r, "product_id"))
 	if err != nil {
-		return validate.NewFieldsError("product_id", err)
+		return v1.NewRequestError(ErrInvalidID, http.StatusBadRequest)
 	}
 
 	prd, err := h.product.QueryByID(ctx, productID)
