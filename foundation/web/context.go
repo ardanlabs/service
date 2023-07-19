@@ -20,6 +20,11 @@ type Values struct {
 	StatusCode int
 }
 
+// SetValues sets the specified Values in the context.
+func SetValues(ctx context.Context, v *Values) context.Context {
+	return context.WithValue(ctx, key, v)
+}
+
 // GetValues returns the values from the context.
 func GetValues(ctx context.Context) *Values {
 	v, ok := ctx.Value(key).(*Values)

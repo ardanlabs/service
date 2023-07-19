@@ -13,7 +13,7 @@ import (
 	"github.com/ardanlabs/service/business/core/user"
 	db "github.com/ardanlabs/service/business/data/dbsql/pgx"
 	"github.com/ardanlabs/service/business/data/dbtest"
-	"github.com/ardanlabs/service/business/data/tran"
+	"github.com/ardanlabs/service/business/data/transaction"
 	"github.com/ardanlabs/service/foundation/docker"
 	"github.com/google/go-cmp/cmp"
 )
@@ -35,7 +35,7 @@ func TestMain(m *testing.M) {
 func Test_Product(t *testing.T) {
 	t.Run("crud", crud)
 	t.Run("paging", paging)
-	t.Run("transaction", transaction)
+	t.Run("transaction", tran)
 }
 
 // =============================================================================
@@ -291,7 +291,7 @@ func paging(t *testing.T) {
 	}
 }
 
-func transaction(t *testing.T) {
+func tran(t *testing.T) {
 	test := dbtest.NewTest(t, c)
 	defer func() {
 		if r := recover(); r != nil {
@@ -309,7 +309,7 @@ func transaction(t *testing.T) {
 	// -------------------------------------------------------------------------
 	// Execute under a transaction with rollback
 
-	f := func(tx tran.Transaction) error {
+	f := func(tx transaction.Transaction) error {
 		usrCore, err := api.User.ExecuteUnderTransaction(tx)
 		if err != nil {
 			t.Fatalf("Should be able to create new user core: %s.", err)
@@ -354,7 +354,7 @@ func transaction(t *testing.T) {
 		return nil
 	}
 
-	err := tran.ExecuteUnderTransaction(ctx, test.Log, db.NewBeginner(test.DB), f)
+	err := transaction.ExecuteUnderTransaction(ctx, test.Log, db.NewBeginner(test.DB), f)
 	if !errors.Is(err, product.ErrInvalidCost) {
 		t.Fatalf("Should NOT be able to add product : %s.", err)
 	}
@@ -387,7 +387,7 @@ func transaction(t *testing.T) {
 	// -------------------------------------------------------------------------
 	// Good transaction
 
-	f = func(tx tran.Transaction) error {
+	f = func(tx transaction.Transaction) error {
 		usrCore, err := api.User.ExecuteUnderTransaction(tx)
 		if err != nil {
 			t.Fatalf("Should be able to create new user core: %s.", err)
@@ -432,7 +432,7 @@ func transaction(t *testing.T) {
 		return nil
 	}
 
-	err = tran.ExecuteUnderTransaction(ctx, test.Log, db.NewBeginner(test.DB), f)
+	err = transaction.ExecuteUnderTransaction(ctx, test.Log, db.NewBeginner(test.DB), f)
 	if errors.Is(err, product.ErrInvalidCost) {
 		t.Fatalf("Should be able to add product : %s.", err)
 	}

@@ -1,5 +1,5 @@
-// Package tran provides support for database transaction related functionality.
-package tran
+// Package transaction provides support for database transaction related functionality.
+package transaction
 
 import (
 	"context"
@@ -27,13 +27,13 @@ type ctxKey int
 
 const trKey ctxKey = 2
 
-// SetTransaction stores a value that can manage a transaction.
-func SetTransaction(ctx context.Context, tx Transaction) context.Context {
+// Set stores a value that can manage a transaction.
+func Set(ctx context.Context, tx Transaction) context.Context {
 	return context.WithValue(ctx, trKey, tx)
 }
 
-// GetTransaction retrieves the value that can manage a transaction.
-func GetTransaction(ctx context.Context) (Transaction, bool) {
+// Get retrieves the value that can manage a transaction.
+func Get(ctx context.Context) (Transaction, bool) {
 	v, ok := ctx.Value(trKey).(Transaction)
 	return v, ok
 }

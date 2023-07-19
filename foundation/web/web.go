@@ -83,17 +83,14 @@ func (a *App) Handle(method string, group string, path string, handler Handler, 
 // to the application server mux.
 func (a *App) handle(method string, group string, path string, handler Handler) {
 	h := func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-
-		ctx, span := AddSpan(ctx, "foundation.app.handle")
+		ctx, span := AddSpan(r.Context(), "foundation.app.handle")
 		defer span.End()
 
-		v := Values{
+		ctx = SetValues(ctx, &Values{
 			TraceID: span.SpanContext().TraceID().String(),
 			Tracer:  a.tracer,
 			Now:     time.Now().UTC(),
-		}
-		ctx = context.WithValue(ctx, key, &v)
+		})
 
 		if err := handler(ctx, w, r); err != nil {
 			if validateShutdown(err) {
@@ -107,6 +104,7 @@ func (a *App) handle(method string, group string, path string, handler Handler) 
 	if group != "" {
 		finalPath = "/" + group + path
 	}
+
 	a.mux.Handle(method, finalPath, h)
 }
 

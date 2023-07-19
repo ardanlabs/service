@@ -12,7 +12,7 @@ import (
 	"github.com/ardanlabs/service/business/core/event"
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/data/order"
-	"github.com/ardanlabs/service/business/data/tran"
+	"github.com/ardanlabs/service/business/data/transaction"
 	"github.com/ardanlabs/service/business/sys/logger"
 	"github.com/google/uuid"
 )
@@ -29,7 +29,7 @@ var (
 // Storer interface declares the behavior this package needs to perists and
 // retrieve data.
 type Storer interface {
-	ExecuteUnderTransaction(tx tran.Transaction) (Storer, error)
+	ExecuteUnderTransaction(tx transaction.Transaction) (Storer, error)
 	Create(ctx context.Context, prd Product) error
 	Update(ctx context.Context, prd Product) error
 	Delete(ctx context.Context, prd Product) error
@@ -42,7 +42,7 @@ type Storer interface {
 // UserCore interface declares the behavior this package needs from the user
 // core domain.
 type UserCore interface {
-	ExecuteUnderTransaction(tx tran.Transaction) (*user.Core, error)
+	ExecuteUnderTransaction(tx transaction.Transaction) (*user.Core, error)
 	QueryByID(ctx context.Context, userID uuid.UUID) (user.User, error)
 }
 
@@ -72,7 +72,7 @@ func NewCore(log *logger.Logger, evnCore *event.Core, usrCore UserCore, storer S
 
 // ExecuteUnderTransaction constructs a new Core value that will use the
 // specified transaction in any store related calls.
-func (c *Core) ExecuteUnderTransaction(tx tran.Transaction) (*Core, error) {
+func (c *Core) ExecuteUnderTransaction(tx transaction.Transaction) (*Core, error) {
 	storer, err := c.storer.ExecuteUnderTransaction(tx)
 	if err != nil {
 		return nil, err

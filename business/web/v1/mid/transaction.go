@@ -7,14 +7,14 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/ardanlabs/service/business/data/tran"
+	"github.com/ardanlabs/service/business/data/transaction"
 	"github.com/ardanlabs/service/business/sys/logger"
 	"github.com/ardanlabs/service/foundation/web"
 )
 
 // ExecuteInTransation starts a transaction around all the storage calls within
 // the scope of the handler function.
-func ExecuteInTransation(log *logger.Logger, bgn tran.Beginner) web.Middleware {
+func ExecuteInTransation(log *logger.Logger, bgn transaction.Beginner) web.Middleware {
 	m := func(handler web.Handler) web.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 			hasCommited := false
@@ -38,7 +38,7 @@ func ExecuteInTransation(log *logger.Logger, bgn tran.Beginner) web.Middleware {
 				}
 			}()
 
-			ctx = tran.SetTransaction(ctx, tx)
+			ctx = transaction.Set(ctx, tx)
 
 			if err := handler(ctx, w, r); err != nil {
 				return fmt.Errorf("EXECUTE TRANSACTION: %w", err)
