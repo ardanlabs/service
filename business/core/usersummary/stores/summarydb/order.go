@@ -3,13 +3,13 @@ package summarydb
 import (
 	"fmt"
 
-	"github.com/ardanlabs/service/business/cview/user/summary"
+	"github.com/ardanlabs/service/business/core/usersummary"
 	"github.com/ardanlabs/service/business/data/order"
 )
 
 var orderByFields = map[string]string{
-	summary.OrderByUserID:   "user_id",
-	summary.OrderByUserName: "user_name",
+	usersummary.OrderByUserID:   "user_id",
+	usersummary.OrderByUserName: "user_name",
 }
 
 func orderByClause(orderBy order.By) (string, error) {

@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ardanlabs/service/business/cview/user/summary"
+	"github.com/ardanlabs/service/business/core/usersummary"
 )
 
-func (s *Store) applyFilter(filter summary.QueryFilter, data map[string]interface{}, buf *bytes.Buffer) {
+func (s *Store) applyFilter(filter usersummary.QueryFilter, data map[string]interface{}, buf *bytes.Buffer) {
 	var wc []string
 
 	if filter.UserID != nil {

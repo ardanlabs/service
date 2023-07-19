@@ -16,8 +16,8 @@ import (
 	"github.com/ardanlabs/service/business/core/product/stores/productdb"
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/core/user/stores/userdb"
-	"github.com/ardanlabs/service/business/cview/user/summary"
-	"github.com/ardanlabs/service/business/cview/user/summary/stores/summarydb"
+	"github.com/ardanlabs/service/business/core/usersummary"
+	"github.com/ardanlabs/service/business/core/usersummary/stores/summarydb"
 	"github.com/ardanlabs/service/business/data/dbmigrate"
 	db "github.com/ardanlabs/service/business/data/dbsql/pgx"
 	"github.com/ardanlabs/service/business/sys/logger"
@@ -228,29 +228,23 @@ func FloatPointer(f float64) *float64 {
 
 // =============================================================================
 
-// UserViews represents the set of core user view apis.
-type UserViews struct {
-	Summary *summary.Core
-}
-
 // CoreAPIs represents all the core api's needed for testing.
 type CoreAPIs struct {
-	User      *user.Core
-	Product   *product.Core
-	UserViews UserViews
+	User        *user.Core
+	Product     *product.Core
+	UserSummary *usersummary.Core
 }
 
 func newCoreAPIs(log *logger.Logger, db *sqlx.DB) CoreAPIs {
 	evnCore := event.NewCore(log)
 	usrCore := user.NewCore(log, evnCore, userdb.NewStore(log, db))
 	prdCore := product.NewCore(log, evnCore, usrCore, productdb.NewStore(log, db))
+	usmCore := usersummary.NewCore(summarydb.NewStore(log, db))
 
 	return CoreAPIs{
-		User:    usrCore,
-		Product: prdCore,
-		UserViews: UserViews{
-			Summary: summary.NewCore(summarydb.NewStore(log, db)),
-		},
+		User:        usrCore,
+		Product:     prdCore,
+		UserSummary: usmCore,
 	}
 }
 

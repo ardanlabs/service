@@ -1,4 +1,4 @@
-package summary
+package usersummary
 
 import "github.com/ardanlabs/service/business/data/order"
 

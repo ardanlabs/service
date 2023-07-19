@@ -1,6 +1,6 @@
-// Package summary provides an example of a core business API that
+// Package usersummary provides an example of a core business API that
 // is based on a view.
-package summary
+package usersummary
 
 import (
 	"context"

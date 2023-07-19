@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/core/user"
-	"github.com/ardanlabs/service/business/cview/user/summary"
+	"github.com/ardanlabs/service/business/core/usersummary"
 	"github.com/ardanlabs/service/business/sys/validate"
 )
 
@@ -147,16 +147,16 @@ func (app AppUpdateUser) Validate() error {
 
 // =============================================================================
 
-// AppSummary represents information about an individual user and their products.
-type AppSummary struct {
+// AppUserSummary represents information about an individual user and their products.
+type AppUserSummary struct {
 	UserID     string  `json:"userID"`
 	UserName   string  `json:"userName"`
 	TotalCount int     `json:"totalCount"`
 	TotalCost  float64 `json:"totalCost"`
 }
 
-func toAppSummary(smm summary.Summary) AppSummary {
-	return AppSummary{
+func toAppUserSummary(smm usersummary.Summary) AppUserSummary {
+	return AppUserSummary{
 		UserID:     smm.UserID.String(),
 		UserName:   smm.UserName,
 		TotalCount: smm.TotalCount,

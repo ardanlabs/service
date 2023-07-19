@@ -1,7 +1,7 @@
 package summarydb
 
 import (
-	"github.com/ardanlabs/service/business/cview/user/summary"
+	"github.com/ardanlabs/service/business/core/usersummary"
 	"github.com/google/uuid"
 )
 
@@ -12,8 +12,8 @@ type dbSummary struct {
 	TotalCost  float64   `db:"total_cost"`
 }
 
-func toCoreSummary(dbSmm dbSummary) summary.Summary {
-	usr := summary.Summary{
+func toCoreSummary(dbSmm dbSummary) usersummary.Summary {
+	usr := usersummary.Summary{
 		UserID:     dbSmm.UserID,
 		UserName:   dbSmm.UserName,
 		TotalCount: dbSmm.TotalCount,
@@ -23,8 +23,8 @@ func toCoreSummary(dbSmm dbSummary) summary.Summary {
 	return usr
 }
 
-func toCoreSummarySlice(dbSmms []dbSummary) []summary.Summary {
-	usrs := make([]summary.Summary, len(dbSmms))
+func toCoreSummarySlice(dbSmms []dbSummary) []usersummary.Summary {
+	usrs := make([]usersummary.Summary, len(dbSmms))
 	for i, dbSmm := range dbSmms {
 		usrs[i] = toCoreSummary(dbSmm)
 	}

@@ -417,7 +417,7 @@ func (ut *UserTests) summary(usrs []user.User) func(t *testing.T) {
 			t.Fatalf("Should receive a status code of 200 for the response : %d", w.Code)
 		}
 
-		var pr paging.Response[usergrp.AppSummary]
+		var pr paging.Response[usergrp.AppUserSummary]
 		if err := json.Unmarshal(w.Body.Bytes(), &pr); err != nil {
 			t.Fatalf("Should be able to unmarshal the response : %s", err)
 		}

@@ -1,4 +1,4 @@
-package summary_test
+package usersummary_test
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 
 	"github.com/ardanlabs/service/business/core/product"
 	"github.com/ardanlabs/service/business/core/user"
-	"github.com/ardanlabs/service/business/cview/user/summary"
+	"github.com/ardanlabs/service/business/core/usersummary"
 	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/ardanlabs/service/business/data/order"
 	"github.com/ardanlabs/service/foundation/docker"
@@ -84,12 +84,12 @@ func paging(t *testing.T) {
 
 	// -------------------------------------------------------------------------
 
-	prd1, err := api.UserViews.Summary.Query(ctx, summary.QueryFilter{}, order.By{Field: summary.OrderByUserName, Direction: order.ASC}, 1, 10)
+	prd1, err := api.UserSummary.Query(ctx, usersummary.QueryFilter{}, order.By{Field: usersummary.OrderByUserName, Direction: order.ASC}, 1, 10)
 	if err != nil {
 		t.Fatalf("Should be able to retrieve user summary : %s", err)
 	}
 
-	n, err := api.UserViews.Summary.Count(ctx, summary.QueryFilter{})
+	n, err := api.UserSummary.Count(ctx, usersummary.QueryFilter{})
 	if err != nil {
 		t.Fatalf("Should be able to retrieve user summary count : %s", err)
 	}
@@ -115,7 +115,7 @@ func paging(t *testing.T) {
 		totalCost2 += prds[i].Cost
 	}
 
-	cases := []summary.Summary{
+	cases := []usersummary.Summary{
 		{
 			UserID:     usrs[0].ID,
 			UserName:   usrs[0].Name,

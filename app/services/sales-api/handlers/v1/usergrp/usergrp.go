@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/core/user"
-	"github.com/ardanlabs/service/business/cview/user/summary"
+	"github.com/ardanlabs/service/business/core/usersummary"
 	"github.com/ardanlabs/service/business/data/tran"
 	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/ardanlabs/service/business/web/auth"
@@ -23,12 +23,12 @@ import (
 // Handlers manages the set of user endpoints.
 type Handlers struct {
 	user    *user.Core
-	summary *summary.Core
+	summary *usersummary.Core
 	auth    *auth.Auth
 }
 
 // New constructs a handlers for route access.
-func New(user *user.Core, summary *summary.Core, auth *auth.Auth) *Handlers {
+func New(user *user.Core, summary *usersummary.Core, auth *auth.Auth) *Handlers {
 	return &Handlers{
 		user:    user,
 		summary: summary,
@@ -217,9 +217,9 @@ func (h *Handlers) QuerySummary(ctx context.Context, w http.ResponseWriter, r *h
 		return fmt.Errorf("query: %w", err)
 	}
 
-	items := make([]AppSummary, len(smms))
+	items := make([]AppUserSummary, len(smms))
 	for i, smm := range smms {
-		items[i] = toAppSummary(smm)
+		items[i] = toAppUserSummary(smm)
 	}
 
 	total, err := h.summary.Count(ctx, filter)

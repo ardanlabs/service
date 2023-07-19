@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/ardanlabs/service/business/core/user"
-	"github.com/ardanlabs/service/business/cview/user/summary"
+	"github.com/ardanlabs/service/business/core/usersummary"
 	"github.com/ardanlabs/service/business/data/order"
 	"github.com/ardanlabs/service/business/sys/validate"
 )
@@ -34,8 +34,8 @@ func parseOrder(r *http.Request) (order.By, error) {
 // =============================================================================
 
 var orderBySummaryFields = map[string]struct{}{
-	summary.OrderByUserID:   {},
-	summary.OrderByUserName: {},
+	usersummary.OrderByUserID:   {},
+	usersummary.OrderByUserName: {},
 }
 
 func parseSummaryOrder(r *http.Request) (order.By, error) {

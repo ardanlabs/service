@@ -6,7 +6,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/ardanlabs/service/business/cview/user/summary"
+	"github.com/ardanlabs/service/business/core/usersummary"
 	db "github.com/ardanlabs/service/business/data/dbsql/pgx"
 	"github.com/ardanlabs/service/business/data/order"
 	"github.com/ardanlabs/service/business/sys/logger"
@@ -28,7 +28,7 @@ func NewStore(log *logger.Logger, db *sqlx.DB) *Store {
 }
 
 // Query retrieves a list of existing users from the database.
-func (s *Store) Query(ctx context.Context, filter summary.QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]summary.Summary, error) {
+func (s *Store) Query(ctx context.Context, filter usersummary.QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]usersummary.Summary, error) {
 	data := map[string]interface{}{
 		"offset":        (pageNumber - 1) * rowsPerPage,
 		"rows_per_page": rowsPerPage,
@@ -60,7 +60,7 @@ func (s *Store) Query(ctx context.Context, filter summary.QueryFilter, orderBy o
 }
 
 // Count returns the total number of users in the DB.
-func (s *Store) Count(ctx context.Context, filter summary.QueryFilter) (int, error) {
+func (s *Store) Count(ctx context.Context, filter usersummary.QueryFilter) (int, error) {
 	data := map[string]interface{}{}
 
 	const q = `

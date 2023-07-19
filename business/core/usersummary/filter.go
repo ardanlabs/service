@@ -1,4 +1,4 @@
-package summary
+package usersummary
 
 import (
 	"fmt"
