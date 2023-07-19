@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/core/user"
-	"github.com/ardanlabs/service/business/sys/database/pgx/dbarray"
+	"github.com/ardanlabs/service/business/data/database/pgx/dbarray"
 	"github.com/google/uuid"
 )
 

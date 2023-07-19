@@ -11,8 +11,8 @@ import (
 
 	"github.com/ardanlabs/service/business/core/event"
 	"github.com/ardanlabs/service/business/core/user"
+	"github.com/ardanlabs/service/business/data/database"
 	"github.com/ardanlabs/service/business/data/order"
-	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/ardanlabs/service/business/sys/logger"
 	"github.com/google/uuid"
 )

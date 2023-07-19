@@ -8,7 +8,7 @@ import (
 	"github.com/ardanlabs/service/business/core/event"
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/core/user/stores/userdb"
-	database "github.com/ardanlabs/service/business/sys/database/pgx"
+	db "github.com/ardanlabs/service/business/data/database/pgx"
 	"github.com/ardanlabs/service/business/sys/logger"
 	"github.com/ardanlabs/service/business/web/auth"
 	"github.com/ardanlabs/service/foundation/vault"
@@ -17,13 +17,13 @@ import (
 )
 
 // GenToken generates a JWT for the specified user.
-func GenToken(log *logger.Logger, dbConfig database.Config, vaultConfig vault.Config, userID uuid.UUID, kid string) error {
+func GenToken(log *logger.Logger, dbConfig db.Config, vaultConfig vault.Config, userID uuid.UUID, kid string) error {
 	if kid == "" {
 		fmt.Println("help: gentoken <user_id> <kid>")
 		return ErrHelp
 	}
 
-	db, err := database.Open(dbConfig)
+	db, err := db.Open(dbConfig)
 	if err != nil {
 		return fmt.Errorf("connect database: %w", err)
 	}

@@ -11,9 +11,9 @@ import (
 
 	"github.com/ardanlabs/service/business/core/product"
 	"github.com/ardanlabs/service/business/core/user"
+	"github.com/ardanlabs/service/business/data/database"
+	db "github.com/ardanlabs/service/business/data/database/pgx"
 	"github.com/ardanlabs/service/business/data/dbtest"
-	"github.com/ardanlabs/service/business/sys/database"
-	db "github.com/ardanlabs/service/business/sys/database/pgx"
 	"github.com/ardanlabs/service/foundation/docker"
 	"github.com/google/go-cmp/cmp"
 )

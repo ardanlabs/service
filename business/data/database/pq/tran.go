@@ -3,7 +3,7 @@ package db
 import (
 	"fmt"
 
-	"github.com/ardanlabs/service/business/sys/database"
+	"github.com/ardanlabs/service/business/data/database"
 	"github.com/jmoiron/sqlx"
 )
 

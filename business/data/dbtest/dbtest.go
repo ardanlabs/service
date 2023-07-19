@@ -18,8 +18,8 @@ import (
 	"github.com/ardanlabs/service/business/core/user/stores/userdb"
 	"github.com/ardanlabs/service/business/cview/user/summary"
 	"github.com/ardanlabs/service/business/cview/user/summary/stores/summarydb"
+	db "github.com/ardanlabs/service/business/data/database/pgx"
 	"github.com/ardanlabs/service/business/data/dbmigrate"
-	database "github.com/ardanlabs/service/business/sys/database/pgx"
 	"github.com/ardanlabs/service/business/sys/logger"
 	"github.com/ardanlabs/service/business/web/auth"
 	"github.com/ardanlabs/service/foundation/docker"
@@ -71,7 +71,7 @@ func NewTest(t *testing.T, c *docker.Container) *Test {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	dbM, err := database.Open(database.Config{
+	dbM, err := db.Open(db.Config{
 		User:       "postgres",
 		Password:   "postgres",
 		Host:       c.Host,
@@ -84,7 +84,7 @@ func NewTest(t *testing.T, c *docker.Container) *Test {
 
 	t.Log("Waiting for database to be ready ...")
 
-	if err := database.StatusCheck(ctx, dbM); err != nil {
+	if err := db.StatusCheck(ctx, dbM); err != nil {
 		t.Fatalf("status check database: %v", err)
 	}
 
@@ -104,7 +104,7 @@ func NewTest(t *testing.T, c *docker.Container) *Test {
 
 	// -------------------------------------------------------------------------
 
-	db, err := database.Open(database.Config{
+	db, err := db.Open(db.Config{
 		User:       "postgres",
 		Password:   "postgres",
 		Host:       c.Host,

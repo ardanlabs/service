@@ -10,7 +10,7 @@ import (
 
 	"github.com/ardanlabs/conf/v3"
 	"github.com/ardanlabs/service/app/tooling/sales-admin/commands"
-	database "github.com/ardanlabs/service/business/sys/database/pgx"
+	db "github.com/ardanlabs/service/business/data/database/pgx"
 	"github.com/ardanlabs/service/business/sys/logger"
 	"github.com/ardanlabs/service/foundation/vault"
 	"github.com/google/uuid"
@@ -80,7 +80,7 @@ func run(log *logger.Logger) error {
 // processCommands handles the execution of the commands specified on
 // the command line.
 func processCommands(args conf.Args, log *logger.Logger, cfg config) error {
-	dbConfig := database.Config{
+	dbConfig := db.Config{
 		User:         cfg.DB.User,
 		Password:     cfg.DB.Password,
 		Host:         cfg.DB.Host,

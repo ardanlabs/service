@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/ardanlabs/service/business/sys/database"
+	"github.com/ardanlabs/service/business/data/database"
 	"github.com/ardanlabs/service/business/sys/logger"
 	"github.com/ardanlabs/service/foundation/web"
 )

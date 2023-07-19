@@ -11,7 +11,7 @@ import (
 
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/cview/user/summary"
-	"github.com/ardanlabs/service/business/sys/database"
+	"github.com/ardanlabs/service/business/data/database"
 	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/ardanlabs/service/business/web/auth"
 	v1 "github.com/ardanlabs/service/business/web/v1"
