@@ -6,7 +6,7 @@ import (
 
 	"github.com/ardanlabs/service/business/core/product"
 	"github.com/ardanlabs/service/business/core/user"
-	"github.com/ardanlabs/service/business/sys/validate"
+	"github.com/ardanlabs/service/foundation/validate"
 	"github.com/google/uuid"
 )
 

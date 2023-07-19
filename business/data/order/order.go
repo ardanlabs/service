@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/ardanlabs/service/business/sys/validate"
+	"github.com/ardanlabs/service/foundation/validate"
 )
 
 // Set of directions for data ordering.

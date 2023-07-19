@@ -18,9 +18,9 @@ import (
 	"github.com/ardanlabs/service/business/core/usersummary"
 	"github.com/ardanlabs/service/business/core/usersummary/stores/usersummarydb"
 	db "github.com/ardanlabs/service/business/data/dbsql/pgx"
-	"github.com/ardanlabs/service/business/sys/logger"
 	"github.com/ardanlabs/service/business/web/auth"
 	"github.com/ardanlabs/service/business/web/v1/mid"
+	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/jmoiron/sqlx"
 )

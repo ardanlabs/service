@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/ardanlabs/service/business/sys/validate"
+	"github.com/ardanlabs/service/foundation/validate"
 )
 
 // Response is what is returned when a query call is performed.

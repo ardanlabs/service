@@ -15,10 +15,11 @@ import (
 	"github.com/ardanlabs/conf/v3"
 	"github.com/ardanlabs/service/app/services/sales-api/handlers"
 	db "github.com/ardanlabs/service/business/data/dbsql/pgx"
-	"github.com/ardanlabs/service/business/sys/logger"
 	"github.com/ardanlabs/service/business/web/auth"
 	"github.com/ardanlabs/service/business/web/v1/debug"
+	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/vault"
+	"github.com/ardanlabs/service/foundation/web"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
@@ -43,7 +44,11 @@ func main() {
 		},
 	}
 
-	log = logger.NewWithEvents(os.Stdout, logger.LevelInfo, "SALES-API", events)
+	traceIDFunc := func(ctx context.Context) string {
+		return web.GetTraceID(ctx)
+	}
+
+	log = logger.NewWithEvents(os.Stdout, logger.LevelInfo, "SALES-API", traceIDFunc, events)
 
 	// -------------------------------------------------------------------------
 

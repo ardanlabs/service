@@ -4,7 +4,7 @@ package event
 import (
 	"context"
 
-	"github.com/ardanlabs/service/business/sys/logger"
+	"github.com/ardanlabs/service/foundation/logger"
 )
 
 // Core manages the set of APIs for event access.

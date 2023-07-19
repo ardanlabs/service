@@ -3,7 +3,7 @@ package usersummary
 import (
 	"fmt"
 
-	"github.com/ardanlabs/service/business/sys/validate"
+	"github.com/ardanlabs/service/foundation/validate"
 	"github.com/google/uuid"
 )
 

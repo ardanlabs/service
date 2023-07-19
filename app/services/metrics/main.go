@@ -18,7 +18,7 @@ import (
 	"github.com/ardanlabs/service/app/services/metrics/publisher"
 	expvarsrv "github.com/ardanlabs/service/app/services/metrics/publisher/expvar"
 	prometheussrv "github.com/ardanlabs/service/app/services/metrics/publisher/prometheus"
-	"github.com/ardanlabs/service/business/sys/logger"
+	"github.com/ardanlabs/service/foundation/logger"
 )
 
 var build = "develop"
@@ -30,7 +30,11 @@ func main() {
 		Error: func(ctx context.Context, r logger.Record) { log.Info(ctx, "******* SEND ALERT ******") },
 	}
 
-	log = logger.NewWithEvents(os.Stdout, logger.LevelInfo, "METRICS", events)
+	traceIDFunc := func(ctx context.Context) string {
+		return "00000000-0000-0000-0000-000000000000"
+	}
+
+	log = logger.NewWithEvents(os.Stdout, logger.LevelInfo, "METRICS", traceIDFunc, events)
 
 	// -------------------------------------------------------------------------
 

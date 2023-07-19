@@ -20,9 +20,10 @@ import (
 	"github.com/ardanlabs/service/business/core/usersummary/stores/usersummarydb"
 	"github.com/ardanlabs/service/business/data/dbmigrate"
 	db "github.com/ardanlabs/service/business/data/dbsql/pgx"
-	"github.com/ardanlabs/service/business/sys/logger"
 	"github.com/ardanlabs/service/business/web/auth"
 	"github.com/ardanlabs/service/foundation/docker"
+	"github.com/ardanlabs/service/foundation/logger"
+	"github.com/ardanlabs/service/foundation/web"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/jmoiron/sqlx"
 )
@@ -130,7 +131,7 @@ func NewTest(t *testing.T, c *docker.Container) *Test {
 	// -------------------------------------------------------------------------
 
 	var buf bytes.Buffer
-	log := logger.New(&buf, logger.LevelInfo, "TEST")
+	log := logger.New(&buf, logger.LevelInfo, "TEST", func(context.Context) string { return web.GetTraceID(ctx) })
 
 	coreAPIs := newCoreAPIs(log, db)
 

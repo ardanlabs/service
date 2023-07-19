@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/core/user"
-	"github.com/ardanlabs/service/business/sys/logger"
 	"github.com/ardanlabs/service/business/web/auth"
+	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
@@ -233,7 +233,7 @@ func Test_Auth(t *testing.T) {
 
 func newUnit(t *testing.T) (*logger.Logger, *sqlx.DB, func()) {
 	var buf bytes.Buffer
-	log := logger.New(&buf, logger.LevelInfo, "TEST")
+	log := logger.New(&buf, logger.LevelInfo, "TEST", func(context.Context) string { return "00000000-0000-0000-0000-000000000000" })
 
 	// teardown is the function that should be invoked when the caller is done
 	// with the database.

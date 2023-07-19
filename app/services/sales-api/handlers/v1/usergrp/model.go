@@ -7,7 +7,7 @@ import (
 
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/core/usersummary"
-	"github.com/ardanlabs/service/business/sys/validate"
+	"github.com/ardanlabs/service/foundation/validate"
 )
 
 // AppUser represents information about an individual user.

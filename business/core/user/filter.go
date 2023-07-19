@@ -5,7 +5,7 @@ import (
 	"net/mail"
 	"time"
 
-	"github.com/ardanlabs/service/business/sys/validate"
+	"github.com/ardanlabs/service/foundation/validate"
 	"github.com/google/uuid"
 )
 

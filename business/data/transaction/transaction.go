@@ -7,7 +7,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/ardanlabs/service/business/sys/logger"
+	"github.com/ardanlabs/service/foundation/logger"
 )
 
 // Transaction represents a value that can commit or rollback a transaction.

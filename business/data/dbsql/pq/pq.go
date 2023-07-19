@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ardanlabs/service/business/sys/logger"
+	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"

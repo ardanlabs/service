@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ardanlabs/service/business/sys/logger"
+	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/dimfeld/httptreemux/v5"
 )
 

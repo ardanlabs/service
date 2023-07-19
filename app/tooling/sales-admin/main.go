@@ -11,7 +11,7 @@ import (
 	"github.com/ardanlabs/conf/v3"
 	"github.com/ardanlabs/service/app/tooling/sales-admin/commands"
 	db "github.com/ardanlabs/service/business/data/dbsql/pgx"
-	"github.com/ardanlabs/service/business/sys/logger"
+	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/vault"
 	"github.com/google/uuid"
 )
@@ -39,7 +39,7 @@ type config struct {
 }
 
 func main() {
-	log := logger.New(io.Discard, logger.LevelInfo, "ADMIN")
+	log := logger.New(io.Discard, logger.LevelInfo, "ADMIN", func(context.Context) string { return "00000000-0000-0000-0000-000000000000" })
 
 	if err := run(log); err != nil {
 		if !errors.Is(err, commands.ErrHelp) {

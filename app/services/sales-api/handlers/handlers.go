@@ -7,9 +7,9 @@ import (
 	"os"
 
 	v1 "github.com/ardanlabs/service/app/services/sales-api/handlers/v1"
-	"github.com/ardanlabs/service/business/sys/logger"
 	"github.com/ardanlabs/service/business/web/auth"
 	"github.com/ardanlabs/service/business/web/v1/mid"
+	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/jmoiron/sqlx"
 	"go.opentelemetry.io/otel/trace"
