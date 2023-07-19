@@ -1,5 +1,5 @@
-// Package summarydb contains product related CRUD functionality.
-package summarydb
+// Package usersummarydb contains product related CRUD functionality.
+package usersummarydb
 
 import (
 	"bytes"

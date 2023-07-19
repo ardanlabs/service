@@ -17,7 +17,7 @@ import (
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/core/user/stores/userdb"
 	"github.com/ardanlabs/service/business/core/usersummary"
-	"github.com/ardanlabs/service/business/core/usersummary/stores/summarydb"
+	"github.com/ardanlabs/service/business/core/usersummary/stores/usersummarydb"
 	"github.com/ardanlabs/service/business/data/dbmigrate"
 	db "github.com/ardanlabs/service/business/data/dbsql/pgx"
 	"github.com/ardanlabs/service/business/sys/logger"
@@ -239,7 +239,7 @@ func newCoreAPIs(log *logger.Logger, db *sqlx.DB) CoreAPIs {
 	evnCore := event.NewCore(log)
 	usrCore := user.NewCore(log, evnCore, userdb.NewStore(log, db))
 	prdCore := product.NewCore(log, evnCore, usrCore, productdb.NewStore(log, db))
-	usmCore := usersummary.NewCore(summarydb.NewStore(log, db))
+	usmCore := usersummary.NewCore(usersummarydb.NewStore(log, db))
 
 	return CoreAPIs{
 		User:        usrCore,

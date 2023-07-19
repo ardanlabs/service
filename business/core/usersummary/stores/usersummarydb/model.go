@@ -1,4 +1,4 @@
-package summarydb
+package usersummarydb
 
 import (
 	"github.com/ardanlabs/service/business/core/usersummary"

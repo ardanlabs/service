@@ -1,4 +1,4 @@
-package summarydb
+package usersummarydb
 
 import (
 	"fmt"
