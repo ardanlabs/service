@@ -11,10 +11,10 @@ import (
 	"net/mail"
 
 	"github.com/ardanlabs/service/business/core/user"
-	"github.com/ardanlabs/service/business/data/database"
-	db "github.com/ardanlabs/service/business/data/database/pgx"
-	"github.com/ardanlabs/service/business/data/database/pgx/dbarray"
+	db "github.com/ardanlabs/service/business/data/dbsql/pgx"
+	"github.com/ardanlabs/service/business/data/dbsql/pgx/dbarray"
 	"github.com/ardanlabs/service/business/data/order"
+	"github.com/ardanlabs/service/business/data/tran"
 	"github.com/ardanlabs/service/business/sys/logger"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
@@ -36,7 +36,7 @@ func NewStore(log *logger.Logger, db *sqlx.DB) *Store {
 
 // ExecuteUnderTransaction constructs a new Store value replacing the sqlx DB
 // value with a sqlx DB value that is currently inside a transaction.
-func (s *Store) ExecuteUnderTransaction(tx database.Transaction) (user.Storer, error) {
+func (s *Store) ExecuteUnderTransaction(tx tran.Transaction) (user.Storer, error) {
 	ec, err := db.GetExtContext(tx)
 	if err != nil {
 		return nil, err

@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	db "github.com/ardanlabs/service/business/data/database/pgx"
+	db "github.com/ardanlabs/service/business/data/dbsql/pgx"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/jmoiron/sqlx"
 )

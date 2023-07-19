@@ -7,7 +7,7 @@ import (
 	"fmt"
 
 	"github.com/ardanlabs/service/business/cview/user/summary"
-	db "github.com/ardanlabs/service/business/data/database/pgx"
+	db "github.com/ardanlabs/service/business/data/dbsql/pgx"
 	"github.com/ardanlabs/service/business/data/order"
 	"github.com/ardanlabs/service/business/sys/logger"
 	"github.com/jmoiron/sqlx"

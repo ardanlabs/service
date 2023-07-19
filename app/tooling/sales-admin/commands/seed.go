@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	db "github.com/ardanlabs/service/business/data/database/pgx"
 	"github.com/ardanlabs/service/business/data/dbmigrate"
+	db "github.com/ardanlabs/service/business/data/dbsql/pgx"
 )
 
 // Seed loads test data into the database.

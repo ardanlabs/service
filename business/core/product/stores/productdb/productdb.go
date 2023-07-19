@@ -8,9 +8,9 @@ import (
 	"fmt"
 
 	"github.com/ardanlabs/service/business/core/product"
-	"github.com/ardanlabs/service/business/data/database"
-	db "github.com/ardanlabs/service/business/data/database/pgx"
+	db "github.com/ardanlabs/service/business/data/dbsql/pgx"
 	"github.com/ardanlabs/service/business/data/order"
+	"github.com/ardanlabs/service/business/data/tran"
 	"github.com/ardanlabs/service/business/sys/logger"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
@@ -32,7 +32,7 @@ func NewStore(log *logger.Logger, db *sqlx.DB) *Store {
 
 // ExecuteUnderTransaction constructs a new Store value replacing the sqlx DB
 // value with a sqlx DB value that is currently inside a transaction.
-func (s *Store) ExecuteUnderTransaction(tx database.Transaction) (product.Storer, error) {
+func (s *Store) ExecuteUnderTransaction(tx tran.Transaction) (product.Storer, error) {
 	ec, err := db.GetExtContext(tx)
 	if err != nil {
 		return nil, err

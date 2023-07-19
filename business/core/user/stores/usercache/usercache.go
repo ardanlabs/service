@@ -7,8 +7,8 @@ import (
 	"sync"
 
 	"github.com/ardanlabs/service/business/core/user"
-	"github.com/ardanlabs/service/business/data/database"
 	"github.com/ardanlabs/service/business/data/order"
+	"github.com/ardanlabs/service/business/data/tran"
 	"github.com/ardanlabs/service/business/sys/logger"
 	"github.com/google/uuid"
 )
@@ -32,7 +32,7 @@ func NewStore(log *logger.Logger, storer user.Storer) *Store {
 
 // ExecuteUnderTransaction constructs a new Store value replacing the sqlx DB
 // value with a sqlx DB value that is currently inside a transaction.
-func (s *Store) ExecuteUnderTransaction(tx database.Transaction) (user.Storer, error) {
+func (s *Store) ExecuteUnderTransaction(tx tran.Transaction) (user.Storer, error) {
 	return s.storer.ExecuteUnderTransaction(tx)
 }
 

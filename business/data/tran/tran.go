@@ -1,5 +1,5 @@
-// Package database provides support for common database related functionality.
-package database
+// Package tran provides support for database transaction related functionality.
+package tran
 
 import (
 	"context"
