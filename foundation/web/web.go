@@ -11,6 +11,7 @@ import (
 
 	"github.com/dimfeld/httptreemux/v5"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -83,14 +84,17 @@ func (a *App) Handle(method string, group string, path string, handler Handler, 
 // to the application server mux.
 func (a *App) handle(method string, group string, path string, handler Handler) {
 	h := func(w http.ResponseWriter, r *http.Request) {
-		ctx, span := AddSpan(r.Context(), "foundation.app.handle")
-		defer span.End()
+		ctx := r.Context()
+		span := trace.SpanFromContext(ctx)
 
-		ctx = SetValues(ctx, &Values{
+		ctx = SetValues(r.Context(), &Values{
 			TraceID: span.SpanContext().TraceID().String(),
 			Tracer:  a.tracer,
 			Now:     time.Now().UTC(),
 		})
+
+		ctx, span = AddSpan(ctx, "pkg.web.handle", attribute.String("endpoint", r.RequestURI))
+		defer span.End()
 
 		if err := handler(ctx, w, r); err != nil {
 			if validateShutdown(err) {
