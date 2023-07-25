@@ -85,9 +85,10 @@ func (a *App) Handle(method string, group string, path string, handler Handler, 
 func (a *App) handle(method string, group string, path string, handler Handler) {
 	h := func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
+
 		span := trace.SpanFromContext(ctx)
 
-		ctx = SetValues(r.Context(), &Values{
+		ctx = SetValues(ctx, &Values{
 			TraceID: span.SpanContext().TraceID().String(),
 			Tracer:  a.tracer,
 			Now:     time.Now().UTC(),
