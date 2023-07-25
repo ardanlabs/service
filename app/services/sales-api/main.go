@@ -31,6 +31,8 @@ import (
 /*
 	Need to figure out timeouts for http service.
 	Add Category field and type to product.
+	Idea for generating Web API docs
+		service:api POST /products AppNewProduct AppNewProduct http.StatusCreated
 */
 
 var build = "develop"
