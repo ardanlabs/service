@@ -247,7 +247,7 @@ dev-up-local:
 	kind load docker-image $(PROMTAIL) --name $(KIND_CLUSTER)
 
 dev-up: dev-up-local
-	telepresence --context=kind-$(KIND_CLUSTER) helm install
+	telepresence --context=kind-$(KIND_CLUSTER) helm install --request-timeout 2m 
 	telepresence --context=kind-$(KIND_CLUSTER) connect
 
 dev-down-local:
