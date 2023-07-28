@@ -12,6 +12,7 @@ import (
 	"github.com/dimfeld/httptreemux/v5"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -44,7 +45,7 @@ func NewApp(shutdown chan os.Signal, tracer trace.Tracer, mw ...Middleware) *App
 
 	return &App{
 		mux:      mux,
-		otmux:    otelhttp.NewHandler(mux, "request"),
+		otmux:    otelhttp.NewHandler(mux, "request", otelhttp.WithPropagators(propagation.TraceContext{})),
 		shutdown: shutdown,
 		mw:       mw,
 		tracer:   tracer,
@@ -84,18 +85,16 @@ func (a *App) Handle(method string, group string, path string, handler Handler, 
 // to the application server mux.
 func (a *App) handle(method string, group string, path string, handler Handler) {
 	h := func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
+		ctx, span := a.tracer.Start(r.Context(), "pkg.web.handle")
+		span.SetAttributes(attribute.String("endpoint", r.RequestURI))
+		defer span.End()
 
-		span := trace.SpanFromContext(ctx)
-
-		ctx = SetValues(ctx, &Values{
+		v := Values{
 			TraceID: span.SpanContext().TraceID().String(),
 			Tracer:  a.tracer,
 			Now:     time.Now().UTC(),
-		})
-
-		ctx, span = AddSpan(ctx, "pkg.web.handle", attribute.String("endpoint", r.RequestURI))
-		defer span.End()
+		}
+		ctx = SetValues(ctx, &v)
 
 		if err := handler(ctx, w, r); err != nil {
 			if validateShutdown(err) {
