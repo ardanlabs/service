@@ -103,6 +103,6 @@ spec:
       - name: metrics
         resources:
           requests:
-            cpu: "150m"
+            cpu: "100m"
           limits:
-            cpu: "150m"
+            cpu: "100m"
