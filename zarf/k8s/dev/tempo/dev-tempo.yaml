@@ -114,7 +114,9 @@ spec:
               mountPath: /tempo-conf
           resources:
             requests:
-              cpu: 150m
+              cpu: 100m
+            limits:
+              cpu: 100m
       volumes:
         - name: config-volume
           configMap:

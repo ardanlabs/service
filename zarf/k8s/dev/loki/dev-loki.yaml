@@ -103,7 +103,9 @@ spec:
             - -config.expand-env
           resources:
             requests:
-              cpu: 150m
+              cpu: 100m
+            limits:
+              cpu: 100m
           volumeMounts:
             - name: config-volume
               mountPath: /loki-conf
