@@ -85,9 +85,19 @@ func (a *App) Handle(method string, group string, path string, handler Handler, 
 // to the application server mux.
 func (a *App) handle(method string, group string, path string, handler Handler) {
 	h := func(w http.ResponseWriter, r *http.Request) {
-		ctx, span := a.tracer.Start(r.Context(), "pkg.web.handle")
-		span.SetAttributes(attribute.String("endpoint", r.RequestURI))
-		defer span.End()
+
+		// There are times when the handler is called without a tracer, such
+		// as with tests. We need a span for the trace id.
+		ctx := r.Context()
+		span := trace.SpanFromContext(ctx)
+
+		// If a tracer exists, then replace the span for the one currently
+		// found in the context. This may have come from over the wire.
+		if a.tracer != nil {
+			ctx, span = a.tracer.Start(ctx, "pkg.web.handle")
+			span.SetAttributes(attribute.String("endpoint", r.RequestURI))
+			defer span.End()
+		}
 
 		v := Values{
 			TraceID: span.SpanContext().TraceID().String(),
