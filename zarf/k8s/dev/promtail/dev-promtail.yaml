@@ -137,9 +137,9 @@ spec:
               protocol: TCP
           resources:
             requests:
-              cpu: 100m
+              cpu: 150m
             limits:
-              cpu: 100m
+              cpu: 150m
           volumeMounts:
             - name: config
               mountPath: /etc/promtail

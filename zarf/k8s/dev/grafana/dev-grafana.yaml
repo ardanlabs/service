@@ -438,9 +438,9 @@ spec:
             timeoutSeconds: 1
           resources:
             requests:
-              cpu: 100m
+              cpu: 150m
             limits:
-              cpu: 100m
+              cpu: 150m
           volumeMounts:
             - name: config-datasources
               mountPath: /etc/grafana/provisioning/datasources
