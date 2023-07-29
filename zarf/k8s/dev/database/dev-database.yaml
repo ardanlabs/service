@@ -37,17 +37,29 @@ spec:
         - name: data
           persistentVolumeClaim:
             claimName: database-data
+        - name: config
+          configMap:
+            name: pghbaconf
+              #defaultMode: 0400
+            items:
+              - key: "pg_hba.conf"
+                path: "pg_hba.conf"
       containers:
       - name: postgres
         image: postgres:15.3
         volumeMounts:
           - name: data
             mountPath: /var/lib/postgresql/data
+          - name: config
+            readOnly: false
+            mountPath: "/etc/pg_hba.conf"
+            subPath: "pg_hba.conf"
         resources:
           requests:
             cpu: "500m"
           limits:
             cpu: "500m"
+        args: ['-c', 'hba_file=/etc/pg_hba.conf']
         env:
         - name: POSTGRES_PASSWORD
           value: postgres
@@ -88,3 +100,22 @@ spec:
   - name: postgres
     port: 5432
     targetPort: postgres
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pghbaconf
+  namespace: sales-system
+data:
+  # file-like keys
+  pg_hba.conf: |
+    local   all             all                                     trust
+    # IPv4 local connections:
+    host    all             all             0.0.0.0/0               trust
+    # IPv6 local connections:
+    host    all             all             ::1/128                 trust
+    # Allow replication connections from localhost, by a user with the
+    # replication privilege.
+    local   replication     all                                     trust
+    host    replication     all             0.0.0.0/0               trust
+    host    replication     all             ::1/128                 trust

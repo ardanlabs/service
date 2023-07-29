@@ -288,7 +288,7 @@ dev-apply:
 	kubectl wait pods --namespace=$(NAMESPACE) --selector app=promtail --timeout=120s --for=condition=Ready
 
 	kustomize build zarf/k8s/dev/sales | kubectl apply -f -
-	kubectl wait pods --namespace=$(NAMESPACE) --selector app=$(APP) --for=condition=Ready
+	kubectl wait pods --namespace=$(NAMESPACE) --selector app=$(APP) --timeout=120s --for=condition=Ready
 
 dev-restart:
 	kubectl rollout restart deployment $(APP) --namespace=$(NAMESPACE)

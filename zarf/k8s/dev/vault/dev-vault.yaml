@@ -55,9 +55,9 @@ spec:
           imagePullPolicy: IfNotPresent
           resources:
             requests:
-              cpu: "150m"
+              cpu: "250m"
             limits:
-              cpu: "150m"
+              cpu: "250m"
           command:
           - "/bin/sh"
           - "-ec"
