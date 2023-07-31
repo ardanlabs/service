@@ -83,6 +83,8 @@ export default function NavBar() {
           <Image
             src="https://www.ardanlabs.com/images/ardanlabs-logo.svg"
             alt="Ardan Labs"
+            width={60}
+            height={60}
           />
         </Button>
       </Toolbar>
