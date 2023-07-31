@@ -92,9 +92,9 @@ spec:
       - name: sales-api
         resources:
           requests:
-            cpu: "1000m" # I need access to 1 cores on the node.
+            cpu: "500m" # I need access to 1/2 core on the node.
           limits:
-            cpu: "1000m" # Execute instructions 100ms/100ms on my 1 core.
+            cpu: "500m" # Execute instructions 50ms/100ms on my 1 core.
 
         volumeMounts:
           - name: vault
@@ -103,6 +103,6 @@ spec:
       - name: metrics
         resources:
           requests:
-            cpu: "500m" # I need access to 1/2 core on the node.
+            cpu: "100m"
           limits:
-            cpu: "500m" # Execute instructions 50ms/100ms on my 1/2 core.
+            cpu: "100m"
