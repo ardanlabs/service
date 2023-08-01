@@ -154,7 +154,7 @@ PROMETHEUS      := prom/prometheus:v2.44.0
 TEMPO           := grafana/tempo:2.1.1
 LOKI            := grafana/loki:2.8.2
 PROMTAIL        := grafana/promtail:2.8.2
-TELEPRESENCE    := datawire/ambassador-telepresence-manager:2.14.1
+TELEPRESENCE    := datawire/ambassador-telepresence-manager:2.14.2
 
 KIND_CLUSTER    := ardan-starter-cluster
 NAMESPACE       := sales-system
