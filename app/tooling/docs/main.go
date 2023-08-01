@@ -23,48 +23,21 @@ func run() error {
 	}
 
 	for _, war := range wars {
-		fmt.Println("Route:", war.route)
-		fmt.Println("Method:", war.method)
+		fmt.Print("\n============================\n\n")
+
+		fmt.Printf("Route : (%s) %s\n", war.method, war.route)
+		fmt.Printf("Status: %s (%d)\n", war.status, statuses[war.status])
+
 		for _, comment := range war.comments {
 			fmt.Println(comment)
 		}
+
 		fmt.Print("\n")
-
-		inputFields, err := findAppModel("productgrp", war.inputDoc)
-		if err != nil {
-			return fmt.Errorf("findAppModel, %w", err)
-		}
-
-		outputFields, err := findAppModel("productgrp", war.outputDoc)
-		if err != nil {
-			return fmt.Errorf("findAppModel, %w", err)
-		}
-
-		if war.inputDoc != "" {
-			fmt.Println("Input Model:", war.inputDoc)
-			fmt.Print(produceJSONDocument(inputFields), "\n\n")
-		}
-
-		if war.outputDoc != "" {
-			fmt.Println("Output Model", war.outputDoc)
-			fmt.Print(produceJSONDocument(outputFields), "\n\n")
-		}
-
-		fmt.Printf("Status: %s(%d)\n", war.status, statuses[war.status])
-
-		if war.hasPaging {
-			fmt.Println("HAS PAGING")
-		}
-
-		if war.hasFiltering {
-			fmt.Println("HAS FILTERS")
-		}
-
-		if war.hasOrdering {
-			fmt.Println("HAS ORDERING")
-		}
-
-		fmt.Print("\n============================\n\n")
+		fmt.Println("Input Model:", war.inputDoc)
+		fmt.Print("\n")
+		fmt.Println("Output Model:", war.outputDoc)
+		fmt.Print("\n")
+		fmt.Printf("Page:%v, Filter:%v, Order:%v\n", war.hasPaging, war.hasFiltering, war.hasOrdering)
 	}
 
 	return nil
@@ -118,7 +91,8 @@ func parseWebAPIFunctions(fset *token.FileSet, file *ast.File, funcDecl *ast.Fun
 	// Capture the line number for this function declaration.
 	line := fset.Position(funcDecl.Pos()).Line
 
-	// Search through the comments for this function.
+	// Search through the group of comments in this file looking for a
+	// comment that exist in the line above the function declaration.
 	var cGroup *ast.CommentGroup
 	for _, cGroup = range file.Comments {
 
@@ -128,6 +102,7 @@ func parseWebAPIFunctions(fset *token.FileSet, file *ast.File, funcDecl *ast.Fun
 		}
 	}
 
+	// We didn't find any comments.
 	if cGroup == nil {
 		return webAPIRecord{}, false
 	}
@@ -167,72 +142,22 @@ func parseWebAPIFunctions(fset *token.FileSet, file *ast.File, funcDecl *ast.Fun
 		case "route":
 			war.route = kv[1]
 		case "inputdoc":
-			war.inputDoc = kv[1]
+			if fields, err := findAppModel("productgrp", kv[1]); err == nil {
+				war.inputDoc = produceJSONDocument(fields)
+			}
 		case "outputdoc":
-			war.outputDoc = kv[1]
+			if fields, err := findAppModel("productgrp", kv[1]); err == nil {
+				war.outputDoc = produceJSONDocument(fields)
+			}
 		case "status":
 			war.status = kv[1]
 		}
 	}
 
-	parseQuery(&war, funcDecl.Body)
+	// Check if paging, filtering, or odering is in play.
+	checkPageFilterOrder(&war, funcDecl.Body)
 
 	return war, true
-}
-
-func parseQuery(war *webAPIRecord, body *ast.BlockStmt) {
-
-	// Walk through the body of the function looking for calls to
-	// paging, parseFilter, and parseOrder.
-	for _, stmt := range body.List {
-
-		// Start by looking for assignment statements.
-		agn, ok := stmt.(*ast.AssignStmt)
-		if !ok {
-			continue
-		}
-
-		// For each assignment statement, look at the right side.
-		for _, a := range agn.Rhs {
-
-			// If a function call is not being made, ignore.
-			ce, ok := a.(*ast.CallExpr)
-			if !ok {
-				continue
-			}
-
-			var ident *ast.Ident
-
-			// We might have a method call (*ast.SelectorExpr) or
-			// function call (*ast.Ident). Check if we have a method
-			// call first.
-			se, ok := ce.Fun.(*ast.SelectorExpr)
-
-			// If we had a method call, then use the X field to get
-			// to the identifier information. If this was a function
-			// call, then use the Fun field from the call expression.
-			switch ok {
-			case true:
-				ident, ok = se.X.(*ast.Ident)
-			default:
-				ident, ok = ce.Fun.(*ast.Ident)
-			}
-
-			// We need to check that either type assersion succeeed.
-			if !ok {
-				continue
-			}
-
-			switch ident.Name {
-			case "paging":
-				war.hasPaging = true
-			case "parseFilter":
-				war.hasFiltering = true
-			case "parseOrder":
-				war.hasOrdering = true
-			}
-		}
-	}
 }
 
 // =============================================================================
@@ -364,6 +289,63 @@ func produceJSONDocument(fields []apiField) string {
 	doc = strings.ReplaceAll(doc, "\"int\"", "int")
 
 	return doc
+}
+
+// =============================================================================
+
+func checkPageFilterOrder(war *webAPIRecord, body *ast.BlockStmt) {
+
+	// Walk through the body of the function looking for calls to
+	// paging, parseFilter, and parseOrder.
+	for _, stmt := range body.List {
+
+		// Start by looking for assignment statements.
+		agn, ok := stmt.(*ast.AssignStmt)
+		if !ok {
+			continue
+		}
+
+		// For each assignment statement, look at the right side.
+		for _, a := range agn.Rhs {
+
+			// If a function call is not being made, ignore.
+			ce, ok := a.(*ast.CallExpr)
+			if !ok {
+				continue
+			}
+
+			var ident *ast.Ident
+
+			// We might have a method call (*ast.SelectorExpr) or
+			// function call (*ast.Ident). Check if we have a method
+			// call first.
+			se, ok := ce.Fun.(*ast.SelectorExpr)
+
+			// If we had a method call, then use the X field to get
+			// to the identifier information. If this was a function
+			// call, then use the Fun field from the call expression.
+			switch ok {
+			case true:
+				ident, ok = se.X.(*ast.Ident)
+			default:
+				ident, ok = ce.Fun.(*ast.Ident)
+			}
+
+			// We need to check that either type assersion succeeed.
+			if !ok {
+				continue
+			}
+
+			switch ident.Name {
+			case "paging":
+				war.hasPaging = true
+			case "parseFilter":
+				war.hasFiltering = true
+			case "parseOrder":
+				war.hasOrdering = true
+			}
+		}
+	}
 }
 
 // =============================================================================
