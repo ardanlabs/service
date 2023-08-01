@@ -52,6 +52,18 @@ func run() error {
 
 		fmt.Printf("Status: %s(%d)\n", war.status, statuses[war.status])
 
+		if war.hasPaging {
+			fmt.Println("HAS PAGING")
+		}
+
+		if war.hasFiltering {
+			fmt.Println("HAS FILTERS")
+		}
+
+		if war.hasOrdering {
+			fmt.Println("HAS ORDERING")
+		}
+
 		fmt.Print("\n============================\n\n")
 	}
 
@@ -61,13 +73,16 @@ func run() error {
 // =============================================================================
 
 type webAPIRecord struct {
-	tag       string
-	method    string
-	route     string
-	inputDoc  string
-	outputDoc string
-	status    string
-	comments  []string
+	tag          string
+	method       string
+	route        string
+	inputDoc     string
+	outputDoc    string
+	status       string
+	comments     []string
+	hasPaging    bool
+	hasFiltering bool
+	hasOrdering  bool
 }
 
 func findWebAPIRecords() ([]webAPIRecord, error) {
@@ -160,7 +175,64 @@ func parseWebAPIFunctions(fset *token.FileSet, file *ast.File, funcDecl *ast.Fun
 		}
 	}
 
+	parseQuery(&war, funcDecl.Body)
+
 	return war, true
+}
+
+func parseQuery(war *webAPIRecord, body *ast.BlockStmt) {
+
+	// Walk through the body of the function looking for calls to
+	// paging, parseFilter, and parseOrder.
+	for _, stmt := range body.List {
+
+		// Start by looking for assignment statements.
+		agn, ok := stmt.(*ast.AssignStmt)
+		if !ok {
+			continue
+		}
+
+		// For each assignment statement, look at the right side.
+		for _, a := range agn.Rhs {
+
+			// If a function call is not being made, ignore.
+			ce, ok := a.(*ast.CallExpr)
+			if !ok {
+				continue
+			}
+
+			var ident *ast.Ident
+
+			// We might have a method call (*ast.SelectorExpr) or
+			// function call (*ast.Ident). Check if we have a method
+			// call first.
+			se, ok := ce.Fun.(*ast.SelectorExpr)
+
+			// If we had a method call, then use the X field to get
+			// to the identifier information. If this was a function
+			// call, then use the Fun field from the call expression.
+			switch ok {
+			case true:
+				ident, ok = se.X.(*ast.Ident)
+			default:
+				ident, ok = ce.Fun.(*ast.Ident)
+			}
+
+			// We need to check that either type assersion succeeed.
+			if !ok {
+				continue
+			}
+
+			switch ident.Name {
+			case "paging":
+				war.hasPaging = true
+			case "parseFilter":
+				war.hasFiltering = true
+			case "parseOrder":
+				war.hasOrdering = true
+			}
+		}
+	}
 }
 
 // =============================================================================
@@ -186,65 +258,70 @@ func findAppModel(group string, modelName string) ([]apiField, error) {
 
 		// We only care to look at types.
 		typeSpec, ok := n.(*ast.TypeSpec)
-		if ok {
+		if !ok {
+			return true
+		}
 
-			// Did we find the model that was specified in the call?
-			if typeSpec.Name.Name == modelName {
-				structType := typeSpec.Type.(*ast.StructType)
+		// Did we find the model that was specified in the call?
+		if typeSpec.Name.Name != modelName {
+			return true
+		}
 
-				// Walk through the list of fields in this struct.
-				for _, field := range structType.Fields.List {
-					var fieldType *ast.Ident
-					var optional bool
+		structType := typeSpec.Type.(*ast.StructType)
 
-					// This is complicated. A field can be using pointer or
-					// value semantics. There is a different type depending.
-					// So we start by asking if the field is using pointer
-					// semantics.
-					starType, ok := field.Type.(*ast.StarExpr)
+		// Walk through the list of fields in this struct.
+		for _, field := range structType.Fields.List {
+			var fieldType *ast.Ident
+			var optional bool
 
-					// If this field was using pointer semantics, then we
-					// use the starType variable to get to the identifier
-					// and mark this field as optional.
-					//
-					// If this field was using value semantics, then we
-					// use the field variable to get to the identifier.
-					switch ok {
-					case true:
-						fieldType, ok = starType.X.(*ast.Ident)
-						optional = true
-					default:
-						fieldType, ok = field.Type.(*ast.Ident)
-					}
+			// This is complicated. A field can be using pointer or
+			// value semantics. There is a different type depending.
+			// So we start by asking if the field is using pointer
+			// semantics.
+			starType, ok := field.Type.(*ast.StarExpr)
 
-					// We need to check that either type assersion succeeed.
-					// Now look for the json tag on the field to know what
-					// actual field name is being used after marshaling.
-					if ok {
-
-						// We will use the field name by default.
-						tag := field.Names[0].Name
-
-						// Check if there is a json tag and if so, parse
-						// out the field name.
-						idx := strings.Index(field.Tag.Value, "json")
-						if idx != -1 {
-							idx2 := strings.Index(field.Tag.Value[idx:], "\"")
-							idx3 := idx + idx2 + 1
-							idx4 := strings.Index(field.Tag.Value[idx3:], "\"")
-							tag = field.Tag.Value[idx3 : idx3+idx4]
-						}
-
-						// Add the field information to the list.
-						fields = append(fields, apiField{
-							Name:     field.Names[0].Name,
-							Type:     fieldType.Name,
-							Tag:      tag,
-							Optional: optional,
-						})
-					}
-				}
+			// If this field was using pointer semantics, then we
+			// use the starType variable to get to the identifier
+			// and mark this field as optional.
+			//
+			// If this field was using value semantics, then we
+			// use the field variable to get to the identifier.
+			switch ok {
+			case true:
+				fieldType, ok = starType.X.(*ast.Ident)
+				optional = true
+			default:
+				fieldType, ok = field.Type.(*ast.Ident)
 			}
+
+			// We need to check that either type assersion succeeed.
+			if !ok {
+				continue
+			}
+
+			// Now look for the json tag on the field to know what
+			// actual field name is being used after marshaling.
+
+			// We will use the field name by default.
+			tag := field.Names[0].Name
+
+			// Check if there is a json tag and if so, parse
+			// out the field name.
+			idx := strings.Index(field.Tag.Value, "json")
+			if idx != -1 {
+				idx2 := strings.Index(field.Tag.Value[idx:], "\"")
+				idx3 := idx + idx2 + 1
+				idx4 := strings.Index(field.Tag.Value[idx3:], "\"")
+				tag = field.Tag.Value[idx3 : idx3+idx4]
+			}
+
+			// Add the field information to the list.
+			fields = append(fields, apiField{
+				Name:     field.Names[0].Name,
+				Type:     fieldType.Name,
+				Tag:      tag,
+				Optional: optional,
+			})
 		}
 
 		return true
@@ -257,6 +334,7 @@ func findAppModel(group string, modelName string) ([]apiField, error) {
 
 func produceJSONDocument(fields []apiField) string {
 	m := make(map[string]any)
+
 	for _, field := range fields {
 		tag := field.Tag
 		typ := field.Type
