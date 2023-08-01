@@ -28,22 +28,22 @@ func run() error {
 			fmt.Println(comment)
 		}
 
-		inputFields, err := findAppModel("productgrp", war.inputType)
+		inputFields, err := findAppModel("productgrp", war.inputDoc)
 		if err != nil {
 			return fmt.Errorf("findAppModel, %w", err)
 		}
 
-		outputFields, err := findAppModel("productgrp", war.outputType)
+		outputFields, err := findAppModel("productgrp", war.outputDoc)
 		if err != nil {
 			return fmt.Errorf("findAppModel, %w", err)
 		}
 
-		fmt.Println("Input Model:", war.inputType)
+		fmt.Println("Input Model:", war.inputDoc)
 		for _, field := range inputFields {
 			fmt.Printf("%#v\n", field)
 		}
 
-		fmt.Println("Output Model", war.outputType)
+		fmt.Println("Output Model", war.outputDoc)
 		for _, field := range outputFields {
 			fmt.Printf("%#v\n", field)
 		}
@@ -76,16 +76,32 @@ func findAppModel(group string, modelName string) ([]apiFields, error) {
 	var fields []apiFields
 
 	f := func(n ast.Node) bool {
+
+		// We only care to look at types.
 		typeSpec, ok := n.(*ast.TypeSpec)
 		if ok {
+
+			// Did we find the model that was specified in the call?
 			if typeSpec.Name.Name == modelName {
 				structType := typeSpec.Type.(*ast.StructType)
 
+				// Walk through the list of fields in this struct.
 				for _, field := range structType.Fields.List {
-					starType, ok := field.Type.(*ast.StarExpr)
-
 					var fieldType *ast.Ident
 					var optional bool
+
+					// This is complicated. A field can be using pointer or
+					// value semantics. There is a different type depending.
+					// So we start by asking if the field is using pointer
+					// semantics.
+					starType, ok := field.Type.(*ast.StarExpr)
+
+					// If this field was using pointer semantics, then we
+					// use the starType variable to get to the identifier
+					// and mark this field as optional.
+					//
+					// If this field was using value semantics, then we
+					// use the field variable to get to the identifier.
 					switch ok {
 					case true:
 						fieldType, ok = starType.X.(*ast.Ident)
@@ -94,8 +110,16 @@ func findAppModel(group string, modelName string) ([]apiFields, error) {
 						fieldType, ok = field.Type.(*ast.Ident)
 					}
 
+					// We need to check that either type assersion succeeed.
+					// Now look for the json tag on the field to know what
+					// actual field name is being used after marshaling.
 					if ok {
+
+						// We will use the field name by default.
 						tag := field.Names[0].Name
+
+						// Check if there is a json tag and if so, parse
+						// out the field name.
 						idx := strings.Index(field.Tag.Value, "json")
 						if idx != -1 {
 							idx2 := strings.Index(field.Tag.Value[idx:], "\"")
@@ -104,16 +128,14 @@ func findAppModel(group string, modelName string) ([]apiFields, error) {
 							tag = field.Tag.Value[idx3 : idx3+idx4]
 						}
 
+						// Add the field information to the list.
 						fields = append(fields, apiFields{
 							Name:     field.Names[0].Name,
 							Type:     fieldType.Name,
 							Tag:      tag,
 							Optional: optional,
 						})
-
-						continue
 					}
-
 				}
 			}
 		}
@@ -129,13 +151,13 @@ func findAppModel(group string, modelName string) ([]apiFields, error) {
 // =============================================================================
 
 type webAPIRecord struct {
-	tag        string
-	method     string
-	route      string
-	inputType  string
-	outputType string
-	status     string
-	comments   []string
+	tag       string
+	method    string
+	route     string
+	inputDoc  string
+	outputDoc string
+	status    string
+	comments  []string
 }
 
 func findWebAPIRecords() ([]webAPIRecord, error) {
@@ -146,36 +168,64 @@ func findWebAPIRecords() ([]webAPIRecord, error) {
 		return nil, fmt.Errorf("ParseFile: %w", err)
 	}
 
-	var tag = "service:webapi"
+	var tag = "webapi"
 	var wars []webAPIRecord
 
 	f := func(n ast.Node) bool {
+
+		// We only care to look at functions.
 		funcDecl, ok := n.(*ast.FuncDecl)
 		if ok {
+
+			// Capture the line number for this function declaration.
 			line := fset.Position(funcDecl.Pos()).Line
 
+			// Search through the comments for this function.
 			for _, cGroup := range file.Comments {
+
+				// We need the last comment to check for the webapi tag.
 				if fset.Position(cGroup.End()).Line == line-1 {
+
+					// Capture the last comment.
 					comment := cGroup.List[len(cGroup.List)-1].Text
 
+					// Does this comment have the webapi tag?
 					if n := strings.Index(comment, tag); n != -1 {
+
+						// Split this comment by the space delimiter.
 						record := strings.Split(comment[n:], " ")
 
+						// Capture any remaining comments that are not
+						// part of the webapi tag.
 						var comments []string
 						for _, com := range cGroup.List[:len(cGroup.List)-1] {
 							comments = append(comments, com.Text[3:])
 						}
 
+						// Create a webAPIRecord and assign what we have now.
 						war := webAPIRecord{
-							tag:        strings.TrimSpace(record[0]),
-							method:     record[1],
-							route:      record[2],
-							inputType:  record[3],
-							outputType: record[4],
-							status:     record[5],
-							comments:   comments,
+							tag:      strings.TrimSpace(record[0]),
+							comments: comments,
 						}
 
+						// Match the key to the field in the webAPIRecord.
+						for _, rec := range record {
+							kv := strings.Split(rec, "=")
+							switch kv[0] {
+							case "method":
+								war.method = kv[1]
+							case "route":
+								war.route = kv[1]
+							case "inputdoc":
+								war.inputDoc = kv[1]
+							case "outputdoc":
+								war.outputDoc = kv[1]
+							case "status":
+								war.status = kv[1]
+							}
+						}
+
+						// Append this webAPIRecord to the list.
 						wars = append(wars, war)
 					}
 				}
