@@ -73,7 +73,7 @@ func findWebAPIRecords() ([]webAPIRecord, error) {
 		// We only care if this node is a function declaration.
 		funcDecl, ok := n.(*ast.FuncDecl)
 		if ok {
-			if war, found := parseWebAPIFunctions(fset, file, funcDecl); found {
+			if war, found := parseWebAPIFunctions(fset, file, funcDecl, "productgrp"); found {
 				wars = append(wars, war)
 			}
 		}
@@ -86,7 +86,7 @@ func findWebAPIRecords() ([]webAPIRecord, error) {
 	return wars, nil
 }
 
-func parseWebAPIFunctions(fset *token.FileSet, file *ast.File, funcDecl *ast.FuncDecl) (webAPIRecord, bool) {
+func parseWebAPIFunctions(fset *token.FileSet, file *ast.File, funcDecl *ast.FuncDecl, group string) (webAPIRecord, bool) {
 
 	// Capture the line number for this function declaration.
 	line := fset.Position(funcDecl.Pos()).Line
@@ -142,11 +142,11 @@ func parseWebAPIFunctions(fset *token.FileSet, file *ast.File, funcDecl *ast.Fun
 		case "route":
 			war.route = kv[1]
 		case "inputdoc":
-			if fields, err := findAppModel("productgrp", kv[1]); err == nil {
+			if fields, err := findAppModel(group, kv[1]); err == nil {
 				war.inputDoc = produceJSONDocument(fields)
 			}
 		case "outputdoc":
-			if fields, err := findAppModel("productgrp", kv[1]); err == nil {
+			if fields, err := findAppModel(group, kv[1]); err == nil {
 				war.outputDoc = produceJSONDocument(fields)
 			}
 		case "status":
