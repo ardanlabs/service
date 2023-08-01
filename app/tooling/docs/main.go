@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"go/ast"
 	"go/parser"
@@ -27,6 +28,7 @@ func run() error {
 		for _, comment := range war.comments {
 			fmt.Println(comment)
 		}
+		fmt.Print("\n")
 
 		inputFields, err := findAppModel("productgrp", war.inputDoc)
 		if err != nil {
@@ -39,18 +41,14 @@ func run() error {
 		}
 
 		fmt.Println("Input Model:", war.inputDoc)
-		for _, field := range inputFields {
-			fmt.Printf("%#v\n", field)
-		}
+		fmt.Print(produceJSONDocument(inputFields), "\n\n")
 
 		fmt.Println("Output Model", war.outputDoc)
-		for _, field := range outputFields {
-			fmt.Printf("%#v\n", field)
-		}
+		fmt.Print(produceJSONDocument(outputFields), "\n\n")
 
 		fmt.Printf("Status %s(%d)\n", war.status, statuses[war.status])
 
-		fmt.Print("\n")
+		fmt.Print("\n============================\n\n")
 	}
 
 	return nil
@@ -58,14 +56,47 @@ func run() error {
 
 // =============================================================================
 
-type apiFields struct {
+type apiField struct {
 	Name     string
 	Type     string
 	Tag      string
 	Optional bool
 }
 
-func findAppModel(group string, modelName string) ([]apiFields, error) {
+func produceJSONDocument(fields []apiField) string {
+	m := make(map[string]any)
+	for _, field := range fields {
+		tag := field.Tag
+		typ := field.Type
+
+		if field.Optional {
+			tag = "*" + tag
+		}
+
+		if strings.Contains(strings.ToLower(field.Name), "id") {
+			typ = "UUID"
+		}
+
+		if strings.Contains(strings.ToLower(field.Name), "date") {
+			typ = "RFC3339"
+		}
+
+		m[tag] = typ
+	}
+
+	data, err := json.MarshalIndent(m, "", "  ")
+	if err != nil {
+		return ""
+	}
+
+	doc := string(data)
+	doc = strings.ReplaceAll(doc, "\"float64\"", "float64")
+	doc = strings.ReplaceAll(doc, "\"int\"", "int")
+
+	return doc
+}
+
+func findAppModel(group string, modelName string) ([]apiField, error) {
 	fset := token.NewFileSet()
 
 	file, err := parser.ParseFile(fset, "app/services/sales-api/handlers/v1/"+group+"/model.go", nil, parser.ParseComments)
@@ -73,7 +104,7 @@ func findAppModel(group string, modelName string) ([]apiFields, error) {
 		return nil, fmt.Errorf("ParseFile: %w", err)
 	}
 
-	var fields []apiFields
+	var fields []apiField
 
 	f := func(n ast.Node) bool {
 
@@ -129,7 +160,7 @@ func findAppModel(group string, modelName string) ([]apiFields, error) {
 						}
 
 						// Add the field information to the list.
-						fields = append(fields, apiFields{
+						fields = append(fields, apiField{
 							Name:     field.Names[0].Name,
 							Type:     fieldType.Name,
 							Tag:      tag,
