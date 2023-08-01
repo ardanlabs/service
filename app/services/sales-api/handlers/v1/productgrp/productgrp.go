@@ -118,6 +118,7 @@ func (h *Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Re
 }
 
 // Delete removes a product from the system.
+// webapi method=DELETE route=/products/:product_id status=StatusNoContent
 func (h *Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	h, err := h.executeUnderTransaction(ctx)
 	if err != nil {

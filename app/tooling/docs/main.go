@@ -40,13 +40,17 @@ func run() error {
 			return fmt.Errorf("findAppModel, %w", err)
 		}
 
-		fmt.Println("Input Model:", war.inputDoc)
-		fmt.Print(produceJSONDocument(inputFields), "\n\n")
+		if war.inputDoc != "" {
+			fmt.Println("Input Model:", war.inputDoc)
+			fmt.Print(produceJSONDocument(inputFields), "\n\n")
+		}
 
-		fmt.Println("Output Model", war.outputDoc)
-		fmt.Print(produceJSONDocument(outputFields), "\n\n")
+		if war.outputDoc != "" {
+			fmt.Println("Output Model", war.outputDoc)
+			fmt.Print(produceJSONDocument(outputFields), "\n\n")
+		}
 
-		fmt.Printf("Status %s(%d)\n", war.status, statuses[war.status])
+		fmt.Printf("Status: %s(%d)\n", war.status, statuses[war.status])
 
 		fmt.Print("\n============================\n\n")
 	}
