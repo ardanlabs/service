@@ -60,44 +60,116 @@ func run() error {
 
 // =============================================================================
 
+type webAPIRecord struct {
+	tag       string
+	method    string
+	route     string
+	inputDoc  string
+	outputDoc string
+	status    string
+	comments  []string
+}
+
+func findWebAPIRecords() ([]webAPIRecord, error) {
+	fset := token.NewFileSet()
+
+	file, err := parser.ParseFile(fset, "app/services/sales-api/handlers/v1/productgrp/productgrp.go", nil, parser.ParseComments)
+	if err != nil {
+		return nil, fmt.Errorf("ParseFile: %w", err)
+	}
+
+	var wars []webAPIRecord
+
+	f := func(n ast.Node) bool {
+
+		// We only care if this node is a function declaration.
+		funcDecl, ok := n.(*ast.FuncDecl)
+		if ok {
+			if war, found := parseWebAPIFunctions(fset, file, funcDecl); found {
+				wars = append(wars, war)
+			}
+		}
+
+		return true
+	}
+
+	ast.Inspect(file, f)
+
+	return wars, nil
+}
+
+func parseWebAPIFunctions(fset *token.FileSet, file *ast.File, funcDecl *ast.FuncDecl) (webAPIRecord, bool) {
+
+	// Capture the line number for this function declaration.
+	line := fset.Position(funcDecl.Pos()).Line
+
+	// Search through the comments for this function.
+	var cGroup *ast.CommentGroup
+	for _, cGroup = range file.Comments {
+
+		// We are looking for the comments associated with this function.
+		if fset.Position(cGroup.End()).Line == line-1 {
+			break
+		}
+	}
+
+	if cGroup == nil {
+		return webAPIRecord{}, false
+	}
+
+	// Capture the last comment.
+	comment := cGroup.List[len(cGroup.List)-1].Text
+
+	// Does this comment have the webapi tag?
+	const tag = "webapi"
+	idx := strings.Index(comment, tag)
+	if idx == -1 {
+		return webAPIRecord{}, false
+	}
+
+	// Split this comment by the space delimiter.
+	record := strings.Split(comment[idx:], " ")
+
+	// Capture any remaining comments that are not
+	// part of the webapi tag.
+	var comments []string
+	for _, com := range cGroup.List[:len(cGroup.List)-1] {
+		comments = append(comments, com.Text[3:])
+	}
+
+	// Create a webAPIRecord and assign what we have now.
+	war := webAPIRecord{
+		tag:      strings.TrimSpace(record[0]),
+		comments: comments,
+	}
+
+	// Match the key to the field in the webAPIRecord.
+	for _, rec := range record {
+		kv := strings.Split(rec, "=")
+		switch kv[0] {
+		case "method":
+			war.method = kv[1]
+		case "route":
+			war.route = kv[1]
+		case "inputdoc":
+			war.inputDoc = kv[1]
+		case "outputdoc":
+			war.outputDoc = kv[1]
+		case "status":
+			war.status = kv[1]
+		}
+	}
+
+	return war, true
+}
+
+// =============================================================================
+
 type apiField struct {
 	Name     string
 	Type     string
 	Tag      string
 	Optional bool
-}
-
-func produceJSONDocument(fields []apiField) string {
-	m := make(map[string]any)
-	for _, field := range fields {
-		tag := field.Tag
-		typ := field.Type
-
-		if field.Optional {
-			tag = "*" + tag
-		}
-
-		if strings.Contains(strings.ToLower(field.Name), "id") {
-			typ = "UUID"
-		}
-
-		if strings.Contains(strings.ToLower(field.Name), "date") {
-			typ = "RFC3339"
-		}
-
-		m[tag] = typ
-	}
-
-	data, err := json.MarshalIndent(m, "", "  ")
-	if err != nil {
-		return ""
-	}
-
-	doc := string(data)
-	doc = strings.ReplaceAll(doc, "\"float64\"", "float64")
-	doc = strings.ReplaceAll(doc, "\"int\"", "int")
-
-	return doc
 }
 
 func findAppModel(group string, modelName string) ([]apiField, error) {
@@ -183,96 +255,37 @@ func findAppModel(group string, modelName string) ([]apiField, error) {
 	return fields, nil
 }
 
-// =============================================================================
+func produceJSONDocument(fields []apiField) string {
+	m := make(map[string]any)
+	for _, field := range fields {
+		tag := field.Tag
+		typ := field.Type
 
-type webAPIRecord struct {
-	tag       string
-	method    string
-	route     string
-	inputDoc  string
-	outputDoc string
-	status    string
-	comments  []string
-}
-
-func findWebAPIRecords() ([]webAPIRecord, error) {
-	fset := token.NewFileSet()
-
-	file, err := parser.ParseFile(fset, "app/services/sales-api/handlers/v1/productgrp/productgrp.go", nil, parser.ParseComments)
-	if err != nil {
-		return nil, fmt.Errorf("ParseFile: %w", err)
-	}
-
-	var tag = "webapi"
-	var wars []webAPIRecord
-
-	f := func(n ast.Node) bool {
-
-		// We only care to look at functions.
-		funcDecl, ok := n.(*ast.FuncDecl)
-		if ok {
-
-			// Capture the line number for this function declaration.
-			line := fset.Position(funcDecl.Pos()).Line
-
-			// Search through the comments for this function.
-			for _, cGroup := range file.Comments {
-
-				// We need the last comment to check for the webapi tag.
-				if fset.Position(cGroup.End()).Line == line-1 {
-
-					// Capture the last comment.
-					comment := cGroup.List[len(cGroup.List)-1].Text
-
-					// Does this comment have the webapi tag?
-					if n := strings.Index(comment, tag); n != -1 {
-
-						// Split this comment by the space delimiter.
-						record := strings.Split(comment[n:], " ")
-
-						// Capture any remaining comments that are not
-						// part of the webapi tag.
-						var comments []string
-						for _, com := range cGroup.List[:len(cGroup.List)-1] {
-							comments = append(comments, com.Text[3:])
-						}
-
-						// Create a webAPIRecord and assign what we have now.
-						war := webAPIRecord{
-							tag:      strings.TrimSpace(record[0]),
-							comments: comments,
-						}
-
-						// Match the key to the field in the webAPIRecord.
-						for _, rec := range record {
-							kv := strings.Split(rec, "=")
-							switch kv[0] {
-							case "method":
-								war.method = kv[1]
-							case "route":
-								war.route = kv[1]
-							case "inputdoc":
-								war.inputDoc = kv[1]
-							case "outputdoc":
-								war.outputDoc = kv[1]
-							case "status":
-								war.status = kv[1]
-							}
-						}
-
-						// Append this webAPIRecord to the list.
-						wars = append(wars, war)
-					}
-				}
-			}
+		if field.Optional {
+			tag = "*" + tag
 		}
 
-		return true
+		if strings.Contains(strings.ToLower(field.Name), "id") {
+			typ = "UUID"
+		}
+
+		if strings.Contains(strings.ToLower(field.Name), "date") {
+			typ = "RFC3339"
+		}
+
+		m[tag] = typ
 	}
 
-	ast.Inspect(file, f)
+	data, err := json.MarshalIndent(m, "", "  ")
+	if err != nil {
+		return ""
+	}
 
-	return wars, nil
+	doc := string(data)
+	doc = strings.ReplaceAll(doc, "\"float64\"", "float64")
+	doc = strings.ReplaceAll(doc, "\"int\"", "int")
+
+	return doc
 }
 
 // =============================================================================

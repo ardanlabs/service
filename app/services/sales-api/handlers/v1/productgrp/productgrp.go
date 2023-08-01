@@ -152,6 +152,7 @@ func (h *Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Re
 }
 
 // Query returns a list of products with paging.
+// webapi method=GET route=/products status=StatusOK
 func (h *Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	page, err := paging.ParseRequest(r)
 	if err != nil {
