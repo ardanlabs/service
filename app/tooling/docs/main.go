@@ -25,19 +25,20 @@ func run() error {
 	for _, war := range wars {
 		fmt.Print("\n============================\n\n")
 
-		fmt.Printf("Route : (%s) %s\n", war.method, war.route)
-		fmt.Printf("Status: %s (%d)\n", war.status, statuses[war.status])
+		fmt.Printf("Route  : (%s) %s\n", war.method, war.route)
+		fmt.Printf("Status : %s (%d)\n", war.status, statuses[war.status])
 
 		for _, comment := range war.comments {
 			fmt.Println(comment)
 		}
 
 		fmt.Print("\n")
-		fmt.Println("Input Model:", war.inputDoc)
+		fmt.Println("Input Model :", produceJSONDocument(war.inputDoc))
 		fmt.Print("\n")
-		fmt.Println("Output Model:", war.outputDoc)
+		fmt.Println("Output Model :", produceJSONDocument(war.outputDoc))
 		fmt.Print("\n")
-		fmt.Printf("Query Vars: %v\n", strings.Join(war.queryVars, ", "))
+		fmt.Printf("Paging Vars    : %v\n", strings.Join(war.queryVars.paging, ", "))
+		fmt.Printf("Filtering Vars : %v\n", strings.Join(war.queryVars.filtering, ", "))
 	}
 
 	return nil
@@ -45,16 +46,28 @@ func run() error {
 
 // =============================================================================
 
+type field struct {
+	Name     string
+	Type     string
+	Tag      string
+	Optional bool
+}
+
+type queryVars struct {
+	paging    []string
+	filtering []string
+}
+
 type webAPIRecord struct {
 	group     string
 	tag       string
 	method    string
 	route     string
-	inputDoc  string
-	outputDoc string
 	status    string
+	inputDoc  []field
+	outputDoc []field
 	comments  []string
-	queryVars []string
+	queryVars queryVars
 }
 
 func findWebAPIRecords() ([]webAPIRecord, error) {
@@ -71,17 +84,19 @@ func findWebAPIRecords() ([]webAPIRecord, error) {
 
 		// We only care if this node is a function declaration.
 		funcDecl, ok := n.(*ast.FuncDecl)
-		if ok {
-			found, war, errF := parseWebAPI(fset, file, funcDecl, "productgrp")
-			if found {
-				wars = append(wars, war)
-				return true
-			}
+		if !ok {
+			return true
+		}
 
-			if errF != nil {
-				err = fmt.Errorf("parseWebAPI: %w", err)
-				return false
-			}
+		found, war, errF := parseWebAPI(fset, file, funcDecl, "productgrp")
+		if found {
+			wars = append(wars, war)
+			return true
+		}
+
+		if errF != nil {
+			err = fmt.Errorf("parseWebAPI: %w", err)
+			return false
 		}
 
 		return true
@@ -181,19 +196,12 @@ func parseWebAPI(fset *token.FileSet, file *ast.File, funcDecl *ast.FuncDecl, gr
 
 // =============================================================================
 
-type field struct {
-	Name     string
-	Type     string
-	Tag      string
-	Optional bool
-}
-
-func findAppModel(group string, modelName string) (string, error) {
+func findAppModel(group string, modelName string) ([]field, error) {
 	fset := token.NewFileSet()
 
 	file, err := parser.ParseFile(fset, "app/services/sales-api/handlers/v1/"+group+"/model.go", nil, parser.ParseComments)
 	if err != nil {
-		return "", fmt.Errorf("ParseFile: %w", err)
+		return nil, fmt.Errorf("ParseFile: %w", err)
 	}
 
 	var fields []field
@@ -273,7 +281,7 @@ func findAppModel(group string, modelName string) (string, error) {
 
 	ast.Inspect(file, f)
 
-	return produceJSONDocument(fields), nil
+	return fields, nil
 }
 
 func produceJSONDocument(fields []field) string {
@@ -312,8 +320,8 @@ func produceJSONDocument(fields []field) string {
 
 // =============================================================================
 
-func findQueryVars(body *ast.BlockStmt, group string) ([]string, error) {
-	var queryVars []string
+func findQueryVars(body *ast.BlockStmt, group string) (queryVars, error) {
+	var qv queryVars
 
 	// Walk through the body of the function looking for calls to
 	// paging, parseFilter, and parseOrder.
@@ -325,55 +333,50 @@ func findQueryVars(body *ast.BlockStmt, group string) ([]string, error) {
 			continue
 		}
 
-		// For each assignment statement, look at the right side.
-		for _, a := range agn.Rhs {
+		// If a function call is not being made, ignore.
+		ce, ok := agn.Rhs[0].(*ast.CallExpr)
+		if !ok {
+			continue
+		}
 
-			// If a function call is not being made, ignore.
-			ce, ok := a.(*ast.CallExpr)
-			if !ok {
-				continue
+		var ident *ast.Ident
+
+		// We might have a method call (*ast.SelectorExpr) or
+		// function call (*ast.Ident). Check if we have a method
+		// call first.
+		se, ok := ce.Fun.(*ast.SelectorExpr)
+
+		// If we had a method call, then use the X field to get
+		// to the identifier information. If this was a function
+		// call, then use the Fun field from the call expression.
+		switch ok {
+		case true:
+			ident, ok = se.X.(*ast.Ident)
+		default:
+			ident, ok = ce.Fun.(*ast.Ident)
+		}
+
+		// We need to check that either type assersion succeeed.
+		if !ok {
+			continue
+		}
+
+		switch ident.Name {
+		case "paging":
+			qv.paging = append(qv.paging, "page", "rows")
+
+		case "parseFilter":
+			filtering, err := findFilters(qv.filtering, group)
+			if err != nil {
+				return queryVars{}, fmt.Errorf("findFilters: %w", err)
 			}
+			qv.filtering = filtering
 
-			var ident *ast.Ident
-
-			// We might have a method call (*ast.SelectorExpr) or
-			// function call (*ast.Ident). Check if we have a method
-			// call first.
-			se, ok := ce.Fun.(*ast.SelectorExpr)
-
-			// If we had a method call, then use the X field to get
-			// to the identifier information. If this was a function
-			// call, then use the Fun field from the call expression.
-			switch ok {
-			case true:
-				ident, ok = se.X.(*ast.Ident)
-			default:
-				ident, ok = ce.Fun.(*ast.Ident)
-			}
-
-			// We need to check that either type assersion succeeed.
-			if !ok {
-				continue
-			}
-
-			switch ident.Name {
-			case "paging":
-				queryVars = append(queryVars, "page")
-				queryVars = append(queryVars, "rows")
-
-			case "parseFilter":
-				var err error
-				queryVars, err = findFilters(queryVars, group)
-				if err != nil {
-					return nil, fmt.Errorf("findFilters: %w", err)
-				}
-
-			case "parseOrder":
-			}
+		case "parseOrder":
 		}
 	}
 
-	return queryVars, nil
+	return qv, nil
 }
 
 func findFilters(queryVars []string, group string) ([]string, error) {
@@ -385,6 +388,60 @@ func findFilters(queryVars []string, group string) ([]string, error) {
 	}
 
 	f := func(n ast.Node) bool {
+
+		// We only care if this node is a function declaration.
+		funcDecl, ok := n.(*ast.FuncDecl)
+		if !ok {
+			return true
+		}
+
+		// Is this function the parseFilter function.
+		if funcDecl.Name.Name != "parseFilter" {
+			return true
+		}
+
+		// We need to find all the value.Get calls.
+		for _, stmt := range funcDecl.Body.List {
+
+			// These calls are inside of if statments.
+			ifs, ok := stmt.(*ast.IfStmt)
+			if !ok {
+				continue
+			}
+
+			// Capture the assignment inside the if statement.
+			agn, ok := ifs.Init.(*ast.AssignStmt)
+			if !ok {
+				continue
+			}
+
+			// If a function call is not being made, ignore.
+			ce, ok := agn.Rhs[0].(*ast.CallExpr)
+			if !ok {
+				continue
+			}
+
+			// Convert to the selector expression to get information.
+			se, ok := ce.Fun.(*ast.SelectorExpr)
+			if !ok {
+				continue
+			}
+
+			// Check we have a values.Get function call.
+			if se.Sel.Name != "Get" {
+				continue
+			}
+
+			// Convert the argument to a basic literal.
+			lit, ok := ce.Args[0].(*ast.BasicLit)
+			if !ok {
+				continue
+			}
+
+			// Capture the name of the filter.
+			queryVars = append(queryVars, strings.Trim(lit.Value, "\""))
+		}
+
 		return true
 	}
 
