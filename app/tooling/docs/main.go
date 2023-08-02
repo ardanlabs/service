@@ -37,7 +37,7 @@ func run() error {
 		fmt.Print("\n")
 		fmt.Println("Output Model:", war.outputDoc)
 		fmt.Print("\n")
-		fmt.Printf("Page:%v, Filter:%v, Order:%v\n", war.hasPaging, war.hasFiltering, war.hasOrdering)
+		fmt.Printf("Query Vars: %v\n", strings.Join(war.queryVars, ", "))
 	}
 
 	return nil
@@ -46,16 +46,15 @@ func run() error {
 // =============================================================================
 
 type webAPIRecord struct {
-	tag          string
-	method       string
-	route        string
-	inputDoc     string
-	outputDoc    string
-	status       string
-	comments     []string
-	hasPaging    bool
-	hasFiltering bool
-	hasOrdering  bool
+	group     string
+	tag       string
+	method    string
+	route     string
+	inputDoc  string
+	outputDoc string
+	status    string
+	comments  []string
+	queryVars []string
 }
 
 func findWebAPIRecords() ([]webAPIRecord, error) {
@@ -73,8 +72,15 @@ func findWebAPIRecords() ([]webAPIRecord, error) {
 		// We only care if this node is a function declaration.
 		funcDecl, ok := n.(*ast.FuncDecl)
 		if ok {
-			if war, found := parseWebAPIFunctions(fset, file, funcDecl, "productgrp"); found {
+			found, war, errF := parseWebAPI(fset, file, funcDecl, "productgrp")
+			if found {
 				wars = append(wars, war)
+				return true
+			}
+
+			if errF != nil {
+				err = fmt.Errorf("parseWebAPI: %w", err)
+				return false
 			}
 		}
 
@@ -83,10 +89,10 @@ func findWebAPIRecords() ([]webAPIRecord, error) {
 
 	ast.Inspect(file, f)
 
-	return wars, nil
+	return wars, err
 }
 
-func parseWebAPIFunctions(fset *token.FileSet, file *ast.File, funcDecl *ast.FuncDecl, group string) (webAPIRecord, bool) {
+func parseWebAPI(fset *token.FileSet, file *ast.File, funcDecl *ast.FuncDecl, group string) (found bool, war webAPIRecord, err error) {
 
 	// Capture the line number for this function declaration.
 	line := fset.Position(funcDecl.Pos()).Line
@@ -104,7 +110,7 @@ func parseWebAPIFunctions(fset *token.FileSet, file *ast.File, funcDecl *ast.Fun
 
 	// We didn't find any comments.
 	if cGroup == nil {
-		return webAPIRecord{}, false
+		return false, webAPIRecord{}, nil
 	}
 
 	// Capture the last comment.
@@ -114,7 +120,7 @@ func parseWebAPIFunctions(fset *token.FileSet, file *ast.File, funcDecl *ast.Fun
 	const tag = "webapi"
 	idx := strings.Index(comment, tag)
 	if idx == -1 {
-		return webAPIRecord{}, false
+		return false, webAPIRecord{}, nil
 	}
 
 	// Split this comment by the space delimiter.
@@ -128,7 +134,8 @@ func parseWebAPIFunctions(fset *token.FileSet, file *ast.File, funcDecl *ast.Fun
 	}
 
 	// Create a webAPIRecord and assign what we have now.
-	war := webAPIRecord{
+	war = webAPIRecord{
+		group:    group,
 		tag:      strings.TrimSpace(record[0]),
 		comments: comments,
 	}
@@ -136,48 +143,60 @@ func parseWebAPIFunctions(fset *token.FileSet, file *ast.File, funcDecl *ast.Fun
 	// Match the key to the field in the webAPIRecord.
 	for _, rec := range record {
 		kv := strings.Split(rec, "=")
+
 		switch kv[0] {
 		case "method":
 			war.method = kv[1]
+
 		case "route":
 			war.route = kv[1]
+
 		case "inputdoc":
-			if fields, err := findAppModel(group, kv[1]); err == nil {
-				war.inputDoc = produceJSONDocument(fields)
+			inputDoc, err := findAppModel(group, kv[1])
+			if err != nil {
+				return false, war, fmt.Errorf("findAppModel input: %w", err)
 			}
+			war.inputDoc = inputDoc
+
 		case "outputdoc":
-			if fields, err := findAppModel(group, kv[1]); err == nil {
-				war.outputDoc = produceJSONDocument(fields)
+			outputDoc, err := findAppModel(group, kv[1])
+			if err != nil {
+				return false, war, fmt.Errorf("findAppModel output: %w", err)
 			}
+			war.outputDoc = outputDoc
+
 		case "status":
 			war.status = kv[1]
 		}
 	}
 
-	// Check if paging, filtering, or odering is in play.
-	checkPageFilterOrder(&war, funcDecl.Body)
+	queryVars, err := findQueryVars(funcDecl.Body, group)
+	if err != nil {
+		return false, war, fmt.Errorf("findPageFilterOrder: %w", err)
+	}
+	war.queryVars = queryVars
 
-	return war, true
+	return true, war, nil
 }
 
 // =============================================================================
 
-type apiField struct {
+type field struct {
 	Name     string
 	Type     string
 	Tag      string
 	Optional bool
 }
 
-func findAppModel(group string, modelName string) ([]apiField, error) {
+func findAppModel(group string, modelName string) (string, error) {
 	fset := token.NewFileSet()
 
 	file, err := parser.ParseFile(fset, "app/services/sales-api/handlers/v1/"+group+"/model.go", nil, parser.ParseComments)
 	if err != nil {
-		return nil, fmt.Errorf("ParseFile: %w", err)
+		return "", fmt.Errorf("ParseFile: %w", err)
 	}
 
-	var fields []apiField
+	var fields []field
 
 	f := func(n ast.Node) bool {
 
@@ -195,7 +214,7 @@ func findAppModel(group string, modelName string) ([]apiField, error) {
 		structType := typeSpec.Type.(*ast.StructType)
 
 		// Walk through the list of fields in this struct.
-		for _, field := range structType.Fields.List {
+		for _, astField := range structType.Fields.List {
 			var fieldType *ast.Ident
 			var optional bool
 
@@ -203,7 +222,7 @@ func findAppModel(group string, modelName string) ([]apiField, error) {
 			// value semantics. There is a different type depending.
 			// So we start by asking if the field is using pointer
 			// semantics.
-			starType, ok := field.Type.(*ast.StarExpr)
+			starType, ok := astField.Type.(*ast.StarExpr)
 
 			// If this field was using pointer semantics, then we
 			// use the starType variable to get to the identifier
@@ -216,7 +235,7 @@ func findAppModel(group string, modelName string) ([]apiField, error) {
 				fieldType, ok = starType.X.(*ast.Ident)
 				optional = true
 			default:
-				fieldType, ok = field.Type.(*ast.Ident)
+				fieldType, ok = astField.Type.(*ast.Ident)
 			}
 
 			// We need to check that either type assersion succeeed.
@@ -228,21 +247,21 @@ func findAppModel(group string, modelName string) ([]apiField, error) {
 			// actual field name is being used after marshaling.
 
 			// We will use the field name by default.
-			tag := field.Names[0].Name
+			tag := astField.Names[0].Name
 
 			// Check if there is a json tag and if so, parse
 			// out the field name.
-			idx := strings.Index(field.Tag.Value, "json")
+			idx := strings.Index(astField.Tag.Value, "json")
 			if idx != -1 {
-				idx2 := strings.Index(field.Tag.Value[idx:], "\"")
+				idx2 := strings.Index(astField.Tag.Value[idx:], "\"")
 				idx3 := idx + idx2 + 1
-				idx4 := strings.Index(field.Tag.Value[idx3:], "\"")
-				tag = field.Tag.Value[idx3 : idx3+idx4]
+				idx4 := strings.Index(astField.Tag.Value[idx3:], "\"")
+				tag = astField.Tag.Value[idx3 : idx3+idx4]
 			}
 
 			// Add the field information to the list.
-			fields = append(fields, apiField{
-				Name:     field.Names[0].Name,
+			fields = append(fields, field{
+				Name:     astField.Names[0].Name,
 				Type:     fieldType.Name,
 				Tag:      tag,
 				Optional: optional,
@@ -254,10 +273,10 @@ func findAppModel(group string, modelName string) ([]apiField, error) {
 
 	ast.Inspect(file, f)
 
-	return fields, nil
+	return produceJSONDocument(fields), nil
 }
 
-func produceJSONDocument(fields []apiField) string {
+func produceJSONDocument(fields []field) string {
 	m := make(map[string]any)
 
 	for _, field := range fields {
@@ -293,7 +312,8 @@ func produceJSONDocument(fields []apiField) string {
 
 // =============================================================================
 
-func checkPageFilterOrder(war *webAPIRecord, body *ast.BlockStmt) {
+func findQueryVars(body *ast.BlockStmt, group string) ([]string, error) {
+	var queryVars []string
 
 	// Walk through the body of the function looking for calls to
 	// paging, parseFilter, and parseOrder.
@@ -338,14 +358,39 @@ func checkPageFilterOrder(war *webAPIRecord, body *ast.BlockStmt) {
 
 			switch ident.Name {
 			case "paging":
-				war.hasPaging = true
+				queryVars = append(queryVars, "page")
+				queryVars = append(queryVars, "rows")
+
 			case "parseFilter":
-				war.hasFiltering = true
+				var err error
+				queryVars, err = findFilters(queryVars, group)
+				if err != nil {
+					return nil, fmt.Errorf("findFilters: %w", err)
+				}
+
 			case "parseOrder":
-				war.hasOrdering = true
 			}
 		}
 	}
+
+	return queryVars, nil
+}
+
+func findFilters(queryVars []string, group string) ([]string, error) {
+	fset := token.NewFileSet()
+
+	file, err := parser.ParseFile(fset, "app/services/sales-api/handlers/v1/"+group+"/filter.go", nil, parser.ParseComments)
+	if err != nil {
+		return queryVars, fmt.Errorf("ParseFile: %w", err)
+	}
+
+	f := func(n ast.Node) bool {
+		return true
+	}
+
+	ast.Inspect(file, f)
+
+	return queryVars, nil
 }
 
 // =============================================================================
