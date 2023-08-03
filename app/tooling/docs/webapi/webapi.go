@@ -1,3 +1,5 @@
+// Package webapi provides support for extracting web api information from
+// reading the code.
 package webapi
 
 import (
