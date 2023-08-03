@@ -9,13 +9,18 @@ import (
 	"github.com/ardanlabs/service/foundation/validate"
 )
 
-var orderByFields = map[string]struct{}{
-	usersummary.OrderByUserID:   {},
-	usersummary.OrderByUserName: {},
-}
-
 func parseOrder(r *http.Request) (order.By, error) {
-	orderBy, err := order.Parse(r, usersummary.DefaultOrderBy)
+	const (
+		orderByUserID   = "user_id"
+		orderByUserName = "user_name"
+	)
+
+	var orderByFields = map[string]string{
+		orderByUserID:   usersummary.OrderByUserID,
+		orderByUserName: usersummary.OrderByUserName,
+	}
+
+	orderBy, err := order.Parse(r, order.NewBy(orderByUserID, order.ASC))
 	if err != nil {
 		return order.By{}, err
 	}
@@ -23,6 +28,8 @@ func parseOrder(r *http.Request) (order.By, error) {
 	if _, exists := orderByFields[orderBy.Field]; !exists {
 		return order.By{}, validate.NewFieldsError(orderBy.Field, errors.New("order field does not exist"))
 	}
+
+	orderBy.Field = orderByFields[orderBy.Field]
 
 	return orderBy, nil
 }

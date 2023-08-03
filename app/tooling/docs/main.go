@@ -37,8 +37,9 @@ func run() error {
 		fmt.Print("\n")
 		fmt.Println("Output Model :", produceJSONDocument(war.outputDoc))
 		fmt.Print("\n")
-		fmt.Printf("Paging Vars    : %v\n", strings.Join(war.queryVars.paging, ", "))
-		fmt.Printf("Filtering Vars : %v\n", strings.Join(war.queryVars.filtering, ", "))
+		fmt.Printf("Paging   : %v\n", strings.Join(war.queryVars.paging, ", "))
+		fmt.Printf("FilterBy : %v\n", strings.Join(war.queryVars.filterBy, ", "))
+		fmt.Printf("OrderBy  : %v\n", strings.Join(war.queryVars.orderBy, ", "))
 	}
 
 	return nil
@@ -54,8 +55,9 @@ type field struct {
 }
 
 type queryVars struct {
-	paging    []string
-	filtering []string
+	paging   []string
+	filterBy []string
+	orderBy  []string
 }
 
 type webAPIRecord struct {
@@ -366,26 +368,33 @@ func findQueryVars(body *ast.BlockStmt, group string) (queryVars, error) {
 			qv.paging = append(qv.paging, "page", "rows")
 
 		case "parseFilter":
-			filtering, err := findFilters(qv.filtering, group)
+			filterBy, err := findFilters(group)
 			if err != nil {
 				return queryVars{}, fmt.Errorf("findFilters: %w", err)
 			}
-			qv.filtering = filtering
+			qv.filterBy = filterBy
 
 		case "parseOrder":
+			orderBy, err := findOrders(group)
+			if err != nil {
+				return queryVars{}, fmt.Errorf("findOrders: %w", err)
+			}
+			qv.orderBy = orderBy
 		}
 	}
 
 	return qv, nil
 }
 
-func findFilters(queryVars []string, group string) ([]string, error) {
+func findFilters(group string) ([]string, error) {
 	fset := token.NewFileSet()
 
 	file, err := parser.ParseFile(fset, "app/services/sales-api/handlers/v1/"+group+"/filter.go", nil, parser.ParseComments)
 	if err != nil {
-		return queryVars, fmt.Errorf("ParseFile: %w", err)
+		return nil, fmt.Errorf("ParseFile: %w", err)
 	}
+
+	var filterBy []string
 
 	f := func(n ast.Node) bool {
 
@@ -428,7 +437,7 @@ func findFilters(queryVars []string, group string) ([]string, error) {
 					// Capture the value assigned to the constant.
 					bl, ok := vs.Values[i].(*ast.BasicLit)
 					if ok {
-						queryVars = append(queryVars, strings.Trim(bl.Value, "\""))
+						filterBy = append(filterBy, strings.Trim(bl.Value, "\""))
 					}
 				}
 			}
@@ -441,7 +450,74 @@ func findFilters(queryVars []string, group string) ([]string, error) {
 
 	ast.Inspect(file, f)
 
-	return queryVars, nil
+	return filterBy, nil
+}
+
+func findOrders(group string) ([]string, error) {
+	fset := token.NewFileSet()
+
+	file, err := parser.ParseFile(fset, "app/services/sales-api/handlers/v1/"+group+"/order.go", nil, parser.ParseComments)
+	if err != nil {
+		return nil, fmt.Errorf("ParseFile: %w", err)
+	}
+
+	var orderBy []string
+
+	f := func(n ast.Node) bool {
+
+		// We only care if this node is a function declaration.
+		funcDecl, ok := n.(*ast.FuncDecl)
+		if !ok {
+			return true
+		}
+
+		// Is this function the parseOrder function.
+		if funcDecl.Name.Name != "parseOrder" {
+			return true
+		}
+
+		// We need to find all the value.Get calls.
+		for _, stmt := range funcDecl.Body.List {
+
+			// We only care if this node is a value spec.
+			vs, ok := stmt.(*ast.DeclStmt)
+			if !ok {
+				continue
+			}
+
+			gd, ok := vs.Decl.(*ast.GenDecl)
+			if !ok {
+				continue
+			}
+
+			for _, sp := range gd.Specs {
+				vs, ok := sp.(*ast.ValueSpec)
+				if !ok {
+					break
+				}
+
+				for i, n := range vs.Names {
+					if !strings.Contains(n.Name, "orderBy") {
+						continue
+					}
+
+					// Capture the value assigned to the constant.
+					bl, ok := vs.Values[i].(*ast.BasicLit)
+					if ok {
+						orderBy = append(orderBy, strings.Trim(bl.Value, "\""))
+					}
+				}
+			}
+
+			break
+		}
+
+		return true
+	}
+
+	ast.Inspect(file, f)
+
+	return orderBy, nil
 }
 
 // =============================================================================
