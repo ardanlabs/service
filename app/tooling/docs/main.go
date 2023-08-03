@@ -403,43 +403,37 @@ func findFilters(queryVars []string, group string) ([]string, error) {
 		// We need to find all the value.Get calls.
 		for _, stmt := range funcDecl.Body.List {
 
-			// These calls are inside of if statments.
-			ifs, ok := stmt.(*ast.IfStmt)
+			// We only care if this node is a value spec.
+			vs, ok := stmt.(*ast.DeclStmt)
 			if !ok {
 				continue
 			}
 
-			// Capture the assignment inside the if statement.
-			agn, ok := ifs.Init.(*ast.AssignStmt)
+			gd, ok := vs.Decl.(*ast.GenDecl)
 			if !ok {
 				continue
 			}
 
-			// If a function call is not being made, ignore.
-			ce, ok := agn.Rhs[0].(*ast.CallExpr)
-			if !ok {
-				continue
+			for _, sp := range gd.Specs {
+				vs, ok := sp.(*ast.ValueSpec)
+				if !ok {
+					break
+				}
+
+				for i, n := range vs.Names {
+					if !strings.Contains(n.Name, "filterBy") {
+						continue
+					}
+
+					// Capture the value assigned to the constant.
+					bl, ok := vs.Values[i].(*ast.BasicLit)
+					if ok {
+						queryVars = append(queryVars, strings.Trim(bl.Value, "\""))
+					}
+				}
 			}
 
-			// Convert to the selector expression to get information.
-			se, ok := ce.Fun.(*ast.SelectorExpr)
-			if !ok {
-				continue
-			}
-
-			// Check we have a values.Get function call.
-			if se.Sel.Name != "Get" {
-				continue
-			}
-
-			// Convert the argument to a basic literal.
-			lit, ok := ce.Args[0].(*ast.BasicLit)
-			if !ok {
-				continue
-			}
-
-			// Capture the name of the filter.
-			queryVars = append(queryVars, strings.Trim(lit.Value, "\""))
+			break
 		}
 
 		return true
