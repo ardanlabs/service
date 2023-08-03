@@ -37,9 +37,9 @@ func run() error {
 		fmt.Print("\n")
 		fmt.Println("Output Model :", produceJSONDocument(war.outputDoc))
 		fmt.Print("\n")
-		fmt.Printf("Paging  : %v\n", strings.Join(war.queryVars.paging, ", "))
-		fmt.Printf("Filters : %v\n", strings.Join(war.queryVars.filters, ", "))
-		fmt.Printf("Orders  : %v\n", strings.Join(war.queryVars.orders, ", "))
+		fmt.Printf("Paging   : %v\n", strings.Join(war.queryVars.paging, ", "))
+		fmt.Printf("FilterBy : %v\n", strings.Join(war.queryVars.filterBy, ", "))
+		fmt.Printf("OrderBy  : %v\n", strings.Join(war.queryVars.orderBy, ", "))
 	}
 
 	return nil
@@ -55,9 +55,9 @@ type field struct {
 }
 
 type queryVars struct {
-	paging  []string
-	filters []string
-	orders  []string
+	paging   []string
+	filterBy []string
+	orderBy  []string
 }
 
 type webAPIRecord struct {
@@ -368,120 +368,22 @@ func findQueryVars(body *ast.BlockStmt, group string) (queryVars, error) {
 			qv.paging = append(qv.paging, "page", "rows")
 
 		case "parseFilter":
-			filters, err := findFilters(group)
+			filterBy, err := findFilters(group)
 			if err != nil {
 				return queryVars{}, fmt.Errorf("findFilters: %w", err)
 			}
-			qv.filters = filters
+			qv.filterBy = filterBy
 
 		case "parseOrder":
-			orders, err := findOrders(group)
+			orderBy, err := findOrders(group)
 			if err != nil {
 				return queryVars{}, fmt.Errorf("findOrders: %w", err)
 			}
-			qv.orders = orders
+			qv.orderBy = orderBy
 		}
 	}
 
 	return qv, nil
-}
-
-func findOrders(group string) ([]string, error) {
-	fset := token.NewFileSet()
-
-	file, err := parser.ParseFile(fset, "app/services/sales-api/handlers/v1/"+group+"/order.go", nil, parser.ParseComments)
-	if err != nil {
-		return nil, fmt.Errorf("ParseFile: %w", err)
-	}
-
-	var orders []string
-
-	f := func(n ast.Node) bool {
-		// We only care if this node is a function declaration.
-		funcDecl, ok := n.(*ast.FuncDecl)
-		if !ok {
-			return true
-		}
-
-		// Is this function the parseOrder function.
-		if funcDecl.Name.Name != "parseOrder" {
-			return true
-		}
-
-		for _, l := range funcDecl.Body.List {
-			ifs, ok := l.(*ast.IfStmt)
-			if !ok {
-				continue
-			}
-
-			asg, ok := ifs.Init.(*ast.AssignStmt)
-			if !ok {
-				continue
-			}
-
-			ie, ok := asg.Rhs[0].(*ast.IndexExpr)
-			if !ok {
-				continue
-			}
-
-			mapToUse, ok := ie.X.(*ast.Ident)
-			if !ok {
-				continue
-			}
-
-			f := func(n ast.Node) bool {
-				gd, ok := n.(*ast.GenDecl)
-				if !ok {
-					return true
-				}
-
-				if gd.Tok != token.VAR {
-					return true
-				}
-
-				vs, ok := gd.Specs[0].(*ast.ValueSpec)
-				if !ok {
-					return true
-				}
-
-				if vs.Names[0].Name == mapToUse.Name {
-					cl, ok := vs.Values[0].(*ast.CompositeLit)
-					if !ok {
-						return false
-					}
-
-					for _, el := range cl.Elts {
-						kve, ok := el.(*ast.KeyValueExpr)
-						if !ok {
-							return false
-						}
-
-						se, ok := kve.Key.(*ast.SelectorExpr)
-						if !ok {
-							return false
-						}
-
-						fmt.Printf("* %v\n", se.Sel.Name)
-
-						// I NOW NEED TO LOOK IN THE BUSINESS LAYER FOR THESE
-						// ACTUAL STRINGS :(  I THINK I NEED TO MAP THESE.
-					}
-				}
-
-				return true
-			}
-
-			ast.Inspect(file, f)
-
-			return false
-		}
-
-		return true
-	}
-
-	ast.Inspect(file, f)
-
-	return orders, nil
 }
 
 func findFilters(group string) ([]string, error) {
@@ -492,7 +394,7 @@ func findFilters(group string) ([]string, error) {
 		return nil, fmt.Errorf("ParseFile: %w", err)
 	}
 
-	var filters []string
+	var filterBy []string
 
 	f := func(n ast.Node) bool {
 
@@ -535,7 +437,7 @@ func findFilters(group string) ([]string, error) {
 					// Capture the value assigned to the constant.
 					bl, ok := vs.Values[i].(*ast.BasicLit)
 					if ok {
-						filters = append(filters, strings.Trim(bl.Value, "\""))
+						filterBy = append(filterBy, strings.Trim(bl.Value, "\""))
 					}
 				}
 			}
@@ -548,7 +450,74 @@ func findFilters(group string) ([]string, error) {
 
 	ast.Inspect(file, f)
 
-	return filters, nil
+	return filterBy, nil
+}
+
+func findOrders(group string) ([]string, error) {
+	fset := token.NewFileSet()
+
+	file, err := parser.ParseFile(fset, "app/services/sales-api/handlers/v1/"+group+"/order.go", nil, parser.ParseComments)
+	if err != nil {
+		return nil, fmt.Errorf("ParseFile: %w", err)
+	}
+
+	var orderBy []string
+
+	f := func(n ast.Node) bool {
+
+		// We only care if this node is a function declaration.
+		funcDecl, ok := n.(*ast.FuncDecl)
+		if !ok {
+			return true
+		}
+
+		// Is this function the parseOrder function.
+		if funcDecl.Name.Name != "parseOrder" {
+			return true
+		}
+
+		// We need to find all the value.Get calls.
+		for _, stmt := range funcDecl.Body.List {
+
+			// We only care if this node is a value spec.
+			vs, ok := stmt.(*ast.DeclStmt)
+			if !ok {
+				continue
+			}
+
+			gd, ok := vs.Decl.(*ast.GenDecl)
+			if !ok {
+				continue
+			}
+
+			for _, sp := range gd.Specs {
+				vs, ok := sp.(*ast.ValueSpec)
+				if !ok {
+					break
+				}
+
+				for i, n := range vs.Names {
+					if !strings.Contains(n.Name, "orderBy") {
+						continue
+					}
+
+					// Capture the value assigned to the constant.
+					bl, ok := vs.Values[i].(*ast.BasicLit)
+					if ok {
+						orderBy = append(orderBy, strings.Trim(bl.Value, "\""))
+					}
+				}
+			}
+
+			break
+		}
+
+		return true
+	}
+
+	ast.Inspect(file, f)
+
+	return orderBy, nil
 }
 
 // =============================================================================
