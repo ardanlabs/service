@@ -446,6 +446,9 @@ test-all: test lint vuln-check
 
 test-all-race: test-race lint vuln-check
 
+docs:
+	go run app/tooling/docs/main.go
+
 # ==============================================================================
 # Hitting endpoints
 

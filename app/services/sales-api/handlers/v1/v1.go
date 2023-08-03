@@ -9,6 +9,7 @@ import (
 	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/productgrp"
 	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/trangrp"
 	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/usergrp"
+	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/usersummarygrp"
 	"github.com/ardanlabs/service/business/core/event"
 	"github.com/ardanlabs/service/business/core/product"
 	"github.com/ardanlabs/service/business/core/product/stores/productdb"
@@ -56,12 +57,11 @@ func Routes(app *web.App, cfg Config) {
 
 	// -------------------------------------------------------------------------
 
-	ugh := usergrp.New(usrCore, usmCore, cfg.Auth)
+	ugh := usergrp.New(usrCore, cfg.Auth)
 
 	app.Handle(http.MethodGet, version, "/users/token/:kid", ugh.Token)
 	app.Handle(http.MethodGet, version, "/users", ugh.Query, authen, ruleAdmin)
 	app.Handle(http.MethodGet, version, "/users/:user_id", ugh.QueryByID, authen, ruleAdminOrSubject)
-	app.Handle(http.MethodGet, version, "/users/summary", ugh.QuerySummary, authen, ruleAdmin)
 	app.Handle(http.MethodPost, version, "/users", ugh.Create, authen, ruleAdmin)
 	app.Handle(http.MethodPut, version, "/users/:user_id", ugh.Update, authen, ruleAdminOrSubject, tran)
 	app.Handle(http.MethodDelete, version, "/users/:user_id", ugh.Delete, authen, ruleAdminOrSubject, tran)
@@ -81,4 +81,10 @@ func Routes(app *web.App, cfg Config) {
 	tgh := trangrp.New(usrCore, prdCore)
 
 	app.Handle(http.MethodPost, version, "/tranexample", tgh.Create, authen, tran)
+
+	// -------------------------------------------------------------------------
+
+	usgh := usersummarygrp.New(usmCore)
+
+	app.Handle(http.MethodGet, version, "/users/summary", usgh.Query, authen, ruleAdmin)
 }

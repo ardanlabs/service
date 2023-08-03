@@ -108,7 +108,6 @@ func Test_Users(t *testing.T) {
 	t.Run("deleteUserNotFound", tests.deleteUserNotFound())
 	t.Run("putUser404", tests.putUser404())
 	t.Run("getUsers200", tests.getUsers200(usrs))
-	t.Run("summary", tests.summary(usrs))
 	t.Run("crudUsers", tests.crudUser())
 }
 
@@ -398,39 +397,6 @@ func (ut *UserTests) getUsers200(usrs []user.User) func(t *testing.T) {
 		if len(pr.Items) != 2 {
 			t.Log("got:", len(pr.Items))
 			t.Log("exp:", 2)
-			t.Error("Should get the right number of users")
-		}
-	}
-}
-
-func (ut *UserTests) summary(usrs []user.User) func(t *testing.T) {
-	return func(t *testing.T) {
-		url := "/v1/users/summary"
-
-		r := httptest.NewRequest(http.MethodGet, url, nil)
-		w := httptest.NewRecorder()
-
-		r.Header.Set("Authorization", "Bearer "+ut.adminToken)
-		ut.app.ServeHTTP(w, r)
-
-		if w.Code != http.StatusOK {
-			t.Fatalf("Should receive a status code of 200 for the response : %d", w.Code)
-		}
-
-		var pr paging.Response[usergrp.AppUserSummary]
-		if err := json.Unmarshal(w.Body.Bytes(), &pr); err != nil {
-			t.Fatalf("Should be able to unmarshal the response : %s", err)
-		}
-
-		if pr.Total != len(usrs) {
-			t.Log("got:", pr.Total)
-			t.Log("exp:", len(usrs))
-			t.Error("Should get the right total")
-		}
-
-		if len(pr.Items) != len(usrs) {
-			t.Log("got:", len(pr.Items))
-			t.Log("exp:", len(usrs))
 			t.Error("Should get the right number of users")
 		}
 	}

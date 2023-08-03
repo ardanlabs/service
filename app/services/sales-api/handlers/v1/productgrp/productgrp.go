@@ -61,6 +61,7 @@ func (h *Handlers) executeUnderTransaction(ctx context.Context) (*Handlers, erro
 }
 
 // Create adds a new product to the system.
+// webapi method=POST route=/products inputdoc=AppNewProduct outputdoc=AppProduct status=StatusCreated
 func (h *Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app AppNewProduct
 	if err := web.Decode(r, &app); err != nil {
@@ -81,6 +82,7 @@ func (h *Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Re
 }
 
 // Update updates a product in the system.
+// webapi method=POST route=/products/:product_id inputdoc=AppUpdateProduct outputdoc=AppProduct status=StatusOK
 func (h *Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	h, err := h.executeUnderTransaction(ctx)
 	if err != nil {
@@ -116,6 +118,7 @@ func (h *Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Re
 }
 
 // Delete removes a product from the system.
+// webapi method=DELETE route=/products/:product_id status=StatusNoContent
 func (h *Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	h, err := h.executeUnderTransaction(ctx)
 	if err != nil {
@@ -149,6 +152,7 @@ func (h *Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Re
 }
 
 // Query returns a list of products with paging.
+// webapi method=GET route=/products status=StatusOK
 func (h *Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	page, err := paging.ParseRequest(r)
 	if err != nil {

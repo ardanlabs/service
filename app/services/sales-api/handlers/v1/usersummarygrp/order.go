@@ -1,24 +1,21 @@
-package usergrp
+package usersummarygrp
 
 import (
 	"errors"
 	"net/http"
 
-	"github.com/ardanlabs/service/business/core/user"
+	"github.com/ardanlabs/service/business/core/usersummary"
 	"github.com/ardanlabs/service/business/data/order"
 	"github.com/ardanlabs/service/foundation/validate"
 )
 
 var orderByFields = map[string]struct{}{
-	user.OrderByID:      {},
-	user.OrderByName:    {},
-	user.OrderByEmail:   {},
-	user.OrderByRoles:   {},
-	user.OrderByEnabled: {},
+	usersummary.OrderByUserID:   {},
+	usersummary.OrderByUserName: {},
 }
 
 func parseOrder(r *http.Request) (order.By, error) {
-	orderBy, err := order.Parse(r, user.DefaultOrderBy)
+	orderBy, err := order.Parse(r, usersummary.DefaultOrderBy)
 	if err != nil {
 		return order.By{}, err
 	}
