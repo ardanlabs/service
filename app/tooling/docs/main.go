@@ -37,8 +37,9 @@ func run() error {
 		fmt.Print("\n")
 		fmt.Println("Output Model :", produceJSONDocument(war.outputDoc))
 		fmt.Print("\n")
-		fmt.Printf("Paging Vars    : %v\n", strings.Join(war.queryVars.paging, ", "))
-		fmt.Printf("Filtering Vars : %v\n", strings.Join(war.queryVars.filtering, ", "))
+		fmt.Printf("Paging  : %v\n", strings.Join(war.queryVars.paging, ", "))
+		fmt.Printf("Filters : %v\n", strings.Join(war.queryVars.filters, ", "))
+		fmt.Printf("Orders  : %v\n", strings.Join(war.queryVars.orders, ", "))
 	}
 
 	return nil
@@ -54,8 +55,9 @@ type field struct {
 }
 
 type queryVars struct {
-	paging    []string
-	filtering []string
+	paging  []string
+	filters []string
+	orders  []string
 }
 
 type webAPIRecord struct {
@@ -366,26 +368,131 @@ func findQueryVars(body *ast.BlockStmt, group string) (queryVars, error) {
 			qv.paging = append(qv.paging, "page", "rows")
 
 		case "parseFilter":
-			filtering, err := findFilters(qv.filtering, group)
+			filters, err := findFilters(group)
 			if err != nil {
 				return queryVars{}, fmt.Errorf("findFilters: %w", err)
 			}
-			qv.filtering = filtering
+			qv.filters = filters
 
 		case "parseOrder":
+			orders, err := findOrders(group)
+			if err != nil {
+				return queryVars{}, fmt.Errorf("findOrders: %w", err)
+			}
+			qv.orders = orders
 		}
 	}
 
 	return qv, nil
 }
 
-func findFilters(queryVars []string, group string) ([]string, error) {
+func findOrders(group string) ([]string, error) {
+	fset := token.NewFileSet()
+
+	file, err := parser.ParseFile(fset, "app/services/sales-api/handlers/v1/"+group+"/order.go", nil, parser.ParseComments)
+	if err != nil {
+		return nil, fmt.Errorf("ParseFile: %w", err)
+	}
+
+	var orders []string
+
+	f := func(n ast.Node) bool {
+		// We only care if this node is a function declaration.
+		funcDecl, ok := n.(*ast.FuncDecl)
+		if !ok {
+			return true
+		}
+
+		// Is this function the parseOrder function.
+		if funcDecl.Name.Name != "parseOrder" {
+			return true
+		}
+
+		for _, l := range funcDecl.Body.List {
+			ifs, ok := l.(*ast.IfStmt)
+			if !ok {
+				continue
+			}
+
+			asg, ok := ifs.Init.(*ast.AssignStmt)
+			if !ok {
+				continue
+			}
+
+			ie, ok := asg.Rhs[0].(*ast.IndexExpr)
+			if !ok {
+				continue
+			}
+
+			mapToUse, ok := ie.X.(*ast.Ident)
+			if !ok {
+				continue
+			}
+
+			f := func(n ast.Node) bool {
+				gd, ok := n.(*ast.GenDecl)
+				if !ok {
+					return true
+				}
+
+				if gd.Tok != token.VAR {
+					return true
+				}
+
+				vs, ok := gd.Specs[0].(*ast.ValueSpec)
+				if !ok {
+					return true
+				}
+
+				if vs.Names[0].Name == mapToUse.Name {
+					cl, ok := vs.Values[0].(*ast.CompositeLit)
+					if !ok {
+						return false
+					}
+
+					for _, el := range cl.Elts {
+						kve, ok := el.(*ast.KeyValueExpr)
+						if !ok {
+							return false
+						}
+
+						se, ok := kve.Key.(*ast.SelectorExpr)
+						if !ok {
+							return false
+						}
+
+						fmt.Printf("* %v\n", se.Sel.Name)
+
+						// I NOW NEED TO LOOK IN THE BUSINESS LAYER FOR THESE
+						// ACTUAL STRINGS :(  I THINK I NEED TO MAP THESE.
+					}
+				}
+
+				return true
+			}
+
+			ast.Inspect(file, f)
+
+			return false
+		}
+
+		return true
+	}
+
+	ast.Inspect(file, f)
+
+	return orders, nil
+}
+
+func findFilters(group string) ([]string, error) {
 	fset := token.NewFileSet()
 
 	file, err := parser.ParseFile(fset, "app/services/sales-api/handlers/v1/"+group+"/filter.go", nil, parser.ParseComments)
 	if err != nil {
-		return queryVars, fmt.Errorf("ParseFile: %w", err)
+		return nil, fmt.Errorf("ParseFile: %w", err)
 	}
+
+	var filters []string
 
 	f := func(n ast.Node) bool {
 
@@ -428,7 +535,7 @@ func findFilters(queryVars []string, group string) ([]string, error) {
 					// Capture the value assigned to the constant.
 					bl, ok := vs.Values[i].(*ast.BasicLit)
 					if ok {
-						queryVars = append(queryVars, strings.Trim(bl.Value, "\""))
+						filters = append(filters, strings.Trim(bl.Value, "\""))
 					}
 				}
 			}
@@ -441,7 +548,7 @@ func findFilters(queryVars []string, group string) ([]string, error) {
 
 	ast.Inspect(file, f)
 
-	return queryVars, nil
+	return filters, nil
 }
 
 // =============================================================================
