@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Ultimate Service Documentation</title>
+        <meta name="description" content="Service documentation">
+    </head>
+    <script>
+    </script>
+    <body>
+{{range .}}
+        <div>
+            <span>============================</span>
+            <br />
+            <span>Route : ({{.Method}}) {{.Route}}</span>
+            <span>Status: {{.Status}} ({{status .Status}})</span>
+            <span>{{range .Comments}}{{.}}{{end}}</span>
+            <br />
+            <span>Input Model  : {{json .InputDoc}}</span>
+            <br />
+            <span>Output Model : {{json .OutputDoc}}</span>
+            <br />
+            <span>Paging   : {{$length := len .QueryVars.Paging}}{{$length = minus $length 1}}{{range $index, $elem := .QueryVars.Paging}}{{$elem}}{{if lt $index $length}}, {{end}}{{end}}</span>
+            <span>FilterBy : {{$length := len .QueryVars.FilterBy}}{{$length = minus $length 1}}{{range $index, $elem := .QueryVars.FilterBy}}{{$elem}}{{if lt $index $length}}, {{end}}{{end}}</span>
+            <span>OrderBy  : {{$length := len .QueryVars.OrderBy}}{{$length = minus $length 1}}{{range $index, $elem := .QueryVars.OrderBy}}{{$elem}}{{if lt $index $length}}, {{end}}{{end}}</span>
+        </div>
+{{end}}
+    </body>
+</html>

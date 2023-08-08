@@ -5,9 +5,9 @@ Route : ({{.Method}}) {{.Route}}
 Status: {{.Status}} ({{status .Status}})
 {{range .Comments}}{{.}}{{end}}
 
-Input Model : {{json .InputDoc}}
+Input Model  : {{json .InputDoc}}
 
-Input Model : {{json .OutputDoc}}
+Output Model : {{json .OutputDoc}}
 
 Paging   : {{$length := len .QueryVars.Paging}}{{$length = minus $length 1}}{{range $index, $elem := .QueryVars.Paging}}{{$elem}}{{if lt $index $length}}, {{end}}{{end}}
 FilterBy : {{$length := len .QueryVars.FilterBy}}{{$length = minus $length 1}}{{range $index, $elem := .QueryVars.FilterBy}}{{$elem}}{{if lt $index $length}}, {{end}}{{end}}

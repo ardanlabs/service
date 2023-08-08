@@ -1,6 +1,6 @@
 module github.com/ardanlabs/service
 
-go 1.18
+go 1.21
 
 require (
 	github.com/ardanlabs/conf/v3 v3.1.6
@@ -23,7 +23,6 @@ require (
 	go.opentelemetry.io/otel/sdk v1.16.0
 	go.opentelemetry.io/otel/trace v1.16.0
 	golang.org/x/crypto v0.11.0
-	golang.org/x/exp v0.0.0-20230801115018-d63ba01acd4b
 )
 
 require (

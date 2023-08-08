@@ -6,6 +6,10 @@ import (
 
 // toModel covnerts a collection of fields to a model document.
 func toModel(fields []Field) map[string]any {
+	if len(fields) == 0 {
+		return nil
+	}
+
 	m := make(map[string]any)
 
 	for _, field := range fields {

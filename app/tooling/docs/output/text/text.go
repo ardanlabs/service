@@ -5,6 +5,7 @@ import (
 	"bytes"
 	_ "embed"
 	"encoding/json"
+	"fmt"
 	"text/template"
 
 	"github.com/ardanlabs/service/app/tooling/docs/webapi"
@@ -13,7 +14,7 @@ import (
 //go:embed template.txt
 var document string
 
-func Transform(records []webapi.Record) (string, error) {
+func Transform(records []webapi.Record) error {
 	var funcMap = template.FuncMap{
 		"minus":  minus,
 		"status": status,
@@ -25,10 +26,12 @@ func Transform(records []webapi.Record) (string, error) {
 	var b bytes.Buffer
 	err := tmpl.Execute(&b, records)
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	return b.String(), nil
+	fmt.Print(b.String())
+
+	return nil
 }
 
 // =============================================================================
@@ -42,6 +45,10 @@ func status(status string) int {
 }
 
 func toJson(m map[string]any) string {
+	if len(m) == 0 {
+		return ""
+	}
+
 	data, err := json.MarshalIndent(m, "", "    ")
 	if err != nil {
 		return ""

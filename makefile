@@ -446,8 +446,10 @@ test-all: test lint vuln-check
 
 test-all-race: test-race lint vuln-check
 
+# make docs ARGS="-out json"
+# make docs ARGS="-out html"
 docs:
-	go run app/tooling/docs/main.go
+	go run app/tooling/docs/main.go $(ARGS)
 
 # ==============================================================================
 # Hitting endpoints

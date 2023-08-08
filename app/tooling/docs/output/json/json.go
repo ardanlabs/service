@@ -3,16 +3,19 @@ package json
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/ardanlabs/service/app/tooling/docs/webapi"
 )
 
 // Transform converts the collection of webapi records into json.
-func Transform(records []webapi.Record) (string, error) {
+func Transform(records []webapi.Record) error {
 	data, err := json.MarshalIndent(records, "", "    ")
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	return string(data), nil
+	fmt.Print(string(data))
+
+	return nil
 }
