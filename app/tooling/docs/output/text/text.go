@@ -1,3 +1,4 @@
+// Package json converts the webapi records into text output.
 package text
 
 import (
