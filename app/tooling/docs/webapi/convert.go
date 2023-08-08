@@ -1,12 +1,11 @@
 package webapi
 
 import (
-	"encoding/json"
 	"strings"
 )
 
-// ToJSON covnerts a collection of fields to a JSON document.
-func ToJSON(fields []Field) string {
+// toModel covnerts a collection of fields to a model document.
+func toModel(fields []Field) map[string]any {
 	m := make(map[string]any)
 
 	for _, field := range fields {
@@ -28,14 +27,5 @@ func ToJSON(fields []Field) string {
 		m[tag] = typ
 	}
 
-	data, err := json.MarshalIndent(m, "", "  ")
-	if err != nil {
-		return ""
-	}
-
-	doc := string(data)
-	doc = strings.ReplaceAll(doc, "\"float64\"", "float64")
-	doc = strings.ReplaceAll(doc, "\"int\"", "int")
-
-	return doc
+	return m
 }

@@ -115,14 +115,14 @@ func parseWebAPI(fset *token.FileSet, file *ast.File, funcDecl *ast.FuncDecl, gr
 			if err != nil {
 				return false, Record{}, fmt.Errorf("findAppModel input: %w", err)
 			}
-			record.InputDoc = inputDoc
+			record.InputDoc = toModel(inputDoc)
 
 		case "outputdoc":
 			outputDoc, err := findAppModel(group, kv[1])
 			if err != nil {
 				return false, Record{}, fmt.Errorf("findAppModel output: %w", err)
 			}
-			record.OutputDoc = outputDoc
+			record.OutputDoc = toModel(outputDoc)
 
 		case "status":
 			record.Status = kv[1]

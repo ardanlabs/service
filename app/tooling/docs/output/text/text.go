@@ -4,6 +4,7 @@ package text
 import (
 	"bytes"
 	_ "embed"
+	"encoding/json"
 	"text/template"
 
 	"github.com/ardanlabs/service/app/tooling/docs/webapi"
@@ -16,7 +17,7 @@ func Transform(records []webapi.Record) (string, error) {
 	var funcMap = template.FuncMap{
 		"minus":  minus,
 		"status": status,
-		"json":   webapi.ToJSON,
+		"json":   toJson,
 	}
 
 	tmpl := template.Must(template.New("webapi").Funcs(funcMap).Parse(document))
@@ -38,4 +39,13 @@ func minus(a, b int) int {
 
 func status(status string) int {
 	return webapi.Statuses[status]
+}
+
+func toJson(m map[string]any) string {
+	data, err := json.MarshalIndent(m, "", "    ")
+	if err != nil {
+		return ""
+	}
+
+	return string(data)
 }

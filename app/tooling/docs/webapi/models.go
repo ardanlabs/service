@@ -18,8 +18,8 @@ type Record struct {
 	Method    string
 	Route     string
 	Status    string
-	InputDoc  []Field
-	OutputDoc []Field
+	InputDoc  map[string]any
+	OutputDoc map[string]any
 	Comments  []string
 	QueryVars QueryVars
 }
