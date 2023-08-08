@@ -1,4 +1,4 @@
-// Package json converts the webapi records into html.
+// Package html converts the webapi records into html.
 package html
 
 import (
@@ -76,7 +76,7 @@ func (p *page) show(w http.ResponseWriter, r *http.Request) {
 	var funcMap = template.FuncMap{
 		"minus":  minus,
 		"status": status,
-		"json":   toJson,
+		"json":   toJSON,
 	}
 
 	tmpl, err := template.New("").Funcs(funcMap).ParseFS(document, "template.html")
@@ -100,7 +100,7 @@ func status(status string) int {
 	return webapi.Statuses[status]
 }
 
-func toJson(m map[string]any) string {
+func toJSON(m map[string]any) string {
 	if len(m) == 0 {
 		return ""
 	}

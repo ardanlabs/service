@@ -18,7 +18,7 @@ func Transform(records []webapi.Record) error {
 	var funcMap = template.FuncMap{
 		"minus":  minus,
 		"status": status,
-		"json":   toJson,
+		"json":   toJSON,
 	}
 
 	tmpl := template.Must(template.New("webapi").Funcs(funcMap).Parse(document))
@@ -44,7 +44,7 @@ func status(status string) int {
 	return webapi.Statuses[status]
 }
 
-func toJson(m map[string]any) string {
+func toJSON(m map[string]any) string {
 	if len(m) == 0 {
 		return ""
 	}
