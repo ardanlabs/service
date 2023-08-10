@@ -105,7 +105,7 @@ func toJSON(m map[string]any) string {
 		return ""
 	}
 
-	data, err := json.MarshalIndent(m, "", "    ")
+	data, err := json.MarshalIndent(m, "", "  ")
 	if err != nil {
 		return ""
 	}
