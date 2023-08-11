@@ -61,6 +61,7 @@ func (h *Handlers) executeUnderTransaction(ctx context.Context) (*Handlers, erro
 }
 
 // Create adds a new product to the system.
+// webapi method=POST route=/products inputdoc=AppNewProduct outputdoc=AppProduct errdoc=ErrorResponse status=StatusCreated
 func (h *Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app AppNewProduct
 	if err := web.Decode(r, &app); err != nil {
@@ -81,6 +82,7 @@ func (h *Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Re
 }
 
 // Update updates a product in the system.
+// webapi method=POST route=/products/:product_id inputdoc=AppUpdateProduct outputdoc=AppProduct errdoc=ErrorResponse status=StatusOK
 func (h *Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	h, err := h.executeUnderTransaction(ctx)
 	if err != nil {
@@ -116,6 +118,7 @@ func (h *Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Re
 }
 
 // Delete removes a product from the system.
+// webapi method=DELETE route=/products/:product_id errdoc=ErrorResponse status=StatusNoContent
 func (h *Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	h, err := h.executeUnderTransaction(ctx)
 	if err != nil {
@@ -149,6 +152,7 @@ func (h *Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Re
 }
 
 // Query returns a list of products with paging.
+// webapi method=GET route=/products outputdoc=AppProductDetails errdoc=ErrorResponse status=StatusOK
 func (h *Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	page, err := paging.ParseRequest(r)
 	if err != nil {
@@ -205,6 +209,7 @@ func (h *Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Req
 }
 
 // QueryByID returns a product by its ID.
+// webapi method=GET route=/products/:product_id outputdoc=AppProduct errdoc=ErrorResponse status=StatusOK
 func (h *Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	productID, err := uuid.Parse(web.Param(r, "product_id"))
 	if err != nil {

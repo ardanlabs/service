@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/core/user"
-	"github.com/ardanlabs/service/business/core/usersummary"
 	"github.com/ardanlabs/service/business/data/transaction"
 	"github.com/ardanlabs/service/business/web/auth"
 	v1 "github.com/ardanlabs/service/business/web/v1"
@@ -22,17 +21,15 @@ import (
 
 // Handlers manages the set of user endpoints.
 type Handlers struct {
-	user    *user.Core
-	summary *usersummary.Core
-	auth    *auth.Auth
+	user *user.Core
+	auth *auth.Auth
 }
 
 // New constructs a handlers for route access.
-func New(user *user.Core, summary *usersummary.Core, auth *auth.Auth) *Handlers {
+func New(user *user.Core, auth *auth.Auth) *Handlers {
 	return &Handlers{
-		user:    user,
-		summary: summary,
-		auth:    auth,
+		user: user,
+		auth: auth,
 	}
 }
 
@@ -46,9 +43,8 @@ func (h *Handlers) executeUnderTransaction(ctx context.Context) (*Handlers, erro
 		}
 
 		h = &Handlers{
-			user:    user,
-			summary: h.summary,
-			auth:    h.auth,
+			user: user,
+			auth: h.auth,
 		}
 
 		return h, nil
@@ -193,41 +189,6 @@ func (h *Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http
 	}
 
 	return web.Respond(ctx, w, toAppUser(usr), http.StatusOK)
-}
-
-// QuerySummary returns a list of user summary data with paging.
-func (h *Handlers) QuerySummary(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	page, err := paging.ParseRequest(r)
-	if err != nil {
-		return err
-	}
-
-	filter, err := parseSummaryFilter(r)
-	if err != nil {
-		return err
-	}
-
-	orderBy, err := parseSummaryOrder(r)
-	if err != nil {
-		return err
-	}
-
-	smms, err := h.summary.Query(ctx, filter, orderBy, page.Number, page.RowsPerPage)
-	if err != nil {
-		return fmt.Errorf("query: %w", err)
-	}
-
-	items := make([]AppUserSummary, len(smms))
-	for i, smm := range smms {
-		items[i] = toAppUserSummary(smm)
-	}
-
-	total, err := h.summary.Count(ctx, filter)
-	if err != nil {
-		return fmt.Errorf("count: %w", err)
-	}
-
-	return web.Respond(ctx, w, paging.NewResponse(items, total, page.Number, page.RowsPerPage), http.StatusOK)
 }
 
 // Token provides an API token for the authenticated user.

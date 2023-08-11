@@ -3,7 +3,9 @@ package web
 
 import (
 	"context"
+	"encoding/hex"
 	"errors"
+	"fmt"
 	"net/http"
 	"os"
 	"syscall"
@@ -12,7 +14,6 @@ import (
 	"github.com/dimfeld/httptreemux/v5"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -45,7 +46,7 @@ func NewApp(shutdown chan os.Signal, tracer trace.Tracer, mw ...Middleware) *App
 
 	return &App{
 		mux:      mux,
-		otmux:    otelhttp.NewHandler(mux, "request", otelhttp.WithPropagators(propagation.TraceContext{})),
+		otmux:    otelhttp.NewHandler(mux, "request"),
 		shutdown: shutdown,
 		mw:       mw,
 		tracer:   tracer,
@@ -85,19 +86,8 @@ func (a *App) Handle(method string, group string, path string, handler Handler, 
 // to the application server mux.
 func (a *App) handle(method string, group string, path string, handler Handler) {
 	h := func(w http.ResponseWriter, r *http.Request) {
-
-		// There are times when the handler is called without a tracer, such
-		// as with tests. We need a span for the trace id.
-		ctx := r.Context()
-		span := trace.SpanFromContext(ctx)
-
-		// If a tracer exists, then replace the span for the one currently
-		// found in the context. This may have come from over the wire.
-		if a.tracer != nil {
-			ctx, span = a.tracer.Start(ctx, "pkg.web.handle")
-			span.SetAttributes(attribute.String("endpoint", r.RequestURI))
-			defer span.End()
-		}
+		ctx, span := a.startSpan(w, r)
+		defer span.End()
 
 		v := Values{
 			TraceID: span.SpanContext().TraceID().String(),
@@ -120,6 +110,40 @@ func (a *App) handle(method string, group string, path string, handler Handler) 
 	}
 
 	a.mux.Handle(method, finalPath, h)
+}
+
+// startSpan initializes the request by adding a span and writing otel
+// related information into the response writer for the response.
+func (a *App) startSpan(w http.ResponseWriter, r *http.Request) (context.Context, trace.Span) {
+	ctx := r.Context()
+
+	// There are times when the handler is called without a tracer, such
+	// as with tests. We need a span for the trace id.
+	span := trace.SpanFromContext(ctx)
+
+	// If a tracer exists, then replace the span for the one currently
+	// found in the context. This may have come from over the wire.
+	if a.tracer != nil {
+		ctx, span = a.tracer.Start(ctx, "pkg.web.handle")
+		span.SetAttributes(attribute.String("endpoint", r.RequestURI))
+	}
+
+	// Add trace context in traceparent form (https://www.w3.org/TR/trace-context/#traceparent-header)
+	// as Server-Timing header (https://www.w3.org/TR/server-timing/) to the HTTP response.
+	if spanCtx := trace.SpanContextFromContext(ctx); spanCtx.IsValid() {
+		traceID := spanCtx.TraceID()
+		hexTraceID := hex.EncodeToString(traceID[:])
+
+		spanID := spanCtx.SpanID()
+		hexSpanID := hex.EncodeToString(spanID[:])
+
+		traceParent := fmt.Sprintf(`traceparent;desc="00-%s-%s-01"`, hexTraceID, hexSpanID)
+
+		w.Header().Add("Access-Control-Expose-Headers", "Server-Timing")
+		w.Header().Add("Server-Timing", traceParent)
+	}
+
+	return ctx, span
 }
 
 // validateShutdown validates the error for special conditions that do not

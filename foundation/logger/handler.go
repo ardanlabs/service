@@ -3,7 +3,7 @@ package logger
 import (
 	"context"
 
-	"golang.org/x/exp/slog"
+	"log/slog"
 )
 
 // logHandler provides a wrapper around the slog handler to capture which

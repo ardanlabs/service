@@ -271,7 +271,7 @@ func (pt *ProductTests) putProduct404() func(t *testing.T) {
 // getProducts200 validates a query request.
 func (pt *ProductTests) getProducts200(prds []product.Product) func(t *testing.T) {
 	return func(t *testing.T) {
-		url := "/v1/products?page=1&rows=10&orderBy=userid,DESC"
+		url := "/v1/products?page=1&rows=10&orderBy=user_id,DESC"
 
 		r := httptest.NewRequest(http.MethodGet, url, nil)
 		w := httptest.NewRecorder()

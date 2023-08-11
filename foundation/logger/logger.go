@@ -10,7 +10,7 @@ import (
 	"runtime"
 	"time"
 
-	"golang.org/x/exp/slog"
+	"log/slog"
 )
 
 // TraceIDFunc represents a function that can return the trace id from

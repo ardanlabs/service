@@ -144,7 +144,7 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 # ==============================================================================
 # Define dependencies
 
-GOLANG          := golang:1.20
+GOLANG          := golang:1.21
 ALPINE          := alpine:3.18
 KIND            := kindest/node:v1.27.3
 POSTGRES        := postgres:15.3
@@ -154,7 +154,7 @@ PROMETHEUS      := prom/prometheus:v2.44.0
 TEMPO           := grafana/tempo:2.1.1
 LOKI            := grafana/loki:2.8.2
 PROMTAIL        := grafana/promtail:2.8.2
-TELEPRESENCE    := datawire/ambassador-telepresence-manager:2.14.1
+TELEPRESENCE    := datawire/ambassador-telepresence-manager:2.14.2
 
 KIND_CLUSTER    := ardan-starter-cluster
 NAMESPACE       := sales-system
@@ -288,7 +288,7 @@ dev-apply:
 	kubectl wait pods --namespace=$(NAMESPACE) --selector app=promtail --timeout=120s --for=condition=Ready
 
 	kustomize build zarf/k8s/dev/sales | kubectl apply -f -
-	kubectl wait pods --namespace=$(NAMESPACE) --selector app=$(APP) --for=condition=Ready
+	kubectl wait pods --namespace=$(NAMESPACE) --selector app=$(APP) --timeout=120s --for=condition=Ready
 
 dev-restart:
 	kubectl rollout restart deployment $(APP) --namespace=$(NAMESPACE)
@@ -445,6 +445,11 @@ vuln-check:
 test-all: test lint vuln-check
 
 test-all-race: test-race lint vuln-check
+
+# make docs ARGS="-out json"
+# make docs ARGS="-out html"
+docs:
+	go run app/tooling/docs/main.go $(ARGS)
 
 # ==============================================================================
 # Hitting endpoints

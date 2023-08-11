@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"golang.org/x/exp/slog"
+	"log/slog"
 )
 
 // Level represents different logging levels.
