@@ -51,6 +51,9 @@
          background-color: #fd1605a3;
          color: white;
       }
+      .method-container {
+        cursor: pointer;
+      }
       .method-container.GET {
          background-color: #4caf4f22;
          border: 1px solid #ccc;
@@ -79,6 +82,17 @@
          margin-bottom: 8px;
          border-color: #f44336bd ;
       }
+      .method-container .route {
+         cursor: text;
+         margin-top: 8px;
+         margin-bottom: 10vh;
+      }
+      .method-container .comment {
+         cursor: text;
+         margin-top: 15vh;
+         margin-bottom: 15px;
+         margin-left: 8px;
+      }
       .collapsible {
          cursor: pointer;
          outline: none;
@@ -87,24 +101,20 @@
          font-weight: bold;
          display: inline-block; 
       }
-      .method-container .route {
-         margin-top: 8px;
-         margin-bottom: 10vh;
-      }
-      .method-container .comment {
-         margin-top: 15vh;
-         margin-bottom: 15px;
-         margin-left: 8px;
-      }
       .route {
          margin-left: 10px;
+         font-weight: bold;
       }
       .content {
+         cursor: text;
          display: none;
          padding: 5px;
          border: 1px solid #ccc;
          margin: 10px;
          background-color: #ffffff;
+      }
+      .status {
+        font-weight: bold;
       }
       .btn-container{
          margin-bottom: 8px;
@@ -116,7 +126,7 @@
          padding: 8px;
          border-radius: 4px;
       }
-      .input-model, .output-model {
+      .input-model, .output-model, .error-model {
          font-family: monospace;
          font-size: 14px;
          margin-bottom: 5px;
@@ -132,41 +142,45 @@
       <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
       <script>
          $(document).ready(function () {
-            // Individual collapsible button click event
-             $(".collapsible").click(function () {
+            $(".comment").click(function () {
+                return false;
+            });
+
+            $(".route").click(function () {
+                return false;
+            });
+
+            $(".content").click(function () {
+                return false;
+            });
+
+            $(".method-container").click(function () {
                  $(this).toggleClass("active");
                  var content = $(this).closest(".method-container").find(".content");
                  content.slideToggle();
-             });
-            // Collapse All button click event
-            //  $("#collapseAllButton").click(function () {
-            //      $(".collapsible").removeClass("active");
-            //      $(".content").slideUp();
-            //  });
+            });
+            
             $("#collapseAllButton").click(function () {
-               var collapsibleButtons = $(".collapsible");
-               var contentSections = $(".content");
+                var collapsibleButtons = $(".collapsible");
+                var contentSections = $(".content");
+                var isAnySectionOpen = false;
 
-               var isAnySectionOpen = false;
-
-               // Check if any section is open
-               contentSections.each(function () {
-                  if ($(this).is(":visible")) {
-                     isAnySectionOpen = true;
-                     return false; // Exit the loop
-                  }
+                // Check if any section is open
+                contentSections.each(function () {
+                    if ($(this).is(":visible")) {
+                        isAnySectionOpen = true;
+                        return false; // Exit the loop
+                    }
                });
 
-               // Toggle all sections based on the current state
                if (isAnySectionOpen) {
-                  collapsibleButtons.removeClass("active");
-                  contentSections.slideUp();
+                    collapsibleButtons.removeClass("active");
+                    contentSections.slideUp();
                } else {
-                  collapsibleButtons.addClass("active");
-                  contentSections.slideDown();
+                    collapsibleButtons.addClass("active");
+                    contentSections.slideDown();
                }
             });
-
          });
      </script>
     </head>
@@ -182,35 +196,44 @@
             </div>
             <span class="comment">{{range .Comments}}{{.}}{{end}}</span>
             <div class="content">
-               <span>Status: {{.Status}} ({{status .Status}})</span>
+               <span class="status">Status: {{.Status}} ({{status .Status}})</span>
                <br/>
                {{if .InputDoc}}
                <div class="json-block">
-                     <span>Input Model:</span>
+                     <span><b>Input Model:</b></span>
+                     <br/>
                      <span class="input-model" ><pre><code>{{json .InputDoc}}</code></pre></span>
                </div>
                {{end}}
                {{if .OutputDoc}}
                   <div class="json-block">
-                     <span>Output Model :</span>
+                     <span><b>Output Model :</b></span>
+                     <br/>
                      <span class="output-model" > <pre><code>{{json .OutputDoc}}</code></pre></span>
+                  </div>
+               {{end}}
+               {{if .ErrorDoc}}
+                  <div class="json-block">
+                     <span><b>Error Model :</b></span>
+                     <br/>
+                     <span class="error-model" > <pre><code>{{json .ErrorDoc}}</code></pre></span>
                   </div>
                {{end}}
                {{if or .QueryVars.Paging .QueryVars.FilterBy .QueryVars.OrderBy}}
                   <div class="query-strings">
-                     <p>Query Strings:</p>
+                     <p><b>Query Strings:</b></p>
                      <br/>
-                     {{if .QueryVars.Paging}}
-                        <span>Paging   : {{$length := len .QueryVars.Paging}}{{$length = minus $length 1}}{{range $index, $elem := .QueryVars.Paging}}{{$elem}}{{if lt $index $length}}, {{end}}{{end}}</span>
-                        <br/>
-                     {{end}}
-                     {{if .QueryVars.FilterBy}}
-                        <span>FilterBy : {{$length := len .QueryVars.FilterBy}}{{$length = minus $length 1}}{{range $index, $elem := .QueryVars.FilterBy}}{{$elem}}{{if lt $index $length}}, {{end}}{{end}}</span>
-                        <br/>
-                     {{end}}
-                     {{if .QueryVars.OrderBy}}
-                        <span>OrderBy  : {{$length := len .QueryVars.OrderBy}}{{$length = minus $length 1}}{{range $index, $elem := .QueryVars.OrderBy}}{{$elem}}{{if lt $index $length}}, {{end}}{{end}}</span>
-                     {{end}}
+                     <table>
+                        {{if .QueryVars.Paging}}
+                        <tr><td><b>Paging:</b></td><td>{{$length := len .QueryVars.Paging}}{{$length = minus $length 1}}{{range $index, $elem := .QueryVars.Paging}}{{$elem}}{{if lt $index $length}}, {{end}}{{end}}</td></tr>
+                        {{end}}
+                        {{if .QueryVars.FilterBy}}
+                        <tr><td><b>FilterBy:</b></td><td>{{$length := len .QueryVars.FilterBy}}{{$length = minus $length 1}}{{range $index, $elem := .QueryVars.FilterBy}}{{$elem}}{{if lt $index $length}}, {{end}}{{end}}</td></tr>
+                        {{end}}
+                        {{if .QueryVars.OrderBy}}
+                        <tr><td><b>OrderBy:</b></td><td>{{$length := len .QueryVars.OrderBy}}{{$length = minus $length 1}}{{range $index, $elem := .QueryVars.OrderBy}}{{$elem}}{{if lt $index $length}}, {{end}}{{end}}</td></tr>
+                        {{end}}
+                    </table>                     
                   </div>
                {{end}}
             </div>
