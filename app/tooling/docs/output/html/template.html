@@ -27,6 +27,9 @@
          border-radius: 4px;
          font-weight: bold;
       }
+      p {
+         margin: 0px;
+      }
 
 
       /* Apply different colors based on the kind of method */
@@ -127,8 +130,15 @@
       .input-model, .output-model {
          font-family: monospace;
          font-size: 14px;
-         margin-bottom: 10px;
+         margin-bottom: 5px;
          white-space: pre;
+      }
+
+      .query-strings {
+         background-color: #cccccc69;
+         margin: 10px;
+         padding: 8px;
+         border-radius: 4px;
       }
 
     </style>
@@ -164,7 +174,6 @@
                <div class="json-block">
                      <span>Input Model:</span>
                      <span class="input-model" ><pre><code>{{json .InputDoc}}</code></pre></span>
-                     <br />
                </div>
                {{end}}
 
@@ -172,12 +181,12 @@
                   <div class="json-block">
                      <span>Output Model :</span>
                      <span class="output-model" > <pre><code>{{json .OutputDoc}}</code></pre></span>
-                     <br />
                   </div>
                {{end}}
                {{if or .QueryVars.Paging .QueryVars.FilterBy .QueryVars.OrderBy}}
                   <div class="query-strings">
-                     <p>Query Strings</p>
+                     <p>Query Strings:</p>
+                     <br/>
                      {{if .QueryVars.Paging}}
                         <span>Paging   : {{$length := len .QueryVars.Paging}}{{$length = minus $length 1}}{{range $index, $elem := .QueryVars.Paging}}{{$elem}}{{if lt $index $length}}, {{end}}{{end}}</span>
                         <br/>
@@ -190,7 +199,6 @@
                      
                      {{if .QueryVars.OrderBy}}
                         <span>OrderBy  : {{$length := len .QueryVars.OrderBy}}{{$length = minus $length 1}}{{range $index, $elem := .QueryVars.OrderBy}}{{$elem}}{{if lt $index $length}}, {{end}}{{end}}</span>
-                        <br/>
                      {{end}}
                   </div>
                {{end}}
