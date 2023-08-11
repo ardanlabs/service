@@ -127,10 +127,10 @@
          border-radius: 4px;
       }
       .input-model, .output-model, .error-model {
+         margin-top: 10px;
          font-family: monospace;
          font-size: 14px;
          margin-bottom: 5px;
-         white-space: pre;
       }
       .query-strings {
          background-color: #cccccc69;
@@ -201,22 +201,19 @@
                {{if .InputDoc}}
                <div class="json-block">
                      <span><b>Input Model:</b></span>
-                     <br/>
-                     <span class="input-model" ><pre><code>{{json .InputDoc}}</code></pre></span>
+                     <div class="input-model" ><pre><code>{{json .InputDoc}}</code></pre></div>
                </div>
                {{end}}
                {{if .OutputDoc}}
                   <div class="json-block">
                      <span><b>Output Model :</b></span>
-                     <br/>
-                     <span class="output-model" > <pre><code>{{json .OutputDoc}}</code></pre></span>
+                     <div class="output-model" > <pre><code>{{json .OutputDoc}}</code></pre></div>
                   </div>
                {{end}}
                {{if .ErrorDoc}}
                   <div class="json-block">
                      <span><b>Error Model :</b></span>
-                     <br/>
-                     <span class="error-model" > <pre><code>{{json .ErrorDoc}}</code></pre></span>
+                     <div class="error-model" > <pre><code>{{json .ErrorDoc}}</code></pre></div>
                   </div>
                {{end}}
                {{if or .QueryVars.Paging .QueryVars.FilterBy .QueryVars.OrderBy}}
