@@ -124,6 +124,13 @@ func parseWebAPI(fset *token.FileSet, file *ast.File, funcDecl *ast.FuncDecl, gr
 			}
 			record.OutputDoc = toModel(outputDoc)
 
+		case "errdoc":
+			errorDoc, err := findAppModel(group, kv[1])
+			if err != nil {
+				return false, Record{}, fmt.Errorf("findAppModel error: %w", err)
+			}
+			record.ErrorDoc = toModel(errorDoc)
+
 		case "status":
 			record.Status = kv[1]
 		}
@@ -143,7 +150,15 @@ func parseWebAPI(fset *token.FileSet, file *ast.File, funcDecl *ast.FuncDecl, gr
 func findAppModel(group string, modelName string) ([]Field, error) {
 	fset := token.NewFileSet()
 
-	file, err := parser.ParseFile(fset, "app/services/sales-api/handlers/v1/"+group+"/model.go", nil, parser.ParseComments)
+	var file *ast.File
+	var err error
+
+	if strings.Contains(modelName, "Error") {
+		file, err = parser.ParseFile(fset, "business/web/v1/v1.go", nil, parser.ParseComments)
+	} else {
+		file, err = parser.ParseFile(fset, "app/services/sales-api/handlers/v1/"+group+"/model.go", nil, parser.ParseComments)
+	}
+
 	if err != nil {
 		return nil, fmt.Errorf("ParseFile: %w", err)
 	}
@@ -167,7 +182,7 @@ func findAppModel(group string, modelName string) ([]Field, error) {
 
 		// Walk through the list of fields in this struct.
 		for _, astField := range structType.Fields.List {
-			var fieldType *ast.Ident
+			var fieldType string
 			var optional bool
 
 			// This is complicated. A field can be using pointer or
@@ -176,23 +191,37 @@ func findAppModel(group string, modelName string) ([]Field, error) {
 			// semantics.
 			starType, ok := astField.Type.(*ast.StarExpr)
 
-			// If this field was using pointer semantics, then we
-			// use the starType variable to get to the identifier
-			// and mark this field as optional.
-			//
-			// If this field was using value semantics, then we
-			// use the field variable to get to the identifier.
 			switch ok {
 			case true:
-				fieldType, ok = starType.X.(*ast.Ident)
+				// If this field was using pointer semantics, so we
+				// use the starType variable to get to the identifier
+				// and mark this field as optional.
+				v, ok := starType.X.(*ast.Ident)
+				if !ok {
+					continue
+				}
+				fieldType = v.Name
 				optional = true
-			default:
-				fieldType, ok = astField.Type.(*ast.Ident)
-			}
 
-			// We need to check that either type assersion succeeed.
-			if !ok {
-				continue
+			default:
+				// If this field was using value semantics, so we
+				// use the field variable to get to the identifier.
+				switch v := astField.Type.(type) {
+				case *ast.Ident:
+					fieldType = v.Name
+				case *ast.MapType:
+					keyType, ok := v.Key.(*ast.Ident)
+					if !ok {
+						continue
+					}
+					keyVal, ok := v.Value.(*ast.Ident)
+					if !ok {
+						continue
+					}
+					fieldType = fmt.Sprintf("map[%s]%s", keyType, keyVal)
+				default:
+					continue
+				}
 			}
 
 			// Now look for the json tag on the field to know what
@@ -214,7 +243,7 @@ func findAppModel(group string, modelName string) ([]Field, error) {
 			// Add the field information to the list.
 			fields = append(fields, Field{
 				Name:     astField.Names[0].Name,
-				Type:     fieldType.Name,
+				Type:     fieldType,
 				Tag:      tag,
 				Optional: optional,
 			})

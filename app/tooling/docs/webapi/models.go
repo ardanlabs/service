@@ -20,6 +20,7 @@ type Record struct {
 	Status    string
 	InputDoc  map[string]any
 	OutputDoc map[string]any
+	ErrorDoc  map[string]any
 	Comments  []string
 	QueryVars QueryVars
 }
