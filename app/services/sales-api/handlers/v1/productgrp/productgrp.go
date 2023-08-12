@@ -61,7 +61,7 @@ func (h *Handlers) executeUnderTransaction(ctx context.Context) (*Handlers, erro
 }
 
 // Create adds a new product to the system.
-// webapi method=POST route=/products inputdoc=AppNewProduct outputdoc=AppProduct errdoc=ErrorResponse status=StatusCreated
+// webapi method=POST route=/products outputdoc=AppProduct errdoc=ErrorResponse status=StatusCreated
 func (h *Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app AppNewProduct
 	if err := web.Decode(r, &app); err != nil {
@@ -82,7 +82,7 @@ func (h *Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Re
 }
 
 // Update updates a product in the system.
-// webapi method=POST route=/products/:product_id inputdoc=AppUpdateProduct outputdoc=AppProduct errdoc=ErrorResponse status=StatusOK
+// webapi method=POST route=/products/:product_id outputdoc=AppProduct errdoc=ErrorResponse status=StatusOK
 func (h *Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	h, err := h.executeUnderTransaction(ctx)
 	if err != nil {

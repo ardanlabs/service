@@ -110,13 +110,6 @@ func parseWebAPI(fset *token.FileSet, file *ast.File, funcDecl *ast.FuncDecl, gr
 		case "route":
 			record.Route = kv[1]
 
-		case "inputdoc":
-			inputDoc, err := findAppModel(group, kv[1])
-			if err != nil {
-				return false, Record{}, fmt.Errorf("findAppModel input: %w", err)
-			}
-			record.InputDoc = toModel(inputDoc)
-
 		case "outputdoc":
 			outputDoc, err := findAppModel(group, kv[1])
 			if err != nil {
@@ -136,6 +129,15 @@ func parseWebAPI(fset *token.FileSet, file *ast.File, funcDecl *ast.FuncDecl, gr
 		}
 	}
 
+	idt := findInputDocument(funcDecl.Body)
+	if idt != nil {
+		inputDoc, err := findAppModel(group, idt.Name)
+		if err != nil {
+			return false, Record{}, fmt.Errorf("findAppModel input: %w", err)
+		}
+		record.InputDoc = toModel(inputDoc)
+	}
+
 	queryVars, err := findQueryVars(funcDecl.Body, group)
 	if err != nil {
 		return false, Record{}, fmt.Errorf("findPageFilterOrder: %w", err)
@@ -146,6 +148,87 @@ func parseWebAPI(fset *token.FileSet, file *ast.File, funcDecl *ast.FuncDecl, gr
 }
 
 // =============================================================================
+
+func findInputDocument(body *ast.BlockStmt) *ast.Ident {
+
+	// Walk through the body of the function looking for the web.Decode
+	// function call.
+	for _, stmt := range body.List {
+
+		// Start by looking for an if statement.
+		ifs, ok := stmt.(*ast.IfStmt)
+		if !ok {
+			continue
+		}
+
+		// Look at the assignment inside the if statement.
+		agn, ok := ifs.Init.(*ast.AssignStmt)
+		if !ok {
+			continue
+		}
+
+		// If a function call is not being made, ignore.
+		ce, ok := agn.Rhs[0].(*ast.CallExpr)
+		if !ok {
+			continue
+		}
+
+		// We need to extract the name of the function being called.
+		se, ok := ce.Fun.(*ast.SelectorExpr)
+		if !ok {
+			continue
+		}
+
+		// If this is not the web.Decode call, move on.
+		if se.Sel.Name != "Decode" {
+			continue
+		}
+
+		// Now we need the name of the varaible being passed
+		// to the decode call.
+		ue, ok := ce.Args[1].(*ast.UnaryExpr)
+		if !ok {
+			continue
+		}
+
+		// We now have the name of the variable.
+		idtVarName, ok := ue.X.(*ast.Ident)
+		if !ok {
+			continue
+		}
+
+		// Look again at this function for the declaration of this
+		// variable being passed into web.Decode.
+		for _, stmt2 := range body.List {
+			ds, ok := stmt2.(*ast.DeclStmt)
+			if !ok {
+				continue
+			}
+
+			gd, ok := ds.Decl.(*ast.GenDecl)
+			if !ok {
+				continue
+			}
+
+			vs, ok := gd.Specs[0].(*ast.ValueSpec)
+			if !ok {
+				continue
+			}
+
+			idt, ok := vs.Type.(*ast.Ident)
+			if !ok {
+				continue
+			}
+
+			// Did we find the declaration and the type information?
+			if idtVarName.Name == vs.Names[0].Name {
+				return idt
+			}
+		}
+	}
+
+	return nil
+}
 
 func findAppModel(group string, modelName string) ([]Field, error) {
 	fset := token.NewFileSet()
