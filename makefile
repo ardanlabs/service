@@ -147,13 +147,13 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 GOLANG          := golang:1.21
 ALPINE          := alpine:3.18
 KIND            := kindest/node:v1.27.3
-POSTGRES        := postgres:15.3
+POSTGRES        := postgres:15.4
 VAULT           := hashicorp/vault:1.14
 GRAFANA         := grafana/grafana:9.5.3
-PROMETHEUS      := prom/prometheus:v2.44.0
-TEMPO           := grafana/tempo:2.1.1
-LOKI            := grafana/loki:2.8.2
-PROMTAIL        := grafana/promtail:2.8.2
+PROMETHEUS      := prom/prometheus:v2.45.0
+TEMPO           := grafana/tempo:2.2.0
+LOKI            := grafana/loki:2.8.3
+PROMTAIL        := grafana/promtail:2.8.3
 TELEPRESENCE    := datawire/ambassador-telepresence-manager:2.14.2
 
 KIND_CLUSTER    := ardan-starter-cluster
@@ -295,7 +295,7 @@ dev-restart:
 
 dev-update: all dev-load dev-restart
 
-dev-update-apply: all dev-load dev-apply dev-restart
+dev-update-apply: all dev-load dev-apply
 
 # ------------------------------------------------------------------------------
 
@@ -432,7 +432,7 @@ grafana:
 test-race:
 	CGO_ENABLED=1 go test -race -count=1 ./...
 
-test:
+test-only:
 	CGO_ENABLED=0 go test -count=1 ./...
 
 lint:
@@ -442,9 +442,9 @@ lint:
 vuln-check:
 	govulncheck ./...
 
-test-all: test lint vuln-check
+test: test-only lint vuln-check
 
-test-all-race: test-race lint vuln-check
+test-race: test-race lint vuln-check
 
 # make docs ARGS="-out json"
 # make docs ARGS="-out html"
