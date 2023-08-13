@@ -483,7 +483,6 @@ deps-reset:
 	go mod vendor
 
 tidy:
-	rm -rf vendor
 	go mod tidy
 	go mod vendor
 

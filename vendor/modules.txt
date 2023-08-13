@@ -122,7 +122,7 @@ github.com/jackc/pgx/v5/stdlib
 ## explicit; go 1.10
 github.com/jmoiron/sqlx
 github.com/jmoiron/sqlx/reflectx
-# github.com/klauspost/compress v1.16.6
+# github.com/klauspost/compress v1.16.7
 ## explicit; go 1.18
 # github.com/leodido/go-urn v1.2.4
 ## explicit; go 1.16
