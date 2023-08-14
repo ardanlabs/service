@@ -110,13 +110,6 @@ func parseWebAPI(fset *token.FileSet, file *ast.File, funcDecl *ast.FuncDecl, gr
 		case "route":
 			record.Route = kv[1]
 
-		case "outputdoc":
-			outputDoc, err := findAppModel(group, kv[1])
-			if err != nil {
-				return false, Record{}, fmt.Errorf("findAppModel output: %w", err)
-			}
-			record.OutputDoc = toModel(outputDoc)
-
 		case "errdoc":
 			errorDoc, err := findAppModel(group, kv[1])
 			if err != nil {
@@ -129,13 +122,28 @@ func parseWebAPI(fset *token.FileSet, file *ast.File, funcDecl *ast.FuncDecl, gr
 		}
 	}
 
-	idt := findInputDocument(funcDecl.Body)
-	if idt != nil {
-		inputDoc, err := findAppModel(group, idt.Name)
+	modelName := findInputDocument(funcDecl.Body)
+	if modelName != "" {
+		inputDoc, err := findAppModel(group, modelName)
 		if err != nil {
 			return false, Record{}, fmt.Errorf("findAppModel input: %w", err)
 		}
 		record.InputDoc = toModel(inputDoc)
+	}
+
+	funcName := findOutputDocument(funcDecl.Body)
+	if funcName != "" {
+		modelName, _, err := findAppFunction(group, funcName)
+		if err != nil {
+			return false, Record{}, fmt.Errorf("findAppModel output: %w", err)
+		}
+
+		outputDoc, err := findAppModel(group, modelName)
+		if err != nil {
+			return false, Record{}, fmt.Errorf("findAppModel output: %w", err)
+		}
+
+		record.OutputDoc = toModel(outputDoc)
 	}
 
 	queryVars, err := findQueryVars(funcDecl.Body, group)
@@ -149,7 +157,66 @@ func parseWebAPI(fset *token.FileSet, file *ast.File, funcDecl *ast.FuncDecl, gr
 
 // =============================================================================
 
-func findInputDocument(body *ast.BlockStmt) *ast.Ident {
+func findOutputDocument(body *ast.BlockStmt) string {
+
+	// Walk through the body of the function looking for the web.Decode
+	// function call.
+	for _, stmt := range body.List {
+
+		// Start by looking for a return statement.
+		rs, ok := stmt.(*ast.ReturnStmt)
+		if !ok {
+			continue
+		}
+
+		// Look for a function call inside the return.
+		ce, ok := rs.Results[0].(*ast.CallExpr)
+		if !ok {
+			continue
+		}
+
+		se, ok := ce.Fun.(*ast.SelectorExpr)
+		if !ok {
+			continue
+		}
+
+		// We are looking for the web.Respond call.
+		if se.Sel.Name != "Respond" {
+			continue
+		}
+
+		// Now we need to find the third parameter which should
+		// be a to function.
+		ce, ok = ce.Args[2].(*ast.CallExpr)
+		if !ok {
+			continue
+		}
+
+		// Did we find NewResponse and if so, we need the
+		// to function inside that call.
+		if se, ok = ce.Fun.(*ast.SelectorExpr); ok {
+			if se.Sel.Name != "NewResponse" {
+				continue
+			}
+			ce, ok = ce.Args[0].(*ast.CallExpr)
+			if !ok {
+				continue
+			}
+		}
+
+		// Did we find a to function.
+		idt, ok := ce.Fun.(*ast.Ident)
+		if !ok {
+			continue
+		}
+
+		return idt.Name
+	}
+
+	return ""
+}
+
+func findInputDocument(body *ast.BlockStmt) string {
 
 	// Walk through the body of the function looking for the web.Decode
 	// function call.
@@ -222,12 +289,67 @@ func findInputDocument(body *ast.BlockStmt) *ast.Ident {
 
 			// Did we find the declaration and the type information?
 			if idtVarName.Name == vs.Names[0].Name {
-				return idt
+				return idt.Name
 			}
 		}
 	}
 
-	return nil
+	return ""
+}
+
+func findAppFunction(group string, funcName string) (string, bool, error) {
+	fset := token.NewFileSet()
+
+	file, err := parser.ParseFile(fset, "app/services/sales-api/handlers/v1/"+group+"/model.go", nil, parser.ParseComments)
+	if err != nil {
+		return "", false, fmt.Errorf("ParseFile: %w", err)
+	}
+
+	var idt *ast.Ident
+	var slice bool
+
+	f := func(n ast.Node) bool {
+		if idt != nil {
+			return false
+		}
+
+		// We only care to look at functions.
+		fs, ok := n.(*ast.FuncDecl)
+		if !ok {
+			return true
+		}
+
+		// Did we find the function we are looking for.
+		if fs.Name.Name != funcName {
+			return true
+		}
+
+		// If the return type is a struct type, set the ident.
+		idt, ok = fs.Type.Results.List[0].Type.(*ast.Ident)
+		if ok {
+			return false
+		}
+
+		// If the return type is an array, we need one more step to
+		// get the ident.
+		at, ok := fs.Type.Results.List[0].Type.(*ast.ArrayType)
+		if !ok {
+			return true
+		}
+
+		idt, _ = at.Elt.(*ast.Ident)
+		slice = true
+
+		return false
+	}
+
+	ast.Inspect(file, f)
+
+	if idt == nil {
+		return "", false, nil
+	}
+
+	return idt.Name, slice, nil
 }
 
 func findAppModel(group string, modelName string) ([]Field, error) {
