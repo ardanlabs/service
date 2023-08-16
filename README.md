@@ -56,7 +56,7 @@ hello@ardanlabs.com
 
 ## Installation
 
-To clone the project, create a folder and use the git clone command. Then please read the [README.md](.reading/README.md) file to learn how to install all the tooling and docker images.
+To clone the project, create a folder and use the git clone command. Then please read the [makefile](makefile) file to learn how to install all the tooling and docker images.
 
 ```
 $ cd $HOME
