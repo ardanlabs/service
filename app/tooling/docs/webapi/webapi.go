@@ -219,6 +219,8 @@ func findOutputDocument(body *ast.BlockStmt) string {
 		// the idt.Name type as the generic type.
 		if isNewResponse {
 
+			// TODO
+			return idt.Name
 		}
 
 		return idt.Name
