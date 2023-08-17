@@ -5,7 +5,7 @@ import (
 )
 
 // toModel covnerts a collection of fields to a model document.
-func toModel(fields []Field) map[string]any {
+func toModel(fields []Field, slice bool) any {
 	if len(fields) == 0 {
 		return nil
 	}
@@ -29,6 +29,12 @@ func toModel(fields []Field) map[string]any {
 		}
 
 		m[tag] = typ
+	}
+
+	if slice {
+		return []map[string]any{
+			m,
+		}
 	}
 
 	return m

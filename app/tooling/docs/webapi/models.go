@@ -18,9 +18,9 @@ type Record struct {
 	Method    string
 	Route     string
 	Status    string
-	InputDoc  map[string]any
-	OutputDoc map[string]any
-	ErrorDoc  map[string]any
+	InputDoc  any
+	OutputDoc any
+	ErrorDoc  any
 	Comments  []string
 	QueryVars QueryVars
 }

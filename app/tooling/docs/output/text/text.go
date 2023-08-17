@@ -44,12 +44,8 @@ func status(status string) int {
 	return webapi.Statuses[status]
 }
 
-func toJSON(m map[string]any) string {
-	if len(m) == 0 {
-		return ""
-	}
-
-	data, err := json.MarshalIndent(m, "", "    ")
+func toJSON(v any) string {
+	data, err := json.MarshalIndent(v, "", "    ")
 	if err != nil {
 		return ""
 	}

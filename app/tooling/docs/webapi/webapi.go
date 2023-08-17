@@ -115,7 +115,7 @@ func parseWebAPI(fset *token.FileSet, file *ast.File, funcDecl *ast.FuncDecl, gr
 			if err != nil {
 				return false, Record{}, fmt.Errorf("findAppModel error: %w", err)
 			}
-			record.ErrorDoc = toModel(errorDoc)
+			record.ErrorDoc = toModel(errorDoc, false)
 
 		case "status":
 			record.Status = kv[1]
@@ -128,12 +128,12 @@ func parseWebAPI(fset *token.FileSet, file *ast.File, funcDecl *ast.FuncDecl, gr
 		if err != nil {
 			return false, Record{}, fmt.Errorf("findAppModel input: %w", err)
 		}
-		record.InputDoc = toModel(inputDoc)
+		record.InputDoc = toModel(inputDoc, false)
 	}
 
 	funcName := findOutputDocument(funcDecl.Body)
 	if funcName != "" {
-		modelName, _, err := findAppFunction(group, funcName)
+		modelName, slice, err := findAppFunction(group, funcName)
 		if err != nil {
 			return false, Record{}, fmt.Errorf("findAppModel output: %w", err)
 		}
@@ -143,7 +143,7 @@ func parseWebAPI(fset *token.FileSet, file *ast.File, funcDecl *ast.FuncDecl, gr
 			return false, Record{}, fmt.Errorf("findAppModel output: %w", err)
 		}
 
-		record.OutputDoc = toModel(outputDoc)
+		record.OutputDoc = toModel(outputDoc, slice)
 	}
 
 	queryVars, err := findQueryVars(funcDecl.Body, group)
