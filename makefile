@@ -474,6 +474,9 @@ load-local:
 load:
 	hey -m GET -c 100 -n 10000 -H "Authorization: Bearer ${TOKEN}" "http://$(SERVICE_NAME).$(NAMESPACE).svc.cluster.local:3000/v1/users?page=1&rows=2"
 
+otel-test:
+	curl -il -H "Traceparent: 00-918dd5ecf264712262b68cf2ef8b5239-896d90f23f69f006-01" --user "admin@example.com:gophers" http://sales-api.sales-system.svc.cluster.local:3000/v1/users/token/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
+
 # ==============================================================================
 # Modules support
 

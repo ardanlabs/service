@@ -157,6 +157,8 @@ func parseWebAPI(fset *token.FileSet, file *ast.File, funcDecl *ast.FuncDecl, gr
 
 // =============================================================================
 
+// This function looks for the web.Respond call at the end of each handler.
+// Once found, it returns the name of the type that is used in the response.
 func findOutputDocument(body *ast.BlockStmt) string {
 
 	// Walk through the body of the function looking for the web.Decode
@@ -192,6 +194,8 @@ func findOutputDocument(body *ast.BlockStmt) string {
 			continue
 		}
 
+		var isNewResponse bool
+
 		// Did we find NewResponse and if so, we need the
 		// to function inside that call.
 		if se, ok = ce.Fun.(*ast.SelectorExpr); ok {
@@ -202,12 +206,19 @@ func findOutputDocument(body *ast.BlockStmt) string {
 			if !ok {
 				continue
 			}
+			isNewResponse = true
 		}
 
 		// Did we find a to function.
 		idt, ok := ce.Fun.(*ast.Ident)
 		if !ok {
 			continue
+		}
+
+		// This is the actual document that is being sent back with
+		// the idt.Name type as the generic type.
+		if isNewResponse {
+
 		}
 
 		return idt.Name

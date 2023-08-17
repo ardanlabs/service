@@ -3,9 +3,7 @@ package web
 
 import (
 	"context"
-	"encoding/hex"
 	"errors"
-	"fmt"
 	"net/http"
 	"os"
 	"syscall"
@@ -13,7 +11,9 @@ import (
 
 	"github.com/dimfeld/httptreemux/v5"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -128,20 +128,8 @@ func (a *App) startSpan(w http.ResponseWriter, r *http.Request) (context.Context
 		span.SetAttributes(attribute.String("endpoint", r.RequestURI))
 	}
 
-	// Add trace context in traceparent form (https://www.w3.org/TR/trace-context/#traceparent-header)
-	// as Server-Timing header (https://www.w3.org/TR/server-timing/) to the HTTP response.
-	if spanCtx := trace.SpanContextFromContext(ctx); spanCtx.IsValid() {
-		traceID := spanCtx.TraceID()
-		hexTraceID := hex.EncodeToString(traceID[:])
-
-		spanID := spanCtx.SpanID()
-		hexSpanID := hex.EncodeToString(spanID[:])
-
-		traceParent := fmt.Sprintf(`traceparent;desc="00-%s-%s-01"`, hexTraceID, hexSpanID)
-
-		w.Header().Add("Access-Control-Expose-Headers", "Server-Timing")
-		w.Header().Add("Server-Timing", traceParent)
-	}
+	// Inject the trace information into the response.
+	otel.GetTextMapPropagator().Inject(ctx, propagation.HeaderCarrier(w.Header()))
 
 	return ctx, span
 }
