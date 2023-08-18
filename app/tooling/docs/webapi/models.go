@@ -2,7 +2,7 @@ package webapi
 
 type Field struct {
 	Name     string
-	Type     string
+	Type     any
 	Tag      string
 	Optional bool
 }

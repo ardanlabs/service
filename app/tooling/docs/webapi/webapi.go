@@ -133,17 +133,45 @@ func parseWebAPI(fset *token.FileSet, file *ast.File, funcDecl *ast.FuncDecl, gr
 
 	funcName := findOutputDocument(funcDecl.Body)
 	if funcName != "" {
-		modelName, slice, err := findAppFunction(group, funcName)
-		if err != nil {
-			return false, Record{}, fmt.Errorf("findAppModel output: %w", err)
-		}
+		parts := strings.Split(funcName, ".")
 
-		outputDoc, err := findAppModel(group, modelName)
-		if err != nil {
-			return false, Record{}, fmt.Errorf("findAppModel output: %w", err)
-		}
+		switch parts[0] {
+		case "paging":
+			funcName, _ = strings.CutPrefix(parts[1], "NewResponse[")
+			funcName, _ = strings.CutSuffix(funcName, "]")
 
-		record.OutputDoc = toModel(outputDoc, slice)
+			concreteModelName, _, err := findAppFunctionFromModel(group, funcName)
+			if err != nil {
+				return false, Record{}, fmt.Errorf("findAppModel output: %w", err)
+			}
+
+			concreteModel, err := findAppModel(group, concreteModelName)
+			if err != nil {
+				return false, Record{}, fmt.Errorf("findAppModel output: %w", err)
+			}
+
+			outputDoc, err := findAppModel(group, "Response")
+			if err != nil {
+				return false, Record{}, fmt.Errorf("findAppModel output: %w", err)
+			}
+
+			outputDoc[0].Type = toModel(concreteModel, true)
+
+			record.OutputDoc = toModel(outputDoc, false)
+
+		default:
+			modelName, slice, err := findAppFunctionFromModel(group, funcName)
+			if err != nil {
+				return false, Record{}, fmt.Errorf("findAppModel output: %w", err)
+			}
+
+			outputDoc, err := findAppModel(group, modelName)
+			if err != nil {
+				return false, Record{}, fmt.Errorf("findAppModel output: %w", err)
+			}
+
+			record.OutputDoc = toModel(outputDoc, slice)
+		}
 	}
 
 	queryVars, err := findQueryVars(funcDecl.Body, group)
@@ -218,9 +246,7 @@ func findOutputDocument(body *ast.BlockStmt) string {
 		// This is the actual document that is being sent back with
 		// the idt.Name type as the generic type.
 		if isNewResponse {
-
-			// TODO
-			return idt.Name
+			return fmt.Sprintf("paging.NewResponse[%s]", idt.Name)
 		}
 
 		return idt.Name
@@ -310,16 +336,16 @@ func findInputDocument(body *ast.BlockStmt) string {
 	return ""
 }
 
-func findAppFunction(group string, funcName string) (string, bool, error) {
+func findAppFunctionFromModel(group string, funcName string) (string, bool, error) {
 	fset := token.NewFileSet()
+
+	var idt *ast.Ident
+	var slice bool
 
 	file, err := parser.ParseFile(fset, "app/services/sales-api/handlers/v1/"+group+"/model.go", nil, parser.ParseComments)
 	if err != nil {
 		return "", false, fmt.Errorf("ParseFile: %w", err)
 	}
-
-	var idt *ast.Ident
-	var slice bool
 
 	f := func(n ast.Node) bool {
 		if idt != nil {
@@ -371,9 +397,12 @@ func findAppModel(group string, modelName string) ([]Field, error) {
 	var file *ast.File
 	var err error
 
-	if strings.Contains(modelName, "Error") {
+	switch {
+	case strings.Contains(modelName, "Error"):
 		file, err = parser.ParseFile(fset, "business/web/v1/v1.go", nil, parser.ParseComments)
-	} else {
+	case strings.Contains(modelName, "Response"):
+		file, err = parser.ParseFile(fset, "business/web/v1/paging/paging.go", nil, parser.ParseComments)
+	default:
 		file, err = parser.ParseFile(fset, "app/services/sales-api/handlers/v1/"+group+"/model.go", nil, parser.ParseComments)
 	}
 
@@ -407,10 +436,11 @@ func findAppModel(group string, modelName string) ([]Field, error) {
 			// value semantics. There is a different type depending.
 			// So we start by asking if the field is using pointer
 			// semantics.
-			starType, ok := astField.Type.(*ast.StarExpr)
+			starType, okStar := astField.Type.(*ast.StarExpr)
+			arryType, okArray := astField.Type.(*ast.ArrayType)
 
-			switch ok {
-			case true:
+			switch {
+			case okStar:
 				// If this field was using pointer semantics, so we
 				// use the starType variable to get to the identifier
 				// and mark this field as optional.
@@ -420,6 +450,16 @@ func findAppModel(group string, modelName string) ([]Field, error) {
 				}
 				fieldType = v.Name
 				optional = true
+
+			case okArray:
+				v, ok := arryType.Elt.(*ast.Ident)
+				if !ok {
+					continue
+				}
+				if !ok {
+					continue
+				}
+				fieldType = v.Name
 
 			default:
 				// If this field was using value semantics, so we

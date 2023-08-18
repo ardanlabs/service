@@ -11,7 +11,7 @@ import (
 	"github.com/ardanlabs/service/app/tooling/docs/webapi"
 )
 
-var output = flag.String("out", "text", "json, text, html")
+var output = flag.String("out", "html", "json, text, html")
 
 func main() {
 	flag.Parse()
