@@ -17,13 +17,7 @@ import DeleteUser from '@/components/Users/Delete'
 import { DefaultAPIResponse } from '@/utils/types'
 import { User, headCells } from '@/components/Users/constants'
 
-interface UsersDataTableProps {
-  needsUpdate?: boolean
-  setNeedsUpdate?: React.Dispatch<React.SetStateAction<boolean>>
-}
-
-export default function UsersDataTable(props: UsersDataTableProps) {
-  const { needsUpdate, setNeedsUpdate } = props
+export default function UsersDataTable() {
   const [serverItemsLength, setServerItemsLength] = React.useState(0)
   const [rows, setRows] = React.useState<User[]>([])
 
@@ -54,8 +48,6 @@ export default function UsersDataTable(props: UsersDataTableProps) {
         serverItemsLength={serverItemsLength}
         rowCount={rows.length}
         headCells={headCells}
-        needsUpdate={needsUpdate}
-        setNeedsUpdate={setNeedsUpdate}
         getData={getData}
       >
         {rows.map((row, index) => {
@@ -80,7 +72,6 @@ export default function UsersDataTable(props: UsersDataTableProps) {
               <DateCell value={row.dateUpdated} />
               <ActionsCell>
                 <AddUser
-                  setNeedsUpdate={setNeedsUpdate}
                   isEdit
                   user={row}
                   actionButton={
@@ -89,7 +80,7 @@ export default function UsersDataTable(props: UsersDataTableProps) {
                     </IconButton>
                   }
                 />
-                <DeleteUser rowId={row.id} setNeedsUpdate={setNeedsUpdate} />
+                <DeleteUser rowId={row.id} />
               </ActionsCell>
             </TableRow>
           )

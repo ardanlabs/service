@@ -2,15 +2,16 @@ import * as React from 'react'
 import IconButton from '@mui/material/IconButton'
 import DeleteIcon from '@mui/icons-material/Delete'
 import ConfirmationModal from '../ConfirmationModal/ConfirmationModal'
+import UserContext from '@/context/UserContext'
 
 interface DeleteUserProps {
   rowId: string
-  setNeedsUpdate?: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 // Delete user displays a confirmation modal that lets you delete a user.
 export default function DeleteUser(props: DeleteUserProps) {
-  const { rowId, setNeedsUpdate } = props
+  const { setNeedsUpdate } = React.useContext(UserContext)
+  const { rowId } = props
   const [fetchError, setFetchError] = React.useState('')
   const [open, setOpenDelete] = React.useState(false)
   const handleOpenDelete = () => setOpenDelete(true)
