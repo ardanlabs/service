@@ -7,7 +7,7 @@ export const metadata = {
 }
 
 // This is the entry layout of the application.
-// ThemeRegistry make MUI available through the whole app.
+// ThemeRegistry makes MUI available through the whole app.
 export default function RootLayout({
   children,
 }: {

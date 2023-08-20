@@ -9,6 +9,7 @@ import TableRow from '@mui/material/TableRow'
 import Paper from '@mui/material/Paper'
 import { DataTableProps, Order } from './types'
 import EnhancedTableHead from './EnhancedTableHead'
+import UserContext from '@/context/UserContext'
 
 type PropsWithChildren<P> = P & { children?: React.ReactNode }
 
@@ -29,9 +30,8 @@ export default function DataTable(props: PropsWithChildren<DataTableProps>) {
     serverItemsLength,
     handleSelectAllClick,
     children,
-    needsUpdate,
-    setNeedsUpdate,
   } = props
+  const { needsUpdate, setNeedsUpdate } = React.useContext(UserContext)
   // Set init states.
   const [orderDirection, setOrderDirection] = React.useState<Order>(
     defaultOrderDirection,

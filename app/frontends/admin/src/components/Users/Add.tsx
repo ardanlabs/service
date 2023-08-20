@@ -11,9 +11,9 @@ import PasswordTextField from '@/components/PasswordTextField/PasswordTextField'
 import Chip from '@mui/material/Chip'
 import ApiError from '@/components/ApiError/ApiError'
 import { User } from './constants'
+import UserContext from '@/context/UserContext'
 
 interface AddUserProps {
-  setNeedsUpdate?: React.Dispatch<React.SetStateAction<boolean>>
   isEdit?: boolean
   user?: User
   actionButton?: React.ReactNode
@@ -22,7 +22,8 @@ interface AddUserProps {
 const availableRoles = ['USER', 'ADMIN']
 
 export default function AddUser(props: AddUserProps) {
-  const { setNeedsUpdate, isEdit, user, actionButton } = props
+  const { isEdit, user, actionButton } = props
+  const { setNeedsUpdate } = React.useContext(UserContext)
   const [open, setOpen] = React.useState(false)
   const handleOpen = () => setOpen(true)
   const handleClose = () => setOpen(false)
