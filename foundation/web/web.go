@@ -59,6 +59,16 @@ func (a *App) SignalShutdown() {
 	a.shutdown <- syscall.SIGTERM
 }
 
+// EnableCORS enables CORS preflight requests to work in the middleware. It
+// prevents the MethodNotAllowedHandler from being called. This must be enabled
+// for the CORS middleware to work.
+func (a *App) EnableCORS() {
+	h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+		return nil
+	}
+	a.Handle(http.MethodOptions, "", "/*", h)
+}
+
 // ServeHTTP implements the http.Handler interface. It's the entry point for
 // all http traffic and allows the opentelemetry mux to run first to handle
 // tracing. The opentelemetry mux then calls the application mux to handle

@@ -2,7 +2,6 @@
 package handlers
 
 import (
-	"context"
 	"net/http"
 	"os"
 
@@ -57,10 +56,7 @@ func APIMux(cfg APIMuxConfig, options ...func(opts *Options)) http.Handler {
 			mid.Panics(),
 		)
 
-		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-			return nil
-		}
-		app.Handle(http.MethodOptions, "", "/*", h, mid.Cors(opts.corsOrigin))
+		app.EnableCORS()
 	}
 
 	if app == nil {
