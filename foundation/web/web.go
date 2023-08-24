@@ -62,8 +62,8 @@ func (a *App) SignalShutdown() {
 // EnableCORS enables CORS preflight requests to work in the middleware. It
 // prevents the MethodNotAllowedHandler from being called. This must be enabled
 // for the CORS middleware to work.
-func (a *App) EnableCORS(cm Middleware) {
-	a.mw = append(a.mw, cm)
+func (a *App) EnableCORS(mw Middleware) {
+	a.mw = append(a.mw, mw)
 
 	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 		return Respond(ctx, w, "OK", http.StatusOK)
