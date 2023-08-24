@@ -10,18 +10,16 @@ import (
 	"strings"
 )
 
-// Records produces and returns the web api information for the specified
-// handler group.
-func Records(group string) ([]Record, error) {
+func Routes(version string) ([]Route, error) {
 	fset := token.NewFileSet()
 
-	fileName := fmt.Sprintf("app/services/sales-api/handlers/v1/%s/%s.go", group, group)
+	fileName := fmt.Sprintf("app/services/sales-api/handlers/%s/%s.go", version, version)
 	file, err := parser.ParseFile(fset, fileName, nil, parser.ParseComments)
 	if err != nil {
 		return nil, fmt.Errorf("ParseFile: %w", err)
 	}
 
-	var records []Record
+	var routes []Route
 
 	f := func(n ast.Node) bool {
 
@@ -31,15 +29,97 @@ func Records(group string) ([]Record, error) {
 			return true
 		}
 
-		found, record, errF := parseWebAPI(fset, file, funcDecl, group)
-		if found {
-			records = append(records, record)
-			return true
+		// We only want the routes function.
+		if funcDecl.Name.Name != "Routes" {
+			return false
 		}
 
-		if errF != nil {
-			err = fmt.Errorf("parseWebAPI: %w", err)
-			return false
+		var group string
+
+		// We need to find all the value.Get calls.
+		for _, stmt := range funcDecl.Body.List {
+
+			// We need to identify which group the handlers that follow
+			// belong to.
+			as, ok := stmt.(*ast.AssignStmt)
+			if ok {
+
+				// We are looking for call expression.
+				ce, ok := as.Rhs[0].(*ast.CallExpr)
+				if !ok {
+					continue
+				}
+
+				fn, ok := ce.Fun.(*ast.SelectorExpr)
+				if !ok {
+					continue
+				}
+
+				// Did we find a New function call.
+				if fn.Sel.Name != "New" {
+					continue
+				}
+
+				// We need the name of the variable representing the
+				// group. ex. usergrp.New
+				id, ok := fn.X.(*ast.Ident)
+				if !ok {
+					continue
+				}
+
+				group = id.Name
+
+				continue
+			}
+
+			// We are looking for expressions that will represent the
+			// call to Handle.
+			es, ok := stmt.(*ast.ExprStmt)
+			if !ok {
+				continue
+			}
+
+			ce, ok := es.X.(*ast.CallExpr)
+			if !ok {
+				continue
+			}
+
+			se, ok := ce.Fun.(*ast.SelectorExpr)
+			if !ok {
+				continue
+			}
+
+			if se.Sel.Name != "Handle" {
+				continue
+			}
+
+			// The first parameter to Handle represents the method information.
+			method, ok := ce.Args[0].(*ast.SelectorExpr)
+			if !ok {
+				continue
+			}
+
+			// The third parameter to Handle represents the route.
+			url, ok := ce.Args[2].(*ast.BasicLit)
+			if !ok {
+				continue
+			}
+
+			// The forth parameter to Handle represents the name of the
+			// handler function.
+			handler, ok := ce.Args[3].(*ast.SelectorExpr)
+			if !ok {
+				continue
+			}
+
+			routes = append(routes, Route{
+				Method:   method.Sel.Name,
+				URL:      url.Value,
+				Handler:  handler.Sel.Name,
+				Group:    group,
+				ErrorDoc: "ErrorResponse",
+				File:     fmt.Sprintf("app/services/sales-api/handlers/%s/%s/%s.go", version, group, group),
+			})
 		}
 
 		return true
@@ -47,12 +127,58 @@ func Records(group string) ([]Record, error) {
 
 	ast.Inspect(file, f)
 
-	return records, err
+	return routes, nil
+}
+
+// Records produces and returns the web api information for the specified
+// handler group.
+func Records(routes []Route) ([]Record, error) {
+	var records []Record
+
+	for _, route := range routes {
+		fset := token.NewFileSet()
+
+		file, err := parser.ParseFile(fset, route.File, nil, parser.ParseComments)
+		if err != nil {
+			return nil, fmt.Errorf("ParseFile: %w", err)
+		}
+
+		f := func(n ast.Node) bool {
+
+			// We only care if this node is a function declaration.
+			funcDecl, ok := n.(*ast.FuncDecl)
+			if !ok {
+				return true
+			}
+
+			// We are looking for this route.
+			if funcDecl.Name.Name != route.Handler {
+				return true
+			}
+
+			found, record, errF := parseWebAPI(fset, file, funcDecl, route)
+			if found {
+				records = append(records, record)
+				return true
+			}
+
+			if errF != nil {
+				err = fmt.Errorf("parseWebAPI: %w", err)
+				return false
+			}
+
+			return true
+		}
+
+		ast.Inspect(file, f)
+	}
+
+	return records, nil
 }
 
 // =============================================================================
 
-func parseWebAPI(fset *token.FileSet, file *ast.File, funcDecl *ast.FuncDecl, group string) (bool, Record, error) {
+func parseWebAPI(fset *token.FileSet, file *ast.File, funcDecl *ast.FuncDecl, route Route) (bool, Record, error) {
 
 	// Capture the line number for this function declaration.
 	line := fset.Position(funcDecl.Pos()).Line
@@ -73,64 +199,42 @@ func parseWebAPI(fset *token.FileSet, file *ast.File, funcDecl *ast.FuncDecl, gr
 		return false, Record{}, nil
 	}
 
-	// Capture the last comment.
-	comment := cGroup.List[len(cGroup.List)-1].Text
-
-	// Does this comment have the webapi tag?
-	const tag = "webapi"
-	idx := strings.Index(comment, tag)
-	if idx == -1 {
-		return false, Record{}, nil
-	}
-
 	// Capture any remaining comments that are not
 	// part of the webapi tag.
 	var comments []string
-	for _, com := range cGroup.List[:len(cGroup.List)-1] {
+	for _, com := range cGroup.List {
 		comments = append(comments, com.Text[3:])
 	}
 
 	// Create a webAPIRecord and assign what we have now.
 	record := Record{
-		Group:    group,
+		Group:    route.Group,
+		Method:   route.Method,
+		Route:    route.URL,
 		Comments: comments,
 	}
 
-	// Split this comment by the space delimiter.
-	fields := strings.Split(comment[idx:], " ")
-
-	// Match the key to the field in the webAPIRecord.
-	for _, field := range fields {
-		kv := strings.Split(field, "=")
-
-		switch kv[0] {
-		case "method":
-			record.Method = kv[1]
-
-		case "route":
-			record.Route = kv[1]
-
-		case "errdoc":
-			errorDoc, err := findAppModel(group, kv[1])
-			if err != nil {
-				return false, Record{}, fmt.Errorf("findAppModel error: %w", err)
-			}
-			record.ErrorDoc = toModel(errorDoc, false)
-
-		case "status":
-			record.Status = kv[1]
-		}
+	// Find the error document.
+	errorDoc, err := findAppModel(route.Group, route.ErrorDoc)
+	if err != nil {
+		return false, Record{}, fmt.Errorf("findAppModel error: %w", err)
 	}
+	record.ErrorDoc = toModel(errorDoc, false)
 
+	// Find the status.
+	record.Status = "TBD"
+
+	// Fing the input document.
 	modelName := findInputDocument(funcDecl.Body)
 	if modelName != "" {
-		inputDoc, err := findAppModel(group, modelName)
+		inputDoc, err := findAppModel(route.Group, modelName)
 		if err != nil {
 			return false, Record{}, fmt.Errorf("findAppModel input: %w", err)
 		}
 		record.InputDoc = toModel(inputDoc, false)
 	}
 
+	// Find the output document.
 	funcName := findOutputDocument(funcDecl.Body)
 	if funcName != "" {
 		parts := strings.Split(funcName, ".")
@@ -140,17 +244,17 @@ func parseWebAPI(fset *token.FileSet, file *ast.File, funcDecl *ast.FuncDecl, gr
 			funcName, _ = strings.CutPrefix(parts[1], "NewResponse[")
 			funcName, _ = strings.CutSuffix(funcName, "]")
 
-			concreteModelName, _, err := findAppFunctionFromModel(group, funcName)
+			concreteModelName, _, err := findAppFunctionFromModel(route.Group, funcName)
 			if err != nil {
 				return false, Record{}, fmt.Errorf("findAppModel output: %w", err)
 			}
 
-			concreteModel, err := findAppModel(group, concreteModelName)
+			concreteModel, err := findAppModel(route.Group, concreteModelName)
 			if err != nil {
 				return false, Record{}, fmt.Errorf("findAppModel output: %w", err)
 			}
 
-			outputDoc, err := findAppModel(group, "Response")
+			outputDoc, err := findAppModel(route.Group, "Response")
 			if err != nil {
 				return false, Record{}, fmt.Errorf("findAppModel output: %w", err)
 			}
@@ -160,12 +264,12 @@ func parseWebAPI(fset *token.FileSet, file *ast.File, funcDecl *ast.FuncDecl, gr
 			record.OutputDoc = toModel(outputDoc, false)
 
 		default:
-			modelName, slice, err := findAppFunctionFromModel(group, funcName)
+			modelName, slice, err := findAppFunctionFromModel(route.Group, funcName)
 			if err != nil {
 				return false, Record{}, fmt.Errorf("findAppModel output: %w", err)
 			}
 
-			outputDoc, err := findAppModel(group, modelName)
+			outputDoc, err := findAppModel(route.Group, modelName)
 			if err != nil {
 				return false, Record{}, fmt.Errorf("findAppModel output: %w", err)
 			}
@@ -174,7 +278,8 @@ func parseWebAPI(fset *token.FileSet, file *ast.File, funcDecl *ast.FuncDecl, gr
 		}
 	}
 
-	queryVars, err := findQueryVars(funcDecl.Body, group)
+	// Find the query vars.
+	queryVars, err := findQueryVars(funcDecl.Body, route.Group)
 	if err != nil {
 		return false, Record{}, fmt.Errorf("findPageFilterOrder: %w", err)
 	}

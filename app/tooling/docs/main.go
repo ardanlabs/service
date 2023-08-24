@@ -11,7 +11,7 @@ import (
 	"github.com/ardanlabs/service/app/tooling/docs/webapi"
 )
 
-var output = flag.String("out", "html", "json, text, html")
+var output = flag.String("out", "text", "json, text, html")
 
 func main() {
 	flag.Parse()
@@ -22,9 +22,14 @@ func main() {
 }
 
 func run() error {
-	records, err := webapi.Records("productgrp")
+	routes, err := webapi.Routes("v1")
 	if err != nil {
-		return fmt.Errorf("findWebAPIRecords, %w", err)
+		return fmt.Errorf("webapi.Routes, %w", err)
+	}
+
+	records, err := webapi.Records(routes)
+	if err != nil {
+		return fmt.Errorf("webapi.Records, %w", err)
 	}
 
 	switch *output {
