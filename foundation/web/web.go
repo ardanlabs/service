@@ -62,11 +62,18 @@ func (a *App) SignalShutdown() {
 // EnableCORS enables CORS preflight requests to work in the middleware. It
 // prevents the MethodNotAllowedHandler from being called. This must be enabled
 // for the CORS middleware to work.
-func (a *App) EnableCORS() {
-	h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-		return nil
+func (a *App) EnableCORS(cm Middleware) {
+	a.mw = append(a.mw, cm)
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+		return Respond(ctx, w, "OK", http.StatusOK)
 	}
-	a.Handle(http.MethodOptions, "", "/*", h)
+	handler = wrapMiddleware(a.mw, handler)
+
+	a.mux.OptionsHandler = func(w http.ResponseWriter, r *http.Request, params map[string]string) {
+		// No-op handler stops the MethodNotAllowedHandler from being called.
+		handler(r.Context(), w, r)
+	}
 }
 
 // ServeHTTP implements the http.Handler interface. It's the entry point for
