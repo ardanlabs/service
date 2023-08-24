@@ -71,7 +71,17 @@ func (a *App) EnableCORS(mw Middleware) {
 	handler = wrapMiddleware(a.mw, handler)
 
 	a.mux.OptionsHandler = func(w http.ResponseWriter, r *http.Request, params map[string]string) {
-		handler(r.Context(), w, r)
+		ctx, span := a.startSpan(w, r)
+		defer span.End()
+
+		v := Values{
+			TraceID: span.SpanContext().TraceID().String(),
+			Tracer:  a.tracer,
+			Now:     time.Now().UTC(),
+		}
+		ctx = SetValues(ctx, &v)
+
+		handler(ctx, w, r)
 	}
 }
 
