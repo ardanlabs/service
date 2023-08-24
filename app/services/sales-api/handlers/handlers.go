@@ -43,31 +43,17 @@ func APIMux(cfg APIMuxConfig, options ...func(opts *Options)) http.Handler {
 		option(&opts)
 	}
 
-	var app *web.App
+	app := web.NewApp(
+		cfg.Shutdown,
+		cfg.Tracer,
+		mid.Logger(cfg.Log),
+		mid.Errors(cfg.Log),
+		mid.Metrics(),
+		mid.Panics(),
+	)
 
 	if opts.corsOrigin != "" {
-		app = web.NewApp(
-			cfg.Shutdown,
-			cfg.Tracer,
-			mid.Logger(cfg.Log),
-			mid.Errors(cfg.Log),
-			mid.Metrics(),
-			mid.Cors(opts.corsOrigin),
-			mid.Panics(),
-		)
-
-		app.EnableCORS()
-	}
-
-	if app == nil {
-		app = web.NewApp(
-			cfg.Shutdown,
-			cfg.Tracer,
-			mid.Logger(cfg.Log),
-			mid.Errors(cfg.Log),
-			mid.Metrics(),
-			mid.Panics(),
-		)
+		app.EnableCORS(mid.Cors(opts.corsOrigin))
 	}
 
 	v1.Routes(app, v1.Config{
