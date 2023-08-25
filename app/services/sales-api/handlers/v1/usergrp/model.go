@@ -41,6 +41,15 @@ func toAppUser(usr user.User) AppUser {
 	}
 }
 
+func toAppUsers(users []user.User) []AppUser {
+	items := make([]AppUser, len(users))
+	for i, usr := range users {
+		items[i] = toAppUser(usr)
+	}
+
+	return items
+}
+
 // =============================================================================
 
 // AppNewUser contains information needed to create a new user.
@@ -142,4 +151,16 @@ func (app AppUpdateUser) Validate() error {
 		return fmt.Errorf("validate: %w", err)
 	}
 	return nil
+}
+
+// =============================================================================
+
+type token struct {
+	Token string `json:"token"`
+}
+
+func toToken(v string) token {
+	return token{
+		Token: v,
+	}
 }

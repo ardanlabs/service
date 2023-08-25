@@ -1,5 +1,14 @@
 package webapi
 
+type Route struct {
+	Method   string
+	URL      string
+	Handler  string
+	Group    string
+	ErrorDoc string
+	File     string
+}
+
 type Field struct {
 	Name     string
 	Type     any

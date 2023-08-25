@@ -22,9 +22,14 @@ func main() {
 }
 
 func run() error {
-	records, err := webapi.Records("productgrp")
+	routes, err := webapi.Routes("v1")
 	if err != nil {
-		return fmt.Errorf("findWebAPIRecords, %w", err)
+		return fmt.Errorf("webapi.Routes, %w", err)
+	}
+
+	records, err := webapi.Records(routes)
+	if err != nil {
+		return fmt.Errorf("webapi.Records, %w", err)
 	}
 
 	switch *output {

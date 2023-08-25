@@ -16,6 +16,10 @@ func toModel(fields []Field, slice bool) any {
 		tag := field.Tag
 		typ := field.Type
 
+		if tag == "-" {
+			continue
+		}
+
 		if field.Optional {
 			tag = "*" + tag
 		}
