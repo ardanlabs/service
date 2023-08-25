@@ -18,3 +18,12 @@ func toAppUserSummary(smm usersummary.Summary) AppUserSummary {
 		TotalCost:  smm.TotalCost,
 	}
 }
+
+func toAppUsersSummary(smms []usersummary.Summary) []AppUserSummary {
+	items := make([]AppUserSummary, len(smms))
+	for i, smm := range smms {
+		items[i] = toAppUserSummary(smm)
+	}
+
+	return items
+}

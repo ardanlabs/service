@@ -7,8 +7,20 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"net/http"
 	"strings"
 )
+
+var methods = map[string]string{
+	"MethodDelete":  http.MethodDelete,
+	"MethodGet":     http.MethodGet,
+	"MethodHead":    http.MethodHead,
+	"MethodOptions": http.MethodOptions,
+	"MethodPatch":   http.MethodPatch,
+	"MethodPost":    http.MethodPost,
+	"MethodPut":     http.MethodPut,
+	"MethodTrace":   http.MethodTrace,
+}
 
 func Routes(version string) ([]Route, error) {
 	fset := token.NewFileSet()
@@ -113,7 +125,7 @@ func Routes(version string) ([]Route, error) {
 			}
 
 			routes = append(routes, Route{
-				Method:   method.Sel.Name,
+				Method:   methods[method.Sel.Name],
 				URL:      url.Value,
 				Handler:  handler.Sel.Name,
 				Group:    group,
@@ -221,9 +233,6 @@ func parseWebAPI(fset *token.FileSet, file *ast.File, funcDecl *ast.FuncDecl, ro
 	}
 	record.ErrorDoc = toModel(errorDoc, false)
 
-	// Find the status.
-	record.Status = "TBD"
-
 	// Fing the input document.
 	modelName := findInputDocument(funcDecl.Body)
 	if modelName != "" {
@@ -235,7 +244,9 @@ func parseWebAPI(fset *token.FileSet, file *ast.File, funcDecl *ast.FuncDecl, ro
 	}
 
 	// Find the output document.
-	funcName := findOutputDocument(funcDecl.Body)
+	funcName, status := findOutputDocument(funcDecl.Body)
+	record.Status = status
+
 	if funcName != "" {
 		parts := strings.Split(funcName, ".")
 
@@ -292,7 +303,7 @@ func parseWebAPI(fset *token.FileSet, file *ast.File, funcDecl *ast.FuncDecl, ro
 
 // This function looks for the web.Respond call at the end of each handler.
 // Once found, it returns the name of the type that is used in the response.
-func findOutputDocument(body *ast.BlockStmt) string {
+func findOutputDocument(body *ast.BlockStmt) (funcName string, status string) {
 
 	// Walk through the body of the function looking for the web.Decode
 	// function call.
@@ -318,6 +329,12 @@ func findOutputDocument(body *ast.BlockStmt) string {
 		// We are looking for the web.Respond call.
 		if se.Sel.Name != "Respond" {
 			continue
+		}
+
+		// Now we need to find the forth parameter which should
+		// be the status.
+		if stat, ok := ce.Args[3].(*ast.SelectorExpr); ok {
+			status = stat.Sel.Name
 		}
 
 		// Now we need to find the third parameter which should
@@ -351,13 +368,13 @@ func findOutputDocument(body *ast.BlockStmt) string {
 		// This is the actual document that is being sent back with
 		// the idt.Name type as the generic type.
 		if isNewResponse {
-			return fmt.Sprintf("paging.NewResponse[%s]", idt.Name)
+			return fmt.Sprintf("paging.NewResponse[%s]", idt.Name), status
 		}
 
-		return idt.Name
+		return idt.Name, status
 	}
 
-	return ""
+	return "", status
 }
 
 func findInputDocument(body *ast.BlockStmt) string {

@@ -45,15 +45,10 @@ func (h *Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Req
 		return fmt.Errorf("query: %w", err)
 	}
 
-	items := make([]AppUserSummary, len(smms))
-	for i, smm := range smms {
-		items[i] = toAppUserSummary(smm)
-	}
-
 	total, err := h.summary.Count(ctx, filter)
 	if err != nil {
 		return fmt.Errorf("count: %w", err)
 	}
 
-	return web.Respond(ctx, w, paging.NewResponse(items, total, page.Number, page.RowsPerPage), http.StatusOK)
+	return web.Respond(ctx, w, paging.NewResponse(toAppUsersSummary(smms), total, page.Number, page.RowsPerPage), http.StatusOK)
 }

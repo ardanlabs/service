@@ -161,17 +161,12 @@ func (h *Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Req
 		return fmt.Errorf("query: %w", err)
 	}
 
-	items := make([]AppUser, len(users))
-	for i, usr := range users {
-		items[i] = toAppUser(usr)
-	}
-
 	total, err := h.user.Count(ctx, filter)
 	if err != nil {
 		return fmt.Errorf("count: %w", err)
 	}
 
-	return web.Respond(ctx, w, paging.NewResponse(items, total, page.Number, page.RowsPerPage), http.StatusOK)
+	return web.Respond(ctx, w, paging.NewResponse(toAppUsers(users), total, page.Number, page.RowsPerPage), http.StatusOK)
 }
 
 // QueryByID returns a user by its ID.
@@ -230,13 +225,10 @@ func (h *Handlers) Token(ctx context.Context, w http.ResponseWriter, r *http.Req
 		Roles: usr.Roles,
 	}
 
-	var tkn struct {
-		Token string `json:"token"`
-	}
-	tkn.Token, err = h.auth.GenerateToken(kid, claims)
+	token, err := h.auth.GenerateToken(kid, claims)
 	if err != nil {
 		return fmt.Errorf("generatetoken: %w", err)
 	}
 
-	return web.Respond(ctx, w, tkn, http.StatusOK)
+	return web.Respond(ctx, w, toToken(token), http.StatusOK)
 }
