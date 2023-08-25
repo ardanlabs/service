@@ -20,8 +20,19 @@ import (
 //go:embed template.html
 var document embed.FS
 
+var uniqueGroups []string
+
 // Transform converts the collection of webapi records into html.
 func Transform(records []webapi.Record) error {
+	lastGroup := records[0].Group
+	uniqueGroups = append(uniqueGroups, records[0].Group)
+	for _, record := range records {
+		if record.Group != lastGroup {
+			lastGroup = record.Group
+			uniqueGroups = append(uniqueGroups, record.Group)
+		}
+	}
+
 	p := page{
 		records: records,
 	}
@@ -77,6 +88,7 @@ func (p *page) show(w http.ResponseWriter, r *http.Request) {
 		"minus":  minus,
 		"status": status,
 		"json":   toJSON,
+		"groups": groups,
 	}
 
 	tmpl, err := template.New("").Funcs(funcMap).ParseFS(document, "template.html")
@@ -91,6 +103,10 @@ func (p *page) show(w http.ResponseWriter, r *http.Request) {
 }
 
 // =============================================================================
+
+func groups() []string {
+	return uniqueGroups
+}
 
 func minus(a, b int) int {
 	return a - b

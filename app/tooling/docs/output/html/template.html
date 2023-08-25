@@ -187,8 +187,13 @@
     <body>
         <h1>Ultimate Service Documentation</h1>
         <button id="collapseAllButton" class="collapseAllBtn">Collapse All</button>
+        <select name="groups" id="groups">
+{{range groups}}
+            <option value="{{.}}">{{.}}</option>
+{{end}}
+        </select>
 {{range .}}
-        <div class = "method-container {{.Method}}">
+        <div class = "method-container {{.Method}}" group="{{.Group}}">
             <div class="btn-container">
                <button class="collapsible method {{.Method}}">{{.Method}}</button>
                <span class="route">{{.Route}}</span>
