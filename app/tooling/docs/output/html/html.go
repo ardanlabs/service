@@ -23,7 +23,7 @@ var document embed.FS
 var uniqueGroups []string
 
 // Transform converts the collection of webapi records into html.
-func Transform(records []webapi.Record) error {
+func Transform(records []webapi.Record, browser bool) error {
 	lastGroup := records[0].Group
 	uniqueGroups = append(uniqueGroups, records[0].Group)
 	for _, record := range records {
@@ -40,7 +40,7 @@ func Transform(records []webapi.Record) error {
 	http.HandleFunc("/", p.show)
 
 	app := http.Server{
-		Addr:    ":8080",
+		Addr:    "localhost:8080",
 		Handler: http.DefaultServeMux,
 	}
 
@@ -54,7 +54,9 @@ func Transform(records []webapi.Record) error {
 	fmt.Println("Hit <ctrl> C to shutdown")
 	defer fmt.Println("Shutdown complete")
 
-	startBrowser("http://localhost:8080")
+	if browser {
+		startBrowser("http://localhost:8080")
+	}
 
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, os.Interrupt)
