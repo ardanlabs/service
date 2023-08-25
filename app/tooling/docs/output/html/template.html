@@ -36,6 +36,21 @@
          color: white;
          font-weight: bold;
       }
+      #groupSelector {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 4px;
+        background-color: #f95838a8;
+        color: white;
+        font-weight: bold;
+        border: none;
+        cursor: pointer;
+      }
+      #groupSelector option {
+        background-color: #f95838a8;
+        color: white;
+        font-weight: bold;
+      }
       .method.GET {
          background-color: #4caf50;
          color: white;
@@ -181,13 +196,25 @@
                     contentSections.slideDown();
                }
             });
+
+            $("#groupSelector").change(function () {
+               var selectedGroup = $(this).val();
+
+               if (selectedGroup === "All") {
+                     $(".method-container").show();
+               } else {
+                     $(".method-container").hide();
+                     $(".method-container[group='" + selectedGroup + "']").show();
+               }
+            });
          });
      </script>
     </head>
     <body>
         <h1>Ultimate Service Documentation</h1>
         <button id="collapseAllButton" class="collapseAllBtn">Collapse All</button>
-        <select name="groups" id="groups">
+        <select name="groups" id="groupSelector">
+            <option value="All">All</option>
 {{range groups}}
             <option value="{{.}}">{{.}}</option>
 {{end}}
