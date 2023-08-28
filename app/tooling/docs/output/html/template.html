@@ -30,7 +30,9 @@
       }
       #collapseAllButton{
          display: flow;
+         width: 125px;
          padding: 5px 10px;
+         margin-right: 10px;
          border-radius: 4px;
          background-color: #f95838a8; 
          color: white;
@@ -39,6 +41,7 @@
       #groupSelector {
         display: inline-block;
         padding: 5px 10px;
+        margin-left: 10px;
         border-radius: 4px;
         background-color: #f95838a8;
         color: white;
@@ -156,6 +159,7 @@
     </style>
       <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
       <script>
+         var isAnySectionOpen = false;
          $(document).ready(function () {
             $(".comment").click(function () {
                 return false;
@@ -174,28 +178,25 @@
                  var content = $(this).closest(".method-container").find(".content");
                  content.slideToggle();
             });
-            
+
             $("#collapseAllButton").click(function () {
-                var collapsibleButtons = $(".collapsible");
-                var contentSections = $(".content");
-                var isAnySectionOpen = false;
-
-                // Check if any section is open
-                contentSections.each(function () {
-                    if ($(this).is(":visible")) {
-                        isAnySectionOpen = true;
-                        return false; // Exit the loop
-                    }
-               });
-
+               var collapsibleButtons = $(".collapsible");
+               var contentSections = $(".content");
+                
                if (isAnySectionOpen) {
                     collapsibleButtons.removeClass("active");
                     contentSections.slideUp();
+                    isAnySectionOpen = false;
+                    $("#collapseAllButton").text("Expand All");
+                 
                } else {
                     collapsibleButtons.addClass("active");
                     contentSections.slideDown();
+                    isAnySectionOpen = true;
+                    $("#collapseAllButton").text("Collapse All");
                }
             });
+
 
             $("#groupSelector").change(function () {
                var selectedGroup = $(this).val();
@@ -212,7 +213,7 @@
     </head>
     <body>
         <h1>Ultimate Service Documentation</h1>
-        <button id="collapseAllButton" class="collapseAllBtn">Collapse All</button>
+        <button id="collapseAllButton" class="collapseAllBtn">Expand All</button>
         <select name="groups" id="groupSelector">
             <option value="All">All</option>
 {{range groups}}
