@@ -86,5 +86,5 @@ func Routes(app *web.App, cfg Config) {
 
 	usgh := usersummarygrp.New(usmCore)
 
-	app.Handle(http.MethodGet, version, "/users/summary", usgh.Query, authen, ruleAdmin)
+	app.Handle(http.MethodGet, version, "/usersummary", usgh.Query, authen, ruleAdmin)
 }
