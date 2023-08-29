@@ -50,7 +50,7 @@ type Core struct {
 	storer  Storer
 }
 
-func NewCore(log *logger.Logger, usrCore *user.Core, evnCore *event.Core, storer Storer) *Core {
+func NewCore(log *logger.Logger, evnCore *event.Core, usrCore *user.Core, storer Storer) *Core {
 	core := Core{
 		log:     log,
 		usrCore: usrCore,
