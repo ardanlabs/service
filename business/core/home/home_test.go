@@ -22,4 +22,4 @@ func TestMain(m *testing.M) {
 	m.Run()
 }
 
-func Test_Product(t *testing.T) {}
+func Test_Home(t *testing.T) {}
