@@ -16,7 +16,7 @@ func TestGenerateNewHomes(n int, userID uuid.UUID) []NewHome {
 	zipCode := fmt.Sprintf("%05d", idx)
 
 	for i := 0; i < n; i++ {
-		np := NewHome{
+		nh := NewHome{
 			Type: fmt.Sprintf("Type%d", idx),
 			Address: Address{
 				Address1: fmt.Sprintf("Address%d", idx),
@@ -29,7 +29,7 @@ func TestGenerateNewHomes(n int, userID uuid.UUID) []NewHome {
 			UserID: userID,
 		}
 
-		newHmes[i] = np
+		newHmes[i] = nh
 		idx++
 	}
 
