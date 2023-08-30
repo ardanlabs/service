@@ -31,28 +31,27 @@ func NewStore(log *logger.Logger, db *sqlx.DB) *Store {
 
 // ExecuteUnderTransaction constructs a new Store value replacing the sqlx DB
 // value with a sqlx DB value that is currently inside a transaction.
-func (s *Store) ExecuteUnderTransaction(tx transaction.Transaction) (home.Storer, error) {
+func (s Store) ExecuteUnderTransaction(tx transaction.Transaction) (home.Storer, error) {
 	ec, err := db.GetExtContext(tx)
 	if err != nil {
 		return nil, err
 	}
 
-	s = &Store{
+	s = Store{
 		log: s.log,
 		db:  ec,
 	}
 
-	return s, nil
+	return &s, nil
 }
 
 // Create adds a Home to the database. It returns an error if something went wrong
 func (s *Store) Create(ctx context.Context, hme home.Home) error {
 	const q = `
-      INSERT INTO homes
-        (home_id, user_id, type, address_1, address_2, zip_code, city, state, country, da:te_created, date_updated)
-      VALUES
-      (:home_id, :user_id, :type, :address_1, :address_2, :zip_code, :city, :state, :country, :date_created, :date_updated)
-    `
+    INSERT INTO homes
+        (home_id, user_id, type, address_1, address_2, zip_code, city, state, country, date_created, date_updated)
+    VALUES
+        (:home_id, :user_id, :type, :address_1, :address_2, :zip_code, :city, :state, :country, :date_created, :date_updated)`
 
 	if err := db.NamedExecContext(ctx, s.log, s.db, q, toDBHome(hme)); err != nil {
 		return fmt.Errorf("namedexeccontext: %w", err)
@@ -70,10 +69,10 @@ func (s *Store) Delete(ctx context.Context, hme home.Home) error {
 	}
 
 	const q = `
-	DELETE FROM
-		products
+    DELETE FROM
+	    products
 	WHERE
-		product_id = :product_id`
+	  	product_id = :product_id`
 
 	if err := db.NamedExecContext(ctx, s.log, s.db, q, data); err != nil {
 		return fmt.Errorf("namedexeccontext: %w", err)
@@ -90,10 +89,10 @@ func (s *Store) Query(ctx context.Context, filter home.QueryFilter, orderBy orde
 	}
 
 	const q = `
-	SELECT
-		*
+    SELECT
+	    home_id, user_id, type, address_1, address_2, zip_code, city, state, country, date_created, date_update
 	FROM
-		homes`
+	  	homes`
 
 	buf := bytes.NewBufferString(q)
 	s.applyFilter(filter, data, buf)
@@ -106,12 +105,12 @@ func (s *Store) Query(ctx context.Context, filter home.QueryFilter, orderBy orde
 	buf.WriteString(orderByClause)
 	buf.WriteString(" OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY")
 
-	var dbHses []dbHome
-	if err := db.NamedQuerySlice(ctx, s.log, s.db, buf.String(), data, &dbHses); err != nil {
+	var dbHmes []dbHome
+	if err := db.NamedQuerySlice(ctx, s.log, s.db, buf.String(), data, &dbHmes); err != nil {
 		return nil, fmt.Errorf("namedqueryslice: %w", err)
 	}
 
-	hmes := toCoreHomeSlice(dbHses)
+	hmes := toCoreHomeSlice(dbHmes)
 
 	return hmes, nil
 }
@@ -120,19 +119,19 @@ func (s *Store) Query(ctx context.Context, filter home.QueryFilter, orderBy orde
 // invalid or does not reference an existing Product.
 func (s *Store) Update(ctx context.Context, hme home.Home) error {
 	const q = `
-	UPDATE
-		homes
-	SET
-    "address_1"     = :address_1,
-		"address_2"     = :address_2,
-		"zip_code"      = :zip_code,
-		"city"          = :city,
-		"state"         = :state,
-		"country"       = :country,
-    "type"          = :type,
-		"date_updated"  = :date_updated
-	WHERE
-		product_id = :product_id`
+    UPDATE
+        homes
+    SET
+        "address_1"     = :address_1,
+        "address_2"     = :address_2,
+        "zip_code"      = :zip_code,
+        "city"          = :city,
+        "state"         = :state,
+        "country"       = :country,
+        "type"          = :type,
+        "date_updated"  = :date_updated
+    WHERE
+        product_id = :product_id`
 
 	if err := db.NamedExecContext(ctx, s.log, s.db, q, toDBHome(hme)); err != nil {
 		return fmt.Errorf("namedexeccontext: %w", err)
@@ -146,10 +145,10 @@ func (s *Store) Count(ctx context.Context, filter home.QueryFilter) (int, error)
 	data := map[string]interface{}{}
 
 	const q = `
-	SELECT
-		count(1)
-	FROM
-		homes`
+    SELECT
+        count(1)
+    FROM
+        homes`
 
 	buf := bytes.NewBufferString(q)
 	s.applyFilter(filter, data, buf)
@@ -173,12 +172,12 @@ func (s *Store) QueryByID(ctx context.Context, homeID uuid.UUID) (home.Home, err
 	}
 
 	const q = `
-	SELECT
-		*
-	FROM
-		homes
-	WHERE
-		home_id = :home_id`
+    SELECT
+	  	home_id, user_id, type, address_1, address_2, zip_code, city, state, country, date_created, date_update
+    FROM
+        homes
+    WHERE
+        home_id = :home_id`
 
 	var dbHme dbHome
 	if err := db.NamedQueryStruct(ctx, s.log, s.db, q, data, &dbHme); err != nil {
@@ -201,7 +200,7 @@ func (s *Store) QueryByUserID(ctx context.Context, userID uuid.UUID) ([]home.Hom
 
 	const q = `
 	SELECT
-		*
+	    home_id, user_id, type, address_1, address_2, zip_code, city, state, country, date_created, date_update
 	FROM
 		homes
 	WHERE

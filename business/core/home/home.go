@@ -1,3 +1,4 @@
+// Package home provides a business access to home data in the system.
 package home
 
 import (
@@ -84,8 +85,7 @@ func (c *Core) ExecuteUnderTransaction(tx transaction.Transaction) (*Core, error
 	return c, nil
 }
 
-// Create adds a Home to the database. It returns the created Home with
-// fields like ID and DateCreated populated
+// Create adds a new Home to the system leveraging the storer layer.
 func (c *Core) Create(ctx context.Context, nh NewHome) (Home, error) {
 	usr, err := c.usrCore.QueryByID(ctx, nh.UserID)
 	if err != nil {

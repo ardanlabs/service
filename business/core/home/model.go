@@ -6,16 +6,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// Home represents an individual home.
-type Home struct {
-	ID          uuid.UUID
-	Address     Address
-	Type        string
-	UserID      uuid.UUID
-	DateCreated time.Time
-	DateUpdated time.Time
-}
-
 // Address represents an individual address.
 type Address struct {
 	Address1 string
@@ -24,6 +14,16 @@ type Address struct {
 	City     string
 	State    string
 	Country  string
+}
+
+// Home represents an individual home.
+type Home struct {
+	ID          uuid.UUID
+	Address     Address
+	Type        string
+	UserID      uuid.UUID
+	DateCreated time.Time
+	DateUpdated time.Time
 }
 
 // NewHome is what we require from clients when adding a Home.

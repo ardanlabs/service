@@ -32,18 +32,18 @@ func NewStore(log *logger.Logger, db *sqlx.DB) *Store {
 
 // ExecuteUnderTransaction constructs a new Store value replacing the sqlx DB
 // value with a sqlx DB value that is currently inside a transaction.
-func (s *Store) ExecuteUnderTransaction(tx transaction.Transaction) (product.Storer, error) {
+func (s Store) ExecuteUnderTransaction(tx transaction.Transaction) (product.Storer, error) {
 	ec, err := db.GetExtContext(tx)
 	if err != nil {
 		return nil, err
 	}
 
-	s = &Store{
+	s = Store{
 		log: s.log,
 		db:  ec,
 	}
 
-	return s, nil
+	return &s, nil
 }
 
 // Create adds a Product to the database. It returns the created Product with
@@ -113,7 +113,7 @@ func (s *Store) Query(ctx context.Context, filter product.QueryFilter, orderBy o
 
 	const q = `
 	SELECT
-		*
+	    product_id, user_id, name, cost, quantity, date_created, date_updated
 	FROM
 		products`
 
@@ -171,7 +171,7 @@ func (s *Store) QueryByID(ctx context.Context, productID uuid.UUID) (product.Pro
 
 	const q = `
 	SELECT
-		*
+	    product_id, user_id, name, cost, quantity, date_created, date_updated
 	FROM
 		products
 	WHERE
@@ -198,7 +198,7 @@ func (s *Store) QueryByUserID(ctx context.Context, userID uuid.UUID) ([]product.
 
 	const q = `
 	SELECT
-		*
+	    product_id, user_id, name, cost, quantity, date_created, date_updated
 	FROM
 		products
 	WHERE
