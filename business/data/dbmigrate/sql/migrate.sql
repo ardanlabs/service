@@ -18,9 +18,9 @@ CREATE TABLE users (
 -- Description: Create table products
 CREATE TABLE products (
 	product_id   UUID           NOT NULL,
-    user_id      UUID           NOT NULL,
+       user_id      UUID           NOT NULL,
 	name         TEXT           NOT NULL,
-	cost         NUMERIC(10, 2) NOT NULL,
+    	cost         NUMERIC(10, 2) NOT NULL,
 	quantity     INT            NOT NULL,
 	date_created TIMESTAMP      NOT NULL,
 	date_updated TIMESTAMP      NOT NULL,
@@ -58,6 +58,6 @@ CREATE TABLE homes (
     date_created  TIMESTAMP  NOT NULL,
     date_updated  TIMESTAMP  NOT NULL,
 
-    PRIMARY_KEY (product_id),
+    PRIMARY_KEY (home_id),
     FOREIGN_KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
