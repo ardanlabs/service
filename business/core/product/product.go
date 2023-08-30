@@ -58,16 +58,16 @@ type Core struct {
 
 // NewCore constructs a core for product api access.
 func NewCore(log *logger.Logger, evnCore *event.Core, usrCore UserCore, storer Storer) *Core {
-	core := Core{
+	c := Core{
 		log:     log,
 		evnCore: evnCore,
 		usrCore: usrCore,
 		storer:  storer,
 	}
 
-	core.registerEventHandlers(evnCore)
+	c.registerEventHandlers(evnCore)
 
-	return &core
+	return &c
 }
 
 // ExecuteUnderTransaction constructs a new Core value that will use the
@@ -93,8 +93,7 @@ func (c *Core) ExecuteUnderTransaction(tx transaction.Transaction) (*Core, error
 	return c, nil
 }
 
-// Create adds a Product to the database. It returns the created Product with
-// fields like ID and DateCreated populated.
+// Create adds a new product to the system.
 func (c *Core) Create(ctx context.Context, np NewProduct) (Product, error) {
 	usr, err := c.usrCore.QueryByID(ctx, np.UserID)
 	if err != nil {
@@ -128,18 +127,20 @@ func (c *Core) Create(ctx context.Context, np NewProduct) (Product, error) {
 	return prd, nil
 }
 
-// Update modifies data about a Product. It will error if the specified ID is
-// invalid or does not reference an existing Product.
+// Update modifies information about a product.
 func (c *Core) Update(ctx context.Context, prd Product, up UpdateProduct) (Product, error) {
 	if up.Name != nil {
 		prd.Name = *up.Name
 	}
+
 	if up.Cost != nil {
 		prd.Cost = *up.Cost
 	}
+
 	if up.Quantity != nil {
 		prd.Quantity = *up.Quantity
 	}
+
 	prd.DateUpdated = time.Now()
 
 	if err := c.storer.Update(ctx, prd); err != nil {
@@ -149,7 +150,7 @@ func (c *Core) Update(ctx context.Context, prd Product, up UpdateProduct) (Produ
 	return prd, nil
 }
 
-// Delete removes the product identified by a given ID.
+// Delete removes the specified product.
 func (c *Core) Delete(ctx context.Context, prd Product) error {
 	if err := c.storer.Delete(ctx, prd); err != nil {
 		return fmt.Errorf("delete: %w", err)
@@ -158,7 +159,7 @@ func (c *Core) Delete(ctx context.Context, prd Product) error {
 	return nil
 }
 
-// Query gets all Products from the database.
+// Query retrieves a list of existing products.
 func (c *Core) Query(ctx context.Context, filter QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]Product, error) {
 	prds, err := c.storer.Query(ctx, filter, orderBy, pageNumber, rowsPerPage)
 	if err != nil {
@@ -168,12 +169,12 @@ func (c *Core) Query(ctx context.Context, filter QueryFilter, orderBy order.By, 
 	return prds, nil
 }
 
-// Count returns the total number of products in the store.
+// Count returns the total number of products.
 func (c *Core) Count(ctx context.Context, filter QueryFilter) (int, error) {
 	return c.storer.Count(ctx, filter)
 }
 
-// QueryByID finds the product identified by a given ID.
+// QueryByID finds the product by the specified ID.
 func (c *Core) QueryByID(ctx context.Context, productID uuid.UUID) (Product, error) {
 	prd, err := c.storer.QueryByID(ctx, productID)
 	if err != nil {
@@ -183,7 +184,7 @@ func (c *Core) QueryByID(ctx context.Context, productID uuid.UUID) (Product, err
 	return prd, nil
 }
 
-// QueryByUserID finds the products identified by a given User ID.
+// QueryByUserID finds the products by a specified User ID.
 func (c *Core) QueryByUserID(ctx context.Context, userID uuid.UUID) ([]Product, error) {
 	prds, err := c.storer.QueryByUserID(ctx, userID)
 	if err != nil {

@@ -52,14 +52,12 @@ type Core struct {
 }
 
 func NewCore(log *logger.Logger, evnCore *event.Core, usrCore *user.Core, storer Storer) *Core {
-	core := Core{
+	return &Core{
 		log:     log,
 		usrCore: usrCore,
 		evnCore: evnCore,
 		storer:  storer,
 	}
-
-	return &core
 }
 
 // ExecuteUnderTransaction constructs a new Core value that will use the
@@ -85,7 +83,7 @@ func (c *Core) ExecuteUnderTransaction(tx transaction.Transaction) (*Core, error
 	return c, nil
 }
 
-// Create adds a new Home to the system leveraging the storer layer.
+// Create adds a new home to the system.
 func (c *Core) Create(ctx context.Context, nh NewHome) (Home, error) {
 	usr, err := c.usrCore.QueryByID(ctx, nh.UserID)
 	if err != nil {
@@ -121,8 +119,7 @@ func (c *Core) Create(ctx context.Context, nh NewHome) (Home, error) {
 	return hme, nil
 }
 
-// Update modifies data about a Home. It will error if the specified ID is
-// invalid or does not reference an existing Home.
+// Update modifies information about a home.
 func (c *Core) Update(ctx context.Context, hme Home, uh UpdateHome) (Home, error) {
 	if uh.Type != nil {
 		hme.Type = *uh.Type
@@ -132,18 +129,23 @@ func (c *Core) Update(ctx context.Context, hme Home, uh UpdateHome) (Home, error
 		if uh.Address.Address1 != nil {
 			hme.Address.Address1 = *uh.Address.Address1
 		}
+
 		if uh.Address.Address2 != nil {
 			hme.Address.Address2 = *uh.Address.Address2
 		}
+
 		if uh.Address.ZipCode != nil {
 			hme.Address.ZipCode = *uh.Address.ZipCode
 		}
+
 		if uh.Address.City != nil {
 			hme.Address.City = *uh.Address.City
 		}
+
 		if uh.Address.State != nil {
 			hme.Address.State = *uh.Address.State
 		}
+
 		if uh.Address.Country != nil {
 			hme.Address.Country = *uh.Address.Country
 		}
@@ -158,7 +160,7 @@ func (c *Core) Update(ctx context.Context, hme Home, uh UpdateHome) (Home, error
 	return hme, nil
 }
 
-// Delete removes the home identified by a given ID.
+// Delete removes the specified home.
 func (c *Core) Delete(ctx context.Context, hme Home) error {
 	if err := c.storer.Delete(ctx, hme); err != nil {
 		return fmt.Errorf("delete: %w", err)
@@ -167,22 +169,22 @@ func (c *Core) Delete(ctx context.Context, hme Home) error {
 	return nil
 }
 
-// Query retrieves a list of existing users from the database.
+// Query retrieves a list of existing homes.
 func (c *Core) Query(ctx context.Context, filter QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]Home, error) {
-	homes, err := c.storer.Query(ctx, filter, orderBy, pageNumber, rowsPerPage)
+	hmes, err := c.storer.Query(ctx, filter, orderBy, pageNumber, rowsPerPage)
 	if err != nil {
 		return nil, fmt.Errorf("query: %w", err)
 	}
 
-	return homes, nil
+	return hmes, nil
 }
 
-// Count returns the total number of users in the store.
+// Count returns the total number of users.
 func (c *Core) Count(ctx context.Context, filter QueryFilter) (int, error) {
 	return c.storer.Count(ctx, filter)
 }
 
-// QueryByID finds the home identified by a given ID.
+// QueryByID finds the home by the specified ID.
 func (c *Core) QueryByID(ctx context.Context, homeID uuid.UUID) (Home, error) {
 	hme, err := c.storer.QueryByID(ctx, homeID)
 	if err != nil {
@@ -192,7 +194,7 @@ func (c *Core) QueryByID(ctx context.Context, homeID uuid.UUID) (Home, error) {
 	return hme, nil
 }
 
-// QueryByUserID finds the products identified by a given User ID.
+// QueryByUserID finds the homes by a specified User ID.
 func (c *Core) QueryByUserID(ctx context.Context, userID uuid.UUID) ([]Home, error) {
 	hmes, err := c.storer.QueryByUserID(ctx, userID)
 	if err != nil {

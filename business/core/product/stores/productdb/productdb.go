@@ -32,18 +32,18 @@ func NewStore(log *logger.Logger, db *sqlx.DB) *Store {
 
 // ExecuteUnderTransaction constructs a new Store value replacing the sqlx DB
 // value with a sqlx DB value that is currently inside a transaction.
-func (s Store) ExecuteUnderTransaction(tx transaction.Transaction) (product.Storer, error) {
+func (s *Store) ExecuteUnderTransaction(tx transaction.Transaction) (product.Storer, error) {
 	ec, err := db.GetExtContext(tx)
 	if err != nil {
 		return nil, err
 	}
 
-	s = Store{
+	s = &Store{
 		log: s.log,
 		db:  ec,
 	}
 
-	return &s, nil
+	return s, nil
 }
 
 // Create adds a Product to the database. It returns the created Product with
