@@ -179,7 +179,7 @@ func (c *Core) Query(ctx context.Context, filter QueryFilter, orderBy order.By, 
 	return hmes, nil
 }
 
-// Count returns the total number of users.
+// Count returns the total number of homes.
 func (c *Core) Count(ctx context.Context, filter QueryFilter) (int, error) {
 	return c.storer.Count(ctx, filter)
 }
