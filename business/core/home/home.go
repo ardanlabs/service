@@ -25,7 +25,7 @@ var (
 // retrieve data
 type Storer interface {
 	ExecuteUnderTransaction(tx transaction.Transaction) (Storer, error)
-	Create(ctx context.Context, nh Home) error
+	Create(ctx context.Context, hme Home) error
 	Update(ctx context.Context, hme Home) error
 	Delete(ctx context.Context, hme Home) error
 	Query(ctx context.Context, filter QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]Home, error)
