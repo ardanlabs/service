@@ -94,7 +94,7 @@ func Test_UserSummary(t *testing.T) {
 
 func (ust *UserSummaryTests) query(usrs []user.User) func(t *testing.T) {
 	return func(t *testing.T) {
-		url := "/v1/users/summary"
+		url := "/v1/usersummary"
 
 		r := httptest.NewRequest(http.MethodGet, url, nil)
 		w := httptest.NewRecorder()

@@ -12,6 +12,7 @@ import (
 )
 
 var output = flag.String("out", "html", "json, text, html")
+var browser = flag.Bool("browser", false, "start the browser automagically")
 
 func main() {
 	flag.Parse()
@@ -40,7 +41,7 @@ func run() error {
 		err = json.Transform(records)
 
 	case "html":
-		err = html.Transform(records)
+		err = html.Transform(records, *browser)
 	}
 
 	if err != nil {
