@@ -63,16 +63,16 @@ func (s *Store) Create(ctx context.Context, hme home.Home) error {
 // Delete removes the Home identified by a given ID.
 func (s *Store) Delete(ctx context.Context, hme home.Home) error {
 	data := struct {
-		ID string `db:"product_id"`
+		ID string `db:"home_id"`
 	}{
 		ID: hme.ID.String(),
 	}
 
 	const q = `
     DELETE FROM
-	    products
+	    homes
 	WHERE
-	  	product_id = :product_id`
+	  	home_id = :home_id`
 
 	if err := db.NamedExecContext(ctx, s.log, s.db, q, data); err != nil {
 		return fmt.Errorf("namedexeccontext: %w", err)
@@ -90,7 +90,7 @@ func (s *Store) Query(ctx context.Context, filter home.QueryFilter, orderBy orde
 
 	const q = `
     SELECT
-	    home_id, user_id, type, address_1, address_2, zip_code, city, state, country, date_created, date_update
+	    home_id, user_id, type, address_1, address_2, zip_code, city, state, country, date_created, date_updated
 	FROM
 	  	homes`
 
@@ -131,7 +131,7 @@ func (s *Store) Update(ctx context.Context, hme home.Home) error {
         "type"          = :type,
         "date_updated"  = :date_updated
     WHERE
-        product_id = :product_id`
+        home_id = :home_id`
 
 	if err := db.NamedExecContext(ctx, s.log, s.db, q, toDBHome(hme)); err != nil {
 		return fmt.Errorf("namedexeccontext: %w", err)
@@ -173,7 +173,7 @@ func (s *Store) QueryByID(ctx context.Context, homeID uuid.UUID) (home.Home, err
 
 	const q = `
     SELECT
-	  	home_id, user_id, type, address_1, address_2, zip_code, city, state, country, date_created, date_update
+	  	home_id, user_id, type, address_1, address_2, zip_code, city, state, country, date_created, date_updated
     FROM
         homes
     WHERE
@@ -200,7 +200,7 @@ func (s *Store) QueryByUserID(ctx context.Context, userID uuid.UUID) ([]home.Hom
 
 	const q = `
 	SELECT
-	    home_id, user_id, type, address_1, address_2, zip_code, city, state, country, date_created, date_update
+	    home_id, user_id, type, address_1, address_2, zip_code, city, state, country, date_created, date_updated
 	FROM
 		homes
 	WHERE
