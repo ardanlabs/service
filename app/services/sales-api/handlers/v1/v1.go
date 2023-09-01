@@ -6,11 +6,14 @@ import (
 	"net/http"
 
 	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/checkgrp"
+	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/homegrp"
 	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/productgrp"
 	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/trangrp"
 	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/usergrp"
 	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/usersummarygrp"
 	"github.com/ardanlabs/service/business/core/event"
+	"github.com/ardanlabs/service/business/core/home"
+	"github.com/ardanlabs/service/business/core/home/stores/homedb"
 	"github.com/ardanlabs/service/business/core/product"
 	"github.com/ardanlabs/service/business/core/product/stores/productdb"
 	"github.com/ardanlabs/service/business/core/user"
@@ -42,6 +45,7 @@ func Routes(app *web.App, cfg Config) {
 	usrCore := user.NewCore(cfg.Log, envCore, usercache.NewStore(cfg.Log, userdb.NewStore(cfg.Log, cfg.DB)))
 	prdCore := product.NewCore(cfg.Log, envCore, usrCore, productdb.NewStore(cfg.Log, cfg.DB))
 	usmCore := usersummary.NewCore(usersummarydb.NewStore(cfg.Log, cfg.DB))
+	hmeCore := home.NewCore(cfg.Log, envCore, usrCore, homedb.NewStore(cfg.Log, cfg.DB))
 
 	authen := mid.Authenticate(cfg.Auth)
 	ruleAdmin := mid.Authorize(cfg.Auth, auth.RuleAdminOnly)
@@ -81,6 +85,16 @@ func Routes(app *web.App, cfg Config) {
 	tgh := trangrp.New(usrCore, prdCore)
 
 	app.Handle(http.MethodPost, version, "/tranexample", tgh.Create, authen, tran)
+
+	// -------------------------------------------------------------------------
+
+	hgh := homegrp.New(hmeCore)
+
+	app.Handle(http.MethodGet, version, "/homes", hgh.Query, authen)
+	app.Handle(http.MethodGet, version, "/homes/:home_id", hgh.QueryByID, authen)
+	app.Handle(http.MethodPost, version, "/homes", hgh.Create, authen)
+	app.Handle(http.MethodPut, version, "/homes/:home_id", hgh.Update, authen, tran)
+	app.Handle(http.MethodDelete, version, "/homes/:home_id", hgh.Delete, authen, tran)
 
 	// -------------------------------------------------------------------------
 
