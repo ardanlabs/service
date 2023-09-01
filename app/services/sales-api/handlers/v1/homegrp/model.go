@@ -70,6 +70,7 @@ func toCoreNewHome(app AppNewHome) (home.NewHome, error) {
 	if err != nil {
 		return home.NewHome{}, fmt.Errorf("passing userid: %w", err)
 	}
+
 	hme := home.NewHome{
 		UserID: userID,
 		Type:   app.Type,
@@ -91,6 +92,7 @@ func (app AppNewHome) validate() error {
 	if err := validate.Check(app); err != nil {
 		return err
 	}
+
 	return nil
 }
 

@@ -1,18 +1,11 @@
 package tests
 
 import (
-	"context"
-	"fmt"
 	"net/http"
-	"os"
 	"runtime/debug"
 	"testing"
 
-	"github.com/ardanlabs/service/app/services/sales-api/handlers"
-	"github.com/ardanlabs/service/business/core/home"
-	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/data/dbtest"
-	"github.com/ardanlabs/service/business/data/order"
 )
 
 // HomeTests holds methods for each home subtest. This type allows passing
@@ -37,54 +30,54 @@ func Test_Homes(t *testing.T) {
 		test.Teardown()
 	}()
 
-	api := test.CoreAPIs
+	// api := test.CoreAPIs
 
-	shutdown := make(chan os.Signal, 1)
-	tests := HomeTests{
-		app: handlers.APIMux(handlers.APIMuxConfig{
-			Shutdown: shutdown,
-			Log:      test.Log,
-			Auth:     test.Auth,
-			DB:       test.DB,
-		}),
-		userToken:  test.Token("user@example.com", "gophers"),
-		adminToken: test.Token("admin@example.com", "gophers"),
-	}
+	// shutdown := make(chan os.Signal, 1)
+	// tests := HomeTests{
+	// 	app: handlers.APIMux(handlers.APIMuxConfig{
+	// 		Shutdown: shutdown,
+	// 		Log:      test.Log,
+	// 		Auth:     test.Auth,
+	// 		DB:       test.DB,
+	// 	}),
+	// 	userToken:  test.Token("user@example.com", "gophers"),
+	// 	adminToken: test.Token("admin@example.com", "gophers"),
+	// }
 
 	// ------------------------------------------------------------------------
-	seed := func(ctx context.Context, usrCore *user.Core, hmeCore *home.Core) ([]user.User, []home.Home, error) {
-		usrs, err := usrCore.Query(ctx, user.QueryFilter{}, order.By{Field: user.OrderByName, Direction: order.ASC}, 1, 2)
-		if err != nil {
-			return nil, nil, fmt.Errorf("seeding users : %w", err)
-		}
+	// seed := func(ctx context.Context, usrCore *user.Core, hmeCore *home.Core) ([]user.User, []home.Home, error) {
+	// 	usrs, err := usrCore.Query(ctx, user.QueryFilter{}, order.By{Field: user.OrderByName, Direction: order.ASC}, 1, 2)
+	// 	if err != nil {
+	// 		return nil, nil, fmt.Errorf("seeding users : %w", err)
+	// 	}
 
-		hmes1, err := home.TestGenerateSeedHomes(5, hmeCore, usrs[0].ID)
-		if err != nil {
-			return nil, nil, fmt.Errorf("seeding homes1 : %w", err)
-		}
+	// 	hmes1, err := home.TestGenerateSeedHomes(5, hmeCore, usrs[0].ID)
+	// 	if err != nil {
+	// 		return nil, nil, fmt.Errorf("seeding homes1 : %w", err)
+	// 	}
 
-		hmes2, err := home.TestGenerateSeedHomes(5, hmeCore, usrs[1].ID)
-		if err != nil {
-			return nil, nil, fmt.Errorf("seeding homes2 : %w", err)
-		}
+	// 	hmes2, err := home.TestGenerateSeedHomes(5, hmeCore, usrs[1].ID)
+	// 	if err != nil {
+	// 		return nil, nil, fmt.Errorf("seeding homes2 : %w", err)
+	// 	}
 
-		var hmes []home.Home
-		hmes = append(hmes, hmes1...)
-		hmes = append(hmes, hmes2...)
+	// 	var hmes []home.Home
+	// 	hmes = append(hmes, hmes1...)
+	// 	hmes = append(hmes, hmes2...)
 
-		return usrs, hmes, nil
-	}
+	// 	return usrs, hmes, nil
+	// }
 
-	t.Log("Go seeding ...")
+	// t.Log("Go seeding ...")
 
-	hmes, _, err := seed(context.Background(), api.User, api.Home)
-	if err != nil {
-		t.Fatalf("Seeding error: %s", err)
-	}
+	// hmes, _, err := seed(context.Background(), api.User, api.Home)
+	// if err != nil {
+	// 	t.Fatalf("Seeding error: %s", err)
+	// }
 
 	// -------------------------------------------------------------------------
 
-	t.Run()
+	// t.Run()
 }
 
 // TODO finish this test file.

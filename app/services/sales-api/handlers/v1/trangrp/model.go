@@ -86,6 +86,7 @@ func (app AppNewUser) Validate() error {
 	if err := validate.Check(app); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -113,5 +114,6 @@ func (app AppNewProduct) Validate() error {
 	if err := validate.Check(app); err != nil {
 		return err
 	}
+
 	return nil
 }

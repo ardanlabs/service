@@ -35,7 +35,6 @@ func New(home *home.Core) *Handlers {
 // using a store transaction that was created via middleware.
 func (h *Handlers) executeUnderTransaction(ctx context.Context) (*Handlers, error) {
 	if tx, ok := transaction.Get(ctx); ok {
-
 		home, err := h.home.ExecuteUnderTransaction(tx)
 		if err != nil {
 			return nil, err
