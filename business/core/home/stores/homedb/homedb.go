@@ -1,3 +1,4 @@
+// Package homedb contains home related CRUD functionality.
 package homedb
 
 import (

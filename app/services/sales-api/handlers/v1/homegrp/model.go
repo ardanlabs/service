@@ -88,7 +88,7 @@ func toCoreNewHome(app AppNewHome) (home.NewHome, error) {
 }
 
 // Validate checks if the data in the model is considered clean.
-func (app AppNewHome) validate() error {
+func (app AppNewHome) Validate() error {
 	if err := validate.Check(app); err != nil {
 		return err
 	}
@@ -101,7 +101,7 @@ func (app AppNewHome) validate() error {
 // AppUpdateAddress defines what information may be provided to modify an existing
 // Client.
 type AppUpdateAddress struct {
-	Address1 *string `json:"address1" validate:"required,min=1,max=70"`
+	Address1 *string `json:"address1" validate:"omitempty,min=1,max=70"`
 	Address2 *string `json:"address2" validate:"omitempty,max=70"`
 	ZipCode  *string `json:"zipCode" validate:"omitempty"`
 	City     *string `json:"city" validate:"omitempty"`
@@ -117,15 +117,18 @@ type AppUpdateHome struct {
 
 func toCoreUpdateHome(app AppUpdateHome) home.UpdateHome {
 	core := home.UpdateHome{
-		Address: &home.UpdateAddress{
+		Type: app.Type,
+	}
+
+	if app.Address != nil {
+		core.Address = &home.UpdateAddress{
 			Address1: app.Address.Address1,
 			Address2: app.Address.Address2,
 			ZipCode:  app.Address.ZipCode,
 			City:     app.Address.City,
 			State:    app.Address.State,
 			Country:  app.Address.Country,
-		},
-		Type: app.Type,
+		}
 	}
 
 	return core

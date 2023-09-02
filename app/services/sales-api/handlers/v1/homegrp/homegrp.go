@@ -1,3 +1,4 @@
+// Package homegrp maintains the group of handlers for home access.
 package homegrp
 
 import (

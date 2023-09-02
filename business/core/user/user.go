@@ -180,7 +180,7 @@ func (c *Core) QueryByID(ctx context.Context, userID uuid.UUID) (User, error) {
 	return user, nil
 }
 
-// QueryByUserID finds the users by a specified User IDs.
+// QueryByIDs finds the users by a specified User IDs.
 func (c *Core) QueryByIDs(ctx context.Context, userIDs []uuid.UUID) ([]User, error) {
 	user, err := c.storer.QueryByIDs(ctx, userIDs)
 	if err != nil {
@@ -190,7 +190,7 @@ func (c *Core) QueryByIDs(ctx context.Context, userIDs []uuid.UUID) ([]User, err
 	return user, nil
 }
 
-// QueryByUserID finds the user by a specified user email.
+// QueryByEmail finds the user by a specified user email.
 func (c *Core) QueryByEmail(ctx context.Context, email mail.Address) (User, error) {
 	user, err := c.storer.QueryByEmail(ctx, email)
 	if err != nil {

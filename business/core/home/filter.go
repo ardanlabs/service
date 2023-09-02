@@ -25,7 +25,7 @@ func (qf *QueryFilter) Validate() error {
 	return nil
 }
 
-// WithUserID sets the ID field of the QueryFilter value.
+// WithHomeID sets the ID field of the QueryFilter value.
 func (qf *QueryFilter) WithHomeID(homeID uuid.UUID) {
 	qf.ID = &homeID
 }
