@@ -94,6 +94,7 @@ func (app AppNewUser) Validate() error {
 	if err := validate.Check(app); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -150,6 +151,7 @@ func (app AppUpdateUser) Validate() error {
 	if err := validate.Check(app); err != nil {
 		return fmt.Errorf("validate: %w", err)
 	}
+
 	return nil
 }
 

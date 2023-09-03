@@ -123,7 +123,7 @@ func (s *Store) Query(ctx context.Context, filter user.QueryFilter, orderBy orde
 
 	const q = `
 	SELECT
-		*
+		user_id, name, email, password_hash, roles, enabled, department, date_created, date_updated
 	FROM
 		users`
 
@@ -184,7 +184,7 @@ func (s *Store) QueryByID(ctx context.Context, userID uuid.UUID) (user.User, err
 
 	const q = `
 	SELECT
-		*
+        user_id, name, email, password_hash, roles, enabled, department, date_created, date_updated
 	FROM
 		users
 	WHERE 
@@ -224,7 +224,7 @@ func (s *Store) QueryByIDs(ctx context.Context, userIDs []uuid.UUID) ([]user.Use
 
 	const q = `
 	SELECT
-		*
+        user_id, name, email, password_hash, roles, enabled, department, date_created, date_updated
 	FROM
 		users
 	WHERE
@@ -256,7 +256,7 @@ func (s *Store) QueryByEmail(ctx context.Context, email mail.Address) (user.User
 
 	const q = `
 	SELECT
-		*
+        user_id, name, email, password_hash, roles, enabled, department, date_created, date_updated
 	FROM
 		users
 	WHERE

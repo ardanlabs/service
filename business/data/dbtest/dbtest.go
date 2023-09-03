@@ -12,6 +12,8 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/core/event"
+	"github.com/ardanlabs/service/business/core/home"
+	"github.com/ardanlabs/service/business/core/home/stores/homedb"
 	"github.com/ardanlabs/service/business/core/product"
 	"github.com/ardanlabs/service/business/core/product/stores/productdb"
 	"github.com/ardanlabs/service/business/core/user"
@@ -233,6 +235,7 @@ func FloatPointer(f float64) *float64 {
 type CoreAPIs struct {
 	User        *user.Core
 	Product     *product.Core
+	Home        *home.Core
 	UserSummary *usersummary.Core
 }
 
@@ -240,12 +243,14 @@ func newCoreAPIs(log *logger.Logger, db *sqlx.DB) CoreAPIs {
 	evnCore := event.NewCore(log)
 	usrCore := user.NewCore(log, evnCore, userdb.NewStore(log, db))
 	prdCore := product.NewCore(log, evnCore, usrCore, productdb.NewStore(log, db))
+	hmeCore := home.NewCore(log, evnCore, usrCore, homedb.NewStore(log, db))
 	usmCore := usersummary.NewCore(usersummarydb.NewStore(log, db))
 
 	return CoreAPIs{
 		User:        usrCore,
 		Product:     prdCore,
 		UserSummary: usmCore,
+		Home:        hmeCore,
 	}
 }
 

@@ -76,7 +76,7 @@ func (c *Core) ExecuteUnderTransaction(tx transaction.Transaction) (*Core, error
 	return c, nil
 }
 
-// Create inserts a new user into the database.
+// Create adds a new user to the system.
 func (c *Core) Create(ctx context.Context, nu NewUser) (User, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(nu.Password), bcrypt.DefaultCost)
 	if err != nil {
@@ -104,17 +104,20 @@ func (c *Core) Create(ctx context.Context, nu NewUser) (User, error) {
 	return usr, nil
 }
 
-// Update replaces a user document in the database.
+// Update modifies information about a user.
 func (c *Core) Update(ctx context.Context, usr User, uu UpdateUser) (User, error) {
 	if uu.Name != nil {
 		usr.Name = *uu.Name
 	}
+
 	if uu.Email != nil {
 		usr.Email = *uu.Email
 	}
+
 	if uu.Roles != nil {
 		usr.Roles = uu.Roles
 	}
+
 	if uu.Password != nil {
 		pw, err := bcrypt.GenerateFromPassword([]byte(*uu.Password), bcrypt.DefaultCost)
 		if err != nil {
@@ -122,9 +125,11 @@ func (c *Core) Update(ctx context.Context, usr User, uu UpdateUser) (User, error
 		}
 		usr.PasswordHash = pw
 	}
+
 	if uu.Department != nil {
 		usr.Department = *uu.Department
 	}
+
 	if uu.Enabled != nil {
 		usr.Enabled = *uu.Enabled
 	}
@@ -141,7 +146,7 @@ func (c *Core) Update(ctx context.Context, usr User, uu UpdateUser) (User, error
 	return usr, nil
 }
 
-// Delete removes a user from the database.
+// Delete removes the specified user.
 func (c *Core) Delete(ctx context.Context, usr User) error {
 	if err := c.storer.Delete(ctx, usr); err != nil {
 		return fmt.Errorf("delete: %w", err)
@@ -150,7 +155,7 @@ func (c *Core) Delete(ctx context.Context, usr User) error {
 	return nil
 }
 
-// Query retrieves a list of existing users from the database.
+// Query retrieves a list of existing users.
 func (c *Core) Query(ctx context.Context, filter QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]User, error) {
 	users, err := c.storer.Query(ctx, filter, orderBy, pageNumber, rowsPerPage)
 	if err != nil {
@@ -160,12 +165,12 @@ func (c *Core) Query(ctx context.Context, filter QueryFilter, orderBy order.By, 
 	return users, nil
 }
 
-// Count returns the total number of users in the store.
+// Count returns the total number of users.
 func (c *Core) Count(ctx context.Context, filter QueryFilter) (int, error) {
 	return c.storer.Count(ctx, filter)
 }
 
-// QueryByID gets the specified user from the database.
+// QueryByID finds the user by the specified ID.
 func (c *Core) QueryByID(ctx context.Context, userID uuid.UUID) (User, error) {
 	user, err := c.storer.QueryByID(ctx, userID)
 	if err != nil {
@@ -175,7 +180,7 @@ func (c *Core) QueryByID(ctx context.Context, userID uuid.UUID) (User, error) {
 	return user, nil
 }
 
-// QueryByIDs gets the specified user from the database.
+// QueryByIDs finds the users by a specified User IDs.
 func (c *Core) QueryByIDs(ctx context.Context, userIDs []uuid.UUID) ([]User, error) {
 	user, err := c.storer.QueryByIDs(ctx, userIDs)
 	if err != nil {
@@ -185,7 +190,7 @@ func (c *Core) QueryByIDs(ctx context.Context, userIDs []uuid.UUID) ([]User, err
 	return user, nil
 }
 
-// QueryByEmail gets the specified user from the database by email.
+// QueryByEmail finds the user by a specified user email.
 func (c *Core) QueryByEmail(ctx context.Context, email mail.Address) (User, error) {
 	user, err := c.storer.QueryByEmail(ctx, email)
 	if err != nil {

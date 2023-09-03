@@ -113,7 +113,7 @@ func (s *Store) Query(ctx context.Context, filter product.QueryFilter, orderBy o
 
 	const q = `
 	SELECT
-		*
+	    product_id, user_id, name, cost, quantity, date_created, date_updated
 	FROM
 		products`
 
@@ -171,7 +171,7 @@ func (s *Store) QueryByID(ctx context.Context, productID uuid.UUID) (product.Pro
 
 	const q = `
 	SELECT
-		*
+	    product_id, user_id, name, cost, quantity, date_created, date_updated
 	FROM
 		products
 	WHERE
@@ -198,7 +198,7 @@ func (s *Store) QueryByUserID(ctx context.Context, userID uuid.UUID) ([]product.
 
 	const q = `
 	SELECT
-		*
+	    product_id, user_id, name, cost, quantity, date_created, date_updated
 	FROM
 		products
 	WHERE
