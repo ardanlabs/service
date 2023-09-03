@@ -10,7 +10,6 @@ import (
 )
 
 func parseOrder(r *http.Request) (order.By, error) {
-
 	const (
 		orderByID     = "home_id"
 		orderByType   = "type"
