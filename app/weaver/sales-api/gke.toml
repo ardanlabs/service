@@ -1,0 +1,8 @@
+[serviceweaver]
+binary = "./sales-api"
+#args = ["--db-host=10.24.240.10"]
+rollout = "5m"
+
+[gke]
+regions = ["us-west1"]
+listeners.api   = {public_hostname = "sales.example.com"}
