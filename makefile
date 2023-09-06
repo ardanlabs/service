@@ -149,12 +149,11 @@ ALPINE          := alpine:3.18
 KIND            := kindest/node:v1.27.3
 POSTGRES        := postgres:15.4
 VAULT           := hashicorp/vault:1.14
-GRAFANA         := grafana/grafana:9.5.3
-PROMETHEUS      := prom/prometheus:v2.45.0
+GRAFANA         := grafana/grafana:10.1.0
+PROMETHEUS      := prom/prometheus:v2.47.0
 TEMPO           := grafana/tempo:2.2.0
-LOKI            := grafana/loki:2.8.3
-PROMTAIL        := grafana/promtail:2.8.3
-TELEPRESENCE    := datawire/ambassador-telepresence-manager:2.14.4
+LOKI            := grafana/loki:2.9.0
+PROMTAIL        := grafana/promtail:2.9.0
 
 KIND_CLUSTER    := ardan-starter-cluster
 NAMESPACE       := sales-system
@@ -177,7 +176,7 @@ dev-gotooling:
 	go install golang.org/x/vuln/cmd/govulncheck@latest
 	go install golang.org/x/tools/cmd/goimports@latest
 
-dev-brew-common:
+dev-brew:
 	brew update
 	brew tap hashicorp/tap
 	brew list kind || brew install kind
@@ -185,12 +184,6 @@ dev-brew-common:
 	brew list kustomize || brew install kustomize
 	brew list pgcli || brew install pgcli
 	brew list vault || brew install vault
-
-dev-brew: dev-brew-common
-	brew list datawire/blackbird/telepresence || brew install datawire/blackbird/telepresence
-
-dev-brew-arm64: dev-brew-common
-	brew list datawire/blackbird/telepresence-arm64 || brew install datawire/blackbird/telepresence-arm64
 
 dev-docker:
 	docker pull $(GOLANG)
@@ -203,7 +196,6 @@ dev-docker:
 	docker pull $(TEMPO)
 	docker pull $(LOKI)
 	docker pull $(PROMTAIL)
-	docker pull $(TELEPRESENCE)
 
 # ==============================================================================
 # Building containers
@@ -229,7 +221,7 @@ metrics:
 # ==============================================================================
 # Running from within k8s/kind
 
-dev-up-local:
+dev-up:
 	kind create cluster \
 		--image $(KIND) \
 		--name $(KIND_CLUSTER) \
@@ -237,7 +229,6 @@ dev-up-local:
 
 	kubectl wait --timeout=120s --namespace=local-path-storage --for=condition=Available deployment/local-path-provisioner
 
-	kind load docker-image $(TELEPRESENCE) --name $(KIND_CLUSTER)
 	kind load docker-image $(POSTGRES) --name $(KIND_CLUSTER)
 	kind load docker-image $(VAULT) --name $(KIND_CLUSTER)
 	kind load docker-image $(GRAFANA) --name $(KIND_CLUSTER)
@@ -246,15 +237,7 @@ dev-up-local:
 	kind load docker-image $(LOKI) --name $(KIND_CLUSTER)
 	kind load docker-image $(PROMTAIL) --name $(KIND_CLUSTER)
 
-dev-up: dev-up-local
-	telepresence --context=kind-$(KIND_CLUSTER) helm install --request-timeout 2m 
-	telepresence --context=kind-$(KIND_CLUSTER) connect
-
-dev-down-local:
-	kind delete cluster --name $(KIND_CLUSTER)
-
 dev-down:
-	telepresence quit -s
 	kind delete cluster --name $(KIND_CLUSTER)
 
 # ------------------------------------------------------------------------------
@@ -384,47 +367,29 @@ seed: migrate
 vault:
 	go run app/tooling/sales-admin/main.go vault
 
-token-gen:
-	go run app/tooling/sales-admin/main.go gentoken 5cf37266-3473-4006-984f-9325122678b7 54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
-
-pgcli-local:
+pgcli:
 	pgcli postgresql://postgres:postgres@localhost
 
-pgcli:
-	pgcli postgresql://postgres:postgres@database-service.$(NAMESPACE).svc.cluster.local
-
-liveness-local:
+liveness:
 	curl -il http://localhost:3000/v1/liveness
 
-liveness:
-	curl -il http://$(SERVICE_NAME).$(NAMESPACE).svc.cluster.local:3000/v1/liveness
-
-readiness-local:
+readiness:
 	curl -il http://localhost:3000/v1/readiness
 
-readiness:
-	curl -il http://$(SERVICE_NAME).$(NAMESPACE).svc.cluster.local:3000/v1/readiness
+token-gen:
+	go run app/tooling/sales-admin/main.go gentoken 5cf37266-3473-4006-984f-9325122678b7 54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
 
 # ==============================================================================
 # Metrics and Tracing
 
-metrics-view-local-sc:
+metrics-view-sc:
 	expvarmon -ports="localhost:4000" -vars="build,requests,goroutines,errors,panics,mem:memstats.Alloc"
 
-metrics-view-sc:
-	expvarmon -ports="$(SERVICE_NAME).$(NAMESPACE).svc.cluster.local:4000" -vars="build,requests,goroutines,errors,panics,mem:memstats.Alloc"
-
-metrics-view-local:
+metrics-view:
 	expvarmon -ports="localhost:3001" -endpoint="/metrics" -vars="build,requests,goroutines,errors,panics,mem:memstats.Alloc"
 
-metrics-view:
-	expvarmon -ports="$(SERVICE_NAME).$(NAMESPACE).svc.cluster.local:3001" -endpoint="/metrics" -vars="build,requests,goroutines,errors,panics,mem:memstats.Alloc"
-
-grafana-local:
-	open -a "Google Chrome" http://localhost:3100/
-
 grafana:
-	open -a "Google Chrome" http://grafana-service.$(NAMESPACE).svc.cluster.local:3100/
+	open -a "Google Chrome" http://localhost:3100/
 
 # ==============================================================================
 # Running tests within the local computer
@@ -457,28 +422,19 @@ docs-debug:
 # ==============================================================================
 # Hitting endpoints
 
-token-local:
-	curl -il --user "admin@example.com:gophers" http://localhost:3000/v1/users/token/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
-
 token:
-	curl -il --user "admin@example.com:gophers" http://$(SERVICE_NAME).$(NAMESPACE).svc.cluster.local:3000/v1/users/token/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
+	curl -il --user "admin@example.com:gophers" http://localhost:3000/v1/users/token/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
 
 # export TOKEN="COPY TOKEN STRING FROM LAST CALL"
 
-users-local:
+users:
 	curl -il -H "Authorization: Bearer ${TOKEN}" http://localhost:3000/v1/users?page=1&rows=2
 
-users:
-	curl -il -H "Authorization: Bearer ${TOKEN}" http://$(SERVICE_NAME).$(NAMESPACE).svc.cluster.local:3000/v1/users?page=1&rows=2
-
-load-local:
+load:
 	hey -m GET -c 100 -n 10000 -H "Authorization: Bearer ${TOKEN}" "http://localhost:3000/v1/users?page=1&rows=2"
 
-load:
-	hey -m GET -c 100 -n 10000 -H "Authorization: Bearer ${TOKEN}" "http://$(SERVICE_NAME).$(NAMESPACE).svc.cluster.local:3000/v1/users?page=1&rows=2"
-
 otel-test:
-	curl -il -H "Traceparent: 00-918dd5ecf264712262b68cf2ef8b5239-896d90f23f69f006-01" --user "admin@example.com:gophers" http://sales-api.sales-system.svc.cluster.local:3000/v1/users/token/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
+	curl -il -H "Traceparent: 00-918dd5ecf264712262b68cf2ef8b5239-896d90f23f69f006-01" --user "admin@example.com:gophers" http://localhost:3000/v1/users/token/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
 
 # ==============================================================================
 # Modules support
