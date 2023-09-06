@@ -137,6 +137,7 @@ func serve(ctx context.Context, s *server) error {
 	if err := dbmigrate.Migrate(ctx, db); err != nil {
 		return fmt.Errorf("migrate db: %w", err)
 	}
+
 	if err := dbmigrate.Seed(ctx, db); err != nil {
 		return fmt.Errorf("seed db: %w", err)
 	}
@@ -185,12 +186,13 @@ func serve(ctx context.Context, s *server) error {
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
 
 	cfgMux := handlers.APIMuxConfig{
-		Build:    build,
-		Shutdown: shutdown,
-		Log:      log,
-		Auth:     auth,
-		DB:       db,
-		Tracer:   otel.Tracer("service"),
+		UsingWeaver: true,
+		Build:       build,
+		Shutdown:    shutdown,
+		Log:         log,
+		Auth:        auth,
+		DB:          db,
+		Tracer:      otel.Tracer("service"),
 	}
 	apiMux := handlers.APIMux(cfgMux, handlers.WithCORS("*"))
 

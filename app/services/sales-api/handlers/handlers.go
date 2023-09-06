@@ -28,12 +28,13 @@ func WithCORS(origin string) func(opts *Options) {
 
 // APIMuxConfig contains all the mandatory systems required by handlers.
 type APIMuxConfig struct {
-	Build    string
-	Shutdown chan os.Signal
-	Log      *logger.Logger
-	Auth     *auth.Auth
-	DB       *sqlx.DB
-	Tracer   trace.Tracer
+	UsingWeaver bool
+	Build       string
+	Shutdown    chan os.Signal
+	Log         *logger.Logger
+	Auth        *auth.Auth
+	DB          *sqlx.DB
+	Tracer      trace.Tracer
 }
 
 // APIMux constructs a http.Handler with all application routes defined.
@@ -57,10 +58,11 @@ func APIMux(cfg APIMuxConfig, options ...func(opts *Options)) http.Handler {
 	}
 
 	v1.Routes(app, v1.Config{
-		Build: cfg.Build,
-		Log:   cfg.Log,
-		Auth:  cfg.Auth,
-		DB:    cfg.DB,
+		UsingWeaver: cfg.UsingWeaver,
+		Build:       cfg.Build,
+		Log:         cfg.Log,
+		Auth:        cfg.Auth,
+		DB:          cfg.DB,
 	})
 
 	return app

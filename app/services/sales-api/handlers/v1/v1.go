@@ -5,6 +5,7 @@ package v1
 import (
 	"net/http"
 
+	"github.com/ServiceWeaver/weaver"
 	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/checkgrp"
 	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/homegrp"
 	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/productgrp"
@@ -31,10 +32,11 @@ import (
 
 // Config contains all the mandatory systems required by handlers.
 type Config struct {
-	Build string
-	Log   *logger.Logger
-	Auth  *auth.Auth
-	DB    *sqlx.DB
+	UsingWeaver bool
+	Build       string
+	Log         *logger.Logger
+	Auth        *auth.Auth
+	DB          *sqlx.DB
 }
 
 // Routes binds all the version 1 routes.
@@ -58,6 +60,10 @@ func Routes(app *web.App, cfg Config) {
 
 	app.HandleNoMiddleware(http.MethodGet, version, "/readiness", cgh.Readiness)
 	app.HandleNoMiddleware(http.MethodGet, version, "/liveness", cgh.Liveness)
+
+	if cfg.UsingWeaver {
+		app.HandleNoMiddleware(http.MethodGet, "" /*group*/, weaver.HealthzURL, cgh.Readiness)
+	}
 
 	// -------------------------------------------------------------------------
 
