@@ -47,7 +47,12 @@ func (r Role) Name() string {
 
 // UnmarshalText implement the unmarshal interface for JSON conversions.
 func (r *Role) UnmarshalText(data []byte) error {
-	r.name = string(data)
+	role, err := ParseRole(string(data))
+	if err != nil {
+		return err
+	}
+
+	r.name = role.name
 	return nil
 }
 
