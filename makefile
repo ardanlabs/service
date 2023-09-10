@@ -468,19 +468,19 @@ list:
 ADMIN_FRONTEND_PREFIX := ./app/frontends/admin
 
 write-token-to-env:
-	echo "NEXT_PUBLIC_BASE_API_URL=http://localhost:3000/v1" > ${ADMIN_FRONTEND_PREFIX}/.env
-	make token | grep -o '"ey.*"' | awk '{print "NEXT_PUBLIC_TOKEN="$$1}' >> ${ADMIN_FRONTEND_PREFIX}/.env
+	echo "VITE_SERVICE_API=http://localhost:3000/v1" > ${ADMIN_FRONTEND_PREFIX}/.env
+	make token | grep -o '"ey.*"' | awk '{print "VITE_SERVICE_TOKEN="$$1}' >> ${ADMIN_FRONTEND_PREFIX}/.env
 
 admin-gui-install:
-	npm install --prefix ${ADMIN_FRONTEND_PREFIX}
+	pnpm -C ${ADMIN_FRONTEND_PREFIX} install 
 
 admin-gui-dev: admin-gui-install
-	npm run dev --prefix ${ADMIN_FRONTEND_PREFIX}
+	pnpm -C ${ADMIN_FRONTEND_PREFIX} run dev 
 
 admin-gui-build: admin-gui-install
-	npm run build --prefix ${ADMIN_FRONTEND_PREFIX}
+	pnpm -C ${ADMIN_FRONTEND_PREFIX} run build 
 
 admin-gui-start-build: admin-gui-build
-	npm run start --prefix ${ADMIN_FRONTEND_PREFIX}
+	pnpm -C ${ADMIN_FRONTEND_PREFIX} run start 
 
 admin-gui-run: write-token-to-env admin-gui-start-build
