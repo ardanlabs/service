@@ -10,6 +10,19 @@
           class="text--dark ma-1"
           size="x-small"
           v-on="on"
+          @click.stop.prevent="action('profile')"
+        >
+          <v-icon icon="fas fa-user"> </v-icon>
+        </v-btn>
+      </template>
+      <span>User Profile</span>
+    </v-tooltip>
+    <v-tooltip bottom>
+      <template #activator="{ on }">
+        <v-btn
+          class="text--dark ma-1"
+          size="x-small"
+          v-on="on"
           @click.stop.prevent="action('edit')"
         >
           <v-icon icon="fas fa-pencil"> </v-icon>

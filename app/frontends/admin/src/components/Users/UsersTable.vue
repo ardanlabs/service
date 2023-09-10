@@ -32,6 +32,7 @@
       <users-table-actions
         @delete="$emit('delete', item.selectable)"
         @edit="$emit('edit', item.selectable)"
+        @profile="goToClientsProfile(item.selectable.id)"
         :item="item"
       />
     </template>
@@ -86,10 +87,14 @@ export default {
     sortQuery(s) {
       return SortQuery(s);
     },
-    goToClientsProfile(_e, row) {
+    goToClientsProfile(id, e) {
+      let userId = id;
+      if (typeof userId !== "string") {
+        userId = e.item.selectable.id;
+      }
       this.$router.push({
         name: "UserProfile",
-        params: { id: row.item.value },
+        params: { id: userId },
       });
     },
     async loadItems() {
