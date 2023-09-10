@@ -481,6 +481,6 @@ admin-gui-build: admin-gui-install
 	pnpm -C ${ADMIN_FRONTEND_PREFIX} run build 
 
 admin-gui-start-build: admin-gui-build
-	pnpm -C ${ADMIN_FRONTEND_PREFIX} run start 
+	pnpm -C ${ADMIN_FRONTEND_PREFIX} run preview 
 
 admin-gui-run: write-token-to-env admin-gui-start-build
