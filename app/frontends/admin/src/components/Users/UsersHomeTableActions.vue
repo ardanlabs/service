@@ -1,6 +1,6 @@
 <template>
   <v-btn-toggle
-    class="rounded-lg users-actions elevation-2"
+    class="rounded-lg homes-table-actions elevation-2"
     borderless
     background-color="rgba(255, 255, 255)"
   >
@@ -15,7 +15,7 @@
           <v-icon icon="fas fa-pencil"> </v-icon>
         </v-btn>
       </template>
-      <span>Edit User</span>
+      <span>Edit Home</span>
     </v-tooltip>
     <v-tooltip bottom>
       <template #activator="{ on }">
@@ -28,14 +28,14 @@
           <v-icon icon="fas fa-trash"></v-icon>
         </v-btn>
       </template>
-      <span> Delete User </span>
+      <span> Delete Home </span>
     </v-tooltip>
   </v-btn-toggle>
 </template>
 
 <script>
 export default {
-  name: "UsersDataTableActions",
+  name: "UserHomesDataTableActions",
   props: {
     item: {
       type: Object,

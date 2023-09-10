@@ -1,10 +1,10 @@
 <template>
-  <v-container class="fill-height">
+  <div class="ma-6 fill-height justify-start">
     <v-responsive class="align-start text-center fill-height">
       <v-card>
         <v-card-title class="d-flex align-center justify-space-between">
-          <div class="v-card-title">Users</div>
-          <v-btn @click="openUser">Add User</v-btn>
+          <div>Users</div>
+          <v-btn @click="openNewUser">Add User</v-btn>
         </v-card-title>
         <v-card-text>
           <users-table
@@ -20,7 +20,7 @@
         :user="dialogs.edit.item"
         @close="dialogs.edit.open = false"
         @error="failure"
-        @success="success"
+        @success="successEdit"
       />
       <ui-confirmation-dialog
         v-model="dialogs.confirmation.open"
@@ -44,7 +44,7 @@
         @close="dialogs.failure.open = false"
       />
     </v-responsive>
-  </v-container>
+  </div>
 </template>
 
 <script>
@@ -94,7 +94,13 @@ export default {
     };
   },
   methods: {
-    success() {
+    successDelete(userName) {
+      this.dialogs.success.title = "Delete Success";
+      this.dialogs.success.subtitle = `User ${userName} deleted successfully`;
+      this.dialogs.success.open = true;
+      if ("usersTable" in this.$refs) this.$refs.usersTable.loadItems();
+    },
+    successEdit() {
       const action = this.dialogs.edit.edit ? "edited" : "added";
       this.dialogs.success.title = "Success";
       this.dialogs.success.subtitle = `User ${action} successfully`;
@@ -110,7 +116,7 @@ export default {
       this.dialogs.failure.subtitle = "Creating user went wrong";
       this.dialogs.failure.open = true;
     },
-    openUser() {
+    openNewUser() {
       this.dialogs.edit.open = true;
       this.dialogs.edit.edit = false;
     },
@@ -121,13 +127,57 @@ export default {
       await nextTick();
       this.dialogs.edit.open = true;
     },
-    sendDeleteUser() {
-      console.log(this.dialogs.confirmation.item.id);
-    },
-    openDelete(item) {
-      console.log(item);
+    async openDelete(item) {
       this.dialogs.confirmation.item = item;
+      await nextTick();
       this.dialogs.confirmation.open = true;
+    },
+    async sendDeleteUser() {
+      const { id, name } = this.dialogs.confirmation.item;
+      try {
+        const fetchCall = await fetch(
+          `${import.meta.env.VITE_SERVICE_API}/users/${id}`,
+          {
+            method: "DELETE",
+            headers: {
+              Accept: "application/json",
+              "Content-type": "application/json",
+              Authorization: `Bearer ${import.meta.env.VITE_SERVICE_TOKEN}`,
+            },
+          }
+        );
+
+        switch (fetchCall.status) {
+          case 204:
+            this.successDelete(name);
+            this.dialogs.confirmation.item = {};
+            break;
+          default:
+            let userDeleteData;
+            try {
+              userDeleteData = await fetchCall.json();
+            } catch (error) {
+              const errors = [
+                { message: "Returned delete data couldn't be parsed" },
+                { message: `Error: ${error}` },
+              ];
+              this.failure(errors);
+            }
+            const errors = [
+              { message: "Deleting user went wrong" },
+              { message: `Error Code: ${fetchCall.status}` },
+              { message: userDeleteData.error },
+            ];
+            this.failure(errors);
+            break;
+        }
+      } catch (error) {
+        const errors = [
+          { message: "Post call failed" },
+          { message: `Error: ${error}` },
+        ];
+        this.failure(errors);
+      }
     },
   },
 };

@@ -32,7 +32,7 @@ func (qf *QueryFilter) WithHomeID(homeID uuid.UUID) {
 
 // WithUserID sets the ID field of the QueryFilter value.
 func (qf *QueryFilter) WithUserID(userID uuid.UUID) {
-	qf.ID = &userID
+	qf.UserID = &userID
 }
 
 // WithHomeType sets the Type field of the QueryFilter value.

@@ -17,8 +17,8 @@ func parseOrder(r *http.Request) (order.By, error) {
 	)
 
 	var orderByFields = map[string]string{
-		orderByID:     home.OrderByUserID,
-		orderByType:   home.OrderByID,
+		orderByID:     home.OrderByID,
+		orderByType:   home.OrderByType,
 		orderByUserID: home.OrderByUserID,
 	}
 

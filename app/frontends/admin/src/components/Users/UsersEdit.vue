@@ -106,14 +106,16 @@ export default {
     };
   },
   beforeMount() {
-    if (this.edit) {
-      this.form = this.user;
+    if (this.edit && Object.keys(this.user).length) {
+      this.form = Object.assign({}, this.user);
     }
   },
   watch: {
     user: {
       handler() {
-        this.form = this.user;
+        if (Object.keys(this.user).length) {
+          this.form = Object.assign({}, this.user);
+        }
       },
       deep: true,
     },
@@ -230,7 +232,6 @@ export default {
           this.$emit("error", errors);
         }
       }
-      // this.success();
     },
     closeDialog() {
       this.$emit("close");

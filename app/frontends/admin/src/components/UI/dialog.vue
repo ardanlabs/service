@@ -13,12 +13,7 @@
           <div class="flex-grow-1">
             <slot name="title" />
           </div>
-          <v-btn
-            v-if="showCloseButton"
-            flat
-            icon
-            @click="$emit('input', false)"
-          >
+          <v-btn v-if="showCloseButton" flat icon @click="$emit('close')">
             <v-icon>$clear</v-icon>
           </v-btn>
         </v-card-title>

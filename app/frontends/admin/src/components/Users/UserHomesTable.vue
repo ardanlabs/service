@@ -13,20 +13,10 @@
     hide-title
     has-actions
     class="elevation-1"
-    @click:row="goToClientsProfile"
     @update:options="loadItems"
   >
-    <template v-slot:[`item.user_id`]="{ item }">
-      <div>{{ item.value }}</div>
-    </template>
-    <template v-slot:[`item.roles`]="{ item }">
-      <div>{{ item.columns.roles.join(", ") }}</div>
-    </template>
-    <template v-slot:[`item.dateCreated`]="{ item }">
-      <div>{{ item.columns.dateCreated.substring(0, 10) }}</div>
-    </template>
-    <template v-slot:[`item.dateUpdated`]="{ item }">
-      <div>{{ item.columns.dateUpdated.substring(0, 10) }}</div>
+    <template v-slot:[`item.address.country`]="{ item }">
+      <div>{{ getCountry(item.columns["address.country"]) }}</div>
     </template>
     <template #[`item.actions`]="{ item }">
       <users-table-actions
@@ -39,36 +29,47 @@
 </template>
 <script>
 import DataTableServer from "../DataTable/DataTableServer.vue";
-import { UsersTableHeaders } from "../Users/Users.js";
+import { UserHomesTableHeaders } from "../Users/Users.js";
 import UsersTableActions from "../Users/UsersTableActions.vue";
 import SortQuery from "../DataTable/SortQuery";
+import Countries from "../Users/Countries.js";
 
 export default {
-  name: "UsersTable",
+  name: "UserHomesTable",
   components: {
     DataTableServer,
     UsersTableActions,
+  },
+  props: {
+    userId: {
+      type: String,
+      default: "",
+      required: true,
+    },
   },
   data() {
     return {
       tableOptions: {
         page: 1,
-        itemsPerPage: 5,
+        itemsPerPage: 3,
         sortBy: [],
       },
       error: {},
       users: [],
       serverItemsLength: 0,
       usersItemsPerPageOptions: [
-        { title: "5", value: 5 },
-        { title: "10", value: "10" },
-        { title: "20", value: "20" },
+        { title: "1", value: 1 },
+        { title: "2", value: 2 },
+        { title: "3", value: 3 },
       ],
     };
   },
   computed: {
+    countries() {
+      return Countries;
+    },
     headers() {
-      return UsersTableHeaders;
+      return UserHomesTableHeaders;
     },
     dataTableProps() {
       return {
@@ -83,14 +84,11 @@ export default {
     },
   },
   methods: {
+    getCountry(code) {
+      return this.countries.filter((e) => e.value === code)[0].title;
+    },
     sortQuery(s) {
       return SortQuery(s);
-    },
-    goToClientsProfile(_e, row) {
-      this.$router.push({
-        name: "UserProfile",
-        params: { id: row.item.value },
-      });
     },
     async loadItems() {
       const { page, itemsPerPage, sortBy } = this.tableOptions;
@@ -99,9 +97,9 @@ export default {
 
       try {
         const fetchCall = await fetch(
-          `${
-            import.meta.env.VITE_SERVICE_API
-          }/users?page=${page}&rows=${itemsPerPage}${sort ? sort : ""}`,
+          `${import.meta.env.VITE_SERVICE_API}/homes?user_id=${
+            this.userId
+          }&page=${page}&rows=${itemsPerPage}${sort ? sort : ""}`,
           {
             headers: {
               Authorization: `Bearer ${import.meta.env.VITE_SERVICE_TOKEN}`,

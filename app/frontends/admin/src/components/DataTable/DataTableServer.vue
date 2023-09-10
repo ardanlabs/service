@@ -52,8 +52,8 @@ export default {
 
 <style lang="scss">
 @import "@/styles/variables.scss";
-.ui-data-table--actions thead.v-data-table-header > tr > th:last-child > span {
-  opacity: 0;
+.ui-data-table.v-data-table table tbody > tr:nth-child(odd) td:last-child > * {
+  background-color: #fff;
 }
 .ui-data-table.v-data-table {
   table {
@@ -94,30 +94,6 @@ export default {
     }
   }
 }
-.ui-data-table--actions {
-  tbody > tr > td:last-child,
-  thead.v-data-table__thead > tr > th:last-child {
-    display: none;
-    transition: opacity 0.5s ease-in-out;
-    border: none !important;
-    right: 0;
-    position: sticky;
-  }
-  tbody > tr > td:last-child {
-    opacity: 0;
-    display: none;
-    background: red;
-  }
-
-  tbody > tr:hover {
-    td:last-child,
-    th:last-child {
-      transition: opacity 0.5s ease-in-out;
-      opacity: 1;
-      display: block;
-    }
-  }
-}
 .ui-data-table--fixed {
   table > tbody > tr:nth-child(odd) td:nth-child(1) {
     background: $theme-light-table-row-odd-color;
@@ -132,8 +108,6 @@ export default {
   }
   div table > tbody > tr > td:nth-child(1),
   div table > thead.v-data-table__thead > tr th:nth-child(1) {
-    position: sticky;
-    left: 0;
     background: $theme-light-table-row-even-color;
     z-index: 1;
   }

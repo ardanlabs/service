@@ -14,7 +14,7 @@
       </v-card-title>
       <v-card-text class="pa-0">
         <div class="d-flex flex-column align-center justify-center">
-          <v-img src="success.svg" class="mr-5" width="150px" />
+          <v-img src="../../../public/success.svg" class="mr-5" width="150px" />
           <h1 class="text-h6 text-center text--dark">
             {{ title }}
           </h1>
