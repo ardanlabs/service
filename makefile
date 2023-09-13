@@ -175,8 +175,6 @@ dev-gotooling:
 	go install honnef.co/go/tools/cmd/staticcheck@latest
 	go install golang.org/x/vuln/cmd/govulncheck@latest
 	go install golang.org/x/tools/cmd/goimports@latest
-	go install github.com/ServiceWeaver/weaver/cmd/weaver@latest
-	go install github.com/ServiceWeaver/weaver-kube/cmd/weaver-kube@latest
 
 dev-brew:
 	brew update
@@ -490,6 +488,11 @@ admin-gui-run: write-token-to-env admin-gui-start-build
 # ==============================================================================
 # Running using Service Weaver.
 
+wea-dev-gotooling: dev-gotooling
+	go install github.com/ServiceWeaver/weaver/cmd/weaver@latest
+	go install github.com/ServiceWeaver/weaver-kube/cmd/weaver-kube@latest
+
+# Feel like we need to build this into it's own container?
 weaver:
 	cd app/weaver/sales-api; GOOS=linux GOARCH=amd64 go build .
 
