@@ -1,6 +1,6 @@
 package user
 
-import "errors"
+import "fmt"
 
 // Set of possible roles for a user.
 var (
@@ -23,7 +23,7 @@ type Role struct {
 func ParseRole(value string) (Role, error) {
 	role, exists := roles[value]
 	if !exists {
-		return Role{}, errors.New("invalid role")
+		return Role{}, fmt.Errorf("invalid role %q", value)
 	}
 
 	return role, nil
@@ -47,7 +47,12 @@ func (r Role) Name() string {
 
 // UnmarshalText implement the unmarshal interface for JSON conversions.
 func (r *Role) UnmarshalText(data []byte) error {
-	r.name = string(data)
+	role, err := ParseRole(string(data))
+	if err != nil {
+		return err
+	}
+
+	r.name = role.name
 	return nil
 }
 
