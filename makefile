@@ -490,6 +490,9 @@ admin-gui-run: write-token-to-env admin-gui-start-build
 # ==============================================================================
 # Running using Service Weaver.
 
+weaver:
+	cd app/weaver/sales-api; GOOS=linux GOARCH=amd64 go build .
+
 wea-dev-up:
 	kind create cluster \
 		--image $(KIND) \
@@ -498,15 +501,22 @@ wea-dev-up:
 
 	kubectl --context=kind-$(KIND_CLUSTER) wait --timeout=120s --namespace=local-path-storage --for=condition=Available deployment/local-path-provisioner
 
-	kustomize build zarf/k8s/dev/database | kubectl --context=kind-$(KIND_CLUSTER) apply -f -
-	kubectl rollout status --context=kind-$(KIND_CLUSTER) --namespace=$(NAMESPACE) --watch --timeout=120s sts/database
+	kind load docker-image $(POSTGRES) --name $(KIND_CLUSTER)
 
 wea-dev-down:
 	kind delete cluster --name $(KIND_CLUSTER)
 
-wea-dev-build:
-	cd app/weaver/sales-api; GOOS=linux GOARCH=amd64 go build .
-	kind load docker-image $(SERVICE_IMAGE) --name $(KIND_CLUSTER)
+# ------------------------------------------------------------------------------
 
-wea-dev-apply: wea-dev-build
+wea-dev-apply:
+	kustomize build zarf/k8s/dev/database | kubectl apply -f -
+	kubectl rollout status --namespace=$(NAMESPACE) --watch --timeout=120s sts/database
+
 	weaver-kube deploy app/weaver/sales-api/dev.toml | xargs kubectl apply -f
+
+wea-dev-restart:
+	kubectl rollout restart deployment $(APP) --namespace=$(NAMESPACE)
+
+wea-dev-update: weaver wea-dev-restart
+
+wea-dev-update-apply: weaver wea-dev-apply
