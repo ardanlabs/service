@@ -1,0 +1,8 @@
+[serviceweaver]
+binary = "./sales-api"
+args = [ "--db-host=database-service.sales-system.svc.cluster.local" ]
+rollout = "1s" # immediate rollout
+
+[kube]
+namespace = "sales-system"
+local_tag = "ardanlabs/service/sales-api:0.0.1"
