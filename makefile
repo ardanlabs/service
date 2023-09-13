@@ -492,10 +492,6 @@ wea-dev-gotooling: dev-gotooling
 	go install github.com/ServiceWeaver/weaver/cmd/weaver@latest
 	go install github.com/ServiceWeaver/weaver-kube/cmd/weaver-kube@latest
 
-# Feel like we need to build this into it's own container?
-weaver:
-	cd app/weaver/sales-api; GOOS=linux GOARCH=amd64 go build .
-
 wea-dev-up:
 	kind create cluster \
 		--image $(KIND) \
@@ -512,14 +508,18 @@ wea-dev-down:
 # ------------------------------------------------------------------------------
 
 wea-dev-apply:
+#   Deploy the database.
 	kustomize build zarf/k8s/dev/database | kubectl apply -f -
 	kubectl rollout status --namespace=$(NAMESPACE) --watch --timeout=120s sts/database
 
-	weaver-kube deploy app/weaver/sales-api/dev.toml | xargs kubectl apply -f
+#   Build the application binary.
+	cd app/weaver/sales-api; GOOS=linux GOARCH=amd64 go build .
 
-wea-dev-restart:
-	kubectl rollout restart deployment $(APP) --namespace=$(NAMESPACE)
+#   Build the application docker image and generate a deployment YAML.
+	$(eval WEAVER_YAML=$(shell weaver-kube deploy app/weaver/sales-api/dev.toml))
 
-wea-dev-update: weaver wea-dev-restart
+#   Push the application docker image to the cluster.
+	kind load docker-image $(SERVICE_IMAGE) --name $(KIND_CLUSTER)
 
-wea-dev-update-apply: weaver wea-dev-apply
+#   Start the application.
+	kubectl apply -f $(WEAVER_YAML)
