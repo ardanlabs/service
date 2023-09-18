@@ -91,13 +91,13 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 # Hashicorp Vault
 # 	READ THIS: https://developer.hashicorp.com/vault/docs/concepts/tokens
 # 	$ export VAULT_TOKEN=mytoken
-# 	$ export VAULT_ADDR='http://vault-service.sales-system.svc.cluster.local:8200'
+# 	$ export VAULT_ADDR='http://localhost:8200'
 # 	$ vault secrets list
 # 	$ vault kv get secret/sales
 # 	$ vault kv put secret/sales key="some data"
 # 	$ kubectl logs --namespace=sales-system -l app=sales -c init-vault-server
-# 	$ curl -H "X-Vault-Token: mytoken" -X GET http://vault-service.sales-system.svc.cluster.local:8200/v1/secret/data/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
-# 	$ curl -H "X-Vault-Token: mytoken" -H "Content-Type: application/json" -X POST -d '{"data":{"pk":"PEM"}}' http://vault-service.sales-system.svc.cluster.local:8200/v1/secret/data/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
+# 	$ curl -H "X-Vault-Token: mytoken" -X GET http://localhost:8200/v1/secret/data/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
+# 	$ curl -H "X-Vault-Token: mytoken" -H "Content-Type: application/json" -X POST -d '{"data":{"pk":"PEM"}}' http://localhost:8200/v1/secret/data/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
 #
 # Module Call Examples
 # 	$ curl https://proxy.golang.org/github.com/ardanlabs/conf/@v/list
