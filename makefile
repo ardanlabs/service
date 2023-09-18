@@ -29,47 +29,25 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 #	$ brew install gcc
 
 # ==============================================================================
-# Windows Users ONLY - Install Telepresence
-#
-#	Unfortunately you can't use brew to install telepresence because you will
-#	receive a bad binary. Please follow these instruction.
-#
-#	$ sudo curl -fL https://app.getambassador.io/download/tel2/linux/amd64/latest/telepresence -o /usr/local/bin/telepresence
-#	$ sudo chmod a+x /usr/local/bin/telepresence
-#
-# 	Restart your wsl environment.
-
-# ==============================================================================
-# Linux Users ONLY - Install Telepresence
-#
-#   https://www.telepresence.io/docs/latest/quick-start/?os=gnu-linux
-
-# ==============================================================================
-# M1 Mac Users ONLY - Uninstall Telepresence If Installed Intel Version
-#
-#   $ sudo rm -rf /Library/Developer/CommandLineTools
-#   $ sudo xcode-select --install
-#   Then it installed with brew (arm64)
-
-# ==============================================================================
 # Install Tooling and Dependencies
 #
-#	If you are running a mac machine with brew, run these commands:
+#   This project uses Docker and it is expected to be installed. Please provide
+#   Docker at least 3 CPUs.
+#
+#	MAC: If you are running a mac machine with brew, run these commands:
 #	$ make dev-brew  or  make dev-brew-arm64
 #	$ make dev-docker
 #	$ make dev-gotooling
 #
-#	If you are running a linux machine with brew, run these commands:
+#	LINUX: If you are running a linux machine with brew, run these commands:
 #	$ make dev-brew-common
 #	$ make dev-docker
 #	$ make dev-gotooling
-#   Follow instructions above for Telepresence.
 #
-#	If you are a windows user with brew, run these commands:
+#	WINDOWS: If you are a windows user with brew, run these commands:
 #	$ make dev-brew-common
 #	$ make dev-docker
 #	$ make dev-gotooling
-#   Follow instructions above for Telepresence.
 
 # ==============================================================================
 # Running Test
@@ -84,22 +62,15 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 #	# make test-all
 
 # ==============================================================================
-# Starting The Project
+# Running The Project
 #
-#	If you want to use telepresence (recommended):
 #	$ make dev-up
 #	$ make dev-update-apply
+#   $ make token
+#   $ export TOKEN=<token>
+#   $ make users
 #
-#	If telepresence is not working for you:
-#	$ make dev-up-local
-#	$ make dev-update-apply
-#
-#	Note: If you attempted to run with telepresence and it didn't work, you may
-#		  want to restart the cluser.
-#		  $ make dev-down-local
-#
-#	Note: When running without telepresence, if you see a command where there is
-#         a `-local` option, you will need to use that command.
+#   You can use `make dev-status` to look at the status of your KIND cluster.
 
 # ==============================================================================
 # CLASS NOTES
