@@ -8,8 +8,8 @@ github.com/DataDog/mmh3 v0.0.0-20210722141835-012dc69a9e49 h1:EbzDX8HPk5uE2FsJYx
 github.com/DataDog/mmh3 v0.0.0-20210722141835-012dc69a9e49/go.mod h1:SvsjzyJlSg0rKsqYgdcFxeEVflx3ZNAyFfkUHP0TxXg=
 github.com/OneOfOne/xxhash v1.2.8 h1:31czK/TI9sNkxIKfaUfGlU47BAxQ0ztGgd9vPyqimf8=
 github.com/OneOfOne/xxhash v1.2.8/go.mod h1:eZbhyaAYD41SGSSsnmcpxVoRiQ/MPUTjUdIIOT9Um7Q=
-github.com/ServiceWeaver/weaver v0.20.0 h1:unopuUy61mnSUHLa7wsAo0qdSmUy2PDflXP9u6RxKk0=
-github.com/ServiceWeaver/weaver v0.20.0/go.mod h1:/gQMZ/m0lS+2p75AVgHYSPuuxVMn0vOfbOMvDNtvovQ=
+github.com/ServiceWeaver/weaver v0.21.2 h1:HsVb5f5o3ZRIntW36sapObyxnE7Pr6fPRxjRrSu/cbI=
+github.com/ServiceWeaver/weaver v0.21.2/go.mod h1:/gQMZ/m0lS+2p75AVgHYSPuuxVMn0vOfbOMvDNtvovQ=
 github.com/agnivade/levenshtein v1.1.1 h1:QY8M92nrzkmr798gCo3kmMyqXFzdQVpxLlGPRBij0P8=
 github.com/agnivade/levenshtein v1.1.1/go.mod h1:veldBMzWxcCG2ZvUTKD2kJNRdCk5hVbJomOvKkmgYbo=
 github.com/antlr/antlr4/runtime/Go/antlr/v4 v4.0.0-20230305170008-8188dc5388df h1:7RFfzj4SSt6nnvCPbCqijJi1nWCd+TqAT3bYCStRC18=
