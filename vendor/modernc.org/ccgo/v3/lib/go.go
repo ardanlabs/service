@@ -110,6 +110,7 @@ const (
 	fForceRuntimeConv
 	fNoCondAssignment
 	fAddrOfFuncPtrOk
+	fVolatileOk
 )
 
 type imported struct {
@@ -2112,7 +2113,7 @@ func (p *project) typ(nd cc.Node, t cc.Type) (r string) {
 		panic(todo("", p.pos(nd), t))
 	}
 
-	if t.IsAliasType() {
+	if t.IsAliasType() && !t.IsScalarType() {
 		if tld := p.tlds[t.AliasDeclarator()]; tld != nil {
 			return tld.name
 		}
@@ -3445,7 +3446,7 @@ func (p *project) declaratorLValueArray(n cc.Node, f *function, d *cc.Declarator
 }
 
 func (p *project) declaratorLValueNormal(n cc.Node, f *function, d *cc.Declarator, t cc.Type, mode exprMode, flags flags) {
-	if p.isVolatileOrAtomic(d) {
+	if p.isVolatileOrAtomic(d) && flags&fVolatileOk == 0 {
 		panic(todo("", n.Position(), d.Position()))
 	}
 
@@ -9063,6 +9064,41 @@ func (p *project) unaryExpressionPreIncDecValueNormal(f *function, n *cc.UnaryEx
 		x = "Inc"
 	}
 	ut := n.UnaryExpression.Operand.Type()
+	if d := n.UnaryExpression.Declarator(); d != nil && p.isVolatileOrAtomic(d) {
+		if !ut.IsIntegerType() {
+			panic(todo("", n.Position(), d.Position(), ut))
+		}
+
+		flags |= fVolatileOk
+		switch ut.Size() {
+		case 4:
+			switch {
+			case ut.IsSignedType():
+				p.w("%sPre%sInt32(&", p.task.crt, x)
+				p.unaryExpression(f, n.UnaryExpression, ut, exprLValue, flags)
+				p.w(", 1)")
+			default:
+				p.w("%sPre%sInt32((*int32)(unsafe.Pointer(&", p.task.crt, x)
+				p.unaryExpression(f, n.UnaryExpression, ut, exprLValue, flags)
+				p.w(")), 1)")
+			}
+		case 8:
+			switch {
+			case ut.IsSignedType():
+				p.w("%sPre%sInt64(&", p.task.crt, x)
+				p.unaryExpression(f, n.UnaryExpression, ut, exprLValue, flags)
+				p.w(", 1)")
+			default:
+				p.w("%sPre%sInt64((*int64)(unsafe.Pointer(&", p.task.crt, x)
+				p.unaryExpression(f, n.UnaryExpression, ut, exprLValue, flags)
+				p.w(")), 1)")
+			}
+		default:
+			panic(todo("", n.Position(), d.Position(), ut))
+		}
+		return
+	}
+
 	p.w("%sPre%s%s(&", p.task.crt, x, p.helperType(n, ut))
 	p.unaryExpression(f, n.UnaryExpression, ut, exprLValue, flags)
 	p.w(", %d)", p.incDelta(n.PostfixExpression, ut))
@@ -11088,14 +11124,26 @@ func (p *project) atomicLoadN(f *function, n *cc.PostfixExpression, t cc.Type, m
 	vt := pt.Elem()
 	switch {
 	case vt.IsIntegerType():
-		var s string
+		var s, sb string
 		switch {
 		case vt.IsSignedType():
 			s = "Int"
+			sb = "int8"
 		default:
 			s = "Uint"
+			sb = "byte"
 		}
 		switch vt.Size() {
+		case 1:
+			switch {
+			case p.task.ignoreUnsupportedAligment:
+				p.w("(*(*%s)(unsafe.Pointer(", sb)
+				p.assignmentExpression(f, args[0], pt, exprValue, flags)
+				p.w(")))")
+			default:
+				p.err(n, "invalid argument of __atomic_load_n: %v, elem kind %v", pt, vt.Kind())
+			}
+			return
 		case 2, 4, 8:
 			p.w("%sAtomicLoadN%s%d", p.task.crt, s, 8*vt.Size())
 		default:
@@ -11207,7 +11255,23 @@ func (p *project) atomicStoreN(f *function, n *cc.PostfixExpression, t cc.Type, 
 		p.w(")")
 		return
 	case vt.Kind() == cc.Ptr:
-		panic(todo("", pt, vt))
+		p.w("%sAtomicStoreNUintptr", p.task.crt)
+		p.w("(")
+		types := []cc.Type{pt, vt, p.intType}
+		for i, v := range args[:3] {
+			if i != 0 {
+				p.w(", ")
+			}
+			if i == 1 {
+				p.w("%s(", strings.ToLower(p.helperType(n, vt)))
+			}
+			p.assignmentExpression(f, v, types[i], exprValue, flags)
+			if i == 1 {
+				p.w(")")
+			}
+		}
+		p.w(")")
+		return
 	}
 
 	p.err(n, "invalid arguments of __atomic_store_n: (%v, %v), element kind %v", pt, vt, vt.Kind())

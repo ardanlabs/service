@@ -370,7 +370,7 @@ func (a *Allocator) UintptrRealloc(p uintptr, size int) (r uintptr, err error) {
 	}
 
 	us := UintptrUsableSize(p)
-	if us > size {
+	if us >= size {
 		return p, nil
 	}
 

@@ -136,6 +136,7 @@ var DefaultBuiltins = [...]*Builtin{
 
 	// Numbers
 	NumbersRange,
+	NumbersRangeStep,
 	RandIntn,
 
 	// Encoding
@@ -1347,6 +1348,23 @@ var NumbersRange = &Builtin{
 	),
 }
 
+var NumbersRangeStep = &Builtin{
+	Name: "numbers.range_step",
+	Description: `Returns an array of numbers in the given (inclusive) range incremented by a positive step.
+	If "a==b", then "range == [a]"; if "a > b", then "range" is in descending order.
+	If the provided "step" is less then 1, an error will be thrown.
+	If "b" is not in the range of the provided "step", "b" won't be included in the result.
+	`,
+	Decl: types.NewFunction(
+		types.Args(
+			types.Named("a", types.N),
+			types.Named("b", types.N),
+			types.Named("step", types.N),
+		),
+		types.Named("range", types.NewArray(nil, types.N)).Description("the range between `a` and `b` in `step` increments"),
+	),
+}
+
 /**
  * Units
  */
@@ -2212,7 +2230,7 @@ var Weekday = &Builtin{
 
 var AddDate = &Builtin{
 	Name:        "time.add_date",
-	Description: "Returns the nanoseconds since epoch after adding years, months and days to nanoseconds. `undefined` if the result would be outside the valid time range that can fit within an `int64`.",
+	Description: "Returns the nanoseconds since epoch after adding years, months and days to nanoseconds. Month & day values outside their usual ranges after the operation and will be normalized - for example, October 32 would become November 1. `undefined` if the result would be outside the valid time range that can fit within an `int64`.",
 	Decl: types.NewFunction(
 		types.Args(
 			types.Named("ns", types.N).Description("nanoseconds since the epoch"),

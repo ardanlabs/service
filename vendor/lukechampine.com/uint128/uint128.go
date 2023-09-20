@@ -379,6 +379,12 @@ func (u Uint128) PutBytes(b []byte) {
 	binary.LittleEndian.PutUint64(b[8:], u.Hi)
 }
 
+// PutBytesBE stores u in b in big-endian order. It panics if len(ip) < 16.
+func (u Uint128) PutBytesBE(b []byte) {
+	binary.BigEndian.PutUint64(b[:8], u.Hi)
+	binary.BigEndian.PutUint64(b[8:], u.Lo)
+}
+
 // Big returns u as a *big.Int.
 func (u Uint128) Big() *big.Int {
 	i := new(big.Int).SetUint64(u.Hi)
@@ -417,6 +423,14 @@ func FromBytes(b []byte) Uint128 {
 	return New(
 		binary.LittleEndian.Uint64(b[:8]),
 		binary.LittleEndian.Uint64(b[8:]),
+	)
+}
+
+// FromBytesBE converts big-endian b to a Uint128 value.
+func FromBytesBE(b []byte) Uint128 {
+	return New(
+		binary.BigEndian.Uint64(b[8:]),
+		binary.BigEndian.Uint64(b[:8]),
 	)
 }
 

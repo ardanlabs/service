@@ -141,6 +141,36 @@ func CopyDir(dst, src string, canOverwrite func(fn string, fi os.FileInfo) bool)
 			return err
 		}
 
+		if info.Mode()&os.ModeSymlink != 0 {
+			target, err := filepath.EvalSymlinks(path)
+			if err != nil {
+				return fmt.Errorf("cannot evaluate symlink %s: %v", path, err)
+			}
+
+			if info, err = os.Stat(target); err != nil {
+				return fmt.Errorf("cannot stat %s: %v", target, err)
+			}
+
+			if info.IsDir() {
+				rel, err := filepath.Rel(src, path)
+				if err != nil {
+					return err
+				}
+
+				dst2 := filepath.Join(dst, rel)
+				if err := os.MkdirAll(dst2, 0770); err != nil {
+					return err
+				}
+
+				f, b, err := CopyDir(dst2, target, canOverwrite)
+				files += f
+				bytes += b
+				return err
+			}
+
+			path = target
+		}
+
 		rel, err := filepath.Rel(src, path)
 		if err != nil {
 			return err

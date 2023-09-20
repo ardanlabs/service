@@ -805,13 +805,17 @@ func hostConfigv3(cpp string, opts ...string) (predefined string, includePaths, 
 		cpp = "cpp"
 	}
 	args := append(append([]string{"-dM"}, opts...), os.DevNull)
-	pre, err := exec.Command(cpp, args...).Output()
+	cmd := exec.Command(cpp, args...)
+	cmd.Env = append(os.Environ(), "LC_ALL=C")
+	pre, err := cmd.Output()
 	if err != nil {
 		return "", nil, nil, err
 	}
 
 	args = append(append([]string{"-v"}, opts...), os.DevNull)
-	out, err := exec.Command(cpp, args...).CombinedOutput()
+	cmd = exec.Command(cpp, args...)
+	cmd.Env = append(os.Environ(), "LC_ALL=C")
+	out, err := cmd.CombinedOutput()
 	if err != nil {
 		return "", nil, nil, err
 	}
@@ -864,7 +868,9 @@ func hostConfigv4(opts []string) (predefined string, includePaths, sysIncludePat
 		}
 
 		args := append(opts, "-dM", "-E", "-")
-		pre, err := exec.Command(cc, args...).CombinedOutput()
+		cmd := exec.Command(cc, args...)
+		cmd.Env = append(os.Environ(), "LC_ALL=C")
+		pre, err := cmd.CombinedOutput()
 		if err != nil {
 			continue
 		}
@@ -883,7 +889,9 @@ func hostConfigv4(opts []string) (predefined string, includePaths, sysIncludePat
 		}
 		predefined = strings.Join(a[:w], "\n")
 		args = append(opts, "-v", "-E", "-")
-		out, err := exec.Command(cc, args...).CombinedOutput()
+		cmd = exec.Command(cc, args...)
+		cmd.Env = append(os.Environ(), "LC_ALL=C")
+		out, err := cmd.CombinedOutput()
 		if err != nil {
 			continue
 		}
