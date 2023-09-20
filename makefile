@@ -479,21 +479,12 @@ wea-dev-down:
 # ------------------------------------------------------------------------------
 
 wea-dev-apply:
-#   TODO: Start all of the observability services in dev-apply, once we've
-#   configured their integration with the weaver sales app.
-
-#   Deploy the database.
 	kustomize build zarf/k8s/dev/database | kubectl --context=kind-$(KIND_CLUSTER) apply -f -
 	kubectl rollout status --context=kind-$(KIND_CLUSTER) --namespace=$(NAMESPACE) --watch --timeout=120s sts/database
 
-#   Build the application binary.
 	cd app/weaver/sales-api; GOOS=linux GOARCH=amd64 go build .
-
-#   Build the application docker image and generate a deployment YAML.
-	$(eval WEAVER_YAML=$(shell weaver-kube deploy app/weaver/sales-api/dev.toml))
-
-#   Push the application docker image to the cluster.
+	$(eval WEAVER_YAML := $(shell weaver-kube deploy app/weaver/sales-api/dev.toml))
 	kind load docker-image $(SERVICE_IMAGE) --name $(KIND_CLUSTER)
 
-#   Start the application.
 	kubectl --context=kind-$(KIND_CLUSTER) apply -f $(WEAVER_YAML)
+	kubectl wait pods --namespace=$(NAMESPACE) --selector appName=$(APP)-api --timeout=120s --for=condition=Ready

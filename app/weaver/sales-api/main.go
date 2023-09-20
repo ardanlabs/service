@@ -29,7 +29,6 @@ import (
 /*
 	TODOs:
 	* Add secrets API to Service Weaver and use it.
-	* Makefile so there is a command to build/update and build/update/apply.
 	* More documentation in the dev.toml file or a link where to go.
 	* Break things down by domain.
 */
