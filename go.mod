@@ -3,7 +3,7 @@ module github.com/ardanlabs/service
 go 1.21
 
 require (
-	github.com/ServiceWeaver/weaver v0.20.0
+	github.com/ServiceWeaver/weaver v0.21.2
 	github.com/ardanlabs/conf/v3 v3.1.6
 	github.com/ardanlabs/darwin/v3 v3.3.0
 	github.com/dimfeld/httptreemux/v5 v5.5.0

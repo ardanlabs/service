@@ -8,7 +8,7 @@ github.com/DataDog/hyperloglog
 # github.com/OneOfOne/xxhash v1.2.8
 ## explicit; go 1.11
 github.com/OneOfOne/xxhash
-# github.com/ServiceWeaver/weaver v0.20.0
+# github.com/ServiceWeaver/weaver v0.21.2
 ## explicit; go 1.21
 github.com/ServiceWeaver/weaver
 github.com/ServiceWeaver/weaver/internal/cond
