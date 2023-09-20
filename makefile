@@ -455,3 +455,36 @@ admin-gui-start-build: admin-gui-build
 	pnpm -C ${ADMIN_FRONTEND_PREFIX} run preview 
 
 admin-gui-run: write-token-to-env admin-gui-start-build
+
+# ==============================================================================
+# Running using Service Weaver.
+
+wea-dev-gotooling: dev-gotooling
+	go install github.com/ServiceWeaver/weaver/cmd/weaver@latest
+	go install github.com/ServiceWeaver/weaver-kube/cmd/weaver-kube@latest
+
+wea-dev-up:
+	kind create cluster \
+		--image $(KIND) \
+		--name $(KIND_CLUSTER) \
+		--config zarf/k8s/dev/kind-config.yaml
+
+	kubectl --context=kind-$(KIND_CLUSTER) wait --timeout=120s --namespace=local-path-storage --for=condition=Available deployment/local-path-provisioner
+
+	kind load docker-image $(POSTGRES) --name $(KIND_CLUSTER)
+
+wea-dev-down:
+	kind delete cluster --name $(KIND_CLUSTER)
+
+# ------------------------------------------------------------------------------
+
+wea-dev-apply:
+	kustomize build zarf/k8s/dev/database | kubectl --context=kind-$(KIND_CLUSTER) apply -f -
+	kubectl rollout status --context=kind-$(KIND_CLUSTER) --namespace=$(NAMESPACE) --watch --timeout=120s sts/database
+
+	cd app/weaver/sales-api; GOOS=linux GOARCH=amd64 go build .
+	$(eval WEAVER_YAML := $(shell weaver-kube deploy app/weaver/sales-api/dev.toml))
+	kind load docker-image $(SERVICE_IMAGE) --name $(KIND_CLUSTER)
+
+	kubectl --context=kind-$(KIND_CLUSTER) apply -f $(WEAVER_YAML)
+	kubectl wait pods --namespace=$(NAMESPACE) --selector appName=$(APP)-api --timeout=120s --for=condition=Ready

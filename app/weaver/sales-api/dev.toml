@@ -1,0 +1,18 @@
+[serviceweaver]
+binary = "./sales-api"
+args = [ "--db-host=database-service.sales-system.svc.cluster.local" ]
+rollout = "1s" # immediate rollout
+
+[kube]
+namespace = "sales-system"
+local_tag = "ardanlabs/service/sales-api:0.0.1"
+use_host_network = true
+listeners.api = { port = 3000 }
+listeners.debug = { port = 4000 }
+
+# TODO(rgrandl): Set these up to integrate with started observability services.
+[kube.observability]
+prometheus_service = "none"
+jaeger_service = "none"
+loki_service = "none"
+grafana_service = "none"

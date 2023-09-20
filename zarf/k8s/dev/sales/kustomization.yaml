@@ -12,5 +12,5 @@ images:
   newName: ardanlabs/service/sales-api-metrics
   newTag: 0.0.1
 - name: service-image
-  newName: ardanlabs/service/sales-api
+  newName: ardanlabs/service/sales-api-weaver
   newTag: 0.0.1

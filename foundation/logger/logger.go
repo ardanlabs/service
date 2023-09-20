@@ -33,6 +33,12 @@ func NewWithEvents(w io.Writer, minLevel Level, serviceName string, traceIDFunc 
 	return new(w, minLevel, serviceName, traceIDFunc, events)
 }
 
+// NewWithHandler returns a new log for application use with the underlying
+// handler.
+func NewWithHandler(h slog.Handler) *Logger {
+	return &Logger{handler: h}
+}
+
 // NewStdLogger returns a standard library Logger that wraps the slog Logger.
 func NewStdLogger(logger *Logger, level Level) *log.Logger {
 	return slog.NewLogLogger(logger.handler, slog.Level(level))
@@ -90,7 +96,9 @@ func (log *Logger) write(ctx context.Context, level Level, caller int, msg strin
 
 	r := slog.NewRecord(time.Now(), slogLevel, msg, pcs[0])
 
-	args = append(args, "trace_id", log.traceIDFunc(ctx))
+	if log.traceIDFunc != nil {
+		args = append(args, "trace_id", log.traceIDFunc(ctx))
+	}
 	r.Add(args...)
 
 	log.handler.Handle(ctx, r)
