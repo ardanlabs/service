@@ -12,14 +12,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ardanlabs/service/app/services/sales-api/handlers"
-	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/productgrp"
+	v1 "github.com/ardanlabs/service/app/services/sales-api/handlers/v1"
+	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/groups/productgrp"
+	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/paging"
+	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/request"
 	"github.com/ardanlabs/service/business/core/product"
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/ardanlabs/service/business/data/order"
-	v1 "github.com/ardanlabs/service/business/web/v1"
-	"github.com/ardanlabs/service/business/web/v1/paging"
 	"github.com/ardanlabs/service/foundation/validate"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
@@ -51,7 +51,7 @@ func Test_Products(t *testing.T) {
 
 	shutdown := make(chan os.Signal, 1)
 	tests := ProductTests{
-		app: handlers.APIMux(handlers.APIMuxConfig{
+		app: v1.APIMux(v1.APIMuxConfig{
 			Shutdown: shutdown,
 			Log:      test.Log,
 			Auth:     test.Auth,
@@ -118,7 +118,7 @@ func (pt *ProductTests) postProduct400() func(t *testing.T) {
 			t.Fatalf("Should receive a status code of 400 for the response : %d", w.Code)
 		}
 
-		var got v1.ErrorResponse
+		var got request.ErrorResponse
 		if err := json.NewDecoder(w.Body).Decode(&got); err != nil {
 			t.Fatalf("Should be able to unmarshal the response to an error type : %s", err)
 		}
@@ -129,7 +129,7 @@ func (pt *ProductTests) postProduct400() func(t *testing.T) {
 			{Field: "quantity", Err: "quantity must be 1 or greater"},
 			{Field: "userID", Err: "userID is a required field"},
 		}
-		exp := v1.ErrorResponse{
+		exp := request.ErrorResponse{
 			Error:  "data validation error",
 			Fields: fields.Fields(),
 		}

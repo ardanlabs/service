@@ -7,11 +7,11 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/paging"
+	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/request"
 	"github.com/ardanlabs/service/business/core/product"
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/data/transaction"
-	v1 "github.com/ardanlabs/service/business/web/v1"
-	"github.com/ardanlabs/service/business/web/v1/paging"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/google/uuid"
 )
@@ -64,12 +64,12 @@ func (h *Handlers) executeUnderTransaction(ctx context.Context) (*Handlers, erro
 func (h *Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app AppNewProduct
 	if err := web.Decode(r, &app); err != nil {
-		return v1.NewRequestError(err, http.StatusBadRequest)
+		return request.NewError(err, http.StatusBadRequest)
 	}
 
 	np, err := toCoreNewProduct(app)
 	if err != nil {
-		return v1.NewRequestError(err, http.StatusBadRequest)
+		return request.NewError(err, http.StatusBadRequest)
 	}
 
 	prd, err := h.product.Create(ctx, np)
@@ -89,19 +89,19 @@ func (h *Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Re
 
 	var app AppUpdateProduct
 	if err := web.Decode(r, &app); err != nil {
-		return v1.NewRequestError(err, http.StatusBadRequest)
+		return request.NewError(err, http.StatusBadRequest)
 	}
 
 	productID, err := uuid.Parse(web.Param(r, "product_id"))
 	if err != nil {
-		return v1.NewRequestError(ErrInvalidID, http.StatusBadRequest)
+		return request.NewError(ErrInvalidID, http.StatusBadRequest)
 	}
 
 	prd, err := h.product.QueryByID(ctx, productID)
 	if err != nil {
 		switch {
 		case errors.Is(err, product.ErrNotFound):
-			return v1.NewRequestError(err, http.StatusNotFound)
+			return request.NewError(err, http.StatusNotFound)
 		default:
 			return fmt.Errorf("querybyid: productID[%s]: %w", productID, err)
 		}
@@ -124,7 +124,7 @@ func (h *Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Re
 
 	productID, err := uuid.Parse(web.Param(r, "product_id"))
 	if err != nil {
-		return v1.NewRequestError(ErrInvalidID, http.StatusBadRequest)
+		return request.NewError(ErrInvalidID, http.StatusBadRequest)
 	}
 
 	prd, err := h.product.QueryByID(ctx, productID)
@@ -135,7 +135,7 @@ func (h *Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Re
 			// Don't send StatusNotFound here since the call to Delete
 			// below won't if this product is not found. We only know
 			// this because we are doing the Query for the UserID.
-			return v1.NewRequestError(err, http.StatusNoContent)
+			return request.NewError(err, http.StatusNoContent)
 		default:
 			return fmt.Errorf("querybyid: productID[%s]: %w", productID, err)
 		}
@@ -208,14 +208,14 @@ func (h *Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Req
 func (h *Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	productID, err := uuid.Parse(web.Param(r, "product_id"))
 	if err != nil {
-		return v1.NewRequestError(ErrInvalidID, http.StatusBadRequest)
+		return request.NewError(ErrInvalidID, http.StatusBadRequest)
 	}
 
 	prd, err := h.product.QueryByID(ctx, productID)
 	if err != nil {
 		switch {
 		case errors.Is(err, product.ErrNotFound):
-			return v1.NewRequestError(err, http.StatusNotFound)
+			return request.NewError(err, http.StatusNotFound)
 		default:
 			return fmt.Errorf("querybyid: productID[%s]: %w", productID, err)
 		}

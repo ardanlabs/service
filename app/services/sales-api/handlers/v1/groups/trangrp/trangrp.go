@@ -5,10 +5,10 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/request"
 	"github.com/ardanlabs/service/business/core/product"
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/data/transaction"
-	v1 "github.com/ardanlabs/service/business/web/v1"
 	"github.com/ardanlabs/service/foundation/web"
 )
 
@@ -60,17 +60,17 @@ func (h *Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Re
 
 	var app AppNewTran
 	if err := web.Decode(r, &app); err != nil {
-		return v1.NewRequestError(err, http.StatusBadRequest)
+		return request.NewError(err, http.StatusBadRequest)
 	}
 
 	np, err := toCoreNewProduct(app.Product)
 	if err != nil {
-		return v1.NewRequestError(err, http.StatusBadRequest)
+		return request.NewError(err, http.StatusBadRequest)
 	}
 
 	nu, err := toCoreNewUser(app.User)
 	if err != nil {
-		return v1.NewRequestError(err, http.StatusBadRequest)
+		return request.NewError(err, http.StatusBadRequest)
 	}
 
 	usr, err := h.user.Create(ctx, nu)

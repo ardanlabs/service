@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/paging"
 	"github.com/ardanlabs/service/business/core/usersummary"
-	"github.com/ardanlabs/service/business/web/v1/paging"
 	"github.com/ardanlabs/service/foundation/web"
 )
 

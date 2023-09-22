@@ -12,13 +12,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ardanlabs/service/app/services/sales-api/handlers"
-	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/homegrp"
+	v1 "github.com/ardanlabs/service/app/services/sales-api/handlers/v1"
+	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/groups/homegrp"
+	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/paging"
 	"github.com/ardanlabs/service/business/core/home"
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/ardanlabs/service/business/data/order"
-	"github.com/ardanlabs/service/business/web/v1/paging"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/uuid"
 )
@@ -49,7 +49,7 @@ func Test_Homes(t *testing.T) {
 
 	shutdown := make(chan os.Signal, 1)
 	tests := HomeTests{
-		app: handlers.APIMux(handlers.APIMuxConfig{
+		app: v1.APIMux(v1.APIMuxConfig{
 			Shutdown: shutdown,
 			Log:      test.Log,
 			Auth:     test.Auth,
