@@ -5,7 +5,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/request"
+	"github.com/ardanlabs/service/app/services/sales-api/v1/request"
 	"github.com/ardanlabs/service/business/core/product"
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/data/transaction"

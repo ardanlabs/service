@@ -9,8 +9,8 @@ import (
 	"net/mail"
 	"time"
 
-	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/paging"
-	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/request"
+	"github.com/ardanlabs/service/app/services/sales-api/v1/paging"
+	"github.com/ardanlabs/service/app/services/sales-api/v1/request"
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/data/transaction"
 	"github.com/ardanlabs/service/business/web/auth"

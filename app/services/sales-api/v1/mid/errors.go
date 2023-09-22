@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/request"
+	"github.com/ardanlabs/service/app/services/sales-api/v1/request"
 	"github.com/ardanlabs/service/business/web/auth"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/validate"

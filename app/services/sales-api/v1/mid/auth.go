@@ -5,7 +5,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/request"
+	"github.com/ardanlabs/service/app/services/sales-api/v1/request"
 	"github.com/ardanlabs/service/business/web/auth"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/google/uuid"

@@ -10,9 +10,10 @@ import (
 	"runtime/debug"
 	"testing"
 
-	v1 "github.com/ardanlabs/service/app/services/sales-api/handlers/v1"
-	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/groups/usersummarygrp"
-	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/paging"
+	v1 "github.com/ardanlabs/service/app/services/sales-api/v1"
+	"github.com/ardanlabs/service/app/services/sales-api/v1/cmd/all"
+	"github.com/ardanlabs/service/app/services/sales-api/v1/handlers/usersummarygrp"
+	"github.com/ardanlabs/service/app/services/sales-api/v1/paging"
 	"github.com/ardanlabs/service/business/core/product"
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/data/dbtest"
@@ -50,7 +51,7 @@ func Test_UserSummary(t *testing.T) {
 			Log:      test.Log,
 			Auth:     test.Auth,
 			DB:       test.DB,
-		}),
+		}, all.Routes()),
 		userToken:  test.Token("user@example.com", "gophers"),
 		adminToken: test.Token("admin@example.com", "gophers"),
 	}
