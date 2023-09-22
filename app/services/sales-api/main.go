@@ -13,10 +13,10 @@ import (
 	"time"
 
 	"github.com/ardanlabs/conf/v3"
-	"github.com/ardanlabs/service/app/services/sales-api/handlers"
+	v1 "github.com/ardanlabs/service/app/services/sales-api/handlers/v1"
+	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/debug"
 	db "github.com/ardanlabs/service/business/data/dbsql/pgx"
 	"github.com/ardanlabs/service/business/web/auth"
-	"github.com/ardanlabs/service/business/web/v1/debug"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/vault"
 	"github.com/ardanlabs/service/foundation/web"
@@ -227,7 +227,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
 
-	cfgMux := handlers.APIMuxConfig{
+	cfgMux := v1.APIMuxConfig{
 		Build:    build,
 		Shutdown: shutdown,
 		Log:      log,
@@ -235,7 +235,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 		DB:       db,
 		Tracer:   tracer,
 	}
-	apiMux := handlers.APIMux(cfgMux, handlers.WithCORS("*"))
+	apiMux := v1.APIMux(cfgMux, v1.WithCORS("*"))
 
 	api := http.Server{
 		Addr:         cfg.Web.APIHost,

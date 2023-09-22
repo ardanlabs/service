@@ -15,11 +15,11 @@ import (
 
 	"github.com/ServiceWeaver/weaver"
 	"github.com/ardanlabs/conf/v3"
-	"github.com/ardanlabs/service/app/services/sales-api/handlers"
+	v1 "github.com/ardanlabs/service/app/services/sales-api/handlers/v1"
+	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/debug"
 	"github.com/ardanlabs/service/business/data/dbmigrate"
 	db "github.com/ardanlabs/service/business/data/dbsql/pgx"
 	"github.com/ardanlabs/service/business/web/auth"
-	"github.com/ardanlabs/service/business/web/v1/debug"
 	"github.com/ardanlabs/service/foundation/keystore"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/zarf/keys"
@@ -188,7 +188,7 @@ func serve(ctx context.Context, s *server) error {
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
 
-	cfgMux := handlers.APIMuxConfig{
+	cfgMux := v1.APIMuxConfig{
 		UsingWeaver: true,
 		Build:       build,
 		Shutdown:    shutdown,
@@ -197,7 +197,7 @@ func serve(ctx context.Context, s *server) error {
 		DB:          db,
 		Tracer:      otel.Tracer("service"),
 	}
-	apiMux := handlers.APIMux(cfgMux, handlers.WithCORS("*"))
+	apiMux := v1.APIMux(cfgMux, v1.WithCORS("*"))
 
 	api := http.Server{
 		Handler:      weaver.InstrumentHandler("service", apiMux),

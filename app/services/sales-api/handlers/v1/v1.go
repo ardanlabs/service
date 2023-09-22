@@ -1,110 +1,106 @@
-// Package v1 contains the full set of handler functions and routes
-// supported by the v1 web api.
+// Package v1 manages the different versions of the API.
 package v1
 
 import (
 	"net/http"
+	"os"
 
-	"github.com/ServiceWeaver/weaver"
-	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/checkgrp"
-	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/homegrp"
-	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/productgrp"
-	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/trangrp"
-	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/usergrp"
-	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/usersummarygrp"
-	"github.com/ardanlabs/service/business/core/event"
-	"github.com/ardanlabs/service/business/core/home"
-	"github.com/ardanlabs/service/business/core/home/stores/homedb"
-	"github.com/ardanlabs/service/business/core/product"
-	"github.com/ardanlabs/service/business/core/product/stores/productdb"
-	"github.com/ardanlabs/service/business/core/user"
-	"github.com/ardanlabs/service/business/core/user/stores/usercache"
-	"github.com/ardanlabs/service/business/core/user/stores/userdb"
-	"github.com/ardanlabs/service/business/core/usersummary"
-	"github.com/ardanlabs/service/business/core/usersummary/stores/usersummarydb"
-	db "github.com/ardanlabs/service/business/data/dbsql/pgx"
+	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/groups/checkgrp"
+	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/groups/homegrp"
+	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/groups/productgrp"
+	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/groups/trangrp"
+	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/groups/usergrp"
+	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/groups/usersummarygrp"
+	"github.com/ardanlabs/service/app/services/sales-api/handlers/v1/mid"
 	"github.com/ardanlabs/service/business/web/auth"
-	"github.com/ardanlabs/service/business/web/v1/mid"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/jmoiron/sqlx"
+	"go.opentelemetry.io/otel/trace"
 )
 
-// Config contains all the mandatory systems required by handlers.
-type Config struct {
+// Options represent optional parameters.
+type Options struct {
+	corsOrigin string
+}
+
+// WithCORS provides configuration options for CORS.
+func WithCORS(origin string) func(opts *Options) {
+	return func(opts *Options) {
+		opts.corsOrigin = origin
+	}
+}
+
+// APIMuxConfig contains all the mandatory systems required by handlers.
+type APIMuxConfig struct {
 	UsingWeaver bool
 	Build       string
+	Shutdown    chan os.Signal
 	Log         *logger.Logger
 	Auth        *auth.Auth
 	DB          *sqlx.DB
+	Tracer      trace.Tracer
 }
 
-// Routes binds all the version 1 routes.
-func Routes(app *web.App, cfg Config) {
-	const version = "v1"
-
-	envCore := event.NewCore(cfg.Log)
-	usrCore := user.NewCore(cfg.Log, envCore, usercache.NewStore(cfg.Log, userdb.NewStore(cfg.Log, cfg.DB)))
-	prdCore := product.NewCore(cfg.Log, envCore, usrCore, productdb.NewStore(cfg.Log, cfg.DB))
-	usmCore := usersummary.NewCore(usersummarydb.NewStore(cfg.Log, cfg.DB))
-	hmeCore := home.NewCore(cfg.Log, envCore, usrCore, homedb.NewStore(cfg.Log, cfg.DB))
-
-	authen := mid.Authenticate(cfg.Auth)
-	ruleAdmin := mid.Authorize(cfg.Auth, auth.RuleAdminOnly)
-	ruleAdminOrSubject := mid.Authorize(cfg.Auth, auth.RuleAdminOrSubject)
-	tran := mid.ExecuteInTransation(cfg.Log, db.NewBeginner(cfg.DB))
-
-	// -------------------------------------------------------------------------
-
-	cgh := checkgrp.New(cfg.Build, cfg.DB)
-
-	app.HandleNoMiddleware(http.MethodGet, version, "/readiness", cgh.Readiness)
-	app.HandleNoMiddleware(http.MethodGet, version, "/liveness", cgh.Liveness)
-
-	if cfg.UsingWeaver {
-		app.HandleNoMiddleware(http.MethodGet, "" /*group*/, weaver.HealthzURL, cgh.Readiness)
+// APIMux constructs a http.Handler with all application routes defined.
+func APIMux(cfg APIMuxConfig, options ...func(opts *Options)) http.Handler {
+	var opts Options
+	for _, option := range options {
+		option(&opts)
 	}
 
-	// -------------------------------------------------------------------------
+	app := web.NewApp(
+		cfg.Shutdown,
+		cfg.Tracer,
+		mid.Logger(cfg.Log),
+		mid.Errors(cfg.Log),
+		mid.Metrics(),
+		mid.Panics(),
+	)
 
-	ugh := usergrp.New(usrCore, cfg.Auth)
+	if opts.corsOrigin != "" {
+		app.EnableCORS(mid.Cors(opts.corsOrigin))
+	}
 
-	app.Handle(http.MethodGet, version, "/users/token/:kid", ugh.Token)
-	app.Handle(http.MethodGet, version, "/users", ugh.Query, authen, ruleAdmin)
-	app.Handle(http.MethodGet, version, "/users/:user_id", ugh.QueryByID, authen, ruleAdminOrSubject)
-	app.Handle(http.MethodPost, version, "/users", ugh.Create, authen, ruleAdmin)
-	app.Handle(http.MethodPut, version, "/users/:user_id", ugh.Update, authen, ruleAdminOrSubject, tran)
-	app.Handle(http.MethodDelete, version, "/users/:user_id", ugh.Delete, authen, ruleAdminOrSubject, tran)
+	addRoutes(app, cfg)
 
-	// -------------------------------------------------------------------------
+	return app
+}
 
-	pgh := productgrp.New(prdCore, usrCore)
+func addRoutes(app *web.App, cfg APIMuxConfig) {
+	checkgrp.Routes(app, checkgrp.Config{
+		UsingWeaver: cfg.UsingWeaver,
+		Build:       cfg.Build,
+		DB:          cfg.DB,
+	})
 
-	app.Handle(http.MethodGet, version, "/products", pgh.Query, authen)
-	app.Handle(http.MethodGet, version, "/products/:product_id", pgh.QueryByID, authen)
-	app.Handle(http.MethodPost, version, "/products", pgh.Create, authen)
-	app.Handle(http.MethodPut, version, "/products/:product_id", pgh.Update, authen, tran)
-	app.Handle(http.MethodDelete, version, "/products/:product_id", pgh.Delete, authen, tran)
+	homegrp.Routes(app, homegrp.Config{
+		Log:  cfg.Log,
+		Auth: cfg.Auth,
+		DB:   cfg.DB,
+	})
 
-	// -------------------------------------------------------------------------
+	productgrp.Routes(app, productgrp.Config{
+		Log:  cfg.Log,
+		Auth: cfg.Auth,
+		DB:   cfg.DB,
+	})
 
-	tgh := trangrp.New(usrCore, prdCore)
+	trangrp.Routes(app, trangrp.Config{
+		Log:  cfg.Log,
+		Auth: cfg.Auth,
+		DB:   cfg.DB,
+	})
 
-	app.Handle(http.MethodPost, version, "/tranexample", tgh.Create, authen, tran)
+	usergrp.Routes(app, usergrp.Config{
+		Log:  cfg.Log,
+		Auth: cfg.Auth,
+		DB:   cfg.DB,
+	})
 
-	// -------------------------------------------------------------------------
-
-	hgh := homegrp.New(hmeCore)
-
-	app.Handle(http.MethodGet, version, "/homes", hgh.Query, authen)
-	app.Handle(http.MethodGet, version, "/homes/:home_id", hgh.QueryByID, authen)
-	app.Handle(http.MethodPost, version, "/homes", hgh.Create, authen)
-	app.Handle(http.MethodPut, version, "/homes/:home_id", hgh.Update, authen, tran)
-	app.Handle(http.MethodDelete, version, "/homes/:home_id", hgh.Delete, authen, tran)
-
-	// -------------------------------------------------------------------------
-
-	usgh := usersummarygrp.New(usmCore)
-
-	app.Handle(http.MethodGet, version, "/usersummary", usgh.Query, authen, ruleAdmin)
+	usersummarygrp.Routes(app, usersummarygrp.Config{
+		Log:  cfg.Log,
+		Auth: cfg.Auth,
+		DB:   cfg.DB,
+	})
 }
