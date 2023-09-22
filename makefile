@@ -9,7 +9,7 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 #
 #	Having brew installed will simplify the process of installing all the tooling.
 #
-#	Run this command to install brew on your machine. This works for Linux, Max and Windows.
+#	Run this command to install brew on your machine. This works for Linux, Mac and Windows.
 #	The script explains what it will do and then pauses before it does it.
 #	$ /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 #
@@ -40,7 +40,7 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 #	$ make dev-gotooling
 #
 #	LINUX: If you are running a linux machine with brew, run these commands:
-#	$ make dev-brew-common
+#	$ make dev-brew-common or make dev-brew
 #	$ make dev-docker
 #	$ make dev-gotooling
 #
