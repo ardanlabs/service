@@ -8,6 +8,7 @@ import (
 	"go/parser"
 	"go/token"
 	"net/http"
+	"os"
 	"strings"
 )
 
@@ -23,121 +24,113 @@ var methods = map[string]string{
 }
 
 func Routes(version string) ([]Route, error) {
-	fset := token.NewFileSet()
-
-	fileName := fmt.Sprintf("app/services/sales-api/%s/%s.go", version, version)
-	file, err := parser.ParseFile(fset, fileName, nil, parser.ParseComments)
+	dirEntries, err := os.ReadDir("app/services/sales-api/v1/handlers")
 	if err != nil {
-		return nil, fmt.Errorf("ParseFile: %w", err)
+		return nil, fmt.Errorf("ReadDir: %w", err)
+	}
+
+	var files []struct {
+		group string
+		file  string
+	}
+
+	for _, entry := range dirEntries {
+		if !entry.IsDir() {
+			continue
+		}
+
+		fmt.Println(entry.Name())
+
+		files = append(files, struct {
+			group string
+			file  string
+		}{
+			entry.Name(),
+			fmt.Sprintf("app/services/sales-api/v1/handlers/%s/route.go", entry.Name()),
+		})
 	}
 
 	var routes []Route
 
-	f := func(n ast.Node) bool {
+	for _, item := range files {
+		fset := token.NewFileSet()
 
-		// We only care if this node is a function declaration.
-		funcDecl, ok := n.(*ast.FuncDecl)
-		if !ok {
+		file, err := parser.ParseFile(fset, item.file, nil, parser.ParseComments)
+		if err != nil {
+			return nil, fmt.Errorf("ParseFile: %w", err)
+		}
+
+		f := func(n ast.Node) bool {
+
+			// We only care if this node is a function declaration.
+			funcDecl, ok := n.(*ast.FuncDecl)
+			if !ok {
+				return true
+			}
+
+			// We only want the routes function.
+			if funcDecl.Name.Name != "Routes" {
+				return false
+			}
+
+			// We need to find all the value.Get calls.
+			for _, stmt := range funcDecl.Body.List {
+
+				// We are looking for expressions that will represent the
+				// call to Handle.
+				es, ok := stmt.(*ast.ExprStmt)
+				if !ok {
+					continue
+				}
+
+				ce, ok := es.X.(*ast.CallExpr)
+				if !ok {
+					continue
+				}
+
+				se, ok := ce.Fun.(*ast.SelectorExpr)
+				if !ok {
+					continue
+				}
+
+				if se.Sel.Name != "Handle" {
+					continue
+				}
+
+				// The first parameter to Handle represents the method information.
+				method, ok := ce.Args[0].(*ast.SelectorExpr)
+				if !ok {
+					continue
+				}
+
+				// The third parameter to Handle represents the route.
+				url, ok := ce.Args[2].(*ast.BasicLit)
+				if !ok {
+					continue
+				}
+
+				// The forth parameter to Handle represents the name of the
+				// handler function.
+				handler, ok := ce.Args[3].(*ast.SelectorExpr)
+				if !ok {
+					continue
+				}
+
+				routes = append(routes, Route{
+					Method:   methods[method.Sel.Name],
+					URL:      url.Value,
+					Handler:  handler.Sel.Name,
+					Group:    item.group,
+					ErrorDoc: "ErrorResponse",
+					File:     fmt.Sprintf("app/services/sales-api/%s/handlers/%s/%s.go", version, item.group, item.group),
+				})
+			}
+
 			return true
 		}
 
-		// We only want the routes function.
-		if funcDecl.Name.Name != "Routes" {
-			return false
-		}
-
-		var group string
-
-		// We need to find all the value.Get calls.
-		for _, stmt := range funcDecl.Body.List {
-
-			// We need to identify which group the handlers that follow
-			// belong to.
-			as, ok := stmt.(*ast.AssignStmt)
-			if ok {
-
-				// We are looking for call expression.
-				ce, ok := as.Rhs[0].(*ast.CallExpr)
-				if !ok {
-					continue
-				}
-
-				fn, ok := ce.Fun.(*ast.SelectorExpr)
-				if !ok {
-					continue
-				}
-
-				// Did we find a New function call.
-				if fn.Sel.Name != "New" {
-					continue
-				}
-
-				// We need the name of the variable representing the
-				// group. ex. usergrp.New
-				id, ok := fn.X.(*ast.Ident)
-				if !ok {
-					continue
-				}
-
-				group = id.Name
-
-				continue
-			}
-
-			// We are looking for expressions that will represent the
-			// call to Handle.
-			es, ok := stmt.(*ast.ExprStmt)
-			if !ok {
-				continue
-			}
-
-			ce, ok := es.X.(*ast.CallExpr)
-			if !ok {
-				continue
-			}
-
-			se, ok := ce.Fun.(*ast.SelectorExpr)
-			if !ok {
-				continue
-			}
-
-			if se.Sel.Name != "Handle" {
-				continue
-			}
-
-			// The first parameter to Handle represents the method information.
-			method, ok := ce.Args[0].(*ast.SelectorExpr)
-			if !ok {
-				continue
-			}
-
-			// The third parameter to Handle represents the route.
-			url, ok := ce.Args[2].(*ast.BasicLit)
-			if !ok {
-				continue
-			}
-
-			// The forth parameter to Handle represents the name of the
-			// handler function.
-			handler, ok := ce.Args[3].(*ast.SelectorExpr)
-			if !ok {
-				continue
-			}
-
-			routes = append(routes, Route{
-				Method:   methods[method.Sel.Name],
-				URL:      url.Value,
-				Handler:  handler.Sel.Name,
-				Group:    group,
-				ErrorDoc: "ErrorResponse",
-				File:     fmt.Sprintf("app/services/sales-api/%s/handlers/%s/%s.go", version, group, group),
-			})
-		}
-
-		return true
+		ast.Inspect(file, f)
 	}
-
-	ast.Inspect(file, f)
 
 	return routes, nil
 }
@@ -175,7 +168,7 @@ func Records(routes []Route) ([]Record, error) {
 			}
 
 			if errF != nil {
-				err = fmt.Errorf("parseWebAPI: %w", err)
+				err = fmt.Errorf("parseWebAPI: %w", errF)
 				return false
 			}
 
@@ -183,6 +176,10 @@ func Records(routes []Route) ([]Record, error) {
 		}
 
 		ast.Inspect(file, f)
+
+		if err != nil {
+			return nil, fmt.Errorf("inspect: %w", err)
+		}
 	}
 
 	return records, nil
@@ -523,7 +520,7 @@ func findAppModel(group string, modelName string) ([]Field, error) {
 	case strings.Contains(modelName, "Error"):
 		file, err = parser.ParseFile(fset, "app/services/sales-api/v1/v1.go", nil, parser.ParseComments)
 	case strings.Contains(modelName, "Response"):
-		file, err = parser.ParseFile(fset, "app/services/sales-api/v1/paging.go", nil, parser.ParseComments)
+		file, err = parser.ParseFile(fset, "app/services/sales-api/v1/paging/paging.go", nil, parser.ParseComments)
 	default:
 		file, err = parser.ParseFile(fset, "app/services/sales-api/v1/handlers/"+group+"/model.go", nil, parser.ParseComments)
 	}
