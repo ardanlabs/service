@@ -19,9 +19,9 @@ import (
 
 // Set of error variables for CRUD operations.
 var (
-	ErrNotFound    = errors.New("product not found")
-	ErrInvalidUser = errors.New("user not valid")
-	ErrInvalidCost = errors.New("cost not valid")
+	ErrNotFound     = errors.New("product not found")
+	ErrUserDisabled = errors.New("user disabled")
+	ErrInvalidCost  = errors.New("cost not valid")
 )
 
 // =============================================================================
@@ -105,7 +105,7 @@ func (c *Core) Create(ctx context.Context, np NewProduct) (Product, error) {
 	}
 
 	if !usr.Enabled {
-		return Product{}, ErrInvalidUser
+		return Product{}, ErrUserDisabled
 	}
 
 	now := time.Now()

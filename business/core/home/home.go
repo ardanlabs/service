@@ -17,8 +17,8 @@ import (
 
 // Set of error variables for CRUD operations.
 var (
-	ErrNotFound    = errors.New("home not found")
-	ErrInvalidUser = errors.New("user not valid")
+	ErrNotFound     = errors.New("home not found")
+	ErrUserDisabled = errors.New("user disabled")
 )
 
 // Storer interface declares the behaviour this package needs to persist and
@@ -91,7 +91,7 @@ func (c *Core) Create(ctx context.Context, nh NewHome) (Home, error) {
 	}
 
 	if !usr.Enabled {
-		return Home{}, ErrInvalidUser
+		return Home{}, ErrUserDisabled
 	}
 
 	now := time.Now()
