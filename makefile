@@ -56,10 +56,6 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 #	dependencies properly.
 #
 #	$ make test
-#
-#	To run the tests, linter, vet, and the vuln check.
-#
-#	# make test-all
 
 # ==============================================================================
 # Running The Project
