@@ -35,7 +35,7 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 #   Docker at least 3 CPUs.
 #
 #	MAC: If you are running a mac machine with brew, run these commands:
-#	$ make dev-brew  or  make dev-brew-arm64
+#	$ make dev-brew
 #	$ make dev-docker
 #	$ make dev-gotooling
 #
