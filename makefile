@@ -34,18 +34,8 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 #   This project uses Docker and it is expected to be installed. Please provide
 #   Docker at least 3 CPUs.
 #
-#	MAC: If you are running a mac machine with brew, run these commands:
+#	Run these commands to install everything needed.
 #	$ make dev-brew
-#	$ make dev-docker
-#	$ make dev-gotooling
-#
-#	LINUX: If you are running a linux machine with brew, run these commands:
-#	$ make dev-brew-common or make dev-brew
-#	$ make dev-docker
-#	$ make dev-gotooling
-#
-#	WINDOWS: If you are a windows user with brew, run these commands:
-#	$ make dev-brew-common
 #	$ make dev-docker
 #	$ make dev-gotooling
 
