@@ -7,7 +7,6 @@ package ast
 import (
 	"fmt"
 	"io"
-	"os"
 	"sort"
 	"strconv"
 	"strings"
@@ -146,7 +145,6 @@ type Compiler struct {
 	keepModules             bool                          // whether to keep the unprocessed, parse modules (below)
 	parsedModules           map[string]*Module            // parsed, but otherwise unprocessed modules, kept track of when keepModules is true
 	useTypeCheckAnnotations bool                          // whether to provide annotated information (schemas) to the type checker
-	generalRuleRefsEnabled  bool
 }
 
 // CompilerStage defines the interface for stages in the compiler.
@@ -334,8 +332,6 @@ func NewCompiler() *Compiler {
 		{"BuildRuleIndices", "compile_stage_rebuild_indices", c.buildRuleIndices},
 		{"BuildComprehensionIndices", "compile_stage_rebuild_comprehension_indices", c.buildComprehensionIndices},
 	}
-
-	_, c.generalRuleRefsEnabled = os.LookupEnv("EXPERIMENTAL_GENERAL_RULE_REFS")
 
 	return c
 }
@@ -783,6 +779,60 @@ func (c *Compiler) PassesTypeCheck(body Body) bool {
 	return len(errs) == 0
 }
 
+// PassesTypeCheckRules determines whether the given rules passes type checking
+func (c *Compiler) PassesTypeCheckRules(rules []*Rule) Errors {
+	elems := []util.T{}
+
+	for _, rule := range rules {
+		elems = append(elems, rule)
+	}
+
+	// Load the global input schema if one was provided.
+	if c.schemaSet != nil {
+		if schema := c.schemaSet.Get(SchemaRootRef); schema != nil {
+
+			var allowNet []string
+			if c.capabilities != nil {
+				allowNet = c.capabilities.AllowNet
+			}
+
+			tpe, err := loadSchema(schema, allowNet)
+			if err != nil {
+				return Errors{NewError(TypeErr, nil, err.Error())}
+			}
+			c.inputType = tpe
+		}
+	}
+
+	var as *AnnotationSet
+	if c.useTypeCheckAnnotations {
+		as = c.annotationSet
+	}
+
+	checker := newTypeChecker().WithSchemaSet(c.schemaSet).WithInputType(c.inputType)
+
+	if c.TypeEnv == nil {
+		if c.capabilities == nil {
+			c.capabilities = CapabilitiesForThisVersion()
+		}
+
+		c.builtins = make(map[string]*Builtin, len(c.capabilities.Builtins)+len(c.customBuiltins))
+
+		for _, bi := range c.capabilities.Builtins {
+			c.builtins[bi.Name] = bi
+		}
+
+		for name, bi := range c.customBuiltins {
+			c.builtins[name] = bi
+		}
+
+		c.TypeEnv = checker.Env(c.builtins)
+	}
+
+	_, errs := checker.CheckTypes(c.TypeEnv, elems, as)
+	return errs
+}
+
 // ModuleLoader defines the interface that callers can implement to enable lazy
 // loading of modules during compilation.
 type ModuleLoader func(resolved map[string]*Module) (parsed map[string]*Module, err error)
@@ -951,50 +1001,8 @@ func (c *Compiler) checkRuleConflicts() {
 			//   data.p.q[r][s] { r := input.r; s := input.s }
 			//   data.p[q].r.s { q := input.q }
 
-			if c.generalRuleRefsEnabled {
-				if r.Ref().IsGround() && len(node.Children) > 0 {
-					conflicts = node.flattenChildren()
-				}
-			} else { // TODO: Remove when general rule refs are enabled by default.
-				if r.Head.RuleKind() == SingleValue && len(node.Children) > 0 {
-					if len(ref) > 1 && !ref[len(ref)-1].IsGround() { // p.q[x] and p.q.s.t => check grandchildren
-						for _, c := range node.Children {
-							grandchildrenFound := false
-
-							if len(c.Values) > 0 {
-								childRules := extractRules(c.Values)
-								for _, childRule := range childRules {
-									childRef := childRule.Ref()
-									if childRule.Head.RuleKind() == SingleValue && !childRef[len(childRef)-1].IsGround() {
-										// The child is a partial object rule, so it's effectively "generating" grandchildren.
-										grandchildrenFound = true
-										break
-									}
-								}
-							}
-
-							if len(c.Children) > 0 {
-								grandchildrenFound = true
-							}
-
-							if grandchildrenFound {
-								conflicts = node.flattenChildren()
-								break
-							}
-						}
-					} else { // p.q.s and p.q.s.t => any children are in conflict
-						conflicts = node.flattenChildren()
-					}
-				}
-
-				// Multi-value rules may not have any other rules in their extent; e.g.:
-				//
-				// data.p[v] { v := ... }
-				// data.p.q := 42 # In direct conflict with data.p[v], which is constructing a set and cannot have values assigned to a sub-path.
-
-				if r.Head.RuleKind() == MultiValue && len(node.Children) > 0 {
-					conflicts = node.flattenChildren()
-				}
+			if r.Ref().IsGround() && len(node.Children) > 0 {
+				conflicts = node.flattenChildren()
 			}
 
 			if r.Head.RuleKind() == SingleValue && r.Head.Ref().IsGround() {
@@ -1757,18 +1765,6 @@ func (c *Compiler) rewriteRuleHeadRefs() {
 			}
 
 			for i := 1; i < len(ref); i++ {
-				// NOTE: Unless enabled via the EXPERIMENTAL_GENERAL_RULE_REFS env var, non-string values in the refs are forbidden
-				// except for the last position, e.g.
-				//     OK: p.q.r[s]
-				// NOT OK: p[q].r.s
-				// TODO: Remove when general rule refs are enabled by default.
-				if !c.generalRuleRefsEnabled && i != len(ref)-1 { // last
-					if _, ok := ref[i].Value.(String); !ok {
-						c.err(NewError(TypeErr, rule.Loc(), "rule head must only contain string terms (except for last): %v", ref[i]))
-						continue
-					}
-				}
-
 				// Rewrite so that any non-scalar elements that in the last position of
 				// the rule are vars:
 				//     p.q.r[y.z] { ... }  =>  p.q.r[__local0__] { __local0__ = y.z }
@@ -2331,8 +2327,9 @@ func (c *Compiler) rewriteLocalVarsInRule(rule *Rule, unusedArgs VarSet, argsSta
 	// Rewrite assignments in body.
 	used := NewVarSet()
 
-	last := rule.Head.Ref()[len(rule.Head.Ref())-1]
-	used.Update(last.Vars())
+	for _, t := range rule.Head.Ref()[1:] {
+		used.Update(t.Vars())
+	}
 
 	if rule.Head.Key != nil {
 		used.Update(rule.Head.Key.Vars())
