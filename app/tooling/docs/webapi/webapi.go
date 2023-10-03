@@ -39,8 +39,6 @@ func Routes(version string) ([]Route, error) {
 			continue
 		}
 
-		fmt.Println(entry.Name())
-
 		files = append(files, struct {
 			group string
 			file  string
