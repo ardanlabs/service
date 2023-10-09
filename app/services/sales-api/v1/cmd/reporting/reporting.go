@@ -1,5 +1,5 @@
-// Package usersummary binds the usersummary domain set of routes into the specified app.
-package usersummary
+// Package reporting binds the reporting domain set of routes into the specified app.
+package reporting
 
 import (
 	v1 "github.com/ardanlabs/service/app/services/sales-api/v1"

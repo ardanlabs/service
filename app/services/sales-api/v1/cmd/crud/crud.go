@@ -1,10 +1,13 @@
-// Package product binds the product domain set of routes into the specified app.
-package product
+// Package crud binds the crud domain set of routes into the specified app.
+package crud
 
 import (
 	v1 "github.com/ardanlabs/service/app/services/sales-api/v1"
 	"github.com/ardanlabs/service/app/services/sales-api/v1/handlers/checkgrp"
+	"github.com/ardanlabs/service/app/services/sales-api/v1/handlers/homegrp"
 	"github.com/ardanlabs/service/app/services/sales-api/v1/handlers/productgrp"
+	"github.com/ardanlabs/service/app/services/sales-api/v1/handlers/trangrp"
+	"github.com/ardanlabs/service/app/services/sales-api/v1/handlers/usergrp"
 	"github.com/ardanlabs/service/foundation/web"
 )
 
@@ -24,7 +27,25 @@ func (add) Add(app *web.App, cfg v1.APIMuxConfig) {
 		DB:          cfg.DB,
 	})
 
+	homegrp.Routes(app, homegrp.Config{
+		Log:  cfg.Log,
+		Auth: cfg.Auth,
+		DB:   cfg.DB,
+	})
+
 	productgrp.Routes(app, productgrp.Config{
+		Log:  cfg.Log,
+		Auth: cfg.Auth,
+		DB:   cfg.DB,
+	})
+
+	trangrp.Routes(app, trangrp.Config{
+		Log:  cfg.Log,
+		Auth: cfg.Auth,
+		DB:   cfg.DB,
+	})
+
+	usergrp.Routes(app, usergrp.Config{
 		Log:  cfg.Log,
 		Auth: cfg.Auth,
 		DB:   cfg.DB,
