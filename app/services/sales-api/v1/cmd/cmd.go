@@ -32,7 +32,7 @@ import (
 )
 
 // Main is the entry point for the running instance.
-func Main(build string, routeAdder v1.RouteAdder, debug net.Listener, app net.Listener, usingWeaver bool) error {
+func Main(build string, routeAdder v1.RouteAdder) error {
 	var log *logger.Logger
 
 	events := logger.Events{
@@ -51,7 +51,35 @@ func Main(build string, routeAdder v1.RouteAdder, debug net.Listener, app net.Li
 
 	ctx := context.Background()
 
-	if err := run(ctx, log, build, routeAdder, debug, app, usingWeaver); err != nil {
+	if err := run(ctx, log, build, routeAdder, nil, nil, false); err != nil {
+		log.Error(ctx, "startup", "msg", err)
+		return err
+	}
+
+	return nil
+}
+
+// MainServiceWeaver is the entry point for the running instance.
+func MainServiceWeaver(build string, routeAdder v1.RouteAdder, debug net.Listener, app net.Listener) error {
+	var log *logger.Logger
+
+	events := logger.Events{
+		Error: func(ctx context.Context, r logger.Record) {
+			log.Info(ctx, "******* SEND ALERT ******")
+		},
+	}
+
+	traceIDFunc := func(ctx context.Context) string {
+		return web.GetTraceID(ctx)
+	}
+
+	log = logger.NewWithEvents(os.Stdout, logger.LevelInfo, "SALES-API", traceIDFunc, events)
+
+	// -------------------------------------------------------------------------
+
+	ctx := context.Background()
+
+	if err := run(ctx, log, build, routeAdder, debug, app, true); err != nil {
 		log.Error(ctx, "startup", "msg", err)
 		return err
 	}

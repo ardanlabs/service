@@ -32,7 +32,7 @@ type server struct {
 }
 
 func serve(ctx context.Context, s *server) error {
-	if err := cmd.Main(build, all.Routes(), s.debug, s.api, true); err != nil {
+	if err := cmd.MainServiceWeaver(build, all.Routes(), s.debug, s.api); err != nil {
 		return err
 	}
 

@@ -31,17 +31,17 @@ func main() {
 
 	switch routes {
 	case "all":
-		if err := cmd.Main(build, all.Routes(), nil, nil, false); err != nil {
+		if err := cmd.Main(build, all.Routes()); err != nil {
 			os.Exit(1)
 		}
 
 	case "crud":
-		if err := cmd.Main(build, crud.Routes(), nil, nil, false); err != nil {
+		if err := cmd.Main(build, crud.Routes()); err != nil {
 			os.Exit(1)
 		}
 
 	case "reporting":
-		if err := cmd.Main(build, reporting.Routes(), nil, nil, false); err != nil {
+		if err := cmd.Main(build, reporting.Routes()); err != nil {
 			os.Exit(1)
 		}
 	}
