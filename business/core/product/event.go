@@ -9,8 +9,8 @@ import (
 	"github.com/ardanlabs/service/business/core/user"
 )
 
-func (c *Core) registerEventHandlers(evnCore *event.Core) {
-	evnCore.AddHandler(user.EventSource, user.EventUpdated, c.handleUserUpdatedEvent)
+func (c *Core) registerEventHandlers() {
+	c.evnCore.AddHandler(user.EventSource, user.EventUpdated, c.handleUserUpdatedEvent)
 }
 
 func (c *Core) handleUserUpdatedEvent(ctx context.Context, ev event.Event) error {
