@@ -27,8 +27,12 @@ import (
 func init() {
 	// See internal/weaver/types.go.
 	weaver.SetLogger = setLogger
+	weaver.HasRefs = hasRefs
 	weaver.FillRefs = fillRefs
+	weaver.HasListeners = hasListeners
 	weaver.FillListeners = fillListeners
+	weaver.HasConfig = hasConfig
+	weaver.GetConfig = getConfig
 }
 
 // See internal/weaver/types.go.
@@ -39,6 +43,30 @@ func setLogger(v any, logger *slog.Logger) error {
 	}
 	x.setLogger(logger)
 	return nil
+}
+
+// See internal/weaver/types.go.
+func hasRefs(impl any) bool {
+	p := reflect.ValueOf(impl)
+	if p.Kind() != reflect.Pointer {
+		return false
+	}
+	s := p.Elem()
+	if s.Kind() != reflect.Struct {
+		return false
+	}
+
+	for i, n := 0, s.NumField(); i < n; i++ {
+		f := s.Field(i)
+		if !f.CanAddr() {
+			continue
+		}
+		p := reflect.NewAt(f.Type(), f.Addr().UnsafePointer()).Interface()
+		if _, ok := p.(interface{ isRef() }); ok {
+			return true
+		}
+	}
+	return false
 }
 
 // See internal/weaver/types.go.
@@ -54,19 +82,13 @@ func fillRefs(impl any, get func(reflect.Type) (any, error)) error {
 
 	for i, n := 0, s.NumField(); i < n; i++ {
 		f := s.Field(i)
-		if !f.Type().Implements(reflection.Type[interface{ isRef() }]()) {
+		if !f.CanAddr() {
 			continue
 		}
-
-		// Sanity check that field type structure matches weaver.Ref[T].
-		if f.Kind() != reflect.Struct {
-			panic(fmt.Errorf("FillRefs: weaver.Ref %v is not a struct", f))
-		}
-		if f.NumField() != 1 {
-			panic(fmt.Errorf("FillRefs: weaver.Ref %v does not have one field", f))
-		}
-		if f.Type().Field(0).Name != "value" {
-			panic(fmt.Errorf("FillRefs: weaver.Ref %v field 0 not named %q", f, "value"))
+		p := reflect.NewAt(f.Type(), f.Addr().UnsafePointer()).Interface()
+		x, ok := p.(interface{ setRef(any) })
+		if !ok {
+			continue
 		}
 
 		// Set the component.
@@ -75,9 +97,29 @@ func fillRefs(impl any, get func(reflect.Type) (any, error)) error {
 		if err != nil {
 			return fmt.Errorf("FillRefs: setting field %v.%s: %w", s.Type(), s.Type().Field(i).Name, err)
 		}
-		setPossiblyUnexported(valueField, reflect.ValueOf(component))
+		x.setRef(component)
 	}
 	return nil
+}
+
+// See internal/weaver/types.go.
+func hasListeners(impl any) bool {
+	p := reflect.ValueOf(impl)
+	if p.Kind() != reflect.Pointer {
+		return false
+	}
+	s := p.Elem()
+	if s.Kind() != reflect.Struct {
+		return false
+	}
+
+	for i, n := 0, s.NumField(); i < n; i++ {
+		f := s.Field(i)
+		if f.Type() == reflection.Type[Listener]() {
+			return true
+		}
+	}
+	return false
 }
 
 // See internal/weaver/types.go.
@@ -122,11 +164,16 @@ func fillListeners(impl any, get func(name string) (net.Listener, string, error)
 	return nil
 }
 
-// setPossiblyUnexported sets dst to value. It is equivalent to
-// reflect.Value.Set except that it works even if dst was accessed via
-// unexported fields.
-func setPossiblyUnexported(dst, value reflect.Value) {
-	// Use UnsafePointer + NewAt so we can handle unexported fields.
-	dst = reflect.NewAt(dst.Type(), dst.Addr().UnsafePointer()).Elem()
-	dst.Set(value)
+// See internal/weaver/types.go.
+func hasConfig(impl any) bool {
+	_, ok := impl.(interface{ getConfig() any })
+	return ok
+}
+
+// See internal/weaver/types.go.
+func getConfig(impl any) any {
+	if c, ok := impl.(interface{ getConfig() any }); ok {
+		return c.getConfig()
+	}
+	return nil
 }

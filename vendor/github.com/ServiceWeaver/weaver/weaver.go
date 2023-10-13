@@ -47,6 +47,7 @@ import (
 //go:generate ./dev/protoc.sh internal/tool/ssh/impl/ssh.proto
 //go:generate ./dev/protoc.sh runtime/protos/runtime.proto
 //go:generate ./dev/protoc.sh runtime/protos/config.proto
+//go:generate ./cmd/weaver/weaver generate . ./internal/tool/multi
 //go:generate ./dev/writedeps.sh
 
 // RemoteCallError indicates that a remote component method call failed to
@@ -162,18 +163,18 @@ func runLocal[T any, _ PointerToMain[T]](ctx context.Context, app func(context.C
 		return err
 	}
 
-	runner, err := weaver.NewSingleWeavelet(ctx, regs, opts)
+	wlet, err := weaver.NewSingleWeavelet(ctx, regs, opts)
 	if err != nil {
 		return err
 	}
 
 	go func() {
-		if err := runner.ServeStatus(ctx); err != nil {
+		if err := wlet.ServeStatus(ctx); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 		}
 	}()
 
-	main, err := runner.GetImpl(reflection.Type[T]())
+	main, err := wlet.GetImpl(reflection.Type[T]())
 	if err != nil {
 		return err
 	}
@@ -187,18 +188,27 @@ func runRemote[T any, _ PointerToMain[T]](ctx context.Context, app func(context.
 	}
 
 	opts := weaver.RemoteWeaveletOptions{}
-	runner, err := weaver.NewRemoteWeavelet(ctx, regs, bootstrap, opts)
+	wlet, err := weaver.NewRemoteWeavelet(ctx, regs, bootstrap, opts)
 	if err != nil {
 		return err
 	}
-	if runner.Info().RunMain {
-		main, err := runner.GetImpl(reflection.Type[T]())
+
+	// Return when either (1) the remote weavelet exits, or (2) the user
+	// provided app function returns, whichever happens first.
+	errs := make(chan error, 2)
+	if wlet.Info().RunMain {
+		main, err := wlet.GetImpl(reflection.Type[T]())
 		if err != nil {
 			return err
 		}
-		return app(ctx, main.(*T))
+		go func() {
+			errs <- app(ctx, main.(*T))
+		}()
 	}
-	return runner.Wait()
+	go func() {
+		errs <- wlet.Wait()
+	}()
+	return <-errs
 }
 
 // Implements[T] is a type that is be embedded inside a component
@@ -285,6 +295,11 @@ func (r Ref[T]) Get() T { return r.value }
 // isRef is an internal method that is only implemented by Ref[T] and is
 // used internally to check that a value is of type Ref[T].
 func (r Ref[T]) isRef() {}
+
+// setRef sets the underlying value of a Ref.
+func (r *Ref[T]) setRef(value any) {
+	r.value = value.(T)
+}
 
 // Listener is a network listener that can be placed as a field inside a
 // component implementation struct. Once placed, Service Weaver automatically
@@ -406,6 +421,11 @@ type WithConfig[T any] struct {
 // Any fields in the application config file that are not present in T will be
 // flagged as an error at application startup.
 func (wc *WithConfig[T]) Config() *T {
+	return &wc.config
+}
+
+// getConfig returns the underlying config.
+func (wc *WithConfig[T]) getConfig() any {
 	return &wc.config
 }
 
