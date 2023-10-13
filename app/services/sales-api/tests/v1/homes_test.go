@@ -15,7 +15,7 @@ import (
 	v1 "github.com/ardanlabs/service/app/services/sales-api/v1"
 	"github.com/ardanlabs/service/app/services/sales-api/v1/cmd/all"
 	"github.com/ardanlabs/service/app/services/sales-api/v1/handlers/homegrp"
-	"github.com/ardanlabs/service/app/services/sales-api/v1/paging"
+	"github.com/ardanlabs/service/app/services/sales-api/v1/response"
 	"github.com/ardanlabs/service/business/core/home"
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/data/dbtest"
@@ -112,7 +112,7 @@ func (ht *HomeTests) getHomes200(hmes []home.Home) func(t *testing.T) {
 			t.Fatalf("Should receive a status code of 200 for the response : %d", w.Code)
 		}
 
-		var pr paging.Response[homegrp.AppHome]
+		var pr response.PageDocument[homegrp.AppHome]
 		if err := json.Unmarshal(w.Body.Bytes(), &pr); err != nil {
 			t.Fatalf("Should be able to unmarshal the response : %s", err)
 		}

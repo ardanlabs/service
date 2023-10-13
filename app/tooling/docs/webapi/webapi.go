@@ -119,9 +119,11 @@ func Routes(version string) ([]Route, error) {
 					URL:      url.Value,
 					Handler:  handler.Sel.Name,
 					Group:    item.group,
-					ErrorDoc: "ErrorResponse",
+					ErrorDoc: "ErrorDocument",
 					File:     fmt.Sprintf("app/services/sales-api/%s/handlers/%s/%s.go", version, item.group, item.group),
 				})
+
+				break
 			}
 
 			return true
@@ -246,8 +248,8 @@ func parseWebAPI(fset *token.FileSet, file *ast.File, funcDecl *ast.FuncDecl, ro
 		parts := strings.Split(funcName, ".")
 
 		switch parts[0] {
-		case "paging":
-			funcName, _ = strings.CutPrefix(parts[1], "NewResponse[")
+		case "response":
+			funcName, _ = strings.CutPrefix(parts[1], "PageDocument[")
 			funcName, _ = strings.CutSuffix(funcName, "]")
 
 			concreteModelName, _, err := findAppFunctionFromModel(route.Group, funcName)
@@ -260,7 +262,7 @@ func parseWebAPI(fset *token.FileSet, file *ast.File, funcDecl *ast.FuncDecl, ro
 				return false, Record{}, fmt.Errorf("findAppModel output: %w", err)
 			}
 
-			outputDoc, err := findAppModel(route.Group, "Response")
+			outputDoc, err := findAppModel(route.Group, "PageDocument")
 			if err != nil {
 				return false, Record{}, fmt.Errorf("findAppModel output: %w", err)
 			}
@@ -339,19 +341,19 @@ func findOutputDocument(body *ast.BlockStmt) (funcName string, status string) {
 			continue
 		}
 
-		var isNewResponse bool
+		var isPageDocument bool
 
-		// Did we find NewResponse and if so, we need the
+		// Did we find PageDocument and if so, we need the
 		// to function inside that call.
 		if se, ok = ce.Fun.(*ast.SelectorExpr); ok {
-			if se.Sel.Name != "NewResponse" {
+			if se.Sel.Name != "NewPageDocument" {
 				continue
 			}
 			ce, ok = ce.Args[0].(*ast.CallExpr)
 			if !ok {
 				continue
 			}
-			isNewResponse = true
+			isPageDocument = true
 		}
 
 		// Did we find a to function.
@@ -362,8 +364,8 @@ func findOutputDocument(body *ast.BlockStmt) (funcName string, status string) {
 
 		// This is the actual document that is being sent back with
 		// the idt.Name type as the generic type.
-		if isNewResponse {
-			return fmt.Sprintf("paging.NewResponse[%s]", idt.Name), status
+		if isPageDocument {
+			return fmt.Sprintf("response.PageDocument[%s]", idt.Name), status
 		}
 
 		return idt.Name, status
@@ -515,10 +517,10 @@ func findAppModel(group string, modelName string) ([]Field, error) {
 	var err error
 
 	switch {
-	case strings.Contains(modelName, "Error"):
-		file, err = parser.ParseFile(fset, "app/services/sales-api/v1/v1.go", nil, parser.ParseComments)
-	case strings.Contains(modelName, "Response"):
-		file, err = parser.ParseFile(fset, "app/services/sales-api/v1/paging/paging.go", nil, parser.ParseComments)
+	case strings.Contains(modelName, "ErrorDocument"):
+		file, err = parser.ParseFile(fset, "app/services/sales-api/v1/response/response.go", nil, parser.ParseComments)
+	case strings.Contains(modelName, "PageDocument"):
+		file, err = parser.ParseFile(fset, "app/services/sales-api/v1/response/response.go", nil, parser.ParseComments)
 	default:
 		file, err = parser.ParseFile(fset, "app/services/sales-api/v1/handlers/"+group+"/model.go", nil, parser.ParseComments)
 	}
@@ -676,7 +678,7 @@ func findQueryVars(body *ast.BlockStmt, group string) (QueryVars, error) {
 		}
 
 		switch ident.Name {
-		case "paging":
+		case "page":
 			qv.Paging = append(qv.Paging, "page", "rows")
 
 		case "parseFilter":

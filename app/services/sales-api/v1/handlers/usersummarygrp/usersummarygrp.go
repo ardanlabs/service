@@ -6,8 +6,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/ardanlabs/service/app/services/sales-api/v1/paging"
+	"github.com/ardanlabs/service/app/services/sales-api/v1/response"
 	"github.com/ardanlabs/service/business/core/usersummary"
+	"github.com/ardanlabs/service/business/data/page"
 	"github.com/ardanlabs/service/foundation/web"
 )
 
@@ -25,7 +26,7 @@ func New(summary *usersummary.Core) *Handlers {
 
 // Query returns a list of user summary data with paging.
 func (h *Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	page, err := paging.ParseRequest(r)
+	page, err := page.Parse(r)
 	if err != nil {
 		return err
 	}
@@ -50,5 +51,5 @@ func (h *Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Req
 		return fmt.Errorf("count: %w", err)
 	}
 
-	return web.Respond(ctx, w, paging.NewResponse(toAppUsersSummary(smms), total, page.Number, page.RowsPerPage), http.StatusOK)
+	return web.Respond(ctx, w, response.NewPageDocument(toAppUsersSummary(smms), total, page.Number, page.RowsPerPage), http.StatusOK)
 }

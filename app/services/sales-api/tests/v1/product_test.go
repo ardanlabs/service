@@ -15,8 +15,7 @@ import (
 	v1 "github.com/ardanlabs/service/app/services/sales-api/v1"
 	"github.com/ardanlabs/service/app/services/sales-api/v1/cmd/all"
 	"github.com/ardanlabs/service/app/services/sales-api/v1/handlers/productgrp"
-	"github.com/ardanlabs/service/app/services/sales-api/v1/paging"
-	"github.com/ardanlabs/service/app/services/sales-api/v1/request"
+	"github.com/ardanlabs/service/app/services/sales-api/v1/response"
 	"github.com/ardanlabs/service/business/core/product"
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/data/dbtest"
@@ -119,7 +118,7 @@ func (pt *ProductTests) postProduct400() func(t *testing.T) {
 			t.Fatalf("Should receive a status code of 400 for the response : %d", w.Code)
 		}
 
-		var got request.ErrorResponse
+		var got response.ErrorDocument
 		if err := json.NewDecoder(w.Body).Decode(&got); err != nil {
 			t.Fatalf("Should be able to unmarshal the response to an error type : %s", err)
 		}
@@ -130,7 +129,7 @@ func (pt *ProductTests) postProduct400() func(t *testing.T) {
 			{Field: "quantity", Err: "quantity must be 1 or greater"},
 			{Field: "userID", Err: "userID is a required field"},
 		}
-		exp := request.ErrorResponse{
+		exp := response.ErrorDocument{
 			Error:  "data validation error",
 			Fields: fields.Fields(),
 		}
@@ -284,7 +283,7 @@ func (pt *ProductTests) getProducts200(prds []product.Product) func(t *testing.T
 			t.Fatalf("Should receive a status code of 200 for the response : %d", w.Code)
 		}
 
-		var pr paging.Response[productgrp.AppProductDetails]
+		var pr response.PageDocument[productgrp.AppProductDetails]
 		if err := json.Unmarshal(w.Body.Bytes(), &pr); err != nil {
 			t.Fatalf("Should be able to unmarshal the response : %s", err)
 		}

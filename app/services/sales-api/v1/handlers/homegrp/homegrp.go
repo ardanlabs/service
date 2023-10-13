@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/ardanlabs/service/app/services/sales-api/v1/paging"
-	"github.com/ardanlabs/service/app/services/sales-api/v1/request"
+	"github.com/ardanlabs/service/app/services/sales-api/v1/response"
 	"github.com/ardanlabs/service/business/core/home"
+	"github.com/ardanlabs/service/business/data/page"
 	"github.com/ardanlabs/service/business/data/transaction"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/google/uuid"
@@ -53,7 +53,7 @@ func (h *Handlers) executeUnderTransaction(ctx context.Context) (*Handlers, erro
 
 // Query returns a list of homes with paging.
 func (h *Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	page, err := paging.ParseRequest(r)
+	page, err := page.Parse(r)
 	if err != nil {
 		return err
 	}
@@ -78,21 +78,21 @@ func (h *Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Req
 		return fmt.Errorf("count: %w", err)
 	}
 
-	return web.Respond(ctx, w, paging.NewResponse(toAppHomes(homes), total, page.Number, page.RowsPerPage), http.StatusOK)
+	return web.Respond(ctx, w, response.NewPageDocument(toAppHomes(homes), total, page.Number, page.RowsPerPage), http.StatusOK)
 }
 
 // QueryByID returns a home by its ID.
 func (h *Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	homeID, err := uuid.Parse(web.Param(r, "home_id"))
 	if err != nil {
-		return request.NewError(ErrInvalidID, http.StatusBadRequest)
+		return response.NewError(ErrInvalidID, http.StatusBadRequest)
 	}
 
 	hme, err := h.home.QueryByID(ctx, homeID)
 	if err != nil {
 		switch {
 		case errors.Is(err, home.ErrNotFound):
-			return request.NewError(err, http.StatusNotFound)
+			return response.NewError(err, http.StatusNotFound)
 		default:
 			return fmt.Errorf("querybyid: homeID[%s] %w", homeID, err)
 		}
@@ -105,12 +105,12 @@ func (h *Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http
 func (h *Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app AppNewHome
 	if err := web.Decode(r, &app); err != nil {
-		return request.NewError(err, http.StatusBadRequest)
+		return response.NewError(err, http.StatusBadRequest)
 	}
 
 	nh, err := toCoreNewHome(app)
 	if err != nil {
-		return request.NewError(err, http.StatusBadRequest)
+		return response.NewError(err, http.StatusBadRequest)
 	}
 
 	hme, err := h.home.Create(ctx, nh)
@@ -130,19 +130,19 @@ func (h *Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Re
 
 	var app AppUpdateHome
 	if err := web.Decode(r, &app); err != nil {
-		return request.NewError(err, http.StatusBadRequest)
+		return response.NewError(err, http.StatusBadRequest)
 	}
 
 	homeID, err := uuid.Parse(web.Param(r, "home_id"))
 	if err != nil {
-		return request.NewError(ErrInvalidID, http.StatusBadRequest)
+		return response.NewError(ErrInvalidID, http.StatusBadRequest)
 	}
 
 	hme, err := h.home.QueryByID(ctx, homeID)
 	if err != nil {
 		switch {
 		case errors.Is(err, home.ErrNotFound):
-			return request.NewError(err, http.StatusNotFound)
+			return response.NewError(err, http.StatusNotFound)
 		default:
 			return fmt.Errorf("querybyid: homeID[%s] %w", homeID, err)
 		}
@@ -165,14 +165,14 @@ func (h *Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Re
 
 	homeID, err := uuid.Parse(web.Param(r, "home_id"))
 	if err != nil {
-		return request.NewError(ErrInvalidID, http.StatusBadRequest)
+		return response.NewError(ErrInvalidID, http.StatusBadRequest)
 	}
 
 	hme, err := h.home.QueryByID(ctx, homeID)
 	if err != nil {
 		switch {
 		case errors.Is(err, home.ErrNotFound):
-			return request.NewError(err, http.StatusNotFound)
+			return response.NewError(err, http.StatusNotFound)
 		default:
 			return fmt.Errorf("querybyid: homeID[%s] %w", homeID, err)
 		}

@@ -9,9 +9,9 @@ import (
 	"net/mail"
 	"time"
 
-	"github.com/ardanlabs/service/app/services/sales-api/v1/paging"
-	"github.com/ardanlabs/service/app/services/sales-api/v1/request"
+	"github.com/ardanlabs/service/app/services/sales-api/v1/response"
 	"github.com/ardanlabs/service/business/core/user"
+	"github.com/ardanlabs/service/business/data/page"
 	"github.com/ardanlabs/service/business/data/transaction"
 	"github.com/ardanlabs/service/business/web/auth"
 	"github.com/ardanlabs/service/foundation/validate"
@@ -57,18 +57,18 @@ func (h *Handlers) executeUnderTransaction(ctx context.Context) (*Handlers, erro
 func (h *Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app AppNewUser
 	if err := web.Decode(r, &app); err != nil {
-		return request.NewError(err, http.StatusBadRequest)
+		return response.NewError(err, http.StatusBadRequest)
 	}
 
 	nc, err := toCoreNewUser(app)
 	if err != nil {
-		return request.NewError(err, http.StatusBadRequest)
+		return response.NewError(err, http.StatusBadRequest)
 	}
 
 	usr, err := h.user.Create(ctx, nc)
 	if err != nil {
 		if errors.Is(err, user.ErrUniqueEmail) {
-			return request.NewError(err, http.StatusConflict)
+			return response.NewError(err, http.StatusConflict)
 		}
 		return fmt.Errorf("create: usr[%+v]: %w", usr, err)
 	}
@@ -85,7 +85,7 @@ func (h *Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Re
 
 	var app AppUpdateUser
 	if err := web.Decode(r, &app); err != nil {
-		return request.NewError(err, http.StatusBadRequest)
+		return response.NewError(err, http.StatusBadRequest)
 	}
 
 	userID := auth.GetUserID(ctx)
@@ -94,7 +94,7 @@ func (h *Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Re
 	if err != nil {
 		switch {
 		case errors.Is(err, user.ErrNotFound):
-			return request.NewError(err, http.StatusNotFound)
+			return response.NewError(err, http.StatusNotFound)
 		default:
 			return fmt.Errorf("querybyid: userID[%s]: %w", userID, err)
 		}
@@ -102,7 +102,7 @@ func (h *Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Re
 
 	uu, err := toCoreUpdateUser(app)
 	if err != nil {
-		return request.NewError(err, http.StatusBadRequest)
+		return response.NewError(err, http.StatusBadRequest)
 	}
 
 	usr, err = h.user.Update(ctx, usr, uu)
@@ -141,7 +141,7 @@ func (h *Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Re
 
 // Query returns a list of users with paging.
 func (h *Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	page, err := paging.ParseRequest(r)
+	page, err := page.Parse(r)
 	if err != nil {
 		return err
 	}
@@ -166,7 +166,7 @@ func (h *Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Req
 		return fmt.Errorf("count: %w", err)
 	}
 
-	return web.Respond(ctx, w, paging.NewResponse(toAppUsers(users), total, page.Number, page.RowsPerPage), http.StatusOK)
+	return web.Respond(ctx, w, response.NewPageDocument(toAppUsers(users), total, page.Number, page.RowsPerPage), http.StatusOK)
 }
 
 // QueryByID returns a user by its ID.
@@ -177,7 +177,7 @@ func (h *Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http
 	if err != nil {
 		switch {
 		case errors.Is(err, user.ErrNotFound):
-			return request.NewError(err, http.StatusNotFound)
+			return response.NewError(err, http.StatusNotFound)
 		default:
 			return fmt.Errorf("querybyid: id[%s]: %w", id, err)
 		}
@@ -207,7 +207,7 @@ func (h *Handlers) Token(ctx context.Context, w http.ResponseWriter, r *http.Req
 	if err != nil {
 		switch {
 		case errors.Is(err, user.ErrNotFound):
-			return request.NewError(err, http.StatusNotFound)
+			return response.NewError(err, http.StatusNotFound)
 		case errors.Is(err, user.ErrAuthenticationFailure):
 			return auth.NewAuthError(err.Error())
 		default:

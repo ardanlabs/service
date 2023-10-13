@@ -13,7 +13,7 @@ import (
 	v1 "github.com/ardanlabs/service/app/services/sales-api/v1"
 	"github.com/ardanlabs/service/app/services/sales-api/v1/cmd/all"
 	"github.com/ardanlabs/service/app/services/sales-api/v1/handlers/usersummarygrp"
-	"github.com/ardanlabs/service/app/services/sales-api/v1/paging"
+	"github.com/ardanlabs/service/app/services/sales-api/v1/response"
 	"github.com/ardanlabs/service/business/core/product"
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/data/dbtest"
@@ -107,7 +107,7 @@ func (ust *UserSummaryTests) query(usrs []user.User) func(t *testing.T) {
 			t.Fatalf("Should receive a status code of 200 for the response : %d", w.Code)
 		}
 
-		var pr paging.Response[usersummarygrp.AppUserSummary]
+		var pr response.PageDocument[usersummarygrp.AppUserSummary]
 		if err := json.Unmarshal(w.Body.Bytes(), &pr); err != nil {
 			t.Fatalf("Should be able to unmarshal the response : %s", err)
 		}
