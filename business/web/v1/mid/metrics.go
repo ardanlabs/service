@@ -16,7 +16,10 @@ func Metrics() web.Middleware {
 
 			err := handler(ctx, w, r)
 
-			metrics.AddRequests(ctx)
+			n := metrics.AddRequests(ctx)
+			if n%1000 == 0 {
+				metrics.AddGoroutines(ctx)
+			}
 
 			if err != nil {
 				metrics.AddErrors(ctx)

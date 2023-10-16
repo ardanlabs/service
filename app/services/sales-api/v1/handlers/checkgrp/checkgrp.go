@@ -8,7 +8,6 @@ import (
 	"time"
 
 	db "github.com/ardanlabs/service/business/data/dbsql/pgx"
-	"github.com/ardanlabs/service/business/web/v1/metrics"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/jmoiron/sqlx"
 )
@@ -86,10 +85,7 @@ func (h *Handlers) Liveness(ctx context.Context, w http.ResponseWriter, r *http.
 		GOMAXPROCS: os.Getenv("GOMAXPROCS"),
 	}
 
-	// This handler provides a free timer loop. This is a great place to
-	// update the goroutine count.
-
-	metrics.AddGoroutines(ctx)
+	// This handler provides a free timer loop.
 
 	return web.Respond(ctx, w, data, http.StatusOK)
 }

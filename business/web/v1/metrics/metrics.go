@@ -49,31 +49,45 @@ func Set(ctx context.Context) context.Context {
 }
 
 // AddGoroutines refreshes the goroutine metric every 100 requests.
-func AddGoroutines(ctx context.Context) {
+func AddGoroutines(ctx context.Context) int64 {
 	if v, ok := ctx.Value(key).(*metrics); ok {
 		if v.requests.Value()%100 == 0 {
-			v.goroutines.Set(int64(runtime.NumGoroutine()))
+			g := int64(runtime.NumGoroutine())
+			v.goroutines.Set(g)
+			return g
 		}
 	}
+
+	return 0
 }
 
 // AddRequests increments the request metric by 1.
-func AddRequests(ctx context.Context) {
-	if v, ok := ctx.Value(key).(*metrics); ok {
+func AddRequests(ctx context.Context) int64 {
+	v, ok := ctx.Value(key).(*metrics)
+	if ok {
 		v.requests.Add(1)
+		return v.goroutines.Value()
 	}
+
+	return 0
 }
 
 // AddErrors increments the errors metric by 1.
-func AddErrors(ctx context.Context) {
+func AddErrors(ctx context.Context) int64 {
 	if v, ok := ctx.Value(key).(*metrics); ok {
 		v.errors.Add(1)
+		return v.errors.Value()
 	}
+
+	return 0
 }
 
 // AddPanics increments the panics metric by 1.
-func AddPanics(ctx context.Context) {
+func AddPanics(ctx context.Context) int64 {
 	if v, ok := ctx.Value(key).(*metrics); ok {
 		v.panics.Add(1)
+		return v.panics.Value()
 	}
+
+	return 0
 }
