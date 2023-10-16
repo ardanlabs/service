@@ -35,7 +35,7 @@ func Test_Vault(t *testing.T) {
 	t.Logf("Host:        %s\n", c.Host)
 
 	// Give Vault time to initialize.
-	time.Sleep(time.Second)
+	time.Sleep(time.Second * 2)
 
 	// -------------------------------------------------------------------------
 

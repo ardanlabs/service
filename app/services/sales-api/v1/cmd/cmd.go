@@ -15,10 +15,10 @@ import (
 	"time"
 
 	"github.com/ardanlabs/conf/v3"
-	v1 "github.com/ardanlabs/service/app/services/sales-api/v1"
-	"github.com/ardanlabs/service/app/services/sales-api/v1/debug"
 	db "github.com/ardanlabs/service/business/data/dbsql/pq"
-	"github.com/ardanlabs/service/business/web/auth"
+	v1 "github.com/ardanlabs/service/business/web/v1"
+	"github.com/ardanlabs/service/business/web/v1/auth"
+	"github.com/ardanlabs/service/business/web/v1/debug"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/vault"
 	"github.com/ardanlabs/service/foundation/web"

@@ -122,8 +122,6 @@ func Routes(version string) ([]Route, error) {
 					ErrorDoc: "ErrorDocument",
 					File:     fmt.Sprintf("app/services/sales-api/%s/handlers/%s/%s.go", version, item.group, item.group),
 				})
-
-				break
 			}
 
 			return true
@@ -518,9 +516,9 @@ func findAppModel(group string, modelName string) ([]Field, error) {
 
 	switch {
 	case strings.Contains(modelName, "ErrorDocument"):
-		file, err = parser.ParseFile(fset, "app/services/sales-api/v1/response/response.go", nil, parser.ParseComments)
+		file, err = parser.ParseFile(fset, "business/web/v1/response/response.go", nil, parser.ParseComments)
 	case strings.Contains(modelName, "PageDocument"):
-		file, err = parser.ParseFile(fset, "app/services/sales-api/v1/response/response.go", nil, parser.ParseComments)
+		file, err = parser.ParseFile(fset, "business/web/v1/response/response.go", nil, parser.ParseComments)
 	default:
 		file, err = parser.ParseFile(fset, "app/services/sales-api/v1/handlers/"+group+"/model.go", nil, parser.ParseComments)
 	}

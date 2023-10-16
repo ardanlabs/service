@@ -22,7 +22,7 @@ import (
 	"github.com/ardanlabs/service/business/core/usersummary/stores/usersummarydb"
 	"github.com/ardanlabs/service/business/data/dbmigrate"
 	db "github.com/ardanlabs/service/business/data/dbsql/pgx"
-	"github.com/ardanlabs/service/business/web/auth"
+	"github.com/ardanlabs/service/business/web/v1/auth"
 	"github.com/ardanlabs/service/foundation/docker"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/web"
@@ -61,10 +61,12 @@ func StopDB(c *docker.Container) {
 type Test struct {
 	DB       *sqlx.DB
 	Log      *logger.Logger
-	Auth     *auth.Auth
 	CoreAPIs CoreAPIs
 	Teardown func()
 	t        *testing.T
+	V1       struct {
+		Auth *auth.Auth
+	}
 }
 
 // NewTest creates a test database inside a Docker container. It creates the
@@ -167,17 +169,21 @@ func NewTest(t *testing.T, c *docker.Container) *Test {
 	test := Test{
 		DB:       db,
 		Log:      log,
-		Auth:     a,
 		CoreAPIs: coreAPIs,
 		Teardown: teardown,
 		t:        t,
+		V1: struct {
+			Auth *auth.Auth
+		}{
+			Auth: a,
+		},
 	}
 
 	return &test
 }
 
-// Token generates an authenticated token for a user.
-func (test *Test) Token(email string, pass string) string {
+// TokenV1 generates an authenticated token for a user.
+func (test *Test) TokenV1(email string, pass string) string {
 	test.t.Log("Generating token for test ...")
 
 	addr, _ := mail.ParseAddress(email)
@@ -198,7 +204,7 @@ func (test *Test) Token(email string, pass string) string {
 		Roles: dbUsr.Roles,
 	}
 
-	token, err := test.Auth.GenerateToken(kid, claims)
+	token, err := test.V1.Auth.GenerateToken(kid, claims)
 	if err != nil {
 		test.t.Fatal(err)
 	}

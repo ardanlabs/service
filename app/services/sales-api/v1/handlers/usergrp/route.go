@@ -3,13 +3,13 @@ package usergrp
 import (
 	"net/http"
 
-	"github.com/ardanlabs/service/app/services/sales-api/v1/mid"
 	"github.com/ardanlabs/service/business/core/event"
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/core/user/stores/usercache"
 	"github.com/ardanlabs/service/business/core/user/stores/userdb"
 	db "github.com/ardanlabs/service/business/data/dbsql/pq"
-	"github.com/ardanlabs/service/business/web/auth"
+	"github.com/ardanlabs/service/business/web/v1/auth"
+	"github.com/ardanlabs/service/business/web/v1/mid"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/jmoiron/sqlx"

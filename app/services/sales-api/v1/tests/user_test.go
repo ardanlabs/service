@@ -14,14 +14,14 @@ import (
 	"testing"
 	"time"
 
-	v1 "github.com/ardanlabs/service/app/services/sales-api/v1"
 	"github.com/ardanlabs/service/app/services/sales-api/v1/cmd/all"
 	"github.com/ardanlabs/service/app/services/sales-api/v1/handlers/usergrp"
-	"github.com/ardanlabs/service/app/services/sales-api/v1/response"
 	"github.com/ardanlabs/service/business/core/product"
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/ardanlabs/service/business/data/order"
+	v1 "github.com/ardanlabs/service/business/web/v1"
+	"github.com/ardanlabs/service/business/web/v1/response"
 	"github.com/ardanlabs/service/foundation/validate"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
@@ -56,11 +56,11 @@ func Test_Users(t *testing.T) {
 		app: v1.APIMux(v1.APIMuxConfig{
 			Shutdown: shutdown,
 			Log:      test.Log,
-			Auth:     test.Auth,
+			Auth:     test.V1.Auth,
 			DB:       test.DB,
 		}, all.Routes()),
-		userToken:  test.Token("user@example.com", "gophers"),
-		adminToken: test.Token("admin@example.com", "gophers"),
+		userToken:  test.TokenV1("user@example.com", "gophers"),
+		adminToken: test.TokenV1("admin@example.com", "gophers"),
 	}
 
 	// -------------------------------------------------------------------------

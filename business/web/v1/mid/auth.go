@@ -5,8 +5,8 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/ardanlabs/service/app/services/sales-api/v1/response"
-	"github.com/ardanlabs/service/business/web/auth"
+	"github.com/ardanlabs/service/business/web/v1/auth"
+	"github.com/ardanlabs/service/business/web/v1/response"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/google/uuid"
 )
