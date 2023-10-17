@@ -64,11 +64,29 @@ spec:
           failureThreshold: 2
 
         env:
+        - name: SALES_DB_USER # here as an example for configuring a hosted db.
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: db_user
+              optional: true
+        - name: SALES_DB_PASSWORD
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: db_password
+              optional: true
         - name: SALES_DB_HOST
           valueFrom:
             configMapKeyRef:
               name: app-config
               key: db_host
+              optional: true
+        - name: SALES_DB_DISABLE_TLS
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: db_disabletls
               optional: true
 
         - name: GOMAXPROCS
