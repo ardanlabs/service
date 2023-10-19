@@ -2,6 +2,9 @@ kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 nodes:
 - role: control-plane
+#  extraMounts:
+#     - hostPath: /home/bill/your/pg/directory/here
+#       containerPath: /database
   extraPortMappings:
   # Sales-Api
   - containerPort: 3000
@@ -48,8 +51,8 @@ nodes:
 # - role: control-plane
 #   extraMounts:
 #     - hostPath: /home/bill/your/pg/directory/here
-#       containerPath: /path/inside/the/kind/container
-# 
+#       containerPath: /database
+#
 # And, then, in the pod definition, do this:
 # volumes:
 #

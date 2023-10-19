@@ -194,6 +194,9 @@ dev-up:
 	kind load docker-image $(LOKI) --name $(KIND_CLUSTER)
 	kind load docker-image $(PROMTAIL) --name $(KIND_CLUSTER)
 
+	# Make the database shared folder writable by the current user (hopefully it's 1000).
+	docker exec -it ardan-starter-cluster-control-plane chown -R 1000:1000 /database
+
 dev-down:
 	kind delete cluster --name $(KIND_CLUSTER)
 
@@ -429,16 +432,16 @@ write-token-to-env:
 	make token | grep -o '"ey.*"' | awk '{print "VITE_SERVICE_TOKEN="$$1}' >> ${ADMIN_FRONTEND_PREFIX}/.env
 
 admin-gui-install:
-	pnpm -C ${ADMIN_FRONTEND_PREFIX} install 
+	pnpm -C ${ADMIN_FRONTEND_PREFIX} install
 
 admin-gui-dev: admin-gui-install
-	pnpm -C ${ADMIN_FRONTEND_PREFIX} run dev 
+	pnpm -C ${ADMIN_FRONTEND_PREFIX} run dev
 
 admin-gui-build: admin-gui-install
-	pnpm -C ${ADMIN_FRONTEND_PREFIX} run build 
+	pnpm -C ${ADMIN_FRONTEND_PREFIX} run build
 
 admin-gui-start-build: admin-gui-build
-	pnpm -C ${ADMIN_FRONTEND_PREFIX} run preview 
+	pnpm -C ${ADMIN_FRONTEND_PREFIX} run preview
 
 admin-gui-run: write-token-to-env admin-gui-start-build
 

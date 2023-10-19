@@ -3,18 +3,6 @@ kind: Namespace
 metadata:
   name: sales-system
 ---
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: database-data
-  namespace: sales-system
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 10Gi
----
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -25,6 +13,7 @@ spec:
     matchLabels:
       app: database
   replicas: 1
+  serviceName: database
   template:
     metadata:
       labels:
@@ -33,10 +22,13 @@ spec:
       dnsPolicy: ClusterFirstWithHostNet
       hostNetwork: true
       terminationGracePeriodSeconds: 60
+      securityContext:
+        runAsUser: 1000  # Use the host user's UID, usualy it's 1000, you might need to check yours using cat /etc/passwd | grep -i yourusername
+        runAsGroup: 1000  # Use the host user's GID
       volumes:
         - name: data
-          persistentVolumeClaim:
-            claimName: database-data
+          hostPath:
+            path: /database
         - name: config
           configMap:
             name: pghbaconf
