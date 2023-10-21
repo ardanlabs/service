@@ -28,10 +28,60 @@ spec:
       - name: init-migrate
         image: service-image
         command: ['./sales-admin', 'migrate']
+        env:
+        - name: SALES_DB_USER
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: db_user
+              optional: true
+        - name: SALES_DB_PASSWORD
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: db_password
+              optional: true
+        - name: SALES_DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: db_host
+              optional: true
+        - name: SALES_DB_DISABLE_TLS
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: db_disabletls
+              optional: true
 
       - name: init-seed
         image: service-image
         command: ['./sales-admin', 'seed']
+        env:
+        - name: SALES_DB_USER
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: db_user
+              optional: true
+        - name: SALES_DB_PASSWORD
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: db_password
+              optional: true
+        - name: SALES_DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: db_host
+              optional: true
+        - name: SALES_DB_DISABLE_TLS
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: db_disabletls
+              optional: true
 
       containers:
       - name: sales-api

@@ -2,11 +2,17 @@
 # database configuration.
 # 1. Run `ifconfig | grep 192` on the local machine for the local IP address.
 #    This could also be a public IP address if the database is being hosted.
-# 2. Change the config information for the DB/host field to this in both the
-#    sales-api and sales-admin applications.
-#    Host string `conf:"default:database-service.sales-system"`
-# 3. Change the kustomization.yaml file in this folder to read this file.
-# 4. Comment out the Postgres host information in kind-config.yaml
+# 2. Change the kustomization.yaml file in this folder to read this file.
+# 3. Comment out the Postgres host information in kind-config.yaml
+# 4. Change the config value in k8s/dev/sales/dev-sales-configmap.yaml
+#    Though, I would create a stg/ environment for non-dev configs.
+#    apiVersion: v1
+#    kind: ConfigMap
+#    metadata:
+#      name: app-config
+#      namespace: sales-system
+#    data:
+#      db_host: "database-service.sales-system"
 # 5. This is an example of how to run the database in docker external to the
 #    cluster. You will need more configuration for the database to use persisted
 #    storage. You won't need to load the database image into the cluster.
