@@ -193,14 +193,17 @@ func parse(args []string, namespace string, cfgStruct interface{}) error {
 			}
 		}
 
+		// Flag to check if any value is provided.
+		provided := false
+
 		// Process each field against all sources.
 		for _, sourcer := range sources {
 			if sourcer == nil {
 				continue
 			}
 
-			value, provided := sourcer.Source(field)
-			if !provided {
+			value, ok := sourcer.Source(field)
+			if !ok {
 				continue
 			}
 
@@ -213,11 +216,12 @@ func parse(args []string, namespace string, cfgStruct interface{}) error {
 					err:       err,
 				}
 			}
+
+			provided = true
 		}
 
-		// If this key is not provided by any source, check if it was
-		// required to be provided.
-		if field.Options.Required && field.Field.IsZero() {
+		// If the field is marked 'required', check if no value was provided.
+		if field.Options.Required && !provided {
 			return fmt.Errorf("required field %s is missing value", field.Name)
 		}
 	}

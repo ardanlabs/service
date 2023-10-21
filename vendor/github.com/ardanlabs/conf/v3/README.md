@@ -3,6 +3,7 @@
 [![CircleCI](https://circleci.com/gh/ardanlabs/conf.svg?style=svg)](https://circleci.com/gh/ardanlabs/conf)
 [![Go Report Card](https://goreportcard.com/badge/github.com/ardanlabs/conf/v3)](https://goreportcard.com/report/github.com/ardanlabs/conf/v3)
 [![go.mod Go version](https://img.shields.io/github/go-mod/go-version/ardanlabs/conf)](https://github.com/ardanlabs/conf)
+[![Go Reference](https://pkg.go.dev/badge/github.com/ardanlabs/conf/v3.svg)](https://pkg.go.dev/github.com/ardanlabs/conf/v3)
 
 Copyright 2018, 2019, 2020, 2021, Ardan Labs  
 hello@ardanlabs.com
