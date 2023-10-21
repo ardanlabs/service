@@ -184,7 +184,7 @@ func NewTest(t *testing.T, c *docker.Container) *Test {
 
 // TokenV1 generates an authenticated token for a user.
 func (test *Test) TokenV1(email string, pass string) string {
-	test.t.Log("Generating token for test ...")
+	test.t.Logf("Generating %q token for test ...", email)
 
 	addr, _ := mail.ParseAddress(email)
 
