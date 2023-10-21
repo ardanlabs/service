@@ -1,0 +1,40 @@
+# To run and access an external database you will use this yaml for your
+# database configuration.
+# 1. Run `ifconfig | grep 192` on the local machine for the local IP address.
+#    This could also be a public IP address if the database is being hosted.
+# 2. Change the config information for the DB/host field to this in both the
+#    sales-api and sales-admin applications.
+#    Host string `conf:"default:database-service.sales-system"`
+# 3. Change the kustomization.yaml file in this folder to read this file.
+# 4. Comment out the Postgres host information in kind-config.yaml
+# 5. This is an example of how to run the database in docker external to the
+#    cluster. You will need more configuration for the database to use persisted
+#    storage. You won't need to load the database image into the cluster.
+#    `docker run --name postgres -p5432:5432 -e POSTGRES_PASSWORD=postgres -d postgres:15.4`
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: sales-system
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: database-service
+  namespace: sales-system
+spec:
+  clusterIP: None
+  ports:
+  - port: 5432
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: database-service
+  namespace: sales-system
+subsets:
+  - addresses:
+        - ip: 192.168.86.155 # ifconfig | grep 192
+    ports:
+      - port: 5432
+        name: database-service

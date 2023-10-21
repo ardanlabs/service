@@ -30,29 +30,3 @@ nodes:
   # Tempo (tracing)
   - containerPort: 9411
     hostPort: 9411
-
-# If you want to use storge from local disk.
-#
-# Change this:
-#
-# kind: Cluster
-# apiVersion: kind.x-k8s.io/v1alpha4
-# nodes:
-# - role: control-plane
-
-# To this:
-#
-# kind: Cluster
-# apiVersion: kind.x-k8s.io/v1alpha4
-# nodes:
-# - role: control-plane
-#   extraMounts:
-#     - hostPath: /home/bill/your/pg/directory/here
-#       containerPath: /path/inside/the/kind/container
-# 
-# And, then, in the pod definition, do this:
-# volumes:
-#
-# - name: data
-#   hostPath:
-#     path: /path/inside/the/kind/container
