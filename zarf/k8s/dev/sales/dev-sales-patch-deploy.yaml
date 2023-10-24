@@ -5,20 +5,12 @@ metadata:
   namespace: sales-system
 
 spec:
-  selector:
-    matchLabels:
-      app: sales
-
   replicas: 1
 
   strategy:
     type: Recreate
 
   template:
-    metadata:
-      labels:
-        app: sales
-
     spec:
       dnsPolicy: ClusterFirstWithHostNet
       hostNetwork: true

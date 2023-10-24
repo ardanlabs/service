@@ -5,9 +5,6 @@ metadata:
   namespace: sales-system
 
 spec:
-  selector:
-    app: sales
-
   type: ClusterIP
 
   ports:
