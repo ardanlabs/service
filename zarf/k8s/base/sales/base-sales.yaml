@@ -186,10 +186,4 @@ metadata:
 
 spec:
   selector:
-    matchLabels:
-      app: sales
-
-  template:
-    metadata:
-      labels:
-        app: sales
+    app: sales
