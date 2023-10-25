@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/ServiceWeaver/weaver"
+	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/jmoiron/sqlx"
 )
@@ -12,6 +13,7 @@ import (
 type Config struct {
 	UsingWeaver bool
 	Build       string
+	Log         *logger.Logger
 	DB          *sqlx.DB
 }
 
@@ -19,7 +21,7 @@ type Config struct {
 func Routes(app *web.App, cfg Config) {
 	const version = "v1"
 
-	hdl := New(cfg.Build, cfg.DB)
+	hdl := New(cfg.Build, cfg.Log, cfg.DB)
 	app.HandleNoMiddleware(http.MethodGet, version, "/readiness", hdl.Readiness)
 	app.HandleNoMiddleware(http.MethodGet, version, "/liveness", hdl.Liveness)
 

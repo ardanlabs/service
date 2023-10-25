@@ -8,6 +8,7 @@ import (
 	"time"
 
 	db "github.com/ardanlabs/service/business/data/dbsql/pgx"
+	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/jmoiron/sqlx"
 )
@@ -15,14 +16,16 @@ import (
 // Handlers manages the set of check endpoints.
 type Handlers struct {
 	build string
+	log   *logger.Logger
 	db    *sqlx.DB
 }
 
 // New constructs a Handlers api for the check group.
-func New(build string, db *sqlx.DB) *Handlers {
+func New(build string, log *logger.Logger, db *sqlx.DB) *Handlers {
 	return &Handlers{
 		build: build,
 		db:    db,
+		log:   log,
 	}
 }
 
@@ -30,17 +33,18 @@ func New(build string, db *sqlx.DB) *Handlers {
 // Do not respond by just returning an error because further up in the call
 // stack it will interpret that as a non-trusted error.
 func (h *Handlers) Readiness(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	ctx, cancel := context.WithTimeout(ctx, time.Second)
-	defer cancel()
-
 	ctx, span := web.AddSpan(ctx, "v1.readiness")
 	defer span.End()
+
+	ctx, cancel := context.WithTimeout(ctx, time.Second)
+	defer cancel()
 
 	status := "ok"
 	statusCode := http.StatusOK
 	if err := db.StatusCheck(ctx, h.db); err != nil {
 		status = "db not ready"
 		statusCode = http.StatusInternalServerError
+		h.log.Info(ctx, "readiness failure", "status", status)
 	}
 
 	data := struct {

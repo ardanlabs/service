@@ -110,7 +110,7 @@ func (a *App) Handle(method string, group string, path string, handler Handler, 
 
 // =============================================================================
 
-// Handle sets a handler function for a given HTTP method and path pair
+// handle sets a handler function for a given HTTP method and path pair
 // to the application server mux.
 func (a *App) handle(method string, group string, path string, handler Handler) {
 	h := func(w http.ResponseWriter, r *http.Request) {
