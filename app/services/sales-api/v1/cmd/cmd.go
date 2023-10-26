@@ -15,7 +15,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/conf/v3"
-	db "github.com/ardanlabs/service/business/data/dbsql/pq"
+	db "github.com/ardanlabs/service/business/data/dbsql/pgx"
 	v1 "github.com/ardanlabs/service/business/web/v1"
 	"github.com/ardanlabs/service/business/web/v1/auth"
 	"github.com/ardanlabs/service/business/web/v1/debug"

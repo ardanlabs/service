@@ -7,7 +7,7 @@ import (
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/core/user/stores/usercache"
 	"github.com/ardanlabs/service/business/core/user/stores/userdb"
-	db "github.com/ardanlabs/service/business/data/dbsql/pq"
+	db "github.com/ardanlabs/service/business/data/dbsql/pgx"
 	"github.com/ardanlabs/service/business/web/v1/auth"
 	"github.com/ardanlabs/service/business/web/v1/mid"
 	"github.com/ardanlabs/service/foundation/logger"
