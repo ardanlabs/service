@@ -6,6 +6,7 @@ import (
 	"errors"
 	"expvar"
 	"fmt"
+	"github.com/ardanlabs/service/business/web/v1/httpclient"
 	"net"
 	"net/http"
 	"os"
@@ -184,7 +185,7 @@ func run(ctx context.Context, log *logger.Logger, build string, routeAdder v1.Ro
 		db.Close()
 	}()
 
-	// -------------------------------------------------------------------------
+	//-------------------------------------------------------------------------
 	// Initialize authentication support
 
 	log.Info(ctx, "startup", "status", "initializing authentication support")
@@ -195,10 +196,16 @@ func run(ctx context.Context, log *logger.Logger, build string, routeAdder v1.Ro
 	// 	return fmt.Errorf("reading keys: %w", err)
 	// }
 
+	httpClient := httpclient.New(
+		httpclient.WithTracing(),
+		httpclient.WithLogger(log, true),
+	)
+
 	vault, err := vault.New(vault.Config{
 		Address:   cfg.Vault.Address,
 		Token:     cfg.Vault.Token,
 		MountPath: cfg.Vault.MountPath,
+		Client:    httpClient,
 	})
 	if err != nil {
 		return fmt.Errorf("constructing vault: %w", err)
