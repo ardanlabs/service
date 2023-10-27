@@ -68,9 +68,9 @@ func (c *Core) ExecuteUnderTransaction(tx transaction.Transaction) (*Core, error
 	}
 
 	c = &Core{
-		log:     c.log,
 		storer:  trS,
 		evnCore: c.evnCore,
+		log:     c.log,
 	}
 
 	return c, nil
