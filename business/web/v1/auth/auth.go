@@ -50,7 +50,7 @@ type Config struct {
 type Auth struct {
 	log       *logger.Logger
 	keyLookup KeyLookup
-	userCore  *user.Core
+	usrCore   *user.Core
 	method    jwt.SigningMethod
 	parser    *jwt.Parser
 	issuer    string
@@ -72,7 +72,7 @@ func New(cfg Config) (*Auth, error) {
 	a := Auth{
 		log:       cfg.Log,
 		keyLookup: cfg.KeyLookup,
-		userCore:  usrCore,
+		usrCore:   usrCore,
 		method:    jwt.GetSigningMethod(jwt.SigningMethodRS256.Name),
 		parser:    jwt.NewParser(jwt.WithValidMethods([]string{jwt.SigningMethodRS256.Name})),
 		issuer:    cfg.Issuer,
@@ -234,7 +234,7 @@ func (a *Auth) opaPolicyEvaluation(ctx context.Context, opaPolicy string, rule s
 // isUserEnabled hits the database and checks the user is not disabled. If the
 // no database connection was provided, this check is skipped.
 func (a *Auth) isUserEnabled(ctx context.Context, claims Claims) error {
-	if a.userCore == nil {
+	if a.usrCore == nil {
 		return nil
 	}
 
@@ -243,7 +243,7 @@ func (a *Auth) isUserEnabled(ctx context.Context, claims Claims) error {
 		return fmt.Errorf("parse user: %w", err)
 	}
 
-	if _, err := a.userCore.QueryByID(ctx, userID); err != nil {
+	if _, err := a.usrCore.QueryByID(ctx, userID); err != nil {
 		return fmt.Errorf("query user: %w", err)
 	}
 
