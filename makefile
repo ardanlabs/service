@@ -417,6 +417,36 @@ list:
 	go list -mod=mod all
 
 # ==============================================================================
+# Class Stuff
+
+run:
+	go run app/services/sales-api/main.go | go run app/tooling/logfmt/main.go
+
+run-help:
+	go run app/services/sales-api/main.go --help | go run app/tooling/logfmt/main.go
+
+curl:
+	curl -il http://localhost:3000/v1/hack
+
+curl-auth:
+	curl -il -H "Authorization: Bearer ${TOKEN}" http://localhost:3000/v1/hackauth
+
+load:
+	hey -m GET -c 100 -n 100000 "http://localhost:3000/v1/hack"
+
+admin:
+	go run app/tooling/sales-admin/main.go
+
+ready:
+	curl -il http://localhost:3000/v1/readiness
+
+live:
+	curl -il http://localhost:3000/v1/liveness
+
+curl-create:
+	curl -il -X POST -H 'Content-Type: application/json' -d '{"name":"bill","email":"b@gmail.com","roles":["ADMIN"],"department":"IT","password":"123","passwordConfirm":"123"}' http://localhost:3000/v1/users
+
+# ==============================================================================
 # Admin Frontend
 
 ADMIN_FRONTEND_PREFIX := ./app/frontends/admin

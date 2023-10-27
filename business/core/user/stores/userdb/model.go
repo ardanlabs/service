@@ -19,8 +19,8 @@ type dbUser struct {
 	Email        string         `db:"email"`
 	Roles        dbarray.String `db:"roles"`
 	PasswordHash []byte         `db:"password_hash"`
-	Enabled      bool           `db:"enabled"`
 	Department   sql.NullString `db:"department"`
+	Enabled      bool           `db:"enabled"`
 	DateCreated  time.Time      `db:"date_created"`
 	DateUpdated  time.Time      `db:"date_updated"`
 }
