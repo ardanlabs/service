@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/open-policy-agent/opa/ast/internal/tokens"
 	astJSON "github.com/open-policy-agent/opa/ast/json"
 	"github.com/open-policy-agent/opa/util"
 )
@@ -42,6 +43,10 @@ var FunctionArgRootDocument = VarTerm("args")
 // FutureRootDocument names the document containing new, to-become-default,
 // features.
 var FutureRootDocument = VarTerm("future")
+
+// RegoRootDocument names the document containing new, to-become-default,
+// features in a future versioned release.
+var RegoRootDocument = VarTerm("rego")
 
 // RootDocumentNames contains the names of top-level documents that can be
 // referred to in modules and queries.
@@ -140,12 +145,13 @@ type (
 	// within a namespace (defined by the package) and optional
 	// dependencies on external documents (defined by imports).
 	Module struct {
-		Package     *Package       `json:"package"`
-		Imports     []*Import      `json:"imports,omitempty"`
-		Annotations []*Annotations `json:"annotations,omitempty"`
-		Rules       []*Rule        `json:"rules,omitempty"`
-		Comments    []*Comment     `json:"comments,omitempty"`
-		stmts       []Statement
+		Package          *Package       `json:"package"`
+		Imports          []*Import      `json:"imports,omitempty"`
+		Annotations      []*Annotations `json:"annotations,omitempty"`
+		Rules            []*Rule        `json:"rules,omitempty"`
+		Comments         []*Comment     `json:"comments,omitempty"`
+		stmts            []Statement
+		regoV1Compatible bool
 	}
 
 	// Comment contains the raw text from the comment in the definition.
@@ -191,7 +197,8 @@ type (
 		// on the rule (e.g., printing, comparison, visiting, etc.)
 		Module *Module `json:"-"`
 
-		jsonOptions astJSON.Options
+		generatedBody bool
+		jsonOptions   astJSON.Options
 	}
 
 	// Head represents the head of a rule.
@@ -204,7 +211,9 @@ type (
 		Assign    bool      `json:"assign,omitempty"`
 		Location  *Location `json:"location,omitempty"`
 
-		jsonOptions astJSON.Options
+		keywords       []tokens.Token
+		generatedValue bool
+		jsonOptions    astJSON.Options
 	}
 
 	// Args represents zero or more arguments to a rule.
@@ -905,6 +914,7 @@ func (head *Head) Copy() *Head {
 	cpy.Args = head.Args.Copy()
 	cpy.Key = head.Key.Copy()
 	cpy.Value = head.Value.Copy()
+	cpy.keywords = nil
 	return &cpy
 }
 

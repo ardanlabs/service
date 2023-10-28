@@ -8,7 +8,7 @@ type DuplicateMigrationVersionError struct {
 	Version float64
 }
 
-// Error implementa the error interface.
+// Error implements the error interface.
 func (d *DuplicateMigrationVersionError) Error() string {
 	return fmt.Sprintf("Multiple migrations have the version number %f.", d.Version)
 }
@@ -19,7 +19,7 @@ type IllegalMigrationVersionError struct {
 	Version float64
 }
 
-// Error implementa the error interface.
+// Error implements the error interface.
 func (i *IllegalMigrationVersionError) Error() string {
 	return fmt.Sprintf("Illegal migration version number %f.", i.Version)
 }
@@ -30,7 +30,7 @@ type RemovedMigrationError struct {
 	Version float64
 }
 
-// Error implementa the error interface.
+// Error implements the error interface.
 func (r *RemovedMigrationError) Error() string {
 	return fmt.Sprintf("Migration %f was removed", r.Version)
 }
@@ -40,7 +40,7 @@ type InvalidChecksumError struct {
 	Version float64
 }
 
-// Error implementa the error interface.
+// Error implements the error interface.
 func (i *InvalidChecksumError) Error() string {
-	return fmt.Sprintf("Invalid cheksum for migration %f", i.Version)
+	return fmt.Sprintf("Invalid checksum for migration %f", i.Version)
 }

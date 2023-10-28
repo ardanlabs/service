@@ -120,6 +120,9 @@ func AstWithOpts(x interface{}, opts Opts) ([]byte, error) {
 
 		case *ast.Import:
 			switch {
+			case isRegoV1Compatible(n):
+				o.contains = true
+				o.ifs = true
 			case future.IsAllFutureKeywords(n):
 				o.contains = true
 				o.ifs = true
@@ -492,7 +495,17 @@ func (w *writer) writeHead(head *ast.Head, isDefault, isExpandedConst bool, o fm
 			w.write("]")
 		}
 	}
-	if head.Value != nil && (head.Key != nil || ast.Compare(head.Value, ast.BooleanTerm(true)) != 0 || isExpandedConst || isDefault) {
+
+	if head.Value != nil &&
+		(head.Key != nil || ast.Compare(head.Value, ast.BooleanTerm(true)) != 0 || isExpandedConst || isDefault) {
+
+		if head.Location == head.Value.Location && head.Name != "else" {
+			// If the value location is the same as the location of the head,
+			// we know that the value is generated, i.e. f(1)
+			// Don't print the value (` = true`) as it is implied.
+			return comments
+		}
+
 		if head.Assign {
 			w.write(" := ")
 		} else {
@@ -820,6 +833,7 @@ func (w *writer) writeCall(parens bool, x ast.Call, loc *ast.Location, comments 
 }
 
 func (w *writer) writeInOperator(parens bool, operands []*ast.Term, comments []*ast.Comment, loc *ast.Location, f *types.Function) []*ast.Comment {
+
 	if len(operands) != len(f.Args()) {
 		// The number of operands does not math the arity of the `in` operator
 		operator := ast.Member.Name
@@ -1420,4 +1434,12 @@ func (d *ArityFormatErrDetail) Lines() []string {
 		"have: " + "(" + strings.Join(d.Have, ",") + ")",
 		"want: " + "(" + strings.Join(d.Want, ",") + ")",
 	}
+}
+
+// isRegoV1Compatible returns true if the passed *ast.Import is `rego.v1`
+func isRegoV1Compatible(imp *ast.Import) bool {
+	path := imp.Path.Value.(ast.Ref)
+	return len(path) == 2 &&
+		ast.RegoRootDocument.Equal(path[0]) &&
+		path[1].Equal(ast.StringTerm("v1"))
 }

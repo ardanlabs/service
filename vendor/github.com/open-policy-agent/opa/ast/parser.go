@@ -25,6 +25,8 @@ import (
 	"github.com/open-policy-agent/opa/ast/location"
 )
 
+var regoV1CompatibleRef = Ref{VarTerm("rego"), StringTerm("v1")}
+
 // Note: This state is kept isolated from the parser so that we
 // can do efficient shallow copies of these values when doing a
 // save() and restore().
@@ -328,9 +330,14 @@ func (p *Parser) Parse() ([]Statement, []*Comment, Errors) {
 		s = p.save()
 
 		if imp := p.parseImport(); imp != nil {
+			if RegoRootDocument.Equal(imp.Path.Value.(Ref)[0]) {
+				p.regoV1Import(imp)
+			}
+
 			if FutureRootDocument.Equal(imp.Path.Value.(Ref)[0]) {
 				p.futureImport(imp, allowedFutureKeywords)
 			}
+
 			stmts = append(stmts, imp)
 			continue
 		} else if len(p.s.errors) > 0 {
@@ -533,9 +540,9 @@ func (p *Parser) parseImport() *Import {
 
 	path := imp.Path.Value.(Ref)
 
-	if !RootDocumentNames.Contains(path[0]) && !FutureRootDocument.Equal(path[0]) {
+	if !RootDocumentNames.Contains(path[0]) && !FutureRootDocument.Equal(path[0]) && !RegoRootDocument.Equal(path[0]) {
 		p.errorf(imp.Path.Location, "unexpected import path, must begin with one of: %v, got: %v",
-			RootDocumentNames.Union(NewSet(FutureRootDocument)),
+			RootDocumentNames.Union(NewSet(FutureRootDocument, RegoRootDocument)),
 			path[0])
 		return nil
 	}
@@ -581,6 +588,10 @@ func (p *Parser) parseRules() []*Rule {
 		return nil
 	}
 
+	if usesContains {
+		rule.Head.keywords = append(rule.Head.keywords, tokens.Contains)
+	}
+
 	if rule.Default {
 		if !p.validateDefaultRuleValue(&rule) {
 			return nil
@@ -602,6 +613,7 @@ func (p *Parser) parseRules() []*Rule {
 	// p[x] if ...  becomes a single-value rule p[x]
 	if hasIf && !usesContains && len(rule.Head.Ref()) == 2 {
 		if rule.Head.Value == nil {
+			rule.Head.generatedValue = true
 			rule.Head.Value = BooleanTerm(true).SetLocation(rule.Head.Location)
 		} else {
 			// p[x] = y if  becomes a single-value rule p[x] with value y, but needs name for compat
@@ -630,6 +642,7 @@ func (p *Parser) parseRules() []*Rule {
 
 	switch {
 	case hasIf:
+		rule.Head.keywords = append(rule.Head.keywords, tokens.If)
 		p.scan()
 		s := p.save()
 		if expr := p.parseLiteral(); expr != nil {
@@ -661,6 +674,7 @@ func (p *Parser) parseRules() []*Rule {
 
 	case usesContains:
 		rule.Body = NewBody(NewExpr(BooleanTerm(true).SetLocation(rule.Location)).SetLocation(rule.Location))
+		rule.generatedBody = true
 		return []*Rule{&rule}
 
 	default:
@@ -744,6 +758,7 @@ func (p *Parser) parseElse(head *Head) *Rule {
 
 	switch p.s.tok {
 	case tokens.LBrace, tokens.If: // no value, but a body follows directly
+		rule.Head.generatedValue = true
 		rule.Head.Value = BooleanTerm(true)
 	case tokens.Assign, tokens.Unify:
 		rule.Head.Assign = tokens.Assign == p.s.tok
@@ -763,11 +778,13 @@ func (p *Parser) parseElse(head *Head) *Rule {
 
 	if !hasIf && !hasLBrace {
 		rule.Body = NewBody(NewExpr(BooleanTerm(true)))
+		rule.generatedBody = true
 		setLocRecursive(rule.Body, rule.Location)
 		return &rule
 	}
 
 	if hasIf {
+		rule.Head.keywords = append(rule.Head.keywords, tokens.If)
 		p.scan()
 	}
 
@@ -889,6 +906,7 @@ func (p *Parser) parseHead(defaultRule bool) (*Head, bool) {
 
 	if head.Value == nil && head.Key == nil {
 		if len(head.Ref()) != 2 || len(head.Args) > 0 {
+			head.generatedValue = true
 			head.Value = BooleanTerm(true).SetLocation(head.Location)
 		}
 	}
@@ -2507,6 +2525,11 @@ func (p *Parser) futureImport(imp *Import, allowedFutureKeywords map[string]toke
 		return
 	}
 
+	if p.s.s.RegoV1Compatible() {
+		p.errorf(imp.Path.Location, "the `%s` import implies `future.keywords`, these are therefore mutually exclusive", regoV1CompatibleRef)
+		return
+	}
+
 	kwds := make([]string, 0, len(allowedFutureKeywords))
 	for k := range allowedFutureKeywords {
 		kwds = append(kwds, k)
@@ -2532,5 +2555,36 @@ func (p *Parser) futureImport(imp *Import, allowedFutureKeywords map[string]toke
 	}
 	for _, kw := range kwds {
 		p.s.s.AddKeyword(kw, allowedFutureKeywords[kw])
+	}
+}
+
+func (p *Parser) regoV1Import(imp *Import) {
+	path := imp.Path.Value.(Ref)
+
+	if len(path) == 1 || !path[1].Equal(regoV1CompatibleRef[1]) || len(path) > 2 {
+		p.errorf(imp.Path.Location, "invalid import, must be `%s`", regoV1CompatibleRef)
+		return
+	}
+
+	if imp.Alias != "" {
+		p.errorf(imp.Path.Location, "`rego` imports cannot be aliased")
+		return
+	}
+
+	// import all future keywords with the rego.v1 import
+	kwds := make([]string, 0, len(futureKeywords))
+	for k := range futureKeywords {
+		kwds = append(kwds, k)
+	}
+
+	if p.s.s.HasKeyword(futureKeywords) && !p.s.s.RegoV1Compatible() {
+		// We have imported future keywords, but they didn't come from another `rego.v1` import.
+		p.errorf(imp.Path.Location, "the `%s` import implies `future.keywords`, these are therefore mutually exclusive", regoV1CompatibleRef)
+		return
+	}
+
+	p.s.s.SetRegoV1Compatible()
+	for _, kw := range kwds {
+		p.s.s.AddKeyword(kw, futureKeywords[kw])
 	}
 }

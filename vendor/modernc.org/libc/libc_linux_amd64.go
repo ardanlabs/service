@@ -7,6 +7,7 @@ package libc // import "modernc.org/libc"
 import (
 	"os"
 	"strings"
+	gotime "time"
 	"unicode"
 	"unsafe"
 
@@ -16,7 +17,12 @@ import (
 	"modernc.org/libc/signal"
 	"modernc.org/libc/stdio"
 	"modernc.org/libc/sys/types"
+	"modernc.org/libc/time"
 	"modernc.org/libc/wctype"
+)
+
+var (
+	startTime = gotime.Now() // For clock(3)
 )
 
 // int sigaction(int signum, const struct sigaction *act, struct sigaction *oldact);
@@ -645,4 +651,9 @@ var Xin6addr_any = Tin6_addr{}
 
 func Xrewinddir(tls *TLS, f uintptr) {
 	Xfseek(tls, f, 0, stdio.SEEK_SET)
+}
+
+// clock_t clock(void);
+func Xclock(t *TLS) time.Clock_t {
+	return time.Clock_t(gotime.Since(startTime) * gotime.Duration(time.CLOCKS_PER_SEC) / gotime.Second)
 }
