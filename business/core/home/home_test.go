@@ -119,7 +119,7 @@ func crud(t *testing.T) {
 			State:    dbtest.StringPointer("Texas"),
 			Country:  dbtest.StringPointer("US"),
 		},
-		Type: dbtest.StringPointer("House"),
+		Type: &home.TypeSingle,
 	}
 
 	if _, err := api.Home.Update(ctx, saved, upd); err != nil {
@@ -163,7 +163,7 @@ func crud(t *testing.T) {
 	// -------------------------------------------------------------------------
 
 	upd = home.UpdateHome{
-		Type: dbtest.StringPointer("Appartment"),
+		Type: &home.TypeCondo,
 	}
 
 	if _, err := api.Home.Update(ctx, saved, upd); err != nil {

@@ -39,7 +39,11 @@ func parseFilter(r *http.Request) (home.QueryFilter, error) {
 	}
 
 	if homeType := values.Get(filterByType); homeType != "" {
-		filter.WithHomeType(homeType)
+		typ, err := home.ParseType(homeType)
+		if err != nil {
+			return home.QueryFilter{}, validate.NewFieldsError(filterByType, err)
+		}
+		filter.WithHomeType(typ)
 	}
 
 	if createdDate := values.Get(filterByStartCreatedDate); createdDate != "" {

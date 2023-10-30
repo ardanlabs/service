@@ -33,7 +33,7 @@ func toAppHome(hme home.Home) AppHome {
 	return AppHome{
 		ID:     hme.ID.String(),
 		UserID: hme.UserID.String(),
-		Type:   hme.Type,
+		Type:   hme.Type.Name(),
 		Address: AppNewAddress{
 			Address1: hme.Address.Address1,
 			Address2: hme.Address.Address2,
@@ -71,9 +71,14 @@ func toCoreNewHome(app AppNewHome) (home.NewHome, error) {
 		return home.NewHome{}, fmt.Errorf("passing userid: %w", err)
 	}
 
+	typ, err := home.ParseType(app.Type)
+	if err != nil {
+		return home.NewHome{}, fmt.Errorf("passing housing type: %w", err)
+	}
+
 	hme := home.NewHome{
 		UserID: userID,
-		Type:   app.Type,
+		Type:   typ,
 		Address: home.Address{
 			Address1: app.Address.Address1,
 			Address2: app.Address.Address2,
@@ -115,9 +120,14 @@ type AppUpdateHome struct {
 	Type    *string           `json:"type" validate:"omitempty"`
 }
 
-func toCoreUpdateHome(app AppUpdateHome) home.UpdateHome {
+func toCoreUpdateHome(app AppUpdateHome) (home.UpdateHome, error) {
+	typ, err := home.ParseType(*app.Type)
+	if err != nil {
+		return home.UpdateHome{}, fmt.Errorf("passing housing type: %w", err)
+	}
+
 	core := home.UpdateHome{
-		Type: app.Type,
+		Type: &typ,
 	}
 
 	if app.Address != nil {
@@ -131,7 +141,7 @@ func toCoreUpdateHome(app AppUpdateHome) home.UpdateHome {
 		}
 	}
 
-	return core
+	return core, nil
 }
 
 // Validate checks the data in the model is considered clean.

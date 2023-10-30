@@ -20,7 +20,7 @@ type Address struct {
 type Home struct {
 	ID          uuid.UUID
 	Address     Address
-	Type        string
+	Type        Type
 	UserID      uuid.UUID
 	DateCreated time.Time
 	DateUpdated time.Time
@@ -30,7 +30,7 @@ type Home struct {
 type NewHome struct {
 	UserID  uuid.UUID
 	Address Address
-	Type    string
+	Type    Type
 }
 
 // UpdateAddress is what fields can be updated in the store.
@@ -51,5 +51,5 @@ type UpdateAddress struct {
 // marshalling/unmarshalling.
 type UpdateHome struct {
 	Address *UpdateAddress
-	Type    *string
+	Type    *Type
 }

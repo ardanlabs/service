@@ -148,7 +148,12 @@ func (h *Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Re
 		}
 	}
 
-	hme, err = h.home.Update(ctx, hme, toCoreUpdateHome(app))
+	updHme, err := toCoreUpdateHome(app)
+	if err != nil {
+		return response.NewError(err, http.StatusBadRequest)
+	}
+
+	hme, err = h.home.Update(ctx, hme, updHme)
 	if err != nil {
 		return fmt.Errorf("update: homeID[%s] app[%+v]: %w", homeID, app, err)
 	}

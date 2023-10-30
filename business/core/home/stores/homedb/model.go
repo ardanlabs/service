@@ -1,6 +1,7 @@
 package homedb
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/ardanlabs/service/business/core/home"
@@ -27,7 +28,7 @@ type dbHome struct {
 func toDBHome(hme home.Home) dbHome {
 	hmeDB := dbHome{
 		ID:          hme.ID,
-		Type:        hme.Type,
+		Type:        hme.Type.Name(),
 		UserID:      hme.UserID,
 		Address1:    hme.Address.Address1,
 		Address2:    hme.Address.Address2,
@@ -42,10 +43,15 @@ func toDBHome(hme home.Home) dbHome {
 	return hmeDB
 }
 
-func toCoreHome(dbHme dbHome) home.Home {
+func toCoreHome(dbHme dbHome) (home.Home, error) {
+	typ, err := home.ParseType(dbHme.Type)
+	if err != nil {
+		return home.Home{}, fmt.Errorf("parse type: %w", err)
+	}
+
 	hme := home.Home{
 		ID:          dbHme.ID,
-		Type:        dbHme.Type,
+		Type:        typ,
 		UserID:      dbHme.UserID,
 		DateCreated: dbHme.DateCreated.In(time.Local),
 		DateUpdated: dbHme.DateUpdated.In(time.Local),
@@ -59,13 +65,17 @@ func toCoreHome(dbHme dbHome) home.Home {
 		},
 	}
 
-	return hme
+	return hme, nil
 }
 
-func toCoreHomeSlice(dbHomes []dbHome) []home.Home {
+func toCoreHomeSlice(dbHomes []dbHome) ([]home.Home, error) {
 	hmes := make([]home.Home, len(dbHomes))
 	for i, dbHme := range dbHomes {
-		hmes[i] = toCoreHome(dbHme)
+		var err error
+		hmes[i], err = toCoreHome(dbHme)
+		if err != nil {
+			return nil, fmt.Errorf("parse type: %w", err)
+		}
 	}
-	return hmes
+	return hmes, nil
 }

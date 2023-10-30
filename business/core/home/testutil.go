@@ -16,8 +16,13 @@ func TestGenerateNewHomes(n int, userID uuid.UUID) []NewHome {
 	zipCode := fmt.Sprintf("%05d", idx)
 
 	for i := 0; i < n; i++ {
+		typ := TypeSingle
+		if v := (idx + i) % 2; v == 0 {
+			typ = TypeCondo
+		}
+
 		nh := NewHome{
-			Type: fmt.Sprintf("Type%d", idx),
+			Type: typ,
 			Address: Address{
 				Address1: fmt.Sprintf("Address%d", idx),
 				Address2: fmt.Sprintf("Address%d", idx),

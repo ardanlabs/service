@@ -100,7 +100,7 @@ func toAppHome(hme home.Home) homegrp.AppHome {
 	return homegrp.AppHome{
 		ID:     hme.ID.String(),
 		UserID: hme.UserID.String(),
-		Type:   hme.Type,
+		Type:   hme.Type.Name(),
 		Address: homegrp.AppNewAddress{
 			Address1: hme.Address.Address1,
 			Address2: hme.Address.Address2,

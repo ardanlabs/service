@@ -111,7 +111,10 @@ func (s *Store) Query(ctx context.Context, filter home.QueryFilter, orderBy orde
 		return nil, fmt.Errorf("namedqueryslice: %w", err)
 	}
 
-	hmes := toCoreHomeSlice(dbHmes)
+	hmes, err := toCoreHomeSlice(dbHmes)
+	if err != nil {
+		return nil, err
+	}
 
 	return hmes, nil
 }
@@ -188,7 +191,7 @@ func (s *Store) QueryByID(ctx context.Context, homeID uuid.UUID) (home.Home, err
 		return home.Home{}, fmt.Errorf("namedquerystruct: %w", err)
 	}
 
-	return toCoreHome(dbHme), nil
+	return toCoreHome(dbHme)
 }
 
 // QueryByUserID finds the home identified by a given User ID.
@@ -212,5 +215,5 @@ func (s *Store) QueryByUserID(ctx context.Context, userID uuid.UUID) ([]home.Hom
 		return nil, fmt.Errorf("namedquerystruct: %w", err)
 	}
 
-	return toCoreHomeSlice(dbHmes), nil
+	return toCoreHomeSlice(dbHmes)
 }

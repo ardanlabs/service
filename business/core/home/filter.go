@@ -12,7 +12,7 @@ import (
 type QueryFilter struct {
 	ID               *uuid.UUID `validate:"omitempty"`
 	UserID           *uuid.UUID `validate:"omitempty"`
-	Type             *string    `validate:"omitempty"`
+	Type             *Type      `validate:"omitempty"`
 	StartCreatedDate *time.Time `validate:"omitempty"`
 	EndCreatedDate   *time.Time `validate:"omitempty"`
 }
@@ -36,7 +36,7 @@ func (qf *QueryFilter) WithUserID(userID uuid.UUID) {
 }
 
 // WithHomeType sets the Type field of the QueryFilter value.
-func (qf *QueryFilter) WithHomeType(homeType string) {
+func (qf *QueryFilter) WithHomeType(homeType Type) {
 	qf.Type = &homeType
 }
 

@@ -143,12 +143,7 @@ func (s *Store) Query(ctx context.Context, filter user.QueryFilter, orderBy orde
 		return nil, fmt.Errorf("namedqueryslice: %w", err)
 	}
 
-	usrs, err := toCoreUserSlice(dbUsrs)
-	if err != nil {
-		return nil, err
-	}
-
-	return usrs, nil
+	return toCoreUserSlice(dbUsrs)
 }
 
 // Count returns the total number of users in the DB.
@@ -198,12 +193,7 @@ func (s *Store) QueryByID(ctx context.Context, userID uuid.UUID) (user.User, err
 		return user.User{}, fmt.Errorf("namedquerystruct: %w", err)
 	}
 
-	usr, err := toCoreUser(dbUsr)
-	if err != nil {
-		return user.User{}, err
-	}
-
-	return usr, nil
+	return toCoreUser(dbUsr)
 }
 
 // QueryByIDs gets the specified users from the database.
@@ -238,12 +228,7 @@ func (s *Store) QueryByIDs(ctx context.Context, userIDs []uuid.UUID) ([]user.Use
 		return nil, fmt.Errorf("namedquerystruct: %w", err)
 	}
 
-	usrs, err := toCoreUserSlice(dbUsrs)
-	if err != nil {
-		return nil, err
-	}
-
-	return usrs, nil
+	return toCoreUserSlice(dbUsrs)
 }
 
 // QueryByEmail gets the specified user from the database by email.
@@ -270,10 +255,5 @@ func (s *Store) QueryByEmail(ctx context.Context, email mail.Address) (user.User
 		return user.User{}, fmt.Errorf("namedquerystruct: %w", err)
 	}
 
-	usr, err := toCoreUser(dbUsr)
-	if err != nil {
-		return user.User{}, err
-	}
-
-	return usr, nil
+	return toCoreUser(dbUsr)
 }
