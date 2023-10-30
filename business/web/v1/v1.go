@@ -27,13 +27,12 @@ func WithCORS(origin string) func(opts *Options) {
 
 // APIMuxConfig contains all the mandatory systems required by handlers.
 type APIMuxConfig struct {
-	UsingWeaver bool
-	Build       string
-	Shutdown    chan os.Signal
-	Log         *logger.Logger
-	Auth        *auth.Auth
-	DB          *sqlx.DB
-	Tracer      trace.Tracer
+	Build    string
+	Shutdown chan os.Signal
+	Log      *logger.Logger
+	Auth     *auth.Auth
+	DB       *sqlx.DB
+	Tracer   trace.Tracer
 }
 
 // RouteAdder defines behavior that sets the routes to bind for an instance

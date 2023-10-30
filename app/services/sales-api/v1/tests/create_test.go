@@ -8,7 +8,7 @@ import (
 	"runtime/debug"
 	"testing"
 
-	"github.com/ardanlabs/service/app/services/sales-api/v1/cmd/all"
+	"github.com/ardanlabs/service/app/services/sales-api/v1/build/all"
 	"github.com/ardanlabs/service/app/services/sales-api/v1/handlers/homegrp"
 	"github.com/ardanlabs/service/app/services/sales-api/v1/handlers/productgrp"
 	"github.com/ardanlabs/service/app/services/sales-api/v1/handlers/usergrp"
