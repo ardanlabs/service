@@ -20,7 +20,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func test_create200(t *testing.T, sd seedData) []tableData {
+func testCreate200(t *testing.T, sd seedData) []tableData {
 	table := []tableData{
 		{
 			name: "user",
@@ -209,5 +209,5 @@ func Test_Create(t *testing.T) {
 
 	// -------------------------------------------------------------------------
 
-	tests.run(t, test_create200(t, sd), "create200")
+	tests.run(t, testCreate200(t, sd), "create200")
 }

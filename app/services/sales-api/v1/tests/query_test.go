@@ -23,7 +23,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func test_query200(t *testing.T, sd seedData) []tableData {
+func testQuery200(t *testing.T, sd seedData) []tableData {
 	usrs := make(map[uuid.UUID]user.User)
 	for _, usr := range sd.users {
 		usrs[usr.ID] = usr
@@ -77,7 +77,7 @@ func test_query200(t *testing.T, sd seedData) []tableData {
 	return table
 }
 
-func test_queryByID200(t *testing.T, sd seedData) []tableData {
+func testQueryByID200(t *testing.T, sd seedData) []tableData {
 	table := []tableData{
 		{
 			name:    "user",
@@ -193,6 +193,6 @@ func Test_Query(t *testing.T) {
 
 	// -------------------------------------------------------------------------
 
-	tests.run(t, test_query200(t, sd), "query200")
-	tests.run(t, test_queryByID200(t, sd), "queryByID200")
+	tests.run(t, testQuery200(t, sd), "query200")
+	tests.run(t, testQueryByID200(t, sd), "queryByID200")
 }
