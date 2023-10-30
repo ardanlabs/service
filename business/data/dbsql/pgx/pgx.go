@@ -18,6 +18,8 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 )
 
+// lib/pq errorCodeNames
+// https://github.com/lib/pq/blob/master/error.go#L178
 const (
 	uniqueViolation = "23505"
 	undefinedTable  = "42P01"
@@ -120,9 +122,9 @@ func NamedExecContext(ctx context.Context, log *logger.Logger, db sqlx.ExtContex
 	defer func() {
 		if err != nil {
 			if _, ok := data.(struct{}); ok {
-				log.Infoc(ctx, 6, "database.NamedExecContext", "query", q)
+				log.Infoc(ctx, 6, "database.NamedExecContext", "query", q, "ERROR", err)
 			} else {
-				log.Infoc(ctx, 5, "database.NamedExecContext", "query", q)
+				log.Infoc(ctx, 5, "database.NamedExecContext", "query", q, "ERROR", err)
 			}
 		}
 	}()
@@ -170,7 +172,7 @@ func namedQuerySlice[T any](ctx context.Context, log *logger.Logger, db sqlx.Ext
 
 	defer func() {
 		if err != nil {
-			log.Infoc(ctx, 5, "database.NamedQuerySlice", "query", q)
+			log.Infoc(ctx, 6, "database.NamedQuerySlice", "query", q, "ERROR", err)
 		}
 	}()
 
@@ -245,7 +247,7 @@ func namedQueryStruct(ctx context.Context, log *logger.Logger, db sqlx.ExtContex
 
 	defer func() {
 		if err != nil {
-			log.Infoc(ctx, 5, "database.NamedQuerySlice", "query", q)
+			log.Infoc(ctx, 6, "database.NamedQuerySlice", "query", q, "ERROR", err)
 		}
 	}()
 

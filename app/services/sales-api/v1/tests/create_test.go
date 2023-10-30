@@ -175,7 +175,7 @@ func (ct *CreateTests) create200(t *testing.T, sd seedData) {
 			url:  "/v1/homes",
 			model: &homegrp.AppNewHome{
 				UserID: sd.users[0].ID.String(),
-				Type:   "Residential",
+				Type:   "SINGLE FAMILY",
 				Address: homegrp.AppNewAddress{
 					Address1: "123 Mocking Bird Lane",
 					ZipCode:  "35810",
@@ -187,7 +187,7 @@ func (ct *CreateTests) create200(t *testing.T, sd seedData) {
 			resp: &homegrp.AppHome{},
 			expResp: &homegrp.AppHome{
 				UserID: sd.users[0].ID.String(),
-				Type:   "Residential",
+				Type:   "SINGLE FAMILY",
 				Address: homegrp.AppNewAddress{
 					Address1: "123 Mocking Bird Lane",
 					ZipCode:  "35810",

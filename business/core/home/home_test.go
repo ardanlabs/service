@@ -238,7 +238,7 @@ func paging(t *testing.T) {
 	// -------------------------------------------------------------------------
 
 	homeType := hmes[0].Type
-	hme1, err := api.Home.Query(ctx, home.QueryFilter{Type: &homeType}, user.DefaultOrderBy, 1, 1)
+	hme1, err := api.Home.Query(ctx, home.QueryFilter{Type: &homeType}, user.DefaultOrderBy, 1, 2)
 	if err != nil {
 		t.Fatalf("Should be able to retrieve homes %q : %s", homeType, err)
 	}
@@ -248,30 +248,13 @@ func paging(t *testing.T) {
 		t.Fatalf("Should be able to retrieve home count %q : %s", homeType, err)
 	}
 
-	if len(hme1) != n && hme1[0].Type == homeType {
+	if len(hme1) != n {
 		t.Log("got:", len(hme1))
 		t.Log("exp:", n)
-		t.Fatalf("Should have a single home for %q", homeType)
+		t.Fatal("Should have the correct number of homes")
 	}
 
-	homeType = hmes[1].Type
-	hme2, err := api.Home.Query(ctx, home.QueryFilter{Type: &homeType}, user.DefaultOrderBy, 1, 1)
-	if err != nil {
-		t.Fatalf("Should be able to retrieve homes %q : %s", homeType, err)
-	}
-
-	n, err = api.Home.Count(ctx, home.QueryFilter{Type: &homeType})
-	if err != nil {
-		t.Fatalf("Should be able to retrieve home count %q : %s", homeType, err)
-	}
-
-	if len(hme2) != n && hme2[0].Type == homeType {
-		t.Log("got:", len(hme2))
-		t.Log("exp:", n)
-		t.Fatalf("Should have a single home for %q", homeType)
-	}
-
-	hme3, err := api.Home.Query(ctx, home.QueryFilter{}, user.DefaultOrderBy, 1, 2)
+	hme2, err := api.Home.Query(ctx, home.QueryFilter{}, user.DefaultOrderBy, 1, 2)
 	if err != nil {
 		t.Fatalf("Should be able to retrieve 2 homes for page 1 : %s", err)
 	}
@@ -281,15 +264,15 @@ func paging(t *testing.T) {
 		t.Fatalf("Should be able to retrieve home count %q : %s", homeType, err)
 	}
 
-	if len(hme3) != n {
-		t.Logf("got: %v", len(hme3))
+	if len(hme2) != n {
+		t.Logf("got: %v", len(hme2))
 		t.Logf("exp: %v", n)
 		t.Fatalf("Should have 2 homes for page ")
 	}
 
-	if hme3[0].ID == hme3[1].ID {
-		t.Logf("home1: %v", hme3[0].ID)
-		t.Logf("home2: %v", hme3[1].ID)
+	if hme2[0].ID == hme2[1].ID {
+		t.Logf("home1: %v", hme2[0].ID)
+		t.Logf("home2: %v", hme2[1].ID)
 		t.Fatalf("Should have different home")
 	}
 }

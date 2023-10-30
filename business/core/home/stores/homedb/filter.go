@@ -21,7 +21,7 @@ func (s *Store) applyFilter(filter home.QueryFilter, data map[string]interface{}
 	}
 
 	if filter.Type != nil {
-		data["type"] = *filter.Type
+		data["type"] = filter.Type.Name()
 		wc = append(wc, "type = :type")
 	}
 
