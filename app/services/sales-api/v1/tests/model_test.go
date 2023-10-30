@@ -12,6 +12,15 @@ import (
 	"github.com/google/uuid"
 )
 
+type tableData struct {
+	name    string
+	url     string
+	model   any
+	resp    any
+	expResp any
+	cmpFunc func(x interface{}, y interface{}) string
+}
+
 type seedData struct {
 	users    []user.User
 	products []product.Product

@@ -1,12 +1,9 @@
 package tests
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/http/httptest"
 	"os"
 	"runtime/debug"
 	"testing"
@@ -23,72 +20,8 @@ import (
 	"github.com/google/uuid"
 )
 
-func Test_Create(t *testing.T) {
-	t.Parallel()
-
-	test := dbtest.NewTest(t, c)
-	defer func() {
-		if r := recover(); r != nil {
-			t.Log(r)
-			t.Error(string(debug.Stack()))
-		}
-		test.Teardown()
-	}()
-
-	tests := CreateTests{
-		app: v1.APIMux(v1.APIMuxConfig{
-			Shutdown: make(chan os.Signal, 1),
-			Log:      test.Log,
-			Auth:     test.V1.Auth,
-			DB:       test.DB,
-		}, all.Routes()),
-		userToken:  test.TokenV1("user@example.com", "gophers"),
-		adminToken: test.TokenV1("admin@example.com", "gophers"),
-	}
-
-	// -------------------------------------------------------------------------
-
-	t.Log("Seeding data ...")
-	sd, err := createSeed(context.Background(), test.CoreAPIs)
-	if err != nil {
-		t.Fatalf("Seeding error: %s", err)
-	}
-
-	// -------------------------------------------------------------------------
-
-	tests.create200(t, sd)
-}
-
-func createSeed(ctx context.Context, api dbtest.CoreAPIs) (seedData, error) {
-	usrs, err := api.User.Query(ctx, user.QueryFilter{}, order.By{Field: user.OrderByName, Direction: order.ASC}, 1, 2)
-	if err != nil {
-		return seedData{}, fmt.Errorf("seeding users : %w", err)
-	}
-
-	sd := seedData{
-		users: usrs,
-	}
-
-	return sd, nil
-}
-
-// =============================================================================
-
-type CreateTests struct {
-	app        http.Handler
-	userToken  string
-	adminToken string
-}
-
-func (ct *CreateTests) create200(t *testing.T, sd seedData) {
-	table := []struct {
-		name    string
-		url     string
-		model   any
-		resp    any
-		expResp any
-		cmpFunc func(x interface{}, y interface{}) string
-	}{
+func test_create200(t *testing.T, sd seedData) []tableData {
+	table := []tableData{
 		{
 			name: "user",
 			url:  "/v1/users",
@@ -221,37 +154,60 @@ func (ct *CreateTests) create200(t *testing.T, sd seedData) {
 		},
 	}
 
-	for _, tt := range table {
-		f := func(t *testing.T) {
-			var b bytes.Buffer
-			if err := json.NewEncoder(&b).Encode(tt.model); err != nil {
-				t.Fatalf("Should be able to marshal the model : %s", err)
-			}
+	return table
+}
 
-			r := httptest.NewRequest(http.MethodPost, tt.url, &b)
-			w := httptest.NewRecorder()
+// =============================================================================
 
-			r.Header.Set("Authorization", "Bearer "+ct.adminToken)
-			ct.app.ServeHTTP(w, r)
-
-			if w.Code != http.StatusCreated {
-				t.Fatalf("%s: Should receive a status code of 201 for the response : %d", tt.name, w.Code)
-			}
-
-			if err := json.Unmarshal(w.Body.Bytes(), tt.resp); err != nil {
-				t.Fatalf("Should be able to unmarshal the response : %s", err)
-			}
-
-			diff := tt.cmpFunc(tt.resp, tt.expResp)
-			if diff != "" {
-				t.Log("GOT")
-				t.Logf("%#v", tt.resp)
-				t.Log("EXP")
-				t.Logf("%#v", tt.expResp)
-				t.Fatalf("Should get the expected response")
-			}
-		}
-
-		t.Run("create200-"+tt.name, f)
+func createSeed(ctx context.Context, api dbtest.CoreAPIs) (seedData, error) {
+	usrs, err := api.User.Query(ctx, user.QueryFilter{}, order.By{Field: user.OrderByName, Direction: order.ASC}, 1, 2)
+	if err != nil {
+		return seedData{}, fmt.Errorf("seeding users : %w", err)
 	}
+
+	sd := seedData{
+		users: usrs,
+	}
+
+	return sd, nil
+}
+
+// =============================================================================
+
+func Test_Create(t *testing.T) {
+	t.Parallel()
+
+	test := dbtest.NewTest(t, c)
+	defer func() {
+		if r := recover(); r != nil {
+			t.Log(r)
+			t.Error(string(debug.Stack()))
+		}
+		test.Teardown()
+	}()
+
+	tests := appTest{
+		app: v1.APIMux(v1.APIMuxConfig{
+			Shutdown: make(chan os.Signal, 1),
+			Log:      test.Log,
+			Auth:     test.V1.Auth,
+			DB:       test.DB,
+		}, all.Routes()),
+		method:     http.MethodPost,
+		statusCode: http.StatusCreated,
+		userToken:  test.TokenV1("user@example.com", "gophers"),
+		adminToken: test.TokenV1("admin@example.com", "gophers"),
+	}
+
+	// -------------------------------------------------------------------------
+
+	t.Log("Seeding data ...")
+	sd, err := createSeed(context.Background(), test.CoreAPIs)
+	if err != nil {
+		t.Fatalf("Seeding error: %s", err)
+	}
+
+	// -------------------------------------------------------------------------
+
+	tests.run(t, test_create200(t, sd), "create200")
 }

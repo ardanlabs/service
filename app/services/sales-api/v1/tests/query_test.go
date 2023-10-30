@@ -2,10 +2,8 @@ package tests
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/http/httptest"
 	"os"
 	"runtime/debug"
 	"testing"
@@ -25,42 +23,95 @@ import (
 	"github.com/google/uuid"
 )
 
-func Test_Query(t *testing.T) {
-	t.Parallel()
-
-	test := dbtest.NewTest(t, c)
-	defer func() {
-		if r := recover(); r != nil {
-			t.Log(r)
-			t.Error(string(debug.Stack()))
-		}
-		test.Teardown()
-	}()
-
-	tests := QueryTests{
-		app: v1.APIMux(v1.APIMuxConfig{
-			Shutdown: make(chan os.Signal, 1),
-			Log:      test.Log,
-			Auth:     test.V1.Auth,
-			DB:       test.DB,
-		}, all.Routes()),
-		userToken:  test.TokenV1("user@example.com", "gophers"),
-		adminToken: test.TokenV1("admin@example.com", "gophers"),
+func test_query200(t *testing.T, sd seedData) []tableData {
+	usrs := make(map[uuid.UUID]user.User)
+	for _, usr := range sd.users {
+		usrs[usr.ID] = usr
 	}
 
-	// -------------------------------------------------------------------------
-
-	t.Log("Seeding data ...")
-	sd, err := querySeed(context.Background(), test.CoreAPIs)
-	if err != nil {
-		t.Fatalf("Seeding error: %s", err)
+	table := []tableData{
+		{
+			name: "user",
+			url:  "/v1/users?page=1&rows=2&orderBy=user_id,DESC",
+			resp: &response.PageDocument[usergrp.AppUser]{},
+			expResp: &response.PageDocument[usergrp.AppUser]{
+				Page:        1,
+				RowsPerPage: 2,
+				Total:       len(sd.users),
+				Items:       toAppUsers(sd.users),
+			},
+			cmpFunc: func(x interface{}, y interface{}) string {
+				return cmp.Diff(x, y)
+			},
+		},
+		{
+			name: "product",
+			url:  "/v1/products?page=1&rows=10&orderBy=user_id,DESC",
+			resp: &response.PageDocument[productgrp.AppProductDetails]{},
+			expResp: &response.PageDocument[productgrp.AppProductDetails]{
+				Page:        1,
+				RowsPerPage: 10,
+				Total:       len(sd.products),
+				Items:       toAppProductsDetails(sd.products, usrs),
+			},
+			cmpFunc: func(x interface{}, y interface{}) string {
+				return cmp.Diff(x, y)
+			},
+		},
+		{
+			name: "home",
+			url:  "/v1/homes?page=1&rows=10&orderBy=user_id,DESC",
+			resp: &response.PageDocument[homegrp.AppHome]{},
+			expResp: &response.PageDocument[homegrp.AppHome]{
+				Page:        1,
+				RowsPerPage: 10,
+				Total:       len(sd.products),
+				Items:       toAppHomes(sd.homes),
+			},
+			cmpFunc: func(x interface{}, y interface{}) string {
+				return cmp.Diff(x, y)
+			},
+		},
 	}
 
-	// -------------------------------------------------------------------------
-
-	tests.query200(t, sd)
-	tests.queryByID200(t, sd)
+	return table
 }
+
+func test_queryByID200(t *testing.T, sd seedData) []tableData {
+	table := []tableData{
+		{
+			name:    "user",
+			url:     fmt.Sprintf("/v1/users/%s", sd.users[0].ID),
+			resp:    &usergrp.AppUser{},
+			expResp: toAppUserPtr(sd.users[0]),
+			cmpFunc: func(x interface{}, y interface{}) string {
+				return cmp.Diff(x, y)
+			},
+		},
+		{
+			name:    "product",
+			url:     fmt.Sprintf("/v1/products/%s", sd.products[0].ID),
+			resp:    &productgrp.AppProduct{},
+			expResp: toAppProductPtr(sd.products[0]),
+			cmpFunc: func(x interface{}, y interface{}) string {
+				return cmp.Diff(x, y)
+			},
+		},
+		{
+			name:    "home",
+			url:     fmt.Sprintf("/v1/homes/%s", sd.homes[0].ID),
+			resp:    &homegrp.AppHome{},
+			expResp: toAppHomePtr(sd.homes[0]),
+			cmpFunc: func(x interface{}, y interface{}) string {
+				return cmp.Diff(x, y)
+			},
+		},
+	}
+
+	return table
+}
+
+// =============================================================================
 
 func querySeed(ctx context.Context, api dbtest.CoreAPIs) (seedData, error) {
 	usrs, err := api.User.Query(ctx, user.QueryFilter{}, order.By{Field: user.OrderByName, Direction: order.ASC}, 1, 2)
@@ -107,142 +158,41 @@ func querySeed(ctx context.Context, api dbtest.CoreAPIs) (seedData, error) {
 
 // =============================================================================
 
-type QueryTests struct {
-	app        http.Handler
-	userToken  string
-	adminToken string
-}
+func Test_Query(t *testing.T) {
+	t.Parallel()
 
-func (qt *QueryTests) query200(t *testing.T, sd seedData) {
-	usrs := make(map[uuid.UUID]user.User)
-	for _, usr := range sd.users {
-		usrs[usr.ID] = usr
-	}
-
-	table := []struct {
-		name    string
-		url     string
-		resp    any
-		expResp any
-	}{
-		{
-			name: "user",
-			url:  "/v1/users?page=1&rows=2&orderBy=user_id,DESC",
-			resp: &response.PageDocument[usergrp.AppUser]{},
-			expResp: &response.PageDocument[usergrp.AppUser]{
-				Page:        1,
-				RowsPerPage: 2,
-				Total:       len(sd.users),
-				Items:       toAppUsers(sd.users),
-			},
-		},
-		{
-			name: "product",
-			url:  "/v1/products?page=1&rows=10&orderBy=user_id,DESC",
-			resp: &response.PageDocument[productgrp.AppProductDetails]{},
-			expResp: &response.PageDocument[productgrp.AppProductDetails]{
-				Page:        1,
-				RowsPerPage: 10,
-				Total:       len(sd.products),
-				Items:       toAppProductsDetails(sd.products, usrs),
-			},
-		},
-		{
-			name: "home",
-			url:  "/v1/homes?page=1&rows=10&orderBy=user_id,DESC",
-			resp: &response.PageDocument[homegrp.AppHome]{},
-			expResp: &response.PageDocument[homegrp.AppHome]{
-				Page:        1,
-				RowsPerPage: 10,
-				Total:       len(sd.products),
-				Items:       toAppHomes(sd.homes),
-			},
-		},
-	}
-
-	for _, tt := range table {
-		f := func(t *testing.T) {
-			r := httptest.NewRequest(http.MethodGet, tt.url, nil)
-			w := httptest.NewRecorder()
-
-			r.Header.Set("Authorization", "Bearer "+qt.adminToken)
-			qt.app.ServeHTTP(w, r)
-
-			if w.Code != http.StatusOK {
-				t.Fatalf("%s: Should receive a status code of 200 for the response : %d", tt.name, w.Code)
-			}
-
-			if err := json.Unmarshal(w.Body.Bytes(), tt.resp); err != nil {
-				t.Fatalf("Should be able to unmarshal the response : %s", err)
-			}
-
-			diff := cmp.Diff(tt.resp, tt.expResp)
-			if diff != "" {
-				t.Log("GOT")
-				t.Logf("%#v", tt.resp)
-				t.Log("EXP")
-				t.Logf("%#v", tt.expResp)
-				t.Fatalf("Should get the expected response")
-			}
+	test := dbtest.NewTest(t, c)
+	defer func() {
+		if r := recover(); r != nil {
+			t.Log(r)
+			t.Error(string(debug.Stack()))
 		}
+		test.Teardown()
+	}()
 
-		t.Run("query200-"+tt.name, f)
-	}
-}
-
-func (qt *QueryTests) queryByID200(t *testing.T, sd seedData) {
-	table := []struct {
-		name    string
-		url     string
-		resp    any
-		expResp any
-	}{
-		{
-			name:    "user",
-			url:     fmt.Sprintf("/v1/users/%s", sd.users[0].ID),
-			resp:    &usergrp.AppUser{},
-			expResp: toAppUserPtr(sd.users[0]),
-		},
-		{
-			name:    "product",
-			url:     fmt.Sprintf("/v1/products/%s", sd.products[0].ID),
-			resp:    &productgrp.AppProduct{},
-			expResp: toAppProductPtr(sd.products[0]),
-		},
-		{
-			name:    "home",
-			url:     fmt.Sprintf("/v1/homes/%s", sd.homes[0].ID),
-			resp:    &homegrp.AppHome{},
-			expResp: toAppHomePtr(sd.homes[0]),
-		},
+	tests := appTest{
+		app: v1.APIMux(v1.APIMuxConfig{
+			Shutdown: make(chan os.Signal, 1),
+			Log:      test.Log,
+			Auth:     test.V1.Auth,
+			DB:       test.DB,
+		}, all.Routes()),
+		statusCode: http.StatusOK,
+		method:     http.MethodGet,
+		userToken:  test.TokenV1("user@example.com", "gophers"),
+		adminToken: test.TokenV1("admin@example.com", "gophers"),
 	}
 
-	for _, tt := range table {
-		f := func(t *testing.T) {
-			r := httptest.NewRequest(http.MethodGet, tt.url, nil)
-			w := httptest.NewRecorder()
+	// -------------------------------------------------------------------------
 
-			r.Header.Set("Authorization", "Bearer "+qt.adminToken)
-			qt.app.ServeHTTP(w, r)
-
-			if w.Code != http.StatusOK {
-				t.Fatalf("%s: Should receive a status code of 200 for the response : %d", tt.name, w.Code)
-			}
-
-			if err := json.Unmarshal(w.Body.Bytes(), tt.resp); err != nil {
-				t.Fatalf("Should be able to unmarshal the response : %s", err)
-			}
-
-			diff := cmp.Diff(tt.resp, tt.expResp)
-			if diff != "" {
-				t.Log("GOT")
-				t.Logf("%#v", tt.resp)
-				t.Log("EXP")
-				t.Logf("%#v", tt.expResp)
-				t.Fatalf("Should get the expected response")
-			}
-		}
-
-		t.Run("queryByID200-"+tt.name, f)
+	t.Log("Seeding data ...")
+	sd, err := querySeed(context.Background(), test.CoreAPIs)
+	if err != nil {
+		t.Fatalf("Seeding error: %s", err)
 	}
+
+	// -------------------------------------------------------------------------
+
+	tests.run(t, test_query200(t, sd), "query200")
+	tests.run(t, test_queryByID200(t, sd), "queryByID200")
 }
