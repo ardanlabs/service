@@ -12,6 +12,14 @@ import (
 	"github.com/google/uuid"
 )
 
+type seedData struct {
+	users    []user.User
+	products []product.Product
+	homes    []home.Home
+}
+
+// =============================================================================
+
 func toAppUser(usr user.User) usergrp.AppUser {
 	roles := make([]string, len(usr.Roles))
 	for i, role := range usr.Roles {
@@ -40,7 +48,29 @@ func toAppUsers(users []user.User) []usergrp.AppUser {
 	return items
 }
 
+func toAppUserPtr(usr user.User) *usergrp.AppUser {
+	appUsr := toAppUser(usr)
+	return &appUsr
+}
+
 // =============================================================================
+
+func toAppProduct(prd product.Product) productgrp.AppProduct {
+	return productgrp.AppProduct{
+		ID:          prd.ID.String(),
+		UserID:      prd.UserID.String(),
+		Name:        prd.Name,
+		Cost:        prd.Cost,
+		Quantity:    prd.Quantity,
+		DateCreated: prd.DateCreated.Format(time.RFC3339),
+		DateUpdated: prd.DateUpdated.Format(time.RFC3339),
+	}
+}
+
+func toAppProductPtr(prd product.Product) *productgrp.AppProduct {
+	appPrd := toAppProduct(prd)
+	return &appPrd
+}
 
 func toAppProductDetails(prd product.Product, usr user.User) productgrp.AppProductDetails {
 	return productgrp.AppProductDetails{
@@ -91,4 +121,9 @@ func toAppHomes(homes []home.Home) []homegrp.AppHome {
 	}
 
 	return items
+}
+
+func toAppHomePtr(hme home.Home) *homegrp.AppHome {
+	appHme := toAppHome(hme)
+	return &appHme
 }
