@@ -52,7 +52,7 @@ func Test_Query(t *testing.T) {
 	// -------------------------------------------------------------------------
 
 	t.Log("Seeding data ...")
-	sd, err := querySeedseed(context.Background(), test.CoreAPIs)
+	sd, err := querySeed(context.Background(), test.CoreAPIs)
 	if err != nil {
 		t.Fatalf("Seeding error: %s", err)
 	}
@@ -63,7 +63,7 @@ func Test_Query(t *testing.T) {
 	tests.queryByID200(t, sd)
 }
 
-func querySeedseed(ctx context.Context, api dbtest.CoreAPIs) (seedData, error) {
+func querySeed(ctx context.Context, api dbtest.CoreAPIs) (seedData, error) {
 	usrs, err := api.User.Query(ctx, user.QueryFilter{}, order.By{Field: user.OrderByName, Direction: order.ASC}, 1, 2)
 	if err != nil {
 		return seedData{}, fmt.Errorf("seeding users : %w", err)
