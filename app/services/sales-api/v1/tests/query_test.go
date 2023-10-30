@@ -25,7 +25,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// Test_Query is the entry point for testing Query based APIs.
 func Test_Query(t *testing.T) {
 	t.Parallel()
 
@@ -108,9 +107,6 @@ func querySeed(ctx context.Context, api dbtest.CoreAPIs) (seedData, error) {
 
 // =============================================================================
 
-// QueryTests holds methods for each subtest. This type allows passing
-// dependencies for tests while still providing a convenient syntax when
-// subtests are registered.
 type QueryTests struct {
 	app        http.Handler
 	userToken  string
