@@ -32,7 +32,7 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 # Install Tooling and Dependencies
 #
 #   This project uses Docker and it is expected to be installed. Please provide
-#   Docker at least 3 CPUs.
+#   Docker at least 4 CPUs.
 #
 #	Run these commands to install everything needed.
 #	$ make dev-brew
