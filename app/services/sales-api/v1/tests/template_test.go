@@ -20,7 +20,9 @@ func nameTests(t *testing.T, tests appTest, sd seedData) {
 }
 
 func testName200(t *testing.T, sd seedData) []tableData {
-	return nil
+	table := []tableData{}
+
+	return table
 }
 
 // =============================================================================
