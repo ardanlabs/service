@@ -178,7 +178,7 @@ func updateSeed(ctx context.Context, api dbtest.CoreAPIs) (seedData, error) {
 
 	hmes, err := home.TestGenerateSeedHomes(1, api.Home, usrs[0].ID)
 	if err != nil {
-		return seedData{}, fmt.Errorf("seeding homes2 : %w", err)
+		return seedData{}, fmt.Errorf("seeding homes : %w", err)
 	}
 
 	sd := seedData{

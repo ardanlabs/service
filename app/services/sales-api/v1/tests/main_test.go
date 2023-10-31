@@ -36,10 +36,10 @@ type appTest struct {
 	adminToken string
 }
 
-func (ap *appTest) run(t *testing.T, table []tableData, testName string) {
+func (at *appTest) run(t *testing.T, table []tableData, testName string) {
 	for _, tt := range table {
 		f := func(t *testing.T) {
-			r := httptest.NewRequest(ap.method, tt.url, nil)
+			r := httptest.NewRequest(at.method, tt.url, nil)
 			w := httptest.NewRecorder()
 
 			if tt.model != nil {
@@ -48,14 +48,18 @@ func (ap *appTest) run(t *testing.T, table []tableData, testName string) {
 					t.Fatalf("Should be able to marshal the model : %s", err)
 				}
 
-				r = httptest.NewRequest(ap.method, tt.url, &b)
+				r = httptest.NewRequest(at.method, tt.url, &b)
 			}
 
-			r.Header.Set("Authorization", "Bearer "+ap.adminToken)
-			ap.app.ServeHTTP(w, r)
+			r.Header.Set("Authorization", "Bearer "+at.adminToken)
+			at.app.ServeHTTP(w, r)
 
-			if w.Code != ap.statusCode {
-				t.Fatalf("%s: Should receive a status code of %d for the response : %d", tt.name, ap.statusCode, w.Code)
+			if w.Code != at.statusCode {
+				t.Fatalf("%s: Should receive a status code of %d for the response : %d", tt.name, at.statusCode, w.Code)
+			}
+
+			if at.statusCode == http.StatusNoContent {
+				return
 			}
 
 			if err := json.Unmarshal(w.Body.Bytes(), tt.resp); err != nil {

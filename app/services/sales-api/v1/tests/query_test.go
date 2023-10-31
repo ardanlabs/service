@@ -126,12 +126,12 @@ func querySeed(ctx context.Context, api dbtest.CoreAPIs) (seedData, error) {
 
 	prds1, err := product.TestGenerateSeedProducts(5, api.Product, usrs[0].ID)
 	if err != nil {
-		return seedData{}, fmt.Errorf("seeding products : %w", err)
+		return seedData{}, fmt.Errorf("seeding products1 : %w", err)
 	}
 
 	prds2, err := product.TestGenerateSeedProducts(5, api.Product, usrs[1].ID)
 	if err != nil {
-		return seedData{}, fmt.Errorf("seeding products : %w", err)
+		return seedData{}, fmt.Errorf("seeding products2 : %w", err)
 	}
 
 	var prds []product.Product
