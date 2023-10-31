@@ -5,6 +5,7 @@ import (
 	"context"
 	"net/http"
 	"os"
+	"runtime"
 	"time"
 
 	db "github.com/ardanlabs/service/business/data/dbsql/pgx"
@@ -77,7 +78,7 @@ func (h *Handlers) Liveness(ctx context.Context, w http.ResponseWriter, r *http.
 		PodIP      string `json:"podIP,omitempty"`
 		Node       string `json:"node,omitempty"`
 		Namespace  string `json:"namespace,omitempty"`
-		GOMAXPROCS string `json:"GOMAXPROCS,omitempty"`
+		GOMAXPROCS int    `json:"GOMAXPROCS,omitempty"`
 	}{
 		Status:     "up",
 		Build:      h.build,
@@ -86,7 +87,7 @@ func (h *Handlers) Liveness(ctx context.Context, w http.ResponseWriter, r *http.
 		PodIP:      os.Getenv("KUBERNETES_POD_IP"),
 		Node:       os.Getenv("KUBERNETES_NODE_NAME"),
 		Namespace:  os.Getenv("KUBERNETES_NAMESPACE"),
-		GOMAXPROCS: os.Getenv("GOMAXPROCS"),
+		GOMAXPROCS: runtime.GOMAXPROCS(0),
 	}
 
 	// This handler provides a free timer loop.

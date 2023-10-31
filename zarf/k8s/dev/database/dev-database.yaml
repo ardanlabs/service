@@ -56,9 +56,9 @@ spec:
             subPath: "pg_hba.conf"
         resources:
           requests:
-            cpu: "500m"
+            cpu: "1000m"
           limits:
-            cpu: "500m"
+            cpu: "1000m"
         args: ['-c', 'hba_file=/etc/pg_hba.conf']
         env:
         - name: POSTGRES_PASSWORD

@@ -25,38 +25,9 @@ spec:
       terminationGracePeriodSeconds: 60
 
       initContainers:
-      - name: init-migrate
+      - name: init-migrate-seed
         image: service-image
-        command: ['./sales-admin', 'migrate']
-        env:
-        - name: SALES_DB_USER
-          valueFrom:
-            configMapKeyRef:
-              name: app-config
-              key: db_user
-              optional: true
-        - name: SALES_DB_PASSWORD
-          valueFrom:
-            configMapKeyRef:
-              name: app-config
-              key: db_password
-              optional: true
-        - name: SALES_DB_HOST
-          valueFrom:
-            configMapKeyRef:
-              name: app-config
-              key: db_host
-              optional: true
-        - name: SALES_DB_DISABLE_TLS
-          valueFrom:
-            configMapKeyRef:
-              name: app-config
-              key: db_disabletls
-              optional: true
-
-      - name: init-seed
-        image: service-image
-        command: ['./sales-admin', 'seed']
+        command: ['./sales-admin', 'migrate-seed']
         env:
         - name: SALES_DB_USER
           valueFrom:
@@ -114,6 +85,11 @@ spec:
           failureThreshold: 2
 
         env:
+        - name: GOMAXPROCS
+          valueFrom:
+            resourceFieldRef:
+              resource: limits.cpu
+
         - name: SALES_DB_USER # here as an example for configuring a hosted db.
           valueFrom:
             configMapKeyRef:
@@ -138,11 +114,6 @@ spec:
               name: app-config
               key: db_disabletls
               optional: true
-
-        - name: GOMAXPROCS
-          valueFrom:
-            resourceFieldRef:
-              resource: limits.cpu
 
         - name: KUBERNETES_NAMESPACE
           valueFrom:

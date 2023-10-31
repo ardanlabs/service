@@ -121,7 +121,7 @@ spec:
         runAsGroup: 0
       containers:
         - name: promtail
-          image: grafana/promtail:2.8.3
+          image: grafana/promtail:2.9.0
           imagePullPolicy: IfNotPresent
           args:
             - -config.file=/etc/promtail/promtail.yaml
@@ -137,9 +137,9 @@ spec:
               protocol: TCP
           resources:
             requests:
-              cpu: 100m
+              cpu: 150m
             limits:
-              cpu: 100m
+              cpu: 150m
           volumeMounts:
             - name: config
               mountPath: /etc/promtail

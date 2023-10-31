@@ -107,6 +107,14 @@ func processCommands(args conf.Args, log *logger.Logger, cfg config) error {
 			return fmt.Errorf("seeding database: %w", err)
 		}
 
+	case "migrate-seed":
+		if err := commands.Migrate(dbConfig); err != nil {
+			return fmt.Errorf("migrating database: %w", err)
+		}
+		if err := commands.Seed(dbConfig); err != nil {
+			return fmt.Errorf("seeding database: %w", err)
+		}
+
 	case "useradd":
 		name := args.Num(1)
 		email := args.Num(2)

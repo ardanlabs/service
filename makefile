@@ -207,25 +207,16 @@ dev-load:
 	kind load docker-image $(METRICS_IMAGE) --name $(KIND_CLUSTER)
 
 dev-apply:
+	kustomize build zarf/k8s/dev/grafana | kubectl apply -f -
+	kustomize build zarf/k8s/dev/prometheus | kubectl apply -f -
+	kustomize build zarf/k8s/dev/tempo | kubectl apply -f -
+	kustomize build zarf/k8s/dev/loki | kubectl apply -f -
+	kustomize build zarf/k8s/dev/promtail | kubectl apply -f -
+
 	kustomize build zarf/k8s/dev/vault | kubectl apply -f -
 
 	kustomize build zarf/k8s/dev/database | kubectl apply -f -
 	kubectl rollout status --namespace=$(NAMESPACE) --watch --timeout=120s sts/database
-
-	kustomize build zarf/k8s/dev/grafana | kubectl apply -f -
-	kubectl wait pods --namespace=$(NAMESPACE) --selector app=grafana --timeout=120s --for=condition=Ready
-
-	kustomize build zarf/k8s/dev/prometheus | kubectl apply -f -
-	kubectl wait pods --namespace=$(NAMESPACE) --selector app=prometheus --timeout=120s --for=condition=Ready
-
-	kustomize build zarf/k8s/dev/tempo | kubectl apply -f -
-	kubectl wait pods --namespace=$(NAMESPACE) --selector app=tempo --timeout=120s --for=condition=Ready
-
-	kustomize build zarf/k8s/dev/loki | kubectl apply -f -
-	kubectl wait pods --namespace=$(NAMESPACE) --selector app=loki --timeout=120s --for=condition=Ready
-
-	kustomize build zarf/k8s/dev/promtail | kubectl apply -f -
-	kubectl wait pods --namespace=$(NAMESPACE) --selector app=promtail --timeout=120s --for=condition=Ready
 
 	kustomize build zarf/k8s/dev/sales | kubectl apply -f -
 	kubectl wait pods --namespace=$(NAMESPACE) --selector app=$(APP) --timeout=120s --for=condition=Ready
@@ -245,23 +236,27 @@ dev-logs:
 dev-logs-init:
 	kubectl logs --namespace=$(NAMESPACE) -l app=$(APP) -f --tail=100 -c init-vault-system
 	kubectl logs --namespace=$(NAMESPACE) -l app=$(APP) -f --tail=100 -c init-vault-loadkeys
-	kubectl logs --namespace=$(NAMESPACE) -l app=$(APP) -f --tail=100 -c init-migrate
-	kubectl logs --namespace=$(NAMESPACE) -l app=$(APP) -f --tail=100 -c init-seed
+	kubectl logs --namespace=$(NAMESPACE) -l app=$(APP) -f --tail=100 -c init-migrate-seed
 
 dev-status:
 	kubectl get nodes -o wide
 	kubectl get svc -o wide
 	kubectl get pods -o wide --watch --all-namespaces
 
-dev-describe:
-	kubectl describe nodes
-	kubectl describe svc
+dev-describe-node:
+	kubectl describe node
 
 dev-describe-deployment:
 	kubectl describe deployment --namespace=$(NAMESPACE) $(APP)
 
 dev-describe-sales:
 	kubectl describe pod --namespace=$(NAMESPACE) -l app=$(APP)
+
+dev-describe-database:
+	kubectl describe pod --namespace=$(NAMESPACE) -l app=database
+
+dev-describe-grafana:
+	kubectl describe pod --namespace=$(NAMESPACE) -l app=grafana
 
 # ------------------------------------------------------------------------------
 
@@ -385,7 +380,7 @@ users:
 	curl -il -H "Authorization: Bearer ${TOKEN}" http://localhost:3000/v1/users?page=1&rows=2
 
 load:
-	hey -m GET -c 100 -n 10000 -H "Authorization: Bearer ${TOKEN}" "http://localhost:3000/v1/users?page=1&rows=2"
+	hey -m GET -c 100 -n 1000 -H "Authorization: Bearer ${TOKEN}" "http://localhost:3000/v1/users?page=1&rows=2"
 
 otel-test:
 	curl -il -H "Traceparent: 00-918dd5ecf264712262b68cf2ef8b5239-896d90f23f69f006-01" --user "admin@example.com:gophers" http://localhost:3000/v1/users/token/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
