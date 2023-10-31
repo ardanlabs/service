@@ -20,6 +20,10 @@ import (
 	"github.com/google/uuid"
 )
 
+func createTests(t *testing.T, tests appTest, sd seedData) {
+	tests.run(t, testCreate200(t, sd), "create200")
+}
+
 func testCreate200(t *testing.T, sd seedData) []tableData {
 	table := []tableData{
 		{
@@ -209,5 +213,5 @@ func Test_Create(t *testing.T) {
 
 	// -------------------------------------------------------------------------
 
-	tests.run(t, testCreate200(t, sd), "create200")
+	createTests(t, tests, sd)
 }
