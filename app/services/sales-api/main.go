@@ -106,7 +106,10 @@ func run(ctx context.Context, log *logger.Logger, build string) error {
 		Tempo struct {
 			ReporterURI string  `conf:"default:tempo.sales-system.svc.cluster.local:4317"`
 			ServiceName string  `conf:"default:sales-api"`
-			Probability float64 `conf:"default:1"` // Shouldn't use a high value in non-developer systems. 0.05 should be enough for most systems. Some might want to have this even lower
+			Probability float64 `conf:"default:0.05"`
+			// Shouldn't use a high Probability value in non-developer systems.
+			// 0.05 should be enough for most systems. Some might want to have
+			// this even lower.
 		}
 	}{
 		Version: conf.Version{

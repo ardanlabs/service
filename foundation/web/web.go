@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/dimfeld/httptreemux/v5"
+	"github.com/google/uuid"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -94,9 +95,31 @@ func (a *App) EnableCORS(mw Middleware) {
 }
 
 // HandleNoMiddleware sets a handler function for a given HTTP method and path pair
-// to the application server mux. Does not include the application middleware.
+// to the application server mux. Does not include the application middleware or
+// OTEL tracing.
 func (a *App) HandleNoMiddleware(method string, group string, path string, handler Handler) {
-	a.handle(method, group, path, handler)
+	h := func(w http.ResponseWriter, r *http.Request) {
+		v := Values{
+			TraceID: uuid.NewString(),
+			Tracer:  nil,
+			Now:     time.Now().UTC(),
+		}
+		ctx := SetValues(r.Context(), &v)
+
+		if err := handler(ctx, w, r); err != nil {
+			if validateShutdown(err) {
+				a.SignalShutdown()
+				return
+			}
+		}
+	}
+
+	finalPath := path
+	if group != "" {
+		finalPath = "/" + group + path
+	}
+
+	a.mux.Handle(method, finalPath, h)
 }
 
 // Handle sets a handler function for a given HTTP method and path pair
@@ -105,14 +128,6 @@ func (a *App) Handle(method string, group string, path string, handler Handler, 
 	handler = wrapMiddleware(mw, handler)
 	handler = wrapMiddleware(a.mw, handler)
 
-	a.handle(method, group, path, handler)
-}
-
-// =============================================================================
-
-// handle sets a handler function for a given HTTP method and path pair
-// to the application server mux.
-func (a *App) handle(method string, group string, path string, handler Handler) {
 	h := func(w http.ResponseWriter, r *http.Request) {
 		ctx, span := a.startSpan(w, r)
 		defer span.End()
@@ -139,6 +154,8 @@ func (a *App) handle(method string, group string, path string, handler Handler) 
 
 	a.mux.Handle(method, finalPath, h)
 }
+
+// =============================================================================
 
 // startSpan initializes the request by adding a span and writing otel
 // related information into the response writer for the response.
