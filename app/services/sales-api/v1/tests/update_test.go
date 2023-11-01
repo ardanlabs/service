@@ -29,8 +29,10 @@ func updateTests(t *testing.T, tests appTest, sd seedData) {
 func testUpdate200(t *testing.T, sd seedData) []tableData {
 	table := []tableData{
 		{
-			name: "user",
-			url:  fmt.Sprintf("/v1/users/%s", sd.users[0].ID),
+			name:       "user",
+			url:        fmt.Sprintf("/v1/users/%s", sd.users[0].ID),
+			method:     http.MethodPut,
+			statusCode: http.StatusOK,
 			model: &usergrp.AppUpdateUser{
 				Name:            dbtest.StringPointer("Bill Kennedy"),
 				Email:           dbtest.StringPointer("bill@ardanlabs.com"),
@@ -71,8 +73,10 @@ func testUpdate200(t *testing.T, sd seedData) []tableData {
 			},
 		},
 		{
-			name: "product",
-			url:  fmt.Sprintf("/v1/products/%s", sd.products[0].ID),
+			name:       "product",
+			url:        fmt.Sprintf("/v1/products/%s", sd.products[0].ID),
+			method:     http.MethodPut,
+			statusCode: http.StatusOK,
 			model: &productgrp.AppUpdateProduct{
 				Name:     dbtest.StringPointer("Guitar"),
 				Cost:     dbtest.FloatPointer(10.34),
@@ -109,8 +113,10 @@ func testUpdate200(t *testing.T, sd seedData) []tableData {
 			},
 		},
 		{
-			name: "home",
-			url:  fmt.Sprintf("/v1/homes/%s", sd.homes[0].ID),
+			name:       "home",
+			url:        fmt.Sprintf("/v1/homes/%s", sd.homes[0].ID),
+			method:     http.MethodPut,
+			statusCode: http.StatusOK,
 			model: &homegrp.AppUpdateHome{
 				Type: dbtest.StringPointer("SINGLE FAMILY"),
 				Address: &homegrp.AppUpdateAddress{
@@ -211,8 +217,6 @@ func Test_Update(t *testing.T) {
 			Auth:     test.V1.Auth,
 			DB:       test.DB,
 		}, all.Routes()),
-		method:     http.MethodPut,
-		statusCode: http.StatusOK,
 		userToken:  test.TokenV1("user@example.com", "gophers"),
 		adminToken: test.TokenV1("admin@example.com", "gophers"),
 	}

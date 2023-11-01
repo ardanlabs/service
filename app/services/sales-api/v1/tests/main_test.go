@@ -30,8 +30,6 @@ func TestMain(m *testing.M) {
 
 type appTest struct {
 	app        http.Handler
-	method     string
-	statusCode int
 	userToken  string
 	adminToken string
 }
@@ -39,7 +37,7 @@ type appTest struct {
 func (at *appTest) run(t *testing.T, table []tableData, testName string) {
 	for _, tt := range table {
 		f := func(t *testing.T) {
-			r := httptest.NewRequest(at.method, tt.url, nil)
+			r := httptest.NewRequest(tt.method, tt.url, nil)
 			w := httptest.NewRecorder()
 
 			if tt.model != nil {
@@ -48,17 +46,17 @@ func (at *appTest) run(t *testing.T, table []tableData, testName string) {
 					t.Fatalf("Should be able to marshal the model : %s", err)
 				}
 
-				r = httptest.NewRequest(at.method, tt.url, &b)
+				r = httptest.NewRequest(tt.method, tt.url, &b)
 			}
 
 			r.Header.Set("Authorization", "Bearer "+at.adminToken)
 			at.app.ServeHTTP(w, r)
 
-			if w.Code != at.statusCode {
-				t.Fatalf("%s: Should receive a status code of %d for the response : %d", tt.name, at.statusCode, w.Code)
+			if w.Code != tt.statusCode {
+				t.Fatalf("%s: Should receive a status code of %d for the response : %d", tt.name, tt.statusCode, w.Code)
 			}
 
-			if at.statusCode == http.StatusNoContent {
+			if tt.statusCode == http.StatusNoContent {
 				return
 			}
 

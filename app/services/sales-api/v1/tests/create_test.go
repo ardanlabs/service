@@ -27,8 +27,10 @@ func createTests(t *testing.T, tests appTest, sd seedData) {
 func testCreate200(t *testing.T, sd seedData) []tableData {
 	table := []tableData{
 		{
-			name: "user",
-			url:  "/v1/users",
+			name:       "user",
+			url:        "/v1/users",
+			method:     http.MethodPost,
+			statusCode: http.StatusCreated,
 			model: &usergrp.AppNewUser{
 				Name:            "Bill Kennedy",
 				Email:           "bill@ardanlabs.com",
@@ -69,8 +71,10 @@ func testCreate200(t *testing.T, sd seedData) []tableData {
 			},
 		},
 		{
-			name: "product",
-			url:  "/v1/products",
+			name:       "product",
+			url:        "/v1/products",
+			method:     http.MethodPost,
+			statusCode: http.StatusCreated,
 			model: &productgrp.AppNewProduct{
 				Name:     "Guitar",
 				UserID:   sd.users[0].ID.String(),
@@ -108,8 +112,10 @@ func testCreate200(t *testing.T, sd seedData) []tableData {
 			},
 		},
 		{
-			name: "home",
-			url:  "/v1/homes",
+			name:       "home",
+			url:        "/v1/homes",
+			method:     http.MethodPost,
+			statusCode: http.StatusCreated,
 			model: &homegrp.AppNewHome{
 				UserID: sd.users[0].ID.String(),
 				Type:   "SINGLE FAMILY",
@@ -197,8 +203,6 @@ func Test_Create(t *testing.T) {
 			Auth:     test.V1.Auth,
 			DB:       test.DB,
 		}, all.Routes()),
-		method:     http.MethodPost,
-		statusCode: http.StatusCreated,
 		userToken:  test.TokenV1("user@example.com", "gophers"),
 		adminToken: test.TokenV1("admin@example.com", "gophers"),
 	}

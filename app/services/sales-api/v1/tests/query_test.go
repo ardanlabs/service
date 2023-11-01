@@ -36,9 +36,11 @@ func testQuery200(t *testing.T, sd seedData) []tableData {
 
 	table := []tableData{
 		{
-			name: "user",
-			url:  "/v1/users?page=1&rows=2&orderBy=user_id,DESC",
-			resp: &response.PageDocument[usergrp.AppUser]{},
+			name:       "user",
+			url:        "/v1/users?page=1&rows=2&orderBy=user_id,DESC",
+			statusCode: http.StatusOK,
+			method:     http.MethodGet,
+			resp:       &response.PageDocument[usergrp.AppUser]{},
 			expResp: &response.PageDocument[usergrp.AppUser]{
 				Page:        1,
 				RowsPerPage: 2,
@@ -50,9 +52,11 @@ func testQuery200(t *testing.T, sd seedData) []tableData {
 			},
 		},
 		{
-			name: "product",
-			url:  "/v1/products?page=1&rows=10&orderBy=user_id,DESC",
-			resp: &response.PageDocument[productgrp.AppProductDetails]{},
+			name:       "product",
+			url:        "/v1/products?page=1&rows=10&orderBy=user_id,DESC",
+			statusCode: http.StatusOK,
+			method:     http.MethodGet,
+			resp:       &response.PageDocument[productgrp.AppProductDetails]{},
 			expResp: &response.PageDocument[productgrp.AppProductDetails]{
 				Page:        1,
 				RowsPerPage: 10,
@@ -64,9 +68,11 @@ func testQuery200(t *testing.T, sd seedData) []tableData {
 			},
 		},
 		{
-			name: "home",
-			url:  "/v1/homes?page=1&rows=10&orderBy=user_id,DESC",
-			resp: &response.PageDocument[homegrp.AppHome]{},
+			name:       "home",
+			url:        "/v1/homes?page=1&rows=10&orderBy=user_id,DESC",
+			statusCode: http.StatusOK,
+			method:     http.MethodGet,
+			resp:       &response.PageDocument[homegrp.AppHome]{},
 			expResp: &response.PageDocument[homegrp.AppHome]{
 				Page:        1,
 				RowsPerPage: 10,
@@ -85,28 +91,34 @@ func testQuery200(t *testing.T, sd seedData) []tableData {
 func testQueryByID200(t *testing.T, sd seedData) []tableData {
 	table := []tableData{
 		{
-			name:    "user",
-			url:     fmt.Sprintf("/v1/users/%s", sd.users[0].ID),
-			resp:    &usergrp.AppUser{},
-			expResp: toAppUserPtr(sd.users[0]),
+			name:       "user",
+			url:        fmt.Sprintf("/v1/users/%s", sd.users[0].ID),
+			statusCode: http.StatusOK,
+			method:     http.MethodGet,
+			resp:       &usergrp.AppUser{},
+			expResp:    toAppUserPtr(sd.users[0]),
 			cmpFunc: func(x interface{}, y interface{}) string {
 				return cmp.Diff(x, y)
 			},
 		},
 		{
-			name:    "product",
-			url:     fmt.Sprintf("/v1/products/%s", sd.products[0].ID),
-			resp:    &productgrp.AppProduct{},
-			expResp: toAppProductPtr(sd.products[0]),
+			name:       "product",
+			url:        fmt.Sprintf("/v1/products/%s", sd.products[0].ID),
+			statusCode: http.StatusOK,
+			method:     http.MethodGet,
+			resp:       &productgrp.AppProduct{},
+			expResp:    toAppProductPtr(sd.products[0]),
 			cmpFunc: func(x interface{}, y interface{}) string {
 				return cmp.Diff(x, y)
 			},
 		},
 		{
-			name:    "home",
-			url:     fmt.Sprintf("/v1/homes/%s", sd.homes[0].ID),
-			resp:    &homegrp.AppHome{},
-			expResp: toAppHomePtr(sd.homes[0]),
+			name:       "home",
+			url:        fmt.Sprintf("/v1/homes/%s", sd.homes[0].ID),
+			statusCode: http.StatusOK,
+			method:     http.MethodGet,
+			resp:       &homegrp.AppHome{},
+			expResp:    toAppHomePtr(sd.homes[0]),
 			cmpFunc: func(x interface{}, y interface{}) string {
 				return cmp.Diff(x, y)
 			},
@@ -182,8 +194,6 @@ func Test_Query(t *testing.T) {
 			Auth:     test.V1.Auth,
 			DB:       test.DB,
 		}, all.Routes()),
-		statusCode: http.StatusOK,
-		method:     http.MethodGet,
 		userToken:  test.TokenV1("user@example.com", "gophers"),
 		adminToken: test.TokenV1("admin@example.com", "gophers"),
 	}

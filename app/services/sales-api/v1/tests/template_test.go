@@ -3,7 +3,6 @@ package tests
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"os"
 	"runtime/debug"
 	"testing"
@@ -61,8 +60,6 @@ func Test_Name(t *testing.T) {
 			Auth:     test.V1.Auth,
 			DB:       test.DB,
 		}, all.Routes()),
-		method:     http.MethodGet,
-		statusCode: http.StatusOK,
 		userToken:  test.TokenV1("user@example.com", "gophers"),
 		adminToken: test.TokenV1("admin@example.com", "gophers"),
 	}

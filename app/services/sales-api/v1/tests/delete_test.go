@@ -23,16 +23,22 @@ func deleteTests(t *testing.T, tests appTest, sd seedData) {
 func testDelete200(t *testing.T, sd seedData) []tableData {
 	table := []tableData{
 		{
-			name: "product",
-			url:  fmt.Sprintf("/v1/products/%s", sd.products[0].ID),
+			name:       "product",
+			url:        fmt.Sprintf("/v1/products/%s", sd.products[0].ID),
+			method:     http.MethodDelete,
+			statusCode: http.StatusNoContent,
 		},
 		{
-			name: "home",
-			url:  fmt.Sprintf("/v1/homes/%s", sd.homes[0].ID),
+			name:       "home",
+			url:        fmt.Sprintf("/v1/homes/%s", sd.homes[0].ID),
+			method:     http.MethodDelete,
+			statusCode: http.StatusNoContent,
 		},
 		{
-			name: "user",
-			url:  fmt.Sprintf("/v1/users/%s", sd.users[0].ID),
+			name:       "user",
+			url:        fmt.Sprintf("/v1/users/%s", sd.users[0].ID),
+			method:     http.MethodDelete,
+			statusCode: http.StatusNoContent,
 		},
 	}
 
@@ -87,8 +93,6 @@ func Test_Delete(t *testing.T) {
 			Auth:     test.V1.Auth,
 			DB:       test.DB,
 		}, all.Routes()),
-		method:     http.MethodDelete,
-		statusCode: http.StatusNoContent,
 		userToken:  test.TokenV1("user@example.com", "gophers"),
 		adminToken: test.TokenV1("admin@example.com", "gophers"),
 	}
