@@ -124,7 +124,7 @@ func Routes(version string) ([]Route, error) {
 
 				routes = append(routes, Route{
 					Method:   methods[method.Sel.Name],
-					URL:      ver[:len(ver)-1] + url.Value[1:],
+					URL:      "/" + ver[:len(ver)-1] + url.Value[1:],
 					Handler:  handler.Sel.Name,
 					Group:    item.group,
 					ErrorDoc: "ErrorDocument",
