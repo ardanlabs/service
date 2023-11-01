@@ -14,11 +14,11 @@ import (
 	v1 "github.com/ardanlabs/service/business/web/v1"
 )
 
-func nameTests(t *testing.T, tests appTest, sd seedData) {
-	tests.run(t, testName200(t, sd), "name200")
+func nameTests(t *testing.T, app appTest, sd seedData) {
+	app.test(t, testName200(t, app, sd), "name200")
 }
 
-func testName200(t *testing.T, sd seedData) []tableData {
+func testName200(t *testing.T, app appTest, sd seedData) []tableData {
 	table := []tableData{}
 
 	return table
@@ -53,8 +53,8 @@ func Test_Name(t *testing.T) {
 		test.Teardown()
 	}()
 
-	tests := appTest{
-		app: v1.APIMux(v1.APIMuxConfig{
+	app := appTest{
+		Handler: v1.APIMux(v1.APIMuxConfig{
 			Shutdown: make(chan os.Signal, 1),
 			Log:      test.Log,
 			Auth:     test.V1.Auth,
@@ -74,5 +74,5 @@ func Test_Name(t *testing.T) {
 
 	// -------------------------------------------------------------------------
 
-	nameTests(t, tests, sd)
+	nameTests(t, app, sd)
 }

@@ -16,19 +16,22 @@ import (
 	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/ardanlabs/service/business/data/order"
 	v1 "github.com/ardanlabs/service/business/web/v1"
+	"github.com/ardanlabs/service/business/web/v1/response"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/uuid"
 )
 
-func createTests(t *testing.T, tests appTest, sd seedData) {
-	tests.run(t, testCreate200(t, sd), "create200")
+func createTests(t *testing.T, app appTest, sd seedData) {
+	app.test(t, testCreate200(t, app, sd), "create200")
+	app.test(t, testCreate401(t, app, sd), "create401")
 }
 
-func testCreate200(t *testing.T, sd seedData) []tableData {
+func testCreate200(t *testing.T, app appTest, sd seedData) []tableData {
 	table := []tableData{
 		{
 			name:       "user",
 			url:        "/v1/users",
+			token:      app.adminToken,
 			method:     http.MethodPost,
 			statusCode: http.StatusCreated,
 			model: &usergrp.AppNewUser{
@@ -73,6 +76,7 @@ func testCreate200(t *testing.T, sd seedData) []tableData {
 		{
 			name:       "product",
 			url:        "/v1/products",
+			token:      app.adminToken,
 			method:     http.MethodPost,
 			statusCode: http.StatusCreated,
 			model: &productgrp.AppNewProduct{
@@ -114,6 +118,7 @@ func testCreate200(t *testing.T, sd seedData) []tableData {
 		{
 			name:       "home",
 			url:        "/v1/homes",
+			token:      app.adminToken,
 			method:     http.MethodPost,
 			statusCode: http.StatusCreated,
 			model: &homegrp.AppNewHome{
@@ -167,6 +172,55 @@ func testCreate200(t *testing.T, sd seedData) []tableData {
 	return table
 }
 
+func testCreate401(t *testing.T, app appTest, sd seedData) []tableData {
+	table := []tableData{
+		{
+			name:       "user",
+			url:        "/v1/users",
+			token:      app.adminToken[:10],
+			method:     http.MethodPost,
+			statusCode: http.StatusUnauthorized,
+			resp:       &response.ErrorDocument{},
+			expResp: &response.ErrorDocument{
+				Error: "Unauthorized",
+			},
+			cmpFunc: func(x interface{}, y interface{}) string {
+				return cmp.Diff(x, y)
+			},
+		},
+		{
+			name:       "product",
+			url:        "/v1/products",
+			token:      app.adminToken[:10],
+			method:     http.MethodPost,
+			statusCode: http.StatusUnauthorized,
+			resp:       &response.ErrorDocument{},
+			expResp: &response.ErrorDocument{
+				Error: "Unauthorized",
+			},
+			cmpFunc: func(x interface{}, y interface{}) string {
+				return cmp.Diff(x, y)
+			},
+		},
+		{
+			name:       "home",
+			url:        "/v1/homes",
+			token:      app.adminToken[:10],
+			method:     http.MethodPost,
+			statusCode: http.StatusUnauthorized,
+			resp:       &response.ErrorDocument{},
+			expResp: &response.ErrorDocument{
+				Error: "Unauthorized",
+			},
+			cmpFunc: func(x interface{}, y interface{}) string {
+				return cmp.Diff(x, y)
+			},
+		},
+	}
+
+	return table
+}
+
 // =============================================================================
 
 func createSeed(ctx context.Context, api dbtest.CoreAPIs) (seedData, error) {
@@ -187,35 +241,35 @@ func createSeed(ctx context.Context, api dbtest.CoreAPIs) (seedData, error) {
 func Test_Create(t *testing.T) {
 	t.Parallel()
 
-	test := dbtest.NewTest(t, c)
+	dbTest := dbtest.NewTest(t, c)
 	defer func() {
 		if r := recover(); r != nil {
 			t.Log(r)
 			t.Error(string(debug.Stack()))
 		}
-		test.Teardown()
+		dbTest.Teardown()
 	}()
 
-	tests := appTest{
-		app: v1.APIMux(v1.APIMuxConfig{
+	app := appTest{
+		Handler: v1.APIMux(v1.APIMuxConfig{
 			Shutdown: make(chan os.Signal, 1),
-			Log:      test.Log,
-			Auth:     test.V1.Auth,
-			DB:       test.DB,
+			Log:      dbTest.Log,
+			Auth:     dbTest.V1.Auth,
+			DB:       dbTest.DB,
 		}, all.Routes()),
-		userToken:  test.TokenV1("user@example.com", "gophers"),
-		adminToken: test.TokenV1("admin@example.com", "gophers"),
+		userToken:  dbTest.TokenV1("user@example.com", "gophers"),
+		adminToken: dbTest.TokenV1("admin@example.com", "gophers"),
 	}
 
 	// -------------------------------------------------------------------------
 
 	t.Log("Seeding data ...")
-	sd, err := createSeed(context.Background(), test.CoreAPIs)
+	sd, err := createSeed(context.Background(), dbTest.CoreAPIs)
 	if err != nil {
 		t.Fatalf("Seeding error: %s", err)
 	}
 
 	// -------------------------------------------------------------------------
 
-	createTests(t, tests, sd)
+	createTests(t, app, sd)
 }

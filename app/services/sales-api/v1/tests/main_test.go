@@ -29,12 +29,12 @@ func TestMain(m *testing.M) {
 // =============================================================================
 
 type appTest struct {
-	app        http.Handler
+	http.Handler
 	userToken  string
 	adminToken string
 }
 
-func (at *appTest) run(t *testing.T, table []tableData, testName string) {
+func (at *appTest) test(t *testing.T, table []tableData, testName string) {
 	for _, tt := range table {
 		f := func(t *testing.T) {
 			r := httptest.NewRequest(tt.method, tt.url, nil)
@@ -49,8 +49,8 @@ func (at *appTest) run(t *testing.T, table []tableData, testName string) {
 				r = httptest.NewRequest(tt.method, tt.url, &b)
 			}
 
-			r.Header.Set("Authorization", "Bearer "+at.adminToken)
-			at.app.ServeHTTP(w, r)
+			r.Header.Set("Authorization", "Bearer "+tt.token)
+			at.ServeHTTP(w, r)
 
 			if w.Code != tt.statusCode {
 				t.Fatalf("%s: Should receive a status code of %d for the response : %d", tt.name, tt.statusCode, w.Code)

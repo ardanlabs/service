@@ -16,27 +16,30 @@ import (
 	v1 "github.com/ardanlabs/service/business/web/v1"
 )
 
-func deleteTests(t *testing.T, tests appTest, sd seedData) {
-	tests.run(t, testDelete200(t, sd), "delete200")
+func deleteTests(t *testing.T, app appTest, sd seedData) {
+	app.test(t, testDelete200(t, app, sd), "delete200")
 }
 
-func testDelete200(t *testing.T, sd seedData) []tableData {
+func testDelete200(t *testing.T, app appTest, sd seedData) []tableData {
 	table := []tableData{
 		{
 			name:       "product",
 			url:        fmt.Sprintf("/v1/products/%s", sd.products[0].ID),
+			token:      app.adminToken,
 			method:     http.MethodDelete,
 			statusCode: http.StatusNoContent,
 		},
 		{
 			name:       "home",
 			url:        fmt.Sprintf("/v1/homes/%s", sd.homes[0].ID),
+			token:      app.adminToken,
 			method:     http.MethodDelete,
 			statusCode: http.StatusNoContent,
 		},
 		{
 			name:       "user",
 			url:        fmt.Sprintf("/v1/users/%s", sd.users[0].ID),
+			token:      app.adminToken,
 			method:     http.MethodDelete,
 			statusCode: http.StatusNoContent,
 		},
@@ -86,8 +89,8 @@ func Test_Delete(t *testing.T) {
 		test.Teardown()
 	}()
 
-	tests := appTest{
-		app: v1.APIMux(v1.APIMuxConfig{
+	app := appTest{
+		Handler: v1.APIMux(v1.APIMuxConfig{
 			Shutdown: make(chan os.Signal, 1),
 			Log:      test.Log,
 			Auth:     test.V1.Auth,
@@ -107,5 +110,5 @@ func Test_Delete(t *testing.T) {
 
 	// -------------------------------------------------------------------------
 
-	deleteTests(t, tests, sd)
+	deleteTests(t, app, sd)
 }

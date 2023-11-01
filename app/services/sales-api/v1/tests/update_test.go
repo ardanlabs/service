@@ -22,15 +22,16 @@ import (
 	"github.com/google/uuid"
 )
 
-func updateTests(t *testing.T, tests appTest, sd seedData) {
-	tests.run(t, testUpdate200(t, sd), "update200")
+func updateTests(t *testing.T, app appTest, sd seedData) {
+	app.test(t, testUpdate200(t, app, sd), "update200")
 }
 
-func testUpdate200(t *testing.T, sd seedData) []tableData {
+func testUpdate200(t *testing.T, app appTest, sd seedData) []tableData {
 	table := []tableData{
 		{
 			name:       "user",
 			url:        fmt.Sprintf("/v1/users/%s", sd.users[0].ID),
+			token:      app.adminToken,
 			method:     http.MethodPut,
 			statusCode: http.StatusOK,
 			model: &usergrp.AppUpdateUser{
@@ -75,6 +76,7 @@ func testUpdate200(t *testing.T, sd seedData) []tableData {
 		{
 			name:       "product",
 			url:        fmt.Sprintf("/v1/products/%s", sd.products[0].ID),
+			token:      app.adminToken,
 			method:     http.MethodPut,
 			statusCode: http.StatusOK,
 			model: &productgrp.AppUpdateProduct{
@@ -115,6 +117,7 @@ func testUpdate200(t *testing.T, sd seedData) []tableData {
 		{
 			name:       "home",
 			url:        fmt.Sprintf("/v1/homes/%s", sd.homes[0].ID),
+			token:      app.adminToken,
 			method:     http.MethodPut,
 			statusCode: http.StatusOK,
 			model: &homegrp.AppUpdateHome{
@@ -210,8 +213,8 @@ func Test_Update(t *testing.T) {
 		test.Teardown()
 	}()
 
-	tests := appTest{
-		app: v1.APIMux(v1.APIMuxConfig{
+	app := appTest{
+		Handler: v1.APIMux(v1.APIMuxConfig{
 			Shutdown: make(chan os.Signal, 1),
 			Log:      test.Log,
 			Auth:     test.V1.Auth,
@@ -231,5 +234,5 @@ func Test_Update(t *testing.T) {
 
 	// -------------------------------------------------------------------------
 
-	updateTests(t, tests, sd)
+	updateTests(t, app, sd)
 }

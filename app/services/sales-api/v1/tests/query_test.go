@@ -23,12 +23,12 @@ import (
 	"github.com/google/uuid"
 )
 
-func queryTests(t *testing.T, tests appTest, sd seedData) {
-	tests.run(t, testQuery200(t, sd), "query200")
-	tests.run(t, testQueryByID200(t, sd), "queryByID200")
+func queryTests(t *testing.T, app appTest, sd seedData) {
+	app.test(t, testQuery200(t, app, sd), "query200")
+	app.test(t, testQueryByID200(t, app, sd), "queryByID200")
 }
 
-func testQuery200(t *testing.T, sd seedData) []tableData {
+func testQuery200(t *testing.T, app appTest, sd seedData) []tableData {
 	usrs := make(map[uuid.UUID]user.User)
 	for _, usr := range sd.users {
 		usrs[usr.ID] = usr
@@ -38,6 +38,7 @@ func testQuery200(t *testing.T, sd seedData) []tableData {
 		{
 			name:       "user",
 			url:        "/v1/users?page=1&rows=2&orderBy=user_id,DESC",
+			token:      app.adminToken,
 			statusCode: http.StatusOK,
 			method:     http.MethodGet,
 			resp:       &response.PageDocument[usergrp.AppUser]{},
@@ -54,6 +55,7 @@ func testQuery200(t *testing.T, sd seedData) []tableData {
 		{
 			name:       "product",
 			url:        "/v1/products?page=1&rows=10&orderBy=user_id,DESC",
+			token:      app.adminToken,
 			statusCode: http.StatusOK,
 			method:     http.MethodGet,
 			resp:       &response.PageDocument[productgrp.AppProductDetails]{},
@@ -70,6 +72,7 @@ func testQuery200(t *testing.T, sd seedData) []tableData {
 		{
 			name:       "home",
 			url:        "/v1/homes?page=1&rows=10&orderBy=user_id,DESC",
+			token:      app.adminToken,
 			statusCode: http.StatusOK,
 			method:     http.MethodGet,
 			resp:       &response.PageDocument[homegrp.AppHome]{},
@@ -88,11 +91,12 @@ func testQuery200(t *testing.T, sd seedData) []tableData {
 	return table
 }
 
-func testQueryByID200(t *testing.T, sd seedData) []tableData {
+func testQueryByID200(t *testing.T, app appTest, sd seedData) []tableData {
 	table := []tableData{
 		{
 			name:       "user",
 			url:        fmt.Sprintf("/v1/users/%s", sd.users[0].ID),
+			token:      app.adminToken,
 			statusCode: http.StatusOK,
 			method:     http.MethodGet,
 			resp:       &usergrp.AppUser{},
@@ -104,6 +108,7 @@ func testQueryByID200(t *testing.T, sd seedData) []tableData {
 		{
 			name:       "product",
 			url:        fmt.Sprintf("/v1/products/%s", sd.products[0].ID),
+			token:      app.adminToken,
 			statusCode: http.StatusOK,
 			method:     http.MethodGet,
 			resp:       &productgrp.AppProduct{},
@@ -115,6 +120,7 @@ func testQueryByID200(t *testing.T, sd seedData) []tableData {
 		{
 			name:       "home",
 			url:        fmt.Sprintf("/v1/homes/%s", sd.homes[0].ID),
+			token:      app.adminToken,
 			statusCode: http.StatusOK,
 			method:     http.MethodGet,
 			resp:       &homegrp.AppHome{},
@@ -187,8 +193,8 @@ func Test_Query(t *testing.T) {
 		test.Teardown()
 	}()
 
-	tests := appTest{
-		app: v1.APIMux(v1.APIMuxConfig{
+	app := appTest{
+		Handler: v1.APIMux(v1.APIMuxConfig{
 			Shutdown: make(chan os.Signal, 1),
 			Log:      test.Log,
 			Auth:     test.V1.Auth,
@@ -208,5 +214,5 @@ func Test_Query(t *testing.T) {
 
 	// -------------------------------------------------------------------------
 
-	queryTests(t, tests, sd)
+	queryTests(t, app, sd)
 }

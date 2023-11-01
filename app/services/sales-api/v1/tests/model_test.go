@@ -15,6 +15,7 @@ import (
 type tableData struct {
 	name       string
 	url        string
+	token      string
 	method     string
 	statusCode int
 	model      any
