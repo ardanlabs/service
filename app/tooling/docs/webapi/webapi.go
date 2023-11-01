@@ -71,8 +71,16 @@ func Routes(version string) ([]Route, error) {
 				return false
 			}
 
+			var ver string
+
 			// We need to find all the value.Get calls.
 			for _, stmt := range funcDecl.Body.List {
+
+				// We are looking for the version of this route.
+				if v, ok := stmt.(*ast.DeclStmt); ok {
+					ver = v.Decl.(*ast.GenDecl).Specs[0].(*ast.ValueSpec).Values[0].(*ast.BasicLit).Value
+					continue
+				}
 
 				// We are looking for expressions that will represent the
 				// call to Handle.
@@ -116,7 +124,7 @@ func Routes(version string) ([]Route, error) {
 
 				routes = append(routes, Route{
 					Method:   methods[method.Sel.Name],
-					URL:      url.Value,
+					URL:      ver[:len(ver)-1] + url.Value[1:],
 					Handler:  handler.Sel.Name,
 					Group:    item.group,
 					ErrorDoc: "ErrorDocument",
