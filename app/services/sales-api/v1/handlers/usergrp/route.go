@@ -32,7 +32,7 @@ func Routes(app *web.App, cfg Config) {
 	authen := mid.Authenticate(cfg.Auth)
 	ruleAdmin := mid.Authorize(cfg.Auth, auth.RuleAdminOnly)
 	ruleAdminOrSubject := mid.Authorize(cfg.Auth, auth.RuleAdminOrSubject)
-	tran := mid.ExecuteInTransation(cfg.Log, db.NewBeginner(cfg.DB))
+	tran := mid.ExecuteInTransaction(cfg.Log, db.NewBeginner(cfg.DB))
 
 	hdl := New(usrCore, cfg.Auth)
 	app.Handle(http.MethodGet, version, "/users/token/:kid", hdl.Token)

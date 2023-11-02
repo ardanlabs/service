@@ -33,7 +33,7 @@ func Routes(app *web.App, cfg Config) {
 	prdCore := product.NewCore(cfg.Log, envCore, usrCore, productdb.NewStore(cfg.Log, cfg.DB))
 
 	authen := mid.Authenticate(cfg.Auth)
-	tran := mid.ExecuteInTransation(cfg.Log, db.NewBeginner(cfg.DB))
+	tran := mid.ExecuteInTransaction(cfg.Log, db.NewBeginner(cfg.DB))
 
 	hdl := New(prdCore, usrCore)
 	app.Handle(http.MethodGet, version, "/products", hdl.Query, authen)

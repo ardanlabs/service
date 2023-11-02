@@ -12,12 +12,12 @@ import (
 	"github.com/ardanlabs/service/foundation/web"
 )
 
-// ExecuteInTransation starts a transaction around all the storage calls within
+// ExecuteInTransaction starts a transaction around all the storage calls within
 // the scope of the handler function.
-func ExecuteInTransation(log *logger.Logger, bgn transaction.Beginner) web.Middleware {
+func ExecuteInTransaction(log *logger.Logger, bgn transaction.Beginner) web.Middleware {
 	m := func(handler web.Handler) web.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-			hasCommited := false
+			hasCommitted := false
 
 			log.Info(ctx, "BEGIN TRANSACTION")
 			tx, err := bgn.Begin()
@@ -26,7 +26,7 @@ func ExecuteInTransation(log *logger.Logger, bgn transaction.Beginner) web.Middl
 			}
 
 			defer func() {
-				if !hasCommited {
+				if !hasCommitted {
 					log.Info(ctx, "ROLLBACK TRANSACTION")
 				}
 
@@ -49,7 +49,7 @@ func ExecuteInTransation(log *logger.Logger, bgn transaction.Beginner) web.Middl
 				return fmt.Errorf("COMMIT TRANSACTION: %w", err)
 			}
 
-			hasCommited = true
+			hasCommitted = true
 
 			return nil
 		}
