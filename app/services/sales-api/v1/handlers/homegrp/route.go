@@ -33,7 +33,7 @@ func Routes(app *web.App, cfg Config) {
 	hmeCore := home.NewCore(cfg.Log, envCore, usrCore, homedb.NewStore(cfg.Log, cfg.DB))
 
 	authen := mid.Authenticate(cfg.Auth)
-	tran := mid.ExecuteInTransation(cfg.Log, db.NewBeginner(cfg.DB))
+	tran := mid.ExecuteInTransaction(cfg.Log, db.NewBeginner(cfg.DB))
 
 	hdl := New(hmeCore)
 	app.Handle(http.MethodGet, version, "/homes", hdl.Query, authen)
