@@ -60,7 +60,7 @@ func main() {
 
 	if err := run(ctx, log, build); err != nil {
 		log.Error(ctx, "startup", "msg", err)
-		return
+		os.Exit(1)
 	}
 }
 

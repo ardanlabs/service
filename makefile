@@ -197,6 +197,11 @@ dev-up:
 dev-down:
 	kind delete cluster --name $(KIND_CLUSTER)
 
+dev-status:
+	kubectl get nodes -o wide
+	kubectl get svc -o wide
+	kubectl get pods -o wide --watch --all-namespaces
+
 # ------------------------------------------------------------------------------
 
 dev-load:
@@ -228,20 +233,15 @@ dev-update: all dev-load dev-restart
 
 dev-update-apply: all dev-load dev-apply
 
-# ------------------------------------------------------------------------------
-
 dev-logs:
 	kubectl logs --namespace=$(NAMESPACE) -l app=$(APP) --all-containers=true -f --tail=100 --max-log-requests=6 | go run app/tooling/logfmt/main.go -service=$(SERVICE_NAME)
+
+# ------------------------------------------------------------------------------
 
 dev-logs-init:
 	kubectl logs --namespace=$(NAMESPACE) -l app=$(APP) -f --tail=100 -c init-vault-system
 	kubectl logs --namespace=$(NAMESPACE) -l app=$(APP) -f --tail=100 -c init-vault-loadkeys
 	kubectl logs --namespace=$(NAMESPACE) -l app=$(APP) -f --tail=100 -c init-migrate-seed
-
-dev-status:
-	kubectl get nodes -o wide
-	kubectl get svc -o wide
-	kubectl get pods -o wide --watch --all-namespaces
 
 dev-describe-node:
 	kubectl describe node
