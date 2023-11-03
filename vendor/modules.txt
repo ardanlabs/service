@@ -59,6 +59,11 @@ github.com/ardanlabs/conf/v3
 github.com/ardanlabs/darwin/v3
 github.com/ardanlabs/darwin/v3/dialects/postgres
 github.com/ardanlabs/darwin/v3/drivers/generic
+# github.com/arl/statsviz v0.6.0
+## explicit; go 1.20
+github.com/arl/statsviz
+github.com/arl/statsviz/internal/plot
+github.com/arl/statsviz/internal/static
 # github.com/beorn7/perks v1.0.1
 ## explicit; go 1.11
 github.com/beorn7/perks/quantile
@@ -154,7 +159,6 @@ github.com/google/cel-go/parser/gen
 # github.com/google/go-cmp v0.6.0
 ## explicit; go 1.13
 github.com/google/go-cmp/cmp
-github.com/google/go-cmp/cmp/cmpopts
 github.com/google/go-cmp/cmp/internal/diff
 github.com/google/go-cmp/cmp/internal/flags
 github.com/google/go-cmp/cmp/internal/function
@@ -168,6 +172,9 @@ github.com/google/uuid
 # github.com/gorilla/mux v1.8.0
 ## explicit; go 1.12
 github.com/gorilla/mux
+# github.com/gorilla/websocket v1.5.0
+## explicit; go 1.12
+github.com/gorilla/websocket
 # github.com/grpc-ecosystem/grpc-gateway/v2 v2.18.0
 ## explicit; go 1.17
 github.com/grpc-ecosystem/grpc-gateway/v2/internal/httprule

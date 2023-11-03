@@ -6,6 +6,7 @@ require (
 	github.com/ServiceWeaver/weaver v0.22.0
 	github.com/ardanlabs/conf/v3 v3.1.7
 	github.com/ardanlabs/darwin/v3 v3.3.1
+	github.com/arl/statsviz v0.6.0
 	github.com/dimfeld/httptreemux/v5 v5.5.0
 	github.com/go-playground/locales v0.14.1
 	github.com/go-playground/universal-translator v0.18.1
@@ -47,6 +48,7 @@ require (
 	github.com/google/cel-go v0.18.1 // indirect
 	github.com/google/pprof v0.0.0-20231023181126-ff6d637d2a7b // indirect
 	github.com/gorilla/mux v1.8.0 // indirect
+	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.18.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
