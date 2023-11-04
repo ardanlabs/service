@@ -11,9 +11,7 @@ hello@ardanlabs.com
 
 ## Description
 
-This class teaches how to build production-level services in Go leveraging the power of Kubernetes. From the beginning, you will pair program with the instructor walking through the design philosophies and guidelines for building services in Go. With each new feature that is added to the service, you will learn how to deploy to and manage the Kubernetes environment used to run the service.
-
-This project leverages ideas around clean architecture and domain driven design. This code base, the architecture, and ideas are being used in production Go services running all over the world.
+This class teaches how to build production-level services in Go leveraging the power of a Domain Driven, Data Oriented Architecture that can run in Kubernetes. From the beginning, you will pair program with the instructor walking through the design philosophies and guidelines for building services in Go. With each new feature that is added to the service, you will learn how to deploy to and manage the Kubernetes environment used to run the service.
 
 Learn more about the project:
 
