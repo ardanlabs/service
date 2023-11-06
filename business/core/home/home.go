@@ -34,13 +34,6 @@ type Storer interface {
 	QueryByUserID(ctx context.Context, userID uuid.UUID) ([]Home, error)
 }
 
-// UserCore interface declares the behavior this package needs from the user
-// core domain.
-type UserCore interface {
-	ExecuteUnderTransaction(tx transaction.Transaction) (*user.Core, error)
-	QueryByID(ctx context.Context, userID uuid.UUID) (user.User, error)
-}
-
 // =============================================================================
 
 // Core manages the set of APIs for home api access.
