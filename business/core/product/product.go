@@ -58,7 +58,7 @@ func NewCore(log *logger.Logger, evnCore *event.Core, usrCore *user.Core, storer
 		storer:  storer,
 	}
 
-	c.registerEventHandlers()
+	c.registerEventFunctions()
 
 	return &c
 }
