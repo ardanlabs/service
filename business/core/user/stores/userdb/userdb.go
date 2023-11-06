@@ -42,12 +42,12 @@ func (s *Store) ExecuteUnderTransaction(tx transaction.Transaction) (user.Storer
 		return nil, err
 	}
 
-	s = &Store{
+	store := Store{
 		log: s.log,
 		db:  ec,
 	}
 
-	return s, nil
+	return &store, nil
 }
 
 // Create inserts a new user into the database.

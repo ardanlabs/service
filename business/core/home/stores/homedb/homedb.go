@@ -38,12 +38,12 @@ func (s *Store) ExecuteUnderTransaction(tx transaction.Transaction) (home.Storer
 		return nil, err
 	}
 
-	s = &Store{
+	store := Store{
 		log: s.log,
 		db:  ec,
 	}
 
-	return s, nil
+	return &store, nil
 }
 
 // Create adds a Home to the database. It returns an error if something went wrong

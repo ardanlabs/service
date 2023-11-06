@@ -38,12 +38,12 @@ func (s *Store) ExecuteUnderTransaction(tx transaction.Transaction) (product.Sto
 		return nil, err
 	}
 
-	s = &Store{
+	store := Store{
 		log: s.log,
 		db:  ec,
 	}
 
-	return s, nil
+	return &store, nil
 }
 
 // Create adds a Product to the database. It returns the created Product with

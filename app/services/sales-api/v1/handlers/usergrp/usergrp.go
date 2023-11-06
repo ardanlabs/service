@@ -42,12 +42,12 @@ func (h *Handlers) executeUnderTransaction(ctx context.Context) (*Handlers, erro
 			return nil, err
 		}
 
-		h = &Handlers{
+		handlers := Handlers{
 			user: user,
 			auth: h.auth,
 		}
 
-		return h, nil
+		return &handlers, nil
 	}
 
 	return h, nil

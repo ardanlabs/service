@@ -76,14 +76,14 @@ func (c *Core) ExecuteUnderTransaction(tx transaction.Transaction) (*Core, error
 		return nil, err
 	}
 
-	c = &Core{
+	core := Core{
 		storer:  storer,
 		evnCore: c.evnCore,
 		usrCore: usrCore,
 		log:     c.log,
 	}
 
-	return c, nil
+	return &core, nil
 }
 
 // Create adds a new product to the system.
