@@ -9,7 +9,7 @@ package libc // import "modernc.org/libc"
 
 import (
 	"bufio"
-	"encoding/hex"
+	// "encoding/hex"
 	"io/ioutil"
 	"math"
 	"math/rand"
@@ -44,6 +44,9 @@ func init() {
 
 // sighandler_t signal(int signum, sighandler_t handler);
 func Xsignal(t *TLS, signum int32, handler uintptr) uintptr { //TODO use sigaction?
+	if __ccgo_strace {
+		trc("t=%v signum=%v handler=%v, (%v:)", t, signum, handler, origin(2))
+	}
 	signalsMu.Lock()
 
 	defer signalsMu.Unlock()
@@ -88,11 +91,17 @@ func Xsignal(t *TLS, signum int32, handler uintptr) uintptr { //TODO use sigacti
 
 // void rewind(FILE *stream);
 func Xrewind(t *TLS, stream uintptr) {
+	if __ccgo_strace {
+		trc("t=%v stream=%v, (%v:)", t, stream, origin(2))
+	}
 	Xfseek(t, stream, 0, stdio.SEEK_SET)
 }
 
 // int putchar(int c);
 func Xputchar(t *TLS, c int32) int32 {
+	if __ccgo_strace {
+		trc("t=%v c=%v, (%v:)", t, c, origin(2))
+	}
 	if _, err := write([]byte{byte(c)}); err != nil {
 		return stdio.EOF
 	}
@@ -102,6 +111,9 @@ func Xputchar(t *TLS, c int32) int32 {
 
 // int gethostname(char *name, size_t len);
 func Xgethostname(t *TLS, name uintptr, slen types.Size_t) int32 {
+	if __ccgo_strace {
+		trc("t=%v name=%v slen=%v, (%v:)", t, name, slen, origin(2))
+	}
 	if slen < 0 {
 		t.setErrno(errno.EINVAL)
 		return -1
@@ -128,41 +140,65 @@ func Xgethostname(t *TLS, name uintptr, slen types.Size_t) int32 {
 
 // int remove(const char *pathname);
 func Xremove(t *TLS, pathname uintptr) int32 {
+	if __ccgo_strace {
+		trc("t=%v pathname=%v, (%v:)", t, pathname, origin(2))
+	}
 	panic(todo(""))
 }
 
 // long pathconf(const char *path, int name);
 func Xpathconf(t *TLS, path uintptr, name int32) long {
+	if __ccgo_strace {
+		trc("t=%v path=%v name=%v, (%v:)", t, path, name, origin(2))
+	}
 	panic(todo(""))
 }
 
 // ssize_t recvfrom(int sockfd, void *buf, size_t len, int flags, struct sockaddr *src_addr, socklen_t *addrlen);
 func Xrecvfrom(t *TLS, sockfd int32, buf uintptr, len types.Size_t, flags int32, src_addr, addrlen uintptr) types.Ssize_t {
+	if __ccgo_strace {
+		trc("t=%v sockfd=%v buf=%v len=%v flags=%v addrlen=%v, (%v:)", t, sockfd, buf, len, flags, addrlen, origin(2))
+	}
 	panic(todo(""))
 }
 
 // ssize_t sendto(int sockfd, const void *buf, size_t len, int flags, const struct sockaddr *dest_addr, socklen_t addrlen);
 func Xsendto(t *TLS, sockfd int32, buf uintptr, len types.Size_t, flags int32, src_addr uintptr, addrlen socklen_t) types.Ssize_t {
+	if __ccgo_strace {
+		trc("t=%v sockfd=%v buf=%v len=%v flags=%v src_addr=%v addrlen=%v, (%v:)", t, sockfd, buf, len, flags, src_addr, addrlen, origin(2))
+	}
 	panic(todo(""))
 }
 
 // void srand48(long int seedval);
 func Xsrand48(t *TLS, seedval long) {
+	if __ccgo_strace {
+		trc("t=%v seedval=%v, (%v:)", t, seedval, origin(2))
+	}
 	panic(todo(""))
 }
 
 // long int lrand48(void);
 func Xlrand48(t *TLS) long {
+	if __ccgo_strace {
+		trc("t=%v, (%v:)", t, origin(2))
+	}
 	panic(todo(""))
 }
 
 // ssize_t sendmsg(int sockfd, const struct msghdr *msg, int flags);
 func Xsendmsg(t *TLS, sockfd int32, msg uintptr, flags int32) types.Ssize_t {
+	if __ccgo_strace {
+		trc("t=%v sockfd=%v msg=%v flags=%v, (%v:)", t, sockfd, msg, flags, origin(2))
+	}
 	panic(todo(""))
 }
 
 // int poll(struct pollfd *fds, nfds_t nfds, int timeout);
 func Xpoll(t *TLS, fds uintptr, nfds poll.Nfds_t, timeout int32) int32 {
+	if __ccgo_strace {
+		trc("t=%v fds=%v nfds=%v timeout=%v, (%v:)", t, fds, nfds, timeout, origin(2))
+	}
 	if nfds == 0 {
 		panic(todo(""))
 	}
@@ -184,6 +220,9 @@ func Xpoll(t *TLS, fds uintptr, nfds poll.Nfds_t, timeout int32) int32 {
 
 // ssize_t recvmsg(int sockfd, struct msghdr *msg, int flags);
 func Xrecvmsg(t *TLS, sockfd int32, msg uintptr, flags int32) types.Ssize_t {
+	if __ccgo_strace {
+		trc("t=%v sockfd=%v msg=%v flags=%v, (%v:)", t, sockfd, msg, flags, origin(2))
+	}
 	n, _, err := unix.Syscall(unix.SYS_RECVMSG, uintptr(sockfd), msg, uintptr(flags))
 	if err != 0 {
 		t.setErrno(err)
@@ -195,51 +234,81 @@ func Xrecvmsg(t *TLS, sockfd int32, msg uintptr, flags int32) types.Ssize_t {
 
 // struct cmsghdr *CMSG_NXTHDR(struct msghdr *msgh, struct cmsghdr *cmsg);
 func X__cmsg_nxthdr(t *TLS, msgh, cmsg uintptr) uintptr {
+	if __ccgo_strace {
+		trc("t=%v cmsg=%v, (%v:)", t, cmsg, origin(2))
+	}
 	panic(todo(""))
 }
 
 // wchar_t *wcschr(const wchar_t *wcs, wchar_t wc);
 func Xwcschr(t *TLS, wcs uintptr, wc wchar_t) wchar_t {
+	if __ccgo_strace {
+		trc("t=%v wcs=%v wc=%v, (%v:)", t, wcs, wc, origin(2))
+	}
 	panic(todo(""))
 }
 
 // gid_t getegid(void);
 func Xgetegid(t *TLS) types.Gid_t {
+	if __ccgo_strace {
+		trc("t=%v, (%v:)", t, origin(2))
+	}
 	panic(todo(""))
 }
 
 // gid_t getgid(void);
 func Xgetgid(t *TLS) types.Gid_t {
+	if __ccgo_strace {
+		trc("t=%v, (%v:)", t, origin(2))
+	}
 	panic(todo(""))
 }
 
 // void *shmat(int shmid, const void *shmaddr, int shmflg);
 func Xshmat(t *TLS, shmid int32, shmaddr uintptr, shmflg int32) uintptr {
+	if __ccgo_strace {
+		trc("t=%v shmid=%v shmaddr=%v shmflg=%v, (%v:)", t, shmid, shmaddr, shmflg, origin(2))
+	}
 	panic(todo(""))
 }
 
 // int shmctl(int shmid, int cmd, struct shmid_ds *buf);
 func Xshmctl(t *TLS, shmid, cmd int32, buf uintptr) int32 {
+	if __ccgo_strace {
+		trc("t=%v cmd=%v buf=%v, (%v:)", t, cmd, buf, origin(2))
+	}
 	panic(todo(""))
 }
 
 // int shmdt(const void *shmaddr);
 func Xshmdt(t *TLS, shmaddr uintptr) int32 {
+	if __ccgo_strace {
+		trc("t=%v shmaddr=%v, (%v:)", t, shmaddr, origin(2))
+	}
 	panic(todo(""))
 }
 
 // int getresuid(uid_t *ruid, uid_t *euid, uid_t *suid);
 func Xgetresuid(t *TLS, ruid, euid, suid uintptr) int32 {
+	if __ccgo_strace {
+		trc("t=%v suid=%v, (%v:)", t, suid, origin(2))
+	}
 	panic(todo(""))
 }
 
 // int getresgid(gid_t *rgid, gid_t *egid, gid_t *sgid);
 func Xgetresgid(t *TLS, rgid, egid, sgid uintptr) int32 {
+	if __ccgo_strace {
+		trc("t=%v sgid=%v, (%v:)", t, sgid, origin(2))
+	}
 	panic(todo(""))
 }
 
 // FILE *tmpfile(void);
 func Xtmpfile(t *TLS) uintptr {
+	if __ccgo_strace {
+		trc("t=%v, (%v:)", t, origin(2))
+	}
 	f, err := ioutil.TempFile("", "tmpfile-")
 	if err != nil {
 		t.setErrno(err)
@@ -258,6 +327,9 @@ func Xtmpfile(t *TLS) uintptr {
 
 // FILE *fdopen(int fd, const char *mode);
 func Xfdopen(t *TLS, fd int32, mode uintptr) uintptr {
+	if __ccgo_strace {
+		trc("t=%v fd=%v mode=%v, (%v:)", t, fd, mode, origin(2))
+	}
 	m := strings.ReplaceAll(GoString(mode), "b", "")
 	switch m {
 	case
@@ -282,6 +354,9 @@ func Xfdopen(t *TLS, fd int32, mode uintptr) uintptr {
 
 // struct passwd *getpwnam(const char *name);
 func Xgetpwnam(t *TLS, name uintptr) uintptr {
+	if __ccgo_strace {
+		trc("t=%v name=%v, (%v:)", t, name, origin(2))
+	}
 	f, err := os.Open("/etc/passwd")
 	if err != nil {
 		panic(todo("", err))
@@ -334,6 +409,9 @@ func Xgetpwnam(t *TLS, name uintptr) uintptr {
 
 // int getpwnam_r(char *name, struct passwd *pwd, char *buf, size_t buflen, struct passwd **result);
 func Xgetpwnam_r(t *TLS, name, cpwd, buf uintptr, buflen types.Size_t, result uintptr) int32 {
+	if __ccgo_strace {
+		trc("t=%v buf=%v buflen=%v result=%v, (%v:)", t, buf, buflen, result, origin(2))
+	}
 	f, err := os.Open("/etc/passwd")
 	if err != nil {
 		panic(todo("", err))
@@ -399,6 +477,9 @@ var staticGetgrgid grp.Group
 
 // struct group *getgrgid(gid_t gid);
 func Xgetgrgid(t *TLS, gid uint32) uintptr {
+	if __ccgo_strace {
+		trc("t=%v gid=%v, (%v:)", t, gid, origin(2))
+	}
 	f, err := os.Open("/etc/group")
 	if err != nil {
 		panic(todo(""))
@@ -440,6 +521,9 @@ func Xgetgrgid(t *TLS, gid uint32) uintptr {
 
 // int getgrgid_r(gid_t gid, struct group *grp, char *buf, size_t buflen, struct group **result);
 func Xgetgrgid_r(t *TLS, gid uint32, pGrp, buf uintptr, buflen types.Size_t, result uintptr) int32 {
+	if __ccgo_strace {
+		trc("t=%v gid=%v buf=%v buflen=%v result=%v, (%v:)", t, gid, buf, buflen, result, origin(2))
+	}
 	f, err := os.Open("/etc/group")
 	if err != nil {
 		panic(todo(""))
@@ -626,6 +710,9 @@ func init() {
 
 // struct passwd *getpwuid(uid_t uid);
 func Xgetpwuid(t *TLS, uid uint32) uintptr {
+	if __ccgo_strace {
+		trc("t=%v uid=%v, (%v:)", t, uid, origin(2))
+	}
 	f, err := os.Open("/etc/passwd")
 	if err != nil {
 		panic(todo("", err))
@@ -688,6 +775,9 @@ func initPasswd(t *TLS, p *pwd.Passwd, name, pwd string, uid, gid uint32, gecos,
 
 // struct group *getgrnam(const char *name);
 func Xgetgrnam(t *TLS, name uintptr) uintptr {
+	if __ccgo_strace {
+		trc("t=%v name=%v, (%v:)", t, name, origin(2))
+	}
 	f, err := os.Open("/etc/group")
 	if err != nil {
 		panic(todo(""))
@@ -734,6 +824,9 @@ func Xgetgrnam(t *TLS, name uintptr) uintptr {
 
 // int getgrnam_r(const char *name, struct group *grp, char *buf, size_t buflen, struct group **result);
 func Xgetgrnam_r(t *TLS, name, pGrp, buf uintptr, buflen types.Size_t, result uintptr) int32 {
+	if __ccgo_strace {
+		trc("t=%v buf=%v buflen=%v result=%v, (%v:)", t, buf, buflen, result, origin(2))
+	}
 	f, err := os.Open("/etc/group")
 	if err != nil {
 		panic(todo(""))
@@ -787,6 +880,9 @@ func Xgetgrnam_r(t *TLS, name, pGrp, buf uintptr, buflen types.Size_t, result ui
 
 // int getpwuid_r(uid_t uid, struct passwd *pwd, char *buf, size_t buflen, struct passwd **result);
 func Xgetpwuid_r(t *TLS, uid types.Uid_t, cpwd, buf uintptr, buflen types.Size_t, result uintptr) int32 {
+	if __ccgo_strace {
+		trc("t=%v uid=%v buf=%v buflen=%v result=%v, (%v:)", t, uid, buf, buflen, result, origin(2))
+	}
 	f, err := os.Open("/etc/passwd")
 	if err != nil {
 		panic(todo("", err))
@@ -846,6 +942,9 @@ func Xgetpwuid_r(t *TLS, uid types.Uid_t, cpwd, buf uintptr, buflen types.Size_t
 
 // int mkostemp(char *template, int flags);
 func Xmkostemp(t *TLS, template uintptr, flags int32) int32 {
+	if __ccgo_strace {
+		trc("t=%v template=%v flags=%v, (%v:)", t, template, flags, origin(2))
+	}
 	len := uintptr(Xstrlen(t, template))
 	x := template + uintptr(len-6)
 	for i := uintptr(0); i < 6; i++ {
@@ -866,12 +965,18 @@ func Xmkostemp(t *TLS, template uintptr, flags int32) int32 {
 
 // void uuid_generate_random(uuid_t out);
 func Xuuid_generate_random(t *TLS, out uintptr) {
+	if __ccgo_strace {
+		trc("t=%v out=%v, (%v:)", t, out, origin(2))
+	}
 	x := guuid.New()
 	copy((*RawMem)(unsafe.Pointer(out))[:], x[:])
 }
 
 // void uuid_unparse(uuid_t uu, char *out);
 func Xuuid_unparse(t *TLS, uu, out uintptr) {
+	if __ccgo_strace {
+		trc("t=%v out=%v, (%v:)", t, out, origin(2))
+	}
 	s := (*guuid.UUID)(unsafe.Pointer(uu)).String()
 	copy((*RawMem)(unsafe.Pointer(out))[:], s)
 	*(*byte)(unsafe.Pointer(out + uintptr(len(s)))) = 0
@@ -881,12 +986,18 @@ var staticRandomData = &rand.Rand{}
 
 // char *initstate(unsigned seed, char *state, size_t size);
 func Xinitstate(t *TLS, seed uint32, statebuf uintptr, statelen types.Size_t) uintptr {
+	if __ccgo_strace {
+		trc("t=%v seed=%v statebuf=%v statelen=%v, (%v:)", t, seed, statebuf, statelen, origin(2))
+	}
 	staticRandomData = rand.New(rand.NewSource(int64(seed)))
 	return 0
 }
 
 // char *setstate(const char *state);
 func Xsetstate(t *TLS, state uintptr) uintptr {
+	if __ccgo_strace {
+		trc("t=%v state=%v, (%v:)", t, state, origin(2))
+	}
 	t.setErrno(errno.EINVAL) //TODO
 	return 0
 }
@@ -902,6 +1013,9 @@ func Xsetstate(t *TLS, state uintptr) uintptr {
 //
 // char *initstate_r(unsigned int seed, char *statebuf, size_t statelen, struct random_data *buf);
 func Xinitstate_r(t *TLS, seed uint32, statebuf uintptr, statelen types.Size_t, buf uintptr) int32 {
+	if __ccgo_strace {
+		trc("t=%v seed=%v statebuf=%v statelen=%v buf=%v, (%v:)", t, seed, statebuf, statelen, buf, origin(2))
+	}
 	if buf == 0 {
 		panic(todo(""))
 	}
@@ -921,11 +1035,17 @@ var (
 
 // int mkstemps(char *template, int suffixlen);
 func Xmkstemps(t *TLS, template uintptr, suffixlen int32) int32 {
+	if __ccgo_strace {
+		trc("t=%v template=%v suffixlen=%v, (%v:)", t, template, suffixlen, origin(2))
+	}
 	return Xmkstemps64(t, template, suffixlen)
 }
 
 // int mkstemps(char *template, int suffixlen);
 func Xmkstemps64(t *TLS, template uintptr, suffixlen int32) int32 {
+	if __ccgo_strace {
+		trc("t=%v template=%v suffixlen=%v, (%v:)", t, template, suffixlen, origin(2))
+	}
 	len := uintptr(Xstrlen(t, template))
 	x := template + uintptr(len-6) - uintptr(suffixlen)
 	for i := uintptr(0); i < 6; i++ {
@@ -946,16 +1066,25 @@ func Xmkstemps64(t *TLS, template uintptr, suffixlen int32) int32 {
 
 // int mkstemp(char *template);
 func Xmkstemp(t *TLS, template uintptr) int32 {
+	if __ccgo_strace {
+		trc("t=%v template=%v, (%v:)", t, template, origin(2))
+	}
 	return Xmkstemp64(t, template)
 }
 
 // int mkstemp(char *template);
 func Xmkstemp64(t *TLS, template uintptr) int32 {
+	if __ccgo_strace {
+		trc("t=%v template=%v, (%v:)", t, template, origin(2))
+	}
 	return Xmkstemps64(t, template, 0)
 }
 
 // int random_r(struct random_data *buf, int32_t *result);
 func Xrandom_r(t *TLS, buf, result uintptr) int32 {
+	if __ccgo_strace {
+		trc("t=%v result=%v, (%v:)", t, result, origin(2))
+	}
 	randomDataMu.Lock()
 
 	defer randomDataMu.Unlock()
@@ -970,11 +1099,17 @@ func Xrandom_r(t *TLS, buf, result uintptr) int32 {
 
 // int strerror_r(int errnum, char *buf, size_t buflen);
 func Xstrerror_r(t *TLS, errnum int32, buf uintptr, buflen size_t) int32 {
+	if __ccgo_strace {
+		trc("t=%v errnum=%v buf=%v buflen=%v, (%v:)", t, errnum, buf, buflen, origin(2))
+	}
 	panic(todo(""))
 }
 
 // void endpwent(void);
 func Xendpwent(t *TLS) {
+	if __ccgo_strace {
+		trc("t=%v, (%v:)", t, origin(2))
+	}
 	// nop
 }
 
@@ -982,11 +1117,17 @@ var ctimeStaticBuf [32]byte
 
 // char *ctime(const time_t *timep);
 func Xctime(t *TLS, timep uintptr) uintptr {
+	if __ccgo_strace {
+		trc("t=%v timep=%v, (%v:)", t, timep, origin(2))
+	}
 	return Xctime_r(t, timep, uintptr(unsafe.Pointer(&ctimeStaticBuf[0])))
 }
 
 // char *ctime_r(const time_t *timep, char *buf);
 func Xctime_r(t *TLS, timep, buf uintptr) uintptr {
+	if __ccgo_strace {
+		trc("t=%v buf=%v, (%v:)", t, buf, origin(2))
+	}
 	ut := *(*ctime.Time_t)(unsafe.Pointer(timep))
 	tm := time.Unix(int64(ut), 0).Local()
 	s := tm.Format(time.ANSIC) + "\n\x00"
@@ -996,6 +1137,9 @@ func Xctime_r(t *TLS, timep, buf uintptr) uintptr {
 
 // ssize_t pread(int fd, void *buf, size_t count, off_t offset);
 func Xpread(t *TLS, fd int32, buf uintptr, count types.Size_t, offset types.Off_t) types.Ssize_t {
+	if __ccgo_strace {
+		trc("t=%v fd=%v buf=%v count=%v offset=%v, (%v:)", t, fd, buf, count, offset, origin(2))
+	}
 	var n int
 	var err error
 	switch {
@@ -1003,20 +1147,20 @@ func Xpread(t *TLS, fd int32, buf uintptr, count types.Size_t, offset types.Off_
 		n, err = unix.Pread(int(fd), nil, int64(offset))
 	default:
 		n, err = unix.Pread(int(fd), (*RawMem)(unsafe.Pointer(buf))[:count:count], int64(offset))
-		if dmesgs && err == nil {
-			dmesg("%v: fd %v, off %#x, count %#x, n %#x\n%s", origin(1), fd, offset, count, n, hex.Dump((*RawMem)(unsafe.Pointer(buf))[:n:n]))
-		}
+		// 		if dmesgs && err == nil {
+		// 			dmesg("%v: fd %v, off %#x, count %#x, n %#x\n%s", origin(1), fd, offset, count, n, hex.Dump((*RawMem)(unsafe.Pointer(buf))[:n:n]))
+		// 		}
 	}
 	if err != nil {
-		if dmesgs {
-			dmesg("%v: %v FAIL", origin(1), err)
-		}
+		// if dmesgs {
+		// 	dmesg("%v: %v FAIL", origin(1), err)
+		// }
 		t.setErrno(err)
 		return -1
 	}
 
-	if dmesgs {
-		dmesg("%v: ok", origin(1))
-	}
+	// if dmesgs {
+	// 	dmesg("%v: ok", origin(1))
+	// }
 	return types.Ssize_t(n)
 }
