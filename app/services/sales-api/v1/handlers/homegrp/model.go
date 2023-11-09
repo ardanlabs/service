@@ -116,8 +116,8 @@ type AppUpdateAddress struct {
 
 // AppUpdateHome contains informations needed to update a product.
 type AppUpdateHome struct {
-	Address *AppUpdateAddress `json:"address"`
 	Type    *string           `json:"type" validate:"omitempty"`
+	Address *AppUpdateAddress `json:"address"`
 }
 
 func toCoreUpdateHome(app AppUpdateHome) (home.UpdateHome, error) {

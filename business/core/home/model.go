@@ -19,9 +19,9 @@ type Address struct {
 // Home represents an individual home.
 type Home struct {
 	ID          uuid.UUID
-	Address     Address
-	Type        Type
 	UserID      uuid.UUID
+	Type        Type
+	Address     Address
 	DateCreated time.Time
 	DateUpdated time.Time
 }
@@ -29,8 +29,8 @@ type Home struct {
 // NewHome is what we require from clients when adding a Home.
 type NewHome struct {
 	UserID  uuid.UUID
-	Address Address
 	Type    Type
+	Address Address
 }
 
 // UpdateAddress is what fields can be updated in the store.
@@ -50,6 +50,6 @@ type UpdateAddress struct {
 // we do not want to use pointers to basic types but we make exepction around
 // marshalling/unmarshalling.
 type UpdateHome struct {
-	Address *UpdateAddress
 	Type    *Type
+	Address *UpdateAddress
 }

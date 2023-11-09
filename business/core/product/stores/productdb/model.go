@@ -50,8 +50,10 @@ func toCoreProduct(dbPrd dbProduct) product.Product {
 
 func toCoreProductSlice(dbProducts []dbProduct) []product.Product {
 	prds := make([]product.Product, len(dbProducts))
+
 	for i, dbPrd := range dbProducts {
 		prds[i] = toCoreProduct(dbPrd)
 	}
+
 	return prds
 }
