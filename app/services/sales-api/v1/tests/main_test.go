@@ -37,8 +37,6 @@ type appTest struct {
 func (at *appTest) test(t *testing.T, table []tableData, testName string) {
 	for _, tt := range table {
 		f := func(t *testing.T) {
-			t.Logf("TEST: %s", tt.name)
-
 			r := httptest.NewRequest(tt.method, tt.url, nil)
 			w := httptest.NewRecorder()
 
