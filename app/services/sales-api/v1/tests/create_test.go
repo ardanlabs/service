@@ -31,7 +31,7 @@ func testCreate200(t *testing.T, app appTest, sd seedData) []tableData {
 		{
 			name:       "user",
 			url:        "/v1/users",
-			token:      app.adminToken,
+			token:      sd.tokens[0],
 			method:     http.MethodPost,
 			statusCode: http.StatusCreated,
 			model: &usergrp.AppNewUser{
@@ -76,12 +76,11 @@ func testCreate200(t *testing.T, app appTest, sd seedData) []tableData {
 		{
 			name:       "product",
 			url:        "/v1/products",
-			token:      app.adminToken,
+			token:      sd.tokens[0],
 			method:     http.MethodPost,
 			statusCode: http.StatusCreated,
 			model: &productgrp.AppNewProduct{
 				Name:     "Guitar",
-				UserID:   sd.users[0].ID.String(),
 				Cost:     10.34,
 				Quantity: 10,
 			},
@@ -118,12 +117,11 @@ func testCreate200(t *testing.T, app appTest, sd seedData) []tableData {
 		{
 			name:       "home",
 			url:        "/v1/homes",
-			token:      app.adminToken,
+			token:      sd.tokens[0],
 			method:     http.MethodPost,
 			statusCode: http.StatusCreated,
 			model: &homegrp.AppNewHome{
-				UserID: sd.users[0].ID.String(),
-				Type:   "SINGLE FAMILY",
+				Type: "SINGLE FAMILY",
 				Address: homegrp.AppNewAddress{
 					Address1: "123 Mocking Bird Lane",
 					ZipCode:  "35810",
@@ -177,7 +175,7 @@ func testCreate401(t *testing.T, app appTest, sd seedData) []tableData {
 		{
 			name:       "user",
 			url:        "/v1/users",
-			token:      app.adminToken[:10],
+			token:      sd.tokens[0][:10],
 			method:     http.MethodPost,
 			statusCode: http.StatusUnauthorized,
 			resp:       &response.ErrorDocument{},
@@ -191,7 +189,7 @@ func testCreate401(t *testing.T, app appTest, sd seedData) []tableData {
 		{
 			name:       "product",
 			url:        "/v1/products",
-			token:      app.adminToken[:10],
+			token:      sd.tokens[0][:10],
 			method:     http.MethodPost,
 			statusCode: http.StatusUnauthorized,
 			resp:       &response.ErrorDocument{},
@@ -205,7 +203,7 @@ func testCreate401(t *testing.T, app appTest, sd seedData) []tableData {
 		{
 			name:       "home",
 			url:        "/v1/homes",
-			token:      app.adminToken[:10],
+			token:      sd.tokens[0][:10],
 			method:     http.MethodPost,
 			statusCode: http.StatusUnauthorized,
 			resp:       &response.ErrorDocument{},
@@ -223,14 +221,20 @@ func testCreate401(t *testing.T, app appTest, sd seedData) []tableData {
 
 // =============================================================================
 
-func createSeed(ctx context.Context, api dbtest.CoreAPIs) (seedData, error) {
-	usrs, err := api.User.Query(ctx, user.QueryFilter{}, order.By{Field: user.OrderByName, Direction: order.ASC}, 1, 2)
+func createSeed(ctx context.Context, dbTest *dbtest.Test) (seedData, error) {
+	usrs, err := dbTest.CoreAPIs.User.Query(ctx, user.QueryFilter{}, order.By{Field: user.OrderByName, Direction: order.ASC}, 1, 2)
 	if err != nil {
 		return seedData{}, fmt.Errorf("seeding users : %w", err)
 	}
 
+	tkns := make([]string, len(usrs))
+	for i, u := range usrs {
+		tkns[i] = dbTest.TokenV1(u.Email.Address, "gophers")
+	}
+
 	sd := seedData{
-		users: usrs,
+		tokens: tkns,
+		users:  usrs,
 	}
 
 	return sd, nil
@@ -257,14 +261,12 @@ func Test_Create(t *testing.T) {
 			Auth:     dbTest.V1.Auth,
 			DB:       dbTest.DB,
 		}, all.Routes()),
-		userToken:  dbTest.TokenV1("user@example.com", "gophers"),
-		adminToken: dbTest.TokenV1("admin@example.com", "gophers"),
 	}
 
 	// -------------------------------------------------------------------------
 
 	t.Log("Seeding data ...")
-	sd, err := createSeed(context.Background(), dbTest.CoreAPIs)
+	sd, err := createSeed(context.Background(), dbTest)
 	if err != nil {
 		t.Fatalf("Seeding error: %s", err)
 	}

@@ -29,6 +29,16 @@ type Claims struct {
 	Roles []user.Role `json:"roles"`
 }
 
+// HasRole checks if the specified role exists.
+func (c Claims) HasRole(r user.Role) bool {
+	for _, role := range c.Roles {
+		if role == r {
+			return true
+		}
+	}
+	return false
+}
+
 // KeyLookup declares a method set of behavior for looking up
 // private and public keys for JWT use. The return could be a
 // PEM encoded string or a JWS based key.

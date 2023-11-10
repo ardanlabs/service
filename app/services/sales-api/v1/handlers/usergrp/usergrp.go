@@ -11,8 +11,8 @@ import (
 
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/data/page"
-	"github.com/ardanlabs/service/business/data/transaction"
 	"github.com/ardanlabs/service/business/web/v1/auth"
+	"github.com/ardanlabs/service/business/web/v1/mid"
 	"github.com/ardanlabs/service/business/web/v1/response"
 	"github.com/ardanlabs/service/foundation/validate"
 	"github.com/ardanlabs/service/foundation/web"
@@ -31,26 +31,6 @@ func New(user *user.Core, auth *auth.Auth) *Handlers {
 		user: user,
 		auth: auth,
 	}
-}
-
-// executeUnderTransaction constructs a new Handlers value with the core apis
-// using a store transaction that was created via middleware.
-func (h *Handlers) executeUnderTransaction(ctx context.Context) (*Handlers, error) {
-	if tx, ok := transaction.Get(ctx); ok {
-		user, err := h.user.ExecuteUnderTransaction(tx)
-		if err != nil {
-			return nil, err
-		}
-
-		handlers := Handlers{
-			user: user,
-			auth: h.auth,
-		}
-
-		return &handlers, nil
-	}
-
-	return h, nil
 }
 
 // Create adds a new user to the system.
@@ -78,27 +58,12 @@ func (h *Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Re
 
 // Update updates a user in the system.
 func (h *Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	h, err := h.executeUnderTransaction(ctx)
-	if err != nil {
-		return err
-	}
-
 	var app AppUpdateUser
 	if err := web.Decode(r, &app); err != nil {
 		return response.NewError(err, http.StatusBadRequest)
 	}
 
-	userID := auth.GetUserID(ctx)
-
-	usr, err := h.user.QueryByID(ctx, userID)
-	if err != nil {
-		switch {
-		case errors.Is(err, user.ErrNotFound):
-			return response.NewError(err, http.StatusNotFound)
-		default:
-			return fmt.Errorf("querybyid: userID[%s]: %w", userID, err)
-		}
-	}
+	usr := mid.GetUser(ctx)
 
 	uu, err := toCoreUpdateUser(app)
 	if err != nil {
@@ -107,7 +72,7 @@ func (h *Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Re
 
 	usr, err = h.user.Update(ctx, usr, uu)
 	if err != nil {
-		return fmt.Errorf("update: userID[%s] uu[%+v]: %w", userID, uu, err)
+		return fmt.Errorf("update: userID[%s] uu[%+v]: %w", usr.ID, uu, err)
 	}
 
 	return web.Respond(ctx, w, toAppUser(usr), http.StatusOK)
@@ -115,25 +80,10 @@ func (h *Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Re
 
 // Delete removes a user from the system.
 func (h *Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	userID := auth.GetUserID(ctx)
-
-	h, err := h.executeUnderTransaction(ctx)
-	if err != nil {
-		return err
-	}
-
-	usr, err := h.user.QueryByID(ctx, userID)
-	if err != nil {
-		switch {
-		case errors.Is(err, user.ErrNotFound):
-			return web.Respond(ctx, w, nil, http.StatusNoContent)
-		default:
-			return fmt.Errorf("querybyid: userID[%s]: %w", userID, err)
-		}
-	}
+	usr := mid.GetUser(ctx)
 
 	if err := h.user.Delete(ctx, usr); err != nil {
-		return fmt.Errorf("delete: userID[%s]: %w", userID, err)
+		return fmt.Errorf("delete: userID[%s]: %w", usr.ID, err)
 	}
 
 	return web.Respond(ctx, w, nil, http.StatusNoContent)
@@ -171,19 +121,7 @@ func (h *Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Req
 
 // QueryByID returns a user by its ID.
 func (h *Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	id := auth.GetUserID(ctx)
-
-	usr, err := h.user.QueryByID(ctx, id)
-	if err != nil {
-		switch {
-		case errors.Is(err, user.ErrNotFound):
-			return response.NewError(err, http.StatusNotFound)
-		default:
-			return fmt.Errorf("querybyid: id[%s]: %w", id, err)
-		}
-	}
-
-	return web.Respond(ctx, w, toAppUser(usr), http.StatusOK)
+	return web.Respond(ctx, w, toAppUser(mid.GetUser(ctx)), http.StatusOK)
 }
 
 // Token provides an API token for the authenticated user.

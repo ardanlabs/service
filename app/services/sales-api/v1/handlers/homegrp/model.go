@@ -1,12 +1,13 @@
 package homegrp
 
 import (
+	"context"
 	"fmt"
 	"time"
 
 	"github.com/ardanlabs/service/business/core/home"
+	"github.com/ardanlabs/service/business/web/v1/auth"
 	"github.com/ardanlabs/service/foundation/validate"
-	"github.com/google/uuid"
 )
 
 // AppNewAddress defines the data needed to add a new address.
@@ -60,24 +61,18 @@ func toAppHomes(homes []home.Home) []AppHome {
 
 // AppNewHome is what we require from clients when adding a Home.
 type AppNewHome struct {
-	UserID  string        `json:"userID" validate:"required"`
 	Type    string        `json:"type" validate:"required"`
 	Address AppNewAddress `json:"address"`
 }
 
-func toCoreNewHome(app AppNewHome) (home.NewHome, error) {
-	userID, err := uuid.Parse(app.UserID)
-	if err != nil {
-		return home.NewHome{}, fmt.Errorf("passing userid: %w", err)
-	}
-
+func toCoreNewHome(ctx context.Context, app AppNewHome) (home.NewHome, error) {
 	typ, err := home.ParseType(app.Type)
 	if err != nil {
 		return home.NewHome{}, fmt.Errorf("passing housing type: %w", err)
 	}
 
 	hme := home.NewHome{
-		UserID: userID,
+		UserID: auth.GetUserID(ctx),
 		Type:   typ,
 		Address: home.Address{
 			Address1: app.Address.Address1,

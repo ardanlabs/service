@@ -7,7 +7,6 @@ import (
 
 	"github.com/ardanlabs/service/business/core/product"
 	"github.com/ardanlabs/service/business/core/user"
-	"github.com/ardanlabs/service/business/data/transaction"
 	"github.com/ardanlabs/service/business/web/v1/response"
 	"github.com/ardanlabs/service/foundation/web"
 )
@@ -24,31 +23,6 @@ func New(user *user.Core, product *product.Core) *Handlers {
 		user:    user,
 		product: product,
 	}
-}
-
-// executeUnderTransaction constructs a new Handlers value with the core apis
-// using a store transaction that was created via middleware.
-func (h *Handlers) executeUnderTransaction(ctx context.Context) (*Handlers, error) {
-	if tx, ok := transaction.Get(ctx); ok {
-		user, err := h.user.ExecuteUnderTransaction(tx)
-		if err != nil {
-			return nil, err
-		}
-
-		product, err := h.product.ExecuteUnderTransaction(tx)
-		if err != nil {
-			return nil, err
-		}
-
-		handlers := Handlers{
-			user:    user,
-			product: product,
-		}
-
-		return &handlers, nil
-	}
-
-	return h, nil
 }
 
 // Create adds a new user and product at the same time under a single transaction.

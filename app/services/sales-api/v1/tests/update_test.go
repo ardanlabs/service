@@ -31,7 +31,7 @@ func testUpdate200(t *testing.T, app appTest, sd seedData) []tableData {
 		{
 			name:       "user",
 			url:        fmt.Sprintf("/v1/users/%s", sd.users[0].ID),
-			token:      app.adminToken,
+			token:      sd.tokens[0],
 			method:     http.MethodPut,
 			statusCode: http.StatusOK,
 			model: &usergrp.AppUpdateUser{
@@ -76,7 +76,7 @@ func testUpdate200(t *testing.T, app appTest, sd seedData) []tableData {
 		{
 			name:       "product",
 			url:        fmt.Sprintf("/v1/products/%s", sd.products[0].ID),
-			token:      app.adminToken,
+			token:      sd.tokens[0],
 			method:     http.MethodPut,
 			statusCode: http.StatusOK,
 			model: &productgrp.AppUpdateProduct{
@@ -117,7 +117,7 @@ func testUpdate200(t *testing.T, app appTest, sd seedData) []tableData {
 		{
 			name:       "home",
 			url:        fmt.Sprintf("/v1/homes/%s", sd.homes[0].ID),
-			token:      app.adminToken,
+			token:      sd.tokens[0],
 			method:     http.MethodPut,
 			statusCode: http.StatusOK,
 			model: &homegrp.AppUpdateHome{
@@ -174,23 +174,29 @@ func testUpdate200(t *testing.T, app appTest, sd seedData) []tableData {
 
 // =============================================================================
 
-func updateSeed(ctx context.Context, api dbtest.CoreAPIs) (seedData, error) {
-	usrs, err := api.User.Query(ctx, user.QueryFilter{}, order.By{Field: user.OrderByName, Direction: order.ASC}, 1, 2)
+func updateSeed(ctx context.Context, dbTest *dbtest.Test) (seedData, error) {
+	usrs, err := dbTest.CoreAPIs.User.Query(ctx, user.QueryFilter{}, order.By{Field: user.OrderByName, Direction: order.ASC}, 1, 2)
 	if err != nil {
 		return seedData{}, fmt.Errorf("seeding users : %w", err)
 	}
 
-	prds, err := product.TestGenerateSeedProducts(1, api.Product, usrs[0].ID)
+	tkns := make([]string, len(usrs))
+	for i, u := range usrs {
+		tkns[i] = dbTest.TokenV1(u.Email.Address, "gophers")
+	}
+
+	prds, err := product.TestGenerateSeedProducts(1, dbTest.CoreAPIs.Product, usrs[0].ID)
 	if err != nil {
 		return seedData{}, fmt.Errorf("seeding products : %w", err)
 	}
 
-	hmes, err := home.TestGenerateSeedHomes(1, api.Home, usrs[0].ID)
+	hmes, err := home.TestGenerateSeedHomes(1, dbTest.CoreAPIs.Home, usrs[0].ID)
 	if err != nil {
 		return seedData{}, fmt.Errorf("seeding homes : %w", err)
 	}
 
 	sd := seedData{
+		tokens:   tkns,
 		users:    usrs,
 		products: prds,
 		homes:    hmes,
@@ -204,30 +210,28 @@ func updateSeed(ctx context.Context, api dbtest.CoreAPIs) (seedData, error) {
 func Test_Update(t *testing.T) {
 	t.Parallel()
 
-	test := dbtest.NewTest(t, c)
+	dbTest := dbtest.NewTest(t, c)
 	defer func() {
 		if r := recover(); r != nil {
 			t.Log(r)
 			t.Error(string(debug.Stack()))
 		}
-		test.Teardown()
+		dbTest.Teardown()
 	}()
 
 	app := appTest{
 		Handler: v1.APIMux(v1.APIMuxConfig{
 			Shutdown: make(chan os.Signal, 1),
-			Log:      test.Log,
-			Auth:     test.V1.Auth,
-			DB:       test.DB,
+			Log:      dbTest.Log,
+			Auth:     dbTest.V1.Auth,
+			DB:       dbTest.DB,
 		}, all.Routes()),
-		userToken:  test.TokenV1("user@example.com", "gophers"),
-		adminToken: test.TokenV1("admin@example.com", "gophers"),
 	}
 
 	// -------------------------------------------------------------------------
 
 	t.Log("Seeding data ...")
-	sd, err := updateSeed(context.Background(), test.CoreAPIs)
+	sd, err := updateSeed(context.Background(), dbTest)
 	if err != nil {
 		t.Fatalf("Seeding error: %s", err)
 	}

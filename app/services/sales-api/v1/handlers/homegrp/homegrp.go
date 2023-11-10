@@ -9,10 +9,9 @@ import (
 
 	"github.com/ardanlabs/service/business/core/home"
 	"github.com/ardanlabs/service/business/data/page"
-	"github.com/ardanlabs/service/business/data/transaction"
+	"github.com/ardanlabs/service/business/web/v1/mid"
 	"github.com/ardanlabs/service/business/web/v1/response"
 	"github.com/ardanlabs/service/foundation/web"
-	"github.com/google/uuid"
 )
 
 // Set of error variables for handling home group errors.
@@ -32,23 +31,57 @@ func New(home *home.Core) *Handlers {
 	}
 }
 
-// executeUnderTransaction constructs a new Handlers value with the core apis
-// using a store transaction that was created via middleware.
-func (h *Handlers) executeUnderTransaction(ctx context.Context) (*Handlers, error) {
-	if tx, ok := transaction.Get(ctx); ok {
-		home, err := h.home.ExecuteUnderTransaction(tx)
-		if err != nil {
-			return nil, err
-		}
-
-		handlers := Handlers{
-			home: home,
-		}
-
-		return &handlers, nil
+// Create adds a new home to the system.
+func (h *Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	var app AppNewHome
+	if err := web.Decode(r, &app); err != nil {
+		return response.NewError(err, http.StatusBadRequest)
 	}
 
-	return h, nil
+	nh, err := toCoreNewHome(ctx, app)
+	if err != nil {
+		return response.NewError(err, http.StatusBadRequest)
+	}
+
+	hme, err := h.home.Create(ctx, nh)
+	if err != nil {
+		return fmt.Errorf("create: hme[%+v]: %w", app, err)
+	}
+
+	return web.Respond(ctx, w, toAppHome(hme), http.StatusCreated)
+}
+
+// Update updates a home in the system.
+func (h *Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	var app AppUpdateHome
+	if err := web.Decode(r, &app); err != nil {
+		return response.NewError(err, http.StatusBadRequest)
+	}
+
+	hme := mid.GetHome(ctx)
+
+	updHme, err := toCoreUpdateHome(app)
+	if err != nil {
+		return response.NewError(err, http.StatusBadRequest)
+	}
+
+	hme, err = h.home.Update(ctx, hme, updHme)
+	if err != nil {
+		return fmt.Errorf("update: homeID[%s] app[%+v]: %w", hme.ID, app, err)
+	}
+
+	return web.Respond(ctx, w, toAppHome(hme), http.StatusOK)
+}
+
+// Delete deletes a home from the system.
+func (h *Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	hme := mid.GetHome(ctx)
+
+	if err := h.home.Delete(ctx, hme); err != nil {
+		return fmt.Errorf("delete: homeID[%s]: %w", hme.ID, err)
+	}
+
+	return web.Respond(ctx, w, nil, http.StatusNoContent)
 }
 
 // Query returns a list of homes with paging.
@@ -83,109 +116,5 @@ func (h *Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Req
 
 // QueryByID returns a home by its ID.
 func (h *Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	homeID, err := uuid.Parse(web.Param(r, "home_id"))
-	if err != nil {
-		return response.NewError(ErrInvalidID, http.StatusBadRequest)
-	}
-
-	hme, err := h.home.QueryByID(ctx, homeID)
-	if err != nil {
-		switch {
-		case errors.Is(err, home.ErrNotFound):
-			return response.NewError(err, http.StatusNotFound)
-		default:
-			return fmt.Errorf("querybyid: homeID[%s] %w", homeID, err)
-		}
-	}
-
-	return web.Respond(ctx, w, toAppHome(hme), http.StatusOK)
-}
-
-// Create adds a new home to the system.
-func (h *Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	var app AppNewHome
-	if err := web.Decode(r, &app); err != nil {
-		return response.NewError(err, http.StatusBadRequest)
-	}
-
-	nh, err := toCoreNewHome(app)
-	if err != nil {
-		return response.NewError(err, http.StatusBadRequest)
-	}
-
-	hme, err := h.home.Create(ctx, nh)
-	if err != nil {
-		return fmt.Errorf("create: hme[%+v]: %w", app, err)
-	}
-
-	return web.Respond(ctx, w, toAppHome(hme), http.StatusCreated)
-}
-
-// Update updates a home in the system.
-func (h *Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	h, err := h.executeUnderTransaction(ctx)
-	if err != nil {
-		return err
-	}
-
-	var app AppUpdateHome
-	if err := web.Decode(r, &app); err != nil {
-		return response.NewError(err, http.StatusBadRequest)
-	}
-
-	homeID, err := uuid.Parse(web.Param(r, "home_id"))
-	if err != nil {
-		return response.NewError(ErrInvalidID, http.StatusBadRequest)
-	}
-
-	hme, err := h.home.QueryByID(ctx, homeID)
-	if err != nil {
-		switch {
-		case errors.Is(err, home.ErrNotFound):
-			return response.NewError(err, http.StatusNotFound)
-		default:
-			return fmt.Errorf("querybyid: homeID[%s] %w", homeID, err)
-		}
-	}
-
-	updHme, err := toCoreUpdateHome(app)
-	if err != nil {
-		return response.NewError(err, http.StatusBadRequest)
-	}
-
-	hme, err = h.home.Update(ctx, hme, updHme)
-	if err != nil {
-		return fmt.Errorf("update: homeID[%s] app[%+v]: %w", homeID, app, err)
-	}
-
-	return web.Respond(ctx, w, toAppHome(hme), http.StatusOK)
-}
-
-// Delete deletes a home from the system.
-func (h *Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	h, err := h.executeUnderTransaction(ctx)
-	if err != nil {
-		return err
-	}
-
-	homeID, err := uuid.Parse(web.Param(r, "home_id"))
-	if err != nil {
-		return response.NewError(ErrInvalidID, http.StatusBadRequest)
-	}
-
-	hme, err := h.home.QueryByID(ctx, homeID)
-	if err != nil {
-		switch {
-		case errors.Is(err, home.ErrNotFound):
-			return response.NewError(err, http.StatusNotFound)
-		default:
-			return fmt.Errorf("querybyid: homeID[%s] %w", homeID, err)
-		}
-	}
-
-	if err = h.home.Delete(ctx, hme); err != nil {
-		return fmt.Errorf("delete: homeID[%s]: %w", homeID, err)
-	}
-
-	return web.Respond(ctx, w, nil, http.StatusNoContent)
+	return web.Respond(ctx, w, toAppHome(mid.GetHome(ctx)), http.StatusOK)
 }

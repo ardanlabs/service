@@ -25,6 +25,7 @@ type tableData struct {
 }
 
 type seedData struct {
+	tokens   []string
 	users    []user.User
 	products []product.Product
 	homes    []home.Home
