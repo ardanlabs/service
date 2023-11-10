@@ -86,7 +86,7 @@ func AuthorizeUser(a *auth.Auth, rule string, usrCore *user.Core) web.Middleware
 				usr, err := usrCore.QueryByID(ctx, userID)
 				if err != nil {
 					switch {
-					case errors.Is(err, product.ErrNotFound):
+					case errors.Is(err, user.ErrNotFound):
 						return response.NewError(err, http.StatusNoContent)
 					default:
 						return fmt.Errorf("querybyid: userID[%s]: %w", userID, err)
@@ -165,7 +165,7 @@ func AuthorizeHome(a *auth.Auth, rule string, hmeCore *home.Core) web.Middleware
 				hme, err := hmeCore.QueryByID(ctx, homeID)
 				if err != nil {
 					switch {
-					case errors.Is(err, product.ErrNotFound):
+					case errors.Is(err, home.ErrNotFound):
 						return response.NewError(err, http.StatusNoContent)
 					default:
 						return fmt.Errorf("querybyid: homeID[%s]: %w", homeID, err)
