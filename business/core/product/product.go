@@ -39,25 +39,18 @@ type Storer interface {
 	QueryByUserID(ctx context.Context, userID uuid.UUID) ([]Product, error)
 }
 
-// UserCore interface declares the behavior this package needs from the user
-// core domain.
-type UserCore interface {
-	ExecuteUnderTransaction(tx transaction.Transaction) (*user.Core, error)
-	QueryByID(ctx context.Context, userID uuid.UUID) (user.User, error)
-}
-
 // =============================================================================
 
 // Core manages the set of APIs for product access.
 type Core struct {
 	log     *logger.Logger
 	evnCore *event.Core
-	usrCore UserCore
+	usrCore *user.Core
 	storer  Storer
 }
 
 // NewCore constructs a core for product api access.
-func NewCore(log *logger.Logger, evnCore *event.Core, usrCore UserCore, storer Storer) *Core {
+func NewCore(log *logger.Logger, evnCore *event.Core, usrCore *user.Core, storer Storer) *Core {
 	c := Core{
 		log:     log,
 		evnCore: evnCore,
@@ -65,7 +58,7 @@ func NewCore(log *logger.Logger, evnCore *event.Core, usrCore UserCore, storer S
 		storer:  storer,
 	}
 
-	c.registerEventHandlers()
+	c.registerEventFunctions()
 
 	return &c
 }
@@ -83,14 +76,14 @@ func (c *Core) ExecuteUnderTransaction(tx transaction.Transaction) (*Core, error
 		return nil, err
 	}
 
-	c = &Core{
+	core := Core{
 		storer:  storer,
 		evnCore: c.evnCore,
 		usrCore: usrCore,
 		log:     c.log,
 	}
 
-	return c, nil
+	return &core, nil
 }
 
 // Create adds a new product to the system.

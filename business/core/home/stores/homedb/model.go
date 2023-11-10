@@ -11,8 +11,8 @@ import (
 // dbHome represents an individual home.
 type dbHome struct {
 	ID          uuid.UUID `db:"home_id"`
-	Type        string    `db:"type"`
 	UserID      uuid.UUID `db:"user_id"`
+	Type        string    `db:"type"`
 	Address1    string    `db:"address_1"`
 	Address2    string    `db:"address_2"`
 	ZipCode     string    `db:"zip_code"`
@@ -28,8 +28,8 @@ type dbHome struct {
 func toDBHome(hme home.Home) dbHome {
 	hmeDB := dbHome{
 		ID:          hme.ID,
-		Type:        hme.Type.Name(),
 		UserID:      hme.UserID,
+		Type:        hme.Type.Name(),
 		Address1:    hme.Address.Address1,
 		Address2:    hme.Address.Address2,
 		ZipCode:     hme.Address.ZipCode,
@@ -50,11 +50,9 @@ func toCoreHome(dbHme dbHome) (home.Home, error) {
 	}
 
 	hme := home.Home{
-		ID:          dbHme.ID,
-		Type:        typ,
-		UserID:      dbHme.UserID,
-		DateCreated: dbHme.DateCreated.In(time.Local),
-		DateUpdated: dbHme.DateUpdated.In(time.Local),
+		ID:     dbHme.ID,
+		UserID: dbHme.UserID,
+		Type:   typ,
 		Address: home.Address{
 			Address1: dbHme.Address1,
 			Address2: dbHme.Address2,
@@ -63,6 +61,8 @@ func toCoreHome(dbHme dbHome) (home.Home, error) {
 			Country:  dbHme.Country,
 			State:    dbHme.State,
 		},
+		DateCreated: dbHme.DateCreated.In(time.Local),
+		DateUpdated: dbHme.DateUpdated.In(time.Local),
 	}
 
 	return hme, nil
@@ -70,6 +70,7 @@ func toCoreHome(dbHme dbHome) (home.Home, error) {
 
 func toCoreHomeSlice(dbHomes []dbHome) ([]home.Home, error) {
 	hmes := make([]home.Home, len(dbHomes))
+
 	for i, dbHme := range dbHomes {
 		var err error
 		hmes[i], err = toCoreHome(dbHme)
@@ -77,5 +78,6 @@ func toCoreHomeSlice(dbHomes []dbHome) ([]home.Home, error) {
 			return nil, fmt.Errorf("parse type: %w", err)
 		}
 	}
+
 	return hmes, nil
 }

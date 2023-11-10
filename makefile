@@ -101,7 +101,7 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 # ==============================================================================
 # Define dependencies
 
-GOLANG          := golang:1.21.3
+GOLANG          := golang:1.21.4
 ALPINE          := alpine:3.18
 KIND            := kindest/node:v1.27.3
 POSTGRES        := postgres:15.4
@@ -339,6 +339,9 @@ metrics-view:
 
 grafana:
 	open -a "Google Chrome" http://localhost:3100/
+
+statsviz:
+	open -a "Google Chrome" http://localhost:4000/debug/statsviz
 
 # ==============================================================================
 # Running tests within the local computer

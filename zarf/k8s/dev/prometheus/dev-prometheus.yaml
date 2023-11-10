@@ -56,9 +56,9 @@ spec:
               hostPort: 9090
           resources:
             requests:
-              cpu: 150m
+              cpu: 100m
             limits:
-              cpu: 150m
+              cpu: 3750m
           volumeMounts:
             - name: config-volume
               mountPath: /prom-conf/

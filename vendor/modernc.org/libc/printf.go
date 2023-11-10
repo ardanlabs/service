@@ -38,17 +38,17 @@ const (
 // the output stream; and conversion specifications, each of which results in
 // fetching zero or more subsequent arguments.
 func printf(format, args uintptr) []byte {
-	format0 := format
-	args0 := args
+	// format0 := format
+	// args0 := args
 	buf := bytes.NewBuffer(nil)
 	for {
 		switch c := *(*byte)(unsafe.Pointer(format)); c {
 		case '%':
 			format = printfConversion(buf, format, &args)
 		case 0:
-			if dmesgs {
-				dmesg("%v: %q, %#x -> %q", origin(1), GoString(format0), args0, buf.Bytes())
-			}
+			// 			if dmesgs {
+			// 				dmesg("%v: %q, %#x -> %q", origin(1), GoString(format0), args0, buf.Bytes())
+			// 			}
 			return buf.Bytes()
 		default:
 			format++
@@ -149,6 +149,8 @@ more:
 			arg = int64(int8(VaInt32(args)))
 		case mod32, modNone:
 			arg = int64(VaInt32(args))
+		case modT:
+			arg = int64(VaInt64(args))
 		default:
 			panic(todo("", mod))
 		}
@@ -185,6 +187,8 @@ more:
 			arg = uint64(uint8(VaInt32(args)))
 		case mod32:
 			arg = uint64(VaInt32(args))
+		case modZ:
+			arg = uint64(VaInt64(args))
 		default:
 			panic(todo("", mod))
 		}
@@ -613,11 +617,14 @@ func parseLengthModifier(format uintptr) (_ uintptr, n int) {
 		n = modJ
 		return format, n
 	case 'z':
-		panic(todo(""))
+		format++
+		return format, modZ
 	case 'Z':
-		panic(todo(""))
+		format++
+		return format, modCapitalZ
 	case 't':
-		panic(todo(""))
+		format++
+		return format, modT
 	default:
 		return format, 0
 	}

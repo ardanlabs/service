@@ -9,7 +9,6 @@ import (
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/core/user/stores/usercache"
 	"github.com/ardanlabs/service/business/core/user/stores/userdb"
-	db "github.com/ardanlabs/service/business/data/dbsql/pgx"
 	"github.com/ardanlabs/service/business/web/v1/auth"
 	"github.com/ardanlabs/service/business/web/v1/mid"
 	"github.com/ardanlabs/service/foundation/logger"
@@ -33,12 +32,14 @@ func Routes(app *web.App, cfg Config) {
 	hmeCore := home.NewCore(cfg.Log, envCore, usrCore, homedb.NewStore(cfg.Log, cfg.DB))
 
 	authen := mid.Authenticate(cfg.Auth)
-	tran := mid.ExecuteInTransaction(cfg.Log, db.NewBeginner(cfg.DB))
+	ruleAny := mid.Authorize(cfg.Auth, auth.RuleAny)
+	ruleUserOnly := mid.Authorize(cfg.Auth, auth.RuleUserOnly)
+	ruleAdminOrSubject := mid.AuthorizeHome(cfg.Auth, auth.RuleAdminOrSubject, hmeCore)
 
 	hdl := New(hmeCore)
-	app.Handle(http.MethodGet, version, "/homes", hdl.Query, authen)
-	app.Handle(http.MethodGet, version, "/homes/:home_id", hdl.QueryByID, authen)
-	app.Handle(http.MethodPost, version, "/homes", hdl.Create, authen)
-	app.Handle(http.MethodPut, version, "/homes/:home_id", hdl.Update, authen, tran)
-	app.Handle(http.MethodDelete, version, "/homes/:home_id", hdl.Delete, authen, tran)
+	app.Handle(http.MethodGet, version, "/homes", hdl.Query, authen, ruleAny)
+	app.Handle(http.MethodGet, version, "/homes/:home_id", hdl.QueryByID, authen, ruleAdminOrSubject)
+	app.Handle(http.MethodPost, version, "/homes", hdl.Create, authen, ruleUserOnly)
+	app.Handle(http.MethodPut, version, "/homes/:home_id", hdl.Update, authen, ruleAdminOrSubject)
+	app.Handle(http.MethodDelete, version, "/homes/:home_id", hdl.Delete, authen, ruleAdminOrSubject)
 }

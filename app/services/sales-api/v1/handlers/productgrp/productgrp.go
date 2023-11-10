@@ -10,7 +10,7 @@ import (
 	"github.com/ardanlabs/service/business/core/product"
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/data/page"
-	"github.com/ardanlabs/service/business/data/transaction"
+	"github.com/ardanlabs/service/business/web/v1/mid"
 	"github.com/ardanlabs/service/business/web/v1/response"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/google/uuid"
@@ -35,31 +35,6 @@ func New(product *product.Core, user *user.Core) *Handlers {
 	}
 }
 
-// executeUnderTransaction constructs a new Handlers value with the core apis
-// using a store transaction that was created via middleware.
-func (h *Handlers) executeUnderTransaction(ctx context.Context) (*Handlers, error) {
-	if tx, ok := transaction.Get(ctx); ok {
-		user, err := h.user.ExecuteUnderTransaction(tx)
-		if err != nil {
-			return nil, err
-		}
-
-		product, err := h.product.ExecuteUnderTransaction(tx)
-		if err != nil {
-			return nil, err
-		}
-
-		h = &Handlers{
-			user:    user,
-			product: product,
-		}
-
-		return h, nil
-	}
-
-	return h, nil
-}
-
 // Create adds a new product to the system.
 func (h *Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app AppNewProduct
@@ -67,7 +42,7 @@ func (h *Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Re
 		return response.NewError(err, http.StatusBadRequest)
 	}
 
-	np, err := toCoreNewProduct(app)
+	np, err := toCoreNewProduct(ctx, app)
 	if err != nil {
 		return response.NewError(err, http.StatusBadRequest)
 	}
@@ -82,34 +57,16 @@ func (h *Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Re
 
 // Update updates a product in the system.
 func (h *Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	h, err := h.executeUnderTransaction(ctx)
-	if err != nil {
-		return err
-	}
-
 	var app AppUpdateProduct
 	if err := web.Decode(r, &app); err != nil {
 		return response.NewError(err, http.StatusBadRequest)
 	}
 
-	productID, err := uuid.Parse(web.Param(r, "product_id"))
-	if err != nil {
-		return response.NewError(ErrInvalidID, http.StatusBadRequest)
-	}
+	prd := mid.GetProduct(ctx)
 
-	prd, err := h.product.QueryByID(ctx, productID)
+	prd, err := h.product.Update(ctx, prd, toCoreUpdateProduct(app))
 	if err != nil {
-		switch {
-		case errors.Is(err, product.ErrNotFound):
-			return response.NewError(err, http.StatusNotFound)
-		default:
-			return fmt.Errorf("querybyid: productID[%s]: %w", productID, err)
-		}
-	}
-
-	prd, err = h.product.Update(ctx, prd, toCoreUpdateProduct(app))
-	if err != nil {
-		return fmt.Errorf("update: productID[%s] app[%+v]: %w", productID, app, err)
+		return fmt.Errorf("update: productID[%s] app[%+v]: %w", prd.ID, app, err)
 	}
 
 	return web.Respond(ctx, w, toAppProduct(prd), http.StatusOK)
@@ -117,32 +74,10 @@ func (h *Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Re
 
 // Delete removes a product from the system.
 func (h *Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	h, err := h.executeUnderTransaction(ctx)
-	if err != nil {
-		return err
-	}
-
-	productID, err := uuid.Parse(web.Param(r, "product_id"))
-	if err != nil {
-		return response.NewError(ErrInvalidID, http.StatusBadRequest)
-	}
-
-	prd, err := h.product.QueryByID(ctx, productID)
-	if err != nil {
-		switch {
-		case errors.Is(err, product.ErrNotFound):
-
-			// Don't send StatusNotFound here since the call to Delete
-			// below won't if this product is not found. We only know
-			// this because we are doing the Query for the UserID.
-			return response.NewError(err, http.StatusNoContent)
-		default:
-			return fmt.Errorf("querybyid: productID[%s]: %w", productID, err)
-		}
-	}
+	prd := mid.GetProduct(ctx)
 
 	if err := h.product.Delete(ctx, prd); err != nil {
-		return fmt.Errorf("delete: productID[%s]: %w", productID, err)
+		return fmt.Errorf("delete: productID[%s]: %w", prd.ID, err)
 	}
 
 	return web.Respond(ctx, w, nil, http.StatusNoContent)
@@ -206,20 +141,5 @@ func (h *Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Req
 
 // QueryByID returns a product by its ID.
 func (h *Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	productID, err := uuid.Parse(web.Param(r, "product_id"))
-	if err != nil {
-		return response.NewError(ErrInvalidID, http.StatusBadRequest)
-	}
-
-	prd, err := h.product.QueryByID(ctx, productID)
-	if err != nil {
-		switch {
-		case errors.Is(err, product.ErrNotFound):
-			return response.NewError(err, http.StatusNotFound)
-		default:
-			return fmt.Errorf("querybyid: productID[%s]: %w", productID, err)
-		}
-	}
-
-	return web.Respond(ctx, w, toAppProduct(prd), http.StatusOK)
+	return web.Respond(ctx, w, toAppProduct(mid.GetProduct(ctx)), http.StatusOK)
 }

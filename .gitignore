@@ -1,8 +1,10 @@
-# Binaries
+# Project
 app/services/sales-api/sales-api
 app/services/metrics/metrics
 app/tooling/sales-admin/sales-admin
 app/tooling/sales-admin/logfmt
+app/tooling/sales-admin/docs
+.excalidraw
 
 # Environment
 app/frontends/admin/.env

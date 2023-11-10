@@ -55,6 +55,11 @@ spec:
             mountPath: "/etc/pg_hba.conf"
             subPath: "pg_hba.conf"
         args: ['-c', 'hba_file=/etc/pg_hba.conf']
+        resources:
+          requests:
+            cpu: 100m
+          limits:
+            cpu: 3750m
         env:
         - name: POSTGRES_PASSWORD
           value: postgres

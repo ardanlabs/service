@@ -1,11 +1,12 @@
 package productgrp
 
 import (
-	"fmt"
+	"context"
 	"time"
 
 	"github.com/ardanlabs/service/business/core/product"
 	"github.com/ardanlabs/service/business/core/user"
+	"github.com/ardanlabs/service/business/web/v1/auth"
 	"github.com/ardanlabs/service/foundation/validate"
 	"github.com/google/uuid"
 )
@@ -73,20 +74,14 @@ func toAppProductsDetails(prds []product.Product, usrs map[uuid.UUID]user.User) 
 
 // AppNewProduct is what we require from clients when adding a Product.
 type AppNewProduct struct {
-	UserID   string  `json:"userID" validate:"required"`
 	Name     string  `json:"name" validate:"required"`
 	Cost     float64 `json:"cost" validate:"required,gte=0"`
 	Quantity int     `json:"quantity" validate:"gte=1"`
 }
 
-func toCoreNewProduct(app AppNewProduct) (product.NewProduct, error) {
-	userID, err := uuid.Parse(app.UserID)
-	if err != nil {
-		return product.NewProduct{}, fmt.Errorf("parsing userid: %w", err)
-	}
-
+func toCoreNewProduct(ctx context.Context, app AppNewProduct) (product.NewProduct, error) {
 	prd := product.NewProduct{
-		UserID:   userID,
+		UserID:   auth.GetUserID(ctx),
 		Name:     app.Name,
 		Cost:     app.Cost,
 		Quantity: app.Quantity,

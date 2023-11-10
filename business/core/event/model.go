@@ -5,8 +5,8 @@ import (
 	"fmt"
 )
 
-// HandleFunc represents a function that can receive an event.
-type HandleFunc func(context.Context, Event) error
+// Func represents a function that can receive an event.
+type Func func(context.Context, Event) error
 
 // Event represents an event between core domains.
 type Event struct {

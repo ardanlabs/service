@@ -26,14 +26,20 @@ func testName200(t *testing.T, app appTest, sd seedData) []tableData {
 
 // =============================================================================
 
-func nameSeed(ctx context.Context, api dbtest.CoreAPIs) (seedData, error) {
-	usrs, err := api.User.Query(ctx, user.QueryFilter{}, order.By{Field: user.OrderByName, Direction: order.ASC}, 1, 2)
+func nameSeed(ctx context.Context, dbTest *dbtest.Test) (seedData, error) {
+	usrs, err := dbTest.CoreAPIs.User.Query(ctx, user.QueryFilter{}, order.By{Field: user.OrderByName, Direction: order.ASC}, 1, 2)
 	if err != nil {
 		return seedData{}, fmt.Errorf("seeding users : %w", err)
 	}
 
+	tkns := make([]string, len(usrs))
+	for _, u := range usrs {
+		tkns = append(tkns, dbTest.TokenV1(u.Email.Address, "gophers"))
+	}
+
 	sd := seedData{
-		users: usrs,
+		tokens: tkns,
+		users:  usrs,
 	}
 
 	return sd, nil
@@ -44,30 +50,28 @@ func nameSeed(ctx context.Context, api dbtest.CoreAPIs) (seedData, error) {
 func Test_Name(t *testing.T) {
 	t.Parallel()
 
-	test := dbtest.NewTest(t, c)
+	dbTest := dbtest.NewTest(t, c)
 	defer func() {
 		if r := recover(); r != nil {
 			t.Log(r)
 			t.Error(string(debug.Stack()))
 		}
-		test.Teardown()
+		dbTest.Teardown()
 	}()
 
 	app := appTest{
 		Handler: v1.APIMux(v1.APIMuxConfig{
 			Shutdown: make(chan os.Signal, 1),
-			Log:      test.Log,
-			Auth:     test.V1.Auth,
-			DB:       test.DB,
+			Log:      dbTest.Log,
+			Auth:     dbTest.V1.Auth,
+			DB:       dbTest.DB,
 		}, all.Routes()),
-		userToken:  test.TokenV1("user@example.com", "gophers"),
-		adminToken: test.TokenV1("admin@example.com", "gophers"),
 	}
 
 	// -------------------------------------------------------------------------
 
 	t.Log("Seeding data ...")
-	sd, err := nameSeed(context.Background(), test.CoreAPIs)
+	sd, err := nameSeed(context.Background(), dbTest)
 	if err != nil {
 		t.Fatalf("Seeding error: %s", err)
 	}

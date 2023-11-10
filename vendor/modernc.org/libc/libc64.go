@@ -35,6 +35,10 @@ func (b bits) has(n int) bool { return b != nil && b[n>>6]&(1<<uint(n&63)) != 0 
 func (b bits) set(n int)      { b[n>>6] |= 1 << uint(n&63) }
 
 func Xstrchrnul(tls *TLS, s uintptr, c int32) (r uintptr) {
+	if __ccgo_strace {
+		trc("tls=%v s=%v c=%v, (%v:)", tls, s, c, origin(2))
+		defer func() { trc("-> %v", r) }()
+	}
 	var k types.Size_t
 	var w uintptr
 	_, _ = k, w

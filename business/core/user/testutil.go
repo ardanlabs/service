@@ -8,7 +8,7 @@ import (
 )
 
 // TestGenerateNewUsers is a helper method for testing.
-func TestGenerateNewUsers(n int) []NewUser {
+func TestGenerateNewUsers(n int, role Role) []NewUser {
 	newUsrs := make([]NewUser, n)
 
 	for i := 0; i < n; i++ {
@@ -16,8 +16,8 @@ func TestGenerateNewUsers(n int) []NewUser {
 
 		nu := NewUser{
 			Name:            fmt.Sprintf("Name%d", idx),
-			Email:           mail.Address{Address: fmt.Sprintf("Email%d", idx)},
-			Roles:           []Role{RoleAdmin},
+			Email:           mail.Address{Address: fmt.Sprintf("Email%d@gmail.com", idx)},
+			Roles:           []Role{role},
 			Department:      fmt.Sprintf("Department%d", idx),
 			Password:        fmt.Sprintf("Password%d", idx),
 			PasswordConfirm: fmt.Sprintf("Password%d", idx),
@@ -30,8 +30,8 @@ func TestGenerateNewUsers(n int) []NewUser {
 }
 
 // TestGenerateSeedUsers is a helper method for testing.
-func TestGenerateSeedUsers(n int, api *Core) ([]User, error) {
-	newUsrs := TestGenerateNewUsers(n)
+func TestGenerateSeedUsers(n int, role Role, api *Core) ([]User, error) {
+	newUsrs := TestGenerateNewUsers(n, role)
 
 	usrs := make([]User, len(newUsrs))
 	for i, nu := range newUsrs {

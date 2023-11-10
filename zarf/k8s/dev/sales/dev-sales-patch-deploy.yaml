@@ -80,6 +80,9 @@ spec:
 # onto a given Node. Limits are there to prevent noisy neighbor conditions with
 # colocated PODs.
 
+# For CPU resource units, the quantity expression 0.1 is equivalent to the 
+# expression 100m, which can be read as "one hundred millicpu". 
+
       containers:
       - name: sales-api
         resources:

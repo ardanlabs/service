@@ -78,6 +78,7 @@ func toCoreUser(dbUsr dbUser) (user.User, error) {
 
 func toCoreUserSlice(dbUsers []dbUser) ([]user.User, error) {
 	usrs := make([]user.User, len(dbUsers))
+
 	for i, dbUsr := range dbUsers {
 		var err error
 		usrs[i], err = toCoreUser(dbUsr)
@@ -85,5 +86,6 @@ func toCoreUserSlice(dbUsers []dbUser) ([]user.User, error) {
 			return nil, err
 		}
 	}
+
 	return usrs, nil
 }

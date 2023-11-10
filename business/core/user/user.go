@@ -67,13 +67,13 @@ func (c *Core) ExecuteUnderTransaction(tx transaction.Transaction) (*Core, error
 		return nil, err
 	}
 
-	c = &Core{
+	core := Core{
 		storer:  trS,
 		evnCore: c.evnCore,
 		log:     c.log,
 	}
 
-	return c, nil
+	return &core, nil
 }
 
 // Create adds a new user to the system.
@@ -139,8 +139,10 @@ func (c *Core) Update(ctx context.Context, usr User, uu UpdateUser) (User, error
 		return User{}, fmt.Errorf("update: %w", err)
 	}
 
-	if err := c.evnCore.SendEvent(ctx, uu.UpdatedEvent(usr.ID)); err != nil {
-		return User{}, fmt.Errorf("failed to send a `%s` event: %w", EventUpdated, err)
+	// Other domains may need to know when a user is updated so business
+	// logic can be applied. This represents an indirect call to other domains.
+	if err := c.evnCore.Execute(ctx, uu.UpdatedEvent(usr.ID)); err != nil {
+		return User{}, fmt.Errorf("failed to execute `%s` event: %w", EventUpdated, err)
 	}
 
 	return usr, nil
