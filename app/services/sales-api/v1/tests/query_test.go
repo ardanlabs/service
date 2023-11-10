@@ -29,24 +29,30 @@ func queryTests(t *testing.T, app appTest, sd seedData) {
 }
 
 func testQuery200(t *testing.T, app appTest, sd seedData) []tableData {
-	usrs := make(map[uuid.UUID]user.User)
+	usrs := make([]user.User, 0, len(sd.admins)+len(sd.users))
+	usrsMap := make(map[uuid.UUID]user.User)
+	for _, adm := range sd.admins {
+		usrsMap[adm.ID] = adm.User
+		usrs = append(usrs, adm.User)
+	}
 	for _, usr := range sd.users {
-		usrs[usr.ID] = usr
+		usrsMap[usr.ID] = usr.User
+		usrs = append(usrs, usr.User)
 	}
 
 	table := []tableData{
 		{
 			name:       "user",
 			url:        "/v1/users?page=1&rows=2&orderBy=user_id,DESC",
-			token:      sd.tokens[0],
+			token:      sd.admins[0].token,
 			statusCode: http.StatusOK,
 			method:     http.MethodGet,
 			resp:       &response.PageDocument[usergrp.AppUser]{},
 			expResp: &response.PageDocument[usergrp.AppUser]{
 				Page:        1,
 				RowsPerPage: 2,
-				Total:       len(sd.users),
-				Items:       toAppUsers(sd.users),
+				Total:       len(usrs),
+				Items:       toAppUsers(usrs),
 			},
 			cmpFunc: func(x interface{}, y interface{}) string {
 				return cmp.Diff(x, y)
@@ -55,15 +61,15 @@ func testQuery200(t *testing.T, app appTest, sd seedData) []tableData {
 		{
 			name:       "product",
 			url:        "/v1/products?page=1&rows=10&orderBy=user_id,DESC",
-			token:      sd.tokens[0],
+			token:      sd.admins[0].token,
 			statusCode: http.StatusOK,
 			method:     http.MethodGet,
 			resp:       &response.PageDocument[productgrp.AppProductDetails]{},
 			expResp: &response.PageDocument[productgrp.AppProductDetails]{
 				Page:        1,
 				RowsPerPage: 10,
-				Total:       len(sd.products),
-				Items:       toAppProductsDetails(sd.products, usrs),
+				Total:       len(sd.admins[0].products) + len(sd.users[0].products),
+				Items:       toAppProductsDetails(append(sd.admins[0].products, sd.users[0].products...), usrsMap),
 			},
 			cmpFunc: func(x interface{}, y interface{}) string {
 				return cmp.Diff(x, y)
@@ -72,15 +78,15 @@ func testQuery200(t *testing.T, app appTest, sd seedData) []tableData {
 		{
 			name:       "home",
 			url:        "/v1/homes?page=1&rows=10&orderBy=user_id,DESC",
-			token:      sd.tokens[0],
+			token:      sd.admins[0].token,
 			statusCode: http.StatusOK,
 			method:     http.MethodGet,
 			resp:       &response.PageDocument[homegrp.AppHome]{},
 			expResp: &response.PageDocument[homegrp.AppHome]{
 				Page:        1,
 				RowsPerPage: 10,
-				Total:       len(sd.products),
-				Items:       toAppHomes(sd.homes),
+				Total:       len(sd.admins[0].homes) + len(sd.users[0].homes),
+				Items:       toAppHomes(append(sd.admins[0].homes, sd.users[0].homes...)),
 			},
 			cmpFunc: func(x interface{}, y interface{}) string {
 				return cmp.Diff(x, y)
@@ -96,35 +102,35 @@ func testQueryByID200(t *testing.T, app appTest, sd seedData) []tableData {
 		{
 			name:       "user",
 			url:        fmt.Sprintf("/v1/users/%s", sd.users[0].ID),
-			token:      sd.tokens[0],
+			token:      sd.users[0].token,
 			statusCode: http.StatusOK,
 			method:     http.MethodGet,
 			resp:       &usergrp.AppUser{},
-			expResp:    toAppUserPtr(sd.users[0]),
+			expResp:    toAppUserPtr(sd.users[0].User),
 			cmpFunc: func(x interface{}, y interface{}) string {
 				return cmp.Diff(x, y)
 			},
 		},
 		{
 			name:       "product",
-			url:        fmt.Sprintf("/v1/products/%s", sd.products[0].ID),
-			token:      sd.tokens[0],
+			url:        fmt.Sprintf("/v1/products/%s", sd.users[0].products[0].ID),
+			token:      sd.users[0].token,
 			statusCode: http.StatusOK,
 			method:     http.MethodGet,
 			resp:       &productgrp.AppProduct{},
-			expResp:    toAppProductPtr(sd.products[0]),
+			expResp:    toAppProductPtr(sd.users[0].products[0]),
 			cmpFunc: func(x interface{}, y interface{}) string {
 				return cmp.Diff(x, y)
 			},
 		},
 		{
 			name:       "home",
-			url:        fmt.Sprintf("/v1/homes/%s", sd.homes[0].ID),
-			token:      sd.tokens[0],
+			url:        fmt.Sprintf("/v1/homes/%s", sd.users[0].homes[0].ID),
+			token:      sd.users[0].token,
 			statusCode: http.StatusOK,
 			method:     http.MethodGet,
 			resp:       &homegrp.AppHome{},
-			expResp:    toAppHomePtr(sd.homes[0]),
+			expResp:    toAppHomePtr(sd.users[0].homes[0]),
 			cmpFunc: func(x interface{}, y interface{}) string {
 				return cmp.Diff(x, y)
 			},
@@ -142,44 +148,45 @@ func querySeed(ctx context.Context, dbTest *dbtest.Test) (seedData, error) {
 		return seedData{}, fmt.Errorf("seeding users : %w", err)
 	}
 
-	tkns := make([]string, len(usrs))
-	for i, u := range usrs {
-		tkns[i] = dbTest.TokenV1(u.Email.Address, "gophers")
+	// -------------------------------------------------------------------------
+
+	tu1 := testUser{
+		User:  usrs[0],
+		token: dbTest.TokenV1(usrs[0].Email.Address, "gophers"),
 	}
 
-	prds1, err := product.TestGenerateSeedProducts(5, dbTest.CoreAPIs.Product, usrs[0].ID)
+	tu1.products, err = product.TestGenerateSeedProducts(5, dbTest.CoreAPIs.Product, tu1.ID)
 	if err != nil {
 		return seedData{}, fmt.Errorf("seeding products1 : %w", err)
 	}
 
-	prds2, err := product.TestGenerateSeedProducts(5, dbTest.CoreAPIs.Product, usrs[1].ID)
-	if err != nil {
-		return seedData{}, fmt.Errorf("seeding products2 : %w", err)
-	}
-
-	var prds []product.Product
-	prds = append(prds, prds1...)
-	prds = append(prds, prds2...)
-
-	hmes1, err := home.TestGenerateSeedHomes(5, dbTest.CoreAPIs.Home, usrs[0].ID)
+	tu1.homes, err = home.TestGenerateSeedHomes(5, dbTest.CoreAPIs.Home, tu1.ID)
 	if err != nil {
 		return seedData{}, fmt.Errorf("seeding homes1 : %w", err)
 	}
 
-	hmes2, err := home.TestGenerateSeedHomes(5, dbTest.CoreAPIs.Home, usrs[1].ID)
+	// -------------------------------------------------------------------------
+
+	tu2 := testUser{
+		User:  usrs[1],
+		token: dbTest.TokenV1(usrs[1].Email.Address, "gophers"),
+	}
+
+	tu2.products, err = product.TestGenerateSeedProducts(5, dbTest.CoreAPIs.Product, tu2.ID)
+	if err != nil {
+		return seedData{}, fmt.Errorf("seeding products2 : %w", err)
+	}
+
+	tu2.homes, err = home.TestGenerateSeedHomes(5, dbTest.CoreAPIs.Home, tu2.ID)
 	if err != nil {
 		return seedData{}, fmt.Errorf("seeding homes2 : %w", err)
 	}
 
-	var hmes []home.Home
-	hmes = append(hmes, hmes1...)
-	hmes = append(hmes, hmes2...)
+	// -------------------------------------------------------------------------
 
 	sd := seedData{
-		tokens:   tkns,
-		users:    usrs,
-		products: prds,
-		homes:    hmes,
+		admins: []testUser{tu1},
+		users:  []testUser{tu2},
 	}
 
 	return sd, nil
@@ -206,6 +213,8 @@ func Test_Query(t *testing.T) {
 			Auth:     dbTest.V1.Auth,
 			DB:       dbTest.DB,
 		}, all.Routes()),
+		userToken:  dbTest.TokenV1("user@example.com", "gophers"),
+		adminToken: dbTest.TokenV1("admin@example.com", "gophers"),
 	}
 
 	// -------------------------------------------------------------------------

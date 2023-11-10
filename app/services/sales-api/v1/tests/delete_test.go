@@ -27,43 +27,43 @@ func testDelete200(t *testing.T, app appTest, sd seedData) []tableData {
 	table := []tableData{
 		{
 			name:       "product-user",
-			url:        fmt.Sprintf("/v1/products/%s", sd.products[0].ID),
-			token:      sd.tokens[0],
+			url:        fmt.Sprintf("/v1/products/%s", sd.users[0].products[0].ID),
+			token:      sd.users[0].token,
 			method:     http.MethodDelete,
 			statusCode: http.StatusNoContent,
 		},
 		{
 			name:       "product-admin",
-			url:        fmt.Sprintf("/v1/products/%s", sd.products[1].ID),
-			token:      sd.tokens[1],
+			url:        fmt.Sprintf("/v1/products/%s", sd.admins[0].products[0].ID),
+			token:      sd.admins[0].token,
 			method:     http.MethodDelete,
 			statusCode: http.StatusNoContent,
 		},
 		{
 			name:       "home-user",
-			url:        fmt.Sprintf("/v1/homes/%s", sd.homes[0].ID),
-			token:      sd.tokens[0],
+			url:        fmt.Sprintf("/v1/homes/%s", sd.users[0].homes[0].ID),
+			token:      sd.users[0].token,
 			method:     http.MethodDelete,
 			statusCode: http.StatusNoContent,
 		},
 		{
 			name:       "home-admin",
-			url:        fmt.Sprintf("/v1/homes/%s", sd.homes[1].ID),
-			token:      sd.tokens[1],
+			url:        fmt.Sprintf("/v1/homes/%s", sd.admins[0].homes[0].ID),
+			token:      sd.admins[0].token,
 			method:     http.MethodDelete,
 			statusCode: http.StatusNoContent,
 		},
 		{
 			name:       "user-user",
-			url:        fmt.Sprintf("/v1/users/%s", sd.users[0].ID),
-			token:      sd.tokens[0],
+			url:        fmt.Sprintf("/v1/users/%s", sd.users[1].ID),
+			token:      sd.users[1].token,
 			method:     http.MethodDelete,
 			statusCode: http.StatusNoContent,
 		},
 		{
 			name:       "user-admin",
-			url:        fmt.Sprintf("/v1/users/%s", sd.users[1].ID),
-			token:      sd.tokens[1],
+			url:        fmt.Sprintf("/v1/users/%s", sd.admins[1].ID),
+			token:      sd.admins[1].token,
 			method:     http.MethodDelete,
 			statusCode: http.StatusNoContent,
 		},
@@ -75,20 +75,8 @@ func testDelete200(t *testing.T, app appTest, sd seedData) []tableData {
 func testDelete401(t *testing.T, app appTest, sd seedData) []tableData {
 	table := []tableData{
 		{
-			name:       "product",
-			url:        fmt.Sprintf("/v1/products/%s", sd.products[0].ID),
-			token:      sd.tokens[0] + "A",
-			method:     http.MethodDelete,
-			statusCode: http.StatusUnauthorized,
-			resp:       &response.ErrorDocument{},
-			expResp:    &response.ErrorDocument{Error: "Unauthorized"},
-			cmpFunc: func(x interface{}, y interface{}) string {
-				return cmp.Diff(x, y)
-			},
-		},
-		{
-			name:       "product",
-			url:        fmt.Sprintf("/v1/products/%s", sd.products[0].ID),
+			name:       "product-emptytoken",
+			url:        fmt.Sprintf("/v1/products/%s", sd.users[0].products[1].ID),
 			token:      "",
 			method:     http.MethodDelete,
 			statusCode: http.StatusUnauthorized,
@@ -99,9 +87,9 @@ func testDelete401(t *testing.T, app appTest, sd seedData) []tableData {
 			},
 		},
 		{
-			name:       "home",
-			url:        fmt.Sprintf("/v1/homes/%s", sd.homes[0].ID),
-			token:      sd.tokens[0] + "A",
+			name:       "product-badsig",
+			url:        fmt.Sprintf("/v1/products/%s", sd.users[0].products[1].ID),
+			token:      sd.users[0].token + "A",
 			method:     http.MethodDelete,
 			statusCode: http.StatusUnauthorized,
 			resp:       &response.ErrorDocument{},
@@ -111,8 +99,20 @@ func testDelete401(t *testing.T, app appTest, sd seedData) []tableData {
 			},
 		},
 		{
-			name:       "home",
-			url:        fmt.Sprintf("/v1/homes/%s", sd.homes[0].ID),
+			name:       "product-wronguser",
+			url:        fmt.Sprintf("/v1/products/%s", sd.users[0].products[1].ID),
+			token:      app.userToken,
+			method:     http.MethodDelete,
+			statusCode: http.StatusUnauthorized,
+			resp:       &response.ErrorDocument{},
+			expResp:    &response.ErrorDocument{Error: "Unauthorized"},
+			cmpFunc: func(x interface{}, y interface{}) string {
+				return cmp.Diff(x, y)
+			},
+		},
+		{
+			name:       "home-emptytoken",
+			url:        fmt.Sprintf("/v1/homes/%s", sd.users[0].homes[1].ID),
 			token:      "",
 			method:     http.MethodDelete,
 			statusCode: http.StatusUnauthorized,
@@ -123,9 +123,33 @@ func testDelete401(t *testing.T, app appTest, sd seedData) []tableData {
 			},
 		},
 		{
-			name:       "user",
+			name:       "home-badsig",
+			url:        fmt.Sprintf("/v1/homes/%s", sd.users[0].homes[1].ID),
+			token:      sd.users[0].token + "A",
+			method:     http.MethodDelete,
+			statusCode: http.StatusUnauthorized,
+			resp:       &response.ErrorDocument{},
+			expResp:    &response.ErrorDocument{Error: "Unauthorized"},
+			cmpFunc: func(x interface{}, y interface{}) string {
+				return cmp.Diff(x, y)
+			},
+		},
+		{
+			name:       "home-wronguser",
+			url:        fmt.Sprintf("/v1/homes/%s", sd.users[0].homes[1].ID),
+			token:      app.userToken,
+			method:     http.MethodDelete,
+			statusCode: http.StatusUnauthorized,
+			resp:       &response.ErrorDocument{},
+			expResp:    &response.ErrorDocument{Error: "Unauthorized"},
+			cmpFunc: func(x interface{}, y interface{}) string {
+				return cmp.Diff(x, y)
+			},
+		},
+		{
+			name:       "user-emptytoken",
 			url:        fmt.Sprintf("/v1/users/%s", sd.users[0].ID),
-			token:      sd.tokens[0] + "A",
+			token:      "",
 			method:     http.MethodDelete,
 			statusCode: http.StatusUnauthorized,
 			resp:       &response.ErrorDocument{},
@@ -135,9 +159,21 @@ func testDelete401(t *testing.T, app appTest, sd seedData) []tableData {
 			},
 		},
 		{
-			name:       "user",
+			name:       "user-badsig",
 			url:        fmt.Sprintf("/v1/users/%s", sd.users[0].ID),
-			token:      "",
+			token:      sd.users[0].token + "A",
+			method:     http.MethodDelete,
+			statusCode: http.StatusUnauthorized,
+			resp:       &response.ErrorDocument{},
+			expResp:    &response.ErrorDocument{Error: "Unauthorized"},
+			cmpFunc: func(x interface{}, y interface{}) string {
+				return cmp.Diff(x, y)
+			},
+		},
+		{
+			name:       "user-wronguser",
+			url:        fmt.Sprintf("/v1/users/%s", sd.users[0].ID),
+			token:      app.userToken,
 			method:     http.MethodDelete,
 			statusCode: http.StatusUnauthorized,
 			resp:       &response.ErrorDocument{},
@@ -156,50 +192,79 @@ func testDelete401(t *testing.T, app appTest, sd seedData) []tableData {
 func deleteSeed(ctx context.Context, dbTest *dbtest.Test) (seedData, error) {
 	usrs, err := user.TestGenerateSeedUsers(1, user.RoleUser, dbTest.CoreAPIs.User)
 	if err != nil {
-		return seedData{}, fmt.Errorf("seeding products : %w", err)
+		return seedData{}, fmt.Errorf("seeding users : %w", err)
 	}
 
-	usrs2, err := user.TestGenerateSeedUsers(1, user.RoleAdmin, dbTest.CoreAPIs.User)
+	prds, err := product.TestGenerateSeedProducts(2, dbTest.CoreAPIs.Product, usrs[0].ID)
 	if err != nil {
 		return seedData{}, fmt.Errorf("seeding products : %w", err)
 	}
 
-	usrs = append(usrs, usrs2...)
-
-	tkns := make([]string, 2)
-	for i, usr := range usrs {
-		tkns[i] = dbTest.TokenV1(usr.Email.Address, fmt.Sprintf("Password%s", usr.Name[4:]))
-	}
-
-	prds, err := product.TestGenerateSeedProducts(1, dbTest.CoreAPIs.Product, usrs[0].ID)
-	if err != nil {
-		return seedData{}, fmt.Errorf("seeding products : %w", err)
-	}
-
-	prds2, err := product.TestGenerateSeedProducts(1, dbTest.CoreAPIs.Product, usrs[1].ID)
-	if err != nil {
-		return seedData{}, fmt.Errorf("seeding products : %w", err)
-	}
-
-	prds = append(prds, prds2...)
-
-	hmes, err := home.TestGenerateSeedHomes(1, dbTest.CoreAPIs.Home, usrs[0].ID)
+	hmes, err := home.TestGenerateSeedHomes(2, dbTest.CoreAPIs.Home, usrs[0].ID)
 	if err != nil {
 		return seedData{}, fmt.Errorf("seeding homes : %w", err)
 	}
 
-	hmes2, err := home.TestGenerateSeedHomes(1, dbTest.CoreAPIs.Home, usrs[1].ID)
-	if err != nil {
-		return seedData{}, fmt.Errorf("seeding homes : %w", err)
-	}
-
-	hmes = append(hmes, hmes2...)
-
-	sd := seedData{
-		tokens:   tkns,
-		users:    usrs,
+	tu1 := testUser{
+		User:     usrs[0],
+		token:    dbTest.TokenV1(usrs[0].Email.Address, fmt.Sprintf("Password%s", usrs[0].Name[4:])),
 		products: prds,
 		homes:    hmes,
+	}
+
+	// -------------------------------------------------------------------------
+
+	usrs, err = user.TestGenerateSeedUsers(1, user.RoleUser, dbTest.CoreAPIs.User)
+	if err != nil {
+		return seedData{}, fmt.Errorf("seeding users : %w", err)
+	}
+
+	tu2 := testUser{
+		User:  usrs[0],
+		token: dbTest.TokenV1(usrs[0].Email.Address, fmt.Sprintf("Password%s", usrs[0].Name[4:])),
+	}
+
+	// -------------------------------------------------------------------------
+
+	usrs, err = user.TestGenerateSeedUsers(1, user.RoleAdmin, dbTest.CoreAPIs.User)
+	if err != nil {
+		return seedData{}, fmt.Errorf("seeding users : %w", err)
+	}
+
+	prds, err = product.TestGenerateSeedProducts(2, dbTest.CoreAPIs.Product, usrs[0].ID)
+	if err != nil {
+		return seedData{}, fmt.Errorf("seeding products : %w", err)
+	}
+
+	hmes, err = home.TestGenerateSeedHomes(2, dbTest.CoreAPIs.Home, usrs[0].ID)
+	if err != nil {
+		return seedData{}, fmt.Errorf("seeding homes : %w", err)
+	}
+
+	tu3 := testUser{
+		User:     usrs[0],
+		token:    dbTest.TokenV1(usrs[0].Email.Address, fmt.Sprintf("Password%s", usrs[0].Name[4:])),
+		products: prds,
+		homes:    hmes,
+	}
+
+	// -------------------------------------------------------------------------
+
+	usrs, err = user.TestGenerateSeedUsers(1, user.RoleAdmin, dbTest.CoreAPIs.User)
+	if err != nil {
+		return seedData{}, fmt.Errorf("seeding users : %w", err)
+	}
+
+	tu4 := testUser{
+		User:  usrs[0],
+		token: dbTest.TokenV1(usrs[0].Email.Address, fmt.Sprintf("Password%s", usrs[0].Name[4:])),
+	}
+
+	// -------------------------------------------------------------------------
+
+	sd := seedData{
+		users:  []testUser{tu1, tu2},
+		admins: []testUser{tu3, tu4},
 	}
 
 	return sd, nil
@@ -226,6 +291,8 @@ func Test_Delete(t *testing.T) {
 			Auth:     dbTest.V1.Auth,
 			DB:       dbTest.DB,
 		}, all.Routes()),
+		userToken:  dbTest.TokenV1("user@example.com", "gophers"),
+		adminToken: dbTest.TokenV1("admin@example.com", "gophers"),
 	}
 
 	// -------------------------------------------------------------------------

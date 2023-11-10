@@ -31,7 +31,7 @@ func testCreate200(t *testing.T, app appTest, sd seedData) []tableData {
 		{
 			name:       "user",
 			url:        "/v1/users",
-			token:      sd.tokens[0],
+			token:      sd.admins[0].token,
 			method:     http.MethodPost,
 			statusCode: http.StatusCreated,
 			model: &usergrp.AppNewUser{
@@ -76,7 +76,7 @@ func testCreate200(t *testing.T, app appTest, sd seedData) []tableData {
 		{
 			name:       "product",
 			url:        "/v1/products",
-			token:      sd.tokens[0],
+			token:      sd.users[0].token,
 			method:     http.MethodPost,
 			statusCode: http.StatusCreated,
 			model: &productgrp.AppNewProduct{
@@ -117,7 +117,7 @@ func testCreate200(t *testing.T, app appTest, sd seedData) []tableData {
 		{
 			name:       "home",
 			url:        "/v1/homes",
-			token:      sd.tokens[0],
+			token:      sd.users[0].token,
 			method:     http.MethodPost,
 			statusCode: http.StatusCreated,
 			model: &homegrp.AppNewHome{
@@ -175,7 +175,7 @@ func testCreate401(t *testing.T, app appTest, sd seedData) []tableData {
 		{
 			name:       "user",
 			url:        "/v1/users",
-			token:      sd.tokens[0][:10],
+			token:      sd.admins[0].token[:10],
 			method:     http.MethodPost,
 			statusCode: http.StatusUnauthorized,
 			resp:       &response.ErrorDocument{},
@@ -189,7 +189,7 @@ func testCreate401(t *testing.T, app appTest, sd seedData) []tableData {
 		{
 			name:       "product",
 			url:        "/v1/products",
-			token:      sd.tokens[0][:10],
+			token:      sd.admins[0].token[:10],
 			method:     http.MethodPost,
 			statusCode: http.StatusUnauthorized,
 			resp:       &response.ErrorDocument{},
@@ -203,7 +203,7 @@ func testCreate401(t *testing.T, app appTest, sd seedData) []tableData {
 		{
 			name:       "home",
 			url:        "/v1/homes",
-			token:      sd.tokens[0][:10],
+			token:      sd.admins[0].token[:10],
 			method:     http.MethodPost,
 			statusCode: http.StatusUnauthorized,
 			resp:       &response.ErrorDocument{},
@@ -227,14 +227,23 @@ func createSeed(ctx context.Context, dbTest *dbtest.Test) (seedData, error) {
 		return seedData{}, fmt.Errorf("seeding users : %w", err)
 	}
 
-	tkns := make([]string, len(usrs))
-	for i, u := range usrs {
-		tkns[i] = dbTest.TokenV1(u.Email.Address, "gophers")
+	// -------------------------------------------------------------------------
+
+	tu1 := testUser{
+		User:  usrs[0],
+		token: dbTest.TokenV1(usrs[0].Email.Address, "gophers"),
 	}
 
+	tu2 := testUser{
+		User:  usrs[1],
+		token: dbTest.TokenV1(usrs[1].Email.Address, "gophers"),
+	}
+
+	// -------------------------------------------------------------------------
+
 	sd := seedData{
-		tokens: tkns,
-		users:  usrs,
+		admins: []testUser{tu1},
+		users:  []testUser{tu2},
 	}
 
 	return sd, nil
@@ -261,6 +270,8 @@ func Test_Create(t *testing.T) {
 			Auth:     dbTest.V1.Auth,
 			DB:       dbTest.DB,
 		}, all.Routes()),
+		userToken:  dbTest.TokenV1("user@example.com", "gophers"),
+		adminToken: dbTest.TokenV1("admin@example.com", "gophers"),
 	}
 
 	// -------------------------------------------------------------------------

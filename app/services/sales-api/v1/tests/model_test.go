@@ -24,11 +24,16 @@ type tableData struct {
 	cmpFunc    func(x interface{}, y interface{}) string
 }
 
-type seedData struct {
-	tokens   []string
-	users    []user.User
+type testUser struct {
+	user.User
+	token    string
 	products []product.Product
 	homes    []home.Home
+}
+
+type seedData struct {
+	users  []testUser
+	admins []testUser
 }
 
 // =============================================================================
