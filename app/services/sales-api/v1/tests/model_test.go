@@ -119,7 +119,7 @@ func toAppHome(hme home.Home) homegrp.AppHome {
 		ID:     hme.ID.String(),
 		UserID: hme.UserID.String(),
 		Type:   hme.Type.Name(),
-		Address: homegrp.AppNewAddress{
+		Address: homegrp.AppAddress{
 			Address1: hme.Address.Address1,
 			Address2: hme.Address.Address2,
 			ZipCode:  hme.Address.ZipCode,

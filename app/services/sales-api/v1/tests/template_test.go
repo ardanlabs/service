@@ -59,7 +59,7 @@ func nameSeed(ctx context.Context, dbTest *dbtest.Test) (seedData, error) {
 func Test_Name(t *testing.T) {
 	t.Parallel()
 
-	dbTest := dbtest.NewTest(t, c)
+	dbTest := dbtest.NewTest(t, c, "Test_Name")
 	defer func() {
 		if r := recover(); r != nil {
 			t.Log(r)
@@ -79,7 +79,6 @@ func Test_Name(t *testing.T) {
 
 	// -------------------------------------------------------------------------
 
-	t.Log("Seeding data ...")
 	sd, err := nameSeed(context.Background(), dbTest)
 	if err != nil {
 		t.Fatalf("Seeding error: %s", err)

@@ -88,7 +88,7 @@ func (a *App) EnableCORS(mw Middleware) {
 			Tracer:  a.tracer,
 			Now:     time.Now().UTC(),
 		}
-		ctx = SetValues(ctx, &v)
+		ctx = setValues(ctx, &v)
 
 		handler(ctx, w, r)
 	}
@@ -104,7 +104,7 @@ func (a *App) HandleNoMiddleware(method string, group string, path string, handl
 			Tracer:  nil,
 			Now:     time.Now().UTC(),
 		}
-		ctx := SetValues(r.Context(), &v)
+		ctx := setValues(r.Context(), &v)
 
 		if err := handler(ctx, w, r); err != nil {
 			if validateShutdown(err) {
@@ -137,7 +137,7 @@ func (a *App) Handle(method string, group string, path string, handler Handler, 
 			Tracer:  a.tracer,
 			Now:     time.Now().UTC(),
 		}
-		ctx = SetValues(ctx, &v)
+		ctx = setValues(ctx, &v)
 
 		if err := handler(ctx, w, r); err != nil {
 			if validateShutdown(err) {

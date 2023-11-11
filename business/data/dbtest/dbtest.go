@@ -72,7 +72,7 @@ type Test struct {
 // NewTest creates a test database inside a Docker container. It creates the
 // required table structure but the database is otherwise empty. It returns
 // the database to use as well as a function to call at the end of the test.
-func NewTest(t *testing.T, c *docker.Container) *Test {
+func NewTest(t *testing.T, c *docker.Container, name string) *Test {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -86,8 +86,6 @@ func NewTest(t *testing.T, c *docker.Container) *Test {
 	if err != nil {
 		t.Fatalf("Opening database connection: %v", err)
 	}
-
-	t.Log("Waiting for database to be ready ...")
 
 	if err := db.StatusCheck(ctx, dbM); err != nil {
 		t.Fatalf("status check database: %v", err)
@@ -105,8 +103,6 @@ func NewTest(t *testing.T, c *docker.Container) *Test {
 	}
 	dbM.Close()
 
-	t.Log("Database ready")
-
 	// -------------------------------------------------------------------------
 
 	db, err := db.Open(db.Config{
@@ -119,8 +115,6 @@ func NewTest(t *testing.T, c *docker.Container) *Test {
 	if err != nil {
 		t.Fatalf("Opening database connection: %v", err)
 	}
-
-	t.Log("Migrate and seed database ...")
 
 	if err := dbmigrate.Migrate(ctx, db); err != nil {
 		t.Logf("Logs for %s\n%s:", c.ID, docker.DumpContainerLogs(c.ID))
@@ -138,8 +132,6 @@ func NewTest(t *testing.T, c *docker.Container) *Test {
 	log := logger.New(&buf, logger.LevelInfo, "TEST", func(context.Context) string { return web.GetTraceID(ctx) })
 
 	coreAPIs := newCoreAPIs(log, db)
-
-	t.Log("Ready for testing ...")
 
 	// -------------------------------------------------------------------------
 
@@ -161,9 +153,9 @@ func NewTest(t *testing.T, c *docker.Container) *Test {
 		t.Helper()
 		db.Close()
 
-		fmt.Println("******************** LOGS ********************")
+		fmt.Printf("******************** LOGS (%s) ********************\n", name)
 		fmt.Print(buf.String())
-		fmt.Println("******************** LOGS ********************")
+		fmt.Printf("******************** LOGS (%s) ********************\n", name)
 	}
 
 	test := Test{
@@ -184,8 +176,6 @@ func NewTest(t *testing.T, c *docker.Container) *Test {
 
 // TokenV1 generates an authenticated token for a user.
 func (test *Test) TokenV1(email string, pass string) string {
-	test.t.Logf("Generating %q-%q token for test ...", email, pass)
-
 	addr, _ := mail.ParseAddress(email)
 
 	store := userdb.NewStore(test.Log, test.DB)

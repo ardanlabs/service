@@ -67,14 +67,14 @@ func toCoreNewUser(app AppNewUser) (user.NewUser, error) {
 	for i, roleStr := range app.Roles {
 		role, err := user.ParseRole(roleStr)
 		if err != nil {
-			return user.NewUser{}, fmt.Errorf("parsing role: %w", err)
+			return user.NewUser{}, fmt.Errorf("parse: %w", err)
 		}
 		roles[i] = role
 	}
 
 	addr, err := mail.ParseAddress(app.Email)
 	if err != nil {
-		return user.NewUser{}, fmt.Errorf("parsing email: %w", err)
+		return user.NewUser{}, fmt.Errorf("parse: %w", err)
 	}
 
 	usr := user.NewUser{
@@ -118,7 +118,7 @@ func toCoreUpdateUser(app AppUpdateUser) (user.UpdateUser, error) {
 		for i, roleStr := range app.Roles {
 			role, err := user.ParseRole(roleStr)
 			if err != nil {
-				return user.UpdateUser{}, fmt.Errorf("parsing role: %w", err)
+				return user.UpdateUser{}, fmt.Errorf("parse: %w", err)
 			}
 			roles[i] = role
 		}
@@ -129,7 +129,7 @@ func toCoreUpdateUser(app AppUpdateUser) (user.UpdateUser, error) {
 		var err error
 		addr, err = mail.ParseAddress(*app.Email)
 		if err != nil {
-			return user.UpdateUser{}, fmt.Errorf("parsing email: %w", err)
+			return user.UpdateUser{}, fmt.Errorf("parse: %w", err)
 		}
 	}
 

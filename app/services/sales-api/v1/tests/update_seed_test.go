@@ -41,12 +41,12 @@ func updateSeed(ctx context.Context, dbTest *dbtest.Test) (seedData, error) {
 		token: dbTest.TokenV1(usrs[1].Email.Address, "gophers"),
 	}
 
-	tu2.products, err = product.TestGenerateSeedProducts(5, dbTest.CoreAPIs.Product, tu2.ID)
+	tu2.products, err = product.TestGenerateSeedProducts(1, dbTest.CoreAPIs.Product, tu2.ID)
 	if err != nil {
 		return seedData{}, fmt.Errorf("seeding products2 : %w", err)
 	}
 
-	tu2.homes, err = home.TestGenerateSeedHomes(5, dbTest.CoreAPIs.Home, tu2.ID)
+	tu2.homes, err = home.TestGenerateSeedHomes(1, dbTest.CoreAPIs.Home, tu2.ID)
 	if err != nil {
 		return seedData{}, fmt.Errorf("seeding homes2 : %w", err)
 	}

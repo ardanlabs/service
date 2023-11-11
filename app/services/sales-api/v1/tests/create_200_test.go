@@ -11,10 +11,10 @@ import (
 	"github.com/google/uuid"
 )
 
-func testCreate200(t *testing.T, app appTest, sd seedData) []tableData {
+func userCreate200(t *testing.T, app appTest, sd seedData) []tableData {
 	table := []tableData{
 		{
-			name:       "user",
+			name:       "basic",
 			url:        "/v1/users",
 			token:      sd.admins[0].token,
 			method:     http.MethodPost,
@@ -58,8 +58,15 @@ func testCreate200(t *testing.T, app appTest, sd seedData) []tableData {
 				return cmp.Diff(x, y)
 			},
 		},
+	}
+
+	return table
+}
+
+func productCreate200(t *testing.T, app appTest, sd seedData) []tableData {
+	table := []tableData{
 		{
-			name:       "product",
+			name:       "basic",
 			url:        "/v1/products",
 			token:      sd.users[0].token,
 			method:     http.MethodPost,
@@ -99,8 +106,15 @@ func testCreate200(t *testing.T, app appTest, sd seedData) []tableData {
 				return cmp.Diff(x, y)
 			},
 		},
+	}
+
+	return table
+}
+
+func homeCreate200(t *testing.T, app appTest, sd seedData) []tableData {
+	table := []tableData{
 		{
-			name:       "home",
+			name:       "basic",
 			url:        "/v1/homes",
 			token:      sd.users[0].token,
 			method:     http.MethodPost,
@@ -119,7 +133,7 @@ func testCreate200(t *testing.T, app appTest, sd seedData) []tableData {
 			expResp: &homegrp.AppHome{
 				UserID: sd.users[0].ID.String(),
 				Type:   "SINGLE FAMILY",
-				Address: homegrp.AppNewAddress{
+				Address: homegrp.AppAddress{
 					Address1: "123 Mocking Bird Lane",
 					ZipCode:  "35810",
 					City:     "Huntsville",

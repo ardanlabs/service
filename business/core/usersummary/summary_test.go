@@ -61,7 +61,7 @@ func paging(t *testing.T) {
 
 	// -------------------------------------------------------------------------
 
-	test := dbtest.NewTest(t, c)
+	test := dbtest.NewTest(t, c, "Test_Product/paging")
 	defer func() {
 		if r := recover(); r != nil {
 			t.Log(r)

@@ -11,17 +11,10 @@ import (
 	v1 "github.com/ardanlabs/service/business/web/v1"
 )
 
-func deleteTests(t *testing.T, app appTest, sd seedData) {
-	app.test(t, testDelete200(t, app, sd), "delete200")
-	app.test(t, testDelete401(t, app, sd), "delete401")
-}
-
-// =============================================================================
-
 func Test_Delete(t *testing.T) {
 	t.Parallel()
 
-	dbTest := dbtest.NewTest(t, c)
+	dbTest := dbtest.NewTest(t, c, "Test_Delete")
 	defer func() {
 		if r := recover(); r != nil {
 			t.Log(r)
@@ -43,7 +36,6 @@ func Test_Delete(t *testing.T) {
 
 	// -------------------------------------------------------------------------
 
-	t.Log("Seeding data ...")
 	sd, err := deleteSeed(context.Background(), dbTest)
 	if err != nil {
 		t.Fatalf("Seeding error: %s", err)
@@ -51,5 +43,11 @@ func Test_Delete(t *testing.T) {
 
 	// -------------------------------------------------------------------------
 
-	deleteTests(t, app, sd)
+	app.test(t, userDelete200(t, app, sd), "user-200")
+	app.test(t, productDelete200(t, app, sd), "product-200")
+	app.test(t, homeDelete200(t, app, sd), "home-200")
+
+	app.test(t, userDelete401(t, app, sd), "user-401")
+	app.test(t, productDelete401(t, app, sd), "product-401")
+	app.test(t, homeDelete401(t, app, sd), "home-401")
 }

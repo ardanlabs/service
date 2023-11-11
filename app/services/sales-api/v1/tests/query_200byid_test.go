@@ -11,10 +11,10 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func testQueryByID200(t *testing.T, app appTest, sd seedData) []tableData {
+func userQueryByID200(t *testing.T, app appTest, sd seedData) []tableData {
 	table := []tableData{
 		{
-			name:       "user",
+			name:       "basic",
 			url:        fmt.Sprintf("/v1/users/%s", sd.users[0].ID),
 			token:      sd.users[0].token,
 			statusCode: http.StatusOK,
@@ -25,8 +25,15 @@ func testQueryByID200(t *testing.T, app appTest, sd seedData) []tableData {
 				return cmp.Diff(x, y)
 			},
 		},
+	}
+
+	return table
+}
+
+func productQueryByID200(t *testing.T, app appTest, sd seedData) []tableData {
+	table := []tableData{
 		{
-			name:       "product",
+			name:       "basic",
 			url:        fmt.Sprintf("/v1/products/%s", sd.users[0].products[0].ID),
 			token:      sd.users[0].token,
 			statusCode: http.StatusOK,
@@ -37,8 +44,15 @@ func testQueryByID200(t *testing.T, app appTest, sd seedData) []tableData {
 				return cmp.Diff(x, y)
 			},
 		},
+	}
+
+	return table
+}
+
+func homeQueryByID200(t *testing.T, app appTest, sd seedData) []tableData {
+	table := []tableData{
 		{
-			name:       "home",
+			name:       "basic",
 			url:        fmt.Sprintf("/v1/homes/%s", sd.users[0].homes[0].ID),
 			token:      sd.users[0].token,
 			statusCode: http.StatusOK,

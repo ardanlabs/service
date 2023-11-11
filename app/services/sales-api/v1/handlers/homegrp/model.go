@@ -6,28 +6,28 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/core/home"
-	"github.com/ardanlabs/service/business/web/v1/auth"
+	"github.com/ardanlabs/service/business/web/v1/mid"
 	"github.com/ardanlabs/service/foundation/validate"
 )
 
-// AppNewAddress defines the data needed to add a new address.
-type AppNewAddress struct {
-	Address1 string `json:"address1" validate:"required,min=1,max=70"`
-	Address2 string `json:"address2" validate:"omitempty,max=70"`
+// AppAddress represents an individual home address.
+type AppAddress struct {
+	Address1 string `json:"address1"`
+	Address2 string `json:"address2"`
 	ZipCode  string `json:"zipCode"`
 	City     string `json:"city"`
-	State    string `json:"state" validate:"required,min=1,max=48"`
-	Country  string `json:"country" validate:"required,iso3166_1_alpha2"`
+	State    string `json:"state"`
+	Country  string `json:"country"`
 }
 
 // AppHome represents an individual home.
 type AppHome struct {
-	ID          string        `json:"id"`
-	UserID      string        `json:"userID"`
-	Type        string        `json:"type"`
-	Address     AppNewAddress `json:"address"`
-	DateCreated string        `json:"dateCreated"`
-	DateUpdated string        `json:"dateUpdated"`
+	ID          string     `json:"id"`
+	UserID      string     `json:"userID"`
+	Type        string     `json:"type"`
+	Address     AppAddress `json:"address"`
+	DateCreated string     `json:"dateCreated"`
+	DateUpdated string     `json:"dateUpdated"`
 }
 
 func toAppHome(hme home.Home) AppHome {
@@ -35,7 +35,7 @@ func toAppHome(hme home.Home) AppHome {
 		ID:     hme.ID.String(),
 		UserID: hme.UserID.String(),
 		Type:   hme.Type.Name(),
-		Address: AppNewAddress{
+		Address: AppAddress{
 			Address1: hme.Address.Address1,
 			Address2: hme.Address.Address2,
 			ZipCode:  hme.Address.ZipCode,
@@ -59,6 +59,16 @@ func toAppHomes(homes []home.Home) []AppHome {
 
 // =============================================================================
 
+// AppNewAddress defines the data needed to add a new address.
+type AppNewAddress struct {
+	Address1 string `json:"address1" validate:"required,min=1,max=70"`
+	Address2 string `json:"address2" validate:"omitempty,max=70"`
+	ZipCode  string `json:"zipCode"`
+	City     string `json:"city"`
+	State    string `json:"state" validate:"required,min=1,max=48"`
+	Country  string `json:"country" validate:"required,iso3166_1_alpha2"`
+}
+
 // AppNewHome is what we require from clients when adding a Home.
 type AppNewHome struct {
 	Type    string        `json:"type" validate:"required"`
@@ -68,11 +78,11 @@ type AppNewHome struct {
 func toCoreNewHome(ctx context.Context, app AppNewHome) (home.NewHome, error) {
 	typ, err := home.ParseType(app.Type)
 	if err != nil {
-		return home.NewHome{}, fmt.Errorf("passing housing type: %w", err)
+		return home.NewHome{}, fmt.Errorf("parse: %w", err)
 	}
 
 	hme := home.NewHome{
-		UserID: auth.GetUserID(ctx),
+		UserID: mid.GetUserID(ctx),
 		Type:   typ,
 		Address: home.Address{
 			Address1: app.Address.Address1,
@@ -109,16 +119,29 @@ type AppUpdateAddress struct {
 	Country  *string `json:"country" validate:"omitempty,iso3166_1_alpha2"`
 }
 
+// Validate checks the data in the model is considered clean.
+func (app AppUpdateAddress) Validate() error {
+	if err := validate.Check(app); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // AppUpdateHome contains informations needed to update a product.
 type AppUpdateHome struct {
-	Type    *string           `json:"type" validate:"omitempty"`
+	Type    *string           `json:"type"`
 	Address *AppUpdateAddress `json:"address"`
 }
 
 func toCoreUpdateHome(app AppUpdateHome) (home.UpdateHome, error) {
-	typ, err := home.ParseType(*app.Type)
-	if err != nil {
-		return home.UpdateHome{}, fmt.Errorf("passing housing type: %w", err)
+	var typ home.Type
+	if app.Type != nil {
+		var err error
+		typ, err = home.ParseType(*app.Type)
+		if err != nil {
+			return home.UpdateHome{}, fmt.Errorf("parse: %w", err)
+		}
 	}
 
 	core := home.UpdateHome{

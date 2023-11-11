@@ -13,7 +13,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func testQuery200(t *testing.T, app appTest, sd seedData) []tableData {
+func userQuery200(t *testing.T, app appTest, sd seedData) []tableData {
 	usrs := make([]user.User, 0, len(sd.admins)+len(sd.users))
 	usrsMap := make(map[uuid.UUID]user.User)
 	for _, adm := range sd.admins {
@@ -27,7 +27,7 @@ func testQuery200(t *testing.T, app appTest, sd seedData) []tableData {
 
 	table := []tableData{
 		{
-			name:       "user",
+			name:       "basic",
 			url:        "/v1/users?page=1&rows=2&orderBy=user_id,DESC",
 			token:      sd.admins[0].token,
 			statusCode: http.StatusOK,
@@ -43,8 +43,23 @@ func testQuery200(t *testing.T, app appTest, sd seedData) []tableData {
 				return cmp.Diff(x, y)
 			},
 		},
+	}
+
+	return table
+}
+
+func productQuery200(t *testing.T, app appTest, sd seedData) []tableData {
+	usrsMap := make(map[uuid.UUID]user.User)
+	for _, adm := range sd.admins {
+		usrsMap[adm.ID] = adm.User
+	}
+	for _, usr := range sd.users {
+		usrsMap[usr.ID] = usr.User
+	}
+
+	table := []tableData{
 		{
-			name:       "product",
+			name:       "basic",
 			url:        "/v1/products?page=1&rows=10&orderBy=user_id,DESC",
 			token:      sd.admins[0].token,
 			statusCode: http.StatusOK,
@@ -60,8 +75,23 @@ func testQuery200(t *testing.T, app appTest, sd seedData) []tableData {
 				return cmp.Diff(x, y)
 			},
 		},
+	}
+
+	return table
+}
+
+func homeQuery200(t *testing.T, app appTest, sd seedData) []tableData {
+	usrsMap := make(map[uuid.UUID]user.User)
+	for _, adm := range sd.admins {
+		usrsMap[adm.ID] = adm.User
+	}
+	for _, usr := range sd.users {
+		usrsMap[usr.ID] = usr.User
+	}
+
+	table := []tableData{
 		{
-			name:       "home",
+			name:       "basic",
 			url:        "/v1/homes?page=1&rows=10&orderBy=user_id,DESC",
 			token:      sd.admins[0].token,
 			statusCode: http.StatusOK,

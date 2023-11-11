@@ -11,17 +11,10 @@ import (
 	v1 "github.com/ardanlabs/service/business/web/v1"
 )
 
-func queryTests(t *testing.T, app appTest, sd seedData) {
-	app.test(t, testQuery200(t, app, sd), "query200")
-	app.test(t, testQueryByID200(t, app, sd), "queryByID200")
-}
-
-// =============================================================================
-
 func Test_Query(t *testing.T) {
 	t.Parallel()
 
-	dbTest := dbtest.NewTest(t, c)
+	dbTest := dbtest.NewTest(t, c, "Test_Query")
 	defer func() {
 		if r := recover(); r != nil {
 			t.Log(r)
@@ -43,7 +36,6 @@ func Test_Query(t *testing.T) {
 
 	// -------------------------------------------------------------------------
 
-	t.Log("Seeding data ...")
 	sd, err := querySeed(context.Background(), dbTest)
 	if err != nil {
 		t.Fatalf("Seeding error: %s", err)
@@ -51,5 +43,11 @@ func Test_Query(t *testing.T) {
 
 	// -------------------------------------------------------------------------
 
-	queryTests(t, app, sd)
+	app.test(t, userQuery200(t, app, sd), "user-200")
+	app.test(t, productQuery200(t, app, sd), "product-200")
+	app.test(t, homeQuery200(t, app, sd), "home-200")
+
+	app.test(t, userQueryByID200(t, app, sd), "user-byid-200")
+	app.test(t, productQueryByID200(t, app, sd), "product-byid-200")
+	app.test(t, homeQueryByID200(t, app, sd), "home-byid-200")
 }

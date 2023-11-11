@@ -11,16 +11,10 @@ import (
 	v1 "github.com/ardanlabs/service/business/web/v1"
 )
 
-func updateTests(t *testing.T, app appTest, sd seedData) {
-	app.test(t, testUpdate200(t, app, sd), "update200")
-}
-
-// =============================================================================
-
 func Test_Update(t *testing.T) {
 	t.Parallel()
 
-	dbTest := dbtest.NewTest(t, c)
+	dbTest := dbtest.NewTest(t, c, "Test_Update")
 	defer func() {
 		if r := recover(); r != nil {
 			t.Log(r)
@@ -42,7 +36,6 @@ func Test_Update(t *testing.T) {
 
 	// -------------------------------------------------------------------------
 
-	t.Log("Seeding data ...")
 	sd, err := updateSeed(context.Background(), dbTest)
 	if err != nil {
 		t.Fatalf("Seeding error: %s", err)
@@ -50,5 +43,15 @@ func Test_Update(t *testing.T) {
 
 	// -------------------------------------------------------------------------
 
-	updateTests(t, app, sd)
+	app.test(t, userUpdate200(t, app, sd), "user-200")
+	app.test(t, productUpdate200(t, app, sd), "product-200")
+	app.test(t, homeUpdate200(t, app, sd), "home-200")
+
+	app.test(t, userUpdate401(t, app, sd), "user-401")
+	app.test(t, productUpdate401(t, app, sd), "product-401")
+	app.test(t, homeUpdate401(t, app, sd), "home-401")
+
+	app.test(t, userUpdate400(t, app, sd), "user-400")
+	app.test(t, productUpdate400(t, app, sd), "product-400")
+	app.test(t, homeUpdate400(t, app, sd), "home-400")
 }

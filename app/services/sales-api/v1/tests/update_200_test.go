@@ -13,10 +13,10 @@ import (
 	"github.com/google/uuid"
 )
 
-func testUpdate200(t *testing.T, app appTest, sd seedData) []tableData {
+func userUpdate200(t *testing.T, app appTest, sd seedData) []tableData {
 	table := []tableData{
 		{
-			name:       "user",
+			name:       "basic",
 			url:        fmt.Sprintf("/v1/users/%s", sd.users[0].ID),
 			token:      sd.users[0].token,
 			method:     http.MethodPut,
@@ -60,8 +60,15 @@ func testUpdate200(t *testing.T, app appTest, sd seedData) []tableData {
 				return cmp.Diff(x, y)
 			},
 		},
+	}
+
+	return table
+}
+
+func productUpdate200(t *testing.T, app appTest, sd seedData) []tableData {
+	table := []tableData{
 		{
-			name:       "product",
+			name:       "basic",
 			url:        fmt.Sprintf("/v1/products/%s", sd.users[0].products[0].ID),
 			token:      sd.users[0].token,
 			method:     http.MethodPut,
@@ -101,8 +108,15 @@ func testUpdate200(t *testing.T, app appTest, sd seedData) []tableData {
 				return cmp.Diff(x, y)
 			},
 		},
+	}
+
+	return table
+}
+
+func homeUpdate200(t *testing.T, app appTest, sd seedData) []tableData {
+	table := []tableData{
 		{
-			name:       "home",
+			name:       "basic",
 			url:        fmt.Sprintf("/v1/homes/%s", sd.users[0].homes[0].ID),
 			token:      sd.users[0].token,
 			method:     http.MethodPut,
@@ -122,7 +136,7 @@ func testUpdate200(t *testing.T, app appTest, sd seedData) []tableData {
 			expResp: &homegrp.AppHome{
 				UserID: sd.users[0].ID.String(),
 				Type:   "SINGLE FAMILY",
-				Address: homegrp.AppNewAddress{
+				Address: homegrp.AppAddress{
 					Address1: "123 Mocking Bird Lane",
 					Address2: "apt 105",
 					ZipCode:  "35810",
