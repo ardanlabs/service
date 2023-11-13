@@ -6,7 +6,7 @@ import (
 
 	"github.com/ardanlabs/service/business/core/product"
 	"github.com/ardanlabs/service/business/core/user"
-	"github.com/ardanlabs/service/business/web/v1/auth"
+	"github.com/ardanlabs/service/business/web/v1/mid"
 	"github.com/ardanlabs/service/foundation/validate"
 	"github.com/google/uuid"
 )
@@ -79,15 +79,15 @@ type AppNewProduct struct {
 	Quantity int     `json:"quantity" validate:"gte=1"`
 }
 
-func toCoreNewProduct(ctx context.Context, app AppNewProduct) (product.NewProduct, error) {
+func toCoreNewProduct(ctx context.Context, app AppNewProduct) product.NewProduct {
 	prd := product.NewProduct{
-		UserID:   auth.GetUserID(ctx),
+		UserID:   mid.GetUserID(ctx),
 		Name:     app.Name,
 		Cost:     app.Cost,
 		Quantity: app.Quantity,
 	}
 
-	return prd, nil
+	return prd
 }
 
 // Validate checks the data in the model is considered clean.

@@ -24,11 +24,16 @@ type tableData struct {
 	cmpFunc    func(x interface{}, y interface{}) string
 }
 
-type seedData struct {
-	tokens   []string
-	users    []user.User
+type testUser struct {
+	user.User
+	token    string
 	products []product.Product
 	homes    []home.Home
+}
+
+type seedData struct {
+	users  []testUser
+	admins []testUser
 }
 
 // =============================================================================
@@ -114,7 +119,7 @@ func toAppHome(hme home.Home) homegrp.AppHome {
 		ID:     hme.ID.String(),
 		UserID: hme.UserID.String(),
 		Type:   hme.Type.Name(),
-		Address: homegrp.AppNewAddress{
+		Address: homegrp.AppAddress{
 			Address1: hme.Address.Address1,
 			Address2: hme.Address.Address2,
 			ZipCode:  hme.Address.ZipCode,

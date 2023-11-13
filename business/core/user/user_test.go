@@ -50,7 +50,7 @@ func crud(t *testing.T) {
 
 	// -------------------------------------------------------------------------
 
-	test := dbtest.NewTest(t, c)
+	test := dbtest.NewTest(t, c, "Test_User/crud")
 	defer func() {
 		if r := recover(); r != nil {
 			t.Log(r)
@@ -157,7 +157,7 @@ func crud(t *testing.T) {
 }
 
 func paging(t *testing.T) {
-	test := dbtest.NewTest(t, c)
+	test := dbtest.NewTest(t, c, "Test_User/paging")
 	defer func() {
 		if r := recover(); r != nil {
 			t.Log(r)

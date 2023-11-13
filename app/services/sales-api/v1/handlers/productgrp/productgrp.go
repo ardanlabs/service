@@ -42,12 +42,7 @@ func (h *Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Re
 		return response.NewError(err, http.StatusBadRequest)
 	}
 
-	np, err := toCoreNewProduct(ctx, app)
-	if err != nil {
-		return response.NewError(err, http.StatusBadRequest)
-	}
-
-	prd, err := h.product.Create(ctx, np)
+	prd, err := h.product.Create(ctx, toCoreNewProduct(ctx, app))
 	if err != nil {
 		return fmt.Errorf("create: app[%+v]: %w", app, err)
 	}

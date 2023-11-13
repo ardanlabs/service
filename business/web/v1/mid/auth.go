@@ -15,10 +15,12 @@ import (
 	"github.com/google/uuid"
 )
 
-// Set of error variables for handling user group errors.
+// Set of error variables for handling auth errors.
 var (
 	ErrInvalidID = errors.New("ID is not in its proper form")
 )
+
+// =============================================================================
 
 // Authenticate validates a JWT from the `Authorization` header.
 func Authenticate(a *auth.Auth) web.Middleware {
@@ -38,8 +40,8 @@ func Authenticate(a *auth.Auth) web.Middleware {
 				return response.NewError(ErrInvalidID, http.StatusBadRequest)
 			}
 
-			ctx = auth.SetUserID(ctx, subjectID)
-			ctx = auth.SetClaims(ctx, claims)
+			ctx = setUserID(ctx, subjectID)
+			ctx = setClaims(ctx, claims)
 
 			return handler(ctx, w, r)
 		}
@@ -50,12 +52,11 @@ func Authenticate(a *auth.Auth) web.Middleware {
 	return m
 }
 
-// Authorize validates that an authenticated user has at least one role from a
-// specified list. This method constructs the actual function that is used.
+// Authorize executes the specified role and does not extract any domain data.
 func Authorize(a *auth.Auth, rule string) web.Middleware {
 	m := func(handler web.Handler) web.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-			claims := auth.GetClaims(ctx)
+			claims := getClaims(ctx)
 			if err := a.Authorize(ctx, claims, uuid.UUID{}, rule); err != nil {
 				return auth.NewAuthError("authorize: you are not authorized for that action, claims[%v] rule[%v]: %s", claims.Roles, rule, err)
 			}
@@ -69,8 +70,10 @@ func Authorize(a *auth.Auth, rule string) web.Middleware {
 	return m
 }
 
-// AuthorizeUser validates that an authenticated user has at least one role from a
-// specified list. This method constructs the actual function that is used.
+// AuthorizeUser executes the specified role and extracts the specified user
+// from the DB if a user id is specified in the call. Depending on the rule
+// specified, the userid from the claims may be compared with the specified
+// user id.
 func AuthorizeUser(a *auth.Auth, rule string, usrCore *user.Core) web.Middleware {
 	m := func(handler web.Handler) web.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
@@ -93,10 +96,10 @@ func AuthorizeUser(a *auth.Auth, rule string, usrCore *user.Core) web.Middleware
 					}
 				}
 
-				ctx = SetUser(ctx, usr)
+				ctx = setUser(ctx, usr)
 			}
 
-			claims := auth.GetClaims(ctx)
+			claims := getClaims(ctx)
 			if err := a.Authorize(ctx, claims, userID, rule); err != nil {
 				return auth.NewAuthError("authorize: you are not authorized for that action, claims[%v] rule[%v]: %s", claims.Roles, rule, err)
 			}
@@ -110,6 +113,10 @@ func AuthorizeUser(a *auth.Auth, rule string, usrCore *user.Core) web.Middleware
 	return m
 }
 
+// AuthorizeProduct executes the specified role and extracts the specified
+// product from the DB if a product id is specified in the call. Depending on
+// the rule specified, the userid from the claims may be compared with the
+// specified user id from the product.
 func AuthorizeProduct(a *auth.Auth, rule string, prdCore *product.Core) web.Middleware {
 	m := func(handler web.Handler) web.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
@@ -133,10 +140,11 @@ func AuthorizeProduct(a *auth.Auth, rule string, prdCore *product.Core) web.Midd
 				}
 
 				userID = prd.UserID
-				ctx = SetProduct(ctx, prd)
+				ctx = setProduct(ctx, prd)
 			}
 
-			claims := auth.GetClaims(ctx)
+			claims := getClaims(ctx)
+
 			if err := a.Authorize(ctx, claims, userID, rule); err != nil {
 				return auth.NewAuthError("authorize: you are not authorized for that action, claims[%v] rule[%v]: %s", claims.Roles, rule, err)
 			}
@@ -150,6 +158,10 @@ func AuthorizeProduct(a *auth.Auth, rule string, prdCore *product.Core) web.Midd
 	return m
 }
 
+// AuthorizeHome executes the specified role and extracts the specified
+// home from the DB if a home id is specified in the call. Depending on
+// the rule specified, the userid from the claims may be compared with the
+// specified user id from the home.
 func AuthorizeHome(a *auth.Auth, rule string, hmeCore *home.Core) web.Middleware {
 	m := func(handler web.Handler) web.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
@@ -173,10 +185,10 @@ func AuthorizeHome(a *auth.Auth, rule string, hmeCore *home.Core) web.Middleware
 				}
 
 				userID = hme.UserID
-				ctx = SetHome(ctx, hme)
+				ctx = setHome(ctx, hme)
 			}
 
-			claims := auth.GetClaims(ctx)
+			claims := getClaims(ctx)
 			if err := a.Authorize(ctx, claims, userID, rule); err != nil {
 				return auth.NewAuthError("authorize: you are not authorized for that action, claims[%v] rule[%v]: %s", claims.Roles, rule, err)
 			}
