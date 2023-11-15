@@ -26,7 +26,7 @@ const (
 
 // GetUserID returns the claims from the context.
 func GetUserID(ctx context.Context) uuid.UUID {
-	v, ok := ctx.Value(userKey).(uuid.UUID)
+	v, ok := ctx.Value(userIDKey).(uuid.UUID)
 	if !ok {
 		return uuid.UUID{}
 	}
@@ -75,7 +75,7 @@ func getClaims(ctx context.Context) auth.Claims {
 }
 
 func setUserID(ctx context.Context, userID uuid.UUID) context.Context {
-	return context.WithValue(ctx, userKey, userID)
+	return context.WithValue(ctx, userIDKey, userID)
 }
 
 func setUser(ctx context.Context, usr user.User) context.Context {
