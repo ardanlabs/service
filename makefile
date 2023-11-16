@@ -163,6 +163,7 @@ service:
 	docker build \
 		-f zarf/docker/dockerfile.service \
 		-t $(SERVICE_IMAGE) \
+		-t docker-io/$(SERVICE_IMAGE) \
 		--build-arg BUILD_REF=$(VERSION) \
 		--build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
 		.
@@ -171,6 +172,7 @@ metrics:
 	docker build \
 		-f zarf/docker/dockerfile.metrics \
 		-t $(METRICS_IMAGE) \
+		-t docker-io/$(METRICS_IMAGE) \
 		--build-arg BUILD_REF=$(VERSION) \
 		--build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
 		.
@@ -210,6 +212,16 @@ dev-load:
 
 	cd zarf/k8s/dev/sales; kustomize edit set image metrics-image=$(METRICS_IMAGE)
 	kind load docker-image $(METRICS_IMAGE) --name $(KIND_CLUSTER)
+#podman is currently experimental, and fails for some reason with kind load docker-image (possibly a tagging issue?) but the below works
+dev-save-load:
+	cd zarf/k8s/dev/sales; kustomize edit set image service-image=$(SERVICE_IMAGE)
+	cd zarf/k8s/dev/sales; kustomize edit set image metrics-image=$(METRICS_IMAGE)
+	rm -f image-sales-metrics image-sales
+	docker image save docker.io/ardanlabs/service/sales-api-metrics:0.0.1 -o image-sales-metrics
+	kind load image-archive image-sales-metrics --name ardan-starter-cluster
+	docker image save docker.io/ardanlabs/service/sales-api:0.0.1 -o image-sales
+	kind load image-archive image-sales --name ardan-starter-cluster
+	rm -f image-sales-metrics image-sales
 
 dev-apply:
 	kustomize build zarf/k8s/dev/grafana | kubectl apply -f -
