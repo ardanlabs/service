@@ -208,10 +208,10 @@ dev-status:
 
 dev-load:
 	cd zarf/k8s/dev/sales; kustomize edit set image service-image=$(SERVICE_IMAGE)
-	kind load docker-image $(SERVICE_IMAGE) --name $(KIND_CLUSTER)
+	kind load docker-image docker.io/$(SERVICE_IMAGE) --name $(KIND_CLUSTER)
 
 	cd zarf/k8s/dev/sales; kustomize edit set image metrics-image=$(METRICS_IMAGE)
-	kind load docker-image $(METRICS_IMAGE) --name $(KIND_CLUSTER)
+	kind load docker-image docker.io/$(METRICS_IMAGE) --name $(KIND_CLUSTER)
 #podman is currently experimental, and fails for some reason with kind load docker-image (possibly a tagging issue?) but the below works
 dev-save-load:
 	cd zarf/k8s/dev/sales; kustomize edit set image service-image=$(SERVICE_IMAGE)
