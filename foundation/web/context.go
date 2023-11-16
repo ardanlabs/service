@@ -6,6 +6,7 @@ import (
 
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel/trace/noop"
 )
 
 type ctxKey int
@@ -30,7 +31,7 @@ func GetValues(ctx context.Context) *Values {
 	if !ok {
 		return &Values{
 			TraceID: "00000000-0000-0000-0000-000000000000",
-			Tracer:  trace.NewNoopTracerProvider().Tracer(""),
+			Tracer:  noop.NewTracerProvider().Tracer(""),
 			Now:     time.Now(),
 		}
 	}

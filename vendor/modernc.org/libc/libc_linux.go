@@ -7,6 +7,7 @@ package libc // import "modernc.org/libc"
 import (
 	// "encoding/hex"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -1431,7 +1432,14 @@ func Xungetc(t *TLS, c int32, stream uintptr) int32 {
 	if __ccgo_strace {
 		trc("t=%v c=%v stream=%v, (%v:)", t, c, stream, origin(2))
 	}
-	panic(todo(""))
+	if c == stdio.EOF {
+		return c
+	}
+
+	ungetcMu.Lock()
+	ungetc[stream] = byte(c)
+	ungetcMu.Unlock()
+	return int32(byte(c))
 }
 
 // int fscanf(FILE *stream, const char *format, ...);
@@ -1439,7 +1447,7 @@ func Xfscanf(t *TLS, stream, format, va uintptr) int32 {
 	if __ccgo_strace {
 		trc("t=%v va=%v, (%v:)", t, va, origin(2))
 	}
-	panic(todo(""))
+	return scanf(&byteScanner{t: t, stream: stream}, format, va)
 }
 
 // int fputs(const char *s, FILE *stream);
@@ -1756,6 +1764,14 @@ func Xfgetc(t *TLS, stream uintptr) int32 {
 	if __ccgo_strace {
 		trc("t=%v stream=%v, (%v:)", t, stream, origin(2))
 	}
+	ungetcMu.Lock()
+	c, ok := ungetc[stream]
+	delete(ungetc, stream)
+	ungetcMu.Unlock()
+	if ok {
+		return int32(c)
+	}
+
 	fd := int((*stdio.FILE)(unsafe.Pointer(stream)).F_fileno)
 	var buf [1]byte
 	if n, _ := unix.Read(fd, buf[:]); n != 0 {
@@ -1976,4 +1992,26 @@ func Xfeof(t *TLS, f uintptr) (r int32) {
 	r = BoolInt32(!!((*stdio.FILE)(unsafe.Pointer(f)).F_flags&Int32FromInt32(m_F_EOF) != 0))
 	X__unlockfile(t, f)
 	return r
+}
+
+type byteScanner struct {
+	t      *TLS
+	stream uintptr
+
+	last byte
+}
+
+func (s *byteScanner) ReadByte() (byte, error) {
+	c := Xfgetc(s.t, s.stream)
+	if c < 0 {
+		return 0, io.EOF
+	}
+
+	s.last = byte(c)
+	return byte(c), nil
+}
+
+func (s *byteScanner) UnreadByte() error {
+	Xungetc(s.t, int32(s.last), s.stream)
+	return nil
 }

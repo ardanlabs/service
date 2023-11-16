@@ -239,6 +239,38 @@ more:
 
 		f := spec + "o"
 		str = fmt.Sprintf(f, arg)
+	case 'b':
+		// Base 2.
+		format++
+		var arg uint64
+		if isWindows && mod == modL {
+			mod = modNone
+		}
+		switch mod {
+		case modNone:
+			arg = uint64(VaUint32(args))
+		case modL, modLL, mod64:
+			arg = VaUint64(args)
+		case modH:
+			arg = uint64(uint16(VaInt32(args)))
+		case modHH:
+			arg = uint64(uint8(VaInt32(args)))
+		case mod32:
+			arg = uint64(VaInt32(args))
+		default:
+			panic(todo("", mod))
+		}
+
+		if arg == 0 && hasPrecision && prec == 0 {
+			break
+		}
+
+		if hasPrecision {
+			panic(todo("", prec))
+		}
+
+		f := spec + "b"
+		str = fmt.Sprintf(f, arg)
 	case 'I':
 		if !isWindows {
 			panic(todo("%#U", c))

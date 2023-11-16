@@ -729,3 +729,7 @@ func Xrewinddir(tls *TLS, f uintptr) {
 	}
 	Xfseek(tls, f, 0, stdio.SEEK_SET)
 }
+
+func AtomicLoadNUint8(ptr uintptr, memorder int32) uint8 {
+	return byte(a_load_8(ptr))
+}

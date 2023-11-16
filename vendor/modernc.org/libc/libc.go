@@ -53,6 +53,8 @@ var (
 	allocMu            sync.Mutex
 	environInitialized bool
 	isWindows          bool
+	ungetcMu           sync.Mutex
+	ungetc             = map[uintptr]byte{}
 )
 
 // Keep these outside of the var block otherwise go generate will miss them.

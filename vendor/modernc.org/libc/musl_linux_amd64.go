@@ -5840,12 +5840,7 @@ func Xvfscanf(tls *TLS, f uintptr, fmt uintptr, ap va_list) int32 { /* vfscanf.c
 	dest = uintptr(0)
 	matches = 0
 	pos = int64(0)
-	__need_unlock = func() int32 {
-		if (*FILE)(unsafe.Pointer(f)).lock >= 0 {
-			return X__lockfile(tls, f)
-		}
-		return 0
-	}()
+	__need_unlock = 0
 
 	if !!(int32((*FILE)(unsafe.Pointer(f)).rpos) != 0) {
 		goto __1

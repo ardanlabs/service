@@ -104,11 +104,11 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 GOLANG          := golang:1.21.4
 ALPINE          := alpine:3.18
 KIND            := kindest/node:v1.27.3
-POSTGRES        := postgres:15.4
+POSTGRES        := postgres:15.5
 VAULT           := hashicorp/vault:1.15
-GRAFANA         := grafana/grafana:10.1.0
-PROMETHEUS      := prom/prometheus:v2.47.0
-TEMPO           := grafana/tempo:2.2.0
+GRAFANA         := grafana/grafana:10.2.0
+PROMETHEUS      := prom/prometheus:v2.48.0
+TEMPO           := grafana/tempo:2.3.0
 LOKI            := grafana/loki:2.9.0
 PROMTAIL        := grafana/promtail:2.9.0
 
