@@ -155,27 +155,27 @@ func (a *App) Handle(method string, group string, path string, handler Handler, 
 	a.mux.Handle(method, finalPath, h)
 }
 
-// GET is a shortcut for app.Handle(http.MethodGet, path, handler).
+// Get is a shortcut for app.Handle(http.MethodGet, path, handler).
 func (a *App) Get(group string, path string, handler Handler, mw ...Middleware) {
 	a.Handle(http.MethodGet, group, path, handler, mw...)
 }
 
-// POST is a shortcut for app.Handle(http.MethodPost, path, handler).
+// Post is a shortcut for app.Handle(http.MethodPost, path, handler).
 func (a *App) Post(group string, path string, handler Handler, mw ...Middleware) {
 	a.Handle(http.MethodPost, group, path, handler, mw...)
 }
 
-// PUT is a shortcut for app.Handle(http.MethodPut, path, handler).
+// Put is a shortcut for app.Handle(http.MethodPut, path, handler).
 func (a *App) Put(group string, path string, handler Handler, mw ...Middleware) {
 	a.Handle(http.MethodPut, group, path, handler, mw...)
 }
 
-// DELETE is a shortcut for app.Handle(http.MethodDelete, path, handler).
+// Delete is a shortcut for app.Handle(http.MethodDelete, path, handler).
 func (a *App) Delete(group string, path string, handler Handler, mw ...Middleware) {
 	a.Handle(http.MethodDelete, group, path, handler, mw...)
 }
 
-// PATCH is a shortcut for app.Handle(http.MethodPatch, path, handler).
+// Patch is a shortcut for app.Handle(http.MethodPatch, path, handler).
 func (a *App) Patch(group string, path string, handler Handler, mw ...Middleware) {
 	a.Handle(http.MethodPatch, group, path, handler, mw...)
 }
