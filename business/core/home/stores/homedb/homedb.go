@@ -119,8 +119,8 @@ func (s *Store) Query(ctx context.Context, filter home.QueryFilter, orderBy orde
 	return hmes, nil
 }
 
-// Update modifies data about a Product. It will error if the specified ID is
-// invalid or does not reference an existing Product.
+// Update modifies data about a Home. It will error if the specified ID is
+// invalid or does not reference an existing Home.
 func (s *Store) Update(ctx context.Context, hme home.Home) error {
 	const q = `
     UPDATE

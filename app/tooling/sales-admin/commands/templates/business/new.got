@@ -1,0 +1,128 @@
+// Package {{.DomainL}} provides a business access to {{.DomainL}} data in the system.
+package {{.DomainL}}
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"time"
+
+	"github.com/ardanlabs/service/business/core/event"
+	"github.com/ardanlabs/service/business/data/order"
+	"github.com/ardanlabs/service/business/data/transaction"
+	"github.com/ardanlabs/service/foundation/logger"
+	"github.com/google/uuid"
+)
+
+// Set of error variables for CRUD operations.
+var (
+	ErrNotFound = errors.New("{{.DomainL}} not found")
+)
+
+// Storer interface declares the behaviour this package needs to persist and
+// retrieve data
+type Storer interface {
+	ExecuteUnderTransaction(tx transaction.Transaction) (Storer, error)
+	Create(ctx context.Context, {{.DomainVar}} {{.DomainU}}) error
+	Update(ctx context.Context, {{.DomainVar}} {{.DomainU}}) error
+	Delete(ctx context.Context, {{.DomainVar}} {{.DomainU}}) error
+	Query(ctx context.Context, filter QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]{{.DomainU}}, error)
+	Count(ctx context.Context, filter QueryFilter) (int, error)
+	QueryByID(ctx context.Context, {{.DomainL}}ID uuid.UUID) ({{.DomainU}}, error)
+}
+
+// =============================================================================
+
+// Core manages the set of APIs for {{.DomainL}} api access.
+type Core struct {
+	log     *logger.Logger
+	evnCore *event.Core
+	storer  Storer
+}
+
+func NewCore(log *logger.Logger, evnCore *event.Core, storer Storer) *Core {
+	return &Core{
+		log:     log,
+		evnCore: evnCore,
+		storer:  storer,
+	}
+}
+
+// ExecuteUnderTransaction constructs a new Core value that will use the
+// specified transaction in any store related calls.
+func (c *Core) ExecuteUnderTransaction(tx transaction.Transaction) (*Core, error) {
+	storer, err := c.storer.ExecuteUnderTransaction(tx)
+	if err != nil {
+		return nil, err
+	}
+
+	core := Core{
+		storer:  storer,
+		evnCore: c.evnCore,
+		log:     c.log,
+	}
+
+	return &core, nil
+}
+
+// Create adds a new {{.DomainL}} to the system.
+func (c *Core) Create(ctx context.Context, {{.DomainNewVar}} New{{.DomainU}}) ({{.DomainU}}, error) {
+	now := time.Now()
+
+	{{.DomainVar}} := {{.DomainU}}{
+		ID:   uuid.New(),
+		DateCreated: now,
+		DateUpdated: now,
+	}
+
+	if err := c.storer.Create(ctx, {{.DomainVar}}); err != nil {
+		return {{.DomainU}}{}, fmt.Errorf("create: %w", err)
+	}
+
+	return {{.DomainVar}}, nil
+}
+
+// Update modifies information about a {{.DomainL}}.
+func (c *Core) Update(ctx context.Context, {{.DomainVar}} {{.DomainU}}, {{.DomainUpdVar}} Update{{.DomainU}}) ({{.DomainU}}, error) {
+	{{.DomainVar}}.DateUpdated = time.Now()
+
+	if err := c.storer.Update(ctx, {{.DomainVar}}); err != nil {
+		return {{.DomainU}}{}, fmt.Errorf("update: %w", err)
+	}
+
+	return {{.DomainVar}}, nil
+}
+
+// Delete removes the specified {{.DomainL}}.
+func (c *Core) Delete(ctx context.Context, {{.DomainVar}} {{.DomainU}}) error {
+	if err := c.storer.Delete(ctx, {{.DomainVar}}); err != nil {
+		return fmt.Errorf("delete: %w", err)
+	}
+
+	return nil
+}
+
+// Query retrieves a list of existing {{.DomainL}}s.
+func (c *Core) Query(ctx context.Context, filter QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]{{.DomainU}}, error) {
+	{{.DomainVar}}s, err := c.storer.Query(ctx, filter, orderBy, pageNumber, rowsPerPage)
+	if err != nil {
+		return nil, fmt.Errorf("query: %w", err)
+	}
+
+	return {{.DomainVar}}s, nil
+}
+
+// Count returns the total number of {{.DomainL}}s.
+func (c *Core) Count(ctx context.Context, filter QueryFilter) (int, error) {
+	return c.storer.Count(ctx, filter)
+}
+
+// QueryByID finds the {{.DomainL}} by the specified ID.
+func (c *Core) QueryByID(ctx context.Context, {{.DomainL}}ID uuid.UUID) ({{.DomainU}}, error) {
+	{{.DomainVar}}, err := c.storer.QueryByID(ctx, {{.DomainL}}ID)
+	if err != nil {
+		return {{.DomainU}}{}, fmt.Errorf("query: {{.DomainL}}ID[%s]: %w", {{.DomainL}}ID, err)
+	}
+
+	return {{.DomainVar}}, nil
+}

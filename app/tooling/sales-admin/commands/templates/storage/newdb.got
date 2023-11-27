@@ -1,0 +1,188 @@
+// Package {{.DomainL}}db contains {{.DomainL}} related CRUD functionality.
+package {{.DomainL}}db
+
+import (
+	"bytes"
+	"context"
+	"errors"
+	"fmt"
+
+	"github.com/ardanlabs/service/business/core/{{.DomainL}}"
+	db "github.com/ardanlabs/service/business/data/dbsql/pgx"
+	"github.com/ardanlabs/service/business/data/order"
+	"github.com/ardanlabs/service/business/data/transaction"
+	"github.com/ardanlabs/service/foundation/logger"
+	"github.com/google/uuid"
+	"github.com/jmoiron/sqlx"
+)
+
+// Store manages the set of APIs for {{.DomainL}} database access.
+type Store struct {
+	log *logger.Logger
+	db  sqlx.ExtContext
+}
+
+// NewStore constructs the api for data access.
+func NewStore(log *logger.Logger, db *sqlx.DB) *Store {
+	return &Store{
+		log: log,
+		db:  db,
+	}
+}
+
+// ExecuteUnderTransaction constructs a new Store value replacing the sqlx DB
+// value with a sqlx DB value that is currently inside a transaction.
+func (s *Store) ExecuteUnderTransaction(tx transaction.Transaction) ({{.DomainL}}.Storer, error) {
+	ec, err := db.GetExtContext(tx)
+	if err != nil {
+		return nil, err
+	}
+
+	store := Store{
+		log: s.log,
+		db:  ec,
+	}
+
+	return &store, nil
+}
+
+// Create adds a {{.DomainU}} to the database. It returns an error if something went wrong
+func (s *Store) Create(ctx context.Context, {{.DomainVar}} {{.DomainL}}.{{.DomainU}}) error {
+	const q = `
+    INSERT INTO {{.DomainL}}s
+        ({{.DomainL}}_id, date_created, date_updated)
+    VALUES
+        (:h{{.DomainL}}_id, :date_created, :date_updated)`
+
+	if err := db.NamedExecContext(ctx, s.log, s.db, q, toDB{{.DomainU}}({{.DomainVar}})); err != nil {
+		return fmt.Errorf("namedexeccontext: %w", err)
+	}
+
+	return nil
+}
+
+// Delete removes the {{.DomainU}} identified by a given ID.
+func (s *Store) Delete(ctx context.Context, {{.DomainVar}} {{.DomainL}}.{{.DomainU}}) error {
+	data := struct {
+		ID string `db:"{{.DomainL}}_id"`
+	}{
+		ID: {{.DomainVar}}.ID.String(),
+	}
+
+	const q = `
+    DELETE FROM
+	    {{.DomainL}}s
+	WHERE
+	  	{{.DomainL}}_id = :{{.DomainL}}_id`
+
+	if err := db.NamedExecContext(ctx, s.log, s.db, q, data); err != nil {
+		return fmt.Errorf("namedexeccontext: %w", err)
+	}
+
+	return nil
+}
+
+// Query retrieves a list of existing {{.DomainL}}s from the database.
+func (s *Store) Query(ctx context.Context, filter {{.DomainL}}.QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]{{.DomainL}}.{{.DomainU}}, error) {
+	data := map[string]interface{}{
+		"offset":        (pageNumber - 1) * rowsPerPage,
+		"rows_per_page": rowsPerPage,
+	}
+
+	const q = `
+    SELECT
+	    {{.DomainL}}_id, date_created, date_updated
+	FROM
+	  	{{.DomainL}}s`
+
+	buf := bytes.NewBufferString(q)
+	s.applyFilter(filter, data, buf)
+
+	orderByClause, err := orderByClause(orderBy)
+	if err != nil {
+		return nil, err
+	}
+
+	buf.WriteString(orderByClause)
+	buf.WriteString(" OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY")
+
+	var db{{.DomainVar}}s []db{{.DomainU}}
+	if err := db.NamedQuerySlice(ctx, s.log, s.db, buf.String(), data, &db{{.DomainVar}}s); err != nil {
+		return nil, fmt.Errorf("namedqueryslice: %w", err)
+	}
+
+	{{.DomainVar}}s, err := toCore{{.DomainU}}Slice(db{{.DomainVar}}s)
+	if err != nil {
+		return nil, err
+	}
+
+	return {{.DomainVar}}s, nil
+}
+
+// Update modifies data about a {{.DomainU}}. It will error if the specified ID is
+// invalid or does not reference an existing {{.DomainU}}.
+func (s *Store) Update(ctx context.Context, {{.DomainVar}} {{.DomainL}}.{{.DomainU}}) error {
+	const q = `
+    UPDATE
+        {{.DomainL}}s
+    SET
+        "date_updated" = :date_updated
+    WHERE
+        {{.DomainL}}_id = :{{.DomainL}}_id`
+
+	if err := db.NamedExecContext(ctx, s.log, s.db, q, toDB{{.DomainU}}({{.DomainVar}})); err != nil {
+		return fmt.Errorf("namedexeccontext: %w", err)
+	}
+
+	return nil
+}
+
+// Count returns the total number of {{.DomainL}}s in the DB.
+func (s *Store) Count(ctx context.Context, filter {{.DomainL}}.QueryFilter) (int, error) {
+	data := map[string]interface{}{}
+
+	const q = `
+    SELECT
+        count(1)
+    FROM
+        {{.DomainL}}s`
+
+	buf := bytes.NewBufferString(q)
+	s.applyFilter(filter, data, buf)
+
+	var count struct {
+		Count int `db:"count"`
+	}
+	if err := db.NamedQueryStruct(ctx, s.log, s.db, buf.String(), data, &count); err != nil {
+		return 0, fmt.Errorf("namedquerystruct: %w", err)
+	}
+
+	return count.Count, nil
+}
+
+// QueryByID finds the {{.DomainL}} identified by a given ID.
+func (s *Store) QueryByID(ctx context.Context, {{.DomainL}}ID uuid.UUID) ({{.DomainL}}.{{.DomainU}}, error) {
+	data := struct {
+		ID string `db:"h{{.DomainL}}_id"`
+	}{
+		ID: {{.DomainL}}ID.String(),
+	}
+
+	const q = `
+    SELECT
+	  	{{.DomainL}}_id, date_created, date_updated
+    FROM
+        {{.DomainL}}s
+    WHERE
+        {{.DomainL}}_id = :{{.DomainL}}_id`
+
+	var db{{.DomainVar}} db{{.DomainU}}
+	if err := db.NamedQueryStruct(ctx, s.log, s.db, q, data, &db{{.DomainVar}}); err != nil {
+		if errors.Is(err, db.ErrDBNotFound) {
+			return {{.DomainL}}.{{.DomainU}}{}, fmt.Errorf("namedquerystruct: %w", {{.DomainL}}.ErrNotFound)
+		}
+		return {{.DomainL}}.{{.DomainU}}{}, fmt.Errorf("namedquerystruct: %w", err)
+	}
+
+	return toCore{{.DomainU}}(db{{.DomainVar}})
+}

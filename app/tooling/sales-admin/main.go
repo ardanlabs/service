@@ -97,6 +97,11 @@ func processCommands(args conf.Args, log *logger.Logger, cfg config) error {
 	}
 
 	switch args.Num(0) {
+	case "domain":
+		if err := commands.Domain(args.Num(1)); err != nil {
+			return fmt.Errorf("adding domain: %w", err)
+		}
+
 	case "migrate":
 		if err := commands.Migrate(dbConfig); err != nil {
 			return fmt.Errorf("migrating database: %w", err)
@@ -156,6 +161,7 @@ func processCommands(args conf.Args, log *logger.Logger, cfg config) error {
 		}
 
 	default:
+		fmt.Println("domain:     add a new domain to the project")
 		fmt.Println("migrate:    create the schema in the database")
 		fmt.Println("seed:       add data to the database")
 		fmt.Println("useradd:    add a new user to the database")
