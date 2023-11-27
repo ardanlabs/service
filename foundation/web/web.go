@@ -156,27 +156,27 @@ func (a *App) Handle(method string, group string, path string, handler Handler, 
 }
 
 // GET is a shortcut for app.Handle(http.MethodGet, path, handler).
-func (a *App) GET(group string, path string, handler Handler, mw ...Middleware) {
+func (a *App) Get(group string, path string, handler Handler, mw ...Middleware) {
 	a.Handle(http.MethodGet, group, path, handler, mw...)
 }
 
 // POST is a shortcut for app.Handle(http.MethodPost, path, handler).
-func (a *App) POST(group string, path string, handler Handler, mw ...Middleware) {
+func (a *App) Post(group string, path string, handler Handler, mw ...Middleware) {
 	a.Handle(http.MethodPost, group, path, handler, mw...)
 }
 
 // PUT is a shortcut for app.Handle(http.MethodPut, path, handler).
-func (a *App) PUT(group string, path string, handler Handler, mw ...Middleware) {
+func (a *App) Put(group string, path string, handler Handler, mw ...Middleware) {
 	a.Handle(http.MethodPut, group, path, handler, mw...)
 }
 
 // DELETE is a shortcut for app.Handle(http.MethodDelete, path, handler).
-func (a *App) DELETE(group string, path string, handler Handler, mw ...Middleware) {
+func (a *App) Delete(group string, path string, handler Handler, mw ...Middleware) {
 	a.Handle(http.MethodDelete, group, path, handler, mw...)
 }
 
 // PATCH is a shortcut for app.Handle(http.MethodPatch, path, handler).
-func (a *App) PATCH(group string, path string, handler Handler, mw ...Middleware) {
+func (a *App) Patch(group string, path string, handler Handler, mw ...Middleware) {
 	a.Handle(http.MethodPatch, group, path, handler, mw...)
 }
 

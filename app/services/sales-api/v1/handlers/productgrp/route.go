@@ -37,7 +37,7 @@ func Routes(app *web.App, cfg Config) {
 	ruleAdminOrSubject := mid.AuthorizeProduct(cfg.Auth, auth.RuleAdminOrSubject, prdCore)
 
 	hdl := New(prdCore, usrCore)
-	// app.GET(version, "/products", hdl.Query, authen, ruleAny) example of how to use the app.GET
+	// app.Get(version, "/products", hdl.Query, authen, ruleAny) example of how to use the app.GET
 	app.Handle(http.MethodGet, version, "/products", hdl.Query, authen, ruleAny)
 	app.Handle(http.MethodGet, version, "/products/:product_id", hdl.QueryByID, authen, ruleAdminOrSubject)
 	app.Handle(http.MethodPost, version, "/products", hdl.Create, authen, ruleUserOnly)
