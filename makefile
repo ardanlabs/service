@@ -59,6 +59,20 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 #   You can use `make dev-status` to look at the status of your KIND cluster.
 
 # ==============================================================================
+# Project Tooling
+#
+#   There is tooling that can generate documentation and add a new domain to
+#   the code base. The code that is generated for a new domain provides the
+#   common code needed for all domains.
+#
+#   Generating Documentation
+#   $ go run app/tooling/docs/main.go --browser
+#   $ go run app/tooling/docs/main.go -out json
+#
+#   Adding New Domain To System
+#   $ go run app/tooling/sales-admin/main.go domain sale
+
+# ==============================================================================
 # CLASS NOTES
 #
 # Kind
@@ -370,14 +384,6 @@ vuln-check:
 test: test-only lint vuln-check
 
 test-race: test-race lint vuln-check
-
-# make docs ARGS="-out json"
-# make docs ARGS="-out html"
-docs:
-	go run app/tooling/docs/main.go --browser $(ARGS)
-
-docs-debug:
-	go run app/tooling/docs/main.go $(ARGS)
 
 # ==============================================================================
 # Hitting endpoints
