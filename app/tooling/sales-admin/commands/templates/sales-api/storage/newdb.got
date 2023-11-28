@@ -106,12 +106,12 @@ func (s *Store) Query(ctx context.Context, filter {{.DomainL}}.QueryFilter, orde
 	buf.WriteString(orderByClause)
 	buf.WriteString(" OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY")
 
-	var db{{.DomainVar}}s []db{{.DomainU}}
-	if err := db.NamedQuerySlice(ctx, s.log, s.db, buf.String(), data, &db{{.DomainVar}}s); err != nil {
+	var db{{.DomainVarU}}s []db{{.DomainU}}
+	if err := db.NamedQuerySlice(ctx, s.log, s.db, buf.String(), data, &db{{.DomainVarU}}s); err != nil {
 		return nil, fmt.Errorf("namedqueryslice: %w", err)
 	}
 
-	{{.DomainVar}}s, err := toCore{{.DomainU}}Slice(db{{.DomainVar}}s)
+	{{.DomainVar}}s, err := toCore{{.DomainU}}Slice(db{{.DomainVarU}}s)
 	if err != nil {
 		return nil, err
 	}
@@ -176,13 +176,13 @@ func (s *Store) QueryByID(ctx context.Context, {{.DomainL}}ID uuid.UUID) ({{.Dom
     WHERE
         {{.DomainL}}_id = :{{.DomainL}}_id`
 
-	var db{{.DomainVar}} db{{.DomainU}}
-	if err := db.NamedQueryStruct(ctx, s.log, s.db, q, data, &db{{.DomainVar}}); err != nil {
+	var db{{.DomainVarU}} db{{.DomainU}}
+	if err := db.NamedQueryStruct(ctx, s.log, s.db, q, data, &db{{.DomainVarU}}); err != nil {
 		if errors.Is(err, db.ErrDBNotFound) {
 			return {{.DomainL}}.{{.DomainU}}{}, fmt.Errorf("namedquerystruct: %w", {{.DomainL}}.ErrNotFound)
 		}
 		return {{.DomainL}}.{{.DomainU}}{}, fmt.Errorf("namedquerystruct: %w", err)
 	}
 
-	return toCore{{.DomainU}}(db{{.DomainVar}})
+	return toCore{{.DomainU}}(db{{.DomainVarU}})
 }

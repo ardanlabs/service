@@ -10,7 +10,7 @@ import (
 
 // TestGenerateNew{{.DomainU}}s is a helper method for testing.
 func TestGenerateNew{{.DomainU}}s(n int, userID uuid.UUID) []New{{.DomainU}} {
-	new{{.DomainVar}}s := make([]New{{.DomainU}}, n)
+	new{{.DomainVarU}}s := make([]New{{.DomainU}}, n)
 
 	idx := rand.Intn(10000)
 
@@ -18,19 +18,19 @@ func TestGenerateNew{{.DomainU}}s(n int, userID uuid.UUID) []New{{.DomainU}} {
 		{{.DomainNewVar}} := New{{.DomainU}}{
 		}
 
-		new{{.DomainVar}}s[i] = {{.DomainNewVar}}
+		new{{.DomainVarU}}s[i] = {{.DomainNewVar}}
 		idx++
 	}
 
-	return new{{.DomainVar}}s
+	return new{{.DomainVarU}}s
 }
 
 // TestGenerateSeed{{.DomainU}}s is a helper method for testing.
 func TestGenerateSeed{{.DomainU}}s(n int, api *Core, userID uuid.UUID) ([]{{.DomainU}}, error) {
-	new{{.DomainVar}}s := TestGenerateNew{{.DomainU}}s(n, userID)
+	new{{.DomainVarU}}s := TestGenerateNew{{.DomainU}}s(n, userID)
 
-	{{.DomainVar}}s := make([]{{.DomainU}}, len(new{{.DomainVar}}s))
-	for i, nd := range new{{.DomainVar}}s {
+	{{.DomainVar}}s := make([]{{.DomainU}}, len(new{{.DomainVarU}}s))
+	for i, nd := range new{{.DomainVarU}}s {
 		{{.DomainVar}}, err := api.Create(context.Background(), nd)
 		if err != nil {
 			return nil, fmt.Errorf("seeding {{.DomainL}}: idx: %d : %w", i, err)
