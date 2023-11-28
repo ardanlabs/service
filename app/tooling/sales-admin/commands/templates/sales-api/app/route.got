@@ -1,0 +1,41 @@
+package {{.DomainL}}grp
+
+import (
+	"net/http"
+
+	"github.com/ardanlabs/service/business/core/event"
+	"github.com/ardanlabs/service/business/core/{{.DomainL}}"
+	"github.com/ardanlabs/service/business/core/{{.DomainL}}/stores/{{.DomainL}}db"
+	"github.com/ardanlabs/service/business/web/v1/auth"
+	"github.com/ardanlabs/service/business/web/v1/mid"
+	"github.com/ardanlabs/service/foundation/logger"
+	"github.com/ardanlabs/service/foundation/web"
+	"github.com/jmoiron/sqlx"
+)
+
+// Config contains all the mandatory systems required by handlers.
+type Config struct {
+	Log  *logger.Logger
+	Auth *auth.Auth
+	DB   *sqlx.DB
+}
+
+// Routes adds specific routes for this group.
+func Routes(app *web.App, cfg Config) {
+	const version = "v1"
+
+	envCore := event.NewCore(cfg.Log)
+	{{.DomainVar}}Core := {{.DomainL}}.NewCore(cfg.Log, envCore, {{.DomainL}}db.NewStore(cfg.Log, cfg.DB))
+
+	authen := mid.Authenticate(cfg.Auth)
+	ruleAny := mid.Authorize(cfg.Auth, auth.RuleAny)
+	ruleUserOnly := mid.Authorize(cfg.Auth, auth.RuleUserOnly)
+	ruleAdminOrSubject := mid.Authorize{{.DomainU}}(cfg.Auth, auth.RuleAdminOrSubject, {{.DomainVar}}Core)
+
+	hdl := New({{.DomainVar}}Core)
+	app.Handle(http.MethodGet, version, "/{{.DomainL}}s", hdl.Query, authen, ruleAny)
+	app.Handle(http.MethodGet, version, "/{{.DomainL}}s/:{{.DomainL}}_id", hdl.QueryByID, authen, ruleAdminOrSubject)
+	app.Handle(http.MethodPost, version, "/{{.DomainL}}s", hdl.Create, authen, ruleUserOnly)
+	app.Handle(http.MethodPut, version, "/{{.DomainL}}s/:{{.DomainL}}_id", hdl.Update, authen, ruleAdminOrSubject)
+	app.Handle(http.MethodDelete, version, "/{{.DomainL}}s/:{{.DomainL}}_id", hdl.Delete, authen, ruleAdminOrSubject)
+}

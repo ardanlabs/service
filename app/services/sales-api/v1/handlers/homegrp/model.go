@@ -128,7 +128,7 @@ func (app AppUpdateAddress) Validate() error {
 	return nil
 }
 
-// AppUpdateHome contains informations needed to update a product.
+// AppUpdateHome contains informations needed to update a home.
 type AppUpdateHome struct {
 	Type    *string           `json:"type"`
 	Address *AppUpdateAddress `json:"address"`

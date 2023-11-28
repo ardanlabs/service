@@ -46,13 +46,13 @@ func TestGenerateSeedHomes(n int, api *Core, userID uuid.UUID) ([]Home, error) {
 	newHmes := TestGenerateNewHomes(n, userID)
 
 	hmes := make([]Home, len(newHmes))
-	for i, np := range newHmes {
-		prd, err := api.Create(context.Background(), np)
+	for i, nh := range newHmes {
+		hme, err := api.Create(context.Background(), nh)
 		if err != nil {
 			return nil, fmt.Errorf("seeding home: idx: %d : %w", i, err)
 		}
 
-		hmes[i] = prd
+		hmes[i] = hme
 	}
 
 	return hmes, nil
