@@ -28,13 +28,17 @@ func Domain(name string) error {
 		return fmt.Errorf("adding sto layer files: %w", err)
 	}
 
+	if err := addMiddlewareLayer(name); err != nil {
+		return fmt.Errorf("adding middleware layer files: %w", err)
+	}
+
 	return nil
 }
 
 func addAppLayer(domain string) error {
 	const basePath = "app/services/sales-api/v1/handlers"
 
-	app, err := fs.Sub(templates, "templates/app")
+	app, err := fs.Sub(templates, "templates/sales-api/app")
 	if err != nil {
 		return fmt.Errorf("switching to template/app folder: %w", err)
 	}
@@ -56,7 +60,7 @@ func addAppLayer(domain string) error {
 func addBusinessLayer(domain string) error {
 	const basePath = "business/core"
 
-	app, err := fs.Sub(templates, "templates/business")
+	app, err := fs.Sub(templates, "templates/sales-api/business")
 	if err != nil {
 		return fmt.Errorf("switching to template/business folder: %w", err)
 	}
@@ -78,7 +82,7 @@ func addBusinessLayer(domain string) error {
 func addStorageLayer(domain string) error {
 	basePath := fmt.Sprintf("business/core/%s/stores", domain)
 
-	app, err := fs.Sub(templates, "templates/storage")
+	app, err := fs.Sub(templates, "templates/sales-api/storage")
 	if err != nil {
 		return fmt.Errorf("switching to template/storage folder: %w", err)
 	}
@@ -89,6 +93,28 @@ func addStorageLayer(domain string) error {
 
 	fmt.Println("=======================================================")
 	fmt.Println("STORAGE LAYER CODE")
+
+	if err := fs.WalkDir(app, ".", fn); err != nil {
+		return fmt.Errorf("walking directory: %w", err)
+	}
+
+	return nil
+}
+
+func addMiddlewareLayer(domain string) error {
+	basePath := "business/web/v1/mid"
+
+	app, err := fs.Sub(templates, "templates/sales-api/mid")
+	if err != nil {
+		return fmt.Errorf("switching to template/mid folder: %w", err)
+	}
+
+	fn := func(fileName string, dirEntry fs.DirEntry, err error) error {
+		return walkWork(domain, basePath, app, fileName, dirEntry, err)
+	}
+
+	fmt.Println("=======================================================")
+	fmt.Println("MIDDLEWARE LAYER CODE")
 
 	if err := fs.WalkDir(app, ".", fn); err != nil {
 		return fmt.Errorf("walking directory: %w", err)
@@ -155,13 +181,13 @@ func walkWork(domain string, basePath string, app fs.FS, fileName string, dirEnt
 }
 
 func writeFile(basePath string, domain string, fileName string, b bytes.Buffer) error {
-	var path string
+	path := basePath
 	switch {
 	case basePath[:3] == "app":
 		path = fmt.Sprintf("%s/%sgrp", basePath, domain)
 	case strings.Contains(basePath, "stores"):
 		path = fmt.Sprintf("%s/%sdb", basePath, domain)
-	default:
+	case strings.Contains(basePath, "core"):
 		path = fmt.Sprintf("%s/%s", basePath, domain)
 	}
 
@@ -174,6 +200,7 @@ func writeFile(basePath string, domain string, fileName string, b bytes.Buffer) 
 	}
 
 	path = fmt.Sprintf("%s/%s", path, fileName[:len(fileName)-1])
+	path = strings.Replace(path, "new", domain, 1)
 
 	fmt.Println("Add file:", path)
 	f, err := os.Create(path)
