@@ -11,8 +11,9 @@ import (
 func TestGenerateNewUsers(n int, role Role) []NewUser {
 	newUsrs := make([]NewUser, n)
 
+	idx := rand.Intn(10000)
 	for i := 0; i < n; i++ {
-		idx := rand.Intn(10000)
+		idx++
 
 		nu := NewUser{
 			Name:            fmt.Sprintf("Name%d", idx),

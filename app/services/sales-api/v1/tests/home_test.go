@@ -11,10 +11,10 @@ import (
 	v1 "github.com/ardanlabs/service/business/web/v1"
 )
 
-func Test_Update(t *testing.T) {
+func Test_Home(t *testing.T) {
 	t.Parallel()
 
-	dbTest := dbtest.NewTest(t, c, "Test_Update")
+	dbTest := dbtest.NewTest(t, c, "Test_Home")
 	defer func() {
 		if r := recover(); r != nil {
 			t.Log(r)
@@ -36,22 +36,24 @@ func Test_Update(t *testing.T) {
 
 	// -------------------------------------------------------------------------
 
-	sd, err := updateSeed(context.Background(), dbTest)
+	sd, err := createHomeSeed(context.Background(), dbTest)
 	if err != nil {
 		t.Fatalf("Seeding error: %s", err)
 	}
 
 	// -------------------------------------------------------------------------
 
-	app.test(t, userUpdate200(t, app, sd), "user-200")
-	app.test(t, productUpdate200(t, app, sd), "product-200")
-	app.test(t, homeUpdate200(t, app, sd), "home-200")
+	app.test(t, homeQuery200(t, app, sd), "home-query-200")
+	app.test(t, homeQueryByID200(t, app, sd), "home-querybyid-200")
 
-	app.test(t, userUpdate401(t, app, sd), "user-401")
-	app.test(t, productUpdate401(t, app, sd), "product-401")
-	app.test(t, homeUpdate401(t, app, sd), "home-401")
+	app.test(t, homeCreate200(t, app, sd), "home-create-200")
+	app.test(t, homeCreate401(t, app, sd), "home-create-401")
+	app.test(t, homeCreate400(t, app, sd), "home-create-400")
 
-	app.test(t, userUpdate400(t, app, sd), "user-400")
-	app.test(t, productUpdate400(t, app, sd), "product-400")
-	app.test(t, homeUpdate400(t, app, sd), "home-400")
+	app.test(t, homeUpdate200(t, app, sd), "home-update-200")
+	app.test(t, homeUpdate401(t, app, sd), "home-update-401")
+	app.test(t, homeUpdate400(t, app, sd), "home-update-400")
+
+	app.test(t, homeDelete200(t, app, sd), "home-delete-200")
+	app.test(t, homeDelete401(t, app, sd), "home-delete-401")
 }

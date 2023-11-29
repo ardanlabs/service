@@ -13,9 +13,9 @@ func TestGenerateNewHomes(n int, userID uuid.UUID) []NewHome {
 	newHmes := make([]NewHome, n)
 
 	idx := rand.Intn(10000)
-	zipCode := fmt.Sprintf("%05d", idx)
-
 	for i := 0; i < n; i++ {
+		idx++
+
 		typ := TypeSingle
 		if v := (idx + i) % 2; v == 0 {
 			typ = TypeCondo
@@ -26,7 +26,7 @@ func TestGenerateNewHomes(n int, userID uuid.UUID) []NewHome {
 			Address: Address{
 				Address1: fmt.Sprintf("Address%d", idx),
 				Address2: fmt.Sprintf("Address%d", idx),
-				ZipCode:  zipCode,
+				ZipCode:  fmt.Sprintf("%05d", idx),
 				City:     fmt.Sprintf("City%d", idx),
 				State:    fmt.Sprintf("State%d", idx),
 				Country:  fmt.Sprintf("Country%d", idx),
@@ -35,7 +35,6 @@ func TestGenerateNewHomes(n int, userID uuid.UUID) []NewHome {
 		}
 
 		newHmes[i] = nh
-		idx++
 	}
 
 	return newHmes

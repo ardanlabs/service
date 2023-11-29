@@ -4,12 +4,63 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/ardanlabs/service/app/services/sales-api/v1/handlers/homegrp"
-	"github.com/ardanlabs/service/app/services/sales-api/v1/handlers/productgrp"
 	"github.com/ardanlabs/service/app/services/sales-api/v1/handlers/usergrp"
 	"github.com/ardanlabs/service/business/web/v1/response"
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/uuid"
 )
+
+func userCreate200(t *testing.T, app appTest, sd seedData) []tableData {
+	table := []tableData{
+		{
+			name:       "basic",
+			url:        "/v1/users",
+			token:      sd.admins[0].token,
+			method:     http.MethodPost,
+			statusCode: http.StatusCreated,
+			model: &usergrp.AppNewUser{
+				Name:            "Bill Kennedy",
+				Email:           "bill@ardanlabs.com",
+				Roles:           []string{"ADMIN"},
+				Department:      "IT",
+				Password:        "123",
+				PasswordConfirm: "123",
+			},
+			resp: &usergrp.AppUser{},
+			expResp: &usergrp.AppUser{
+				Name:       "Bill Kennedy",
+				Email:      "bill@ardanlabs.com",
+				Roles:      []string{"ADMIN"},
+				Department: "IT",
+				Enabled:    true,
+			},
+			cmpFunc: func(x interface{}, y interface{}) string {
+				resp := x.(*usergrp.AppUser)
+				expResp := y.(*usergrp.AppUser)
+
+				if _, err := uuid.Parse(resp.ID); err != nil {
+					return "bad uuid for ID"
+				}
+
+				if resp.DateCreated == "" {
+					return "missing date created"
+				}
+
+				if resp.DateUpdated == "" {
+					return "missing date updated"
+				}
+
+				expResp.ID = resp.ID
+				expResp.DateCreated = resp.DateCreated
+				expResp.DateUpdated = resp.DateUpdated
+
+				return cmp.Diff(x, y)
+			},
+		},
+	}
+
+	return table
+}
 
 func userCreate400(t *testing.T, app appTest, sd seedData) []tableData {
 	table := []tableData{
@@ -56,66 +107,59 @@ func userCreate400(t *testing.T, app appTest, sd seedData) []tableData {
 	return table
 }
 
-func productCreate400(t *testing.T, app appTest, sd seedData) []tableData {
+func userCreate401(t *testing.T, app appTest, sd seedData) []tableData {
 	table := []tableData{
 		{
-			name:       "missing-input",
-			url:        "/v1/products",
-			token:      sd.users[0].token,
+			name:       "emptytoken",
+			url:        "/v1/users",
+			token:      "",
 			method:     http.MethodPost,
-			statusCode: http.StatusBadRequest,
-			model:      &productgrp.AppNewProduct{},
+			statusCode: http.StatusUnauthorized,
 			resp:       &response.ErrorDocument{},
 			expResp: &response.ErrorDocument{
-				Error:  "data validation error",
-				Fields: map[string]string{"cost": "cost is a required field", "name": "name is a required field", "quantity": "quantity must be 1 or greater"},
-			},
-			cmpFunc: func(x interface{}, y interface{}) string {
-				return cmp.Diff(x, y)
-			},
-		},
-	}
-
-	return table
-}
-
-func homeCreate400(t *testing.T, app appTest, sd seedData) []tableData {
-	table := []tableData{
-		{
-			name:       "missing-input",
-			url:        "/v1/homes",
-			token:      sd.users[0].token,
-			method:     http.MethodPost,
-			statusCode: http.StatusBadRequest,
-			model:      &homegrp.AppNewHome{},
-			resp:       &response.ErrorDocument{},
-			expResp: &response.ErrorDocument{
-				Error:  "data validation error",
-				Fields: map[string]string{"address1": "address1 is a required field", "country": "country is a required field", "state": "state is a required field", "type": "type is a required field"},
+				Error: "Unauthorized",
 			},
 			cmpFunc: func(x interface{}, y interface{}) string {
 				return cmp.Diff(x, y)
 			},
 		},
 		{
-			name:       "bad-type",
-			url:        "/v1/homes",
+			name:       "badtoken",
+			url:        "/v1/users",
+			token:      sd.admins[0].token[:10],
+			method:     http.MethodPost,
+			statusCode: http.StatusUnauthorized,
+			resp:       &response.ErrorDocument{},
+			expResp: &response.ErrorDocument{
+				Error: "Unauthorized",
+			},
+			cmpFunc: func(x interface{}, y interface{}) string {
+				return cmp.Diff(x, y)
+			},
+		},
+		{
+			name:       "badsig",
+			url:        "/v1/users",
+			token:      sd.admins[0].token + "A",
+			method:     http.MethodPost,
+			statusCode: http.StatusUnauthorized,
+			resp:       &response.ErrorDocument{},
+			expResp: &response.ErrorDocument{
+				Error: "Unauthorized",
+			},
+			cmpFunc: func(x interface{}, y interface{}) string {
+				return cmp.Diff(x, y)
+			},
+		},
+		{
+			name:       "wronguser",
+			url:        "/v1/users",
 			token:      sd.users[0].token,
 			method:     http.MethodPost,
-			statusCode: http.StatusBadRequest,
-			model: &homegrp.AppNewHome{
-				Type: "BAD TYPE",
-				Address: homegrp.AppNewAddress{
-					Address1: "123 Mocking Bird Lane",
-					ZipCode:  "35810",
-					City:     "Huntsville",
-					State:    "AL",
-					Country:  "US",
-				},
-			},
-			resp: &response.ErrorDocument{},
+			statusCode: http.StatusUnauthorized,
+			resp:       &response.ErrorDocument{},
 			expResp: &response.ErrorDocument{
-				Error: "parse: invalid type \"BAD TYPE\"",
+				Error: "Unauthorized",
 			},
 			cmpFunc: func(x interface{}, y interface{}) string {
 				return cmp.Diff(x, y)
