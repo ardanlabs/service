@@ -1,4 +1,4 @@
-# Ultimate Go: Software Design with Kubernetes
+# Ultimate Software Design with Kubernetes
 
 [![CircleCI](https://circleci.com/gh/ardanlabs/service.svg?style=svg)](https://circleci.com/gh/ardanlabs/service)
 [![Go Report Card](https://goreportcard.com/badge/github.com/ardanlabs/service)](https://goreportcard.com/report/github.com/ardanlabs/service)
