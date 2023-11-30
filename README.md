@@ -11,7 +11,9 @@ hello@ardanlabs.com
 
 ## Description
 
-This class teaches how to build production-level services in Go leveraging the power of a Domain Driven, Data Oriented Architecture that can run in Kubernetes. From the beginning, you will pair program with the instructor walking through the design philosophies and guidelines for building services in Go. With each new feature that is added to the service, you will learn how to deploy to and manage the Kubernetes environment used to run the service.
+_"As a program evolves and acquires more features, it becomes complicated, with subtle dependencies between components. Over time, complexity accumulates, and it becomes harder and harder for programmers to keep all the relevant factors in their minds as they modify the system. This slows down development and leads to bugs, which slow development even more and add to its cost. Complexity increases inevitably over the life of any program. The larger the program, and the more people that work on it, the more difficult it is to manage complexity."_ - John Ousterhout  
+
+This class teaches how to build production-level services in Go leveraging the power of a Domain Driven, Data Oriented Architecture that can run in Kubernetes. From the beginning, you will pair program with the instructor walking through the design philosophies and guidelines for building services in Go. With each new feature that is added to the service, you will learn how to deploy to and manage the Kubernetes environment used to run the service. The core of this class is to teach you and your team how to handle and reduce the spread of complexity in the systems you are building.
 
 Learn more about the project:
 
