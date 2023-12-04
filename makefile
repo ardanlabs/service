@@ -5,6 +5,19 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 # Deploy First Mentality
 
 # ==============================================================================
+# Go Installation
+#
+#   You need to have Go version 1.21 to run this code.
+#   https://go.dev/dl/
+#
+#   If you are not allowed to update your Go frontend, you can install
+#   and use a 1.21 frontend.
+#   $ go install golang.org/dl/go1.21.4@latest
+#   $ go1.21.4 download
+#
+#   This means you need to use go1.21.4 instead of go.
+
+# ==============================================================================
 # Brew Installation
 #
 #	Having brew installed will simplify the process of installing all the tooling.
