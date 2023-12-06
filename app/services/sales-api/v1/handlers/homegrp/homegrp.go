@@ -11,7 +11,6 @@ import (
 	"github.com/ardanlabs/service/business/data/page"
 	v1 "github.com/ardanlabs/service/business/web/v1"
 	"github.com/ardanlabs/service/business/web/v1/mid"
-	"github.com/ardanlabs/service/business/web/v1/trusted"
 	"github.com/ardanlabs/service/foundation/web"
 )
 
@@ -36,12 +35,12 @@ func New(home *home.Core) *Handlers {
 func (h *Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app AppNewHome
 	if err := web.Decode(r, &app); err != nil {
-		return trusted.NewError(err, http.StatusBadRequest)
+		return v1.NewTrustedError(err, http.StatusBadRequest)
 	}
 
 	nh, err := toCoreNewHome(ctx, app)
 	if err != nil {
-		return trusted.NewError(err, http.StatusBadRequest)
+		return v1.NewTrustedError(err, http.StatusBadRequest)
 	}
 
 	hme, err := h.home.Create(ctx, nh)
@@ -56,14 +55,14 @@ func (h *Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Re
 func (h *Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app AppUpdateHome
 	if err := web.Decode(r, &app); err != nil {
-		return trusted.NewError(err, http.StatusBadRequest)
+		return v1.NewTrustedError(err, http.StatusBadRequest)
 	}
 
 	hme := mid.GetHome(ctx)
 
 	updHme, err := toCoreUpdateHome(app)
 	if err != nil {
-		return trusted.NewError(err, http.StatusBadRequest)
+		return v1.NewTrustedError(err, http.StatusBadRequest)
 	}
 
 	hme, err = h.home.Update(ctx, hme, updHme)

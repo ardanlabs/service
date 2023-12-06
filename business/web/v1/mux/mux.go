@@ -42,8 +42,8 @@ type RouteAdder interface {
 	Add(app *web.App, cfg Config)
 }
 
-// API constructs a http.Handler with all application routes defined.
-func API(cfg Config, routeAdder RouteAdder, options ...func(opts *Options)) http.Handler {
+// WebAPI constructs a http.Handler with all application routes bound.
+func WebAPI(cfg Config, routeAdder RouteAdder, options ...func(opts *Options)) http.Handler {
 	var opts Options
 	for _, option := range options {
 		option(&opts)

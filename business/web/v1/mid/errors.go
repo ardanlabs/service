@@ -6,7 +6,6 @@ import (
 
 	v1 "github.com/ardanlabs/service/business/web/v1"
 	"github.com/ardanlabs/service/business/web/v1/auth"
-	"github.com/ardanlabs/service/business/web/v1/trusted"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/validate"
 	"github.com/ardanlabs/service/foundation/web"
@@ -25,16 +24,16 @@ func Errors(log *logger.Logger) web.Middleware {
 				span.RecordError(err)
 				span.End()
 
-				var er v1.ErrorDocument
+				var er v1.ErrorResponse
 				var status int
 
 				switch {
-				case trusted.IsError(err):
-					reqErr := trusted.GetError(err)
+				case v1.IsTrustedError(err):
+					reqErr := v1.GetTrustedError(err)
 
 					if validate.IsFieldErrors(reqErr.Err) {
 						fieldErrors := validate.GetFieldErrors(reqErr.Err)
-						er = v1.ErrorDocument{
+						er = v1.ErrorResponse{
 							Error:  "data validation error",
 							Fields: fieldErrors.Fields(),
 						}
@@ -42,19 +41,19 @@ func Errors(log *logger.Logger) web.Middleware {
 						break
 					}
 
-					er = v1.ErrorDocument{
+					er = v1.ErrorResponse{
 						Error: reqErr.Error(),
 					}
 					status = reqErr.Status
 
 				case auth.IsAuthError(err):
-					er = v1.ErrorDocument{
+					er = v1.ErrorResponse{
 						Error: http.StatusText(http.StatusUnauthorized),
 					}
 					status = http.StatusUnauthorized
 
 				default:
-					er = v1.ErrorDocument{
+					er = v1.ErrorResponse{
 						Error: http.StatusText(http.StatusInternalServerError),
 					}
 					status = http.StatusInternalServerError

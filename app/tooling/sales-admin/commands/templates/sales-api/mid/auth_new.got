@@ -43,14 +43,14 @@ func Authorize{{.DomainU}}(a *auth.Auth, rule string, {{.DomainVar}}Core *{{.Dom
 				var err error
 				{{.DomainL}}ID, err := uuid.Parse(id)
 				if err != nil {
-					return trusted.NewError(ErrInvalidID, http.StatusBadRequest)
+					return v1.NewTrustedError(ErrInvalidID, http.StatusBadRequest)
 				}
 
 				{{.DomainVar}}, err := {{.DomainVar}}Core.QueryByID(ctx, {{.DomainL}}ID)
 				if err != nil {
 					switch {
 					case errors.Is(err, {{.DomainL}}.ErrNotFound):
-						return trusted.NewError(err, http.StatusNoContent)
+						return v1.NewTrustedError(err, http.StatusNoContent)
 					default:
 						return fmt.Errorf("querybyid: {{.DomainL}}ID[%s]: %w", {{.DomainL}}ID, err)
 					}

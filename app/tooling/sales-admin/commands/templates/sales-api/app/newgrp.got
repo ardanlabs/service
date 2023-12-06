@@ -35,12 +35,12 @@ func New({{.DomainL}} *{{.DomainL}}.Core) *Handlers {
 func (h *Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app AppNew{{.DomainU}}
 	if err := web.Decode(r, &app); err != nil {
-		return trusted.NewError(err, http.StatusBadRequest)
+		return v1.NewTrustedError(err, http.StatusBadRequest)
 	}
 
 	{{.DomainNewVar}}, err := toCoreNew{{.DomainU}}(ctx, app)
 	if err != nil {
-		return trusted.NewError(err, http.StatusBadRequest)
+		return v1.NewTrustedError(err, http.StatusBadRequest)
 	}
 
 	{{.DomainVar}}, err := h.{{.DomainL}}.Create(ctx, {{.DomainNewVar}})
@@ -55,14 +55,14 @@ func (h *Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Re
 func (h *Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app AppUpdate{{.DomainU}}
 	if err := web.Decode(r, &app); err != nil {
-		return trusted.NewError(err, http.StatusBadRequest)
+		return v1.NewTrustedError(err, http.StatusBadRequest)
 	}
 
 	{{.DomainVar}} := mid.Get{{.DomainU}}(ctx)
 
 	{{.DomainUpdVar}}, err := toCoreUpdate{{.DomainU}}(app)
 	if err != nil {
-		return trusted.NewError(err, http.StatusBadRequest)
+		return v1.NewTrustedError(err, http.StatusBadRequest)
 	}
 
 	{{.DomainVar}}, err = h.{{.DomainL}}.Update(ctx, {{.DomainVar}}, {{.DomainUpdVar}})

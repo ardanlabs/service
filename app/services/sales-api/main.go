@@ -240,11 +240,9 @@ func run(ctx context.Context, log *logger.Logger, build string) error {
 		Tracer:   tracer,
 	}
 
-	apiMux := mux.API(cfgMux, buildRoutes(), mux.WithCORS("*"))
-
 	api := http.Server{
 		Addr:         cfg.Web.APIHost,
-		Handler:      apiMux,
+		Handler:      mux.WebAPI(cfgMux, buildRoutes(), mux.WithCORS("*")),
 		ReadTimeout:  cfg.Web.ReadTimeout,
 		WriteTimeout: cfg.Web.WriteTimeout,
 		IdleTimeout:  cfg.Web.IdleTimeout,

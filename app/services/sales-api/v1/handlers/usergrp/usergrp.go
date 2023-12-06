@@ -14,7 +14,6 @@ import (
 	v1 "github.com/ardanlabs/service/business/web/v1"
 	"github.com/ardanlabs/service/business/web/v1/auth"
 	"github.com/ardanlabs/service/business/web/v1/mid"
-	"github.com/ardanlabs/service/business/web/v1/trusted"
 	"github.com/ardanlabs/service/foundation/validate"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/golang-jwt/jwt/v4"
@@ -38,18 +37,18 @@ func New(user *user.Core, auth *auth.Auth) *Handlers {
 func (h *Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app AppNewUser
 	if err := web.Decode(r, &app); err != nil {
-		return trusted.NewError(err, http.StatusBadRequest)
+		return v1.NewTrustedError(err, http.StatusBadRequest)
 	}
 
 	nc, err := toCoreNewUser(app)
 	if err != nil {
-		return trusted.NewError(err, http.StatusBadRequest)
+		return v1.NewTrustedError(err, http.StatusBadRequest)
 	}
 
 	usr, err := h.user.Create(ctx, nc)
 	if err != nil {
 		if errors.Is(err, user.ErrUniqueEmail) {
-			return trusted.NewError(err, http.StatusConflict)
+			return v1.NewTrustedError(err, http.StatusConflict)
 		}
 		return fmt.Errorf("create: usr[%+v]: %w", usr, err)
 	}
@@ -61,14 +60,14 @@ func (h *Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Re
 func (h *Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app AppUpdateUser
 	if err := web.Decode(r, &app); err != nil {
-		return trusted.NewError(err, http.StatusBadRequest)
+		return v1.NewTrustedError(err, http.StatusBadRequest)
 	}
 
 	usr := mid.GetUser(ctx)
 
 	uu, err := toCoreUpdateUser(app)
 	if err != nil {
-		return trusted.NewError(err, http.StatusBadRequest)
+		return v1.NewTrustedError(err, http.StatusBadRequest)
 	}
 
 	usr, err = h.user.Update(ctx, usr, uu)
@@ -146,7 +145,7 @@ func (h *Handlers) Token(ctx context.Context, w http.ResponseWriter, r *http.Req
 	if err != nil {
 		switch {
 		case errors.Is(err, user.ErrNotFound):
-			return trusted.NewError(err, http.StatusNotFound)
+			return v1.NewTrustedError(err, http.StatusNotFound)
 		case errors.Is(err, user.ErrAuthenticationFailure):
 			return auth.NewAuthError(err.Error())
 		default:

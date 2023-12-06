@@ -12,7 +12,6 @@ import (
 	"github.com/ardanlabs/service/business/data/page"
 	v1 "github.com/ardanlabs/service/business/web/v1"
 	"github.com/ardanlabs/service/business/web/v1/mid"
-	"github.com/ardanlabs/service/business/web/v1/trusted"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/google/uuid"
 )
@@ -40,7 +39,7 @@ func New(product *product.Core, user *user.Core) *Handlers {
 func (h *Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app AppNewProduct
 	if err := web.Decode(r, &app); err != nil {
-		return trusted.NewError(err, http.StatusBadRequest)
+		return v1.NewTrustedError(err, http.StatusBadRequest)
 	}
 
 	prd, err := h.product.Create(ctx, toCoreNewProduct(ctx, app))
@@ -55,7 +54,7 @@ func (h *Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Re
 func (h *Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app AppUpdateProduct
 	if err := web.Decode(r, &app); err != nil {
-		return trusted.NewError(err, http.StatusBadRequest)
+		return v1.NewTrustedError(err, http.StatusBadRequest)
 	}
 
 	prd := mid.GetProduct(ctx)

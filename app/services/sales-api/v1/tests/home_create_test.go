@@ -77,8 +77,8 @@ func homeCreate400(t *testing.T, app appTest, sd seedData) []tableData {
 			method:     http.MethodPost,
 			statusCode: http.StatusBadRequest,
 			model:      &homegrp.AppNewHome{},
-			resp:       &v1.ErrorDocument{},
-			expResp: &v1.ErrorDocument{
+			resp:       &v1.ErrorResponse{},
+			expResp: &v1.ErrorResponse{
 				Error:  "data validation error",
 				Fields: map[string]string{"address1": "address1 is a required field", "country": "country is a required field", "state": "state is a required field", "type": "type is a required field"},
 			},
@@ -102,8 +102,8 @@ func homeCreate400(t *testing.T, app appTest, sd seedData) []tableData {
 					Country:  "US",
 				},
 			},
-			resp: &v1.ErrorDocument{},
-			expResp: &v1.ErrorDocument{
+			resp: &v1.ErrorResponse{},
+			expResp: &v1.ErrorResponse{
 				Error: "parse: invalid type \"BAD TYPE\"",
 			},
 			cmpFunc: func(x interface{}, y interface{}) string {
@@ -123,8 +123,8 @@ func homeCreate401(t *testing.T, app appTest, sd seedData) []tableData {
 			token:      "",
 			method:     http.MethodPost,
 			statusCode: http.StatusUnauthorized,
-			resp:       &v1.ErrorDocument{},
-			expResp: &v1.ErrorDocument{
+			resp:       &v1.ErrorResponse{},
+			expResp: &v1.ErrorResponse{
 				Error: "Unauthorized",
 			},
 			cmpFunc: func(x interface{}, y interface{}) string {
@@ -137,8 +137,8 @@ func homeCreate401(t *testing.T, app appTest, sd seedData) []tableData {
 			token:      sd.admins[0].token[:10],
 			method:     http.MethodPost,
 			statusCode: http.StatusUnauthorized,
-			resp:       &v1.ErrorDocument{},
-			expResp: &v1.ErrorDocument{
+			resp:       &v1.ErrorResponse{},
+			expResp: &v1.ErrorResponse{
 				Error: "Unauthorized",
 			},
 			cmpFunc: func(x interface{}, y interface{}) string {
@@ -151,8 +151,8 @@ func homeCreate401(t *testing.T, app appTest, sd seedData) []tableData {
 			token:      sd.admins[0].token + "A",
 			method:     http.MethodPost,
 			statusCode: http.StatusUnauthorized,
-			resp:       &v1.ErrorDocument{},
-			expResp: &v1.ErrorDocument{
+			resp:       &v1.ErrorResponse{},
+			expResp: &v1.ErrorResponse{
 				Error: "Unauthorized",
 			},
 			cmpFunc: func(x interface{}, y interface{}) string {
@@ -165,8 +165,8 @@ func homeCreate401(t *testing.T, app appTest, sd seedData) []tableData {
 			token:      sd.admins[0].token,
 			method:     http.MethodPost,
 			statusCode: http.StatusUnauthorized,
-			resp:       &v1.ErrorDocument{},
-			expResp: &v1.ErrorDocument{
+			resp:       &v1.ErrorResponse{},
+			expResp: &v1.ErrorResponse{
 				Error: "Unauthorized",
 			},
 			cmpFunc: func(x interface{}, y interface{}) string {
