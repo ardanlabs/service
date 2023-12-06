@@ -195,6 +195,8 @@ func (a *Auth) publicKeyLookup(kid string) (string, error) {
 		}
 		return pem, nil
 	}()
+
+	// We found the pem in the cache, return it.
 	if err == nil {
 		return pem, nil
 	}
