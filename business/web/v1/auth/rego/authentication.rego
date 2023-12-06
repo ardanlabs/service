@@ -2,12 +2,8 @@ package ardan.rego
 
 default auth = false
 
-auth {
-	jwt_valid
-}
-
-jwt_valid := valid {
-	[valid, header, payload] := verify_jwt
+auth := valid {
+	[valid, _, _] := verify_jwt
 }
 
 verify_jwt := io.jwt.decode_verify(input.Token, {
