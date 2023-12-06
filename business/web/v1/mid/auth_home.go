@@ -8,7 +8,7 @@ import (
 
 	"github.com/ardanlabs/service/business/core/home"
 	"github.com/ardanlabs/service/business/web/v1/auth"
-	"github.com/ardanlabs/service/business/web/v1/response"
+	"github.com/ardanlabs/service/business/web/v1/trusted"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/google/uuid"
 )
@@ -45,14 +45,14 @@ func AuthorizeHome(a *auth.Auth, rule string, hmeCore *home.Core) web.Middleware
 				var err error
 				homeID, err := uuid.Parse(id)
 				if err != nil {
-					return response.NewError(ErrInvalidID, http.StatusBadRequest)
+					return trusted.NewError(ErrInvalidID, http.StatusBadRequest)
 				}
 
 				hme, err := hmeCore.QueryByID(ctx, homeID)
 				if err != nil {
 					switch {
 					case errors.Is(err, home.ErrNotFound):
-						return response.NewError(err, http.StatusNoContent)
+						return trusted.NewError(err, http.StatusNoContent)
 					default:
 						return fmt.Errorf("querybyid: homeID[%s]: %w", homeID, err)
 					}

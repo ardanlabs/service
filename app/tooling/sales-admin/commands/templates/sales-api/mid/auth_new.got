@@ -8,7 +8,7 @@ import (
 
 	"github.com/ardanlabs/service/business/core/{{.DomainL}}"
 	"github.com/ardanlabs/service/business/web/v1/auth"
-	"github.com/ardanlabs/service/business/web/v1/response"
+	"github.com/ardanlabs/service/business/web/v1/trusted"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/google/uuid"
 )
@@ -43,14 +43,14 @@ func Authorize{{.DomainU}}(a *auth.Auth, rule string, {{.DomainVar}}Core *{{.Dom
 				var err error
 				{{.DomainL}}ID, err := uuid.Parse(id)
 				if err != nil {
-					return response.NewError(ErrInvalidID, http.StatusBadRequest)
+					return trusted.NewError(ErrInvalidID, http.StatusBadRequest)
 				}
 
 				{{.DomainVar}}, err := {{.DomainVar}}Core.QueryByID(ctx, {{.DomainL}}ID)
 				if err != nil {
 					switch {
 					case errors.Is(err, {{.DomainL}}.ErrNotFound):
-						return response.NewError(err, http.StatusNoContent)
+						return trusted.NewError(err, http.StatusNoContent)
 					default:
 						return fmt.Errorf("querybyid: {{.DomainL}}ID[%s]: %w", {{.DomainL}}ID, err)
 					}

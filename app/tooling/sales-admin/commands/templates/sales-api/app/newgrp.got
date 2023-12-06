@@ -10,7 +10,7 @@ import (
 	"github.com/ardanlabs/service/business/core/{{.DomainL}}"
 	"github.com/ardanlabs/service/business/data/page"
 	"github.com/ardanlabs/service/business/web/v1/mid"
-	"github.com/ardanlabs/service/business/web/v1/response"
+	"github.com/ardanlabs/service/business/web/v1/trusted"
 	"github.com/ardanlabs/service/foundation/web"
 )
 
@@ -35,12 +35,12 @@ func New({{.DomainL}} *{{.DomainL}}.Core) *Handlers {
 func (h *Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app AppNew{{.DomainU}}
 	if err := web.Decode(r, &app); err != nil {
-		return response.NewError(err, http.StatusBadRequest)
+		return trusted.NewError(err, http.StatusBadRequest)
 	}
 
 	{{.DomainNewVar}}, err := toCoreNew{{.DomainU}}(ctx, app)
 	if err != nil {
-		return response.NewError(err, http.StatusBadRequest)
+		return trusted.NewError(err, http.StatusBadRequest)
 	}
 
 	{{.DomainVar}}, err := h.{{.DomainL}}.Create(ctx, {{.DomainNewVar}})
@@ -55,14 +55,14 @@ func (h *Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Re
 func (h *Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app AppUpdate{{.DomainU}}
 	if err := web.Decode(r, &app); err != nil {
-		return response.NewError(err, http.StatusBadRequest)
+		return trusted.NewError(err, http.StatusBadRequest)
 	}
 
 	{{.DomainVar}} := mid.Get{{.DomainU}}(ctx)
 
 	{{.DomainUpdVar}}, err := toCoreUpdate{{.DomainU}}(app)
 	if err != nil {
-		return response.NewError(err, http.StatusBadRequest)
+		return trusted.NewError(err, http.StatusBadRequest)
 	}
 
 	{{.DomainVar}}, err = h.{{.DomainL}}.Update(ctx, {{.DomainVar}}, {{.DomainUpdVar}})
@@ -111,7 +111,7 @@ func (h *Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Req
 		return fmt.Errorf("count: %w", err)
 	}
 
-	return web.Respond(ctx, w, response.NewPageDocument(toApp{{.DomainU}}s({{.DomainVar}}s), total, page.Number, page.RowsPerPage), http.StatusOK)
+	return web.Respond(ctx, w, v1.NewPageDocument(toApp{{.DomainU}}s({{.DomainVar}}s), total, page.Number, page.RowsPerPage), http.StatusOK)
 }
 
 // QueryByID returns a {{.DomainL}} by its ID.

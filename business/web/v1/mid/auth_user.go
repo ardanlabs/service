@@ -8,7 +8,7 @@ import (
 
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/web/v1/auth"
-	"github.com/ardanlabs/service/business/web/v1/response"
+	"github.com/ardanlabs/service/business/web/v1/trusted"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/google/uuid"
 )
@@ -61,14 +61,14 @@ func AuthorizeUser(a *auth.Auth, rule string, usrCore *user.Core) web.Middleware
 				var err error
 				userID, err = uuid.Parse(id)
 				if err != nil {
-					return response.NewError(ErrInvalidID, http.StatusBadRequest)
+					return trusted.NewError(ErrInvalidID, http.StatusBadRequest)
 				}
 
 				usr, err := usrCore.QueryByID(ctx, userID)
 				if err != nil {
 					switch {
 					case errors.Is(err, user.ErrNotFound):
-						return response.NewError(err, http.StatusNoContent)
+						return trusted.NewError(err, http.StatusNoContent)
 					default:
 						return fmt.Errorf("querybyid: userID[%s]: %w", userID, err)
 					}

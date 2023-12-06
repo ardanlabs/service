@@ -9,8 +9,9 @@ import (
 
 	"github.com/ardanlabs/service/business/core/home"
 	"github.com/ardanlabs/service/business/data/page"
+	v1 "github.com/ardanlabs/service/business/web/v1"
 	"github.com/ardanlabs/service/business/web/v1/mid"
-	"github.com/ardanlabs/service/business/web/v1/response"
+	"github.com/ardanlabs/service/business/web/v1/trusted"
 	"github.com/ardanlabs/service/foundation/web"
 )
 
@@ -35,12 +36,12 @@ func New(home *home.Core) *Handlers {
 func (h *Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app AppNewHome
 	if err := web.Decode(r, &app); err != nil {
-		return response.NewError(err, http.StatusBadRequest)
+		return trusted.NewError(err, http.StatusBadRequest)
 	}
 
 	nh, err := toCoreNewHome(ctx, app)
 	if err != nil {
-		return response.NewError(err, http.StatusBadRequest)
+		return trusted.NewError(err, http.StatusBadRequest)
 	}
 
 	hme, err := h.home.Create(ctx, nh)
@@ -55,14 +56,14 @@ func (h *Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Re
 func (h *Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app AppUpdateHome
 	if err := web.Decode(r, &app); err != nil {
-		return response.NewError(err, http.StatusBadRequest)
+		return trusted.NewError(err, http.StatusBadRequest)
 	}
 
 	hme := mid.GetHome(ctx)
 
 	updHme, err := toCoreUpdateHome(app)
 	if err != nil {
-		return response.NewError(err, http.StatusBadRequest)
+		return trusted.NewError(err, http.StatusBadRequest)
 	}
 
 	hme, err = h.home.Update(ctx, hme, updHme)
@@ -111,7 +112,7 @@ func (h *Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Req
 		return fmt.Errorf("count: %w", err)
 	}
 
-	return web.Respond(ctx, w, response.NewPageDocument(toAppHomes(homes), total, page.Number, page.RowsPerPage), http.StatusOK)
+	return web.Respond(ctx, w, v1.NewPageDocument(toAppHomes(homes), total, page.Number, page.RowsPerPage), http.StatusOK)
 }
 
 // QueryByID returns a home by its ID.

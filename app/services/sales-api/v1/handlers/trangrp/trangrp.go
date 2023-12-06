@@ -7,7 +7,7 @@ import (
 
 	"github.com/ardanlabs/service/business/core/product"
 	"github.com/ardanlabs/service/business/core/user"
-	"github.com/ardanlabs/service/business/web/v1/response"
+	"github.com/ardanlabs/service/business/web/v1/trusted"
 	"github.com/ardanlabs/service/foundation/web"
 )
 
@@ -34,17 +34,17 @@ func (h *Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Re
 
 	var app AppNewTran
 	if err := web.Decode(r, &app); err != nil {
-		return response.NewError(err, http.StatusBadRequest)
+		return trusted.NewError(err, http.StatusBadRequest)
 	}
 
 	np, err := toCoreNewProduct(app.Product)
 	if err != nil {
-		return response.NewError(err, http.StatusBadRequest)
+		return trusted.NewError(err, http.StatusBadRequest)
 	}
 
 	nu, err := toCoreNewUser(app.User)
 	if err != nil {
-		return response.NewError(err, http.StatusBadRequest)
+		return trusted.NewError(err, http.StatusBadRequest)
 	}
 
 	usr, err := h.user.Create(ctx, nu)

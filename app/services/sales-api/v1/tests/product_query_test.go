@@ -7,7 +7,7 @@ import (
 
 	"github.com/ardanlabs/service/app/services/sales-api/v1/handlers/productgrp"
 	"github.com/ardanlabs/service/business/core/user"
-	"github.com/ardanlabs/service/business/web/v1/response"
+	v1 "github.com/ardanlabs/service/business/web/v1"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/uuid"
 )
@@ -31,16 +31,16 @@ func productQuery200(t *testing.T, app appTest, sd seedData) []tableData {
 			token:      sd.admins[1].token,
 			statusCode: http.StatusOK,
 			method:     http.MethodGet,
-			resp:       &response.PageDocument[productgrp.AppProductDetails]{},
-			expResp: &response.PageDocument[productgrp.AppProductDetails]{
+			resp:       &v1.PageDocument[productgrp.AppProductDetails]{},
+			expResp: &v1.PageDocument[productgrp.AppProductDetails]{
 				Page:        1,
 				RowsPerPage: 10,
 				Total:       total,
 				Items:       toAppProductsDetails(append(sd.admins[1].products, sd.users[1].products...), usrsMap),
 			},
 			cmpFunc: func(x interface{}, y interface{}) string {
-				resp := x.(*response.PageDocument[productgrp.AppProductDetails])
-				exp := y.(*response.PageDocument[productgrp.AppProductDetails])
+				resp := x.(*v1.PageDocument[productgrp.AppProductDetails])
+				exp := y.(*v1.PageDocument[productgrp.AppProductDetails])
 
 				var found int
 				for _, r := range resp.Items {

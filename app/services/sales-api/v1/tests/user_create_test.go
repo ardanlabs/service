@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/ardanlabs/service/app/services/sales-api/v1/handlers/usergrp"
-	"github.com/ardanlabs/service/business/web/v1/response"
+	v1 "github.com/ardanlabs/service/business/web/v1"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/uuid"
 )
@@ -71,8 +71,8 @@ func userCreate400(t *testing.T, app appTest, sd seedData) []tableData {
 			method:     http.MethodPost,
 			statusCode: http.StatusBadRequest,
 			model:      &usergrp.AppNewUser{},
-			resp:       &response.ErrorDocument{},
-			expResp: &response.ErrorDocument{
+			resp:       &v1.ErrorDocument{},
+			expResp: &v1.ErrorDocument{
 				Error:  "data validation error",
 				Fields: map[string]string{"email": "email is a required field", "name": "name is a required field", "password": "password is a required field", "roles": "roles is a required field"},
 			},
@@ -94,8 +94,8 @@ func userCreate400(t *testing.T, app appTest, sd seedData) []tableData {
 				Password:        "123",
 				PasswordConfirm: "123",
 			},
-			resp: &response.ErrorDocument{},
-			expResp: &response.ErrorDocument{
+			resp: &v1.ErrorDocument{},
+			expResp: &v1.ErrorDocument{
 				Error: "parse: invalid role \"BAD ROLE\"",
 			},
 			cmpFunc: func(x interface{}, y interface{}) string {
@@ -115,8 +115,8 @@ func userCreate401(t *testing.T, app appTest, sd seedData) []tableData {
 			token:      "",
 			method:     http.MethodPost,
 			statusCode: http.StatusUnauthorized,
-			resp:       &response.ErrorDocument{},
-			expResp: &response.ErrorDocument{
+			resp:       &v1.ErrorDocument{},
+			expResp: &v1.ErrorDocument{
 				Error: "Unauthorized",
 			},
 			cmpFunc: func(x interface{}, y interface{}) string {
@@ -129,8 +129,8 @@ func userCreate401(t *testing.T, app appTest, sd seedData) []tableData {
 			token:      sd.admins[0].token[:10],
 			method:     http.MethodPost,
 			statusCode: http.StatusUnauthorized,
-			resp:       &response.ErrorDocument{},
-			expResp: &response.ErrorDocument{
+			resp:       &v1.ErrorDocument{},
+			expResp: &v1.ErrorDocument{
 				Error: "Unauthorized",
 			},
 			cmpFunc: func(x interface{}, y interface{}) string {
@@ -143,8 +143,8 @@ func userCreate401(t *testing.T, app appTest, sd seedData) []tableData {
 			token:      sd.admins[0].token + "A",
 			method:     http.MethodPost,
 			statusCode: http.StatusUnauthorized,
-			resp:       &response.ErrorDocument{},
-			expResp: &response.ErrorDocument{
+			resp:       &v1.ErrorDocument{},
+			expResp: &v1.ErrorDocument{
 				Error: "Unauthorized",
 			},
 			cmpFunc: func(x interface{}, y interface{}) string {
@@ -157,8 +157,8 @@ func userCreate401(t *testing.T, app appTest, sd seedData) []tableData {
 			token:      sd.users[0].token,
 			method:     http.MethodPost,
 			statusCode: http.StatusUnauthorized,
-			resp:       &response.ErrorDocument{},
-			expResp: &response.ErrorDocument{
+			resp:       &v1.ErrorDocument{},
+			expResp: &v1.ErrorDocument{
 				Error: "Unauthorized",
 			},
 			cmpFunc: func(x interface{}, y interface{}) string {

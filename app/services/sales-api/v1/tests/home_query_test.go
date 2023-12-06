@@ -7,7 +7,7 @@ import (
 
 	"github.com/ardanlabs/service/app/services/sales-api/v1/handlers/homegrp"
 	"github.com/ardanlabs/service/business/core/user"
-	"github.com/ardanlabs/service/business/web/v1/response"
+	v1 "github.com/ardanlabs/service/business/web/v1"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/uuid"
 )
@@ -30,16 +30,16 @@ func homeQuery200(t *testing.T, app appTest, sd seedData) []tableData {
 			token:      sd.admins[0].token,
 			statusCode: http.StatusOK,
 			method:     http.MethodGet,
-			resp:       &response.PageDocument[homegrp.AppHome]{},
-			expResp: &response.PageDocument[homegrp.AppHome]{
+			resp:       &v1.PageDocument[homegrp.AppHome]{},
+			expResp: &v1.PageDocument[homegrp.AppHome]{
 				Page:        1,
 				RowsPerPage: 10,
 				Total:       total,
 				Items:       toAppHomes(append(sd.admins[0].homes, sd.users[0].homes...)),
 			},
 			cmpFunc: func(x interface{}, y interface{}) string {
-				resp := x.(*response.PageDocument[homegrp.AppHome])
-				exp := y.(*response.PageDocument[homegrp.AppHome])
+				resp := x.(*v1.PageDocument[homegrp.AppHome])
+				exp := y.(*v1.PageDocument[homegrp.AppHome])
 
 				var found int
 				for _, r := range resp.Items {

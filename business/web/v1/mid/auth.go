@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/ardanlabs/service/business/web/v1/auth"
-	"github.com/ardanlabs/service/business/web/v1/response"
+	"github.com/ardanlabs/service/business/web/v1/trusted"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/google/uuid"
 )
@@ -33,7 +33,7 @@ func Authenticate(a *auth.Auth) web.Middleware {
 
 			subjectID, err := uuid.Parse(claims.Subject)
 			if err != nil {
-				return response.NewError(ErrInvalidID, http.StatusBadRequest)
+				return trusted.NewError(ErrInvalidID, http.StatusBadRequest)
 			}
 
 			ctx = setUserID(ctx, subjectID)

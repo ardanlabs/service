@@ -1,67 +1,28 @@
-// Package v1 manages the different versions of the API.
+// Package v1 provides types and support related to web v1 functionality.
 package v1
 
-import (
-	"net/http"
-	"os"
-
-	"github.com/ardanlabs/service/business/web/v1/auth"
-	"github.com/ardanlabs/service/business/web/v1/mid"
-	"github.com/ardanlabs/service/foundation/logger"
-	"github.com/ardanlabs/service/foundation/web"
-	"github.com/jmoiron/sqlx"
-	"go.opentelemetry.io/otel/trace"
-)
-
-// Options represent optional parameters.
-type Options struct {
-	corsOrigin string
+// ErrorDocument is the form used for API responses from failures in the API.
+type ErrorDocument struct {
+	Error  string            `json:"error"`
+	Fields map[string]string `json:"fields,omitempty"`
 }
 
-// WithCORS provides configuration options for CORS.
-func WithCORS(origin string) func(opts *Options) {
-	return func(opts *Options) {
-		opts.corsOrigin = origin
+// =============================================================================
+
+// PageDocument is the form used for API responses from query API calls.
+type PageDocument[T any] struct {
+	Items       []T `json:"items"`
+	Total       int `json:"total"`
+	Page        int `json:"page"`
+	RowsPerPage int `json:"rowsPerPage"`
+}
+
+// NewPageDocument constructs a response value for a web paging trusted.
+func NewPageDocument[T any](items []T, total int, page int, rowsPrePage int) PageDocument[T] {
+	return PageDocument[T]{
+		Items:       items,
+		Total:       total,
+		Page:        page,
+		RowsPerPage: rowsPrePage,
 	}
-}
-
-// APIMuxConfig contains all the mandatory systems required by handlers.
-type APIMuxConfig struct {
-	Build    string
-	Shutdown chan os.Signal
-	Log      *logger.Logger
-	Auth     *auth.Auth
-	DB       *sqlx.DB
-	Tracer   trace.Tracer
-}
-
-// RouteAdder defines behavior that sets the routes to bind for an instance
-// of the service.
-type RouteAdder interface {
-	Add(app *web.App, cfg APIMuxConfig)
-}
-
-// APIMux constructs a http.Handler with all application routes defined.
-func APIMux(cfg APIMuxConfig, routeAdder RouteAdder, options ...func(opts *Options)) http.Handler {
-	var opts Options
-	for _, option := range options {
-		option(&opts)
-	}
-
-	app := web.NewApp(
-		cfg.Shutdown,
-		cfg.Tracer,
-		mid.Logger(cfg.Log),
-		mid.Errors(cfg.Log),
-		mid.Metrics(),
-		mid.Panics(),
-	)
-
-	if opts.corsOrigin != "" {
-		app.EnableCORS(mid.Cors(opts.corsOrigin))
-	}
-
-	routeAdder.Add(app, cfg)
-
-	return app
 }

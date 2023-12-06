@@ -10,8 +10,9 @@ import (
 	"github.com/ardanlabs/service/business/core/product"
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/data/page"
+	v1 "github.com/ardanlabs/service/business/web/v1"
 	"github.com/ardanlabs/service/business/web/v1/mid"
-	"github.com/ardanlabs/service/business/web/v1/response"
+	"github.com/ardanlabs/service/business/web/v1/trusted"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/google/uuid"
 )
@@ -39,7 +40,7 @@ func New(product *product.Core, user *user.Core) *Handlers {
 func (h *Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app AppNewProduct
 	if err := web.Decode(r, &app); err != nil {
-		return response.NewError(err, http.StatusBadRequest)
+		return trusted.NewError(err, http.StatusBadRequest)
 	}
 
 	prd, err := h.product.Create(ctx, toCoreNewProduct(ctx, app))
@@ -54,7 +55,7 @@ func (h *Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Re
 func (h *Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app AppUpdateProduct
 	if err := web.Decode(r, &app); err != nil {
-		return response.NewError(err, http.StatusBadRequest)
+		return trusted.NewError(err, http.StatusBadRequest)
 	}
 
 	prd := mid.GetProduct(ctx)
@@ -131,7 +132,7 @@ func (h *Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Req
 		return fmt.Errorf("count: %w", err)
 	}
 
-	return web.Respond(ctx, w, response.NewPageDocument(toAppProductsDetails(prds, users), total, page.Number, page.RowsPerPage), http.StatusOK)
+	return web.Respond(ctx, w, v1.NewPageDocument(toAppProductsDetails(prds, users), total, page.Number, page.RowsPerPage), http.StatusOK)
 }
 
 // QueryByID returns a product by its ID.

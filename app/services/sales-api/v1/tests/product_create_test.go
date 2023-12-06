@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/ardanlabs/service/app/services/sales-api/v1/handlers/productgrp"
-	"github.com/ardanlabs/service/business/web/v1/response"
+	v1 "github.com/ardanlabs/service/business/web/v1"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/uuid"
 )
@@ -67,8 +67,8 @@ func productCreate400(t *testing.T, app appTest, sd seedData) []tableData {
 			method:     http.MethodPost,
 			statusCode: http.StatusBadRequest,
 			model:      &productgrp.AppNewProduct{},
-			resp:       &response.ErrorDocument{},
-			expResp: &response.ErrorDocument{
+			resp:       &v1.ErrorDocument{},
+			expResp: &v1.ErrorDocument{
 				Error:  "data validation error",
 				Fields: map[string]string{"cost": "cost is a required field", "name": "name is a required field", "quantity": "quantity must be 1 or greater"},
 			},
@@ -89,8 +89,8 @@ func productCreate401(t *testing.T, app appTest, sd seedData) []tableData {
 			token:      "",
 			method:     http.MethodPost,
 			statusCode: http.StatusUnauthorized,
-			resp:       &response.ErrorDocument{},
-			expResp: &response.ErrorDocument{
+			resp:       &v1.ErrorDocument{},
+			expResp: &v1.ErrorDocument{
 				Error: "Unauthorized",
 			},
 			cmpFunc: func(x interface{}, y interface{}) string {
@@ -103,8 +103,8 @@ func productCreate401(t *testing.T, app appTest, sd seedData) []tableData {
 			token:      sd.admins[0].token[:10],
 			method:     http.MethodPost,
 			statusCode: http.StatusUnauthorized,
-			resp:       &response.ErrorDocument{},
-			expResp: &response.ErrorDocument{
+			resp:       &v1.ErrorDocument{},
+			expResp: &v1.ErrorDocument{
 				Error: "Unauthorized",
 			},
 			cmpFunc: func(x interface{}, y interface{}) string {
@@ -117,8 +117,8 @@ func productCreate401(t *testing.T, app appTest, sd seedData) []tableData {
 			token:      sd.admins[0].token + "A",
 			method:     http.MethodPost,
 			statusCode: http.StatusUnauthorized,
-			resp:       &response.ErrorDocument{},
-			expResp: &response.ErrorDocument{
+			resp:       &v1.ErrorDocument{},
+			expResp: &v1.ErrorDocument{
 				Error: "Unauthorized",
 			},
 			cmpFunc: func(x interface{}, y interface{}) string {
@@ -131,8 +131,8 @@ func productCreate401(t *testing.T, app appTest, sd seedData) []tableData {
 			token:      sd.admins[0].token,
 			method:     http.MethodPost,
 			statusCode: http.StatusUnauthorized,
-			resp:       &response.ErrorDocument{},
-			expResp: &response.ErrorDocument{
+			resp:       &v1.ErrorDocument{},
+			expResp: &v1.ErrorDocument{
 				Error: "Unauthorized",
 			},
 			cmpFunc: func(x interface{}, y interface{}) string {

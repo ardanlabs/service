@@ -11,9 +11,10 @@ import (
 
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/data/page"
+	v1 "github.com/ardanlabs/service/business/web/v1"
 	"github.com/ardanlabs/service/business/web/v1/auth"
 	"github.com/ardanlabs/service/business/web/v1/mid"
-	"github.com/ardanlabs/service/business/web/v1/response"
+	"github.com/ardanlabs/service/business/web/v1/trusted"
 	"github.com/ardanlabs/service/foundation/validate"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/golang-jwt/jwt/v4"
@@ -37,18 +38,18 @@ func New(user *user.Core, auth *auth.Auth) *Handlers {
 func (h *Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app AppNewUser
 	if err := web.Decode(r, &app); err != nil {
-		return response.NewError(err, http.StatusBadRequest)
+		return trusted.NewError(err, http.StatusBadRequest)
 	}
 
 	nc, err := toCoreNewUser(app)
 	if err != nil {
-		return response.NewError(err, http.StatusBadRequest)
+		return trusted.NewError(err, http.StatusBadRequest)
 	}
 
 	usr, err := h.user.Create(ctx, nc)
 	if err != nil {
 		if errors.Is(err, user.ErrUniqueEmail) {
-			return response.NewError(err, http.StatusConflict)
+			return trusted.NewError(err, http.StatusConflict)
 		}
 		return fmt.Errorf("create: usr[%+v]: %w", usr, err)
 	}
@@ -60,14 +61,14 @@ func (h *Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Re
 func (h *Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app AppUpdateUser
 	if err := web.Decode(r, &app); err != nil {
-		return response.NewError(err, http.StatusBadRequest)
+		return trusted.NewError(err, http.StatusBadRequest)
 	}
 
 	usr := mid.GetUser(ctx)
 
 	uu, err := toCoreUpdateUser(app)
 	if err != nil {
-		return response.NewError(err, http.StatusBadRequest)
+		return trusted.NewError(err, http.StatusBadRequest)
 	}
 
 	usr, err = h.user.Update(ctx, usr, uu)
@@ -116,7 +117,7 @@ func (h *Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Req
 		return fmt.Errorf("count: %w", err)
 	}
 
-	return web.Respond(ctx, w, response.NewPageDocument(toAppUsers(users), total, page.Number, page.RowsPerPage), http.StatusOK)
+	return web.Respond(ctx, w, v1.NewPageDocument(toAppUsers(users), total, page.Number, page.RowsPerPage), http.StatusOK)
 }
 
 // QueryByID returns a user by its ID.
@@ -145,7 +146,7 @@ func (h *Handlers) Token(ctx context.Context, w http.ResponseWriter, r *http.Req
 	if err != nil {
 		switch {
 		case errors.Is(err, user.ErrNotFound):
-			return response.NewError(err, http.StatusNotFound)
+			return trusted.NewError(err, http.StatusNotFound)
 		case errors.Is(err, user.ErrAuthenticationFailure):
 			return auth.NewAuthError(err.Error())
 		default:

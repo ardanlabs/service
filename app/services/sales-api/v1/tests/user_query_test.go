@@ -7,7 +7,7 @@ import (
 
 	"github.com/ardanlabs/service/app/services/sales-api/v1/handlers/usergrp"
 	"github.com/ardanlabs/service/business/core/user"
-	"github.com/ardanlabs/service/business/web/v1/response"
+	v1 "github.com/ardanlabs/service/business/web/v1"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/uuid"
 )
@@ -33,16 +33,16 @@ func userQuery200(t *testing.T, app appTest, sd seedData) []tableData {
 			token:      sd.admins[0].token,
 			statusCode: http.StatusOK,
 			method:     http.MethodGet,
-			resp:       &response.PageDocument[usergrp.AppUser]{},
-			expResp: &response.PageDocument[usergrp.AppUser]{
+			resp:       &v1.PageDocument[usergrp.AppUser]{},
+			expResp: &v1.PageDocument[usergrp.AppUser]{
 				Page:        1,
 				RowsPerPage: 10,
 				Total:       len(usrs),
 				Items:       toAppUsers(usrs),
 			},
 			cmpFunc: func(x interface{}, y interface{}) string {
-				resp := x.(*response.PageDocument[usergrp.AppUser])
-				exp := y.(*response.PageDocument[usergrp.AppUser])
+				resp := x.(*v1.PageDocument[usergrp.AppUser])
+				exp := y.(*v1.PageDocument[usergrp.AppUser])
 
 				var found int
 				for _, r := range resp.Items {

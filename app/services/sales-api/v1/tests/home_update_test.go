@@ -7,7 +7,7 @@ import (
 
 	"github.com/ardanlabs/service/app/services/sales-api/v1/handlers/homegrp"
 	"github.com/ardanlabs/service/business/data/dbtest"
-	"github.com/ardanlabs/service/business/web/v1/response"
+	v1 "github.com/ardanlabs/service/business/web/v1"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/uuid"
 )
@@ -90,8 +90,8 @@ func homeUpdate400(t *testing.T, app appTest, sd seedData) []tableData {
 					Country:  dbtest.StringPointer(""),
 				},
 			},
-			resp: &response.ErrorDocument{},
-			expResp: &response.ErrorDocument{
+			resp: &v1.ErrorDocument{},
+			expResp: &v1.ErrorDocument{
 				Error:  "data validation error",
 				Fields: map[string]string{"address1": "address1 must be at least 1 character in length", "country": "Key: 'AppUpdateHome.address.country' Error:Field validation for 'country' failed on the 'iso3166_1_alpha2' tag", "state": "state must be at least 1 character in length"},
 			},
@@ -109,8 +109,8 @@ func homeUpdate400(t *testing.T, app appTest, sd seedData) []tableData {
 				Type:    dbtest.StringPointer("BAD TYPE"),
 				Address: &homegrp.AppUpdateAddress{},
 			},
-			resp: &response.ErrorDocument{},
-			expResp: &response.ErrorDocument{
+			resp: &v1.ErrorDocument{},
+			expResp: &v1.ErrorDocument{
 				Error: "parse: invalid type \"BAD TYPE\"",
 			},
 			cmpFunc: func(x interface{}, y interface{}) string {
@@ -130,8 +130,8 @@ func homeUpdate401(t *testing.T, app appTest, sd seedData) []tableData {
 			token:      "",
 			method:     http.MethodPut,
 			statusCode: http.StatusUnauthorized,
-			resp:       &response.ErrorDocument{},
-			expResp:    &response.ErrorDocument{Error: "Unauthorized"},
+			resp:       &v1.ErrorDocument{},
+			expResp:    &v1.ErrorDocument{Error: "Unauthorized"},
 			cmpFunc: func(x interface{}, y interface{}) string {
 				return cmp.Diff(x, y)
 			},
@@ -142,8 +142,8 @@ func homeUpdate401(t *testing.T, app appTest, sd seedData) []tableData {
 			token:      sd.users[0].token + "A",
 			method:     http.MethodPut,
 			statusCode: http.StatusUnauthorized,
-			resp:       &response.ErrorDocument{},
-			expResp:    &response.ErrorDocument{Error: "Unauthorized"},
+			resp:       &v1.ErrorDocument{},
+			expResp:    &v1.ErrorDocument{Error: "Unauthorized"},
 			cmpFunc: func(x interface{}, y interface{}) string {
 				return cmp.Diff(x, y)
 			},
@@ -165,8 +165,8 @@ func homeUpdate401(t *testing.T, app appTest, sd seedData) []tableData {
 					Country:  dbtest.StringPointer("US"),
 				},
 			},
-			resp:    &response.ErrorDocument{},
-			expResp: &response.ErrorDocument{Error: "Unauthorized"},
+			resp:    &v1.ErrorDocument{},
+			expResp: &v1.ErrorDocument{Error: "Unauthorized"},
 			cmpFunc: func(x interface{}, y interface{}) string {
 				return cmp.Diff(x, y)
 			},

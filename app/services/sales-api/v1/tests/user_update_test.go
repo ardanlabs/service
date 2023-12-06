@@ -7,7 +7,7 @@ import (
 
 	"github.com/ardanlabs/service/app/services/sales-api/v1/handlers/usergrp"
 	"github.com/ardanlabs/service/business/data/dbtest"
-	"github.com/ardanlabs/service/business/web/v1/response"
+	v1 "github.com/ardanlabs/service/business/web/v1"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/uuid"
 )
@@ -76,8 +76,8 @@ func userUpdate400(t *testing.T, app appTest, sd seedData) []tableData {
 				Email:           dbtest.StringPointer("bill@"),
 				PasswordConfirm: dbtest.StringPointer("jack"),
 			},
-			resp: &response.ErrorDocument{},
-			expResp: &response.ErrorDocument{
+			resp: &v1.ErrorDocument{},
+			expResp: &v1.ErrorDocument{
 				Error:  "data validation error",
 				Fields: map[string]string{"email": "email must be a valid email address", "passwordConfirm": "passwordConfirm must be equal to Password"},
 			},
@@ -94,8 +94,8 @@ func userUpdate400(t *testing.T, app appTest, sd seedData) []tableData {
 			model: &usergrp.AppUpdateUser{
 				Roles: []string{"BAD ROLE"},
 			},
-			resp: &response.ErrorDocument{},
-			expResp: &response.ErrorDocument{
+			resp: &v1.ErrorDocument{},
+			expResp: &v1.ErrorDocument{
 				Error: "parse: invalid role \"BAD ROLE\"",
 			},
 			cmpFunc: func(x interface{}, y interface{}) string {
@@ -115,8 +115,8 @@ func userUpdate401(t *testing.T, app appTest, sd seedData) []tableData {
 			token:      "",
 			method:     http.MethodPut,
 			statusCode: http.StatusUnauthorized,
-			resp:       &response.ErrorDocument{},
-			expResp:    &response.ErrorDocument{Error: "Unauthorized"},
+			resp:       &v1.ErrorDocument{},
+			expResp:    &v1.ErrorDocument{Error: "Unauthorized"},
 			cmpFunc: func(x interface{}, y interface{}) string {
 				return cmp.Diff(x, y)
 			},
@@ -127,8 +127,8 @@ func userUpdate401(t *testing.T, app appTest, sd seedData) []tableData {
 			token:      sd.users[0].token + "A",
 			method:     http.MethodPut,
 			statusCode: http.StatusUnauthorized,
-			resp:       &response.ErrorDocument{},
-			expResp:    &response.ErrorDocument{Error: "Unauthorized"},
+			resp:       &v1.ErrorDocument{},
+			expResp:    &v1.ErrorDocument{Error: "Unauthorized"},
 			cmpFunc: func(x interface{}, y interface{}) string {
 				return cmp.Diff(x, y)
 			},
@@ -147,8 +147,8 @@ func userUpdate401(t *testing.T, app appTest, sd seedData) []tableData {
 				Password:        dbtest.StringPointer("123"),
 				PasswordConfirm: dbtest.StringPointer("123"),
 			},
-			resp:    &response.ErrorDocument{},
-			expResp: &response.ErrorDocument{Error: "Unauthorized"},
+			resp:    &v1.ErrorDocument{},
+			expResp: &v1.ErrorDocument{Error: "Unauthorized"},
 			cmpFunc: func(x interface{}, y interface{}) string {
 				return cmp.Diff(x, y)
 			},

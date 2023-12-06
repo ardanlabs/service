@@ -37,7 +37,7 @@ type App struct {
 func NewApp(shutdown chan os.Signal, tracer trace.Tracer, mw ...Middleware) *App {
 
 	// Create an OpenTelemetry HTTP Handler which wraps our router. This will start
-	// the initial span and annotate it with information about the request/response.
+	// the initial span and annotate it with information about the request/trusted.
 	//
 	// This is configured to use the W3C TraceContext standard to set the remote
 	// parent if a client request includes the appropriate headers.
@@ -107,7 +107,7 @@ func (a *App) HandleNoMiddleware(method string, group string, path string, handl
 		ctx := setValues(r.Context(), &v)
 
 		if err := handler(ctx, w, r); err != nil {
-			if validateShutdown(err) {
+			if validateError(err) {
 				a.SignalShutdown()
 				return
 			}
@@ -140,7 +140,7 @@ func (a *App) Handle(method string, group string, path string, handler Handler, 
 		ctx = setValues(ctx, &v)
 
 		if err := handler(ctx, w, r); err != nil {
-			if validateShutdown(err) {
+			if validateError(err) {
 				a.SignalShutdown()
 				return
 			}
@@ -158,7 +158,7 @@ func (a *App) Handle(method string, group string, path string, handler Handler, 
 // =============================================================================
 
 // startSpan initializes the request by adding a span and writing otel
-// related information into the response writer for the response.
+// related information into the response writer for the trusted.
 func (a *App) startSpan(w http.ResponseWriter, r *http.Request) (context.Context, trace.Span) {
 	ctx := r.Context()
 
@@ -173,15 +173,15 @@ func (a *App) startSpan(w http.ResponseWriter, r *http.Request) (context.Context
 		span.SetAttributes(attribute.String("endpoint", r.RequestURI))
 	}
 
-	// Inject the trace information into the response.
+	// Inject the trace information into the trusted.
 	otel.GetTextMapPropagator().Inject(ctx, propagation.HeaderCarrier(w.Header()))
 
 	return ctx, span
 }
 
-// validateShutdown validates the error for special conditions that do not
+// validateError validates the error for special conditions that do not
 // warrant an actual shutdown by the system.
-func validateShutdown(err error) bool {
+func validateError(err error) bool {
 
 	// Ignore syscall.EPIPE and syscall.ECONNRESET errors which occurs
 	// when a write operation happens on the http.ResponseWriter that

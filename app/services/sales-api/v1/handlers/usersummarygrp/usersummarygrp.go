@@ -8,7 +8,7 @@ import (
 
 	"github.com/ardanlabs/service/business/core/usersummary"
 	"github.com/ardanlabs/service/business/data/page"
-	"github.com/ardanlabs/service/business/web/v1/response"
+	v1 "github.com/ardanlabs/service/business/web/v1"
 	"github.com/ardanlabs/service/foundation/web"
 )
 
@@ -51,5 +51,5 @@ func (h *Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Req
 		return fmt.Errorf("count: %w", err)
 	}
 
-	return web.Respond(ctx, w, response.NewPageDocument(toAppUsersSummary(smms), total, page.Number, page.RowsPerPage), http.StatusOK)
+	return web.Respond(ctx, w, v1.NewPageDocument(toAppUsersSummary(smms), total, page.Number, page.RowsPerPage), http.StatusOK)
 }

@@ -8,7 +8,7 @@ import (
 
 	"github.com/ardanlabs/service/app/services/sales-api/v1/build/all"
 	"github.com/ardanlabs/service/business/data/dbtest"
-	v1 "github.com/ardanlabs/service/business/web/v1"
+	"github.com/ardanlabs/service/business/web/v1/mux"
 )
 
 func Test_User(t *testing.T) {
@@ -24,7 +24,7 @@ func Test_User(t *testing.T) {
 	}()
 
 	app := appTest{
-		Handler: v1.APIMux(v1.APIMuxConfig{
+		Handler: mux.API(mux.Config{
 			Shutdown: make(chan os.Signal, 1),
 			Log:      dbTest.Log,
 			Auth:     dbTest.V1.Auth,

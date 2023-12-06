@@ -305,7 +305,7 @@ func parseWebAPI(fset *token.FileSet, file *ast.File, funcDecl *ast.FuncDecl, ro
 // =============================================================================
 
 // This function looks for the web.Respond call at the end of each handler.
-// Once found, it returns the name of the type that is used in the response.
+// Once found, it returns the name of the type that is used in the trusted.
 func findOutputDocument(body *ast.BlockStmt) (funcName string, status string) {
 
 	// Walk through the body of the function looking for the web.Decode
@@ -371,7 +371,7 @@ func findOutputDocument(body *ast.BlockStmt) (funcName string, status string) {
 		// This is the actual document that is being sent back with
 		// the idt.Name type as the generic type.
 		if isPageDocument {
-			return fmt.Sprintf("response.PageDocument[%s]", idt.Name), status
+			return fmt.Sprintf("v1.PageDocument[%s]", idt.Name), status
 		}
 
 		return idt.Name, status
@@ -524,9 +524,9 @@ func findAppModel(group string, modelName string) ([]Field, error) {
 
 	switch {
 	case strings.Contains(modelName, "ErrorDocument"):
-		file, err = parser.ParseFile(fset, "business/web/v1/response/response.go", nil, parser.ParseComments)
+		file, err = parser.ParseFile(fset, "business/web/v1/trusted/trusted.go", nil, parser.ParseComments)
 	case strings.Contains(modelName, "PageDocument"):
-		file, err = parser.ParseFile(fset, "business/web/v1/response/response.go", nil, parser.ParseComments)
+		file, err = parser.ParseFile(fset, "business/web/v1/trusted/trusted.go", nil, parser.ParseComments)
 	default:
 		file, err = parser.ParseFile(fset, "app/services/sales-api/v1/handlers/"+group+"/model.go", nil, parser.ParseComments)
 	}

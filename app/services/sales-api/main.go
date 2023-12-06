@@ -17,9 +17,9 @@ import (
 	"github.com/ardanlabs/service/app/services/sales-api/v1/build/crud"
 	"github.com/ardanlabs/service/app/services/sales-api/v1/build/reporting"
 	db "github.com/ardanlabs/service/business/data/dbsql/pgx"
-	v1 "github.com/ardanlabs/service/business/web/v1"
 	"github.com/ardanlabs/service/business/web/v1/auth"
 	"github.com/ardanlabs/service/business/web/v1/debug"
+	"github.com/ardanlabs/service/business/web/v1/mux"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/vault"
 	"github.com/ardanlabs/service/foundation/web"
@@ -231,7 +231,7 @@ func run(ctx context.Context, log *logger.Logger, build string) error {
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
 
-	cfgMux := v1.APIMuxConfig{
+	cfgMux := mux.Config{
 		Build:    build,
 		Shutdown: shutdown,
 		Log:      log,
@@ -240,7 +240,7 @@ func run(ctx context.Context, log *logger.Logger, build string) error {
 		Tracer:   tracer,
 	}
 
-	apiMux := v1.APIMux(cfgMux, buildRoutes(), v1.WithCORS("*"))
+	apiMux := mux.API(cfgMux, buildRoutes(), mux.WithCORS("*"))
 
 	api := http.Server{
 		Addr:         cfg.Web.APIHost,
@@ -284,7 +284,7 @@ func run(ctx context.Context, log *logger.Logger, build string) error {
 
 // =============================================================================
 
-func buildRoutes() v1.RouteAdder {
+func buildRoutes() mux.RouteAdder {
 
 	// The idea here is that we can build different versions of the binary
 	// with different sets of exposed web APIs. By default we build a single

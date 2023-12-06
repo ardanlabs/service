@@ -7,7 +7,7 @@ import (
 
 	"github.com/ardanlabs/service/app/services/sales-api/v1/handlers/productgrp"
 	"github.com/ardanlabs/service/business/data/dbtest"
-	"github.com/ardanlabs/service/business/web/v1/response"
+	v1 "github.com/ardanlabs/service/business/web/v1"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/uuid"
 )
@@ -72,8 +72,8 @@ func productUpdate400(t *testing.T, app appTest, sd seedData) []tableData {
 				Cost:     dbtest.FloatPointer(-1.0),
 				Quantity: dbtest.IntPointer(0),
 			},
-			resp: &response.ErrorDocument{},
-			expResp: &response.ErrorDocument{
+			resp: &v1.ErrorDocument{},
+			expResp: &v1.ErrorDocument{
 				Error:  "data validation error",
 				Fields: map[string]string{"cost": "cost must be 0 or greater", "quantity": "quantity must be 1 or greater"},
 			},
@@ -94,8 +94,8 @@ func productUpdate401(t *testing.T, app appTest, sd seedData) []tableData {
 			token:      "",
 			method:     http.MethodPut,
 			statusCode: http.StatusUnauthorized,
-			resp:       &response.ErrorDocument{},
-			expResp:    &response.ErrorDocument{Error: "Unauthorized"},
+			resp:       &v1.ErrorDocument{},
+			expResp:    &v1.ErrorDocument{Error: "Unauthorized"},
 			cmpFunc: func(x interface{}, y interface{}) string {
 				return cmp.Diff(x, y)
 			},
@@ -106,8 +106,8 @@ func productUpdate401(t *testing.T, app appTest, sd seedData) []tableData {
 			token:      sd.users[1].token + "A",
 			method:     http.MethodPut,
 			statusCode: http.StatusUnauthorized,
-			resp:       &response.ErrorDocument{},
-			expResp:    &response.ErrorDocument{Error: "Unauthorized"},
+			resp:       &v1.ErrorDocument{},
+			expResp:    &v1.ErrorDocument{Error: "Unauthorized"},
 			cmpFunc: func(x interface{}, y interface{}) string {
 				return cmp.Diff(x, y)
 			},
@@ -123,8 +123,8 @@ func productUpdate401(t *testing.T, app appTest, sd seedData) []tableData {
 				Cost:     dbtest.FloatPointer(10.34),
 				Quantity: dbtest.IntPointer(10),
 			},
-			resp:    &response.ErrorDocument{},
-			expResp: &response.ErrorDocument{Error: "Unauthorized"},
+			resp:    &v1.ErrorDocument{},
+			expResp: &v1.ErrorDocument{Error: "Unauthorized"},
 			cmpFunc: func(x interface{}, y interface{}) string {
 				return cmp.Diff(x, y)
 			},

@@ -8,7 +8,7 @@ import (
 
 	"github.com/ardanlabs/service/business/core/product"
 	"github.com/ardanlabs/service/business/web/v1/auth"
-	"github.com/ardanlabs/service/business/web/v1/response"
+	"github.com/ardanlabs/service/business/web/v1/trusted"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/google/uuid"
 )
@@ -45,14 +45,14 @@ func AuthorizeProduct(a *auth.Auth, rule string, prdCore *product.Core) web.Midd
 				var err error
 				productID, err := uuid.Parse(id)
 				if err != nil {
-					return response.NewError(ErrInvalidID, http.StatusBadRequest)
+					return trusted.NewError(ErrInvalidID, http.StatusBadRequest)
 				}
 
 				prd, err := prdCore.QueryByID(ctx, productID)
 				if err != nil {
 					switch {
 					case errors.Is(err, product.ErrNotFound):
-						return response.NewError(err, http.StatusNoContent)
+						return trusted.NewError(err, http.StatusNoContent)
 					default:
 						return fmt.Errorf("querybyid: productID[%s]: %w", productID, err)
 					}
