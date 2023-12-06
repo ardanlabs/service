@@ -12,10 +12,10 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 #
 #   If you are not allowed to update your Go frontend, you can install
 #   and use a 1.21 frontend.
-#   $ go install golang.org/dl/go1.21.4@latest
-#   $ go1.21.4 download
+#   $ go install golang.org/dl/go1.21.5@latest
+#   $ go1.21.5 download
 #
-#   This means you need to use go1.21.4 instead of go.
+#   This means you need to use go1.21.5 instead of go.
 
 # ==============================================================================
 # Brew Installation
@@ -128,7 +128,7 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 # ==============================================================================
 # Define dependencies
 
-GOLANG          := golang:1.21.4
+GOLANG          := golang:1.21.5
 ALPINE          := alpine:3.18
 KIND            := kindest/node:v1.27.3
 POSTGRES        := postgres:15.5
