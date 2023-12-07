@@ -11,7 +11,7 @@ import (
 
 	"github.com/ardanlabs/service/business/core/product"
 	"github.com/ardanlabs/service/business/core/user"
-	db "github.com/ardanlabs/service/business/data/dbsql/pgx"
+	database "github.com/ardanlabs/service/business/data/dbsql/pgx"
 	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/ardanlabs/service/business/data/transaction"
 	"github.com/ardanlabs/service/foundation/docker"
@@ -354,7 +354,7 @@ func tran(t *testing.T) {
 		return nil
 	}
 
-	err := transaction.ExecuteUnderTransaction(ctx, test.Log, db.NewBeginner(test.DB), f)
+	err := transaction.ExecuteUnderTransaction(ctx, test.Log, database.NewBeginner(test.DB), f)
 	if !errors.Is(err, product.ErrInvalidCost) {
 		t.Fatalf("Should NOT be able to add product : %s.", err)
 	}
@@ -432,7 +432,7 @@ func tran(t *testing.T) {
 		return nil
 	}
 
-	err = transaction.ExecuteUnderTransaction(ctx, test.Log, db.NewBeginner(test.DB), f)
+	err = transaction.ExecuteUnderTransaction(ctx, test.Log, database.NewBeginner(test.DB), f)
 	if errors.Is(err, product.ErrInvalidCost) {
 		t.Fatalf("Should be able to add product : %s.", err)
 	}

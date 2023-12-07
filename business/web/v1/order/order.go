@@ -31,6 +31,13 @@ type By struct {
 
 // NewBy constructs a new By value with no checks.
 func NewBy(field string, direction string) By {
+	if _, exists := directions[direction]; !exists {
+		return By{
+			Field:     field,
+			Direction: ASC,
+		}
+	}
+
 	return By{
 		Field:     field,
 		Direction: direction,
@@ -53,15 +60,18 @@ func Parse(r *http.Request, defaultOrder By) (By, error) {
 	var by By
 	switch len(orderParts) {
 	case 1:
-		by = NewBy(strings.Trim(orderParts[0], " "), ASC)
+		by = NewBy(strings.TrimSpace(orderParts[0]), ASC)
+
 	case 2:
-		by = NewBy(strings.Trim(orderParts[0], " "), strings.Trim(orderParts[1], " "))
+		direction := strings.Trim(orderParts[1], " ")
+		if _, exists := directions[direction]; !exists {
+			return By{}, validate.NewFieldsError(v, fmt.Errorf("unknown direction: %s", by.Direction))
+		}
+
+		by = NewBy(strings.Trim(orderParts[0], " "), direction)
+
 	default:
 		return By{}, validate.NewFieldsError(v, errors.New("unknown order field"))
-	}
-
-	if _, exists := directions[by.Direction]; !exists {
-		return By{}, validate.NewFieldsError(v, fmt.Errorf("unknown direction: %s", by.Direction))
 	}
 
 	return by, nil

@@ -29,22 +29,22 @@ func Errors(log *logger.Logger) web.Middleware {
 
 				switch {
 				case v1.IsTrustedError(err):
-					reqErr := v1.GetTrustedError(err)
+					trsErr := v1.GetTrustedError(err)
 
-					if validate.IsFieldErrors(reqErr.Err) {
-						fieldErrors := validate.GetFieldErrors(reqErr.Err)
+					if validate.IsFieldErrors(trsErr.Err) {
+						fieldErrors := validate.GetFieldErrors(trsErr.Err)
 						er = v1.ErrorResponse{
 							Error:  "data validation error",
 							Fields: fieldErrors.Fields(),
 						}
-						status = reqErr.Status
+						status = trsErr.Status
 						break
 					}
 
 					er = v1.ErrorResponse{
-						Error: reqErr.Error(),
+						Error: trsErr.Error(),
 					}
-					status = reqErr.Status
+					status = trsErr.Status
 
 				case auth.IsAuthError(err):
 					er = v1.ErrorResponse{

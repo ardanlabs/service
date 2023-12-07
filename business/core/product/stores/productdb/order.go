@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/ardanlabs/service/business/core/product"
-	"github.com/ardanlabs/service/business/data/order"
+	"github.com/ardanlabs/service/business/web/v1/order"
 )
 
 var orderByFields = map[string]string{

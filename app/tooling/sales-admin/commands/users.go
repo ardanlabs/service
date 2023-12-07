@@ -11,13 +11,13 @@ import (
 	"github.com/ardanlabs/service/business/core/event"
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/core/user/stores/userdb"
-	db "github.com/ardanlabs/service/business/data/dbsql/pgx"
+	database "github.com/ardanlabs/service/business/data/dbsql/pgx"
 	"github.com/ardanlabs/service/foundation/logger"
 )
 
 // Users retrieves all users from the database.
-func Users(log *logger.Logger, cfg db.Config, pageNumber string, rowsPerPage string) error {
-	db, err := db.Open(cfg)
+func Users(log *logger.Logger, cfg database.Config, pageNumber string, rowsPerPage string) error {
+	db, err := database.Open(cfg)
 	if err != nil {
 		return fmt.Errorf("connect database: %w", err)
 	}

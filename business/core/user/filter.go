@@ -10,6 +10,7 @@ import (
 )
 
 // QueryFilter holds the available fields a query can be filtered on.
+// We are using pointer semantics to support the api.
 type QueryFilter struct {
 	ID               *uuid.UUID    `validate:"omitempty"`
 	Name             *string       `validate:"omitempty,min=3"`

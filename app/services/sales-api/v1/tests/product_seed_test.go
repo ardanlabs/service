@@ -7,7 +7,7 @@ import (
 	"github.com/ardanlabs/service/business/core/product"
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/data/dbtest"
-	"github.com/ardanlabs/service/business/data/order"
+	"github.com/ardanlabs/service/business/web/v1/order"
 )
 
 func createProductSeed(ctx context.Context, dbTest *dbtest.Test) (seedData, error) {

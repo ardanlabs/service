@@ -213,7 +213,7 @@ func (a *Auth) publicKeyLookup(kid string) (string, error) {
 	return pem, nil
 }
 
-// opaPolicyEvaluation asks opa to evaulate the token against the specified token
+// opaPolicyEvaluation asks opa to evaluate the token against the specified token
 // policy and public key.
 func (a *Auth) opaPolicyEvaluation(ctx context.Context, opaPolicy string, rule string, input any) error {
 	query := fmt.Sprintf("x = data.%s.%s", opaPackage, rule)

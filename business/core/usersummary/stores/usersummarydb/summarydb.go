@@ -7,8 +7,8 @@ import (
 	"fmt"
 
 	"github.com/ardanlabs/service/business/core/usersummary"
-	db "github.com/ardanlabs/service/business/data/dbsql/pgx"
-	"github.com/ardanlabs/service/business/data/order"
+	database "github.com/ardanlabs/service/business/data/dbsql/pgx"
+	"github.com/ardanlabs/service/business/web/v1/order"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/jmoiron/sqlx"
 )
@@ -52,7 +52,7 @@ func (s *Store) Query(ctx context.Context, filter usersummary.QueryFilter, order
 	buf.WriteString(" OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY")
 
 	var dbSmm []dbSummary
-	if err := db.NamedQuerySlice(ctx, s.log, s.db, buf.String(), data, &dbSmm); err != nil {
+	if err := database.NamedQuerySlice(ctx, s.log, s.db, buf.String(), data, &dbSmm); err != nil {
 		return nil, fmt.Errorf("namedqueryslice: %w", err)
 	}
 
@@ -75,7 +75,7 @@ func (s *Store) Count(ctx context.Context, filter usersummary.QueryFilter) (int,
 	var count struct {
 		Count int `db:"count"`
 	}
-	if err := db.NamedQueryStruct(ctx, s.log, s.db, buf.String(), data, &count); err != nil {
+	if err := database.NamedQueryStruct(ctx, s.log, s.db, buf.String(), data, &count); err != nil {
 		return 0, fmt.Errorf("namedquerystruct: %w", err)
 	}
 

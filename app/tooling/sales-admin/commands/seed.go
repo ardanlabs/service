@@ -6,12 +6,12 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/data/dbmigrate"
-	db "github.com/ardanlabs/service/business/data/dbsql/pgx"
+	database "github.com/ardanlabs/service/business/data/dbsql/pgx"
 )
 
 // Seed loads test data into the database.
-func Seed(cfg db.Config) error {
-	db, err := db.Open(cfg)
+func Seed(cfg database.Config) error {
+	db, err := database.Open(cfg)
 	if err != nil {
 		return fmt.Errorf("connect database: %w", err)
 	}

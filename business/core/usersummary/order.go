@@ -1,6 +1,6 @@
 package usersummary
 
-import "github.com/ardanlabs/service/business/data/order"
+import "github.com/ardanlabs/service/business/web/v1/order"
 
 // DefaultOrderBy represents the default way we sort.
 var DefaultOrderBy = order.NewBy(OrderByUserID, order.ASC)

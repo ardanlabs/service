@@ -8,9 +8,9 @@ import (
 	"fmt"
 
 	"github.com/ardanlabs/service/business/core/product"
-	db "github.com/ardanlabs/service/business/data/dbsql/pgx"
-	"github.com/ardanlabs/service/business/data/order"
+	database "github.com/ardanlabs/service/business/data/dbsql/pgx"
 	"github.com/ardanlabs/service/business/data/transaction"
+	"github.com/ardanlabs/service/business/web/v1/order"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
@@ -33,7 +33,7 @@ func NewStore(log *logger.Logger, db *sqlx.DB) *Store {
 // ExecuteUnderTransaction constructs a new Store value replacing the sqlx DB
 // value with a sqlx DB value that is currently inside a transaction.
 func (s *Store) ExecuteUnderTransaction(tx transaction.Transaction) (product.Storer, error) {
-	ec, err := db.GetExtContext(tx)
+	ec, err := database.GetExtContext(tx)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +55,7 @@ func (s *Store) Create(ctx context.Context, prd product.Product) error {
 	VALUES
 		(:product_id, :user_id, :name, :cost, :quantity, :date_created, :date_updated)`
 
-	if err := db.NamedExecContext(ctx, s.log, s.db, q, toDBProduct(prd)); err != nil {
+	if err := database.NamedExecContext(ctx, s.log, s.db, q, toDBProduct(prd)); err != nil {
 		return fmt.Errorf("namedexeccontext: %w", err)
 	}
 
@@ -76,7 +76,7 @@ func (s *Store) Update(ctx context.Context, prd product.Product) error {
 	WHERE
 		product_id = :product_id`
 
-	if err := db.NamedExecContext(ctx, s.log, s.db, q, toDBProduct(prd)); err != nil {
+	if err := database.NamedExecContext(ctx, s.log, s.db, q, toDBProduct(prd)); err != nil {
 		return fmt.Errorf("namedexeccontext: %w", err)
 	}
 
@@ -97,7 +97,7 @@ func (s *Store) Delete(ctx context.Context, prd product.Product) error {
 	WHERE
 		product_id = :product_id`
 
-	if err := db.NamedExecContext(ctx, s.log, s.db, q, data); err != nil {
+	if err := database.NamedExecContext(ctx, s.log, s.db, q, data); err != nil {
 		return fmt.Errorf("namedexeccontext: %w", err)
 	}
 
@@ -129,7 +129,7 @@ func (s *Store) Query(ctx context.Context, filter product.QueryFilter, orderBy o
 	buf.WriteString(" OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY")
 
 	var dbPrds []dbProduct
-	if err := db.NamedQuerySlice(ctx, s.log, s.db, buf.String(), data, &dbPrds); err != nil {
+	if err := database.NamedQuerySlice(ctx, s.log, s.db, buf.String(), data, &dbPrds); err != nil {
 		return nil, fmt.Errorf("namedqueryslice: %w", err)
 	}
 
@@ -154,7 +154,7 @@ func (s *Store) Count(ctx context.Context, filter product.QueryFilter) (int, err
 		Sold    int `db:"sold"`
 		Revenue int `db:"revenue"`
 	}
-	if err := db.NamedQueryStruct(ctx, s.log, s.db, buf.String(), data, &count); err != nil {
+	if err := database.NamedQueryStruct(ctx, s.log, s.db, buf.String(), data, &count); err != nil {
 		return 0, fmt.Errorf("namedquerystruct: %w", err)
 	}
 
@@ -178,8 +178,8 @@ func (s *Store) QueryByID(ctx context.Context, productID uuid.UUID) (product.Pro
 		product_id = :product_id`
 
 	var dbPrd dbProduct
-	if err := db.NamedQueryStruct(ctx, s.log, s.db, q, data, &dbPrd); err != nil {
-		if errors.Is(err, db.ErrDBNotFound) {
+	if err := database.NamedQueryStruct(ctx, s.log, s.db, q, data, &dbPrd); err != nil {
+		if errors.Is(err, database.ErrDBNotFound) {
 			return product.Product{}, fmt.Errorf("namedquerystruct: %w", product.ErrNotFound)
 		}
 		return product.Product{}, fmt.Errorf("namedquerystruct: %w", err)
@@ -205,7 +205,7 @@ func (s *Store) QueryByUserID(ctx context.Context, userID uuid.UUID) ([]product.
 		user_id = :user_id`
 
 	var dbPrds []dbProduct
-	if err := db.NamedQuerySlice(ctx, s.log, s.db, q, data, &dbPrds); err != nil {
+	if err := database.NamedQuerySlice(ctx, s.log, s.db, q, data, &dbPrds); err != nil {
 		return nil, fmt.Errorf("namedquerystruct: %w", err)
 	}
 
