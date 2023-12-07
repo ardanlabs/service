@@ -8,7 +8,7 @@ import (
 	"net/http"
 
 	"github.com/ardanlabs/service/business/core/{{.DomainL}}"
-	"github.com/ardanlabs/service/business/data/page"
+	"github.com/ardanlabs/service/business/web/v1/page"
 	"github.com/ardanlabs/service/business/web/v1/mid"
 	"github.com/ardanlabs/service/business/web/v1/trusted"
 	"github.com/ardanlabs/service/foundation/web"

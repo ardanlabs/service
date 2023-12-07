@@ -7,8 +7,8 @@ import (
 	"net/http"
 
 	"github.com/ardanlabs/service/business/core/usersummary"
-	"github.com/ardanlabs/service/business/data/page"
 	v1 "github.com/ardanlabs/service/business/web/v1"
+	"github.com/ardanlabs/service/business/web/v1/page"
 	"github.com/ardanlabs/service/foundation/web"
 )
 

@@ -8,7 +8,7 @@ import (
 	"github.com/ardanlabs/service/business/core/user"
 )
 
-func (s *Store) applyFilter(filter user.QueryFilter, data map[string]interface{}, buf *bytes.Buffer) {
+func applyFilter(filter user.QueryFilter, data map[string]interface{}, buf *bytes.Buffer) {
 	var wc []string
 
 	if filter.ID != nil {

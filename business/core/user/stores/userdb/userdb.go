@@ -96,9 +96,9 @@ func (s *Store) Update(ctx context.Context, usr user.User) error {
 // Delete removes a user from the database.
 func (s *Store) Delete(ctx context.Context, usr user.User) error {
 	data := struct {
-		UserID string `db:"user_id"`
+		ID string `db:"user_id"`
 	}{
-		UserID: usr.ID.String(),
+		ID: usr.ID.String(),
 	}
 
 	const q = `
@@ -128,7 +128,7 @@ func (s *Store) Query(ctx context.Context, filter user.QueryFilter, orderBy orde
 		users`
 
 	buf := bytes.NewBufferString(q)
-	s.applyFilter(filter, data, buf)
+	applyFilter(filter, data, buf)
 
 	orderByClause, err := orderByClause(orderBy)
 	if err != nil {
@@ -157,7 +157,7 @@ func (s *Store) Count(ctx context.Context, filter user.QueryFilter) (int, error)
 		users`
 
 	buf := bytes.NewBufferString(q)
-	s.applyFilter(filter, data, buf)
+	applyFilter(filter, data, buf)
 
 	var count struct {
 		Count int `db:"count"`

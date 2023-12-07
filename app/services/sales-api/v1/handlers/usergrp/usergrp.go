@@ -10,10 +10,10 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/core/user"
-	"github.com/ardanlabs/service/business/data/page"
 	v1 "github.com/ardanlabs/service/business/web/v1"
 	"github.com/ardanlabs/service/business/web/v1/auth"
 	"github.com/ardanlabs/service/business/web/v1/mid"
+	"github.com/ardanlabs/service/business/web/v1/page"
 	"github.com/ardanlabs/service/foundation/validate"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/golang-jwt/jwt/v4"

@@ -56,11 +56,11 @@ type PageDocument[T any] struct {
 }
 
 // NewPageDocument constructs a response value for a web paging trusted.
-func NewPageDocument[T any](items []T, total int, page int, rowsPrePage int) PageDocument[T] {
+func NewPageDocument[T any](items []T, total int, page int, rowsPerPage int) PageDocument[T] {
 	return PageDocument[T]{
 		Items:       items,
 		Total:       total,
 		Page:        page,
-		RowsPerPage: rowsPrePage,
+		RowsPerPage: rowsPerPage,
 	}
 }
