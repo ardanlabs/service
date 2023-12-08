@@ -1,9 +1,6 @@
 package product
 
 import (
-	"fmt"
-
-	"github.com/ardanlabs/service/foundation/validate"
 	"github.com/google/uuid"
 )
 
@@ -13,14 +10,6 @@ type QueryFilter struct {
 	Name     *string    `validate:"omitempty,min=3"`
 	Cost     *float64   `validate:"omitempty,numeric"`
 	Quantity *int       `validate:"omitempty,numeric"`
-}
-
-// Validate checks the data in the model is considered clean.
-func (qf *QueryFilter) Validate() error {
-	if err := validate.Check(qf); err != nil {
-		return fmt.Errorf("validate: %w", err)
-	}
-	return nil
 }
 
 // WithProductID sets the ID field of the QueryFilter value.

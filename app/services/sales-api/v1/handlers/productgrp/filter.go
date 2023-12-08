@@ -49,9 +49,5 @@ func parseFilter(r *http.Request) (product.QueryFilter, error) {
 		filter.WithName(name)
 	}
 
-	if err := filter.Validate(); err != nil {
-		return product.QueryFilter{}, err
-	}
-
 	return filter, nil
 }

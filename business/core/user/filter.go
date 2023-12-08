@@ -1,11 +1,9 @@
 package user
 
 import (
-	"fmt"
 	"net/mail"
 	"time"
 
-	"github.com/ardanlabs/service/foundation/validate"
 	"github.com/google/uuid"
 )
 
@@ -17,14 +15,6 @@ type QueryFilter struct {
 	Email            *mail.Address `validate:"omitempty"`
 	StartCreatedDate *time.Time    `validate:"omitempty"`
 	EndCreatedDate   *time.Time    `validate:"omitempty"`
-}
-
-// Validate checks the data in the model is considered clean.
-func (qf *QueryFilter) Validate() error {
-	if err := validate.Check(qf); err != nil {
-		return fmt.Errorf("validate: %w", err)
-	}
-	return nil
 }
 
 // WithUserID sets the ID field of the QueryFilter value.

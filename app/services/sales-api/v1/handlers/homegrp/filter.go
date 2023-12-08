@@ -62,9 +62,5 @@ func parseFilter(r *http.Request) (home.QueryFilter, error) {
 		filter.WithEndCreatedDate(t)
 	}
 
-	if err := filter.Validate(); err != nil {
-		return home.QueryFilter{}, err
-	}
-
 	return filter, nil
 }

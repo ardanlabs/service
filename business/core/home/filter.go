@@ -1,10 +1,8 @@
 package home
 
 import (
-	"fmt"
 	"time"
 
-	"github.com/ardanlabs/service/foundation/validate"
 	"github.com/google/uuid"
 )
 
@@ -15,14 +13,6 @@ type QueryFilter struct {
 	Type             *Type      `validate:"omitempty"`
 	StartCreatedDate *time.Time `validate:"omitempty"`
 	EndCreatedDate   *time.Time `validate:"omitempty"`
-}
-
-// Validate checks if the data in the model is considered clean.
-func (qf *QueryFilter) Validate() error {
-	if err := validate.Check(qf); err != nil {
-		return fmt.Errorf("validate: %w", err)
-	}
-	return nil
 }
 
 // WithHomeID sets the ID field of the QueryFilter value.

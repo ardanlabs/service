@@ -12,6 +12,7 @@ import (
 	"github.com/ardanlabs/service/business/data/transaction"
 	"github.com/ardanlabs/service/business/web/v1/order"
 	"github.com/ardanlabs/service/foundation/logger"
+	"github.com/ardanlabs/service/foundation/validate"
 	"github.com/google/uuid"
 )
 
@@ -164,6 +165,10 @@ func (c *Core) Delete(ctx context.Context, hme Home) error {
 
 // Query retrieves a list of existing homes.
 func (c *Core) Query(ctx context.Context, filter QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]Home, error) {
+	if err := validate.Check(filter); err != nil {
+		return nil, fmt.Errorf("validate: %w", err)
+	}
+
 	hmes, err := c.storer.Query(ctx, filter, orderBy, pageNumber, rowsPerPage)
 	if err != nil {
 		return nil, fmt.Errorf("query: %w", err)
@@ -174,6 +179,10 @@ func (c *Core) Query(ctx context.Context, filter QueryFilter, orderBy order.By, 
 
 // Count returns the total number of homes.
 func (c *Core) Count(ctx context.Context, filter QueryFilter) (int, error) {
+	if err := validate.Check(filter); err != nil {
+		return 0, fmt.Errorf("validate: %w", err)
+	}
+
 	return c.storer.Count(ctx, filter)
 }
 

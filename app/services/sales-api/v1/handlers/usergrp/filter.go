@@ -59,10 +59,5 @@ func parseFilter(r *http.Request) (user.QueryFilter, error) {
 		filter.WithName(name)
 	}
 
-	// MAYBE THIS SHOULD BE IN BUSINESS
-	if err := filter.Validate(); err != nil {
-		return user.QueryFilter{}, err
-	}
-
 	return filter, nil
 }

@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/ardanlabs/service/business/web/v1/order"
+	"github.com/ardanlabs/service/foundation/validate"
 )
 
 // Storer interface declares the behavior this package needs to perists and
@@ -32,6 +33,10 @@ func NewCore(storer Storer) *Core {
 
 // Query retrieves a list of existing users from the database.
 func (c *Core) Query(ctx context.Context, filter QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]Summary, error) {
+	if err := validate.Check(filter); err != nil {
+		return nil, fmt.Errorf("validate: %w", err)
+	}
+
 	users, err := c.storer.Query(ctx, filter, orderBy, pageNumber, rowsPerPage)
 	if err != nil {
 		return nil, fmt.Errorf("query: %w", err)
@@ -42,5 +47,9 @@ func (c *Core) Query(ctx context.Context, filter QueryFilter, orderBy order.By, 
 
 // Count returns the total number of users in the store.
 func (c *Core) Count(ctx context.Context, filter QueryFilter) (int, error) {
+	if err := validate.Check(filter); err != nil {
+		return 0, fmt.Errorf("validate: %w", err)
+	}
+
 	return c.storer.Count(ctx, filter)
 }
