@@ -9,17 +9,19 @@ import (
 )
 
 // QueryFilter holds the available fields a query can be filtered on.
+// We are using pointer semantics because the With API mutates the value.
 type QueryFilter struct {
 	ID               *uuid.UUID `validate:"omitempty"`
 	StartCreatedDate *time.Time `validate:"omitempty"`
 	EndCreatedDate   *time.Time `validate:"omitempty"`
 }
 
-// Validate checks if the data in the model is considered clean.
+// Validate can perform a check of the data against the validate tags.
 func (qf *QueryFilter) Validate() error {
 	if err := validate.Check(qf); err != nil {
 		return fmt.Errorf("validate: %w", err)
 	}
+
 	return nil
 }
 
