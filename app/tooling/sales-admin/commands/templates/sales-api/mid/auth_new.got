@@ -7,8 +7,8 @@ import (
 	"net/http"
 
 	"github.com/ardanlabs/service/business/core/{{.DomainL}}"
-	"github.com/ardanlabs/service/business/web/v1/auth"
-	"github.com/ardanlabs/service/business/web/v1/trusted"
+	v1 "github.com/ardanlabs/service/business/web/v1"
+    "github.com/ardanlabs/service/business/web/v1/auth"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/google/uuid"
 )
