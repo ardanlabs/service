@@ -36,5 +36,5 @@ func Routes(app *web.App, cfg Config) {
 	tran := mid.ExecuteInTransaction(cfg.Log, database.NewBeginner(cfg.DB))
 
 	hdl := New(usrCore, prdCore)
-	app.Handle(http.MethodPost, version, "/tranexample", hdl.Create, authen, tran)
+	app.Handle(http.MethodPost, version, "/tranexample", hdl.Create, tran, authen)
 }
