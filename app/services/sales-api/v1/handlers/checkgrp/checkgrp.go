@@ -8,7 +8,7 @@ import (
 	"runtime"
 	"time"
 
-	database "github.com/ardanlabs/service/business/data/dbsql/pgx"
+	"github.com/ardanlabs/service/business/data/sqldb"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/jmoiron/sqlx"
@@ -39,7 +39,7 @@ func (h *Handlers) Readiness(ctx context.Context, w http.ResponseWriter, r *http
 
 	status := "ok"
 	statusCode := http.StatusOK
-	if err := database.StatusCheck(ctx, h.db); err != nil {
+	if err := sqldb.StatusCheck(ctx, h.db); err != nil {
 		status = "db not ready"
 		statusCode = http.StatusInternalServerError
 		h.log.Info(ctx, "readiness failure", "status", status)

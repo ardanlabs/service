@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ardanlabs/service/business/data/dbmigrate"
-	database "github.com/ardanlabs/service/business/data/dbsql/pgx"
+	"github.com/ardanlabs/service/business/data/migrate"
+	"github.com/ardanlabs/service/business/data/sqldb"
 )
 
 // Seed loads test data into the database.
-func Seed(cfg database.Config) error {
-	db, err := database.Open(cfg)
+func Seed(cfg sqldb.Config) error {
+	db, err := sqldb.Open(cfg)
 	if err != nil {
 		return fmt.Errorf("connect database: %w", err)
 	}
@@ -20,7 +20,7 @@ func Seed(cfg database.Config) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	if err := dbmigrate.Seed(ctx, db); err != nil {
+	if err := migrate.Seed(ctx, db); err != nil {
 		return fmt.Errorf("seed database: %w", err)
 	}
 

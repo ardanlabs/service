@@ -8,7 +8,7 @@ import (
 	"fmt"
 
 	"github.com/ardanlabs/service/business/core/home"
-	database "github.com/ardanlabs/service/business/data/dbsql/pgx"
+	"github.com/ardanlabs/service/business/data/sqldb"
 	"github.com/ardanlabs/service/business/data/transaction"
 	"github.com/ardanlabs/service/business/web/v1/order"
 	"github.com/ardanlabs/service/foundation/logger"
@@ -33,7 +33,7 @@ func NewStore(log *logger.Logger, db *sqlx.DB) *Store {
 // ExecuteUnderTransaction constructs a new Store value replacing the sqlx DB
 // value with a sqlx DB value that is currently inside a transaction.
 func (s *Store) ExecuteUnderTransaction(tx transaction.Transaction) (home.Storer, error) {
-	ec, err := database.GetExtContext(tx)
+	ec, err := sqldb.GetExtContext(tx)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +46,7 @@ func (s *Store) ExecuteUnderTransaction(tx transaction.Transaction) (home.Storer
 	return &store, nil
 }
 
-// Create adds a Home to the database. It returns an error if something went wrong
+// Create adds a Home to the sqldb. It returns an error if something went wrong
 func (s *Store) Create(ctx context.Context, hme home.Home) error {
 	const q = `
     INSERT INTO homes
@@ -54,7 +54,7 @@ func (s *Store) Create(ctx context.Context, hme home.Home) error {
     VALUES
         (:home_id, :user_id, :type, :address_1, :address_2, :zip_code, :city, :state, :country, :date_created, :date_updated)`
 
-	if err := database.NamedExecContext(ctx, s.log, s.db, q, toDBHome(hme)); err != nil {
+	if err := sqldb.NamedExecContext(ctx, s.log, s.db, q, toDBHome(hme)); err != nil {
 		return fmt.Errorf("namedexeccontext: %w", err)
 	}
 
@@ -75,7 +75,7 @@ func (s *Store) Delete(ctx context.Context, hme home.Home) error {
 	WHERE
 	  	home_id = :home_id`
 
-	if err := database.NamedExecContext(ctx, s.log, s.db, q, data); err != nil {
+	if err := sqldb.NamedExecContext(ctx, s.log, s.db, q, data); err != nil {
 		return fmt.Errorf("namedexeccontext: %w", err)
 	}
 
@@ -107,7 +107,7 @@ func (s *Store) Query(ctx context.Context, filter home.QueryFilter, orderBy orde
 	buf.WriteString(" OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY")
 
 	var dbHmes []dbHome
-	if err := database.NamedQuerySlice(ctx, s.log, s.db, buf.String(), data, &dbHmes); err != nil {
+	if err := sqldb.NamedQuerySlice(ctx, s.log, s.db, buf.String(), data, &dbHmes); err != nil {
 		return nil, fmt.Errorf("namedqueryslice: %w", err)
 	}
 
@@ -137,7 +137,7 @@ func (s *Store) Update(ctx context.Context, hme home.Home) error {
     WHERE
         home_id = :home_id`
 
-	if err := database.NamedExecContext(ctx, s.log, s.db, q, toDBHome(hme)); err != nil {
+	if err := sqldb.NamedExecContext(ctx, s.log, s.db, q, toDBHome(hme)); err != nil {
 		return fmt.Errorf("namedexeccontext: %w", err)
 	}
 
@@ -160,7 +160,7 @@ func (s *Store) Count(ctx context.Context, filter home.QueryFilter) (int, error)
 	var count struct {
 		Count int `db:"count"`
 	}
-	if err := database.NamedQueryStruct(ctx, s.log, s.db, buf.String(), data, &count); err != nil {
+	if err := sqldb.NamedQueryStruct(ctx, s.log, s.db, buf.String(), data, &count); err != nil {
 		return 0, fmt.Errorf("namedquerystruct: %w", err)
 	}
 
@@ -184,8 +184,8 @@ func (s *Store) QueryByID(ctx context.Context, homeID uuid.UUID) (home.Home, err
         home_id = :home_id`
 
 	var dbHme dbHome
-	if err := database.NamedQueryStruct(ctx, s.log, s.db, q, data, &dbHme); err != nil {
-		if errors.Is(err, database.ErrDBNotFound) {
+	if err := sqldb.NamedQueryStruct(ctx, s.log, s.db, q, data, &dbHme); err != nil {
+		if errors.Is(err, sqldb.ErrDBNotFound) {
 			return home.Home{}, fmt.Errorf("namedquerystruct: %w", home.ErrNotFound)
 		}
 		return home.Home{}, fmt.Errorf("namedquerystruct: %w", err)
@@ -211,7 +211,7 @@ func (s *Store) QueryByUserID(ctx context.Context, userID uuid.UUID) ([]home.Hom
 		user_id = :user_id`
 
 	var dbHmes []dbHome
-	if err := database.NamedQuerySlice(ctx, s.log, s.db, q, data, &dbHmes); err != nil {
+	if err := sqldb.NamedQuerySlice(ctx, s.log, s.db, q, data, &dbHmes); err != nil {
 		return nil, fmt.Errorf("namedquerystruct: %w", err)
 	}
 

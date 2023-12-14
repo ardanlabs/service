@@ -58,19 +58,19 @@ func (h *Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Re
 		return v1.NewTrustedError(err, http.StatusBadRequest)
 	}
 
-	{{.DomainVar}} := mid.Get{{.DomainU}}(ctx)
-
 	{{.DomainUpdVar}}, err := toCoreUpdate{{.DomainU}}(app)
 	if err != nil {
 		return v1.NewTrustedError(err, http.StatusBadRequest)
 	}
 
-	{{.DomainVar}}, err = h.{{.DomainL}}.Update(ctx, {{.DomainVar}}, {{.DomainUpdVar}})
+    {{.DomainVar}} := mid.Get{{.DomainU}}(ctx)
+
+	upd{{.DomainVarU}}, err := h.{{.DomainL}}.Update(ctx, {{.DomainVar}}, {{.DomainUpdVar}})
 	if err != nil {
 		return fmt.Errorf("update: {{.DomainL}}ID[%s] app[%+v]: %w", {{.DomainVar}}.ID, app, err)
 	}
 
-	return web.Respond(ctx, w, toApp{{.DomainU}}({{.DomainVar}}), http.StatusOK)
+	return web.Respond(ctx, w, toApp{{.DomainU}}(upd{{.DomainVarU}}), http.StatusOK)
 }
 
 // Delete deletes a {{.DomainL}} from the system.

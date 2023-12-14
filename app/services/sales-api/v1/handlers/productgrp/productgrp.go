@@ -59,12 +59,12 @@ func (h *Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Re
 
 	prd := mid.GetProduct(ctx)
 
-	prd, err := h.product.Update(ctx, prd, toCoreUpdateProduct(app))
+	updPrd, err := h.product.Update(ctx, prd, toCoreUpdateProduct(app))
 	if err != nil {
 		return fmt.Errorf("update: productID[%s] app[%+v]: %w", prd.ID, app, err)
 	}
 
-	return web.Respond(ctx, w, toAppProduct(prd), http.StatusOK)
+	return web.Respond(ctx, w, toAppProduct(updPrd), http.StatusOK)
 }
 
 // Delete removes a product from the system.

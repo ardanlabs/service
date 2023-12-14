@@ -58,19 +58,19 @@ func (h *Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Re
 		return v1.NewTrustedError(err, http.StatusBadRequest)
 	}
 
-	hme := mid.GetHome(ctx)
-
-	updHme, err := toCoreUpdateHome(app)
+	uh, err := toCoreUpdateHome(app)
 	if err != nil {
 		return v1.NewTrustedError(err, http.StatusBadRequest)
 	}
 
-	hme, err = h.home.Update(ctx, hme, updHme)
+	hme := mid.GetHome(ctx)
+
+	updHme, err := h.home.Update(ctx, hme, uh)
 	if err != nil {
 		return fmt.Errorf("update: homeID[%s] app[%+v]: %w", hme.ID, app, err)
 	}
 
-	return web.Respond(ctx, w, toAppHome(hme), http.StatusOK)
+	return web.Respond(ctx, w, toAppHome(updHme), http.StatusOK)
 }
 
 // Delete deletes a home from the system.

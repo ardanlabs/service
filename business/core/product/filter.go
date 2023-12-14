@@ -10,10 +10,10 @@ import (
 // QueryFilter holds the available fields a query can be filtered on.
 // We are using pointer semantics because the With API mutates the value.
 type QueryFilter struct {
-	ID       *uuid.UUID `validate:"omitempty"`
-	Name     *string    `validate:"omitempty,min=3"`
-	Cost     *float64   `validate:"omitempty,numeric"`
-	Quantity *int       `validate:"omitempty,numeric"`
+	ID       *uuid.UUID
+	Name     *string  `validate:"omitempty,min=3"`
+	Cost     *float64 `validate:"omitempty,numeric"`
+	Quantity *int     `validate:"omitempty,numeric"`
 }
 
 // Validate can perform a check of the data against the validate tags.

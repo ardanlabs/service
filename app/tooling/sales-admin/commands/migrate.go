@@ -6,16 +6,16 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ardanlabs/service/business/data/dbmigrate"
-	database "github.com/ardanlabs/service/business/data/dbsql/pgx"
+	"github.com/ardanlabs/service/business/data/migrate"
+	"github.com/ardanlabs/service/business/data/sqldb"
 )
 
 // ErrHelp provides context that help was given.
 var ErrHelp = errors.New("provided help")
 
 // Migrate creates the schema in the database.
-func Migrate(cfg database.Config) error {
-	db, err := database.Open(cfg)
+func Migrate(cfg sqldb.Config) error {
+	db, err := sqldb.Open(cfg)
 	if err != nil {
 		return fmt.Errorf("connect database: %w", err)
 	}
@@ -24,7 +24,7 @@ func Migrate(cfg database.Config) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	if err := dbmigrate.Migrate(ctx, db); err != nil {
+	if err := migrate.Migrate(ctx, db); err != nil {
 		return fmt.Errorf("migrate database: %w", err)
 	}
 

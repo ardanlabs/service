@@ -1,5 +1,5 @@
-// Package dbmigrate contains the database schema, migrations and seeding data.
-package dbmigrate
+// Package migrate contains the database schema, migrations and seeding data.
+package migrate
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 	"github.com/ardanlabs/darwin/v3"
 	"github.com/ardanlabs/darwin/v3/dialects/postgres"
 	"github.com/ardanlabs/darwin/v3/drivers/generic"
-	database "github.com/ardanlabs/service/business/data/dbsql/pgx"
+	"github.com/ardanlabs/service/business/data/sqldb"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -26,7 +26,7 @@ var (
 // Migrate attempts to bring the database up to date with the migrations
 // defined in this package.
 func Migrate(ctx context.Context, db *sqlx.DB) error {
-	if err := database.StatusCheck(ctx, db); err != nil {
+	if err := sqldb.StatusCheck(ctx, db); err != nil {
 		return fmt.Errorf("status check database: %w", err)
 	}
 
@@ -42,7 +42,7 @@ func Migrate(ctx context.Context, db *sqlx.DB) error {
 // Seed runs the seed document defined in this package against db. The queries
 // are run in a transaction and rolled back if any fail.
 func Seed(ctx context.Context, db *sqlx.DB) (err error) {
-	if err := database.StatusCheck(ctx, db); err != nil {
+	if err := sqldb.StatusCheck(ctx, db); err != nil {
 		return fmt.Errorf("status check database: %w", err)
 	}
 
@@ -75,7 +75,7 @@ func Seed(ctx context.Context, db *sqlx.DB) (err error) {
 // SeedCustom runs the specified seed document against db. The queries are run
 // in a transaction and rolled back if any fail.
 func SeedCustom(ctx context.Context, db *sqlx.DB, seedDoc string) (err error) {
-	if err := database.StatusCheck(ctx, db); err != nil {
+	if err := sqldb.StatusCheck(ctx, db); err != nil {
 		return fmt.Errorf("status check database: %w", err)
 	}
 

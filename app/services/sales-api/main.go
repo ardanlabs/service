@@ -16,7 +16,7 @@ import (
 	"github.com/ardanlabs/service/app/services/sales-api/v1/build/all"
 	"github.com/ardanlabs/service/app/services/sales-api/v1/build/crud"
 	"github.com/ardanlabs/service/app/services/sales-api/v1/build/reporting"
-	database "github.com/ardanlabs/service/business/data/dbsql/pgx"
+	"github.com/ardanlabs/service/business/data/sqldb"
 	"github.com/ardanlabs/service/business/web/v1/auth"
 	"github.com/ardanlabs/service/business/web/v1/debug"
 	"github.com/ardanlabs/service/business/web/v1/mux"
@@ -147,7 +147,7 @@ func run(ctx context.Context, log *logger.Logger, build string) error {
 
 	log.Info(ctx, "startup", "status", "initializing database support", "host", cfg.DB.Host)
 
-	db, err := database.Open(database.Config{
+	db, err := sqldb.Open(sqldb.Config{
 		User:         cfg.DB.User,
 		Password:     cfg.DB.Password,
 		Host:         cfg.DB.Host,

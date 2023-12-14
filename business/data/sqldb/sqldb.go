@@ -1,5 +1,5 @@
-// Package db provides support for access the database.
-package db
+// Package sqldb provides support for access the database.
+package sqldb
 
 import (
 	"context"
@@ -12,8 +12,9 @@ import (
 
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/web"
+	"github.com/jackc/pgx/v5/pgconn"
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
-	"github.com/lib/pq"
 	"go.opentelemetry.io/otel/attribute"
 )
 
@@ -65,7 +66,7 @@ func Open(cfg Config) (*sqlx.DB, error) {
 		RawQuery: q.Encode(),
 	}
 
-	db, err := sqlx.Open("postgres", u.String())
+	db, err := sqlx.Open("pgx", u.String())
 	if err != nil {
 		return nil, err
 	}
@@ -78,6 +79,8 @@ func Open(cfg Config) (*sqlx.DB, error) {
 // StatusCheck returns nil if it can successfully talk to the database. It
 // returns a non-nil error otherwise.
 func StatusCheck(ctx context.Context, db *sqlx.DB) error {
+
+	// If the user doesn't give us a deadline set 1 second.
 	if _, ok := ctx.Deadline(); !ok {
 		var cancel context.CancelFunc
 		ctx, cancel = context.WithTimeout(ctx, time.Second)
@@ -132,7 +135,7 @@ func NamedExecContext(ctx context.Context, log *logger.Logger, db sqlx.ExtContex
 	defer span.End()
 
 	if _, err := sqlx.NamedExecContext(ctx, db, query, data); err != nil {
-		if pqerr, ok := err.(*pq.Error); ok {
+		if pqerr, ok := err.(*pgconn.PgError); ok {
 			switch pqerr.Code {
 			case undefinedTable:
 				return ErrUndefinedTable
@@ -202,7 +205,7 @@ func namedQuerySlice[T any](ctx context.Context, log *logger.Logger, db sqlx.Ext
 	}
 
 	if err != nil {
-		if pqerr, ok := err.(*pq.Error); ok && pqerr.Code == undefinedTable {
+		if pqerr, ok := err.(*pgconn.PgError); ok && pqerr.Code == undefinedTable {
 			return ErrUndefinedTable
 		}
 		return err
@@ -277,7 +280,7 @@ func namedQueryStruct(ctx context.Context, log *logger.Logger, db sqlx.ExtContex
 	}
 
 	if err != nil {
-		if pqerr, ok := err.(*pq.Error); ok && pqerr.Code == undefinedTable {
+		if pqerr, ok := err.(*pgconn.PgError); ok && pqerr.Code == undefinedTable {
 			return ErrUndefinedTable
 		}
 		return err

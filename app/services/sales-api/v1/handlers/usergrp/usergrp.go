@@ -63,26 +63,26 @@ func (h *Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Re
 		return v1.NewTrustedError(err, http.StatusBadRequest)
 	}
 
-	usr := mid.GetUser(ctx)
-
 	uu, err := toCoreUpdateUser(app)
 	if err != nil {
 		return v1.NewTrustedError(err, http.StatusBadRequest)
 	}
 
-	usr, err = h.user.Update(ctx, usr, uu)
+	usr := mid.GetUser(ctx)
+
+	updUsr, err := h.user.Update(ctx, usr, uu)
 	if err != nil {
 		return fmt.Errorf("update: userID[%s] uu[%+v]: %w", usr.ID, uu, err)
 	}
 
-	return web.Respond(ctx, w, toAppUser(usr), http.StatusOK)
+	return web.Respond(ctx, w, toAppUser(updUsr), http.StatusOK)
 }
 
 // Delete removes a user from the system.
 func (h *Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	usr := mid.GetUser(ctx)
 
-	if err := h.user.Delete(ctx, usr); err != nil {
+	if err := h.user.Delete(ctx, mid.GetUser(ctx)); err != nil {
 		return fmt.Errorf("delete: userID[%s]: %w", usr.ID, err)
 	}
 

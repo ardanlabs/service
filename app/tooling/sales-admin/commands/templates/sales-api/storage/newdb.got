@@ -8,7 +8,7 @@ import (
 	"fmt"
 
 	"github.com/ardanlabs/service/business/core/{{.DomainL}}"
-	database "github.com/ardanlabs/service/business/data/dbsql/pgx"
+	"github.com/ardanlabs/service/business/data/database"
 	"github.com/ardanlabs/service/business/web/v1/order"
 	"github.com/ardanlabs/service/business/data/transaction"
 	"github.com/ardanlabs/service/foundation/logger"
