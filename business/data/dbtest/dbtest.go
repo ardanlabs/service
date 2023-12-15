@@ -4,7 +4,6 @@ package dbtest
 import (
 	"bytes"
 	"context"
-	_ "embed"
 	"fmt"
 	"math/rand"
 	"net/mail"

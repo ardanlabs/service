@@ -9,7 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ardanlabs/service/business/core/product"
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/ardanlabs/service/business/web/v1/order"
@@ -39,7 +38,7 @@ func Test_User(t *testing.T) {
 // =============================================================================
 
 func crud(t *testing.T) {
-	seed := func(ctx context.Context, usrCore *user.Core, prdCore *product.Core) ([]user.User, error) {
+	seed := func(ctx context.Context, usrCore *user.Core) ([]user.User, error) {
 		usrs, err := usrCore.Query(ctx, user.QueryFilter{}, order.By{Field: user.OrderByName, Direction: order.ASC}, 1, 1)
 		if err != nil {
 			return nil, fmt.Errorf("seeding users : %w", err)
@@ -66,12 +65,14 @@ func crud(t *testing.T) {
 
 	t.Log("Go seeding ...")
 
-	usrs, err := seed(ctx, api.User, api.Product)
+	usrs, err := seed(ctx, api.User)
 	if err != nil {
 		t.Fatalf("Seeding error: %s", err)
 	}
 
 	// -------------------------------------------------------------------------
+
+	// TODO: CREATE USER !!!!
 
 	saved, err := api.User.QueryByID(ctx, usrs[0].ID)
 	if err != nil {
@@ -145,6 +146,8 @@ func crud(t *testing.T) {
 		t.Logf("exp: %v", *upd.Department)
 		t.Errorf("Should be able to see updates to Department")
 	}
+
+	// -------------------------------------------------------------------------
 
 	if err := api.User.Delete(ctx, saved); err != nil {
 		t.Fatalf("Should be able to delete user : %s.", err)
