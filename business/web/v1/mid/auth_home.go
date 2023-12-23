@@ -30,8 +30,6 @@ func setHome(ctx context.Context, hme home.Home) context.Context {
 	return context.WithValue(ctx, homeKey, hme)
 }
 
-// =============================================================================
-
 // AuthorizeHome executes the specified role and extracts the specified
 // home from the DB if a home id is specified in the call. Depending on
 // the rule specified, the userid from the claims may be compared with the

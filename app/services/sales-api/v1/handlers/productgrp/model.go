@@ -34,8 +34,6 @@ func toAppProduct(prd product.Product) AppProduct {
 	}
 }
 
-// =============================================================================
-
 // AppProductDetails represents an individual product.
 type AppProductDetails struct {
 	ID          string  `json:"id"`
@@ -70,13 +68,11 @@ func toAppProductsDetails(prds []product.Product, usrs map[uuid.UUID]user.User) 
 	return items
 }
 
-// =============================================================================
-
 // AppNewProduct is what we require from clients when adding a Product.
 type AppNewProduct struct {
 	Name     string  `json:"name" validate:"required"`
 	Cost     float64 `json:"cost" validate:"required,gte=0"`
-	Quantity int     `json:"quantity" validate:"gte=1"`
+	Quantity int     `json:"quantity" validate:"required,gte=1"`
 }
 
 func toCoreNewProduct(ctx context.Context, app AppNewProduct) product.NewProduct {
@@ -98,8 +94,6 @@ func (app AppNewProduct) Validate() error {
 
 	return nil
 }
-
-// =============================================================================
 
 // AppUpdateProduct contains information needed to update a product.
 type AppUpdateProduct struct {

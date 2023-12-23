@@ -70,7 +70,7 @@ func productCreate400(t *testing.T, app appTest, sd seedData) []tableData {
 			resp:       &v1.ErrorResponse{},
 			expResp: &v1.ErrorResponse{
 				Error:  "data validation error",
-				Fields: map[string]string{"cost": "cost is a required field", "name": "name is a required field", "quantity": "quantity must be 1 or greater"},
+				Fields: map[string]string{"cost": "cost is a required field", "name": "name is a required field", "quantity": "quantity is a required field"},
 			},
 			cmpFunc: func(x interface{}, y interface{}) string {
 				return cmp.Diff(x, y)

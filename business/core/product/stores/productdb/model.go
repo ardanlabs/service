@@ -18,8 +18,6 @@ type dbProduct struct {
 	DateUpdated time.Time `db:"date_updated"` // When the product record was last modified.
 }
 
-// =============================================================================
-
 func toDBProduct(prd product.Product) dbProduct {
 	prdDB := dbProduct{
 		ID:          prd.ID,

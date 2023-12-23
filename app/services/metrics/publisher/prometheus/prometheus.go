@@ -77,8 +77,6 @@ func (exp *Exporter) Stop(shutdownTimeout time.Duration) {
 	}
 }
 
-// =============================================================================
-
 func (exp *Exporter) handler(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 
@@ -96,8 +94,6 @@ func (exp *Exporter) handler(w http.ResponseWriter, r *http.Request) {
 
 	exp.log.Info(ctx, "prometheus", "metrics", fmt.Sprintf("expvar : (%d) : %s %s -> %s", http.StatusOK, r.Method, r.URL.Path, r.RemoteAddr))
 }
-
-// =============================================================================
 
 func deepCopyMap(source map[string]any) map[string]any {
 	result := make(map[string]any)

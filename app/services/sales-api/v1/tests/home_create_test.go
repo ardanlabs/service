@@ -80,7 +80,7 @@ func homeCreate400(t *testing.T, app appTest, sd seedData) []tableData {
 			resp:       &v1.ErrorResponse{},
 			expResp: &v1.ErrorResponse{
 				Error:  "data validation error",
-				Fields: map[string]string{"address1": "address1 is a required field", "country": "country is a required field", "state": "state is a required field", "type": "type is a required field"},
+				Fields: map[string]string{"address1": "address1 is a required field", "city": "city is a required field", "country": "country is a required field", "state": "state is a required field", "type": "type is a required field", "zipCode": "zipCode is a required field"},
 			},
 			cmpFunc: func(x interface{}, y interface{}) string {
 				return cmp.Diff(x, y)

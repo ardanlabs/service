@@ -24,8 +24,6 @@ var (
 	ErrInvalidCost  = errors.New("cost not valid")
 )
 
-// =============================================================================
-
 // Storer interface declares the behavior this package needs to perists and
 // retrieve data.
 type Storer interface {
@@ -38,8 +36,6 @@ type Storer interface {
 	QueryByID(ctx context.Context, productID uuid.UUID) (Product, error)
 	QueryByUserID(ctx context.Context, userID uuid.UUID) ([]Product, error)
 }
-
-// =============================================================================
 
 // Core manages the set of APIs for product access.
 type Core struct {

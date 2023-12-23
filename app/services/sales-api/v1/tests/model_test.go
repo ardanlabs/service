@@ -36,8 +36,6 @@ type seedData struct {
 	admins []testUser
 }
 
-// =============================================================================
-
 func toAppUser(usr user.User) usergrp.AppUser {
 	roles := make([]string, len(usr.Roles))
 	for i, role := range usr.Roles {
@@ -70,8 +68,6 @@ func toAppUserPtr(usr user.User) *usergrp.AppUser {
 	appUsr := toAppUser(usr)
 	return &appUsr
 }
-
-// =============================================================================
 
 func toAppProduct(prd product.Product) productgrp.AppProduct {
 	return productgrp.AppProduct{
@@ -111,8 +107,6 @@ func toAppProductsDetails(prds []product.Product, usrs map[uuid.UUID]user.User) 
 
 	return items
 }
-
-// =============================================================================
 
 func toAppHome(hme home.Home) homegrp.AppHome {
 	return homegrp.AppHome{

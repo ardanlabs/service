@@ -93,7 +93,7 @@ func homeUpdate400(t *testing.T, app appTest, sd seedData) []tableData {
 			resp: &v1.ErrorResponse{},
 			expResp: &v1.ErrorResponse{
 				Error:  "data validation error",
-				Fields: map[string]string{"address1": "address1 must be at least 1 character in length", "country": "Key: 'AppUpdateHome.address.country' Error:Field validation for 'country' failed on the 'iso3166_1_alpha2' tag", "state": "state must be at least 1 character in length"},
+				Fields: map[string]string{"address1": "address1 must be at least 1 character in length", "country": "Key: 'AppUpdateHome.address.country' Error:Field validation for 'country' failed on the 'iso3166_1_alpha2' tag", "state": "state must be at least 1 character in length", "zipCode": "zipCode must be a valid numeric value"},
 			},
 			cmpFunc: func(x interface{}, y interface{}) string {
 				return cmp.Diff(x, y)

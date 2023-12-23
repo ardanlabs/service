@@ -30,8 +30,6 @@ func setProduct(ctx context.Context, prd product.Product) context.Context {
 	return context.WithValue(ctx, productKey, prd)
 }
 
-// =============================================================================
-
 // AuthorizeProduct executes the specified role and extracts the specified
 // product from the DB if a product id is specified in the call. Depending on
 // the rule specified, the userid from the claims may be compared with the

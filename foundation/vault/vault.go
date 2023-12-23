@@ -74,8 +74,6 @@ func (v *Vault) SetToken(token string) {
 	v.token = token
 }
 
-// =============================================================================
-
 // AddPrivateKey adds a new private key into vault as PEM encoded.
 func (v *Vault) AddPrivateKey(ctx context.Context, kid string, pem []byte) error {
 	url := fmt.Sprintf("%s/v1/%s/data/%s", v.address, v.mountPath, kid)
@@ -154,8 +152,6 @@ func (v *Vault) PublicKey(kid string) (string, error) {
 
 	return publicPEM, nil
 }
-
-// =============================================================================
 
 // Error variables for this set of API calls.
 var (
@@ -433,8 +429,6 @@ func (v *Vault) CreateToken(ctx context.Context, id string, policies []string, d
 	return nil
 }
 
-// =============================================================================
-
 // keyLookup performs a safe lookup in the store map.
 func (v *Vault) keyLookup(kid string) (string, error) {
 	v.mu.RLock()
@@ -525,8 +519,6 @@ func (v *Vault) listMounts(ctx context.Context) (map[string]interface{}, error) 
 
 	return response, nil
 }
-
-// =============================================================================
 
 // toPublicPEM was taken from the JWT package to reduce the dependency. It
 // accepts a PEM encoding of a RSA private key and converts to a PEM encoded

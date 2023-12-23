@@ -104,8 +104,6 @@ func (log *Logger) write(ctx context.Context, level Level, caller int, msg strin
 	log.handler.Handle(ctx, r)
 }
 
-// =============================================================================
-
 func new(w io.Writer, minLevel Level, serviceName string, traceIDFunc TraceIDFunc, events Events) *Logger {
 
 	// Convert the file name to just the name.ext when this key/value will

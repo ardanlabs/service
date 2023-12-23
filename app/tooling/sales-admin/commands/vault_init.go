@@ -121,8 +121,6 @@ func VaultInit(vaultConfig vault.Config) error {
 	return nil
 }
 
-// =============================================================================
-
 func checkIfCredFileExists() (vault.SystemInitResponse, error) {
 	if _, err := os.Stat(credentialsFileName); err != nil {
 		return vault.SystemInitResponse{}, err

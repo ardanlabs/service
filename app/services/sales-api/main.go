@@ -280,8 +280,6 @@ func run(ctx context.Context, log *logger.Logger, build string) error {
 	return nil
 }
 
-// =============================================================================
-
 func buildRoutes() mux.RouteAdder {
 
 	// The idea here is that we can build different versions of the binary

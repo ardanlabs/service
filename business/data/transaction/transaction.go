@@ -21,8 +21,6 @@ type Beginner interface {
 	Begin() (Transaction, error)
 }
 
-// =============================================================================
-
 type ctxKey int
 
 const trKey ctxKey = 2
@@ -37,8 +35,6 @@ func Get(ctx context.Context) (Transaction, bool) {
 	v, ok := ctx.Value(trKey).(Transaction)
 	return v, ok
 }
-
-// =============================================================================
 
 // ExecuteUnderTransaction is a helper function that can be used in tests and
 // other apps to execute the core APIs under a transaction.

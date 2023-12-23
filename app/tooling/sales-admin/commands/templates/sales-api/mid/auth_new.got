@@ -30,8 +30,6 @@ func set{{.DomainU}}(ctx context.Context, {{.DomainVar}} {{.DomainL}}.{{.DomainU
 	return context.WithValue(ctx, {{.DomainL}}Key, {{.DomainVar}})
 }
 
-// =============================================================================
-
 // Authorize{{.DomainU}} executes the specified role and extracts the specified
 // {{.DomainL}} from the DB if a {{.DomainL}} id is specified in the call.
 func Authorize{{.DomainU}}(a *auth.Auth, rule string, {{.DomainVar}}Core *{{.DomainL}}.Core) web.Middleware {

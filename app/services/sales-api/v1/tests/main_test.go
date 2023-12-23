@@ -26,8 +26,6 @@ func TestMain(m *testing.M) {
 	m.Run()
 }
 
-// =============================================================================
-
 type appTest struct {
 	http.Handler
 	userToken  string

@@ -181,8 +181,6 @@ func (a *Auth) Authorize(ctx context.Context, claims Claims, userID uuid.UUID, r
 	return nil
 }
 
-// =============================================================================
-
 // publicKeyLookup performs a lookup for the public pem for the specified kid.
 func (a *Auth) publicKeyLookup(kid string) (string, error) {
 	pem, err := func() (string, error) {

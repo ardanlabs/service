@@ -18,8 +18,6 @@ const (
 	LevelError = Level(slog.LevelError)
 )
 
-// =============================================================================
-
 // Record represents the data that is being logged.
 type Record struct {
 	Time       time.Time

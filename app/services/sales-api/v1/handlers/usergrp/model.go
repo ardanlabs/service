@@ -50,8 +50,6 @@ func toAppUsers(users []user.User) []AppUser {
 	return items
 }
 
-// =============================================================================
-
 // AppNewUser contains information needed to create a new user.
 type AppNewUser struct {
 	Name            string   `json:"name" validate:"required"`
@@ -97,8 +95,6 @@ func (app AppNewUser) Validate() error {
 
 	return nil
 }
-
-// =============================================================================
 
 // AppUpdateUser contains information needed to update a user.
 type AppUpdateUser struct {
@@ -154,8 +150,6 @@ func (app AppUpdateUser) Validate() error {
 
 	return nil
 }
-
-// =============================================================================
 
 type token struct {
 	Token string `json:"token"`

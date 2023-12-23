@@ -16,8 +16,6 @@ type Storer interface {
 	Count(ctx context.Context, filter QueryFilter) (int, error)
 }
 
-// =============================================================================
-
 // Core manages the set of APIs for user access.
 type Core struct {
 	storer Storer

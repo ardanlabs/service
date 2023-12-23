@@ -154,8 +154,6 @@ func (w *Worker) Stop(workKey string) error {
 	return nil
 }
 
-// =============================================================================
-
 func (w *Worker) trackWork(workKey string, cancel context.CancelFunc) {
 	w.mu.Lock()
 	defer w.mu.Unlock()

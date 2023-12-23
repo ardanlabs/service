@@ -15,8 +15,6 @@ const (
 	EventUpdated = "UserUpdated"
 )
 
-// =============================================================================
-
 // EventParamsUpdated is the event parameters for the updated event.
 type EventParamsUpdated struct {
 	UserID uuid.UUID

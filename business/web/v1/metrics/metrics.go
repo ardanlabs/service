@@ -13,8 +13,6 @@ import (
 // isn't much choice here.
 var m *metrics
 
-// =============================================================================
-
 // metrics represents the set of metrics we gather. These fields are
 // safe to be accessed concurrently thanks to expvar. No extra abstraction is required.
 type metrics struct {
@@ -36,8 +34,6 @@ func init() {
 		panics:     expvar.NewInt("panics"),
 	}
 }
-
-// =============================================================================
 
 type ctxKey int
 

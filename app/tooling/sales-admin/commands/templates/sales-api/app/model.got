@@ -32,8 +32,6 @@ func toApp{{.DomainU}}s({{.DomainVar}}s []{{.DomainL}}.{{.DomainU}}) []App{{.Dom
 	return items
 }
 
-// =============================================================================
-
 // AppNew{{.DomainU}} is what we require from clients when adding a {{.DomainL}}.
 type AppNew{{.DomainU}} struct {
 }
@@ -53,8 +51,6 @@ func (app AppNew{{.DomainU}}) Validate() error {
 
 	return nil
 }
-
-// =============================================================================
 
 // AppUpdate{{.DomainU}} contains informations needed to update a {{.DomainL}}.
 type AppUpdate{{.DomainU}} struct {

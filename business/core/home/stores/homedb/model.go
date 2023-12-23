@@ -23,8 +23,6 @@ type dbHome struct {
 	DateUpdated time.Time `db:"date_updated"`
 }
 
-// =============================================================================
-
 func toDBHome(hme home.Home) dbHome {
 	hmeDB := dbHome{
 		ID:          hme.ID,

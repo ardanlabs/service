@@ -11,9 +11,9 @@ import (
 // We are using pointer semantics because the With API mutates the value.
 type QueryFilter struct {
 	ID       *uuid.UUID
-	Name     *string  `validate:"omitempty,min=3"`
-	Cost     *float64 `validate:"omitempty,numeric"`
-	Quantity *int     `validate:"omitempty,numeric"`
+	Name     *string `validate:"omitempty,min=3"`
+	Cost     *float64
+	Quantity *int
 }
 
 // Validate can perform a check of the data against the validate tags.

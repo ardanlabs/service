@@ -31,8 +31,6 @@ type Storer interface {
 	QueryByID(ctx context.Context, {{.DomainL}}ID uuid.UUID) ({{.DomainU}}, error)
 }
 
-// =============================================================================
-
 // Core manages the set of APIs for {{.DomainL}} api access.
 type Core struct {
 	log     *logger.Logger

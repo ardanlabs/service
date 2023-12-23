@@ -35,8 +35,6 @@ func Test_User(t *testing.T) {
 	t.Run("paging", paging)
 }
 
-// =============================================================================
-
 func crud(t *testing.T) {
 	seed := func(ctx context.Context, usrCore *user.Core) ([]user.User, error) {
 		usrs, err := usrCore.Query(ctx, user.QueryFilter{}, order.By{Field: user.OrderByName, Direction: order.ASC}, 1, 1)

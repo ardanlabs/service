@@ -16,15 +16,11 @@ const (
 	TypeDatadog = "datadog"
 )
 
-// =============================================================================
-
 // Collector defines a contract a collector must support
 // so a consumer can retrieve metrics.
 type Collector interface {
 	Collect() (map[string]any, error)
 }
-
-// =============================================================================
 
 // Publisher defines a handler function that will be called
 // on each interval.
@@ -86,8 +82,6 @@ func (p *Publish) update() {
 		pub(data)
 	}
 }
-
-// =============================================================================
 
 // Stdout provide our basic publishing.
 type Stdout struct {

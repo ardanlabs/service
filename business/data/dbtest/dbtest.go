@@ -54,8 +54,6 @@ func StopDB(c *docker.Container) {
 	fmt.Println("Stopped:", c.ID)
 }
 
-// =============================================================================
-
 // Test owns state for running and shutting down tests.
 type Test struct {
 	DB       *sqlx.DB
@@ -201,8 +199,6 @@ func (test *Test) TokenV1(email string, pass string) string {
 	return token
 }
 
-// =============================================================================
-
 // StringPointer is a helper to get a *string from a string. It is in the tests
 // package because we normally don't want to deal with pointers to basic types
 // but it's useful in some tests.
@@ -223,8 +219,6 @@ func IntPointer(i int) *int {
 func FloatPointer(f float64) *float64 {
 	return &f
 }
-
-// =============================================================================
 
 // CoreAPIs represents all the core api's needed for testing.
 type CoreAPIs struct {
@@ -249,8 +243,6 @@ func newCoreAPIs(log *logger.Logger, db *sqlx.DB) CoreAPIs {
 	}
 }
 
-// =============================================================================
-
 type keyStore struct{}
 
 func (ks *keyStore) PrivateKey(kid string) (string, error) {
@@ -260,8 +252,6 @@ func (ks *keyStore) PrivateKey(kid string) (string, error) {
 func (ks *keyStore) PublicKey(kid string) (string, error) {
 	return publicKeyPEM, nil
 }
-
-// =============================================================================
 
 const (
 	kid = "s4sKIjD9kIRjxs2tulPqGLdxSfgPErRN1Mu3Hd9k9NQ"

@@ -38,8 +38,6 @@ func Test_Product(t *testing.T) {
 	t.Run("transaction", tran)
 }
 
-// =============================================================================
-
 func crud(t *testing.T) {
 	seed := func(ctx context.Context, usrCore *user.Core, prdCore *product.Core) ([]product.Product, error) {
 		var filter user.QueryFilter

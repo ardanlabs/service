@@ -16,8 +16,6 @@ var (
 	ErrInvalidID = errors.New("ID is not in its proper form")
 )
 
-// =============================================================================
-
 // Authenticate validates a JWT from the `Authorization` header.
 func Authenticate(a *auth.Auth) web.Middleware {
 	m := func(handler web.Handler) web.Handler {

@@ -33,8 +33,6 @@ func Test_Product(t *testing.T) {
 	t.Run("paging", paging)
 }
 
-// =============================================================================
-
 func paging(t *testing.T) {
 	seed := func(ctx context.Context, usrCore *user.Core, prdCore *product.Core) ([]user.User, []product.Product, error) {
 		usrs, err := usrCore.Query(ctx, user.QueryFilter{}, order.By{Field: user.OrderByName, Direction: order.ASC}, 1, 2)

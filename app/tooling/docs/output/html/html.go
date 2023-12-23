@@ -104,8 +104,6 @@ func (p *page) show(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// =============================================================================
-
 func groups() []string {
 	return uniqueGroups
 }
@@ -126,8 +124,6 @@ func toJSON(v any) string {
 
 	return string(data)
 }
-
-// =============================================================================
 
 // startBrowser tries to open the URL in a browser, and returns
 // whether it succeed.

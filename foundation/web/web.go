@@ -155,8 +155,6 @@ func (a *App) Handle(method string, group string, path string, handler Handler, 
 	a.mux.Handle(method, finalPath, h)
 }
 
-// =============================================================================
-
 // startSpan initializes the request by adding a span and writing otel
 // related information into the response writer for the trusted.
 func (a *App) startSpan(w http.ResponseWriter, r *http.Request) (context.Context, trace.Span) {

@@ -34,8 +34,6 @@ type Storer interface {
 	QueryByUserID(ctx context.Context, userID uuid.UUID) ([]Home, error)
 }
 
-// =============================================================================
-
 // Core manages the set of APIs for home api access.
 type Core struct {
 	log     *logger.Logger

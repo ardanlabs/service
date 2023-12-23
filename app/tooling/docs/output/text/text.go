@@ -34,8 +34,6 @@ func Transform(records []webapi.Record) error {
 	return nil
 }
 
-// =============================================================================
-
 func minus(a, b int) int {
 	return a - b
 }

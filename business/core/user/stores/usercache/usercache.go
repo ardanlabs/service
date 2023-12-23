@@ -123,8 +123,6 @@ func (s *Store) QueryByEmail(ctx context.Context, email mail.Address) (user.User
 	return usr, nil
 }
 
-// =============================================================================
-
 // readCache performs a safe search in the cache for the specified key.
 func (s *Store) readCache(key string) (user.User, bool) {
 	s.mu.RLock()

@@ -21,8 +21,6 @@ var directions = map[string]string{
 	DESC: "DESC",
 }
 
-// =============================================================================
-
 // By represents a field used to order by and direction.
 type By struct {
 	Field     string
@@ -43,8 +41,6 @@ func NewBy(field string, direction string) By {
 		Direction: direction,
 	}
 }
-
-// =============================================================================
 
 // Parse constructs a order.By value by parsing a string in the form
 // of "field,direction".

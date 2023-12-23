@@ -34,8 +34,6 @@ func Test_Home(t *testing.T) {
 	t.Run("paging", paging)
 }
 
-// =============================================================================
-
 func crud(t *testing.T) {
 	seed := func(ctx context.Context, usrCore *user.Core, hmeCore *home.Core) ([]home.Home, error) {
 		var filter user.QueryFilter

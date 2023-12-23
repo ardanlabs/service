@@ -46,8 +46,6 @@ func setUser(ctx context.Context, usr user.User) context.Context {
 	return context.WithValue(ctx, userKey, usr)
 }
 
-// =============================================================================
-
 // AuthorizeUser executes the specified role and extracts the specified user
 // from the DB if a user id is specified in the call. Depending on the rule
 // specified, the userid from the claims may be compared with the specified

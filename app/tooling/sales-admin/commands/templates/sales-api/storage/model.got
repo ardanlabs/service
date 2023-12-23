@@ -15,8 +15,6 @@ type db{{.DomainU}} struct {
 	DateUpdated time.Time `db:"date_updated"`
 }
 
-// =============================================================================
-
 func toDB{{.DomainU}}({{.DomainVar}} {{.DomainL}}.{{.DomainU}}) db{{.DomainU}} {
 	{{.DomainVar}}DB := db{{.DomainU}}{
 		ID:          {{.DomainVar}}.ID,

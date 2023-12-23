@@ -229,8 +229,6 @@ func Test_Auth(t *testing.T) {
 	}
 }
 
-// =============================================================================
-
 func newUnit(t *testing.T) (*logger.Logger, *sqlx.DB, func()) {
 	var buf bytes.Buffer
 	log := logger.New(&buf, logger.LevelInfo, "TEST", func(context.Context) string { return "00000000-0000-0000-0000-000000000000" })
@@ -248,8 +246,6 @@ func newUnit(t *testing.T) (*logger.Logger, *sqlx.DB, func()) {
 	return log, nil, teardown
 }
 
-// =============================================================================
-
 type keyStore struct{}
 
 func (ks *keyStore) PrivateKey(kid string) (string, error) {
@@ -259,8 +255,6 @@ func (ks *keyStore) PrivateKey(kid string) (string, error) {
 func (ks *keyStore) PublicKey(kid string) (string, error) {
 	return publicKeyPEM, nil
 }
-
-// =============================================================================
 
 const (
 	kid = "s4sKIjD9kIRjxs2tulPqGLdxSfgPErRN1Mu3Hd9k9NQ"

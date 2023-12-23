@@ -191,8 +191,6 @@ func Records(routes []Route) ([]Record, error) {
 	return records, nil
 }
 
-// =============================================================================
-
 func parseWebAPI(fset *token.FileSet, file *ast.File, funcDecl *ast.FuncDecl, route Route) (bool, Record, error) {
 
 	// Capture the line number for this function declaration.
@@ -301,8 +299,6 @@ func parseWebAPI(fset *token.FileSet, file *ast.File, funcDecl *ast.FuncDecl, ro
 
 	return true, record, nil
 }
-
-// =============================================================================
 
 // This function looks for the web.Respond call at the end of each handler.
 // Once found, it returns the name of the type that is used in the trusted.
@@ -639,8 +635,6 @@ func findAppModel(group string, modelName string) ([]Field, error) {
 
 	return fields, nil
 }
-
-// =============================================================================
 
 func findQueryVars(body *ast.BlockStmt, group string) (QueryVars, error) {
 	var qv QueryVars

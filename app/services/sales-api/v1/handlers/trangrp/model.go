@@ -33,16 +33,12 @@ func toAppProduct(prd product.Product) AppProduct {
 	}
 }
 
-// =============================================================================
-
 // AppNewTran represents an example of cross domain transaction at the
 // application layer.
 type AppNewTran struct {
 	Product AppNewProduct `json:"product"`
 	User    AppNewUser    `json:"user"`
 }
-
-// =============================================================================
 
 // AppNewUser contains information needed to create a new user.
 type AppNewUser struct {
@@ -90,13 +86,11 @@ func (app AppNewUser) Validate() error {
 	return nil
 }
 
-// =============================================================================
-
 // AppNewProduct is what we require from clients when adding a Product.
 type AppNewProduct struct {
 	Name     string  `json:"name" validate:"required"`
 	Cost     float64 `json:"cost" validate:"required,gte=0"`
-	Quantity int     `json:"quantity" validate:"gte=1"`
+	Quantity int     `json:"quantity" validate:"required,gte=1"`
 }
 
 func toCoreNewProduct(app AppNewProduct) (product.NewProduct, error) {

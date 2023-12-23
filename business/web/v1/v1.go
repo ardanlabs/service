@@ -9,8 +9,6 @@ type ErrorResponse struct {
 	Fields map[string]string `json:"fields,omitempty"`
 }
 
-// =============================================================================
-
 // TrustedError is used to pass an error during the request through the
 // application with web specific context.
 type TrustedError struct {
@@ -44,8 +42,6 @@ func GetTrustedError(err error) *TrustedError {
 	}
 	return te
 }
-
-// =============================================================================
 
 // PageDocument is the form used for API responses from query API calls.
 type PageDocument[T any] struct {
