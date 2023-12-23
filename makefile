@@ -129,9 +129,9 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 # Define dependencies
 
 GOLANG          := golang:1.21.5
-ALPINE          := alpine:3.18
-KIND            := kindest/node:v1.27.3
-POSTGRES        := postgres:15.5
+ALPINE          := alpine:3.19
+KIND            := kindest/node:v1.29.0@sha256:eaa1450915475849a73a9227b8f201df25e55e268e5d619312131292e324d570
+POSTGRES        := postgres:16.1
 VAULT           := hashicorp/vault:1.15
 GRAFANA         := grafana/grafana:10.2.0
 PROMETHEUS      := prom/prometheus:v2.48.0
