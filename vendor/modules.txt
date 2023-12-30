@@ -237,7 +237,7 @@ github.com/open-policy-agent/opa/tracing
 github.com/open-policy-agent/opa/types
 github.com/open-policy-agent/opa/util
 github.com/open-policy-agent/opa/version
-# github.com/prometheus/client_golang v1.17.0
+# github.com/prometheus/client_golang v1.18.0
 ## explicit; go 1.19
 github.com/prometheus/client_golang/prometheus
 github.com/prometheus/client_golang/prometheus/internal
