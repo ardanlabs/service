@@ -34,19 +34,7 @@ func Test_Vault(t *testing.T) {
 	t.Logf("ContainerID: %s\n", c.ID)
 	t.Logf("Host:        %s\n", c.Host)
 
-	// Give Vault time to initialize.
-	time.Sleep(time.Second * 2)
-
 	// -------------------------------------------------------------------------
-
-	vault, err := vault.New(vault.Config{
-		Address:   "http://" + c.Host,
-		MountPath: mountPath,
-		Token:     token,
-	})
-	if err != nil {
-		t.Fatalf("Should be able to construct our Vault API : %s", err)
-	}
 
 	pkExp, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
@@ -62,9 +50,33 @@ func Test_Vault(t *testing.T) {
 		t.Fatalf("Should be able to encode pk to PEM : %s", err)
 	}
 
-	if err := vault.AddPrivateKey(context.Background(), key, expPEM.Bytes()); err != nil {
-		time.Sleep(100 * time.Millisecond)
-		if err := vault.AddPrivateKey(context.Background(), key, expPEM.Bytes()); err != nil {
+	vault, err := vault.New(vault.Config{
+		Address:   "http://" + c.Host,
+		MountPath: mountPath,
+		Token:     token,
+	})
+	if err != nil {
+		t.Fatalf("Should be able to construct our Vault API : %s", err)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
+	defer cancel()
+
+	for attempts := 1; ; attempts++ {
+		if err := vault.AddPrivateKey(ctx, key, expPEM.Bytes()); err == nil {
+			t.Log("Connected To Vault")
+			break
+		}
+
+		t.Log("Waiting For Vault")
+
+		if ctx.Err() != nil {
+			t.Fatalf("Should be able to put the PEM into Vault : %s", err)
+		}
+
+		time.Sleep(time.Duration(attempts) * 100 * time.Millisecond)
+
+		if ctx.Err() != nil {
 			t.Fatalf("Should be able to put the PEM into Vault : %s", err)
 		}
 	}
