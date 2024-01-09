@@ -19,7 +19,7 @@ The class behind this starter kit teaches how to build production-level software
 
 Learn more about the project:
 
-[Wiki](https://github.com/ardanlabs/service/wiki) | [Course Outline](https://github.com/ardanlabs/service/wiki/course-outline) | [Class Schedule](https://www.eventbrite.com/o/ardan-labs-7092394651)
+[Wiki](https://github.com/ardanlabs/service/wiki) | [Course Outline](https://github.com/ardanlabs/service/wiki/course-outline) | [Class Schedule](https://www.ardanlabs.com/events/)
 
 ## Licensing
 
