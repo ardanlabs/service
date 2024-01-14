@@ -16,13 +16,13 @@ import (
 
 // Options represent optional parameters.
 type Options struct {
-	corsOrigin string
+	corsOrigin []string
 }
 
 // WithCORS provides configuration options for CORS.
-func WithCORS(origin string) func(opts *Options) {
+func WithCORS(origins []string) func(opts *Options) {
 	return func(opts *Options) {
-		opts.corsOrigin = origin
+		opts.corsOrigin = origins
 	}
 }
 
@@ -58,7 +58,7 @@ func WebAPI(cfg Config, routeAdder RouteAdder, options ...func(opts *Options)) h
 		mid.Panics(),
 	)
 
-	if opts.corsOrigin != "" {
+	if len(opts.corsOrigin) > 0 {
 		app.EnableCORS(mid.Cors(opts.corsOrigin))
 	}
 
