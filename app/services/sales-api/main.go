@@ -77,12 +77,13 @@ func run(ctx context.Context, log *logger.Logger, build string) error {
 	cfg := struct {
 		conf.Version
 		Web struct {
-			ReadTimeout     time.Duration `conf:"default:5s"`
-			WriteTimeout    time.Duration `conf:"default:10s"`
-			IdleTimeout     time.Duration `conf:"default:120s"`
-			ShutdownTimeout time.Duration `conf:"default:20s"`
-			APIHost         string        `conf:"default:0.0.0.0:3000"`
-			DebugHost       string        `conf:"default:0.0.0.0:4000"`
+			ReadTimeout        time.Duration `conf:"default:5s"`
+			WriteTimeout       time.Duration `conf:"default:10s"`
+			IdleTimeout        time.Duration `conf:"default:120s"`
+			ShutdownTimeout    time.Duration `conf:"default:20s"`
+			APIHost            string        `conf:"default:0.0.0.0:3000"`
+			DebugHost          string        `conf:"default:0.0.0.0:4000"`
+			CORSAllowedOrigins []string      `conf:"default:*"`
 		}
 		Auth struct {
 			// KeysFolder string `conf:"default:zarf/keys/"`
@@ -242,7 +243,7 @@ func run(ctx context.Context, log *logger.Logger, build string) error {
 
 	api := http.Server{
 		Addr:         cfg.Web.APIHost,
-		Handler:      mux.WebAPI(cfgMux, buildRoutes(), mux.WithCORS("*")),
+		Handler:      mux.WebAPI(cfgMux, buildRoutes(), mux.WithCORS(cfg.Web.CORSAllowedOrigins)),
 		ReadTimeout:  cfg.Web.ReadTimeout,
 		WriteTimeout: cfg.Web.WriteTimeout,
 		IdleTimeout:  cfg.Web.IdleTimeout,
