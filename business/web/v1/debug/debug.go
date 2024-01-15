@@ -21,7 +21,7 @@ func Mux() *http.ServeMux {
 	mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
 	mux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
 	mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
-	mux.Handle("/debug/vars", expvar.Handler())
+	mux.Handle("/debug/vars/", expvar.Handler())
 
 	statsviz.Register(mux)
 
