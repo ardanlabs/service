@@ -475,6 +475,34 @@ curl-create:
 	curl -il -X POST -H 'Content-Type: application/json' -d '{"name":"bill","email":"b@gmail.com","roles":["ADMIN"],"department":"IT","password":"123","passwordConfirm":"123"}' http://localhost:3000/v1/users
 
 # ==============================================================================
+# Talk commands
+
+dev-talk-up:
+	kind create cluster \
+		--image $(KIND) \
+		--name $(KIND_CLUSTER) \
+		--config zarf/k8s/dev/kind-config.yaml
+
+	kubectl wait --timeout=120s --namespace=local-path-storage --for=condition=Available deployment/local-path-provisioner
+
+	kind load docker-image $(VAULT) --name $(KIND_CLUSTER)
+	kind load docker-image $(POSTGRES) --name $(KIND_CLUSTER)	
+
+dev-talk-apply:
+	kustomize build zarf/k8s/dev/vault | kubectl apply -f -
+
+	kustomize build zarf/k8s/dev/database | kubectl apply -f -
+	kubectl rollout status --namespace=$(NAMESPACE) --watch --timeout=120s sts/database
+
+	kustomize build zarf/k8s/dev/sales | kubectl apply -f -
+	kubectl wait pods --namespace=$(NAMESPACE) --selector app=$(APP) --timeout=120s --for=condition=Ready
+
+dev-talk-build: all dev-load dev-talk-apply
+
+load-talk:
+	hey -m GET -c 10 -n 100 -H "Authorization: Bearer ${TOKEN}" "http://localhost:3000/v1/users?page=1&rows=2"
+
+# ==============================================================================
 # Admin Frontend
 
 ADMIN_FRONTEND_PREFIX := ./app/frontends/admin
