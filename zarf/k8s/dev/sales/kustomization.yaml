@@ -3,11 +3,9 @@ kind: Kustomization
 resources:
   - ../../base/sales/
   - ./dev-sales-configmap.yaml
-  - ./dev-sales-vault.yaml
 patches:
   - path: ./dev-sales-patch-deploy.yaml
   - path: ./dev-sales-patch-service.yaml
-  - path: ./dev-sales-vault-patch.yaml
 images:
   - name: service-image
     newName: ardanlabs/service/sales-api

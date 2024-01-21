@@ -91,10 +91,6 @@ spec:
           limits:
             cpu: "250m" # Execute instructions 25ms/100ms on my 1 core.
 
-        volumeMounts:
-          - name: vault
-            mountPath: /vault
-
       - name: metrics
         resources:
           requests:

@@ -101,17 +101,6 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 # 	$ go test -coverprofile p.out
 # 	$ go tool cover -html p.out
 #
-# Hashicorp Vault
-# 	READ THIS: https://developer.hashicorp.com/vault/docs/concepts/tokens
-# 	$ export VAULT_TOKEN=mytoken
-# 	$ export VAULT_ADDR='http://localhost:8200'
-# 	$ vault secrets list
-# 	$ vault kv get secret/sales
-# 	$ vault kv put secret/sales key="some data"
-# 	$ kubectl logs --namespace=sales-system -l app=sales -c init-vault-server
-# 	$ curl -H "X-Vault-Token: mytoken" -X GET http://localhost:8200/v1/secret/data/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
-# 	$ curl -H "X-Vault-Token: mytoken" -H "Content-Type: application/json" -X POST -d '{"data":{"pk":"PEM"}}' http://localhost:8200/v1/secret/data/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
-#
 # Module Call Examples
 # 	$ curl https://proxy.golang.org/github.com/ardanlabs/conf/@v/list
 # 	$ curl https://proxy.golang.org/github.com/ardanlabs/conf/v3/@v/list
@@ -132,7 +121,6 @@ GOLANG          := golang:1.21.6
 ALPINE          := alpine:3.19
 KIND            := kindest/node:v1.29.0@sha256:eaa1450915475849a73a9227b8f201df25e55e268e5d619312131292e324d570
 POSTGRES        := postgres:16.1
-VAULT           := hashicorp/vault:1.15
 GRAFANA         := grafana/grafana:10.2.0
 PROMETHEUS      := prom/prometheus:v2.48.0
 TEMPO           := grafana/tempo:2.3.0
@@ -162,19 +150,16 @@ dev-gotooling:
 
 dev-brew:
 	brew update
-	brew tap hashicorp/tap
 	brew list kind || brew install kind
 	brew list kubectl || brew install kubectl
 	brew list kustomize || brew install kustomize
 	brew list pgcli || brew install pgcli
-	brew list vault || brew install vault
 
 dev-docker:
 	docker pull $(GOLANG)
 	docker pull $(ALPINE)
 	docker pull $(KIND)
 	docker pull $(POSTGRES)
-	docker pull $(VAULT)
 	docker pull $(GRAFANA)
 	docker pull $(PROMETHEUS)
 	docker pull $(TEMPO)
@@ -213,7 +198,6 @@ dev-up:
 
 	kubectl wait --timeout=120s --namespace=local-path-storage --for=condition=Available deployment/local-path-provisioner
 
-	kind load docker-image $(VAULT) --name $(KIND_CLUSTER)
 	kind load docker-image $(POSTGRES) --name $(KIND_CLUSTER)
 	kind load docker-image $(GRAFANA) --name $(KIND_CLUSTER)
 	kind load docker-image $(PROMETHEUS) --name $(KIND_CLUSTER)
@@ -253,8 +237,6 @@ dev-apply:
 	kustomize build zarf/k8s/dev/loki | kubectl apply -f -
 	kustomize build zarf/k8s/dev/promtail | kubectl apply -f -
 
-	kustomize build zarf/k8s/dev/vault | kubectl apply -f -
-
 	kustomize build zarf/k8s/dev/database | kubectl apply -f -
 	kubectl rollout status --namespace=$(NAMESPACE) --watch --timeout=120s sts/database
 
@@ -274,8 +256,6 @@ dev-logs:
 # ------------------------------------------------------------------------------
 
 dev-logs-init:
-	kubectl logs --namespace=$(NAMESPACE) -l app=$(APP) -f --tail=100 -c init-vault-system
-	kubectl logs --namespace=$(NAMESPACE) -l app=$(APP) -f --tail=100 -c init-vault-loadkeys
 	kubectl logs --namespace=$(NAMESPACE) -l app=$(APP) -f --tail=100 -c init-migrate-seed
 
 dev-describe-node:
@@ -294,9 +274,6 @@ dev-describe-grafana:
 	kubectl describe pod --namespace=$(NAMESPACE) -l app=grafana
 
 # ------------------------------------------------------------------------------
-
-dev-logs-vault:
-	kubectl logs --namespace=$(NAMESPACE) -l app=vault --all-containers=true -f --tail=100
 
 dev-logs-db:
 	kubectl logs --namespace=$(NAMESPACE) -l app=database --all-containers=true -f --tail=100
@@ -343,13 +320,10 @@ dev-database-restart:
 # Administration
 
 migrate:
-	go run app/tooling/sales-admin/main.go migrate
+	export SALES_DB_HOST=localhost; go run app/tooling/sales-admin/main.go migrate
 
 seed: migrate
-	go run app/tooling/sales-admin/main.go seed
-
-vault:
-	go run app/tooling/sales-admin/main.go vault
+	export SALES_DB_HOST=localhost; go run app/tooling/sales-admin/main.go seed
 
 pgcli:
 	pgcli postgresql://postgres:postgres@localhost
@@ -361,7 +335,7 @@ readiness:
 	curl -il http://localhost:3000/v1/readiness
 
 token-gen:
-	go run app/tooling/sales-admin/main.go gentoken 5cf37266-3473-4006-984f-9325122678b7 54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
+	export SALES_DB_HOST=localhost; go run app/tooling/sales-admin/main.go gentoken 5cf37266-3473-4006-984f-9325122678b7 54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
 
 docs:
 	go run app/tooling/docs/main.go --browser
@@ -485,12 +459,9 @@ dev-talk-up:
 
 	kubectl wait --timeout=120s --namespace=local-path-storage --for=condition=Available deployment/local-path-provisioner
 
-	kind load docker-image $(VAULT) --name $(KIND_CLUSTER)
 	kind load docker-image $(POSTGRES) --name $(KIND_CLUSTER)	
 
 dev-talk-apply:
-	kustomize build zarf/k8s/dev/vault | kubectl apply -f -
-
 	kustomize build zarf/k8s/dev/database | kubectl apply -f -
 	kubectl rollout status --namespace=$(NAMESPACE) --watch --timeout=120s sts/database
 

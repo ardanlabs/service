@@ -15,31 +15,30 @@ import (
 	"strings"
 )
 
-// privateKey represents key information.
-type privateKey struct {
-	pem []byte
+// key represents key information.
+type key struct {
+	privatePEM string
+	publicPEM  string
 }
 
 // KeyStore represents an in memory store implementation of the
 // KeyLookup interface for use with the auth package.
 type KeyStore struct {
-	store map[string]privateKey
+	store map[string]key
 }
 
 // New constructs an empty KeyStore ready for use.
 func New() *KeyStore {
 	return &KeyStore{
-		store: make(map[string]privateKey),
+		store: make(map[string]key),
 	}
 }
 
-// NewFS constructs a KeyStore based on a set of PEM files rooted inside
-// of a directory. The name of each PEM file will be used as the key id.
-// Example: keystore.NewFS(os.DirFS("/zarf/keys/"))
+// LoadRSAKeys loads a set of RSA PEM files rooted inside of a directory. The
+// name of each PEM file will be used as the key id.
+// Example: ks.LoadRSAKeys(os.DirFS("/zarf/keys/"))
 // Example: /zarf/keys/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1.pem
-func NewFS(fsys fs.FS) (*KeyStore, error) {
-	ks := New()
-
+func (ks *KeyStore) LoadRSAKeys(fsys fs.FS) error {
 	fn := func(fileName string, dirEntry fs.DirEntry, err error) error {
 		if err != nil {
 			return fmt.Errorf("walkdir failure: %w", err)
@@ -67,8 +66,15 @@ func NewFS(fsys fs.FS) (*KeyStore, error) {
 			return fmt.Errorf("reading auth private key: %w", err)
 		}
 
-		key := privateKey{
-			pem: pem,
+		privatePEM := string(pem)
+		publicPEM, err := toPublicPEM(privatePEM)
+		if err != nil {
+			return fmt.Errorf("converting private PEM to public: %w", err)
+		}
+
+		key := key{
+			privatePEM: privatePEM,
+			publicPEM:  publicPEM,
 		}
 
 		ks.store[strings.TrimSuffix(dirEntry.Name(), ".pem")] = key
@@ -77,30 +83,34 @@ func NewFS(fsys fs.FS) (*KeyStore, error) {
 	}
 
 	if err := fs.WalkDir(fsys, ".", fn); err != nil {
-		return nil, fmt.Errorf("walking directory: %w", err)
+		return fmt.Errorf("walking directory: %w", err)
 	}
 
-	return ks, nil
+	return nil
 }
 
 // PrivateKey searches the key store for a given kid and returns the private key.
 func (ks *KeyStore) PrivateKey(kid string) (string, error) {
-	privateKey, found := ks.store[kid]
+	key, found := ks.store[kid]
 	if !found {
 		return "", errors.New("kid lookup failed")
 	}
 
-	return string(privateKey.pem), nil
+	return key.privatePEM, nil
 }
 
 // PublicKey searches the key store for a given kid and returns the public key.
 func (ks *KeyStore) PublicKey(kid string) (string, error) {
-	privateKey, found := ks.store[kid]
+	key, found := ks.store[kid]
 	if !found {
 		return "", errors.New("kid lookup failed")
 	}
 
-	block, _ := pem.Decode(privateKey.pem)
+	return key.publicPEM, nil
+}
+
+func toPublicPEM(privatePEM string) (string, error) {
+	block, _ := pem.Decode([]byte(privatePEM))
 	if block == nil {
 		return "", errors.New("invalid key: Key must be a PEM encoded PKCS1 or PKCS8 key")
 	}

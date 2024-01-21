@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"sync"
 
 	"github.com/ardanlabs/service/business/core/event"
 	"github.com/ardanlabs/service/business/core/user"
@@ -64,8 +63,6 @@ type Auth struct {
 	method    jwt.SigningMethod
 	parser    *jwt.Parser
 	issuer    string
-	mu        sync.RWMutex
-	cache     map[string]string
 }
 
 // New creates an Auth to support authentication/authorization.
@@ -86,7 +83,6 @@ func New(cfg Config) (*Auth, error) {
 		method:    jwt.GetSigningMethod(jwt.SigningMethodRS256.Name),
 		parser:    jwt.NewParser(jwt.WithValidMethods([]string{jwt.SigningMethodRS256.Name})),
 		issuer:    cfg.Issuer,
-		cache:     make(map[string]string),
 	}
 
 	return &a, nil
@@ -140,7 +136,7 @@ func (a *Auth) Authenticate(ctx context.Context, bearerToken string) (Claims, er
 		return Claims{}, fmt.Errorf("kid malformed: %w", err)
 	}
 
-	pem, err := a.publicKeyLookup(kid)
+	pem, err := a.keyLookup.PublicKey(kid)
 	if err != nil {
 		return Claims{}, fmt.Errorf("failed to fetch public key: %w", err)
 	}
@@ -179,36 +175,6 @@ func (a *Auth) Authorize(ctx context.Context, claims Claims, userID uuid.UUID, r
 	}
 
 	return nil
-}
-
-// publicKeyLookup performs a lookup for the public pem for the specified kid.
-func (a *Auth) publicKeyLookup(kid string) (string, error) {
-	pem, err := func() (string, error) {
-		a.mu.RLock()
-		defer a.mu.RUnlock()
-
-		pem, exists := a.cache[kid]
-		if !exists {
-			return "", errors.New("not found")
-		}
-		return pem, nil
-	}()
-
-	// We found the pem in the cache, return it.
-	if err == nil {
-		return pem, nil
-	}
-
-	pem, err = a.keyLookup.PublicKey(kid)
-	if err != nil {
-		return "", fmt.Errorf("fetching public key: %w", err)
-	}
-
-	a.mu.Lock()
-	defer a.mu.Unlock()
-	a.cache[kid] = pem
-
-	return pem, nil
 }
 
 // opaPolicyEvaluation asks opa to evaluate the token against the specified token

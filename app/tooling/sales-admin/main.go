@@ -12,7 +12,6 @@ import (
 	"github.com/ardanlabs/service/app/tooling/sales-admin/commands"
 	"github.com/ardanlabs/service/business/data/sqldb"
 	"github.com/ardanlabs/service/foundation/logger"
-	"github.com/ardanlabs/service/foundation/vault"
 	"github.com/google/uuid"
 )
 
@@ -30,11 +29,9 @@ type config struct {
 		MaxOpenConns int    `conf:"default:0"`
 		DisableTLS   bool   `conf:"default:true"`
 	}
-	Vault struct {
+	Auth struct {
 		KeysFolder string `conf:"default:zarf/keys/"`
-		Address    string `conf:"default:http://vault-service.sales-system.svc.cluster.local:8200"`
-		Token      string `conf:"default:mytoken,mask"`
-		MountPath  string `conf:"default:secret"`
+		DefaultKID string `conf:"default:54bb2165-71e1-41a6-af3e-7da4a0e1e2c1"`
 	}
 }
 
@@ -90,12 +87,6 @@ func processCommands(args conf.Args, log *logger.Logger, cfg config) error {
 		DisableTLS:   cfg.DB.DisableTLS,
 	}
 
-	vaultConfig := vault.Config{
-		Address:   cfg.Vault.Address,
-		Token:     cfg.Vault.Token,
-		MountPath: cfg.Vault.MountPath,
-	}
-
 	switch args.Num(0) {
 	case "domain":
 		if err := commands.Domain(args.Num(1)); err != nil {
@@ -146,18 +137,11 @@ func processCommands(args conf.Args, log *logger.Logger, cfg config) error {
 			return fmt.Errorf("generating token: %w", err)
 		}
 		kid := args.Num(2)
-		if err := commands.GenToken(log, dbConfig, vaultConfig, userID, kid); err != nil {
+		if kid == "" {
+			kid = cfg.Auth.DefaultKID
+		}
+		if err := commands.GenToken(log, dbConfig, cfg.Auth.KeysFolder, userID, kid); err != nil {
 			return fmt.Errorf("generating token: %w", err)
-		}
-
-	case "vault":
-		if err := commands.Vault(vaultConfig, cfg.Vault.KeysFolder); err != nil {
-			return fmt.Errorf("setting private key: %w", err)
-		}
-
-	case "vault-init":
-		if err := commands.VaultInit(vaultConfig); err != nil {
-			return fmt.Errorf("initializing vault instance: %w", err)
 		}
 
 	default:
