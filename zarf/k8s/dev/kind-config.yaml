@@ -18,9 +18,6 @@ nodes:
   # Grafana
   - containerPort: 3100
     hostPort: 3100
-  # Vault
-  - containerPort: 8200
-    hostPort: 8200
   # Postgres
   - containerPort: 5432
     hostPort: 5432

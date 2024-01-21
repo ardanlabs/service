@@ -152,8 +152,6 @@ func processCommands(args conf.Args, log *logger.Logger, cfg config) error {
 		fmt.Println("users:      get a list of users from the database")
 		fmt.Println("genkey:     generate a set of private/public key files")
 		fmt.Println("gentoken:   generate a JWT for a user with claims")
-		fmt.Println("vault:      load private keys into vault system")
-		fmt.Println("vault-init: initialize a new vault instance")
 		fmt.Println("provide a command to get more help.")
 		return commands.ErrHelp
 	}
