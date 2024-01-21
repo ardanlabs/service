@@ -13,33 +13,23 @@ import (
 	"io/fs"
 	"path"
 	"strings"
-
-	"github.com/golang-jwt/jwt/v4"
 )
 
-// PrivateKey represents key information.
-type PrivateKey struct {
-	PK  *rsa.PrivateKey
-	PEM []byte
+// privateKey represents key information.
+type privateKey struct {
+	pem []byte
 }
 
 // KeyStore represents an in memory store implementation of the
 // KeyLookup interface for use with the auth package.
 type KeyStore struct {
-	store map[string]PrivateKey
+	store map[string]privateKey
 }
 
 // New constructs an empty KeyStore ready for use.
 func New() *KeyStore {
 	return &KeyStore{
-		store: make(map[string]PrivateKey),
-	}
-}
-
-// NewMap constructs a KeyStore with an initial set of keys.
-func NewMap(store map[string]PrivateKey) *KeyStore {
-	return &KeyStore{
-		store: store,
+		store: make(map[string]privateKey),
 	}
 }
 
@@ -77,14 +67,8 @@ func NewFS(fsys fs.FS) (*KeyStore, error) {
 			return fmt.Errorf("reading auth private key: %w", err)
 		}
 
-		pk, err := jwt.ParseRSAPrivateKeyFromPEM(pem)
-		if err != nil {
-			return fmt.Errorf("parsing auth private key: %w", err)
-		}
-
-		key := PrivateKey{
-			PK:  pk,
-			PEM: pem,
+		key := privateKey{
+			pem: pem,
 		}
 
 		ks.store[strings.TrimSuffix(dirEntry.Name(), ".pem")] = key
@@ -106,7 +90,7 @@ func (ks *KeyStore) PrivateKey(kid string) (string, error) {
 		return "", errors.New("kid lookup failed")
 	}
 
-	return string(privateKey.PEM), nil
+	return string(privateKey.pem), nil
 }
 
 // PublicKey searches the key store for a given kid and returns the public key.
@@ -116,20 +100,39 @@ func (ks *KeyStore) PublicKey(kid string) (string, error) {
 		return "", errors.New("kid lookup failed")
 	}
 
-	asn1Bytes, err := x509.MarshalPKIXPublicKey(&privateKey.PK.PublicKey)
+	block, _ := pem.Decode(privateKey.pem)
+	if block == nil {
+		return "", errors.New("invalid key: Key must be a PEM encoded PKCS1 or PKCS8 key")
+	}
+
+	var parsedKey any
+	parsedKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+	if err != nil {
+		parsedKey, err = x509.ParsePKCS8PrivateKey(block.Bytes)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	pk, ok := parsedKey.(*rsa.PrivateKey)
+	if !ok {
+		return "", errors.New("key is not a valid RSA private key")
+	}
+
+	asn1Bytes, err := x509.MarshalPKIXPublicKey(&pk.PublicKey)
 	if err != nil {
 		return "", fmt.Errorf("marshaling public key: %w", err)
 	}
 
-	block := pem.Block{
+	publicBlock := pem.Block{
 		Type:  "PUBLIC KEY",
 		Bytes: asn1Bytes,
 	}
 
-	var b bytes.Buffer
-	if err := pem.Encode(&b, &block); err != nil {
-		return "", fmt.Errorf("encoding to private file: %w", err)
+	var buf bytes.Buffer
+	if err := pem.Encode(&buf, &publicBlock); err != nil {
+		return "", fmt.Errorf("encoding to public PEM: %w", err)
 	}
 
-	return b.String(), nil
+	return buf.String(), nil
 }
