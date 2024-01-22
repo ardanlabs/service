@@ -14,26 +14,24 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-// Handlers manages the set of check endpoints.
-type Handlers struct {
+type handlers struct {
 	build string
 	log   *logger.Logger
 	db    *sqlx.DB
 }
 
-// New constructs a Handlers api for the check group.
-func New(build string, log *logger.Logger, db *sqlx.DB) *Handlers {
-	return &Handlers{
+func new(build string, log *logger.Logger, db *sqlx.DB) *handlers {
+	return &handlers{
 		build: build,
 		db:    db,
 		log:   log,
 	}
 }
 
-// Readiness checks if the database is ready and if not will return a 500 status.
+// readiness checks if the database is ready and if not will return a 500 status.
 // Do not respond by just returning an error because further up in the call
 // stack it will interpret that as a non-trusted error.
-func (h *Handlers) Readiness(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (h *handlers) readiness(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 
@@ -54,11 +52,11 @@ func (h *Handlers) Readiness(ctx context.Context, w http.ResponseWriter, r *http
 	return web.Respond(ctx, w, data, statusCode)
 }
 
-// Liveness returns simple status info if the service is alive. If the
+// liveness returns simple status info if the service is alive. If the
 // app is deployed to a Kubernetes cluster, it will also return pod, node, and
 // namespace details via the Downward API. The Kubernetes environment variables
 // need to be set within your Pod/Deployment manifest.
-func (h *Handlers) Liveness(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (h *handlers) liveness(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	host, err := os.Hostname()
 	if err != nil {
 		host = "unavailable"

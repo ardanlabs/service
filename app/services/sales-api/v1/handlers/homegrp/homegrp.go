@@ -19,20 +19,18 @@ var (
 	ErrInvalidID = errors.New("ID is not in its proper form")
 )
 
-// Handlers manages the set of home enpoints.
-type Handlers struct {
+type handlers struct {
 	home *home.Core
 }
 
-// New constructs a handlers for route access.
-func New(home *home.Core) *Handlers {
-	return &Handlers{
+func new(home *home.Core) *handlers {
+	return &handlers{
 		home: home,
 	}
 }
 
-// Create adds a new home to the system.
-func (h *Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+// create adds a new home to the system.
+func (h *handlers) create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app AppNewHome
 	if err := web.Decode(r, &app); err != nil {
 		return v1.NewTrustedError(err, http.StatusBadRequest)
@@ -51,8 +49,8 @@ func (h *Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Re
 	return web.Respond(ctx, w, toAppHome(hme), http.StatusCreated)
 }
 
-// Update updates a home in the system.
-func (h *Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+// update updates a home in the system.
+func (h *handlers) update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app AppUpdateHome
 	if err := web.Decode(r, &app); err != nil {
 		return v1.NewTrustedError(err, http.StatusBadRequest)
@@ -73,8 +71,8 @@ func (h *Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Re
 	return web.Respond(ctx, w, toAppHome(updHme), http.StatusOK)
 }
 
-// Delete deletes a home from the system.
-func (h *Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+// delete deletes a home from the system.
+func (h *handlers) delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	hme := mid.GetHome(ctx)
 
 	if err := h.home.Delete(ctx, hme); err != nil {
@@ -84,8 +82,8 @@ func (h *Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Re
 	return web.Respond(ctx, w, nil, http.StatusNoContent)
 }
 
-// Query returns a list of homes with paging.
-func (h *Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+// query returns a list of homes with paging.
+func (h *handlers) query(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	page, err := page.Parse(r)
 	if err != nil {
 		return err
@@ -114,7 +112,7 @@ func (h *Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Req
 	return web.Respond(ctx, w, v1.NewPageDocument(toAppHomes(homes), total, page.Number, page.RowsPerPage), http.StatusOK)
 }
 
-// QueryByID returns a home by its ID.
-func (h *Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+// queryByID returns a home by its ID.
+func (h *handlers) queryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	return web.Respond(ctx, w, toAppHome(mid.GetHome(ctx)), http.StatusOK)
 }

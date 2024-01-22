@@ -28,6 +28,6 @@ func Routes(app *web.App, cfg Config) {
 	authen := mid.Authenticate(cfg.Auth)
 	ruleAdmin := mid.Authorize(cfg.Auth, auth.RuleAdminOnly)
 
-	hdl := New(usmCore)
+	hdl := new(usmCore)
 	app.Handle(http.MethodGet, version, "/usersummary", hdl.Query, authen, ruleAdmin)
 }

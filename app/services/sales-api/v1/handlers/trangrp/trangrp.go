@@ -11,22 +11,20 @@ import (
 	"github.com/ardanlabs/service/foundation/web"
 )
 
-// Handlers manages the set of product endpoints.
-type Handlers struct {
+type handlers struct {
 	user    *user.Core
 	product *product.Core
 }
 
-// New constructs a handlers for route access.
-func New(user *user.Core, product *product.Core) *Handlers {
-	return &Handlers{
+func new(user *user.Core, product *product.Core) *handlers {
+	return &handlers{
 		user:    user,
 		product: product,
 	}
 }
 
-// Create adds a new user and product at the same time under a single transaction.
-func (h *Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+// create adds a new user and product at the same time under a single transaction.
+func (h *handlers) create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	h, err := h.executeUnderTransaction(ctx)
 	if err != nil {
 		return err

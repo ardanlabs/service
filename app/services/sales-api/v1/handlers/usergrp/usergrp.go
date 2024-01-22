@@ -19,22 +19,20 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
-// Handlers manages the set of user endpoints.
-type Handlers struct {
+type handlers struct {
 	user *user.Core
 	auth *auth.Auth
 }
 
-// New constructs a handlers for route access.
-func New(user *user.Core, auth *auth.Auth) *Handlers {
-	return &Handlers{
+func new(user *user.Core, auth *auth.Auth) *handlers {
+	return &handlers{
 		user: user,
 		auth: auth,
 	}
 }
 
-// Create adds a new user to the system.
-func (h *Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+// create adds a new user to the system.
+func (h *handlers) create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app AppNewUser
 	if err := web.Decode(r, &app); err != nil {
 		return v1.NewTrustedError(err, http.StatusBadRequest)
@@ -56,8 +54,8 @@ func (h *Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Re
 	return web.Respond(ctx, w, toAppUser(usr), http.StatusCreated)
 }
 
-// Update updates a user in the system.
-func (h *Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+// update updates a user in the system.
+func (h *handlers) update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app AppUpdateUser
 	if err := web.Decode(r, &app); err != nil {
 		return v1.NewTrustedError(err, http.StatusBadRequest)
@@ -78,8 +76,8 @@ func (h *Handlers) Update(ctx context.Context, w http.ResponseWriter, r *http.Re
 	return web.Respond(ctx, w, toAppUser(updUsr), http.StatusOK)
 }
 
-// Delete removes a user from the system.
-func (h *Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+// delete removes a user from the system.
+func (h *handlers) delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	usr := mid.GetUser(ctx)
 
 	if err := h.user.Delete(ctx, mid.GetUser(ctx)); err != nil {
@@ -89,8 +87,8 @@ func (h *Handlers) Delete(ctx context.Context, w http.ResponseWriter, r *http.Re
 	return web.Respond(ctx, w, nil, http.StatusNoContent)
 }
 
-// Query returns a list of users with paging.
-func (h *Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+// query returns a list of users with paging.
+func (h *handlers) query(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	page, err := page.Parse(r)
 	if err != nil {
 		return err
@@ -119,13 +117,13 @@ func (h *Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Req
 	return web.Respond(ctx, w, v1.NewPageDocument(toAppUsers(users), total, page.Number, page.RowsPerPage), http.StatusOK)
 }
 
-// QueryByID returns a user by its ID.
-func (h *Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+// queryByID returns a user by its ID.
+func (h *handlers) queryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	return web.Respond(ctx, w, toAppUser(mid.GetUser(ctx)), http.StatusOK)
 }
 
-// Token provides an API token for the authenticated user.
-func (h *Handlers) Token(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+// token provides an API token for the authenticated user.
+func (h *handlers) token(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	kid := web.Param(r, "kid")
 	if kid == "" {
 		return validate.NewFieldsError("kid", errors.New("missing kid"))

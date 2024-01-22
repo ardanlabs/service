@@ -17,8 +17,7 @@ type Handlers struct {
 	summary *usersummary.Core
 }
 
-// New constructs a handlers for route access.
-func New(summary *usersummary.Core) *Handlers {
+func new(summary *usersummary.Core) *Handlers {
 	return &Handlers{
 		summary: summary,
 	}
