@@ -57,7 +57,6 @@ type Config struct {
 // Auth is used to authenticate clients. It can generate a token for a
 // set of user claims and recreate the claims by parsing the token.
 type Auth struct {
-	log       *logger.Logger
 	keyLookup KeyLookup
 	usrCore   *user.Core
 	method    jwt.SigningMethod
@@ -77,7 +76,6 @@ func New(cfg Config) (*Auth, error) {
 	}
 
 	a := Auth{
-		log:       cfg.Log,
 		keyLookup: cfg.KeyLookup,
 		usrCore:   usrCore,
 		method:    jwt.GetSigningMethod(jwt.SigningMethodRS256.Name),
@@ -123,8 +121,6 @@ func (a *Auth) Authenticate(ctx context.Context, bearerToken string) (Claims, er
 	if err != nil {
 		return Claims{}, fmt.Errorf("error parsing token: %w", err)
 	}
-
-	// Perform an extra level of authentication verification with OPA.
 
 	kidRaw, exists := token.Header["kid"]
 	if !exists {
