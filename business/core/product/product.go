@@ -45,7 +45,7 @@ type Core struct {
 	storer  Storer
 }
 
-// NewCore constructs a core for product api access.
+// NewCore constructs a product core API for use.
 func NewCore(log *logger.Logger, evnCore *event.Core, usrCore *user.Core, storer Storer) *Core {
 	c := Core{
 		log:     log,

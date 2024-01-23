@@ -13,24 +13,24 @@ import (
 	"log/slog"
 )
 
-// TraceIDFunc represents a function that can return the trace id from
+// TraceIDFn represents a function that can return the trace id from
 // the specified context.
-type TraceIDFunc func(ctx context.Context) string
+type TraceIDFn func(ctx context.Context) string
 
 // Logger represents a logger for logging information.
 type Logger struct {
-	handler     slog.Handler
-	traceIDFunc TraceIDFunc
+	handler   slog.Handler
+	traceIDFn TraceIDFn
 }
 
 // New constructs a new log for application use.
-func New(w io.Writer, minLevel Level, serviceName string, traceIDFunc TraceIDFunc) *Logger {
-	return new(w, minLevel, serviceName, traceIDFunc, Events{})
+func New(w io.Writer, minLevel Level, serviceName string, traceIDFn TraceIDFn) *Logger {
+	return new(w, minLevel, serviceName, traceIDFn, Events{})
 }
 
 // NewWithEvents constructs a new log for application use with events.
-func NewWithEvents(w io.Writer, minLevel Level, serviceName string, traceIDFunc TraceIDFunc, events Events) *Logger {
-	return new(w, minLevel, serviceName, traceIDFunc, events)
+func NewWithEvents(w io.Writer, minLevel Level, serviceName string, traceIDFn TraceIDFn, events Events) *Logger {
+	return new(w, minLevel, serviceName, traceIDFn, events)
 }
 
 // NewWithHandler returns a new log for application use with the underlying
@@ -96,15 +96,15 @@ func (log *Logger) write(ctx context.Context, level Level, caller int, msg strin
 
 	r := slog.NewRecord(time.Now(), slogLevel, msg, pcs[0])
 
-	if log.traceIDFunc != nil {
-		args = append(args, "trace_id", log.traceIDFunc(ctx))
+	if log.traceIDFn != nil {
+		args = append(args, "trace_id", log.traceIDFn(ctx))
 	}
 	r.Add(args...)
 
 	log.handler.Handle(ctx, r)
 }
 
-func new(w io.Writer, minLevel Level, serviceName string, traceIDFunc TraceIDFunc, events Events) *Logger {
+func new(w io.Writer, minLevel Level, serviceName string, traceIDFn TraceIDFn, events Events) *Logger {
 
 	// Convert the file name to just the name.ext when this key/value will
 	// be logged.
@@ -137,7 +137,7 @@ func new(w io.Writer, minLevel Level, serviceName string, traceIDFunc TraceIDFun
 	handler = handler.WithAttrs(attrs)
 
 	return &Logger{
-		handler:     handler,
-		traceIDFunc: traceIDFunc,
+		handler:   handler,
+		traceIDFn: traceIDFn,
 	}
 }

@@ -46,7 +46,7 @@ type Core struct {
 	log     *logger.Logger
 }
 
-// NewCore constructs a core for user api access.
+// NewCore constructs a user core API for use.
 func NewCore(log *logger.Logger, evnCore *event.Core, storer Storer) *Core {
 	return &Core{
 		storer:  storer,

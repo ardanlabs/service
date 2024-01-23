@@ -41,11 +41,11 @@ spec:
               name: app-config
               key: db_password
               optional: true
-        - name: SALES_DB_HOST
+        - name: SALES_DB_HOST_PORT
           valueFrom:
             configMapKeyRef:
               name: app-config
-              key: db_host
+              key: db_hostport
               optional: true
         - name: SALES_DB_DISABLE_TLS
           valueFrom:
@@ -102,11 +102,11 @@ spec:
               name: app-config
               key: db_password
               optional: true
-        - name: SALES_DB_HOST
+        - name: SALES_DB_HOST_PORT
           valueFrom:
             configMapKeyRef:
               name: app-config
-              key: db_host
+              key: db_hostport
               optional: true
         - name: SALES_DB_DISABLE_TLS
           valueFrom:

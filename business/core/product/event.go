@@ -13,7 +13,7 @@ func (c *Core) registerEventFunctions() {
 	c.evnCore.Register(user.EventSource, user.EventUpdated, c.eventUserUpdated)
 }
 
-// The user domain will execute this function indirectly when a user is updated.
+// eventUserUpdated is executed by the user domain indirectly when a user is updated.
 func (c *Core) eventUserUpdated(ctx context.Context, ev event.Event) error {
 	var params user.EventParamsUpdated
 	err := json.Unmarshal(ev.RawParams, &params)

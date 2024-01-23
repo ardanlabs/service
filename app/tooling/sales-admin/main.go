@@ -23,7 +23,7 @@ type config struct {
 	DB   struct {
 		User         string `conf:"default:postgres"`
 		Password     string `conf:"default:postgres,mask"`
-		Host         string `conf:"default:database-service.sales-system.svc.cluster.local"`
+		HostPort     string `conf:"default:database-service.sales-system.svc.cluster.local"`
 		Name         string `conf:"default:postgres"`
 		MaxIdleConns int    `conf:"default:2"`
 		MaxOpenConns int    `conf:"default:0"`
@@ -80,7 +80,7 @@ func processCommands(args conf.Args, log *logger.Logger, cfg config) error {
 	dbConfig := sqldb.Config{
 		User:         cfg.DB.User,
 		Password:     cfg.DB.Password,
-		Host:         cfg.DB.Host,
+		HostPort:     cfg.DB.HostPort,
 		Name:         cfg.DB.Name,
 		MaxIdleConns: cfg.DB.MaxIdleConns,
 		MaxOpenConns: cfg.DB.MaxOpenConns,

@@ -17,7 +17,7 @@ var (
 )
 
 // Authenticate validates a JWT from the `Authorization` header.
-func Authenticate(a *auth.Auth) web.Middleware {
+func Authenticate(a *auth.Auth) web.MidHandler {
 	m := func(handler web.Handler) web.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 			claims, err := a.Authenticate(ctx, r.Header.Get("authorization"))
@@ -47,7 +47,7 @@ func Authenticate(a *auth.Auth) web.Middleware {
 }
 
 // Authorize executes the specified role and does not extract any domain data.
-func Authorize(a *auth.Auth, rule string) web.Middleware {
+func Authorize(a *auth.Auth, rule string) web.MidHandler {
 	m := func(handler web.Handler) web.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 			claims := getClaims(ctx)

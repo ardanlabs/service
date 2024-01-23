@@ -44,7 +44,7 @@ func Set(ctx context.Context) context.Context {
 	return context.WithValue(ctx, key, m)
 }
 
-// AddGoroutines refreshes the goroutine metric every 100 requests.
+// AddGoroutines refreshes the goroutine metric.
 func AddGoroutines(ctx context.Context) int64 {
 	if v, ok := ctx.Value(key).(*metrics); ok {
 		g := int64(runtime.NumGoroutine())

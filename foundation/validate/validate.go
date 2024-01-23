@@ -42,8 +42,6 @@ func init() {
 // Check validates the provided model against it's declared tags.
 func Check(val any) error {
 	if err := validate.Struct(val); err != nil {
-
-		// Use a type assertion to get the real error value.
 		verrors, ok := err.(validator.ValidationErrors)
 		if !ok {
 			return err
@@ -51,11 +49,10 @@ func Check(val any) error {
 
 		var fields FieldErrors
 		for _, verror := range verrors {
-			field := FieldError{
+			fields = append(fields, FieldError{
 				Field: verror.Field(),
 				Err:   verror.Translate(translator),
-			}
-			fields = append(fields, field)
+			})
 		}
 
 		return fields

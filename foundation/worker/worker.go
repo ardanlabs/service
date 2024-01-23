@@ -11,8 +11,8 @@ import (
 	"github.com/google/uuid"
 )
 
-// JobFunc defines a function that can execute work for a specific job.
-type JobFunc func(ctx context.Context)
+// JobFn defines a function that can execute work for a specific job.
+type JobFn func(ctx context.Context)
 
 // Worker manages jobs and the execution of those jobs concurrently.
 type Worker struct {
@@ -59,13 +59,14 @@ func (w *Worker) Shutdown(ctx context.Context) error {
 	close(w.isShutdown)
 
 	// Call the cancel function for all running goroutines.
-	w.mu.RLock()
-	{
+	func() {
+		w.mu.RLock()
+		defer w.mu.RUnlock()
+
 		for _, cancel := range w.running {
 			cancel()
 		}
-	}
-	w.mu.RUnlock()
+	}()
 
 	// Launch a goroutine to wait for all the worker goroutines
 	// to complete their work.
@@ -87,7 +88,7 @@ func (w *Worker) Shutdown(ctx context.Context) error {
 
 // Start lookups a job by key and launches a goroutine to perform the work. A
 // work key is returned so the caller can cancel work early.
-func (w *Worker) Start(ctx context.Context, fn JobFunc) (string, error) {
+func (w *Worker) Start(ctx context.Context, jobFn JobFn) (string, error) {
 
 	// We need to block here waiting to capture a semaphore, timeout or shutdown.
 	// The shutdown is first to handle that event as priority.
@@ -132,7 +133,7 @@ func (w *Worker) Start(ctx context.Context, fn JobFunc) (string, error) {
 		}()
 
 		// Execute the actually workload.
-		fn(ctx)
+		jobFn(ctx)
 	}()
 
 	return workKey, nil

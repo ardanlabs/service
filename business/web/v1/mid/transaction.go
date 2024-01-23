@@ -14,7 +14,7 @@ import (
 
 // ExecuteInTransaction starts a transaction around all the storage calls within
 // the scope of the handler function.
-func ExecuteInTransaction(log *logger.Logger, bgn transaction.Beginner) web.Middleware {
+func ExecuteInTransaction(log *logger.Logger, bgn transaction.Beginner) web.MidHandler {
 	m := func(handler web.Handler) web.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 			hasCommitted := false

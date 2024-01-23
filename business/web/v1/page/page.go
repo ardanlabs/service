@@ -37,8 +37,10 @@ func Parse(r *http.Request) (Page, error) {
 		}
 	}
 
-	return Page{
+	p := Page{
 		Number:      number,
 		RowsPerPage: rowsPerPage,
-	}, nil
+	}
+
+	return p, nil
 }

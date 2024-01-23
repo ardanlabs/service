@@ -42,7 +42,7 @@ func NewBy(field string, direction string) By {
 	}
 }
 
-// Parse constructs a order.By value by parsing a string in the form
+// Parse constructs a By value by parsing a string in the form
 // of "field,direction".
 func Parse(r *http.Request, defaultOrder By) (By, error) {
 	v := r.URL.Query().Get("orderBy")

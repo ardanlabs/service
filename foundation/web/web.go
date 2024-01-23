@@ -29,12 +29,12 @@ type App struct {
 	mux      *httptreemux.ContextMux
 	otmux    http.Handler
 	shutdown chan os.Signal
-	mw       []Middleware
+	mw       []MidHandler
 	tracer   trace.Tracer
 }
 
 // NewApp creates an App value that handle a set of routes for the application.
-func NewApp(shutdown chan os.Signal, tracer trace.Tracer, mw ...Middleware) *App {
+func NewApp(shutdown chan os.Signal, tracer trace.Tracer, mw ...MidHandler) *App {
 
 	// Create an OpenTelemetry HTTP Handler which wraps our router. This will start
 	// the initial span and annotate it with information about the request/trusted.
@@ -71,7 +71,7 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // EnableCORS enables CORS preflight requests to work in the middleware. It
 // prevents the MethodNotAllowedHandler from being called. This must be enabled
 // for the CORS middleware to work.
-func (a *App) EnableCORS(mw Middleware) {
+func (a *App) EnableCORS(mw MidHandler) {
 	a.mw = append(a.mw, mw)
 
 	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
@@ -124,7 +124,7 @@ func (a *App) HandleNoMiddleware(method string, group string, path string, handl
 
 // Handle sets a handler function for a given HTTP method and path pair
 // to the application server mux.
-func (a *App) Handle(method string, group string, path string, handler Handler, mw ...Middleware) {
+func (a *App) Handle(method string, group string, path string, handler Handler, mw ...MidHandler) {
 	handler = wrapMiddleware(mw, handler)
 	handler = wrapMiddleware(a.mw, handler)
 

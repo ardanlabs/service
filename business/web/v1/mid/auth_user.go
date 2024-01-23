@@ -50,7 +50,7 @@ func setUser(ctx context.Context, usr user.User) context.Context {
 // from the DB if a user id is specified in the call. Depending on the rule
 // specified, the userid from the claims may be compared with the specified
 // user id.
-func AuthorizeUser(a *auth.Auth, rule string, usrCore *user.Core) web.Middleware {
+func AuthorizeUser(a *auth.Auth, rule string, usrCore *user.Core) web.MidHandler {
 	m := func(handler web.Handler) web.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 			var userID uuid.UUID

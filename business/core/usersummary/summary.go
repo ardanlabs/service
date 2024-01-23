@@ -21,7 +21,7 @@ type Core struct {
 	storer Storer
 }
 
-// NewCore constructs a core for use product api access.
+// NewCore constructs a usersummary core API for use.
 func NewCore(storer Storer) *Core {
 	return &Core{
 		storer: storer,

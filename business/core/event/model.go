@@ -5,8 +5,8 @@ import (
 	"fmt"
 )
 
-// Func represents a function that can receive an event.
-type Func func(context.Context, Event) error
+// EventFn represents a function that can receive an event.
+type EventFn func(context.Context, Event) error
 
 // Event represents an event between core domains.
 type Event struct {

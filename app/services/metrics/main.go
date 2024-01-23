@@ -30,11 +30,11 @@ func main() {
 		Error: func(ctx context.Context, r logger.Record) { log.Info(ctx, "******* SEND ALERT ******") },
 	}
 
-	traceIDFunc := func(ctx context.Context) string {
+	traceIDFn := func(ctx context.Context) string {
 		return "00000000-0000-0000-0000-000000000000"
 	}
 
-	log = logger.NewWithEvents(os.Stdout, logger.LevelInfo, "METRICS", traceIDFunc, events)
+	log = logger.NewWithEvents(os.Stdout, logger.LevelInfo, "METRICS", traceIDFn, events)
 
 	// -------------------------------------------------------------------------
 

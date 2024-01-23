@@ -36,7 +36,7 @@ var (
 type Config struct {
 	User         string
 	Password     string
-	Host         string
+	HostPort     string
 	Name         string
 	Schema       string
 	MaxIdleConns int
@@ -61,7 +61,7 @@ func Open(cfg Config) (*sqlx.DB, error) {
 	u := url.URL{
 		Scheme:   "postgres",
 		User:     url.UserPassword(cfg.User, cfg.Password),
-		Host:     cfg.Host,
+		Host:     cfg.HostPort,
 		Path:     cfg.Name,
 		RawQuery: q.Encode(),
 	}

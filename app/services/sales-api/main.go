@@ -48,11 +48,11 @@ func main() {
 		},
 	}
 
-	traceIDFunc := func(ctx context.Context) string {
+	traceIDFn := func(ctx context.Context) string {
 		return web.GetTraceID(ctx)
 	}
 
-	log = logger.NewWithEvents(os.Stdout, logger.LevelInfo, "SALES-API", traceIDFunc, events)
+	log = logger.NewWithEvents(os.Stdout, logger.LevelInfo, "SALES-API", traceIDFn, events)
 
 	// -------------------------------------------------------------------------
 
@@ -93,7 +93,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 		DB struct {
 			User         string `conf:"default:postgres"`
 			Password     string `conf:"default:postgres,mask"`
-			Host         string `conf:"default:database-service.sales-system.svc.cluster.local"`
+			HostPort     string `conf:"default:database-service.sales-system.svc.cluster.local"`
 			Name         string `conf:"default:postgres"`
 			MaxIdleConns int    `conf:"default:2"`
 			MaxOpenConns int    `conf:"default:0"`
@@ -141,12 +141,12 @@ func run(ctx context.Context, log *logger.Logger) error {
 	// -------------------------------------------------------------------------
 	// Database Support
 
-	log.Info(ctx, "startup", "status", "initializing database support", "host", cfg.DB.Host)
+	log.Info(ctx, "startup", "status", "initializing database support", "hostport", cfg.DB.HostPort)
 
 	db, err := sqldb.Open(sqldb.Config{
 		User:         cfg.DB.User,
 		Password:     cfg.DB.Password,
-		Host:         cfg.DB.Host,
+		HostPort:     cfg.DB.HostPort,
 		Name:         cfg.DB.Name,
 		MaxIdleConns: cfg.DB.MaxIdleConns,
 		MaxOpenConns: cfg.DB.MaxOpenConns,
@@ -156,7 +156,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 		return fmt.Errorf("connecting to db: %w", err)
 	}
 	defer func() {
-		log.Info(ctx, "shutdown", "status", "stopping database support", "host", cfg.DB.Host)
+		log.Info(ctx, "shutdown", "status", "stopping database support", "hostport", cfg.DB.HostPort)
 		db.Close()
 	}()
 
