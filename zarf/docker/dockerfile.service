@@ -34,7 +34,6 @@ COPY --from=build_sales-api --chown=sales:sales /service/app/tooling/sales-admin
 COPY --from=build_sales-api --chown=sales:sales /service/app/services/sales-api/sales-api /service/sales-api
 WORKDIR /service
 USER sales
-ENV GODEBUG=httpmuxgo121=0
 CMD ["./sales-api"]
 
 LABEL org.opencontainers.image.created="${BUILD_DATE}" \

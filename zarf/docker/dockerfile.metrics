@@ -29,7 +29,6 @@ RUN addgroup -g 1000 -S metrics && \
 COPY --from=build_metrics --chown=metrics:metrics /service/app/services/metrics/metrics /service/metrics
 WORKDIR /service
 USER metrics
-ENV GODEBUG=httpmuxgo121=0
 CMD ["./metrics"]
 
 LABEL org.opencontainers.image.created="${BUILD_DATE}" \
