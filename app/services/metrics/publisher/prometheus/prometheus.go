@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/foundation/logger"
-	"github.com/dimfeld/httptreemux/v5"
 )
 
 // Exporter implements the prometheus exporter support.
@@ -23,7 +22,7 @@ type Exporter struct {
 
 // New constructs an Exporter for use.
 func New(log *logger.Logger, host string, route string, readTimeout, writeTimeout time.Duration, idleTimeout time.Duration) *Exporter {
-	mux := httptreemux.NewContextMux()
+	mux := http.NewServeMux()
 
 	exp := Exporter{
 		log: log,
@@ -37,7 +36,7 @@ func New(log *logger.Logger, host string, route string, readTimeout, writeTimeou
 		},
 	}
 
-	mux.Handle(http.MethodGet, route, exp.handler)
+	mux.HandleFunc(route, exp.handler)
 
 	go func() {
 		ctx := context.Background()

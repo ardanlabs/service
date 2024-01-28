@@ -38,8 +38,8 @@ func Routes(app *web.App, cfg Config) {
 
 	hdl := new(prdCore, usrCore)
 	app.Handle(http.MethodGet, version, "/products", hdl.query, authen, ruleAny)
-	app.Handle(http.MethodGet, version, "/products/:product_id", hdl.queryByID, authen, ruleAdminOrSubject)
+	app.Handle(http.MethodGet, version, "/products/{product_id}", hdl.queryByID, authen, ruleAdminOrSubject)
 	app.Handle(http.MethodPost, version, "/products", hdl.create, authen, ruleUserOnly)
-	app.Handle(http.MethodPut, version, "/products/:product_id", hdl.update, authen, ruleAdminOrSubject)
-	app.Handle(http.MethodDelete, version, "/products/:product_id", hdl.delete, authen, ruleAdminOrSubject)
+	app.Handle(http.MethodPut, version, "/products/{product_id}", hdl.update, authen, ruleAdminOrSubject)
+	app.Handle(http.MethodDelete, version, "/products/{product_id}", hdl.delete, authen, ruleAdminOrSubject)
 }

@@ -4,12 +4,12 @@ package web
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"os"
 	"syscall"
 	"time"
 
-	"github.com/dimfeld/httptreemux/v5"
 	"github.com/google/uuid"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
@@ -26,7 +26,7 @@ type Handler func(ctx context.Context, w http.ResponseWriter, r *http.Request) e
 // object for each of our http handlers. Feel free to add any configuration
 // data/logic on this App struct.
 type App struct {
-	mux      *httptreemux.ContextMux
+	mux      *http.ServeMux
 	otmux    http.Handler
 	shutdown chan os.Signal
 	mw       []MidHandler
@@ -43,7 +43,7 @@ func NewApp(shutdown chan os.Signal, tracer trace.Tracer, mw ...MidHandler) *App
 	// parent if a client request includes the appropriate headers.
 	// https://w3c.github.io/trace-context/
 
-	mux := httptreemux.NewContextMux()
+	mux := http.NewServeMux()
 
 	return &App{
 		mux:      mux,
@@ -79,7 +79,7 @@ func (a *App) EnableCORS(mw MidHandler) {
 	}
 	handler = wrapMiddleware(a.mw, handler)
 
-	a.mux.OptionsHandler = func(w http.ResponseWriter, r *http.Request, params map[string]string) {
+	h := func(w http.ResponseWriter, r *http.Request) {
 		ctx, span := a.startSpan(w, r)
 		defer span.End()
 
@@ -92,6 +92,8 @@ func (a *App) EnableCORS(mw MidHandler) {
 
 		handler(ctx, w, r)
 	}
+
+	a.mux.HandleFunc("OPTIONS /", h)
 }
 
 // HandleNoMiddleware sets a handler function for a given HTTP method and path pair
@@ -118,8 +120,9 @@ func (a *App) HandleNoMiddleware(method string, group string, path string, handl
 	if group != "" {
 		finalPath = "/" + group + path
 	}
+	finalPath = fmt.Sprintf("%s %s", method, finalPath)
 
-	a.mux.Handle(method, finalPath, h)
+	a.mux.HandleFunc(finalPath, h)
 }
 
 // Handle sets a handler function for a given HTTP method and path pair
@@ -151,8 +154,9 @@ func (a *App) Handle(method string, group string, path string, handler Handler, 
 	if group != "" {
 		finalPath = "/" + group + path
 	}
+	finalPath = fmt.Sprintf("%s %s", method, finalPath)
 
-	a.mux.Handle(method, finalPath, h)
+	a.mux.HandleFunc(finalPath, h)
 }
 
 // startSpan initializes the request by adding a span and writing otel

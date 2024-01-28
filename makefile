@@ -117,7 +117,7 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 # ==============================================================================
 # Define dependencies
 
-GOLANG          := golang:1.21.6
+GOLANG          := golang:1.22rc2
 ALPINE          := alpine:3.19
 KIND            := kindest/node:v1.29.0@sha256:eaa1450915475849a73a9227b8f201df25e55e268e5d619312131292e324d570
 POSTGRES        := postgres:16.1
@@ -359,10 +359,10 @@ statsviz:
 # Running tests within the local computer
 
 test-race:
-	CGO_ENABLED=1 go test -race -count=1 ./...
+	GODEBUG=httpmuxgo121=0 CGO_ENABLED=1 go test -race -count=1 ./...
 
 test-only:
-	CGO_ENABLED=0 go test -count=1 ./...
+	GODEBUG=httpmuxgo121=0 CGO_ENABLED=0 go test -count=1 ./...
 
 lint:
 	CGO_ENABLED=0 go vet ./...

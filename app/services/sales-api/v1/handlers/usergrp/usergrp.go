@@ -124,7 +124,7 @@ func (h *handlers) queryByID(ctx context.Context, w http.ResponseWriter, r *http
 
 // token provides an API token for the authenticated user.
 func (h *handlers) token(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	kid := web.Param(ctx, "kid")
+	kid := web.Param(r, "kid")
 	if kid == "" {
 		return validate.NewFieldsError("kid", errors.New("missing kid"))
 	}

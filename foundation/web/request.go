@@ -1,18 +1,14 @@
 package web
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
-
-	"github.com/dimfeld/httptreemux/v5"
 )
 
 // Param returns the web call parameters from the request.
-func Param(ctx context.Context, key string) string {
-	m := httptreemux.ContextParams(ctx)
-	return m[key]
+func Param(r *http.Request, key string) string {
+	return r.PathValue(key)
 }
 
 type validator interface {

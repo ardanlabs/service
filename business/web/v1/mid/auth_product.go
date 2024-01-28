@@ -39,7 +39,7 @@ func AuthorizeProduct(a *auth.Auth, rule string, prdCore *product.Core) web.MidH
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 			var userID uuid.UUID
 
-			if id := web.Param(ctx, "product_id"); id != "" {
+			if id := web.Param(r, "product_id"); id != "" {
 				var err error
 				productID, err := uuid.Parse(id)
 				if err != nil {
