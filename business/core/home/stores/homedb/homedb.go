@@ -193,7 +193,7 @@ func (s *Store) QueryByID(ctx context.Context, homeID uuid.UUID) (home.Home, err
 	return toCoreHome(dbHme)
 }
 
-// QueryByEmail gets the specified home from the database by user id.
+// QueryByUserID gets the specified home from the database by user id.
 func (s *Store) QueryByUserID(ctx context.Context, userID uuid.UUID) ([]home.Home, error) {
 	data := struct {
 		ID string `db:"user_id"`
