@@ -46,7 +46,7 @@ func (s *Store) ExecuteUnderTransaction(tx transaction.Transaction) (home.Storer
 	return &store, nil
 }
 
-// Create adds a Home to the sqldb. It returns an error if something went wrong
+// Create inserts a new home into the database.
 func (s *Store) Create(ctx context.Context, hme home.Home) error {
 	const q = `
     INSERT INTO homes
@@ -61,7 +61,7 @@ func (s *Store) Create(ctx context.Context, hme home.Home) error {
 	return nil
 }
 
-// Delete removes the Home identified by a given ID.
+// Delete removes a home from the database.
 func (s *Store) Delete(ctx context.Context, hme home.Home) error {
 	data := struct {
 		ID string `db:"home_id"`
@@ -76,6 +76,30 @@ func (s *Store) Delete(ctx context.Context, hme home.Home) error {
 	  	home_id = :home_id`
 
 	if err := sqldb.NamedExecContext(ctx, s.log, s.db, q, data); err != nil {
+		return fmt.Errorf("namedexeccontext: %w", err)
+	}
+
+	return nil
+}
+
+// Update replaces a home document in the database.
+func (s *Store) Update(ctx context.Context, hme home.Home) error {
+	const q = `
+    UPDATE
+        homes
+    SET
+        "address_1"     = :address_1,
+        "address_2"     = :address_2,
+        "zip_code"      = :zip_code,
+        "city"          = :city,
+        "state"         = :state,
+        "country"       = :country,
+        "type"          = :type,
+        "date_updated"  = :date_updated
+    WHERE
+        home_id = :home_id`
+
+	if err := sqldb.NamedExecContext(ctx, s.log, s.db, q, toDBHome(hme)); err != nil {
 		return fmt.Errorf("namedexeccontext: %w", err)
 	}
 
@@ -119,31 +143,6 @@ func (s *Store) Query(ctx context.Context, filter home.QueryFilter, orderBy orde
 	return hmes, nil
 }
 
-// Update modifies data about a Home. It will error if the specified ID is
-// invalid or does not reference an existing Home.
-func (s *Store) Update(ctx context.Context, hme home.Home) error {
-	const q = `
-    UPDATE
-        homes
-    SET
-        "address_1"     = :address_1,
-        "address_2"     = :address_2,
-        "zip_code"      = :zip_code,
-        "city"          = :city,
-        "state"         = :state,
-        "country"       = :country,
-        "type"          = :type,
-        "date_updated"  = :date_updated
-    WHERE
-        home_id = :home_id`
-
-	if err := sqldb.NamedExecContext(ctx, s.log, s.db, q, toDBHome(hme)); err != nil {
-		return fmt.Errorf("namedexeccontext: %w", err)
-	}
-
-	return nil
-}
-
 // Count returns the total number of homes in the DB.
 func (s *Store) Count(ctx context.Context, filter home.QueryFilter) (int, error) {
 	data := map[string]interface{}{}
@@ -167,7 +166,7 @@ func (s *Store) Count(ctx context.Context, filter home.QueryFilter) (int, error)
 	return count.Count, nil
 }
 
-// QueryByID finds the home identified by a given ID.
+// QueryByID gets the specified home from the database.
 func (s *Store) QueryByID(ctx context.Context, homeID uuid.UUID) (home.Home, error) {
 	data := struct {
 		ID string `db:"home_id"`
@@ -194,7 +193,7 @@ func (s *Store) QueryByID(ctx context.Context, homeID uuid.UUID) (home.Home, err
 	return toCoreHome(dbHme)
 }
 
-// QueryByUserID finds the home identified by a given User ID.
+// QueryByEmail gets the specified home from the database by user id.
 func (s *Store) QueryByUserID(ctx context.Context, userID uuid.UUID) ([]home.Home, error) {
 	data := struct {
 		ID string `db:"user_id"`
