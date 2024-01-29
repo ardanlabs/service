@@ -22,7 +22,7 @@ var (
 )
 
 // Storer interface declares the behaviour this package needs to persist and
-// retrieve data
+// retrieve data.
 type Storer interface {
 	ExecuteUnderTransaction(tx transaction.Transaction) (Storer, error)
 	Create(ctx context.Context, hme Home) error
