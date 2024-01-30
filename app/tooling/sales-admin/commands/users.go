@@ -44,5 +44,5 @@ func Users(log *logger.Logger, cfg sqldb.Config, pageNumber string, rowsPerPage 
 		return fmt.Errorf("retrieve users: %w", err)
 	}
 
-	return json.MarshalWrite(os.Stdout, users)
+	return json.MarshalWrite(os.Stdout, users, json.FormatNilSliceAsNull(true))
 }

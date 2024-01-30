@@ -88,7 +88,7 @@ func (exp *Expvar) handler(w http.ResponseWriter, r *http.Request) {
 	}
 	exp.mu.Unlock()
 
-	if err := json.MarshalWrite(w, data); err != nil {
+	if err := json.MarshalWrite(w, data, json.FormatNilSliceAsNull(true)); err != nil {
 		exp.log.Error(ctx, "expvar", "status", "encoding data", "msg", err)
 	}
 
