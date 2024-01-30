@@ -1,10 +1,10 @@
 package web
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
-
-	"github.com/go-json-experiment/json"
+	// "github.com/go-json-experiment/json"
 )
 
 // Param returns the web call parameters from the request.
@@ -21,7 +21,13 @@ type validator interface {
 // If the provided value is a struct then it is checked for validation tags.
 // If the value implements a validate function, it is executed.
 func Decode(r *http.Request, val any) error {
-	if err := json.UnmarshalRead(r.Body, val, json.RejectUnknownMembers(true)); err != nil {
+	// if err := json.UnmarshalRead(r.Body, val, json.RejectUnknownMembers(false)); err != nil {
+	// 	return fmt.Errorf("unable to decode payload: %w", err)
+	// }
+
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(val); err != nil {
 		return fmt.Errorf("unable to decode payload: %w", err)
 	}
 

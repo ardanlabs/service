@@ -35,6 +35,11 @@ func new(user *user.Core, auth *auth.Auth) *handlers {
 func (h *handlers) create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app AppNewUser
 	if err := web.Decode(r, &app); err != nil {
+		if app.Roles == nil {
+			fmt.Println("******* BILL 5 *******> NIL")
+		} else {
+			fmt.Println("******* BILL 5 *******> EMPTY")
+		}
 		return v1.NewTrustedError(err, http.StatusBadRequest)
 	}
 
