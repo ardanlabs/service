@@ -86,8 +86,8 @@ func extractIPPort(id string, port string) (hostIP string, hostPort string, err 
 	data := strings.ReplaceAll(out.String(), "}{", "},{")
 
 	var docs []struct {
-		HostIP   string
-		HostPort string
+		HostIP   string `json:"HostIp"`
+		HostPort string `json:"HostPort"`
 	}
 	if err := json.Unmarshal([]byte(data), &docs); err != nil {
 		return "", "", fmt.Errorf("could not decode json: %w", err)
