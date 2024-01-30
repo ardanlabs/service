@@ -69,7 +69,7 @@ type Test struct {
 // NewTest creates a test database inside a Docker container. It creates the
 // required table structure but the database is otherwise empty. It returns
 // the database to use as well as a function to call at the end of the test.
-func NewTest(t *testing.T, c *docker.Container, name string) *Test {
+func NewTest(t *testing.T, c *docker.Container, testName string) *Test {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -150,9 +150,9 @@ func NewTest(t *testing.T, c *docker.Container, name string) *Test {
 		t.Helper()
 		db.Close()
 
-		fmt.Printf("******************** LOGS (%s) ********************\n", name)
+		fmt.Printf("******************** LOGS (%s) ********************\n", testName)
 		fmt.Print(buf.String())
-		fmt.Printf("******************** LOGS (%s) ********************\n", name)
+		fmt.Printf("******************** LOGS (%s) ********************\n", testName)
 	}
 
 	test := Test{
