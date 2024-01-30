@@ -20,7 +20,7 @@ var translator ut.Translator
 func init() {
 
 	// Instantiate a validator.
-	validate = validator.New()
+	validate = validator.New(validator.WithRequiredStructEnabled())
 
 	// Create a translator for english so the error messages are
 	// more human-readable than technical.
