@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	"github.com/ardanlabs/service/business/data/dbtest"
@@ -16,10 +17,11 @@ var c *docker.Container
 
 func TestMain(m *testing.M) {
 	var err error
+
 	c, err = dbtest.StartDB()
 	if err != nil {
 		fmt.Println(err)
-		return
+		os.Exit(1)
 	}
 	defer dbtest.StopDB(c)
 

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/mail"
+	"os"
 	"runtime/debug"
 	"testing"
 	"time"
@@ -19,10 +20,11 @@ var c *docker.Container
 
 func TestMain(m *testing.M) {
 	var err error
+
 	c, err = dbtest.StartDB()
 	if err != nil {
 		fmt.Println(err)
-		return
+		os.Exit(1)
 	}
 	defer dbtest.StopDB(c)
 

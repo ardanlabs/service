@@ -2,7 +2,6 @@ package tests
 
 import (
 	"net/http"
-	"testing"
 
 	"github.com/ardanlabs/service/app/services/sales-api/v1/handlers/usergrp"
 	v1 "github.com/ardanlabs/service/business/web/v1"
@@ -10,7 +9,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func userCreate200(t *testing.T, app appTest, sd seedData) []tableData {
+func userCreate200(sd seedData) []tableData {
 	table := []tableData{
 		{
 			name:       "basic",
@@ -62,7 +61,7 @@ func userCreate200(t *testing.T, app appTest, sd seedData) []tableData {
 	return table
 }
 
-func userCreate400(t *testing.T, app appTest, sd seedData) []tableData {
+func userCreate400(sd seedData) []tableData {
 	table := []tableData{
 		{
 			name:       "missing-input",
@@ -107,7 +106,7 @@ func userCreate400(t *testing.T, app appTest, sd seedData) []tableData {
 	return table
 }
 
-func userCreate401(t *testing.T, app appTest, sd seedData) []tableData {
+func userCreate401(sd seedData) []tableData {
 	table := []tableData{
 		{
 			name:       "emptytoken",

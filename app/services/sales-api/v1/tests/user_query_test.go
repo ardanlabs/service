@@ -3,7 +3,6 @@ package tests
 import (
 	"fmt"
 	"net/http"
-	"testing"
 
 	"github.com/ardanlabs/service/app/services/sales-api/v1/handlers/usergrp"
 	"github.com/ardanlabs/service/business/core/user"
@@ -12,7 +11,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func userQuery200(t *testing.T, app appTest, sd seedData) []tableData {
+func userQuery200(sd seedData) []tableData {
 	usrs := make([]user.User, 0, len(sd.admins)+len(sd.users))
 	usrsMap := make(map[uuid.UUID]user.User)
 
@@ -66,7 +65,7 @@ func userQuery200(t *testing.T, app appTest, sd seedData) []tableData {
 	return table
 }
 
-func userQueryByID200(t *testing.T, app appTest, sd seedData) []tableData {
+func userQueryByID200(sd seedData) []tableData {
 	table := []tableData{
 		{
 			name:       "basic",

@@ -1,7 +1,6 @@
 package tests
 
 import (
-	"context"
 	"os"
 	"runtime/debug"
 	"testing"
@@ -36,24 +35,24 @@ func Test_Product(t *testing.T) {
 
 	// -------------------------------------------------------------------------
 
-	sd, err := createProductSeed(context.Background(), dbTest)
+	sd, err := createProductSeed(dbTest)
 	if err != nil {
 		t.Fatalf("Seeding error: %s", err)
 	}
 
 	// -------------------------------------------------------------------------
 
-	app.test(t, productQuery200(t, app, sd), "product-query-200")
-	app.test(t, productQueryByID200(t, app, sd), "product-querybyid-200")
+	app.test(t, productQuery200(sd), "product-query-200")
+	app.test(t, productQueryByID200(sd), "product-querybyid-200")
 
-	app.test(t, productCreate200(t, app, sd), "product-create-200")
-	app.test(t, productCreate401(t, app, sd), "product-create-401")
-	app.test(t, productCreate400(t, app, sd), "product-create-400")
+	app.test(t, productCreate200(sd), "product-create-200")
+	app.test(t, productCreate401(sd), "product-create-401")
+	app.test(t, productCreate400(sd), "product-create-400")
 
-	app.test(t, productUpdate200(t, app, sd), "product-update-200")
-	app.test(t, productUpdate401(t, app, sd), "product-update-401")
-	app.test(t, productUpdate400(t, app, sd), "product-update-400")
+	app.test(t, productUpdate200(sd), "product-update-200")
+	app.test(t, productUpdate401(sd), "product-update-401")
+	app.test(t, productUpdate400(sd), "product-update-400")
 
-	app.test(t, productDelete200(t, app, sd), "product-delete-200")
-	app.test(t, productDelete401(t, app, sd), "product-delete-401")
+	app.test(t, productDelete200(sd), "product-delete-200")
+	app.test(t, productDelete401(sd), "product-delete-401")
 }
