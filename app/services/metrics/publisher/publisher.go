@@ -3,11 +3,11 @@ package publisher
 
 import (
 	"context"
-	"encoding/json"
 	"sync"
 	"time"
 
 	"github.com/ardanlabs/service/foundation/logger"
+	"github.com/go-json-experiment/json"
 )
 
 // Set of possible publisher types.
@@ -119,7 +119,7 @@ func (s *Stdout) Publish(data map[string]any) {
 	delete(d, "memstats")
 	delete(d, "cmdline")
 
-	out, err := json.MarshalIndent(d, "", "    ")
+	out, err := json.Marshal(d)
 	if err != nil {
 		return
 	}

@@ -2,11 +2,11 @@ package product
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	"github.com/ardanlabs/service/business/core/event"
 	"github.com/ardanlabs/service/business/core/user"
+	"github.com/go-json-experiment/json"
 )
 
 func (c *Core) registerEventFunctions() {

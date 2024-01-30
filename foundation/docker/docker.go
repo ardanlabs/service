@@ -4,11 +4,12 @@ package docker
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"net"
 	"os/exec"
 	"strings"
+
+	"github.com/go-json-experiment/json"
 )
 
 // Container tracks information about the docker container started for tests.

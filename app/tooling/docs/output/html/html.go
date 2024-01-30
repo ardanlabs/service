@@ -4,7 +4,6 @@ package html
 import (
 	"context"
 	"embed"
-	"encoding/json"
 	"fmt"
 	"html/template"
 	"net/http"
@@ -15,6 +14,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/app/tooling/docs/webapi"
+	"github.com/go-json-experiment/json"
 )
 
 //go:embed template.html
@@ -117,7 +117,7 @@ func status(status string) int {
 }
 
 func toJSON(v any) string {
-	data, err := json.MarshalIndent(v, "", "  ")
+	data, err := json.Marshal(v)
 	if err != nil {
 		return ""
 	}

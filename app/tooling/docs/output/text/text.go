@@ -4,11 +4,11 @@ package text
 import (
 	"bytes"
 	_ "embed"
-	"encoding/json"
 	"fmt"
 	"text/template"
 
 	"github.com/ardanlabs/service/app/tooling/docs/webapi"
+	"github.com/go-json-experiment/json"
 )
 
 //go:embed template.txt
@@ -43,7 +43,7 @@ func status(status string) int {
 }
 
 func toJSON(v any) string {
-	data, err := json.MarshalIndent(v, "", "    ")
+	data, err := json.Marshal(v)
 	if err != nil {
 		return ""
 	}

@@ -2,9 +2,9 @@ package web
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
 
+	"github.com/go-json-experiment/json"
 	"go.opentelemetry.io/otel/attribute"
 )
 

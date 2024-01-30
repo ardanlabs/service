@@ -3,13 +3,13 @@ package expvar
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"sync"
 	"time"
 
 	"github.com/ardanlabs/service/foundation/logger"
+	"github.com/go-json-experiment/json"
 )
 
 // Expvar provide our basic publishing.
@@ -88,7 +88,7 @@ func (exp *Expvar) handler(w http.ResponseWriter, r *http.Request) {
 	}
 	exp.mu.Unlock()
 
-	if err := json.NewEncoder(w).Encode(data); err != nil {
+	if err := json.MarshalWrite(w, data); err != nil {
 		exp.log.Error(ctx, "expvar", "status", "encoding data", "msg", err)
 	}
 
