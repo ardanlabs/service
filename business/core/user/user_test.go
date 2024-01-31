@@ -19,20 +19,24 @@ import (
 var c *docker.Container
 
 func TestMain(m *testing.M) {
-	os.Exit(run(m))
+	code, err := run(m)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	os.Exit(code)
 }
 
-func run(m *testing.M) int {
+func run(m *testing.M) (int, error) {
 	var err error
 
 	c, err = dbtest.StartDB()
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		return 1, err
 	}
 	defer dbtest.StopDB(c)
 
-	return m.Run()
+	return m.Run(), nil
 }
 
 func Test_User(t *testing.T) {
