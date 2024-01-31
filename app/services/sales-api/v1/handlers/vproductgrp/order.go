@@ -4,7 +4,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/ardanlabs/service/business/core/vproduct"
+	"github.com/ardanlabs/service/business/core/views/vproduct"
 	"github.com/ardanlabs/service/business/web/v1/order"
 	"github.com/ardanlabs/service/foundation/validate"
 )

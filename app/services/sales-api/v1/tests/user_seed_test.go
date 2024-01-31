@@ -3,7 +3,7 @@ package tests
 import (
 	"fmt"
 
-	"github.com/ardanlabs/service/business/core/user"
+	"github.com/ardanlabs/service/business/core/crud/user"
 	"github.com/ardanlabs/service/business/data/dbtest"
 )
 

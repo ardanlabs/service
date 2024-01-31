@@ -3,8 +3,8 @@ package vproductgrp
 import (
 	"net/http"
 
-	"github.com/ardanlabs/service/business/core/vproduct"
-	"github.com/ardanlabs/service/business/core/vproduct/stores/vproductdb"
+	"github.com/ardanlabs/service/business/core/views/vproduct"
+	"github.com/ardanlabs/service/business/core/views/vproduct/stores/vproductdb"
 	"github.com/ardanlabs/service/business/web/v1/auth"
 	"github.com/ardanlabs/service/business/web/v1/mid"
 	"github.com/ardanlabs/service/foundation/logger"

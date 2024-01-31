@@ -3,7 +3,7 @@ package vproductgrp
 import (
 	"time"
 
-	"github.com/ardanlabs/service/business/core/vproduct"
+	"github.com/ardanlabs/service/business/core/views/vproduct"
 )
 
 // AppProduct represents an individual product.

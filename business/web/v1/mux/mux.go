@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/ardanlabs/service/business/core/crud/delegate"
 	"github.com/ardanlabs/service/business/web/v1/auth"
 	"github.com/ardanlabs/service/business/web/v1/mid"
 	"github.com/ardanlabs/service/foundation/logger"
@@ -31,6 +32,7 @@ type Config struct {
 	Build    string
 	Shutdown chan os.Signal
 	Log      *logger.Logger
+	Delegate *delegate.Delegate
 	Auth     *auth.Auth
 	DB       *sqlx.DB
 	Tracer   trace.Tracer

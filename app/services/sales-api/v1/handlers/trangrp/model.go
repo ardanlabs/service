@@ -5,8 +5,8 @@ import (
 	"net/mail"
 	"time"
 
-	"github.com/ardanlabs/service/business/core/product"
-	"github.com/ardanlabs/service/business/core/user"
+	"github.com/ardanlabs/service/business/core/crud/product"
+	"github.com/ardanlabs/service/business/core/crud/user"
 	"github.com/ardanlabs/service/foundation/validate"
 )
 

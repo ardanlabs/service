@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/ardanlabs/service/business/core/product"
+	"github.com/ardanlabs/service/business/core/crud/product"
 	"github.com/ardanlabs/service/business/web/v1/mid"
 	"github.com/ardanlabs/service/foundation/validate"
 )

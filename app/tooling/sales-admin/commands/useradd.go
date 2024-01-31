@@ -6,9 +6,8 @@ import (
 	"net/mail"
 	"time"
 
-	"github.com/ardanlabs/service/business/core/event"
-	"github.com/ardanlabs/service/business/core/user"
-	"github.com/ardanlabs/service/business/core/user/stores/userdb"
+	"github.com/ardanlabs/service/business/core/crud/user"
+	"github.com/ardanlabs/service/business/core/crud/user/stores/userdb"
 	"github.com/ardanlabs/service/business/data/sqldb"
 	"github.com/ardanlabs/service/foundation/logger"
 )
@@ -29,8 +28,7 @@ func UserAdd(log *logger.Logger, cfg sqldb.Config, name, email, password string)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	evnCore := event.NewCore(log)
-	core := user.NewCore(log, evnCore, userdb.NewStore(log, db))
+	core := user.NewCore(log, nil, userdb.NewStore(log, db))
 
 	addr, err := mail.ParseAddress(email)
 	if err != nil {

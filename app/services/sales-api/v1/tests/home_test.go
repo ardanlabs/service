@@ -26,6 +26,7 @@ func Test_Home(t *testing.T) {
 		Handler: mux.WebAPI(mux.Config{
 			Shutdown: make(chan os.Signal, 1),
 			Log:      dbTest.Log,
+			Delegate: dbTest.CoreAPIs.Delegate,
 			Auth:     dbTest.V1.Auth,
 			DB:       dbTest.DB,
 		}, all.Routes()),

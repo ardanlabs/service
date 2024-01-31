@@ -10,15 +10,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ardanlabs/service/business/core/event"
-	"github.com/ardanlabs/service/business/core/home"
-	"github.com/ardanlabs/service/business/core/home/stores/homedb"
-	"github.com/ardanlabs/service/business/core/product"
-	"github.com/ardanlabs/service/business/core/product/stores/productdb"
-	"github.com/ardanlabs/service/business/core/user"
-	"github.com/ardanlabs/service/business/core/user/stores/userdb"
-	"github.com/ardanlabs/service/business/core/vproduct"
-	"github.com/ardanlabs/service/business/core/vproduct/stores/vproductdb"
+	"github.com/ardanlabs/service/business/core/crud/delegate"
+	"github.com/ardanlabs/service/business/core/crud/home"
+	"github.com/ardanlabs/service/business/core/crud/home/stores/homedb"
+	"github.com/ardanlabs/service/business/core/crud/product"
+	"github.com/ardanlabs/service/business/core/crud/product/stores/productdb"
+	"github.com/ardanlabs/service/business/core/crud/user"
+	"github.com/ardanlabs/service/business/core/crud/user/stores/userdb"
+	"github.com/ardanlabs/service/business/core/views/vproduct"
+	"github.com/ardanlabs/service/business/core/views/vproduct/stores/vproductdb"
 	"github.com/ardanlabs/service/business/data/migrate"
 	"github.com/ardanlabs/service/business/data/sqldb"
 	"github.com/ardanlabs/service/business/web/v1/auth"
@@ -222,6 +222,7 @@ func FloatPointer(f float64) *float64 {
 
 // CoreAPIs represents all the core api's needed for testing.
 type CoreAPIs struct {
+	Delegate *delegate.Delegate
 	User     *user.Core
 	Product  *product.Core
 	Home     *home.Core
@@ -229,13 +230,14 @@ type CoreAPIs struct {
 }
 
 func newCoreAPIs(log *logger.Logger, db *sqlx.DB) CoreAPIs {
-	evnCore := event.NewCore(log)
-	usrCore := user.NewCore(log, evnCore, userdb.NewStore(log, db))
-	prdCore := product.NewCore(log, evnCore, usrCore, productdb.NewStore(log, db))
-	hmeCore := home.NewCore(log, evnCore, usrCore, homedb.NewStore(log, db))
+	delegate := delegate.New(log)
+	usrCore := user.NewCore(log, delegate, userdb.NewStore(log, db))
+	prdCore := product.NewCore(log, usrCore, delegate, productdb.NewStore(log, db))
+	hmeCore := home.NewCore(log, usrCore, delegate, homedb.NewStore(log, db))
 	vPrdCore := vproduct.NewCore(vproductdb.NewStore(log, db))
 
 	return CoreAPIs{
+		Delegate: delegate,
 		User:     usrCore,
 		Product:  prdCore,
 		Home:     hmeCore,

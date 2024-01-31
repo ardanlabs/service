@@ -9,9 +9,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ardanlabs/service/business/core/event"
-	"github.com/ardanlabs/service/business/core/user"
-	"github.com/ardanlabs/service/business/core/user/stores/userdb"
+	"github.com/ardanlabs/service/business/core/crud/user"
+	"github.com/ardanlabs/service/business/core/crud/user/stores/userdb"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
@@ -71,8 +70,7 @@ func New(cfg Config) (*Auth, error) {
 	// user enabled check.
 	var usrCore *user.Core
 	if cfg.DB != nil {
-		evnCore := event.NewCore(cfg.Log)
-		usrCore = user.NewCore(cfg.Log, evnCore, userdb.NewStore(cfg.Log, cfg.DB))
+		usrCore = user.NewCore(cfg.Log, nil, userdb.NewStore(cfg.Log, cfg.DB))
 	}
 
 	a := Auth{
