@@ -1,4 +1,4 @@
-package product
+package vproduct
 
 import "github.com/ardanlabs/service/business/web/v1/order"
 
@@ -12,4 +12,5 @@ const (
 	OrderByName      = "name"
 	OrderByCost      = "cost"
 	OrderByQuantity  = "quantity"
+	OrderByUserName  = "user_name"
 )

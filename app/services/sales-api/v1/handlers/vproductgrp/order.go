@@ -1,10 +1,10 @@
-package productgrp
+package vproductgrp
 
 import (
 	"errors"
 	"net/http"
 
-	"github.com/ardanlabs/service/business/core/product"
+	"github.com/ardanlabs/service/business/core/vproduct"
 	"github.com/ardanlabs/service/business/web/v1/order"
 	"github.com/ardanlabs/service/foundation/validate"
 )
@@ -16,14 +16,16 @@ func parseOrder(r *http.Request) (order.By, error) {
 		orderByName      = "name"
 		orderByCost      = "cost"
 		orderByQuantity  = "quantity"
+		orderByUserName  = "user_name"
 	)
 
 	var orderByFields = map[string]string{
-		orderByProductID: product.OrderByProductID,
-		orderByName:      product.OrderByName,
-		orderByCost:      product.OrderByCost,
-		orderByQuantity:  product.OrderByQuantity,
-		orderByUserID:    product.OrderByUserID,
+		orderByProductID: vproduct.OrderByProductID,
+		orderByUserID:    vproduct.OrderByUserID,
+		orderByName:      vproduct.OrderByName,
+		orderByCost:      vproduct.OrderByCost,
+		orderByQuantity:  vproduct.OrderByQuantity,
+		orderByUserName:  vproduct.OrderByUserName,
 	}
 
 	orderBy, err := order.Parse(r, order.NewBy(orderByProductID, order.ASC))

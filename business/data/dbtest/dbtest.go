@@ -17,8 +17,8 @@ import (
 	"github.com/ardanlabs/service/business/core/product/stores/productdb"
 	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/core/user/stores/userdb"
-	"github.com/ardanlabs/service/business/core/usersummary"
-	"github.com/ardanlabs/service/business/core/usersummary/stores/usersummarydb"
+	"github.com/ardanlabs/service/business/core/vproduct"
+	"github.com/ardanlabs/service/business/core/vproduct/stores/vproductdb"
 	"github.com/ardanlabs/service/business/data/migrate"
 	"github.com/ardanlabs/service/business/data/sqldb"
 	"github.com/ardanlabs/service/business/web/v1/auth"
@@ -222,10 +222,10 @@ func FloatPointer(f float64) *float64 {
 
 // CoreAPIs represents all the core api's needed for testing.
 type CoreAPIs struct {
-	User        *user.Core
-	Product     *product.Core
-	Home        *home.Core
-	UserSummary *usersummary.Core
+	User     *user.Core
+	Product  *product.Core
+	Home     *home.Core
+	VProduct *vproduct.Core
 }
 
 func newCoreAPIs(log *logger.Logger, db *sqlx.DB) CoreAPIs {
@@ -233,13 +233,13 @@ func newCoreAPIs(log *logger.Logger, db *sqlx.DB) CoreAPIs {
 	usrCore := user.NewCore(log, evnCore, userdb.NewStore(log, db))
 	prdCore := product.NewCore(log, evnCore, usrCore, productdb.NewStore(log, db))
 	hmeCore := home.NewCore(log, evnCore, usrCore, homedb.NewStore(log, db))
-	usmCore := usersummary.NewCore(usersummarydb.NewStore(log, db))
+	vPrdCore := vproduct.NewCore(vproductdb.NewStore(log, db))
 
 	return CoreAPIs{
-		User:        usrCore,
-		Product:     prdCore,
-		UserSummary: usmCore,
-		Home:        hmeCore,
+		User:     usrCore,
+		Product:  prdCore,
+		Home:     hmeCore,
+		VProduct: vPrdCore,
 	}
 }
 

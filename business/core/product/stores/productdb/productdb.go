@@ -133,7 +133,7 @@ func (s *Store) Query(ctx context.Context, filter product.QueryFilter, orderBy o
 		return nil, fmt.Errorf("namedqueryslice: %w", err)
 	}
 
-	return toCoreProductSlice(dbPrds), nil
+	return toCoreProducts(dbPrds), nil
 }
 
 // Count returns the total number of users in the DB.
@@ -209,5 +209,5 @@ func (s *Store) QueryByUserID(ctx context.Context, userID uuid.UUID) ([]product.
 		return nil, fmt.Errorf("namedquerystruct: %w", err)
 	}
 
-	return toCoreProductSlice(dbPrds), nil
+	return toCoreProducts(dbPrds), nil
 }

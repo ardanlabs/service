@@ -1,10 +1,10 @@
-package usersummarygrp
+package vproductgrp
 
 import (
 	"net/http"
 
-	"github.com/ardanlabs/service/business/core/usersummary"
-	"github.com/ardanlabs/service/business/core/usersummary/stores/usersummarydb"
+	"github.com/ardanlabs/service/business/core/vproduct"
+	"github.com/ardanlabs/service/business/core/vproduct/stores/vproductdb"
 	"github.com/ardanlabs/service/business/web/v1/auth"
 	"github.com/ardanlabs/service/business/web/v1/mid"
 	"github.com/ardanlabs/service/foundation/logger"
@@ -23,11 +23,11 @@ type Config struct {
 func Routes(app *web.App, cfg Config) {
 	const version = "v1"
 
-	usmCore := usersummary.NewCore(usersummarydb.NewStore(cfg.Log, cfg.DB))
+	vPrdCore := vproduct.NewCore(vproductdb.NewStore(cfg.Log, cfg.DB))
 
 	authen := mid.Authenticate(cfg.Auth)
 	ruleAdmin := mid.Authorize(cfg.Auth, auth.RuleAdminOnly)
 
-	hdl := new(usmCore)
-	app.Handle(http.MethodGet, version, "/usersummary", hdl.Query, authen, ruleAdmin)
+	hdl := new(vPrdCore)
+	app.Handle(http.MethodGet, version, "/vproducts", hdl.Query, authen, ruleAdmin)
 }

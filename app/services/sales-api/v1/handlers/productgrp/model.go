@@ -5,10 +5,8 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/core/product"
-	"github.com/ardanlabs/service/business/core/user"
 	"github.com/ardanlabs/service/business/web/v1/mid"
 	"github.com/ardanlabs/service/foundation/validate"
-	"github.com/google/uuid"
 )
 
 // AppProduct represents an individual product.
@@ -34,35 +32,10 @@ func toAppProduct(prd product.Product) AppProduct {
 	}
 }
 
-// AppProductDetails represents an individual product.
-type AppProductDetails struct {
-	ID          string  `json:"id"`
-	UserID      string  `json:"userID"`
-	Name        string  `json:"name"`
-	Cost        float64 `json:"cost"`
-	Quantity    int     `json:"quantity"`
-	UserName    string  `json:"userName"`
-	DateCreated string  `json:"dateCreated"`
-	DateUpdated string  `json:"dateUpdated"`
-}
-
-func toAppProductDetails(prd product.Product, usr user.User) AppProductDetails {
-	return AppProductDetails{
-		ID:          prd.ID.String(),
-		Name:        prd.Name,
-		Cost:        prd.Cost,
-		Quantity:    prd.Quantity,
-		UserID:      prd.UserID.String(),
-		UserName:    usr.Name,
-		DateCreated: prd.DateCreated.Format(time.RFC3339),
-		DateUpdated: prd.DateUpdated.Format(time.RFC3339),
-	}
-}
-
-func toAppProductsDetails(prds []product.Product, usrs map[uuid.UUID]user.User) []AppProductDetails {
-	items := make([]AppProductDetails, len(prds))
+func toAppProducts(prds []product.Product) []AppProduct {
+	items := make([]AppProduct, len(prds))
 	for i, prd := range prds {
-		items[i] = toAppProductDetails(prd, usrs[prd.UserID])
+		items[i] = toAppProduct(prd)
 	}
 
 	return items

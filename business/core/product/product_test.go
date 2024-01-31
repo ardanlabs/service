@@ -141,7 +141,7 @@ func crud(t *testing.T) {
 		t.Fatalf("Should have a larger DateUpdated : sav %v, prd %v, dif %v", saved.DateUpdated, saved.DateUpdated, diff)
 	}
 
-	products, err := api.Product.Query(ctx, product.QueryFilter{}, user.DefaultOrderBy, 1, 3)
+	products, err := api.Product.Query(ctx, product.QueryFilter{}, product.DefaultOrderBy, 1, 3)
 	if err != nil {
 		t.Fatalf("Should be able to retrieve updated product : %s", err)
 	}
@@ -243,7 +243,7 @@ func paging(t *testing.T) {
 	// -------------------------------------------------------------------------
 
 	name := prds[0].Name
-	prd1, err := api.Product.Query(ctx, product.QueryFilter{Name: &name}, user.DefaultOrderBy, 1, 1)
+	prd1, err := api.Product.Query(ctx, product.QueryFilter{Name: &name}, product.DefaultOrderBy, 1, 1)
 	if err != nil {
 		t.Fatalf("Should be able to retrieve products %q : %s", name, err)
 	}
@@ -260,7 +260,7 @@ func paging(t *testing.T) {
 	}
 
 	name = prds[1].Name
-	prd2, err := api.Product.Query(ctx, product.QueryFilter{Name: &name}, user.DefaultOrderBy, 1, 1)
+	prd2, err := api.Product.Query(ctx, product.QueryFilter{Name: &name}, product.DefaultOrderBy, 1, 1)
 	if err != nil {
 		t.Fatalf("Should be able to retrieve products %q : %s", name, err)
 	}
@@ -276,7 +276,7 @@ func paging(t *testing.T) {
 		t.Fatalf("Should have a single product for %q", name)
 	}
 
-	prd3, err := api.Product.Query(ctx, product.QueryFilter{}, user.DefaultOrderBy, 1, 2)
+	prd3, err := api.Product.Query(ctx, product.QueryFilter{}, product.DefaultOrderBy, 1, 2)
 	if err != nil {
 		t.Fatalf("Should be able to retrieve 2 products for page 1 : %s", err)
 	}

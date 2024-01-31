@@ -1,6 +1,6 @@
-// Package usersummary provides an example of a core business API that
+// Package vproduct provides an example of a core business API that
 // is based on a view.
-package usersummary
+package vproduct
 
 import (
 	"context"
@@ -12,7 +12,7 @@ import (
 // Storer interface declares the behavior this package needs to perists and
 // retrieve data.
 type Storer interface {
-	Query(ctx context.Context, filter QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]Summary, error)
+	Query(ctx context.Context, filter QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]Product, error)
 	Count(ctx context.Context, filter QueryFilter) (int, error)
 }
 
@@ -28,8 +28,8 @@ func NewCore(storer Storer) *Core {
 	}
 }
 
-// Query retrieves a list of existing users from the database.
-func (c *Core) Query(ctx context.Context, filter QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]Summary, error) {
+// Query retrieves a list of existing users and their summary information.
+func (c *Core) Query(ctx context.Context, filter QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]Product, error) {
 	if err := filter.Validate(); err != nil {
 		return nil, err
 	}
@@ -42,7 +42,7 @@ func (c *Core) Query(ctx context.Context, filter QueryFilter, orderBy order.By, 
 	return users, nil
 }
 
-// Count returns the total number of users in the store.
+// Count returns the total number of users with summary information.
 func (c *Core) Count(ctx context.Context, filter QueryFilter) (int, error) {
 	if err := filter.Validate(); err != nil {
 		return 0, err

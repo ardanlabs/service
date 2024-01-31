@@ -1,12 +1,12 @@
-// Package usersummarygrp maintains the group of handlers for user summary access.
-package usersummarygrp
+// Package vproductgrp maintains the group of handlers for detailed product data.
+package vproductgrp
 
 import (
 	"context"
 	"fmt"
 	"net/http"
 
-	"github.com/ardanlabs/service/business/core/usersummary"
+	"github.com/ardanlabs/service/business/core/vproduct"
 	v1 "github.com/ardanlabs/service/business/web/v1"
 	"github.com/ardanlabs/service/business/web/v1/page"
 	"github.com/ardanlabs/service/foundation/web"
@@ -14,12 +14,12 @@ import (
 
 // Handlers manages the set of user endpoints.
 type Handlers struct {
-	summary *usersummary.Core
+	vProduct *vproduct.Core
 }
 
-func new(summary *usersummary.Core) *Handlers {
+func new(vProduct *vproduct.Core) *Handlers {
 	return &Handlers{
-		summary: summary,
+		vProduct: vProduct,
 	}
 }
 
@@ -40,15 +40,15 @@ func (h *Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Req
 		return err
 	}
 
-	smms, err := h.summary.Query(ctx, filter, orderBy, page.Number, page.RowsPerPage)
+	prds, err := h.vProduct.Query(ctx, filter, orderBy, page.Number, page.RowsPerPage)
 	if err != nil {
 		return fmt.Errorf("query: %w", err)
 	}
 
-	total, err := h.summary.Count(ctx, filter)
+	total, err := h.vProduct.Count(ctx, filter)
 	if err != nil {
 		return fmt.Errorf("count: %w", err)
 	}
 
-	return web.Respond(ctx, w, v1.NewPageDocument(toAppUsersSummary(smms), total, page.Number, page.RowsPerPage), http.StatusOK)
+	return web.Respond(ctx, w, v1.NewPageDocument(toAppProducts(prds), total, page.Number, page.RowsPerPage), http.StatusOK)
 }

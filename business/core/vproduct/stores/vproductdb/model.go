@@ -1,9 +1,9 @@
-package productdb
+package vproductdb
 
 import (
 	"time"
 
-	"github.com/ardanlabs/service/business/core/product"
+	"github.com/ardanlabs/service/business/core/vproduct"
 	"github.com/google/uuid"
 )
 
@@ -16,24 +16,11 @@ type dbProduct struct {
 	Quantity    int       `db:"quantity"`
 	DateCreated time.Time `db:"date_created"`
 	DateUpdated time.Time `db:"date_updated"`
+	UserName    string    `db:"user_name"`
 }
 
-func toDBProduct(prd product.Product) dbProduct {
-	prdDB := dbProduct{
-		ID:          prd.ID,
-		UserID:      prd.UserID,
-		Name:        prd.Name,
-		Cost:        prd.Cost,
-		Quantity:    prd.Quantity,
-		DateCreated: prd.DateCreated.UTC(),
-		DateUpdated: prd.DateUpdated.UTC(),
-	}
-
-	return prdDB
-}
-
-func toCoreProduct(dbPrd dbProduct) product.Product {
-	prd := product.Product{
+func toCoreProduct(dbPrd dbProduct) vproduct.Product {
+	prd := vproduct.Product{
 		ID:          dbPrd.ID,
 		UserID:      dbPrd.UserID,
 		Name:        dbPrd.Name,
@@ -41,13 +28,14 @@ func toCoreProduct(dbPrd dbProduct) product.Product {
 		Quantity:    dbPrd.Quantity,
 		DateCreated: dbPrd.DateCreated.In(time.Local),
 		DateUpdated: dbPrd.DateUpdated.In(time.Local),
+		UserName:    dbPrd.UserName,
 	}
 
 	return prd
 }
 
-func toCoreProducts(dbPrds []dbProduct) []product.Product {
-	prds := make([]product.Product, len(dbPrds))
+func toCoreProducts(dbPrds []dbProduct) []vproduct.Product {
+	prds := make([]vproduct.Product, len(dbPrds))
 
 	for i, dbPrd := range dbPrds {
 		prds[i] = toCoreProduct(dbPrd)

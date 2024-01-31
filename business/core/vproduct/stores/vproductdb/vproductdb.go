@@ -1,12 +1,12 @@
-// Package usersummarydb contains product related CRUD functionality.
-package usersummarydb
+// Package vproductdb provides access to the product view.
+package vproductdb
 
 import (
 	"bytes"
 	"context"
 	"fmt"
 
-	"github.com/ardanlabs/service/business/core/usersummary"
+	"github.com/ardanlabs/service/business/core/vproduct"
 	"github.com/ardanlabs/service/business/data/sqldb"
 	"github.com/ardanlabs/service/business/web/v1/order"
 	"github.com/ardanlabs/service/foundation/logger"
@@ -28,7 +28,7 @@ func NewStore(log *logger.Logger, db *sqlx.DB) *Store {
 }
 
 // Query retrieves a list of existing users from the database.
-func (s *Store) Query(ctx context.Context, filter usersummary.QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]usersummary.Summary, error) {
+func (s *Store) Query(ctx context.Context, filter vproduct.QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]vproduct.Product, error) {
 	data := map[string]interface{}{
 		"offset":        (pageNumber - 1) * rowsPerPage,
 		"rows_per_page": rowsPerPage,
@@ -36,9 +36,16 @@ func (s *Store) Query(ctx context.Context, filter usersummary.QueryFilter, order
 
 	const q = `
 	SELECT
-		*
+		product_id,
+		user_id,
+		name,
+		cost,
+		quantity,
+		date_created,
+		date_updated,
+		user_name
 	FROM
-		user_summary`
+		view_products`
 
 	buf := bytes.NewBufferString(q)
 	s.applyFilter(filter, data, buf)
@@ -51,23 +58,23 @@ func (s *Store) Query(ctx context.Context, filter usersummary.QueryFilter, order
 	buf.WriteString(orderByClause)
 	buf.WriteString(" OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY")
 
-	var dbSmm []dbSummary
-	if err := sqldb.NamedQuerySlice(ctx, s.log, s.db, buf.String(), data, &dbSmm); err != nil {
+	var dnPrd []dbProduct
+	if err := sqldb.NamedQuerySlice(ctx, s.log, s.db, buf.String(), data, &dnPrd); err != nil {
 		return nil, fmt.Errorf("namedqueryslice: %w", err)
 	}
 
-	return toCoreSummarySlice(dbSmm), nil
+	return toCoreProducts(dnPrd), nil
 }
 
 // Count returns the total number of users in the DB.
-func (s *Store) Count(ctx context.Context, filter usersummary.QueryFilter) (int, error) {
+func (s *Store) Count(ctx context.Context, filter vproduct.QueryFilter) (int, error) {
 	data := map[string]interface{}{}
 
 	const q = `
 	SELECT
 		count(1)
 	FROM
-		user_summary`
+		view_products`
 
 	buf := bytes.NewBufferString(q)
 	s.applyFilter(filter, data, buf)
