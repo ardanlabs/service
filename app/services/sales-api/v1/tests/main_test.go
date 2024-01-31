@@ -2,28 +2,38 @@ package tests
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/ardanlabs/service/foundation/docker"
+	"github.com/go-json-experiment/json"
 )
 
 var c *docker.Container
 
 func TestMain(m *testing.M) {
-	var err error
-	c, err = dbtest.StartDB()
+	code, err := run(m)
 	if err != nil {
 		fmt.Println(err)
-		return
+	}
+
+	os.Exit(code)
+}
+
+func run(m *testing.M) (int, error) {
+	var err error
+
+	c, err = dbtest.StartDB()
+	if err != nil {
+		return 1, err
 	}
 	defer dbtest.StopDB(c)
 
-	m.Run()
+	return m.Run(), nil
 }
 
 type appTest struct {
@@ -40,7 +50,7 @@ func (at *appTest) test(t *testing.T, table []tableData, testName string) {
 
 			if tt.model != nil {
 				var b bytes.Buffer
-				if err := json.NewEncoder(&b).Encode(tt.model); err != nil {
+				if err := json.MarshalWrite(&b, tt.model, json.FormatNilSliceAsNull(true)); err != nil {
 					t.Fatalf("Should be able to marshal the model : %s", err)
 				}
 

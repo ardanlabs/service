@@ -7,15 +7,15 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 # ==============================================================================
 # Go Installation
 #
-#   You need to have Go version 1.21 to run this code.
+#   You need to have Go version 1.22 to run this code.
 #   https://go.dev/dl/
 #
 #   If you are not allowed to update your Go frontend, you can install
-#   and use a 1.21 frontend.
-#   $ go install golang.org/dl/go1.21.6@latest
-#   $ go1.21.6 download
+#   and use a 1.22 frontend.
+#   $ go install golang.org/dl/go1.22.rc2@latest
+#   $ go1.21.rc2 download
 #
-#   This means you need to use go1.21.6 instead of go.
+#   This means you need to use go1.22.rc2 instead of go.
 
 # ==============================================================================
 # Brew Installation
@@ -117,7 +117,7 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 # ==============================================================================
 # Define dependencies
 
-GOLANG          := golang:1.21.6
+GOLANG          := golang:1.22rc2
 ALPINE          := alpine:3.19
 KIND            := kindest/node:v1.29.0@sha256:eaa1450915475849a73a9227b8f201df25e55e268e5d619312131292e324d570
 POSTGRES        := postgres:16.1

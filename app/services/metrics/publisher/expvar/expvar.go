@@ -3,14 +3,13 @@ package expvar
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"sync"
 	"time"
 
 	"github.com/ardanlabs/service/foundation/logger"
-	"github.com/dimfeld/httptreemux/v5"
+	"github.com/go-json-experiment/json"
 )
 
 // Expvar provide our basic publishing.
@@ -23,7 +22,7 @@ type Expvar struct {
 
 // New starts a service for consuming the raw expvar stats.
 func New(log *logger.Logger, host string, route string, readTimeout, writeTimeout time.Duration, idleTimeout time.Duration) *Expvar {
-	mux := httptreemux.New()
+	mux := http.NewServeMux()
 	exp := Expvar{
 		log: log,
 		server: http.Server{
@@ -36,7 +35,7 @@ func New(log *logger.Logger, host string, route string, readTimeout, writeTimeou
 		},
 	}
 
-	mux.Handle("GET", route, exp.handler)
+	mux.HandleFunc(route, exp.handler)
 
 	go func() {
 		ctx := context.Background()
@@ -76,7 +75,7 @@ func (exp *Expvar) Publish(data map[string]any) {
 }
 
 // handler is what consumers call to get the raw stats.
-func (exp *Expvar) handler(w http.ResponseWriter, r *http.Request, params map[string]string) {
+func (exp *Expvar) handler(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 
 	w.Header().Set("Content-Type", "application/json")
@@ -89,7 +88,7 @@ func (exp *Expvar) handler(w http.ResponseWriter, r *http.Request, params map[st
 	}
 	exp.mu.Unlock()
 
-	if err := json.NewEncoder(w).Encode(data); err != nil {
+	if err := json.MarshalWrite(w, data, json.FormatNilSliceAsNull(true)); err != nil {
 		exp.log.Error(ctx, "expvar", "status", "encoding data", "msg", err)
 	}
 

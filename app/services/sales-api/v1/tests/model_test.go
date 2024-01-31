@@ -6,10 +6,10 @@ import (
 	"github.com/ardanlabs/service/app/services/sales-api/v1/handlers/homegrp"
 	"github.com/ardanlabs/service/app/services/sales-api/v1/handlers/productgrp"
 	"github.com/ardanlabs/service/app/services/sales-api/v1/handlers/usergrp"
-	"github.com/ardanlabs/service/business/core/home"
-	"github.com/ardanlabs/service/business/core/product"
-	"github.com/ardanlabs/service/business/core/user"
-	"github.com/google/uuid"
+	"github.com/ardanlabs/service/app/services/sales-api/v1/handlers/vproductgrp"
+	"github.com/ardanlabs/service/business/core/crud/home"
+	"github.com/ardanlabs/service/business/core/crud/product"
+	"github.com/ardanlabs/service/business/core/crud/user"
 )
 
 type tableData struct {
@@ -86,23 +86,10 @@ func toAppProductPtr(prd product.Product) *productgrp.AppProduct {
 	return &appPrd
 }
 
-func toAppProductDetails(prd product.Product, usr user.User) productgrp.AppProductDetails {
-	return productgrp.AppProductDetails{
-		ID:          prd.ID.String(),
-		Name:        prd.Name,
-		Cost:        prd.Cost,
-		Quantity:    prd.Quantity,
-		UserID:      prd.UserID.String(),
-		UserName:    usr.Name,
-		DateCreated: prd.DateCreated.Format(time.RFC3339),
-		DateUpdated: prd.DateUpdated.Format(time.RFC3339),
-	}
-}
-
-func toAppProductsDetails(prds []product.Product, usrs map[uuid.UUID]user.User) []productgrp.AppProductDetails {
-	items := make([]productgrp.AppProductDetails, len(prds))
+func toAppProducts(prds []product.Product) []productgrp.AppProduct {
+	items := make([]productgrp.AppProduct, len(prds))
 	for i, prd := range prds {
-		items[i] = toAppProductDetails(prd, usrs[prd.UserID])
+		items[i] = toAppProduct(prd)
 	}
 
 	return items
@@ -138,4 +125,26 @@ func toAppHomes(homes []home.Home) []homegrp.AppHome {
 func toAppHomePtr(hme home.Home) *homegrp.AppHome {
 	appHme := toAppHome(hme)
 	return &appHme
+}
+
+func toAppVProduct(usr user.User, prd product.Product) vproductgrp.AppProduct {
+	return vproductgrp.AppProduct{
+		ID:          prd.ID.String(),
+		UserID:      prd.UserID.String(),
+		Name:        prd.Name,
+		Cost:        prd.Cost,
+		Quantity:    prd.Quantity,
+		DateCreated: prd.DateCreated.Format(time.RFC3339),
+		DateUpdated: prd.DateUpdated.Format(time.RFC3339),
+		UserName:    usr.Name,
+	}
+}
+
+func toAppVProducts(usr user.User, prds []product.Product) []vproductgrp.AppProduct {
+	items := make([]vproductgrp.AppProduct, len(prds))
+	for i, prd := range prds {
+		items[i] = toAppVProduct(usr, prd)
+	}
+
+	return items
 }

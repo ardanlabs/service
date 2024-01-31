@@ -16,6 +16,7 @@ import (
 	"github.com/ardanlabs/service/app/services/sales-api/v1/build/all"
 	"github.com/ardanlabs/service/app/services/sales-api/v1/build/crud"
 	"github.com/ardanlabs/service/app/services/sales-api/v1/build/reporting"
+	"github.com/ardanlabs/service/business/core/crud/delegate"
 	"github.com/ardanlabs/service/business/data/sqldb"
 	"github.com/ardanlabs/service/business/web/v1/auth"
 	"github.com/ardanlabs/service/business/web/v1/debug"
@@ -224,6 +225,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 		Build:    build,
 		Shutdown: shutdown,
 		Log:      log,
+		Delegate: delegate.New(log),
 		Auth:     auth,
 		DB:       db,
 		Tracer:   tracer,

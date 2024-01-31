@@ -30,19 +30,21 @@ CREATE TABLE products (
 );
 
 -- Version: 1.03
--- Description: Add user_summary view.
-CREATE OR REPLACE VIEW user_summary AS
+-- Description: Add products view.
+CREATE OR REPLACE VIEW view_products AS
 SELECT
-    u.user_id   AS user_id,
-	u.name      AS user_name,
-    COUNT(p.*)  AS total_count,
-    SUM(p.cost) AS total_cost
+    p.product_id,
+    p.user_id,
+	p.name,
+    p.cost,
+	p.quantity,
+    p.date_created,
+    p.date_updated,
+    u.name AS user_name
 FROM
-    users AS u
+    products AS p
 JOIN
-    products AS p ON p.user_id = u.user_id
-GROUP BY
-    u.user_id
+    users AS u ON u.user_id = p.user_id
 
 -- Version: 1.04
 -- Description: Create table homes

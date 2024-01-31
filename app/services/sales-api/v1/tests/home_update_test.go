@@ -3,7 +3,6 @@ package tests
 import (
 	"fmt"
 	"net/http"
-	"testing"
 
 	"github.com/ardanlabs/service/app/services/sales-api/v1/handlers/homegrp"
 	"github.com/ardanlabs/service/business/data/dbtest"
@@ -12,7 +11,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func homeUpdate200(t *testing.T, app appTest, sd seedData) []tableData {
+func homeUpdate200(sd seedData) []tableData {
 	table := []tableData{
 		{
 			name:       "basic",
@@ -72,7 +71,7 @@ func homeUpdate200(t *testing.T, app appTest, sd seedData) []tableData {
 	return table
 }
 
-func homeUpdate400(t *testing.T, app appTest, sd seedData) []tableData {
+func homeUpdate400(sd seedData) []tableData {
 	table := []tableData{
 		{
 			name:       "bad-input",
@@ -122,7 +121,7 @@ func homeUpdate400(t *testing.T, app appTest, sd seedData) []tableData {
 	return table
 }
 
-func homeUpdate401(t *testing.T, app appTest, sd seedData) []tableData {
+func homeUpdate401(sd seedData) []tableData {
 	table := []tableData{
 		{
 			name:       "emptytoken",
@@ -151,7 +150,7 @@ func homeUpdate401(t *testing.T, app appTest, sd seedData) []tableData {
 		{
 			name:       "wronguser",
 			url:        fmt.Sprintf("/v1/homes/%s", sd.admins[0].homes[0].ID),
-			token:      app.userToken,
+			token:      sd.users[0].token,
 			method:     http.MethodPut,
 			statusCode: http.StatusUnauthorized,
 			model: &homegrp.AppUpdateHome{

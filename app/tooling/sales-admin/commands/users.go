@@ -2,17 +2,16 @@ package commands
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"os"
 	"strconv"
 	"time"
 
-	"github.com/ardanlabs/service/business/core/event"
-	"github.com/ardanlabs/service/business/core/user"
-	"github.com/ardanlabs/service/business/core/user/stores/userdb"
+	"github.com/ardanlabs/service/business/core/crud/user"
+	"github.com/ardanlabs/service/business/core/crud/user/stores/userdb"
 	"github.com/ardanlabs/service/business/data/sqldb"
 	"github.com/ardanlabs/service/foundation/logger"
+	"github.com/go-json-experiment/json"
 )
 
 // Users retrieves all users from the database.
@@ -36,13 +35,12 @@ func Users(log *logger.Logger, cfg sqldb.Config, pageNumber string, rowsPerPage 
 		return fmt.Errorf("converting rows per page: %w", err)
 	}
 
-	evnCore := event.NewCore(log)
-	core := user.NewCore(log, evnCore, userdb.NewStore(log, db))
+	core := user.NewCore(log, nil, userdb.NewStore(log, db))
 
 	users, err := core.Query(ctx, user.QueryFilter{}, user.DefaultOrderBy, page, rows)
 	if err != nil {
 		return fmt.Errorf("retrieve users: %w", err)
 	}
 
-	return json.NewEncoder(os.Stdout).Encode(users)
+	return json.MarshalWrite(os.Stdout, users, json.FormatNilSliceAsNull(true))
 }

@@ -1,18 +1,15 @@
 package web
 
 import (
-	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 
-	"github.com/dimfeld/httptreemux/v5"
+	"github.com/go-json-experiment/json"
 )
 
 // Param returns the web call parameters from the request.
-func Param(ctx context.Context, key string) string {
-	m := httptreemux.ContextParams(ctx)
-	return m[key]
+func Param(r *http.Request, key string) string {
+	return r.PathValue(key)
 }
 
 type validator interface {
@@ -24,9 +21,7 @@ type validator interface {
 // If the provided value is a struct then it is checked for validation tags.
 // If the value implements a validate function, it is executed.
 func Decode(r *http.Request, val any) error {
-	decoder := json.NewDecoder(r.Body)
-	decoder.DisallowUnknownFields()
-	if err := decoder.Decode(val); err != nil {
+	if err := json.UnmarshalRead(r.Body, val, json.RejectUnknownMembers(false)); err != nil {
 		return fmt.Errorf("unable to decode payload: %w", err)
 	}
 

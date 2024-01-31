@@ -1,7 +1,6 @@
 package tests
 
 import (
-	"context"
 	"os"
 	"runtime/debug"
 	"testing"
@@ -27,6 +26,7 @@ func Test_User(t *testing.T) {
 		Handler: mux.WebAPI(mux.Config{
 			Shutdown: make(chan os.Signal, 1),
 			Log:      dbTest.Log,
+			Delegate: dbTest.CoreAPIs.Delegate,
 			Auth:     dbTest.V1.Auth,
 			DB:       dbTest.DB,
 		}, all.Routes()),
@@ -36,24 +36,24 @@ func Test_User(t *testing.T) {
 
 	// -------------------------------------------------------------------------
 
-	sd, err := createUserSeed(context.Background(), dbTest)
+	sd, err := createUserSeed(dbTest)
 	if err != nil {
 		t.Fatalf("Seeding error: %s", err)
 	}
 
 	// -------------------------------------------------------------------------
 
-	app.test(t, userQuery200(t, app, sd), "user-query-200")
-	app.test(t, userQueryByID200(t, app, sd), "user-querybyid-200")
+	app.test(t, userQuery200(sd), "user-query-200")
+	app.test(t, userQueryByID200(sd), "user-querybyid-200")
 
-	app.test(t, userCreate200(t, app, sd), "user-create-200")
-	app.test(t, userCreate401(t, app, sd), "user-create-2401")
-	app.test(t, userCreate400(t, app, sd), "user-create-2400")
+	app.test(t, userCreate200(sd), "user-create-200")
+	app.test(t, userCreate401(sd), "user-create-401")
+	app.test(t, userCreate400(sd), "user-create-400")
 
-	app.test(t, userUpdate200(t, app, sd), "user-update-200")
-	app.test(t, userUpdate401(t, app, sd), "user-update-401")
-	app.test(t, userUpdate400(t, app, sd), "user-update-400")
+	app.test(t, userUpdate200(sd), "user-update-200")
+	app.test(t, userUpdate401(sd), "user-update-401")
+	app.test(t, userUpdate400(sd), "user-update-400")
 
-	app.test(t, userDelete200(t, app, sd), "user-delete-200")
-	app.test(t, userDelete401(t, app, sd), "user-delete-401")
+	app.test(t, userDelete200(sd), "user-delete-200")
+	app.test(t, userDelete401(sd), "user-delete-401")
 }

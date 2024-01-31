@@ -10,15 +10,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ardanlabs/service/business/core/event"
-	"github.com/ardanlabs/service/business/core/home"
-	"github.com/ardanlabs/service/business/core/home/stores/homedb"
-	"github.com/ardanlabs/service/business/core/product"
-	"github.com/ardanlabs/service/business/core/product/stores/productdb"
-	"github.com/ardanlabs/service/business/core/user"
-	"github.com/ardanlabs/service/business/core/user/stores/userdb"
-	"github.com/ardanlabs/service/business/core/usersummary"
-	"github.com/ardanlabs/service/business/core/usersummary/stores/usersummarydb"
+	"github.com/ardanlabs/service/business/core/crud/delegate"
+	"github.com/ardanlabs/service/business/core/crud/home"
+	"github.com/ardanlabs/service/business/core/crud/home/stores/homedb"
+	"github.com/ardanlabs/service/business/core/crud/product"
+	"github.com/ardanlabs/service/business/core/crud/product/stores/productdb"
+	"github.com/ardanlabs/service/business/core/crud/user"
+	"github.com/ardanlabs/service/business/core/crud/user/stores/userdb"
+	"github.com/ardanlabs/service/business/core/views/vproduct"
+	"github.com/ardanlabs/service/business/core/views/vproduct/stores/vproductdb"
 	"github.com/ardanlabs/service/business/data/migrate"
 	"github.com/ardanlabs/service/business/data/sqldb"
 	"github.com/ardanlabs/service/business/web/v1/auth"
@@ -69,7 +69,7 @@ type Test struct {
 // NewTest creates a test database inside a Docker container. It creates the
 // required table structure but the database is otherwise empty. It returns
 // the database to use as well as a function to call at the end of the test.
-func NewTest(t *testing.T, c *docker.Container, name string) *Test {
+func NewTest(t *testing.T, c *docker.Container, testName string) *Test {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -150,9 +150,9 @@ func NewTest(t *testing.T, c *docker.Container, name string) *Test {
 		t.Helper()
 		db.Close()
 
-		fmt.Printf("******************** LOGS (%s) ********************\n", name)
+		fmt.Printf("******************** LOGS (%s) ********************\n", testName)
 		fmt.Print(buf.String())
-		fmt.Printf("******************** LOGS (%s) ********************\n", name)
+		fmt.Printf("******************** LOGS (%s) ********************\n", testName)
 	}
 
 	test := Test{
@@ -222,24 +222,26 @@ func FloatPointer(f float64) *float64 {
 
 // CoreAPIs represents all the core api's needed for testing.
 type CoreAPIs struct {
-	User        *user.Core
-	Product     *product.Core
-	Home        *home.Core
-	UserSummary *usersummary.Core
+	Delegate *delegate.Delegate
+	User     *user.Core
+	Product  *product.Core
+	Home     *home.Core
+	VProduct *vproduct.Core
 }
 
 func newCoreAPIs(log *logger.Logger, db *sqlx.DB) CoreAPIs {
-	evnCore := event.NewCore(log)
-	usrCore := user.NewCore(log, evnCore, userdb.NewStore(log, db))
-	prdCore := product.NewCore(log, evnCore, usrCore, productdb.NewStore(log, db))
-	hmeCore := home.NewCore(log, evnCore, usrCore, homedb.NewStore(log, db))
-	usmCore := usersummary.NewCore(usersummarydb.NewStore(log, db))
+	delegate := delegate.New(log)
+	usrCore := user.NewCore(log, delegate, userdb.NewStore(log, db))
+	prdCore := product.NewCore(log, usrCore, delegate, productdb.NewStore(log, db))
+	hmeCore := home.NewCore(log, usrCore, delegate, homedb.NewStore(log, db))
+	vPrdCore := vproduct.NewCore(vproductdb.NewStore(log, db))
 
 	return CoreAPIs{
-		User:        usrCore,
-		Product:     prdCore,
-		UserSummary: usmCore,
-		Home:        hmeCore,
+		Delegate: delegate,
+		User:     usrCore,
+		Product:  prdCore,
+		Home:     hmeCore,
+		VProduct: vPrdCore,
 	}
 }
 

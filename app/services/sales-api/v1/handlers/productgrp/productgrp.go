@@ -7,13 +7,12 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/ardanlabs/service/business/core/product"
-	"github.com/ardanlabs/service/business/core/user"
+	"github.com/ardanlabs/service/business/core/crud/product"
+	"github.com/ardanlabs/service/business/core/crud/user"
 	v1 "github.com/ardanlabs/service/business/web/v1"
 	"github.com/ardanlabs/service/business/web/v1/mid"
 	"github.com/ardanlabs/service/business/web/v1/page"
 	"github.com/ardanlabs/service/foundation/web"
-	"github.com/google/uuid"
 )
 
 // Set of error variables for handling product group errors.
@@ -98,38 +97,12 @@ func (h *handlers) query(ctx context.Context, w http.ResponseWriter, r *http.Req
 		return fmt.Errorf("query: %w", err)
 	}
 
-	// -------------------------------------------------------------------------
-	// Capture the unique set of users
-
-	users := make(map[uuid.UUID]user.User)
-	if len(prds) > 0 {
-		for _, prd := range prds {
-			users[prd.UserID] = user.User{}
-		}
-
-		userIDs := make([]uuid.UUID, 0, len(users))
-		for userID := range users {
-			userIDs = append(userIDs, userID)
-		}
-
-		usrs, err := h.user.QueryByIDs(ctx, userIDs)
-		if err != nil {
-			return fmt.Errorf("user.querybyids: userIDs[%s]: %w", userIDs, err)
-		}
-
-		for _, usr := range usrs {
-			users[usr.ID] = usr
-		}
-	}
-
-	// -------------------------------------------------------------------------
-
 	total, err := h.product.Count(ctx, filter)
 	if err != nil {
 		return fmt.Errorf("count: %w", err)
 	}
 
-	return web.Respond(ctx, w, v1.NewPageDocument(toAppProductsDetails(prds, users), total, page.Number, page.RowsPerPage), http.StatusOK)
+	return web.Respond(ctx, w, v1.NewPageDocument(toAppProducts(prds), total, page.Number, page.RowsPerPage), http.StatusOK)
 }
 
 // queryByID returns a product by its ID.

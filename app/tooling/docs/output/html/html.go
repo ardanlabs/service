@@ -117,7 +117,7 @@ func status(status string) int {
 }
 
 func toJSON(v any) string {
-	data, err := json.MarshalIndent(v, "", "  ")
+	data, err := json.MarshalIndent(v, "", "    ")
 	if err != nil {
 		return ""
 	}

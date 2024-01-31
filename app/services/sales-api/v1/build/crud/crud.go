@@ -28,26 +28,30 @@ func (add) Add(app *web.App, cfg mux.Config) {
 	})
 
 	homegrp.Routes(app, homegrp.Config{
-		Log:  cfg.Log,
-		Auth: cfg.Auth,
-		DB:   cfg.DB,
+		Log:      cfg.Log,
+		Delegate: cfg.Delegate,
+		Auth:     cfg.Auth,
+		DB:       cfg.DB,
 	})
 
 	productgrp.Routes(app, productgrp.Config{
-		Log:  cfg.Log,
-		Auth: cfg.Auth,
-		DB:   cfg.DB,
+		Log:      cfg.Log,
+		Delegate: cfg.Delegate,
+		Auth:     cfg.Auth,
+		DB:       cfg.DB,
 	})
 
 	trangrp.Routes(app, trangrp.Config{
-		Log:  cfg.Log,
-		Auth: cfg.Auth,
-		DB:   cfg.DB,
+		Log:      cfg.Log,
+		Delegate: cfg.Delegate,
+		Auth:     cfg.Auth,
+		DB:       cfg.DB,
 	})
 
 	usergrp.Routes(app, usergrp.Config{
-		Log:  cfg.Log,
-		Auth: cfg.Auth,
-		DB:   cfg.DB,
+		Log:      cfg.Log,
+		Delegate: cfg.Delegate,
+		Auth:     cfg.Auth,
+		DB:       cfg.DB,
 	})
 }

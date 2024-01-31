@@ -4,14 +4,14 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/ardanlabs/service/business/core/product"
-	"github.com/ardanlabs/service/business/core/user"
+	"github.com/ardanlabs/service/business/core/crud/product"
+	"github.com/ardanlabs/service/business/core/crud/user"
 	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/ardanlabs/service/business/web/v1/order"
 )
 
-func createProductSeed(ctx context.Context, dbTest *dbtest.Test) (seedData, error) {
-	usrs, err := dbTest.CoreAPIs.User.Query(ctx, user.QueryFilter{}, order.By{Field: user.OrderByName, Direction: order.ASC}, 1, 2)
+func createProductSeed(dbTest *dbtest.Test) (seedData, error) {
+	usrs, err := dbTest.CoreAPIs.User.Query(context.Background(), user.QueryFilter{}, order.By{Field: user.OrderByName, Direction: order.ASC}, 1, 2)
 	if err != nil {
 		return seedData{}, fmt.Errorf("seeding users : %w", err)
 	}

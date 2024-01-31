@@ -1,16 +1,15 @@
 package tests
 
 import (
-	"context"
 	"fmt"
 
-	"github.com/ardanlabs/service/business/core/home"
-	"github.com/ardanlabs/service/business/core/product"
-	"github.com/ardanlabs/service/business/core/user"
+	"github.com/ardanlabs/service/business/core/crud/home"
+	"github.com/ardanlabs/service/business/core/crud/product"
+	"github.com/ardanlabs/service/business/core/crud/user"
 	"github.com/ardanlabs/service/business/data/dbtest"
 )
 
-func createHomeSeed(ctx context.Context, dbTest *dbtest.Test) (seedData, error) {
+func createHomeSeed(dbTest *dbtest.Test) (seedData, error) {
 	usrs, err := user.TestGenerateSeedUsers(1, user.RoleUser, dbTest.CoreAPIs.User)
 	if err != nil {
 		return seedData{}, fmt.Errorf("seeding users : %w", err)

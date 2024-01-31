@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/ardanlabs/service/business/core/home"
+	"github.com/ardanlabs/service/business/core/crud/home"
 	v1 "github.com/ardanlabs/service/business/web/v1"
 	"github.com/ardanlabs/service/business/web/v1/auth"
 	"github.com/ardanlabs/service/foundation/web"
@@ -39,7 +39,7 @@ func AuthorizeHome(a *auth.Auth, rule string, hmeCore *home.Core) web.MidHandler
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 			var userID uuid.UUID
 
-			if id := web.Param(ctx, "home_id"); id != "" {
+			if id := web.Param(r, "home_id"); id != "" {
 				var err error
 				homeID, err := uuid.Parse(id)
 				if err != nil {

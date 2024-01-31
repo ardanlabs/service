@@ -5,8 +5,8 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/ardanlabs/service/business/core/product"
-	"github.com/ardanlabs/service/business/core/user"
+	"github.com/ardanlabs/service/business/core/crud/product"
+	"github.com/ardanlabs/service/business/core/crud/user"
 	v1 "github.com/ardanlabs/service/business/web/v1"
 	"github.com/ardanlabs/service/foundation/web"
 )

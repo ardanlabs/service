@@ -3,7 +3,6 @@ package tests
 import (
 	"fmt"
 	"net/http"
-	"testing"
 
 	"github.com/ardanlabs/service/app/services/sales-api/v1/handlers/usergrp"
 	"github.com/ardanlabs/service/business/data/dbtest"
@@ -12,7 +11,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func userUpdate200(t *testing.T, app appTest, sd seedData) []tableData {
+func userUpdate200(sd seedData) []tableData {
 	table := []tableData{
 		{
 			name:       "basic",
@@ -64,7 +63,7 @@ func userUpdate200(t *testing.T, app appTest, sd seedData) []tableData {
 	return table
 }
 
-func userUpdate400(t *testing.T, app appTest, sd seedData) []tableData {
+func userUpdate400(sd seedData) []tableData {
 	table := []tableData{
 		{
 			name:       "bad-input",
@@ -107,7 +106,7 @@ func userUpdate400(t *testing.T, app appTest, sd seedData) []tableData {
 	return table
 }
 
-func userUpdate401(t *testing.T, app appTest, sd seedData) []tableData {
+func userUpdate401(sd seedData) []tableData {
 	table := []tableData{
 		{
 			name:       "emptytoken",
@@ -136,7 +135,7 @@ func userUpdate401(t *testing.T, app appTest, sd seedData) []tableData {
 		{
 			name:       "wronguser",
 			url:        fmt.Sprintf("/v1/users/%s", sd.admins[0].ID),
-			token:      app.userToken,
+			token:      sd.users[0].token,
 			method:     http.MethodPut,
 			statusCode: http.StatusUnauthorized,
 			model: &usergrp.AppUpdateUser{

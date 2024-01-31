@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/ardanlabs/service/business/core/user"
+	"github.com/ardanlabs/service/business/core/crud/user"
 	v1 "github.com/ardanlabs/service/business/web/v1"
 	"github.com/ardanlabs/service/business/web/v1/auth"
 	"github.com/ardanlabs/service/foundation/web"
@@ -55,7 +55,7 @@ func AuthorizeUser(a *auth.Auth, rule string, usrCore *user.Core) web.MidHandler
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 			var userID uuid.UUID
 
-			if id := web.Param(ctx, "user_id"); id != "" {
+			if id := web.Param(r, "user_id"); id != "" {
 				var err error
 				userID, err = uuid.Parse(id)
 				if err != nil {

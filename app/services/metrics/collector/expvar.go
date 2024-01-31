@@ -2,12 +2,13 @@
 package collector
 
 import (
-	"encoding/json"
 	"errors"
 	"io"
 	"net"
 	"net/http"
 	"time"
+
+	"github.com/go-json-experiment/json"
 )
 
 // Expvar provides the ability to receive metrics
@@ -66,7 +67,7 @@ func (exp *Expvar) Collect() (map[string]any, error) {
 	}
 
 	data := make(map[string]any)
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+	if err := json.UnmarshalRead(resp.Body, &data); err != nil {
 		return nil, err
 	}
 

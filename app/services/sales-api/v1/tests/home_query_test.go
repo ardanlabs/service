@@ -3,16 +3,15 @@ package tests
 import (
 	"fmt"
 	"net/http"
-	"testing"
 
 	"github.com/ardanlabs/service/app/services/sales-api/v1/handlers/homegrp"
-	"github.com/ardanlabs/service/business/core/user"
+	"github.com/ardanlabs/service/business/core/crud/user"
 	v1 "github.com/ardanlabs/service/business/web/v1"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/uuid"
 )
 
-func homeQuery200(t *testing.T, app appTest, sd seedData) []tableData {
+func homeQuery200(sd seedData) []tableData {
 	total := len(sd.admins[0].homes) + len(sd.users[0].homes)
 	usrsMap := make(map[uuid.UUID]user.User)
 
@@ -63,7 +62,7 @@ func homeQuery200(t *testing.T, app appTest, sd seedData) []tableData {
 	return table
 }
 
-func homeQueryByID200(t *testing.T, app appTest, sd seedData) []tableData {
+func homeQueryByID200(sd seedData) []tableData {
 	table := []tableData{
 		{
 			name:       "basic",

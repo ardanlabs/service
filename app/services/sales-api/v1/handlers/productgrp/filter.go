@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/ardanlabs/service/business/core/product"
+	"github.com/ardanlabs/service/business/core/crud/product"
 	"github.com/ardanlabs/service/foundation/validate"
 	"github.com/google/uuid"
 )

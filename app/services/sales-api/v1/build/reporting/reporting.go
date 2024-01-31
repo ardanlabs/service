@@ -3,7 +3,7 @@ package reporting
 
 import (
 	"github.com/ardanlabs/service/app/services/sales-api/v1/handlers/checkgrp"
-	"github.com/ardanlabs/service/app/services/sales-api/v1/handlers/usersummarygrp"
+	"github.com/ardanlabs/service/app/services/sales-api/v1/handlers/vproductgrp"
 	"github.com/ardanlabs/service/business/web/v1/mux"
 	"github.com/ardanlabs/service/foundation/web"
 )
@@ -24,7 +24,7 @@ func (add) Add(app *web.App, cfg mux.Config) {
 		DB:    cfg.DB,
 	})
 
-	usersummarygrp.Routes(app, usersummarygrp.Config{
+	vproductgrp.Routes(app, vproductgrp.Config{
 		Log:  cfg.Log,
 		Auth: cfg.Auth,
 		DB:   cfg.DB,
