@@ -22,6 +22,10 @@ import (
 var c *docker.Container
 
 func TestMain(m *testing.M) {
+	os.Exit(run(m))
+}
+
+func run(m *testing.M) int {
 	var err error
 
 	c, err = dbtest.StartDB()
@@ -31,7 +35,7 @@ func TestMain(m *testing.M) {
 	}
 	defer dbtest.StopDB(c)
 
-	os.Exit(m.Run())
+	return m.Run()
 }
 
 func Test_Product(t *testing.T) {
