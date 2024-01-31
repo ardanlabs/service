@@ -7,15 +7,15 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 # ==============================================================================
 # Go Installation
 #
-#   You need to have Go version 1.21 to run this code.
+#   You need to have Go version 1.22 to run this code.
 #   https://go.dev/dl/
 #
 #   If you are not allowed to update your Go frontend, you can install
-#   and use a 1.21 frontend.
-#   $ go install golang.org/dl/go1.21.6@latest
-#   $ go1.21.6 download
+#   and use a 1.22 frontend.
+#   $ go install golang.org/dl/go1.22.rc2@latest
+#   $ go1.21.rc2 download
 #
-#   This means you need to use go1.21.6 instead of go.
+#   This means you need to use go1.22.rc2 instead of go.
 
 # ==============================================================================
 # Brew Installation
