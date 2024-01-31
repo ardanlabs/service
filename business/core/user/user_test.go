@@ -28,7 +28,7 @@ func TestMain(m *testing.M) {
 	}
 	defer dbtest.StopDB(c)
 
-	m.Run()
+	os.Exit(m.Run())
 }
 
 func Test_User(t *testing.T) {

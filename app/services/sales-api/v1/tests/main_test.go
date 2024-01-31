@@ -25,7 +25,7 @@ func TestMain(m *testing.M) {
 	}
 	defer dbtest.StopDB(c)
 
-	m.Run()
+	os.Exit(m.Run())
 }
 
 type appTest struct {
