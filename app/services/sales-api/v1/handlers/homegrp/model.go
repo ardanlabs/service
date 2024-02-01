@@ -10,7 +10,7 @@ import (
 	"github.com/ardanlabs/service/foundation/validate"
 )
 
-// AppProduct represents information about an individual address.
+// AppAddress represents information about an individual address.
 type AppAddress struct {
 	Address1 string `json:"address1"`
 	Address2 string `json:"address2"`
@@ -20,7 +20,7 @@ type AppAddress struct {
 	Country  string `json:"country"`
 }
 
-// AppProduct represents information about an individual home.
+// AppHome represents information about an individual home.
 type AppHome struct {
 	ID          string     `json:"id"`
 	UserID      string     `json:"userID"`
@@ -123,7 +123,7 @@ func (app AppUpdateAddress) Validate() error {
 	return nil
 }
 
-// AppUpdateAddress defines the data needed to update a home.
+// AppUpdateHome defines the data needed to update a home.
 type AppUpdateHome struct {
 	Type    *string           `json:"type"`
 	Address *AppUpdateAddress `json:"address"`
