@@ -7,7 +7,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// dbProduct represents an individual product.
 type dbProduct struct {
 	ID          uuid.UUID `db:"product_id"`
 	UserID      uuid.UUID `db:"user_id"`

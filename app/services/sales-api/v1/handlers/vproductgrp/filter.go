@@ -27,7 +27,7 @@ func parseFilter(r *http.Request) (vproduct.QueryFilter, error) {
 		if err != nil {
 			return vproduct.QueryFilter{}, validate.NewFieldsError(filterByProdID, err)
 		}
-		filter.WithProductID(id)
+		filter.WithID(id)
 	}
 
 	if cost := values.Get(filterByCost); cost != "" {

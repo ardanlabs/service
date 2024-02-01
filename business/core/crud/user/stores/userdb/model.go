@@ -11,8 +11,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// dbUser represent the structure we need for moving data
-// between the app and the database.
 type dbUser struct {
 	ID           uuid.UUID      `db:"user_id"`
 	Name         string         `db:"name"`

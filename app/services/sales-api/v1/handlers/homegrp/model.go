@@ -10,7 +10,7 @@ import (
 	"github.com/ardanlabs/service/foundation/validate"
 )
 
-// AppAddress represents an individual home address.
+// AppProduct represents information about an individual address.
 type AppAddress struct {
 	Address1 string `json:"address1"`
 	Address2 string `json:"address2"`
@@ -20,7 +20,7 @@ type AppAddress struct {
 	Country  string `json:"country"`
 }
 
-// AppHome represents an individual home.
+// AppProduct represents information about an individual home.
 type AppHome struct {
 	ID          string     `json:"id"`
 	UserID      string     `json:"userID"`
@@ -67,7 +67,7 @@ type AppNewAddress struct {
 	Country  string `json:"country" validate:"required,iso3166_1_alpha2"`
 }
 
-// AppNewHome is what we require from clients when adding a Home.
+// AppNewHome defines the data needed to add a new home.
 type AppNewHome struct {
 	Type    string        `json:"type" validate:"required"`
 	Address AppNewAddress `json:"address"`
@@ -104,8 +104,7 @@ func (app AppNewHome) Validate() error {
 	return nil
 }
 
-// AppUpdateAddress defines what information may be provided to modify an
-// existing client.
+// AppUpdateAddress defines the data needed to update an address.
 type AppUpdateAddress struct {
 	Address1 *string `json:"address1" validate:"omitempty,min=1,max=70"`
 	Address2 *string `json:"address2" validate:"omitempty,max=70"`
@@ -124,7 +123,7 @@ func (app AppUpdateAddress) Validate() error {
 	return nil
 }
 
-// AppUpdateHome contains informations needed to update a home.
+// AppUpdateAddress defines the data needed to update a home.
 type AppUpdateHome struct {
 	Type    *string           `json:"type"`
 	Address *AppUpdateAddress `json:"address"`

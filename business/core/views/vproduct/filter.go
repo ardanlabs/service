@@ -26,8 +26,8 @@ func (qf *QueryFilter) Validate() error {
 	return nil
 }
 
-// WithProductID sets the ID field of the QueryFilter value.
-func (qf *QueryFilter) WithProductID(productID uuid.UUID) {
+// WithID sets the ID field of the QueryFilter value.
+func (qf *QueryFilter) WithID(productID uuid.UUID) {
 	qf.ID = &productID
 }
 

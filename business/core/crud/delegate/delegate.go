@@ -8,7 +8,7 @@ import (
 	"github.com/ardanlabs/service/foundation/logger"
 )
 
-// These type are just for documentation so we know what keys go
+// These types are just for documentation so we know what keys go
 // where in the map.
 type (
 	domain string
@@ -43,7 +43,7 @@ func (d *Delegate) Register(domainType string, actionType string, fn Func) {
 	aMap[action(actionType)] = funcs
 }
 
-// Call executes all event functions registered for the specified domain and
+// Call executes all functions registered for the specified domain and
 // action. These functions are executed synchronously on the G making the call.
 func (d *Delegate) Call(ctx context.Context, data Data) error {
 	d.log.Info(ctx, "delegate call", "status", "started", "domain", data.Domain, "action", data.Action, "params", data.RawParams)

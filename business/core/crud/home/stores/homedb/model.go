@@ -8,7 +8,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// dbHome represents an individual home.
 type dbHome struct {
 	ID          uuid.UUID `db:"home_id"`
 	UserID      uuid.UUID `db:"user_id"`

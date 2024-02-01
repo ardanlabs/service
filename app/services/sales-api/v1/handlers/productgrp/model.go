@@ -9,7 +9,7 @@ import (
 	"github.com/ardanlabs/service/foundation/validate"
 )
 
-// AppProduct represents an individual product.
+// AppProduct represents information about an individual product.
 type AppProduct struct {
 	ID          string  `json:"id"`
 	UserID      string  `json:"userID"`
@@ -41,7 +41,7 @@ func toAppProducts(prds []product.Product) []AppProduct {
 	return items
 }
 
-// AppNewProduct is what we require from clients when adding a Product.
+// AppNewProduct defines the data needed to add a new product.
 type AppNewProduct struct {
 	Name     string  `json:"name" validate:"required"`
 	Cost     float64 `json:"cost" validate:"required,gte=0"`
@@ -68,7 +68,7 @@ func (app AppNewProduct) Validate() error {
 	return nil
 }
 
-// AppUpdateProduct contains information needed to update a product.
+// AppUpdateProduct defines the data needed to update a product.
 type AppUpdateProduct struct {
 	Name     *string  `json:"name"`
 	Cost     *float64 `json:"cost" validate:"omitempty,gte=0"`

@@ -28,7 +28,7 @@ func NewCore(storer Storer) *Core {
 	}
 }
 
-// Query retrieves a list of existing users and their summary information.
+// Query retrieves a list of existing products.
 func (c *Core) Query(ctx context.Context, filter QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]Product, error) {
 	if err := filter.Validate(); err != nil {
 		return nil, err
@@ -42,7 +42,7 @@ func (c *Core) Query(ctx context.Context, filter QueryFilter, orderBy order.By, 
 	return users, nil
 }
 
-// Count returns the total number of users with summary information.
+// Count returns the total number of products.
 func (c *Core) Count(ctx context.Context, filter QueryFilter) (int, error) {
 	if err := filter.Validate(); err != nil {
 		return 0, err

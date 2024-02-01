@@ -12,19 +12,18 @@ import (
 	"github.com/ardanlabs/service/foundation/web"
 )
 
-// Handlers manages the set of user endpoints.
-type Handlers struct {
+type handlers struct {
 	vProduct *vproduct.Core
 }
 
-func new(vProduct *vproduct.Core) *Handlers {
-	return &Handlers{
+func new(vProduct *vproduct.Core) *handlers {
+	return &handlers{
 		vProduct: vProduct,
 	}
 }
 
-// Query returns a list of user summary data with paging.
-func (h *Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+// Query returns a list of products with paging.
+func (h *handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	page, err := page.Parse(r)
 	if err != nil {
 		return err

@@ -50,7 +50,7 @@ func toAppUsers(users []user.User) []AppUser {
 	return items
 }
 
-// AppNewUser contains information needed to create a new user.
+// AppNewUser defines the data needed to add a new user.
 type AppNewUser struct {
 	Name            string   `json:"name" validate:"required"`
 	Email           string   `json:"email" validate:"required,email"`
@@ -96,7 +96,7 @@ func (app AppNewUser) Validate() error {
 	return nil
 }
 
-// AppUpdateUser contains information needed to update a user.
+// AppUpdateUser defines the data needed to update a user.
 type AppUpdateUser struct {
 	Name            *string  `json:"name"`
 	Email           *string  `json:"email" validate:"omitempty,email"`

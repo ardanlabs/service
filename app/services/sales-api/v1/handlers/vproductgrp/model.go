@@ -6,7 +6,8 @@ import (
 	"github.com/ardanlabs/service/business/core/views/vproduct"
 )
 
-// AppProduct represents an individual product.
+// AppProduct represents information about an individual product with
+// extended information.
 type AppProduct struct {
 	ID          string  `json:"id"`
 	UserID      string  `json:"userID"`
