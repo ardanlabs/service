@@ -8,14 +8,17 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 # Go Installation
 #
 #   You need to have Go version 1.22 to run this code.
+#
 #   https://go.dev/dl/
 #
 #   If you are not allowed to update your Go frontend, you can install
 #   and use a 1.22 frontend.
-#   $ go install golang.org/dl/go1.22.rc2@latest
-#   $ go1.21.rc2 download
 #
-#   This means you need to use go1.22.rc2 instead of go.
+#   $ go install golang.org/dl/go1.22rc2@latest
+#   $ go1.21rc2 download
+#
+#   This means you need to use go1.22rc2 instead of go on the command line.
+#   More instructions follow for students, so please continue.
 
 # ==============================================================================
 # Brew Installation
@@ -55,13 +58,20 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 # ==============================================================================
 # Running Test
 #
+#   ** If you needed to install 1.22rc2, then run this command to run the tests.
+#
+#   $ make test122
+#
 #	Running the tests is a good way to verify you have installed most of the
 #	dependencies properly.
 #
 #	$ make test
+#
 
 # ==============================================================================
 # Running The Project
+#
+#   ** Don't run these commands if you needed to install 1.22rc2.
 #
 #	$ make dev-up
 #	$ make dev-update-apply
@@ -364,6 +374,9 @@ test-race:
 test-only:
 	CGO_ENABLED=0 go test -count=1 ./...
 
+test-only122:
+	CGO_ENABLED=0 go1.22rc2 test -count=1 ./...
+
 lint:
 	CGO_ENABLED=0 go vet ./...
 	staticcheck -checks=all ./...
@@ -374,6 +387,8 @@ vuln-check:
 test: test-only lint vuln-check
 
 test-race: test-race lint vuln-check
+
+test122: test-only122
 
 # ==============================================================================
 # Hitting endpoints
