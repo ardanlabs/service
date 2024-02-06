@@ -221,7 +221,7 @@ dev-down:
 dev-status:
 	kubectl get nodes -o wide
 	kubectl get svc -o wide
-	kubectl get pods -o wide --watch --all-namespaces
+	watch -n 1 kubectl get pods -o wide --all-namespaces
 
 # ------------------------------------------------------------------------------
 
