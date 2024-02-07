@@ -15,7 +15,7 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 #   and use a 1.22 frontend.
 #
 #   $ go install golang.org/dl/go1.22@latest
-#   $ go1.21 download
+#   $ go1.22 download
 #
 #   This means you need to use go1.22 instead of go on the command line.
 #   More instructions follow for students, so please continue.
