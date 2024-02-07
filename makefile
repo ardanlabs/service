@@ -17,8 +17,8 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 #   $ go install golang.org/dl/go1.22@latest
 #   $ go1.22 download
 #
-#   This means you need to use go1.22 instead of go on the command line.
-#   More instructions follow for students, so please continue.
+#   This means you need to use `go1.22` instead of `go` for any command
+#   using the Go frontend tooling from the makefile.
 
 # ==============================================================================
 # Brew Installation
@@ -378,8 +378,6 @@ vuln-check:
 test: test-only lint vuln-check
 
 test-race: test-race lint vuln-check
-
-test122: test-only122
 
 # ==============================================================================
 # Hitting endpoints
