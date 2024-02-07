@@ -14,10 +14,10 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 #   If you are not allowed to update your Go frontend, you can install
 #   and use a 1.22 frontend.
 #
-#   $ go install golang.org/dl/go1.22rc2@latest
-#   $ go1.21rc2 download
+#   $ go install golang.org/dl/go1.22@latest
+#   $ go1.21 download
 #
-#   This means you need to use go1.22rc2 instead of go on the command line.
+#   This means you need to use go1.22 instead of go on the command line.
 #   More instructions follow for students, so please continue.
 
 # ==============================================================================
@@ -58,10 +58,6 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 # ==============================================================================
 # Running Test
 #
-#   ** If you needed to install 1.22rc2, then run this command to run the tests.
-#
-#   $ make test122
-#
 #	Running the tests is a good way to verify you have installed most of the
 #	dependencies properly.
 #
@@ -70,8 +66,6 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 
 # ==============================================================================
 # Running The Project
-#
-#   ** Don't run these commands if you needed to install 1.22rc2.
 #
 #	$ make dev-up
 #	$ make dev-update-apply
@@ -127,7 +121,7 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 # ==============================================================================
 # Define dependencies
 
-GOLANG          := golang:1.22rc2
+GOLANG          := golang:1.22
 ALPINE          := alpine:3.19
 KIND            := kindest/node:v1.29.0@sha256:eaa1450915475849a73a9227b8f201df25e55e268e5d619312131292e324d570
 POSTGRES        := postgres:16.1
@@ -373,9 +367,6 @@ test-race:
 
 test-only:
 	CGO_ENABLED=0 go test -count=1 ./...
-
-test-only122:
-	CGO_ENABLED=0 go1.22rc2 test -count=1 ./...
 
 lint:
 	CGO_ENABLED=0 go vet ./...
