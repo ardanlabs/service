@@ -455,7 +455,7 @@ curl-create:
 # ==============================================================================
 # Talk commands
 
-dev-talk-up:
+talk-up:
 	kind create cluster \
 		--image $(KIND) \
 		--name $(KIND_CLUSTER) \
@@ -465,17 +465,20 @@ dev-talk-up:
 
 	kind load docker-image $(POSTGRES) --name $(KIND_CLUSTER)	
 
-dev-talk-apply:
+talk-apply:
 	kustomize build zarf/k8s/dev/database | kubectl apply -f -
 	kubectl rollout status --namespace=$(NAMESPACE) --watch --timeout=120s sts/database
 
 	kustomize build zarf/k8s/dev/sales | kubectl apply -f -
 	kubectl wait pods --namespace=$(NAMESPACE) --selector app=$(APP) --timeout=120s --for=condition=Ready
 
-dev-talk-build: all dev-load dev-talk-apply
+talk-build: all dev-load talk-apply
 
-load-talk:
-	hey -m GET -c 10 -n 100 -H "Authorization: Bearer ${TOKEN}" "http://localhost:3000/v1/users?page=1&rows=2"
+talk-load:
+	hey -m GET -c 10 -n 1000 -H "Authorization: Bearer ${TOKEN}" "http://localhost:3000/v1/users?page=1&rows=2"
+
+talk-logs:
+	kubectl logs --namespace=$(NAMESPACE) -l app=$(APP) --all-containers=true -f --tail=100 --max-log-requests=6 | grep SCHED
 
 # ==============================================================================
 # Admin Frontend
