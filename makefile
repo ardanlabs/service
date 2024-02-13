@@ -387,18 +387,23 @@ test-race: test-race lint vuln-check
 # Hitting endpoints
 
 token:
-	curl -il --user "admin@example.com:gophers" http://localhost:3000/v1/users/token/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
+	curl -il \
+	--user "admin@example.com:gophers" http://localhost:3000/v1/users/token/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
 
 # export TOKEN="COPY TOKEN STRING FROM LAST CALL"
 
 users:
-	curl -il -H "Authorization: Bearer ${TOKEN}" "http://localhost:3000/v1/users?page=1&rows=2"
+	curl -il \
+	-H "Authorization: Bearer ${TOKEN}" "http://localhost:3000/v1/users?page=1&rows=2"
 
 load:
-	hey -m GET -c 100 -n 1000 -H "Authorization: Bearer ${TOKEN}" "http://localhost:3000/v1/users?page=1&rows=2"
+	hey -m GET -c 100 -n 1000 \
+	-H "Authorization: Bearer ${TOKEN}" "http://localhost:3000/v1/users?page=1&rows=2"
 
 otel-test:
-	curl -il -H "Traceparent: 00-918dd5ecf264712262b68cf2ef8b5239-896d90f23f69f006-01" --user "admin@example.com:gophers" http://localhost:3000/v1/users/token/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
+	curl -il \
+	-H "Traceparent: 00-918dd5ecf264712262b68cf2ef8b5239-896d90f23f69f006-01" \
+	--user "admin@example.com:gophers" http://localhost:3000/v1/users/token/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
 
 # ==============================================================================
 # Modules support
@@ -455,10 +460,10 @@ live:
 
 curl-create:
 	curl -il -X POST \
-		-H "Authorization: Bearer ${TOKEN}" \
-		-H 'Content-Type: application/json' \
-		-d '{"name":"bill","email":"b@gmail.com","roles":["ADMIN"],"department":"IT","password":"123","passwordConfirm":"123"}' \
-		http://localhost:3000/v1/users
+	-H "Authorization: Bearer ${TOKEN}" \
+	-H 'Content-Type: application/json' \
+	-d '{"name":"bill","email":"b@gmail.com","roles":["ADMIN"],"department":"IT","password":"123","passwordConfirm":"123"}' \
+	http://localhost:3000/v1/users
 
 # ==============================================================================
 # Talk commands
