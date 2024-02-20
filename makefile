@@ -491,7 +491,16 @@ talk-load:
 	hey -m GET -c 10 -n 1000 -H "Authorization: Bearer ${TOKEN}" "http://localhost:3000/v1/users?page=1&rows=2"
 
 talk-logs:
+	kubectl logs --namespace=$(NAMESPACE) -l app=$(APP) --all-containers=true -f --tail=100 --max-log-requests=6
+
+talk-logs-cpu:
 	kubectl logs --namespace=$(NAMESPACE) -l app=$(APP) --all-containers=true -f --tail=100 --max-log-requests=6 | grep SCHED
+
+talk-logs-mem:
+	kubectl logs --namespace=$(NAMESPACE) -l app=$(APP) --all-containers=true -f --tail=100 --max-log-requests=6 | grep "ms clock"
+
+talk-describe:
+	kubectl describe pod --namespace=$(NAMESPACE) -l app=$(APP)
 
 # ==============================================================================
 # Admin Frontend
