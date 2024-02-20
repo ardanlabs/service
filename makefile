@@ -352,10 +352,10 @@ docs:
 # Metrics and Tracing
 
 metrics-view-sc:
-	expvarmon -ports="localhost:4000" -vars="build,requests,goroutines,errors,panics,mem:memstats.Alloc"
+	expvarmon -ports="localhost:4000" -vars="build,requests,goroutines,errors,panics,mem:memstats.HeapAlloc,mem:memstats.HeapSys,mem:memstats.Sys"
 
 metrics-view:
-	expvarmon -ports="localhost:3001" -endpoint="/metrics" -vars="build,requests,goroutines,errors,panics,mem:memstats.Alloc"
+	expvarmon -ports="localhost:3001" -endpoint="/metrics" -vars="build,requests,goroutines,errors,panics,mem:memstats.HeapAlloc,mem:memstats.HeapSys,mem:memstats.Sys"
 
 grafana:
 	open -a "Google Chrome" http://localhost:3100/
@@ -501,6 +501,9 @@ talk-logs-mem:
 
 talk-describe:
 	kubectl describe pod --namespace=$(NAMESPACE) -l app=$(APP)
+
+talk-metrics:
+	expvarmon -ports="localhost:4000" -vars="build,requests,goroutines,errors,panics,mem:memstats.HeapAlloc,mem:memstats.HeapSys,mem:memstats.Sys"
 
 # ==============================================================================
 # Admin Frontend
