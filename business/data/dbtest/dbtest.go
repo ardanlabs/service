@@ -31,7 +31,7 @@ import (
 
 // StartDB starts a database instance.
 func StartDB() (*docker.Container, error) {
-	image := "postgres:16.1"
+	image := "postgres:16.2"
 	port := "5432"
 	dockerArgs := []string{"-e", "POSTGRES_PASSWORD=postgres"}
 	appArgs := []string{"-c", "log_statement=all"}

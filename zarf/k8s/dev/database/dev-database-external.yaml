@@ -16,7 +16,7 @@
 # 5. This is an example of how to run the database in docker external to the
 #    cluster. You will need more configuration for the database to use persisted
 #    storage. You won't need to load the database image into the cluster.
-#    `docker run --name postgres -p5432:5432 -e POSTGRES_PASSWORD=postgres -d -v ~/pg_data:/var/lib/postgresql/data postgres:16.1`
+#    `docker run --name postgres -p5432:5432 -e POSTGRES_PASSWORD=postgres -d -v ~/pg_data:/var/lib/postgresql/data postgres:16.2`
 
 apiVersion: v1
 kind: Namespace

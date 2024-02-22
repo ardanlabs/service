@@ -63,7 +63,7 @@ github.com/go-playground/locales/en
 # github.com/go-playground/universal-translator v0.18.1
 ## explicit; go 1.18
 github.com/go-playground/universal-translator
-# github.com/go-playground/validator/v10 v10.17.0
+# github.com/go-playground/validator/v10 v10.18.0
 ## explicit; go 1.18
 github.com/go-playground/validator/v10
 github.com/go-playground/validator/v10/translations/en
@@ -84,12 +84,7 @@ github.com/gobwas/glob/util/strings
 github.com/golang-jwt/jwt/v4
 # github.com/golang/protobuf v1.5.3
 ## explicit; go 1.9
-github.com/golang/protobuf/jsonpb
 github.com/golang/protobuf/proto
-github.com/golang/protobuf/ptypes
-github.com/golang/protobuf/ptypes/any
-github.com/golang/protobuf/ptypes/duration
-github.com/golang/protobuf/ptypes/timestamp
 # github.com/google/go-cmp v0.6.0
 ## explicit; go 1.13
 github.com/google/go-cmp/cmp
@@ -244,10 +239,10 @@ github.com/open-policy-agent/opa/version
 ## explicit; go 1.19
 github.com/prometheus/client_golang/prometheus
 github.com/prometheus/client_golang/prometheus/internal
-# github.com/prometheus/client_model v0.5.0
+# github.com/prometheus/client_model v0.6.0
 ## explicit; go 1.19
 github.com/prometheus/client_model/go
-# github.com/prometheus/common v0.46.0
+# github.com/prometheus/common v0.47.0
 ## explicit; go 1.20
 github.com/prometheus/common/expfmt
 github.com/prometheus/common/internal/bitbucket.org/ww/goautoneg
@@ -372,14 +367,14 @@ golang.org/x/text/unicode/norm
 golang.org/x/text/width
 # golang.org/x/tools v0.16.0
 ## explicit; go 1.18
-# google.golang.org/genproto/googleapis/api v0.0.0-20240205150955-31a09d347014
+# google.golang.org/genproto/googleapis/api v0.0.0-20240221002015-b0ce06bbee7c
 ## explicit; go 1.19
 google.golang.org/genproto/googleapis/api/httpbody
-# google.golang.org/genproto/googleapis/rpc v0.0.0-20240205150955-31a09d347014
+# google.golang.org/genproto/googleapis/rpc v0.0.0-20240221002015-b0ce06bbee7c
 ## explicit; go 1.19
 google.golang.org/genproto/googleapis/rpc/errdetails
 google.golang.org/genproto/googleapis/rpc/status
-# google.golang.org/grpc v1.61.0
+# google.golang.org/grpc v1.62.0
 ## explicit; go 1.19
 google.golang.org/grpc
 google.golang.org/grpc/attributes
@@ -460,6 +455,7 @@ google.golang.org/protobuf/internal/set
 google.golang.org/protobuf/internal/strs
 google.golang.org/protobuf/internal/version
 google.golang.org/protobuf/proto
+google.golang.org/protobuf/protoadapt
 google.golang.org/protobuf/reflect/protodesc
 google.golang.org/protobuf/reflect/protoreflect
 google.golang.org/protobuf/reflect/protoregistry
