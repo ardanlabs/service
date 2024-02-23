@@ -15,7 +15,7 @@ spec:
       dnsPolicy: ClusterFirstWithHostNet
       hostNetwork: true
 
-# Compute Resource Quotas
+# CPU Limits
 #
 # The request value helps K8s determine what node a POD can be run on by making
 # sure the number of requesting cores for the sum of all PODs are never greater
@@ -83,15 +83,49 @@ spec:
 # For CPU resource units, the quantity expression 0.1 is equivalent to the 
 # expression 100m, which can be read as "one hundred millicpu". 
 
+# Memory Limits
+#
+# Memory Limits restrict the amount of memory the service can use. I have not
+# found any good rules to use, but here is some performance testing when
+# experimenting with memory limits using `make load`.
+#
+# Unrestricted:                  
+#   Total:        35.5745 secs
+#   Slowest:       1.1948 secs
+#   Fastest:       0.0048 secs
+#   Average:       0.3447 secs
+#   Requests/sec: 28.1100        
+#
+# Limit: 18MiB                   With GOMAXLIMIT: 18 MiB
+#   Total:        35.1985 secs     Total:        34.2020 secs
+#   Slowest:       1.1907 secs     Slowest:       1.1017 secs
+#   Fastest:       0.0054 secs     Fastest:       0.0042 secs
+#   Average:       0.3350 secs     Average:       0.3328 secs
+#   Requests/sec: 28.4103          Requests/sec: 29.2380
+#
+# Limit 36 MiB                   With GOMAXLIMIT: 36 MiB
+#   Total:        35.3504 secs     Total:        28.2876 secs
+#   Slowest:       1.2809 secs     Slowest:       0.9867 secs
+#   Fastest:       0.0056 secs     Fastest:       0.0036 secs
+#   Average:       0.3393 secs     Average:       0.2763 secs
+#   Requests/sec: 28.2883          Requests/sec: 35.3512
+#
+# Limit 72 MiB                   With GOMAXLIMIT 72 MiB
+#   Total:        34.1320 secs     Total:        27.8793 secs
+#   Slowest:       1.2031 secs     Slowest:       0.9876 secs
+#   Fastest:       0.0033 secs     Fastest:       0.0046 secs
+#   Average:       0.3369 secs     Average:       0.2690 secs
+#   Requests/sec: 29.2980          Requests/sec: 35.8689
+
       containers:
       - name: sales-api
         resources:
           requests:
             cpu: "250m" # I need access to 1/4 of a core on the node.
-            memory: "36Mi"
+            memory: "72Mi"
           limits:
             cpu: "250m" # Execute instructions 25ms/100ms on my 1 core.
-            memory: "36Mi"
+            memory: "72Mi"
 
       - name: metrics
         resources:
