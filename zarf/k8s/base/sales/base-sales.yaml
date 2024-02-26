@@ -94,7 +94,9 @@ spec:
           value: "off"
 
         - name: GOMEMLIMIT
-          value: "36MiB"
+          valueFrom:
+            resourceFieldRef:
+              resource: limits.memory
 
         - name: SALES_DB_USER # here as an example for configuring a hosted db.
           valueFrom:
