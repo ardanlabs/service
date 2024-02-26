@@ -103,6 +103,13 @@ spec:
 #   Average:       0.3350 secs     Average:       0.3328 secs
 #   Requests/sec: 28.4103          Requests/sec: 29.2380
 #
+# Limit 23 MiB (Go Value)         With GOMAXLIMIT: 23 MiB
+#   Total:        33.5513 secs      Total:        29.9747 secs
+#   Slowest:       1.0979 secs      Slowest:       0.9976 secs
+#   Fastest:       0.0029 secs      Fastest:       0.0047 secs
+#   Average:       0.3285 secs      Average:       0.2891 secs
+#   Requests/sec: 29.8051           Requests/sec: 33.3615
+#
 # Limit 36 MiB                   With GOMAXLIMIT: 36 MiB
 #   Total:        35.3504 secs     Total:        28.2876 secs
 #   Slowest:       1.2809 secs     Slowest:       0.9867 secs
