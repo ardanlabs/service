@@ -85,6 +85,10 @@ spec:
 
 # Memory Limits
 #
+# This service will OOM when the K8s limit is at 17 MiB or below. However, I can
+# keep it alive at 13 MiB when setting GOMAXLIMIT to match. This is with the
+# GC off (GOGC=off).
+#
 # Memory Limits restrict the amount of memory the service can use. I have not
 # found any good rules to use, but here is some performance testing when
 # experimenting with memory limits using `make load`.
@@ -96,7 +100,7 @@ spec:
 #   Average:       0.3447 secs
 #   Requests/sec: 28.1100        
 #
-# Limit: 18MiB                   With GOMAXLIMIT: 18 MiB
+# Limit: 18 MiB                  With GOMAXLIMIT: 18 MiB
 #   Total:        35.1985 secs     Total:        34.2020 secs
 #   Slowest:       1.1907 secs     Slowest:       1.1017 secs
 #   Fastest:       0.0054 secs     Fastest:       0.0042 secs
@@ -128,10 +132,10 @@ spec:
       - name: sales-api
         resources:
           requests:
-            cpu: "250m" # I need access to 1/4 of a core on the node.
-            memory: "36Mi"
+            cpu: "250m"     # I need access to 25ms/100ms on one core
+            memory: "42Mi"  # Make this higher than the limit to keep reserve
           limits:
-            cpu: "250m" # Execute instructions 25ms/100ms on my 1 core.
+            cpu: "250m"     # Execute instructions 25ms/100ms on one core
             memory: "36Mi"
 
       - name: metrics
