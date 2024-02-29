@@ -133,10 +133,10 @@ spec:
         resources:
           requests:
             cpu: "250m"     # I need access to 25ms/100ms on one core
-            memory: "42Mi"  # Make this higher than the limit to keep reserve
+            memory: "36Mi"  # Use this same value for limits
           limits:
             cpu: "250m"     # Execute instructions 25ms/100ms on one core
-            memory: "36Mi"
+            memory: "36Mi"  # Match the requests value
 
       - name: metrics
         resources:
