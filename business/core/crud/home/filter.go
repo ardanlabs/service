@@ -42,13 +42,13 @@ func (qf *QueryFilter) WithHomeType(homeType Type) {
 	qf.Type = &homeType
 }
 
-// WithStartDateCreated sets the DateCreated field of the QueryFilter value.
+// WithStartDateCreated sets the StartCreatedDate field of the QueryFilter value.
 func (qf *QueryFilter) WithStartDateCreated(startDate time.Time) {
 	d := startDate.UTC()
 	qf.StartCreatedDate = &d
 }
 
-// WithEndCreatedDate sets the DateCreated field of the QueryFilter value.
+// WithEndCreatedDate sets the EndCreatedDate field of the QueryFilter value.
 func (qf *QueryFilter) WithEndCreatedDate(endDate time.Time) {
 	d := endDate.UTC()
 	qf.EndCreatedDate = &d
