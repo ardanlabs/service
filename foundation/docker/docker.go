@@ -95,6 +95,12 @@ func extractIPPort(id string, port string) (hostIP string, hostPort string, err 
 
 	for _, doc := range docs {
 		if doc.HostIP != "::" {
+			// Podman keeps HostIP empty instead of using 0.0.0.0.
+			// - https://github.com/containers/podman/issues/17780
+			if doc.HostIP == "" {
+				return "localhost", doc.HostPort, nil
+			}
+
 			return doc.HostIP, doc.HostPort, nil
 		}
 	}

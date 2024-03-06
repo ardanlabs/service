@@ -48,7 +48,10 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 # Install Tooling and Dependencies
 #
 #   This project uses Docker and it is expected to be installed. Please provide
-#   Docker at least 4 CPUs.
+#   Docker at least 4 CPUs. To use Podman instead please alias Docker CLI to
+#   Podman CLI or symlink the Docker socket to the Podman socket. More
+#   information on migrating from Docker to Podman can be found at
+#   https://podman-desktop.io/docs/migrating-from-docker.
 #
 #	Run these commands to install everything needed.
 #	$ make dev-brew
@@ -134,7 +137,7 @@ PROMTAIL        := grafana/promtail:2.9.0
 KIND_CLUSTER    := ardan-starter-cluster
 NAMESPACE       := sales-system
 APP             := sales
-BASE_IMAGE_NAME := ardanlabs/service
+BASE_IMAGE_NAME := localhost/ardanlabs/service
 SERVICE_NAME    := sales-api
 VERSION         := 0.0.1
 SERVICE_IMAGE   := $(BASE_IMAGE_NAME)/$(SERVICE_NAME):$(VERSION)
@@ -181,7 +184,7 @@ service:
 		-f zarf/docker/dockerfile.service \
 		-t $(SERVICE_IMAGE) \
 		--build-arg BUILD_REF=$(VERSION) \
-		--build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
+		--build-arg BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ") \
 		.
 
 metrics:
@@ -189,7 +192,7 @@ metrics:
 		-f zarf/docker/dockerfile.metrics \
 		-t $(METRICS_IMAGE) \
 		--build-arg BUILD_REF=$(VERSION) \
-		--build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
+		--build-arg BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ") \
 		.
 
 # ==============================================================================
@@ -226,17 +229,6 @@ dev-status:
 dev-load:
 	kind load docker-image $(SERVICE_IMAGE) --name $(KIND_CLUSTER)
 	kind load docker-image $(METRICS_IMAGE) --name $(KIND_CLUSTER)
-
-# podman is currently experimental, and fails for some reason with kind load
-# docker-image (possibly a tagging issue?) but the below works.
-dev-load-podman:
-	docker image save $(SERVICE_IMAGE):$(VERSION) -o image-sales
-	kind load image-archive image-sales --name ardan-starter-cluster
-	rm -f image-sales-metrics image-sales
-
-	rm -f image-sales-metrics image-sales
-	docker image save $(METRICS_IMAGE):$(VERSION) -o image-sales-metrics
-	kind load image-archive image-sales-metrics --name ardan-starter-cluster
 
 dev-apply:
 	kustomize build zarf/k8s/dev/grafana | kubectl apply -f -
