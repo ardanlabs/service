@@ -155,7 +155,7 @@ func (h *handlers) token(ctx context.Context, w http.ResponseWriter, r *http.Req
 		RegisteredClaims: jwt.RegisteredClaims{
 			Subject:   usr.ID.String(),
 			Issuer:    "service project",
-			ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(time.Hour)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(8760 * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
 		},
 		Roles: usr.Roles,
