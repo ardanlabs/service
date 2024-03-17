@@ -72,28 +72,18 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // prevents the MethodNotAllowedHandler from being called. This must be enabled
 // for the CORS middleware to work.
 func (a *App) EnableCORS(mw MidHandler) {
-	a.mw = append(a.mw, mw)
-
 	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 		return Respond(ctx, w, "OK", http.StatusOK)
 	}
-	handler = wrapMiddleware(a.mw, handler)
+	handler = wrapMiddleware([]MidHandler{mw}, handler)
 
 	h := func(w http.ResponseWriter, r *http.Request) {
-		ctx, span := a.startSpan(w, r)
-		defer span.End()
-
-		v := Values{
-			TraceID: span.SpanContext().TraceID().String(),
-			Tracer:  a.tracer,
-			Now:     time.Now().UTC(),
-		}
-		ctx = setValues(ctx, &v)
-
-		handler(ctx, w, r)
+		handler(r.Context(), w, r)
 	}
 
-	a.mux.HandleFunc("OPTIONS /", h)
+	finalPath := fmt.Sprintf("%s %s", http.MethodOptions, "/")
+
+	a.mux.HandleFunc(finalPath, h)
 }
 
 // HandleNoMiddleware sets a handler function for a given HTTP method and path pair
