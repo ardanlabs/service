@@ -34,7 +34,7 @@ func setHome(ctx context.Context, hme home.Home) context.Context {
 // home from the DB if a home id is specified in the call. Depending on
 // the rule specified, the userid from the claims may be compared with the
 // specified user id from the home.
-func AuthorizeHome(a *auth.Auth, rule string, hmeCore *home.Core) web.MidHandler {
+func AuthorizeHome(a *auth.Auth, hmeCore *home.Core) web.MidHandler {
 	m := func(handler web.Handler) web.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 			var userID uuid.UUID
@@ -61,8 +61,8 @@ func AuthorizeHome(a *auth.Auth, rule string, hmeCore *home.Core) web.MidHandler
 			}
 
 			claims := getClaims(ctx)
-			if err := a.Authorize(ctx, claims, userID, rule); err != nil {
-				return auth.NewAuthError("authorize: you are not authorized for that action, claims[%v] rule[%v]: %s", claims.Roles, rule, err)
+			if err := a.Authorize(ctx, claims, userID, auth.RuleAdminOrSubject); err != nil {
+				return auth.NewAuthError("authorize: you are not authorized for that action, claims[%v] rule[%v]: %s", claims.Roles, auth.RuleAdminOrSubject, err)
 			}
 
 			return handler(ctx, w, r)

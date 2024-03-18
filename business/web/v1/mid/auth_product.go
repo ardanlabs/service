@@ -34,7 +34,7 @@ func setProduct(ctx context.Context, prd product.Product) context.Context {
 // product from the DB if a product id is specified in the call. Depending on
 // the rule specified, the userid from the claims may be compared with the
 // specified user id from the product.
-func AuthorizeProduct(a *auth.Auth, rule string, prdCore *product.Core) web.MidHandler {
+func AuthorizeProduct(a *auth.Auth, prdCore *product.Core) web.MidHandler {
 	m := func(handler web.Handler) web.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 			var userID uuid.UUID
@@ -62,8 +62,8 @@ func AuthorizeProduct(a *auth.Auth, rule string, prdCore *product.Core) web.MidH
 
 			claims := getClaims(ctx)
 
-			if err := a.Authorize(ctx, claims, userID, rule); err != nil {
-				return auth.NewAuthError("authorize: you are not authorized for that action, claims[%v] rule[%v]: %s", claims.Roles, rule, err)
+			if err := a.Authorize(ctx, claims, userID, auth.RuleAdminOrSubject); err != nil {
+				return auth.NewAuthError("authorize: you are not authorized for that action, claims[%v] rule[%v]: %s", claims.Roles, auth.RuleAdminOrSubject, err)
 			}
 
 			return handler(ctx, w, r)

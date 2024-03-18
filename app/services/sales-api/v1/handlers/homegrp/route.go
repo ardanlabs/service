@@ -34,12 +34,12 @@ func Routes(app *web.App, cfg Config) {
 	authen := mid.Authenticate(cfg.Auth)
 	ruleAny := mid.Authorize(cfg.Auth, auth.RuleAny)
 	ruleUserOnly := mid.Authorize(cfg.Auth, auth.RuleUserOnly)
-	ruleAdminOrSubject := mid.AuthorizeHome(cfg.Auth, auth.RuleAdminOrSubject, hmeCore)
+	ruleAuthorizeHome := mid.AuthorizeHome(cfg.Auth, hmeCore)
 
 	hdl := new(hmeCore)
 	app.Handle(http.MethodGet, version, "/homes", hdl.query, authen, ruleAny)
-	app.Handle(http.MethodGet, version, "/homes/{home_id}", hdl.queryByID, authen, ruleAdminOrSubject)
+	app.Handle(http.MethodGet, version, "/homes/{home_id}", hdl.queryByID, authen, ruleAuthorizeHome)
 	app.Handle(http.MethodPost, version, "/homes", hdl.create, authen, ruleUserOnly)
-	app.Handle(http.MethodPut, version, "/homes/{home_id}", hdl.update, authen, ruleAdminOrSubject)
-	app.Handle(http.MethodDelete, version, "/homes/{home_id}", hdl.delete, authen, ruleAdminOrSubject)
+	app.Handle(http.MethodPut, version, "/homes/{home_id}", hdl.update, authen, ruleAuthorizeHome)
+	app.Handle(http.MethodDelete, version, "/homes/{home_id}", hdl.delete, authen, ruleAuthorizeHome)
 }
