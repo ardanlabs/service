@@ -74,13 +74,18 @@ type AppNewHome struct {
 }
 
 func toCoreNewHome(ctx context.Context, app AppNewHome) (home.NewHome, error) {
+	userID, err := mid.GetUserID(ctx)
+	if err != nil {
+		return home.NewHome{}, fmt.Errorf("getuserid: %w", err)
+	}
+
 	typ, err := home.ParseType(app.Type)
 	if err != nil {
 		return home.NewHome{}, fmt.Errorf("parse: %w", err)
 	}
 
 	hme := home.NewHome{
-		UserID: mid.GetUserID(ctx),
+		UserID: userID,
 		Type:   typ,
 		Address: home.Address{
 			Address1: app.Address.Address1,

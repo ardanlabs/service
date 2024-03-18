@@ -21,21 +21,23 @@ const (
 )
 
 // GetUserID returns the claims from the context.
-func GetUserID(ctx context.Context) uuid.UUID {
+func GetUserID(ctx context.Context) (uuid.UUID, error) {
 	v, ok := ctx.Value(userIDKey).(uuid.UUID)
 	if !ok {
-		return uuid.UUID{}
+		return uuid.UUID{}, errors.New("user id not found in context")
 	}
-	return v
+
+	return v, nil
 }
 
 // GetUser returns the user from the context.
-func GetUser(ctx context.Context) user.User {
+func GetUser(ctx context.Context) (user.User, error) {
 	v, ok := ctx.Value(userKey).(user.User)
 	if !ok {
-		return user.User{}
+		return user.User{}, errors.New("user not found in context")
 	}
-	return v
+
+	return v, nil
 }
 
 func setUserID(ctx context.Context, userID uuid.UUID) context.Context {

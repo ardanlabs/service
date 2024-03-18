@@ -18,12 +18,13 @@ type ctxHomeKey int
 const homeKey ctxHomeKey = 1
 
 // GetHome returns the home from the context.
-func GetHome(ctx context.Context) home.Home {
+func GetHome(ctx context.Context) (home.Home, error) {
 	v, ok := ctx.Value(homeKey).(home.Home)
 	if !ok {
-		return home.Home{}
+		return home.Home{}, errors.New("home not found in context")
 	}
-	return v
+
+	return v, nil
 }
 
 func setHome(ctx context.Context, hme home.Home) context.Context {

@@ -66,7 +66,10 @@ func (h *handlers) update(ctx context.Context, w http.ResponseWriter, r *http.Re
 		return v1.NewTrustedError(err, http.StatusBadRequest)
 	}
 
-	usr := mid.GetUser(ctx)
+	usr, err := mid.GetUser(ctx)
+	if err != nil {
+		return fmt.Errorf("update: %w", err)
+	}
 
 	updUsr, err := h.user.Update(ctx, usr, uu)
 	if err != nil {
@@ -78,9 +81,12 @@ func (h *handlers) update(ctx context.Context, w http.ResponseWriter, r *http.Re
 
 // delete removes a user from the system.
 func (h *handlers) delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	usr := mid.GetUser(ctx)
+	usr, err := mid.GetUser(ctx)
+	if err != nil {
+		return fmt.Errorf("delete: %w", err)
+	}
 
-	if err := h.user.Delete(ctx, mid.GetUser(ctx)); err != nil {
+	if err := h.user.Delete(ctx, usr); err != nil {
 		return fmt.Errorf("delete: userID[%s]: %w", usr.ID, err)
 	}
 
@@ -119,7 +125,12 @@ func (h *handlers) query(ctx context.Context, w http.ResponseWriter, r *http.Req
 
 // queryByID returns a user by its ID.
 func (h *handlers) queryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	return web.Respond(ctx, w, toAppUser(mid.GetUser(ctx)), http.StatusOK)
+	usr, err := mid.GetUser(ctx)
+	if err != nil {
+		return fmt.Errorf("querybyid: %w", err)
+	}
+
+	return web.Respond(ctx, w, toAppUser(usr), http.StatusOK)
 }
 
 // token provides an API token for the authenticated user.

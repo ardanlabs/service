@@ -18,12 +18,13 @@ type ctxProductKey int
 const productKey ctxProductKey = 1
 
 // GetProduct returns the product from the context.
-func GetProduct(ctx context.Context) product.Product {
+func GetProduct(ctx context.Context) (product.Product, error) {
 	v, ok := ctx.Value(productKey).(product.Product)
 	if !ok {
-		return product.Product{}
+		return product.Product{}, errors.New("product not found in context")
 	}
-	return v
+
+	return v, nil
 }
 
 func setProduct(ctx context.Context, prd product.Product) context.Context {

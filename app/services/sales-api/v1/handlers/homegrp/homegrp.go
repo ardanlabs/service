@@ -61,7 +61,10 @@ func (h *handlers) update(ctx context.Context, w http.ResponseWriter, r *http.Re
 		return v1.NewTrustedError(err, http.StatusBadRequest)
 	}
 
-	hme := mid.GetHome(ctx)
+	hme, err := mid.GetHome(ctx)
+	if err != nil {
+		return fmt.Errorf("update: %w", err)
+	}
 
 	updHme, err := h.home.Update(ctx, hme, uh)
 	if err != nil {
@@ -73,7 +76,10 @@ func (h *handlers) update(ctx context.Context, w http.ResponseWriter, r *http.Re
 
 // delete deletes a home from the system.
 func (h *handlers) delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	hme := mid.GetHome(ctx)
+	hme, err := mid.GetHome(ctx)
+	if err != nil {
+		return fmt.Errorf("delete: %w", err)
+	}
 
 	if err := h.home.Delete(ctx, hme); err != nil {
 		return fmt.Errorf("delete: homeID[%s]: %w", hme.ID, err)
@@ -114,5 +120,10 @@ func (h *handlers) query(ctx context.Context, w http.ResponseWriter, r *http.Req
 
 // queryByID returns a home by its ID.
 func (h *handlers) queryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	return web.Respond(ctx, w, toAppHome(mid.GetHome(ctx)), http.StatusOK)
+	hme, err := mid.GetHome(ctx)
+	if err != nil {
+		return fmt.Errorf("querybyid: %w", err)
+	}
+
+	return web.Respond(ctx, w, toAppHome(hme), http.StatusOK)
 }

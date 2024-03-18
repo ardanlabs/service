@@ -2,6 +2,7 @@ package productgrp
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/ardanlabs/service/business/core/crud/product"
@@ -48,15 +49,20 @@ type AppNewProduct struct {
 	Quantity int     `json:"quantity" validate:"required,gte=1"`
 }
 
-func toCoreNewProduct(ctx context.Context, app AppNewProduct) product.NewProduct {
+func toCoreNewProduct(ctx context.Context, app AppNewProduct) (product.NewProduct, error) {
+	userID, err := mid.GetUserID(ctx)
+	if err != nil {
+		return product.NewProduct{}, fmt.Errorf("getuserid: %w", err)
+	}
+
 	prd := product.NewProduct{
-		UserID:   mid.GetUserID(ctx),
+		UserID:   userID,
 		Name:     app.Name,
 		Cost:     app.Cost,
 		Quantity: app.Quantity,
 	}
 
-	return prd
+	return prd, nil
 }
 
 // Validate checks the data in the model is considered clean.

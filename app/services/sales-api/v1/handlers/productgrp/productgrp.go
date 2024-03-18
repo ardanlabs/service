@@ -39,7 +39,12 @@ func (h *handlers) create(ctx context.Context, w http.ResponseWriter, r *http.Re
 		return v1.NewTrustedError(err, http.StatusBadRequest)
 	}
 
-	prd, err := h.product.Create(ctx, toCoreNewProduct(ctx, app))
+	np, err := toCoreNewProduct(ctx, app)
+	if err != nil {
+		return v1.NewTrustedError(err, http.StatusBadRequest)
+	}
+
+	prd, err := h.product.Create(ctx, np)
 	if err != nil {
 		return fmt.Errorf("create: app[%+v]: %w", app, err)
 	}
@@ -54,7 +59,10 @@ func (h *handlers) update(ctx context.Context, w http.ResponseWriter, r *http.Re
 		return v1.NewTrustedError(err, http.StatusBadRequest)
 	}
 
-	prd := mid.GetProduct(ctx)
+	prd, err := mid.GetProduct(ctx)
+	if err != nil {
+		return fmt.Errorf("update: %w", err)
+	}
 
 	updPrd, err := h.product.Update(ctx, prd, toCoreUpdateProduct(app))
 	if err != nil {
@@ -66,7 +74,10 @@ func (h *handlers) update(ctx context.Context, w http.ResponseWriter, r *http.Re
 
 // delete removes a product from the system.
 func (h *handlers) delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	prd := mid.GetProduct(ctx)
+	prd, err := mid.GetProduct(ctx)
+	if err != nil {
+		return fmt.Errorf("delete: %w", err)
+	}
 
 	if err := h.product.Delete(ctx, prd); err != nil {
 		return fmt.Errorf("delete: productID[%s]: %w", prd.ID, err)
@@ -107,5 +118,10 @@ func (h *handlers) query(ctx context.Context, w http.ResponseWriter, r *http.Req
 
 // queryByID returns a product by its ID.
 func (h *handlers) queryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	return web.Respond(ctx, w, toAppProduct(mid.GetProduct(ctx)), http.StatusOK)
+	prd, err := mid.GetProduct(ctx)
+	if err != nil {
+		return fmt.Errorf("querybyid: %w", err)
+	}
+
+	return web.Respond(ctx, w, toAppProduct(prd), http.StatusOK)
 }
