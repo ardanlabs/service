@@ -1,50 +1,25 @@
-package user_test
+package tests
 
 import (
 	"context"
 	"errors"
 	"fmt"
 	"net/mail"
-	"os"
 	"runtime/debug"
 	"testing"
 	"time"
 
 	"github.com/ardanlabs/service/business/core/crud/user"
 	"github.com/ardanlabs/service/business/data/dbtest"
-	"github.com/ardanlabs/service/foundation/docker"
 	"github.com/google/go-cmp/cmp"
 )
 
-var c *docker.Container
-
-func TestMain(m *testing.M) {
-	code, err := run(m)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	os.Exit(code)
-}
-
-func run(m *testing.M) (int, error) {
-	var err error
-
-	c, err = dbtest.StartDB()
-	if err != nil {
-		return 1, err
-	}
-	defer dbtest.StopDB(c)
-
-	return m.Run(), nil
-}
-
 func Test_User(t *testing.T) {
-	t.Run("crud", crud)
-	t.Run("paging", paging)
+	t.Run("crud", userCrud)
+	t.Run("paging", userPaging)
 }
 
-func crud(t *testing.T) {
+func userCrud(t *testing.T) {
 	seed := func(ctx context.Context, usrCore *user.Core) ([]user.User, error) {
 		usrs := make([]user.User, 2)
 
@@ -190,7 +165,7 @@ func crud(t *testing.T) {
 	}
 }
 
-func paging(t *testing.T) {
+func userPaging(t *testing.T) {
 	seed := func(ctx context.Context, usrCore *user.Core) ([]user.User, error) {
 		usrs := make([]user.User, 2)
 

@@ -1,10 +1,9 @@
-package home_test
+package tests
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"runtime/debug"
 	"testing"
 	"time"
@@ -12,39 +11,15 @@ import (
 	"github.com/ardanlabs/service/business/core/crud/home"
 	"github.com/ardanlabs/service/business/core/crud/user"
 	"github.com/ardanlabs/service/business/data/dbtest"
-	"github.com/ardanlabs/service/foundation/docker"
 	"github.com/google/go-cmp/cmp"
 )
 
-var c *docker.Container
-
-func TestMain(m *testing.M) {
-	code, err := run(m)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	os.Exit(code)
-}
-
-func run(m *testing.M) (int, error) {
-	var err error
-
-	c, err = dbtest.StartDB()
-	if err != nil {
-		return 1, err
-	}
-	defer dbtest.StopDB(c)
-
-	return m.Run(), nil
-}
-
 func Test_Home(t *testing.T) {
-	t.Run("crud", crud)
-	t.Run("paging", paging)
+	t.Run("crud", homeCrud)
+	t.Run("paging", homePaging)
 }
 
-func crud(t *testing.T) {
+func homeCrud(t *testing.T) {
 	seed := func(ctx context.Context, usrCore *user.Core, hmeCore *home.Core) ([]home.Home, error) {
 		var filter user.QueryFilter
 		filter.WithName("Admin Gopher")
@@ -202,7 +177,7 @@ func crud(t *testing.T) {
 	}
 }
 
-func paging(t *testing.T) {
+func homePaging(t *testing.T) {
 	seed := func(ctx context.Context, usrCore *user.Core, hmeCore *home.Core) ([]home.Home, error) {
 		var filter user.QueryFilter
 		filter.WithName("Admin Gopher")

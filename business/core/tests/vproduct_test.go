@@ -1,9 +1,8 @@
-package vproduct_test
+package tests
 
 import (
 	"context"
 	"fmt"
-	"os"
 	"runtime/debug"
 	"testing"
 	"time"
@@ -12,37 +11,13 @@ import (
 	"github.com/ardanlabs/service/business/core/crud/user"
 	"github.com/ardanlabs/service/business/core/views/vproduct"
 	"github.com/ardanlabs/service/business/data/dbtest"
-	"github.com/ardanlabs/service/foundation/docker"
 )
 
-var c *docker.Container
-
-func TestMain(m *testing.M) {
-	code, err := run(m)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	os.Exit(code)
-}
-
-func run(m *testing.M) (int, error) {
-	var err error
-
-	c, err = dbtest.StartDB()
-	if err != nil {
-		return 1, err
-	}
-	defer dbtest.StopDB(c)
-
-	return m.Run(), nil
-}
-
 func Test_VProduct(t *testing.T) {
-	t.Run("paging", paging)
+	t.Run("paging", vproductPaging)
 }
 
-func paging(t *testing.T) {
+func vproductPaging(t *testing.T) {
 	seed := func(ctx context.Context, usrCore *user.Core, prdCore *product.Core) ([]product.Product, []user.User, error) {
 		var filter user.QueryFilter
 		filter.WithName("Admin Gopher")

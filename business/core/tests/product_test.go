@@ -1,11 +1,10 @@
-package product_test
+package tests
 
 import (
 	"context"
 	"errors"
 	"fmt"
 	"net/mail"
-	"os"
 	"runtime/debug"
 	"testing"
 	"time"
@@ -15,40 +14,16 @@ import (
 	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/ardanlabs/service/business/data/sqldb"
 	"github.com/ardanlabs/service/business/data/transaction"
-	"github.com/ardanlabs/service/foundation/docker"
 	"github.com/google/go-cmp/cmp"
 )
 
-var c *docker.Container
-
-func TestMain(m *testing.M) {
-	code, err := run(m)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	os.Exit(code)
-}
-
-func run(m *testing.M) (int, error) {
-	var err error
-
-	c, err = dbtest.StartDB()
-	if err != nil {
-		return 1, err
-	}
-	defer dbtest.StopDB(c)
-
-	return m.Run(), nil
-}
-
 func Test_Product(t *testing.T) {
-	t.Run("crud", crud)
-	t.Run("paging", paging)
-	t.Run("transaction", tran)
+	t.Run("crud", productCrud)
+	t.Run("paging", productPaging)
+	t.Run("transaction", productTran)
 }
 
-func crud(t *testing.T) {
+func productCrud(t *testing.T) {
 	seed := func(ctx context.Context, usrCore *user.Core, prdCore *product.Core) ([]product.Product, error) {
 		var filter user.QueryFilter
 		filter.WithName("Admin Gopher")
@@ -199,7 +174,7 @@ func crud(t *testing.T) {
 	}
 }
 
-func paging(t *testing.T) {
+func productPaging(t *testing.T) {
 	seed := func(ctx context.Context, usrCore *user.Core, prdCore *product.Core) ([]product.Product, error) {
 		var filter user.QueryFilter
 		filter.WithName("Admin Gopher")
@@ -299,7 +274,7 @@ func paging(t *testing.T) {
 	}
 }
 
-func tran(t *testing.T) {
+func productTran(t *testing.T) {
 	test := dbtest.NewTest(t, c, "Test_Product/tran")
 	defer func() {
 		if r := recover(); r != nil {
