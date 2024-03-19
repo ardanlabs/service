@@ -191,6 +191,43 @@ func crud(t *testing.T) {
 }
 
 func paging(t *testing.T) {
+	seed := func(ctx context.Context, usrCore *user.Core) ([]user.User, error) {
+		usrs := make([]user.User, 2)
+
+		nu1 := user.NewUser{
+			Name:            "Bill Kennedy",
+			Email:           mail.Address{Address: "bill@ardanlabs.com"},
+			Roles:           []user.Role{user.RoleAdmin},
+			Department:      "IT",
+			Password:        "12345",
+			PasswordConfirm: "12345",
+		}
+		usr1, err := usrCore.Create(ctx, nu1)
+		if err != nil {
+			return nil, fmt.Errorf("seeding user 1 : %w", err)
+		}
+
+		nu2 := user.NewUser{
+			Name:            "Ale Kennedy",
+			Email:           mail.Address{Address: "ale@ardanlabs.com"},
+			Roles:           []user.Role{user.RoleUser},
+			Department:      "IT",
+			Password:        "12345",
+			PasswordConfirm: "12345",
+		}
+		usr2, err := usrCore.Create(ctx, nu2)
+		if err != nil {
+			return nil, fmt.Errorf("seeding user 2 : %w", err)
+		}
+
+		usrs[0] = usr1
+		usrs[1] = usr2
+
+		return usrs, nil
+	}
+
+	// -------------------------------------------------------------------------
+
 	test := dbtest.NewTest(t, c, "Test_User/paging")
 	defer func() {
 		if r := recover(); r != nil {
@@ -205,6 +242,13 @@ func paging(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
+	t.Log("Go seeding ...")
+
+	_, err := seed(ctx, api.User)
+	if err != nil {
+		t.Fatalf("Seeding error: %s", err)
+	}
+
 	// -------------------------------------------------------------------------
 
 	name := "Ale Kennedy"
@@ -218,7 +262,7 @@ func paging(t *testing.T) {
 		t.Fatalf("Should be able to retrieve user count %q : %s.", name, err)
 	}
 
-	if len(users1) != n && users1[0].Name == name {
+	if len(users1) == 0 || (len(users1) != n && users1[0].Name == name) {
 		t.Errorf("Should have a single user for %q", name)
 	}
 
@@ -233,11 +277,11 @@ func paging(t *testing.T) {
 		t.Fatalf("Should be able to retrieve user count %q : %s.", name, err)
 	}
 
-	if len(users2) != n && users2[0].Name == name {
+	if len(users2) == 0 || (len(users2) != n && users2[0].Name == name) {
 		t.Errorf("Should have a single user for %q.", name)
 	}
 
-	users3, err := api.User.Query(ctx, user.QueryFilter{}, user.DefaultOrderBy, 1, 2)
+	users3, err := api.User.Query(ctx, user.QueryFilter{}, user.DefaultOrderBy, 1, 4)
 	if err != nil {
 		t.Fatalf("Should be able to retrieve 2 users for page 1 : %s.", err)
 	}
@@ -247,7 +291,7 @@ func paging(t *testing.T) {
 		t.Fatalf("Should be able to retrieve user count %q : %s.", name, err)
 	}
 
-	if len(users3) != n {
+	if len(users3) == 0 || len(users3) != n {
 		t.Logf("got: %v", len(users3))
 		t.Logf("exp: %v", n)
 		t.Errorf("Should have 2 users for page 1")

@@ -256,7 +256,7 @@ func paging(t *testing.T) {
 		t.Fatalf("Should be able to retrieve home count %q : %s", homeType, err)
 	}
 
-	if len(hme1) != n {
+	if len(hme1) == 0 || len(hme1) != n {
 		t.Log("got:", len(hme1))
 		t.Log("exp:", n)
 		t.Fatal("Should have the correct number of homes")
@@ -272,7 +272,7 @@ func paging(t *testing.T) {
 		t.Fatalf("Should be able to retrieve home count %q : %s", homeType, err)
 	}
 
-	if len(hme2) != n {
+	if len(hme2) == 0 || len(hme2) != n {
 		t.Logf("got: %v", len(hme2))
 		t.Logf("exp: %v", n)
 		t.Fatalf("Should have 2 homes for page ")

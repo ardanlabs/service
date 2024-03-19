@@ -253,7 +253,7 @@ func paging(t *testing.T) {
 		t.Fatalf("Should be able to retrieve product count %q : %s", name, err)
 	}
 
-	if len(prd1) != n && prd1[0].Name == name {
+	if len(prd1) == 0 || (len(prd1) != n && prd1[0].Name == name) {
 		t.Log("got:", len(prd1))
 		t.Log("exp:", n)
 		t.Fatalf("Should have a single product for %q", name)
@@ -270,7 +270,7 @@ func paging(t *testing.T) {
 		t.Fatalf("Should be able to retrieve product count %q : %s", name, err)
 	}
 
-	if len(prd2) != n && prd2[0].Name == name {
+	if len(prd2) == 0 || (len(prd2) != n && prd2[0].Name == name) {
 		t.Log("got:", len(prd2))
 		t.Log("exp:", n)
 		t.Fatalf("Should have a single product for %q", name)
@@ -286,7 +286,7 @@ func paging(t *testing.T) {
 		t.Fatalf("Should be able to retrieve product count %q : %s", name, err)
 	}
 
-	if len(prd3) != n {
+	if len(prd3) == 0 || len(prd3) != n {
 		t.Logf("got: %v", len(prd3))
 		t.Logf("exp: %v", n)
 		t.Fatalf("Should have 2 products for page ")
