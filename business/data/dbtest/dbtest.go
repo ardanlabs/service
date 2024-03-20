@@ -21,7 +21,7 @@ import (
 	"github.com/ardanlabs/service/business/core/views/vproduct/stores/vproductdb"
 	"github.com/ardanlabs/service/business/data/migrate"
 	"github.com/ardanlabs/service/business/data/sqldb"
-	"github.com/ardanlabs/service/business/web/v1/auth"
+	"github.com/ardanlabs/service/business/web/auth"
 	"github.com/ardanlabs/service/foundation/docker"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/web"

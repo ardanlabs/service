@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/ardanlabs/service/business/core/{{.DomainL}}"
-	"github.com/ardanlabs/service/business/web/v1/order"
+	"github.com/ardanlabs/service/business/web/order"
 	"github.com/ardanlabs/service/foundation/validate"
 )
 

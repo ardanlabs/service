@@ -8,7 +8,7 @@ import (
 
 	"github.com/ardanlabs/service/business/core/views/vproduct"
 	"github.com/ardanlabs/service/business/data/sqldb"
-	"github.com/ardanlabs/service/business/web/v1/order"
+	"github.com/ardanlabs/service/business/web/order"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/jmoiron/sqlx"
 )
