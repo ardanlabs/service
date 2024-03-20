@@ -60,7 +60,7 @@ func AddRequests(ctx context.Context) int64 {
 	v, ok := ctx.Value(key).(*metrics)
 	if ok {
 		v.requests.Add(1)
-		return v.goroutines.Value()
+		return v.requests.Value()
 	}
 
 	return 0
