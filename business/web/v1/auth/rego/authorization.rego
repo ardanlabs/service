@@ -1,7 +1,6 @@
 package ardan.rego
 
-import future.keywords.if
-import future.keywords.in
+import rego.v1
 
 default rule_any := false
 
