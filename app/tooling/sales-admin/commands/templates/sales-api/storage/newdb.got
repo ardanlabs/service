@@ -154,7 +154,7 @@ func (s *Store) Count(ctx context.Context, filter {{.DomainL}}.QueryFilter) (int
 		Count int `db:"count"`
 	}
 	if err := database.NamedQueryStruct(ctx, s.log, s.db, buf.String(), data, &count); err != nil {
-		return 0, fmt.Errorf("namedquerystruct: %w", err)
+		return 0, fmt.Errorf("db: %w", err)
 	}
 
 	return count.Count, nil
@@ -179,9 +179,9 @@ func (s *Store) QueryByID(ctx context.Context, {{.DomainL}}ID uuid.UUID) ({{.Dom
 	var db{{.DomainVarU}} db{{.DomainU}}
 	if err := database.NamedQueryStruct(ctx, s.log, s.db, q, data, &db{{.DomainVarU}}); err != nil {
 		if errors.Is(err, database.ErrDBNotFound) {
-			return {{.DomainL}}.{{.DomainU}}{}, fmt.Errorf("namedquerystruct: %w", {{.DomainL}}.ErrNotFound)
+			return {{.DomainL}}.{{.DomainU}}{}, fmt.Errorf("db: %w", {{.DomainL}}.ErrNotFound)
 		}
-		return {{.DomainL}}.{{.DomainU}}{}, fmt.Errorf("namedquerystruct: %w", err)
+		return {{.DomainL}}.{{.DomainU}}{}, fmt.Errorf("db: %w", err)
 	}
 
 	return toCore{{.DomainU}}(db{{.DomainVarU}})
