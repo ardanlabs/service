@@ -12,12 +12,12 @@ import (
 )
 
 type handlers struct {
-	vProduct *vproduct.Core
+	vproduct *vproduct.Core
 }
 
-func new(vProduct *vproduct.Core) *handlers {
+func new(vproduct *vproduct.Core) *handlers {
 	return &handlers{
-		vProduct: vProduct,
+		vproduct: vproduct,
 	}
 }
 
@@ -38,12 +38,12 @@ func (h *handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Req
 		return err
 	}
 
-	prds, err := h.vProduct.Query(ctx, filter, orderBy, pg.Number, pg.RowsPerPage)
+	prds, err := h.vproduct.Query(ctx, filter, orderBy, pg.Number, pg.RowsPerPage)
 	if err != nil {
 		return fmt.Errorf("query: %w", err)
 	}
 
-	total, err := h.vProduct.Count(ctx, filter)
+	total, err := h.vproduct.Count(ctx, filter)
 	if err != nil {
 		return fmt.Errorf("count: %w", err)
 	}
