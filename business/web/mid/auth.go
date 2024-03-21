@@ -31,7 +31,7 @@ func Authenticate(a *auth.Auth) web.MidHandler {
 
 			subjectID, err := uuid.Parse(claims.Subject)
 			if err != nil {
-				return errs.NewTrustedError(ErrInvalidID, http.StatusBadRequest)
+				return errs.NewTrusted(ErrInvalidID, http.StatusBadRequest)
 			}
 
 			ctx = setUserID(ctx, subjectID)

@@ -44,14 +44,14 @@ func AuthorizeHome(a *auth.Auth, hmeCore *home.Core) web.MidHandler {
 				var err error
 				homeID, err := uuid.Parse(id)
 				if err != nil {
-					return errs.NewTrustedError(ErrInvalidID, http.StatusBadRequest)
+					return errs.NewTrusted(ErrInvalidID, http.StatusBadRequest)
 				}
 
 				hme, err := hmeCore.QueryByID(ctx, homeID)
 				if err != nil {
 					switch {
 					case errors.Is(err, home.ErrNotFound):
-						return errs.NewTrustedError(err, http.StatusNoContent)
+						return errs.NewTrusted(err, http.StatusNoContent)
 					default:
 						return fmt.Errorf("querybyid: homeID[%s]: %w", homeID, err)
 					}

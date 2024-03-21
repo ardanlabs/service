@@ -37,8 +37,8 @@ func productDelete401(sd seedData) []tableData {
 			token:      "",
 			method:     http.MethodDelete,
 			statusCode: http.StatusUnauthorized,
-			resp:       &errs.ErrorResponse{},
-			expResp:    &errs.ErrorResponse{Error: "Unauthorized"},
+			resp:       &errs.Response{},
+			expResp:    &errs.Response{Error: "Unauthorized"},
 			cmpFunc: func(x interface{}, y interface{}) string {
 				return cmp.Diff(x, y)
 			},
@@ -49,8 +49,8 @@ func productDelete401(sd seedData) []tableData {
 			token:      sd.users[1].token + "A",
 			method:     http.MethodDelete,
 			statusCode: http.StatusUnauthorized,
-			resp:       &errs.ErrorResponse{},
-			expResp:    &errs.ErrorResponse{Error: "Unauthorized"},
+			resp:       &errs.Response{},
+			expResp:    &errs.Response{Error: "Unauthorized"},
 			cmpFunc: func(x interface{}, y interface{}) string {
 				return cmp.Diff(x, y)
 			},
@@ -61,8 +61,8 @@ func productDelete401(sd seedData) []tableData {
 			token:      sd.users[0].token,
 			method:     http.MethodDelete,
 			statusCode: http.StatusUnauthorized,
-			resp:       &errs.ErrorResponse{},
-			expResp:    &errs.ErrorResponse{Error: "Unauthorized"},
+			resp:       &errs.Response{},
+			expResp:    &errs.Response{Error: "Unauthorized"},
 			cmpFunc: func(x interface{}, y interface{}) string {
 				return cmp.Diff(x, y)
 			},

@@ -36,12 +36,12 @@ func new(product *product.Core, user *user.Core) *handlers {
 func (h *handlers) create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app AppNewProduct
 	if err := web.Decode(r, &app); err != nil {
-		return errs.NewTrustedError(err, http.StatusBadRequest)
+		return errs.NewTrusted(err, http.StatusBadRequest)
 	}
 
 	np, err := toCoreNewProduct(ctx, app)
 	if err != nil {
-		return errs.NewTrustedError(err, http.StatusBadRequest)
+		return errs.NewTrusted(err, http.StatusBadRequest)
 	}
 
 	prd, err := h.product.Create(ctx, np)
@@ -56,7 +56,7 @@ func (h *handlers) create(ctx context.Context, w http.ResponseWriter, r *http.Re
 func (h *handlers) update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app AppUpdateProduct
 	if err := web.Decode(r, &app); err != nil {
-		return errs.NewTrustedError(err, http.StatusBadRequest)
+		return errs.NewTrusted(err, http.StatusBadRequest)
 	}
 
 	prd, err := mid.GetProduct(ctx)

@@ -71,8 +71,8 @@ func productUpdate400(sd seedData) []tableData {
 				Cost:     dbtest.FloatPointer(-1.0),
 				Quantity: dbtest.IntPointer(0),
 			},
-			resp: &errs.ErrorResponse{},
-			expResp: &errs.ErrorResponse{
+			resp: &errs.Response{},
+			expResp: &errs.Response{
 				Error:  "data validation error",
 				Fields: map[string]string{"cost": "cost must be 0 or greater", "quantity": "quantity must be 1 or greater"},
 			},
@@ -93,8 +93,8 @@ func productUpdate401(sd seedData) []tableData {
 			token:      "",
 			method:     http.MethodPut,
 			statusCode: http.StatusUnauthorized,
-			resp:       &errs.ErrorResponse{},
-			expResp:    &errs.ErrorResponse{Error: "Unauthorized"},
+			resp:       &errs.Response{},
+			expResp:    &errs.Response{Error: "Unauthorized"},
 			cmpFunc: func(x interface{}, y interface{}) string {
 				return cmp.Diff(x, y)
 			},
@@ -105,8 +105,8 @@ func productUpdate401(sd seedData) []tableData {
 			token:      sd.users[1].token + "A",
 			method:     http.MethodPut,
 			statusCode: http.StatusUnauthorized,
-			resp:       &errs.ErrorResponse{},
-			expResp:    &errs.ErrorResponse{Error: "Unauthorized"},
+			resp:       &errs.Response{},
+			expResp:    &errs.Response{Error: "Unauthorized"},
 			cmpFunc: func(x interface{}, y interface{}) string {
 				return cmp.Diff(x, y)
 			},
@@ -122,8 +122,8 @@ func productUpdate401(sd seedData) []tableData {
 				Cost:     dbtest.FloatPointer(10.34),
 				Quantity: dbtest.IntPointer(10),
 			},
-			resp:    &errs.ErrorResponse{},
-			expResp: &errs.ErrorResponse{Error: "Unauthorized"},
+			resp:    &errs.Response{},
+			expResp: &errs.Response{Error: "Unauthorized"},
 			cmpFunc: func(x interface{}, y interface{}) string {
 				return cmp.Diff(x, y)
 			},

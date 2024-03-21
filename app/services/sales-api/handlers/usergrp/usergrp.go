@@ -35,18 +35,18 @@ func new(user *user.Core, auth *auth.Auth) *handlers {
 func (h *handlers) create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app AppNewUser
 	if err := web.Decode(r, &app); err != nil {
-		return errs.NewTrustedError(err, http.StatusBadRequest)
+		return errs.NewTrusted(err, http.StatusBadRequest)
 	}
 
 	nc, err := toCoreNewUser(app)
 	if err != nil {
-		return errs.NewTrustedError(err, http.StatusBadRequest)
+		return errs.NewTrusted(err, http.StatusBadRequest)
 	}
 
 	usr, err := h.user.Create(ctx, nc)
 	if err != nil {
 		if errors.Is(err, user.ErrUniqueEmail) {
-			return errs.NewTrustedError(err, http.StatusConflict)
+			return errs.NewTrusted(err, http.StatusConflict)
 		}
 		return fmt.Errorf("create: usr[%+v]: %w", usr, err)
 	}
@@ -58,12 +58,12 @@ func (h *handlers) create(ctx context.Context, w http.ResponseWriter, r *http.Re
 func (h *handlers) update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app AppUpdateUser
 	if err := web.Decode(r, &app); err != nil {
-		return errs.NewTrustedError(err, http.StatusBadRequest)
+		return errs.NewTrusted(err, http.StatusBadRequest)
 	}
 
 	uu, err := toCoreUpdateUser(app)
 	if err != nil {
-		return errs.NewTrustedError(err, http.StatusBadRequest)
+		return errs.NewTrusted(err, http.StatusBadRequest)
 	}
 
 	usr, err := mid.GetUser(ctx)
@@ -154,7 +154,7 @@ func (h *handlers) token(ctx context.Context, w http.ResponseWriter, r *http.Req
 	if err != nil {
 		switch {
 		case errors.Is(err, user.ErrNotFound):
-			return errs.NewTrustedError(err, http.StatusNotFound)
+			return errs.NewTrusted(err, http.StatusNotFound)
 		case errors.Is(err, user.ErrAuthenticationFailure):
 			return auth.NewAuthError(err.Error())
 		default:

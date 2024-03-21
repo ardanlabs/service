@@ -70,8 +70,8 @@ func userCreate400(sd seedData) []tableData {
 			method:     http.MethodPost,
 			statusCode: http.StatusBadRequest,
 			model:      &usergrp.AppNewUser{},
-			resp:       &errs.ErrorResponse{},
-			expResp: &errs.ErrorResponse{
+			resp:       &errs.Response{},
+			expResp: &errs.Response{
 				Error:  "data validation error",
 				Fields: map[string]string{"email": "email is a required field", "name": "name is a required field", "password": "password is a required field", "roles": "roles is a required field"},
 			},
@@ -93,8 +93,8 @@ func userCreate400(sd seedData) []tableData {
 				Password:        "123",
 				PasswordConfirm: "123",
 			},
-			resp: &errs.ErrorResponse{},
-			expResp: &errs.ErrorResponse{
+			resp: &errs.Response{},
+			expResp: &errs.Response{
 				Error: "parse: invalid role \"BAD ROLE\"",
 			},
 			cmpFunc: func(x interface{}, y interface{}) string {
@@ -114,8 +114,8 @@ func userCreate401(sd seedData) []tableData {
 			token:      "",
 			method:     http.MethodPost,
 			statusCode: http.StatusUnauthorized,
-			resp:       &errs.ErrorResponse{},
-			expResp: &errs.ErrorResponse{
+			resp:       &errs.Response{},
+			expResp: &errs.Response{
 				Error: "Unauthorized",
 			},
 			cmpFunc: func(x interface{}, y interface{}) string {
@@ -128,8 +128,8 @@ func userCreate401(sd seedData) []tableData {
 			token:      sd.admins[0].token[:10],
 			method:     http.MethodPost,
 			statusCode: http.StatusUnauthorized,
-			resp:       &errs.ErrorResponse{},
-			expResp: &errs.ErrorResponse{
+			resp:       &errs.Response{},
+			expResp: &errs.Response{
 				Error: "Unauthorized",
 			},
 			cmpFunc: func(x interface{}, y interface{}) string {
@@ -142,8 +142,8 @@ func userCreate401(sd seedData) []tableData {
 			token:      sd.admins[0].token + "A",
 			method:     http.MethodPost,
 			statusCode: http.StatusUnauthorized,
-			resp:       &errs.ErrorResponse{},
-			expResp: &errs.ErrorResponse{
+			resp:       &errs.Response{},
+			expResp: &errs.Response{
 				Error: "Unauthorized",
 			},
 			cmpFunc: func(x interface{}, y interface{}) string {
@@ -156,8 +156,8 @@ func userCreate401(sd seedData) []tableData {
 			token:      sd.users[0].token,
 			method:     http.MethodPost,
 			statusCode: http.StatusUnauthorized,
-			resp:       &errs.ErrorResponse{},
-			expResp: &errs.ErrorResponse{
+			resp:       &errs.Response{},
+			expResp: &errs.Response{
 				Error: "Unauthorized",
 			},
 			cmpFunc: func(x interface{}, y interface{}) string {

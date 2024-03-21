@@ -28,16 +28,16 @@ func Errors(log *logger.Logger) web.MidHandler {
 			span.RecordError(err)
 			span.End()
 
-			var er errs.ErrorResponse
+			var er errs.Response
 			var status int
 
 			switch {
-			case errs.IsTrustedError(err):
-				trsErr := errs.GetTrustedError(err)
+			case errs.IsTrusted(err):
+				trsErr := errs.GetTrusted(err)
 
 				if validate.IsFieldErrors(trsErr.Err) {
 					fieldErrors := validate.GetFieldErrors(trsErr.Err)
-					er = errs.ErrorResponse{
+					er = errs.Response{
 						Error:  "data validation error",
 						Fields: fieldErrors.Fields(),
 					}
@@ -45,19 +45,19 @@ func Errors(log *logger.Logger) web.MidHandler {
 					break
 				}
 
-				er = errs.ErrorResponse{
+				er = errs.Response{
 					Error: trsErr.Error(),
 				}
 				status = trsErr.Status
 
 			case auth.IsAuthError(err):
-				er = errs.ErrorResponse{
+				er = errs.Response{
 					Error: http.StatusText(http.StatusUnauthorized),
 				}
 				status = http.StatusUnauthorized
 
 			default:
-				er = errs.ErrorResponse{
+				er = errs.Response{
 					Error: http.StatusText(http.StatusInternalServerError),
 				}
 				status = http.StatusInternalServerError

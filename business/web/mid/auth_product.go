@@ -44,14 +44,14 @@ func AuthorizeProduct(a *auth.Auth, prdCore *product.Core) web.MidHandler {
 				var err error
 				productID, err := uuid.Parse(id)
 				if err != nil {
-					return errs.NewTrustedError(ErrInvalidID, http.StatusBadRequest)
+					return errs.NewTrusted(ErrInvalidID, http.StatusBadRequest)
 				}
 
 				prd, err := prdCore.QueryByID(ctx, productID)
 				if err != nil {
 					switch {
 					case errors.Is(err, product.ErrNotFound):
-						return errs.NewTrustedError(err, http.StatusNoContent)
+						return errs.NewTrusted(err, http.StatusNoContent)
 					default:
 						return fmt.Errorf("querybyid: productID[%s]: %w", productID, err)
 					}

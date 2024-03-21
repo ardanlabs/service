@@ -33,12 +33,12 @@ func new(home *home.Core) *handlers {
 func (h *handlers) create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app AppNewHome
 	if err := web.Decode(r, &app); err != nil {
-		return errs.NewTrustedError(err, http.StatusBadRequest)
+		return errs.NewTrusted(err, http.StatusBadRequest)
 	}
 
 	nh, err := toCoreNewHome(ctx, app)
 	if err != nil {
-		return errs.NewTrustedError(err, http.StatusBadRequest)
+		return errs.NewTrusted(err, http.StatusBadRequest)
 	}
 
 	hme, err := h.home.Create(ctx, nh)
@@ -53,12 +53,12 @@ func (h *handlers) create(ctx context.Context, w http.ResponseWriter, r *http.Re
 func (h *handlers) update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app AppUpdateHome
 	if err := web.Decode(r, &app); err != nil {
-		return errs.NewTrustedError(err, http.StatusBadRequest)
+		return errs.NewTrusted(err, http.StatusBadRequest)
 	}
 
 	uh, err := toCoreUpdateHome(app)
 	if err != nil {
-		return errs.NewTrustedError(err, http.StatusBadRequest)
+		return errs.NewTrusted(err, http.StatusBadRequest)
 	}
 
 	hme, err := mid.GetHome(ctx)

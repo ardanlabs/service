@@ -61,14 +61,14 @@ func AuthorizeUser(a *auth.Auth, usrCore *user.Core) web.MidHandler {
 				var err error
 				userID, err = uuid.Parse(id)
 				if err != nil {
-					return errs.NewTrustedError(ErrInvalidID, http.StatusBadRequest)
+					return errs.NewTrusted(ErrInvalidID, http.StatusBadRequest)
 				}
 
 				usr, err := usrCore.QueryByID(ctx, userID)
 				if err != nil {
 					switch {
 					case errors.Is(err, user.ErrNotFound):
-						return errs.NewTrustedError(err, http.StatusNoContent)
+						return errs.NewTrusted(err, http.StatusNoContent)
 					default:
 						return fmt.Errorf("querybyid: userID[%s]: %w", userID, err)
 					}

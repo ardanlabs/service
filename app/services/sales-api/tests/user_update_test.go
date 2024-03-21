@@ -75,8 +75,8 @@ func userUpdate400(sd seedData) []tableData {
 				Email:           dbtest.StringPointer("bill@"),
 				PasswordConfirm: dbtest.StringPointer("jack"),
 			},
-			resp: &errs.ErrorResponse{},
-			expResp: &errs.ErrorResponse{
+			resp: &errs.Response{},
+			expResp: &errs.Response{
 				Error:  "data validation error",
 				Fields: map[string]string{"email": "email must be a valid email address", "passwordConfirm": "passwordConfirm must be equal to Password"},
 			},
@@ -93,8 +93,8 @@ func userUpdate400(sd seedData) []tableData {
 			model: &usergrp.AppUpdateUser{
 				Roles: []string{"BAD ROLE"},
 			},
-			resp: &errs.ErrorResponse{},
-			expResp: &errs.ErrorResponse{
+			resp: &errs.Response{},
+			expResp: &errs.Response{
 				Error: "parse: invalid role \"BAD ROLE\"",
 			},
 			cmpFunc: func(x interface{}, y interface{}) string {
@@ -114,8 +114,8 @@ func userUpdate401(sd seedData) []tableData {
 			token:      "",
 			method:     http.MethodPut,
 			statusCode: http.StatusUnauthorized,
-			resp:       &errs.ErrorResponse{},
-			expResp:    &errs.ErrorResponse{Error: "Unauthorized"},
+			resp:       &errs.Response{},
+			expResp:    &errs.Response{Error: "Unauthorized"},
 			cmpFunc: func(x interface{}, y interface{}) string {
 				return cmp.Diff(x, y)
 			},
@@ -126,8 +126,8 @@ func userUpdate401(sd seedData) []tableData {
 			token:      sd.users[0].token + "A",
 			method:     http.MethodPut,
 			statusCode: http.StatusUnauthorized,
-			resp:       &errs.ErrorResponse{},
-			expResp:    &errs.ErrorResponse{Error: "Unauthorized"},
+			resp:       &errs.Response{},
+			expResp:    &errs.Response{Error: "Unauthorized"},
 			cmpFunc: func(x interface{}, y interface{}) string {
 				return cmp.Diff(x, y)
 			},
@@ -146,8 +146,8 @@ func userUpdate401(sd seedData) []tableData {
 				Password:        dbtest.StringPointer("123"),
 				PasswordConfirm: dbtest.StringPointer("123"),
 			},
-			resp:    &errs.ErrorResponse{},
-			expResp: &errs.ErrorResponse{Error: "Unauthorized"},
+			resp:    &errs.Response{},
+			expResp: &errs.Response{Error: "Unauthorized"},
 			cmpFunc: func(x interface{}, y interface{}) string {
 				return cmp.Diff(x, y)
 			},

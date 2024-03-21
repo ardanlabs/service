@@ -89,8 +89,8 @@ func homeUpdate400(sd seedData) []tableData {
 					Country:  dbtest.StringPointer(""),
 				},
 			},
-			resp: &errs.ErrorResponse{},
-			expResp: &errs.ErrorResponse{
+			resp: &errs.Response{},
+			expResp: &errs.Response{
 				Error:  "data validation error",
 				Fields: map[string]string{"address1": "address1 must be at least 1 character in length", "country": "Key: 'AppUpdateHome.address.country' Error:Field validation for 'country' failed on the 'iso3166_1_alpha2' tag", "state": "state must be at least 1 character in length", "zipCode": "zipCode must be a valid numeric value"},
 			},
@@ -108,8 +108,8 @@ func homeUpdate400(sd seedData) []tableData {
 				Type:    dbtest.StringPointer("BAD TYPE"),
 				Address: &homegrp.AppUpdateAddress{},
 			},
-			resp: &errs.ErrorResponse{},
-			expResp: &errs.ErrorResponse{
+			resp: &errs.Response{},
+			expResp: &errs.Response{
 				Error: "parse: invalid type \"BAD TYPE\"",
 			},
 			cmpFunc: func(x interface{}, y interface{}) string {
@@ -129,8 +129,8 @@ func homeUpdate401(sd seedData) []tableData {
 			token:      "",
 			method:     http.MethodPut,
 			statusCode: http.StatusUnauthorized,
-			resp:       &errs.ErrorResponse{},
-			expResp:    &errs.ErrorResponse{Error: "Unauthorized"},
+			resp:       &errs.Response{},
+			expResp:    &errs.Response{Error: "Unauthorized"},
 			cmpFunc: func(x interface{}, y interface{}) string {
 				return cmp.Diff(x, y)
 			},
@@ -141,8 +141,8 @@ func homeUpdate401(sd seedData) []tableData {
 			token:      sd.users[0].token + "A",
 			method:     http.MethodPut,
 			statusCode: http.StatusUnauthorized,
-			resp:       &errs.ErrorResponse{},
-			expResp:    &errs.ErrorResponse{Error: "Unauthorized"},
+			resp:       &errs.Response{},
+			expResp:    &errs.Response{Error: "Unauthorized"},
 			cmpFunc: func(x interface{}, y interface{}) string {
 				return cmp.Diff(x, y)
 			},
@@ -164,8 +164,8 @@ func homeUpdate401(sd seedData) []tableData {
 					Country:  dbtest.StringPointer("US"),
 				},
 			},
-			resp:    &errs.ErrorResponse{},
-			expResp: &errs.ErrorResponse{Error: "Unauthorized"},
+			resp:    &errs.Response{},
+			expResp: &errs.Response{Error: "Unauthorized"},
 			cmpFunc: func(x interface{}, y interface{}) string {
 				return cmp.Diff(x, y)
 			},

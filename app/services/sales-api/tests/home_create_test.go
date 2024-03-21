@@ -76,8 +76,8 @@ func homeCreate400(sd seedData) []tableData {
 			method:     http.MethodPost,
 			statusCode: http.StatusBadRequest,
 			model:      &homegrp.AppNewHome{},
-			resp:       &errs.ErrorResponse{},
-			expResp: &errs.ErrorResponse{
+			resp:       &errs.Response{},
+			expResp: &errs.Response{
 				Error:  "data validation error",
 				Fields: map[string]string{"address1": "address1 is a required field", "city": "city is a required field", "country": "country is a required field", "state": "state is a required field", "type": "type is a required field", "zipCode": "zipCode is a required field"},
 			},
@@ -101,8 +101,8 @@ func homeCreate400(sd seedData) []tableData {
 					Country:  "US",
 				},
 			},
-			resp: &errs.ErrorResponse{},
-			expResp: &errs.ErrorResponse{
+			resp: &errs.Response{},
+			expResp: &errs.Response{
 				Error: "parse: invalid type \"BAD TYPE\"",
 			},
 			cmpFunc: func(x interface{}, y interface{}) string {
@@ -122,8 +122,8 @@ func homeCreate401(sd seedData) []tableData {
 			token:      "",
 			method:     http.MethodPost,
 			statusCode: http.StatusUnauthorized,
-			resp:       &errs.ErrorResponse{},
-			expResp: &errs.ErrorResponse{
+			resp:       &errs.Response{},
+			expResp: &errs.Response{
 				Error: "Unauthorized",
 			},
 			cmpFunc: func(x interface{}, y interface{}) string {
@@ -136,8 +136,8 @@ func homeCreate401(sd seedData) []tableData {
 			token:      sd.admins[0].token[:10],
 			method:     http.MethodPost,
 			statusCode: http.StatusUnauthorized,
-			resp:       &errs.ErrorResponse{},
-			expResp: &errs.ErrorResponse{
+			resp:       &errs.Response{},
+			expResp: &errs.Response{
 				Error: "Unauthorized",
 			},
 			cmpFunc: func(x interface{}, y interface{}) string {
@@ -150,8 +150,8 @@ func homeCreate401(sd seedData) []tableData {
 			token:      sd.admins[0].token + "A",
 			method:     http.MethodPost,
 			statusCode: http.StatusUnauthorized,
-			resp:       &errs.ErrorResponse{},
-			expResp: &errs.ErrorResponse{
+			resp:       &errs.Response{},
+			expResp: &errs.Response{
 				Error: "Unauthorized",
 			},
 			cmpFunc: func(x interface{}, y interface{}) string {
@@ -164,8 +164,8 @@ func homeCreate401(sd seedData) []tableData {
 			token:      sd.admins[0].token,
 			method:     http.MethodPost,
 			statusCode: http.StatusUnauthorized,
-			resp:       &errs.ErrorResponse{},
-			expResp: &errs.ErrorResponse{
+			resp:       &errs.Response{},
+			expResp: &errs.Response{
 				Error: "Unauthorized",
 			},
 			cmpFunc: func(x interface{}, y interface{}) string {
