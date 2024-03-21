@@ -8,7 +8,6 @@ import (
 	"net/http"
 
 	"github.com/ardanlabs/service/business/core/crud/product"
-	"github.com/ardanlabs/service/business/core/crud/user"
 	"github.com/ardanlabs/service/business/web/errs"
 	"github.com/ardanlabs/service/business/web/mid"
 	"github.com/ardanlabs/service/business/web/page"
@@ -22,13 +21,11 @@ var (
 
 type handlers struct {
 	product *product.Core
-	user    *user.Core
 }
 
-func new(product *product.Core, user *user.Core) *handlers {
+func new(product *product.Core) *handlers {
 	return &handlers{
 		product: product,
-		user:    user,
 	}
 }
 

@@ -36,7 +36,7 @@ func Routes(app *web.App, cfg Config) {
 	ruleUserOnly := mid.Authorize(cfg.Auth, auth.RuleUserOnly)
 	ruleAuthorizeProduct := mid.AuthorizeProduct(cfg.Auth, prdCore)
 
-	hdl := new(prdCore, usrCore)
+	hdl := new(prdCore)
 	app.Handle(http.MethodGet, version, "/products", hdl.query, authen, ruleAny)
 	app.Handle(http.MethodGet, version, "/products/{product_id}", hdl.queryByID, authen, ruleAuthorizeProduct)
 	app.Handle(http.MethodPost, version, "/products", hdl.create, authen, ruleUserOnly)
