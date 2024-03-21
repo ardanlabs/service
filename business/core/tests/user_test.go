@@ -57,16 +57,16 @@ func userCrud(t *testing.T) {
 
 	// -------------------------------------------------------------------------
 
-	test := dbtest.NewTest(t, c, "Test_User/crud")
+	dbTest := dbtest.NewTest(t, c, "Test_User/crud")
 	defer func() {
 		if r := recover(); r != nil {
 			t.Log(r)
 			t.Error(string(debug.Stack()))
 		}
-		test.Teardown()
+		dbTest.Teardown()
 	}()
 
-	api := test.CoreAPIs
+	api := dbTest.CoreAPIs
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
