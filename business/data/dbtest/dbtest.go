@@ -58,12 +58,10 @@ func StopDB(c *docker.Container) {
 type Test struct {
 	DB       *sqlx.DB
 	Log      *logger.Logger
+	Auth     *auth.Auth
 	CoreAPIs CoreAPIs
 	Teardown func()
 	t        *testing.T
-	V1       struct {
-		Auth *auth.Auth
-	}
 }
 
 // NewTest creates a test database inside a Docker container. It creates the
@@ -158,14 +156,10 @@ func NewTest(t *testing.T, c *docker.Container, testName string) *Test {
 	test := Test{
 		DB:       db,
 		Log:      log,
+		Auth:     a,
 		CoreAPIs: coreAPIs,
 		Teardown: teardown,
 		t:        t,
-		V1: struct {
-			Auth *auth.Auth
-		}{
-			Auth: a,
-		},
 	}
 
 	return &test
@@ -191,7 +185,7 @@ func (test *Test) TokenV1(email string, pass string) string {
 		Roles: dbUsr.Roles,
 	}
 
-	token, err := test.V1.Auth.GenerateToken(kid, claims)
+	token, err := test.Auth.GenerateToken(kid, claims)
 	if err != nil {
 		test.t.Fatal(err)
 	}

@@ -26,7 +26,7 @@ func Test_VProduct(t *testing.T) {
 		Handler: mux.WebAPI(mux.Config{
 			Shutdown: make(chan os.Signal, 1),
 			Log:      dbTest.Log,
-			Auth:     dbTest.V1.Auth,
+			Auth:     dbTest.Auth,
 			DB:       dbTest.DB,
 		}, all.Routes()),
 		userToken:  dbTest.TokenV1("user@example.com", "gophers"),

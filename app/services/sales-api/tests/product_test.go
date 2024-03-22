@@ -27,7 +27,7 @@ func Test_Product(t *testing.T) {
 			Shutdown: make(chan os.Signal, 1),
 			Log:      dbTest.Log,
 			Delegate: dbTest.CoreAPIs.Delegate,
-			Auth:     dbTest.V1.Auth,
+			Auth:     dbTest.Auth,
 			DB:       dbTest.DB,
 		}, all.Routes()),
 		userToken:  dbTest.TokenV1("user@example.com", "gophers"),
