@@ -35,7 +35,7 @@ func Test_VProduct(t *testing.T) {
 
 	// -------------------------------------------------------------------------
 
-	sd, err := createProductSeed(dbTest)
+	sd, err := createVProductSeed(dbTest)
 	if err != nil {
 		t.Fatalf("Seeding error: %s", err)
 	}
