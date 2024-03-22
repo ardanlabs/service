@@ -126,16 +126,13 @@ func NewTest(t *testing.T, c *docker.Container, testName string) *Test {
 	var buf bytes.Buffer
 	log := logger.New(&buf, logger.LevelInfo, "TEST", func(context.Context) string { return web.GetTraceID(ctx) })
 
-	coreAPIs := newCoreAPIs(log, db)
-
 	// -------------------------------------------------------------------------
 
-	cfg := auth.Config{
+	auth, err := auth.New(auth.Config{
 		Log:       log,
 		DB:        db,
 		KeyLookup: &keyStore{},
-	}
-	a, err := auth.New(cfg)
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -156,8 +153,8 @@ func NewTest(t *testing.T, c *docker.Container, testName string) *Test {
 	test := Test{
 		DB:       db,
 		Log:      log,
-		Auth:     a,
-		CoreAPIs: coreAPIs,
+		Auth:     auth,
+		CoreAPIs: newCoreAPIs(log, db),
 		Teardown: teardown,
 		t:        t,
 	}
