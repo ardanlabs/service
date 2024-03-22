@@ -3,10 +3,10 @@ package tests
 import (
 	"time"
 
-	"github.com/ardanlabs/service/app/services/sales-api/handlers/homegrp"
-	"github.com/ardanlabs/service/app/services/sales-api/handlers/productgrp"
-	"github.com/ardanlabs/service/app/services/sales-api/handlers/usergrp"
-	"github.com/ardanlabs/service/app/services/sales-api/handlers/vproductgrp"
+	"github.com/ardanlabs/service/app/services/sales-api/handlers/crud/homegrp"
+	"github.com/ardanlabs/service/app/services/sales-api/handlers/crud/productgrp"
+	"github.com/ardanlabs/service/app/services/sales-api/handlers/crud/usergrp"
+	"github.com/ardanlabs/service/app/services/sales-api/handlers/views/vproductgrp"
 	"github.com/ardanlabs/service/business/core/crud/home"
 	"github.com/ardanlabs/service/business/core/crud/product"
 	"github.com/ardanlabs/service/business/core/crud/user"

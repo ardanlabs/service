@@ -2,12 +2,12 @@
 package all
 
 import (
-	"github.com/ardanlabs/service/app/services/sales-api/handlers/checkgrp"
-	"github.com/ardanlabs/service/app/services/sales-api/handlers/homegrp"
-	"github.com/ardanlabs/service/app/services/sales-api/handlers/productgrp"
-	"github.com/ardanlabs/service/app/services/sales-api/handlers/trangrp"
-	"github.com/ardanlabs/service/app/services/sales-api/handlers/usergrp"
-	"github.com/ardanlabs/service/app/services/sales-api/handlers/vproductgrp"
+	"github.com/ardanlabs/service/app/services/sales-api/handlers/crud/homegrp"
+	"github.com/ardanlabs/service/app/services/sales-api/handlers/crud/productgrp"
+	"github.com/ardanlabs/service/app/services/sales-api/handlers/crud/trangrp"
+	"github.com/ardanlabs/service/app/services/sales-api/handlers/crud/usergrp"
+	"github.com/ardanlabs/service/app/services/sales-api/handlers/sys/checkgrp"
+	"github.com/ardanlabs/service/app/services/sales-api/handlers/views/vproductgrp"
 	"github.com/ardanlabs/service/business/web/mux"
 	"github.com/ardanlabs/service/foundation/web"
 )

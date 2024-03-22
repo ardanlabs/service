@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/ardanlabs/service/app/services/sales-api/handlers/usergrp"
+	"github.com/ardanlabs/service/app/services/sales-api/handlers/crud/usergrp"
 	"github.com/ardanlabs/service/business/core/crud/user"
 	"github.com/ardanlabs/service/business/web/page"
 	"github.com/google/go-cmp/cmp"

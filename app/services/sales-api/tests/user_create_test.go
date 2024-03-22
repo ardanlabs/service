@@ -3,7 +3,7 @@ package tests
 import (
 	"net/http"
 
-	"github.com/ardanlabs/service/app/services/sales-api/handlers/usergrp"
+	"github.com/ardanlabs/service/app/services/sales-api/handlers/crud/usergrp"
 	"github.com/ardanlabs/service/business/web/errs"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/uuid"

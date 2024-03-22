@@ -3,7 +3,7 @@ package tests
 import (
 	"net/http"
 
-	"github.com/ardanlabs/service/app/services/sales-api/handlers/vproductgrp"
+	"github.com/ardanlabs/service/app/services/sales-api/handlers/views/vproductgrp"
 	"github.com/ardanlabs/service/business/web/page"
 )
 

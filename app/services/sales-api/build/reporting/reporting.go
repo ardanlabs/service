@@ -2,8 +2,8 @@
 package reporting
 
 import (
-	"github.com/ardanlabs/service/app/services/sales-api/handlers/checkgrp"
-	"github.com/ardanlabs/service/app/services/sales-api/handlers/vproductgrp"
+	"github.com/ardanlabs/service/app/services/sales-api/handlers/sys/checkgrp"
+	"github.com/ardanlabs/service/app/services/sales-api/handlers/views/vproductgrp"
 	"github.com/ardanlabs/service/business/web/mux"
 	"github.com/ardanlabs/service/foundation/web"
 )
