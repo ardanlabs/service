@@ -358,7 +358,7 @@ statsviz:
 # ==============================================================================
 # Running tests within the local computer
 
-test-race:
+test-r:
 	CGO_ENABLED=1 go test -race -count=1 ./...
 
 test-only:
@@ -373,7 +373,7 @@ vuln-check:
 
 test: test-only lint vuln-check
 
-test-race: test-race lint vuln-check
+test-race: test-r lint vuln-check
 
 # ==============================================================================
 # Hitting endpoints
