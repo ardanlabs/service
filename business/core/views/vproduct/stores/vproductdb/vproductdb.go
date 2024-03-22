@@ -8,7 +8,7 @@ import (
 
 	"github.com/ardanlabs/service/business/core/views/vproduct"
 	"github.com/ardanlabs/service/business/data/sqldb"
-	"github.com/ardanlabs/service/business/web/v1/order"
+	"github.com/ardanlabs/service/business/web/order"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/jmoiron/sqlx"
 )
@@ -83,7 +83,7 @@ func (s *Store) Count(ctx context.Context, filter vproduct.QueryFilter) (int, er
 		Count int `db:"count"`
 	}
 	if err := sqldb.NamedQueryStruct(ctx, s.log, s.db, buf.String(), data, &count); err != nil {
-		return 0, fmt.Errorf("namedquerystruct: %w", err)
+		return 0, fmt.Errorf("db: %w", err)
 	}
 
 	return count.Count, nil

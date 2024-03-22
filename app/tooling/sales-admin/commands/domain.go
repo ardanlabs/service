@@ -36,7 +36,7 @@ func Domain(name string) error {
 }
 
 func addAppLayer(domain string) error {
-	const basePath = "app/services/sales-api/v1/handlers"
+	const basePath = "app/services/sales-api/handlers"
 
 	app, err := fs.Sub(templates, "templates/sales-api/app")
 	if err != nil {
@@ -102,7 +102,7 @@ func addStorageLayer(domain string) error {
 }
 
 func addMiddlewareLayer(domain string) error {
-	basePath := "business/web/v1/mid"
+	basePath := "business/web/mid"
 
 	app, err := fs.Sub(templates, "templates/sales-api/mid")
 	if err != nil {

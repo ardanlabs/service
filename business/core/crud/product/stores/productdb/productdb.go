@@ -10,7 +10,7 @@ import (
 	"github.com/ardanlabs/service/business/core/crud/product"
 	"github.com/ardanlabs/service/business/data/sqldb"
 	"github.com/ardanlabs/service/business/data/transaction"
-	"github.com/ardanlabs/service/business/web/v1/order"
+	"github.com/ardanlabs/service/business/web/order"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
@@ -155,7 +155,7 @@ func (s *Store) Count(ctx context.Context, filter product.QueryFilter) (int, err
 		Revenue int `db:"revenue"`
 	}
 	if err := sqldb.NamedQueryStruct(ctx, s.log, s.db, buf.String(), data, &count); err != nil {
-		return 0, fmt.Errorf("namedquerystruct: %w", err)
+		return 0, fmt.Errorf("db: %w", err)
 	}
 
 	return count.Count, nil
@@ -180,9 +180,9 @@ func (s *Store) QueryByID(ctx context.Context, productID uuid.UUID) (product.Pro
 	var dbPrd dbProduct
 	if err := sqldb.NamedQueryStruct(ctx, s.log, s.db, q, data, &dbPrd); err != nil {
 		if errors.Is(err, sqldb.ErrDBNotFound) {
-			return product.Product{}, fmt.Errorf("namedquerystruct: %w", product.ErrNotFound)
+			return product.Product{}, fmt.Errorf("db: %w", product.ErrNotFound)
 		}
-		return product.Product{}, fmt.Errorf("namedquerystruct: %w", err)
+		return product.Product{}, fmt.Errorf("db: %w", err)
 	}
 
 	return toCoreProduct(dbPrd), nil
@@ -206,7 +206,7 @@ func (s *Store) QueryByUserID(ctx context.Context, userID uuid.UUID) ([]product.
 
 	var dbPrds []dbProduct
 	if err := sqldb.NamedQuerySlice(ctx, s.log, s.db, q, data, &dbPrds); err != nil {
-		return nil, fmt.Errorf("namedquerystruct: %w", err)
+		return nil, fmt.Errorf("db: %w", err)
 	}
 
 	return toCoreProducts(dbPrds), nil

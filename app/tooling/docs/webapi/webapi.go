@@ -24,7 +24,7 @@ var methods = map[string]string{
 }
 
 func Routes(version string) ([]Route, error) {
-	dirEntries, err := os.ReadDir("app/services/sales-api/v1/handlers")
+	dirEntries, err := os.ReadDir("app/services/sales-api/handlers")
 	if err != nil {
 		return nil, fmt.Errorf("ReadDir: %w", err)
 	}
@@ -44,7 +44,7 @@ func Routes(version string) ([]Route, error) {
 			file  string
 		}{
 			entry.Name(),
-			fmt.Sprintf("app/services/sales-api/v1/handlers/%s/route.go", entry.Name()),
+			fmt.Sprintf("app/services/sales-api/handlers/%s/route.go", entry.Name()),
 		})
 	}
 
@@ -463,7 +463,7 @@ func findAppFunctionFromModel(group string, funcName string) (string, bool, erro
 	var idt *ast.Ident
 	var slice bool
 
-	file, err := parser.ParseFile(fset, "app/services/sales-api/v1/handlers/"+group+"/model.go", nil, parser.ParseComments)
+	file, err := parser.ParseFile(fset, "app/services/sales-api/handlers/"+group+"/model.go", nil, parser.ParseComments)
 	if err != nil {
 		return "", false, fmt.Errorf("ParseFile: %w", err)
 	}
@@ -524,7 +524,7 @@ func findAppModel(group string, modelName string) ([]Field, error) {
 	case strings.Contains(modelName, "PageDocument"):
 		file, err = parser.ParseFile(fset, "business/web/v1/v1.go", nil, parser.ParseComments)
 	default:
-		file, err = parser.ParseFile(fset, "app/services/sales-api/v1/handlers/"+group+"/model.go", nil, parser.ParseComments)
+		file, err = parser.ParseFile(fset, "app/services/sales-api/handlers/"+group+"/model.go", nil, parser.ParseComments)
 	}
 
 	if err != nil {
@@ -703,7 +703,7 @@ func findQueryVars(body *ast.BlockStmt, group string) (QueryVars, error) {
 func findFilters(group string) ([]string, error) {
 	fset := token.NewFileSet()
 
-	file, err := parser.ParseFile(fset, "app/services/sales-api/v1/handlers/"+group+"/filter.go", nil, parser.ParseComments)
+	file, err := parser.ParseFile(fset, "app/services/sales-api/handlers/"+group+"/filter.go", nil, parser.ParseComments)
 	if err != nil {
 		return nil, fmt.Errorf("ParseFile: %w", err)
 	}
@@ -770,7 +770,7 @@ func findFilters(group string) ([]string, error) {
 func findOrders(group string) ([]string, error) {
 	fset := token.NewFileSet()
 
-	file, err := parser.ParseFile(fset, "app/services/sales-api/v1/handlers/"+group+"/order.go", nil, parser.ParseComments)
+	file, err := parser.ParseFile(fset, "app/services/sales-api/handlers/"+group+"/order.go", nil, parser.ParseComments)
 	if err != nil {
 		return nil, fmt.Errorf("ParseFile: %w", err)
 	}

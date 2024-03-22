@@ -10,7 +10,7 @@ import (
 	"github.com/ardanlabs/service/business/core/crud/home"
 	"github.com/ardanlabs/service/business/data/sqldb"
 	"github.com/ardanlabs/service/business/data/transaction"
-	"github.com/ardanlabs/service/business/web/v1/order"
+	"github.com/ardanlabs/service/business/web/order"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
@@ -160,7 +160,7 @@ func (s *Store) Count(ctx context.Context, filter home.QueryFilter) (int, error)
 		Count int `db:"count"`
 	}
 	if err := sqldb.NamedQueryStruct(ctx, s.log, s.db, buf.String(), data, &count); err != nil {
-		return 0, fmt.Errorf("namedquerystruct: %w", err)
+		return 0, fmt.Errorf("db: %w", err)
 	}
 
 	return count.Count, nil
@@ -185,9 +185,9 @@ func (s *Store) QueryByID(ctx context.Context, homeID uuid.UUID) (home.Home, err
 	var dbHme dbHome
 	if err := sqldb.NamedQueryStruct(ctx, s.log, s.db, q, data, &dbHme); err != nil {
 		if errors.Is(err, sqldb.ErrDBNotFound) {
-			return home.Home{}, fmt.Errorf("namedquerystruct: %w", home.ErrNotFound)
+			return home.Home{}, fmt.Errorf("db: %w", home.ErrNotFound)
 		}
-		return home.Home{}, fmt.Errorf("namedquerystruct: %w", err)
+		return home.Home{}, fmt.Errorf("db: %w", err)
 	}
 
 	return toCoreHome(dbHme)
@@ -211,7 +211,7 @@ func (s *Store) QueryByUserID(ctx context.Context, userID uuid.UUID) ([]home.Hom
 
 	var dbHmes []dbHome
 	if err := sqldb.NamedQuerySlice(ctx, s.log, s.db, q, data, &dbHmes); err != nil {
-		return nil, fmt.Errorf("namedquerystruct: %w", err)
+		return nil, fmt.Errorf("db: %w", err)
 	}
 
 	return toCoreHomeSlice(dbHmes)
