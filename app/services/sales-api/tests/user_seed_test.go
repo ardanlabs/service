@@ -7,7 +7,7 @@ import (
 	"github.com/ardanlabs/service/business/data/dbtest"
 )
 
-func createUserSeed(dbTest *dbtest.Test) (seedData, error) {
+func insertUserSeed(dbTest *dbtest.Test) (seedData, error) {
 	usrs, err := user.TestGenerateSeedUsers(2, user.RoleAdmin, dbTest.CoreAPIs.User)
 	if err != nil {
 		return seedData{}, fmt.Errorf("seeding users : %w", err)

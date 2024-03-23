@@ -36,7 +36,7 @@ func Test_User(t *testing.T) {
 
 	// -------------------------------------------------------------------------
 
-	sd, err := createUserSeed(dbTest)
+	sd, err := insertUserSeed(dbTest)
 	if err != nil {
 		t.Fatalf("Seeding error: %s", err)
 	}

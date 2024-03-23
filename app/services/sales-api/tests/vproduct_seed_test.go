@@ -10,7 +10,7 @@ import (
 	"github.com/ardanlabs/service/business/web/order"
 )
 
-func createVProductSeed(dbTest *dbtest.Test) (seedData, error) {
+func insertVProductSeed(dbTest *dbtest.Test) (seedData, error) {
 	usrs, err := dbTest.CoreAPIs.User.Query(context.Background(), user.QueryFilter{}, order.By{Field: user.OrderByName, Direction: order.ASC}, 1, 2)
 	if err != nil {
 		return seedData{}, fmt.Errorf("seeding users : %w", err)

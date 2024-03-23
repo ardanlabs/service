@@ -36,7 +36,7 @@ func Test_Product(t *testing.T) {
 
 	// -------------------------------------------------------------------------
 
-	sd, err := createProductSeed(dbTest)
+	sd, err := insertProductSeed(dbTest)
 	if err != nil {
 		t.Fatalf("Seeding error: %s", err)
 	}

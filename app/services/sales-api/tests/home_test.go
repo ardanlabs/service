@@ -36,7 +36,7 @@ func Test_Home(t *testing.T) {
 
 	// -------------------------------------------------------------------------
 
-	sd, err := createHomeSeed(dbTest)
+	sd, err := insertHomeSeed(dbTest)
 	if err != nil {
 		t.Fatalf("Seeding error: %s", err)
 	}
