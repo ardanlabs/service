@@ -30,8 +30,6 @@ func Test_Home(t *testing.T) {
 			Auth:     dbTest.Auth,
 			DB:       dbTest.DB,
 		}, all.Routes()),
-		userToken:  dbTest.TokenV1("user@example.com", "gophers"),
-		adminToken: dbTest.TokenV1("admin@example.com", "gophers"),
 	}
 
 	// -------------------------------------------------------------------------
