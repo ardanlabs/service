@@ -38,8 +38,6 @@ func run(m *testing.M) (int, error) {
 
 type appTest struct {
 	http.Handler
-	userToken  string
-	adminToken string
 }
 
 func (at *appTest) test(t *testing.T, table []tableData, testName string) {
