@@ -143,34 +143,18 @@ func userPaging(t *testing.T) {
 	seed := func(ctx context.Context, userCore *user.Core) ([]user.User, error) {
 		usrs := make([]user.User, 2)
 
-		nu1 := user.NewUser{
-			Name:            "Bill Kennedy",
-			Email:           mail.Address{Address: "bill@ardanlabs.com"},
-			Roles:           []user.Role{user.RoleAdmin},
-			Department:      "IT",
-			Password:        "12345",
-			PasswordConfirm: "12345",
-		}
-		usr1, err := userCore.Create(ctx, nu1)
+		usrsAdmin, err := user.TestGenerateSeedUsers(ctx, 1, user.RoleAdmin, userCore)
 		if err != nil {
-			return nil, fmt.Errorf("seeding user 1 : %w", err)
+			return nil, fmt.Errorf("seeding user : %w", err)
 		}
 
-		nu2 := user.NewUser{
-			Name:            "Ale Kennedy",
-			Email:           mail.Address{Address: "ale@ardanlabs.com"},
-			Roles:           []user.Role{user.RoleUser},
-			Department:      "IT",
-			Password:        "12345",
-			PasswordConfirm: "12345",
-		}
-		usr2, err := userCore.Create(ctx, nu2)
+		usrsUser, err := user.TestGenerateSeedUsers(ctx, 1, user.RoleUser, userCore)
 		if err != nil {
-			return nil, fmt.Errorf("seeding user 2 : %w", err)
+			return nil, fmt.Errorf("seeding user : %w", err)
 		}
 
-		usrs[0] = usr1
-		usrs[1] = usr2
+		usrs[0] = usrsAdmin[0]
+		usrs[1] = usrsUser[0]
 
 		return usrs, nil
 	}
@@ -193,14 +177,14 @@ func userPaging(t *testing.T) {
 
 	t.Log("Go seeding ...")
 
-	_, err := seed(ctx, api.Crud.User)
+	usrs, err := seed(ctx, api.Crud.User)
 	if err != nil {
 		t.Fatalf("Seeding error: %s", err)
 	}
 
 	// -------------------------------------------------------------------------
 
-	name := "Ale Kennedy"
+	name := usrs[0].Name
 	users1, err := api.Crud.User.Query(ctx, user.QueryFilter{Name: &name}, user.DefaultOrderBy, 1, 1)
 	if err != nil {
 		t.Fatalf("Should be able to retrieve user %q : %s.", name, err)
@@ -215,7 +199,7 @@ func userPaging(t *testing.T) {
 		t.Errorf("Should have a single user for %q", name)
 	}
 
-	name = "Bill Kennedy"
+	name = usrs[1].Name
 	users2, err := api.Crud.User.Query(ctx, user.QueryFilter{Name: &name}, user.DefaultOrderBy, 1, 1)
 	if err != nil {
 		t.Fatalf("Should be able to retrieve user %q : %s.", name, err)
