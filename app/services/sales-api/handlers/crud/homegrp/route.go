@@ -28,15 +28,15 @@ type Config struct {
 func Routes(app *web.App, cfg Config) {
 	const version = "v1"
 
-	usrCore := user.NewCore(cfg.Log, cfg.Delegate, usercache.NewStore(cfg.Log, userdb.NewStore(cfg.Log, cfg.DB)))
-	hmeCore := home.NewCore(cfg.Log, usrCore, cfg.Delegate, homedb.NewStore(cfg.Log, cfg.DB))
+	userCore := user.NewCore(cfg.Log, cfg.Delegate, usercache.NewStore(cfg.Log, userdb.NewStore(cfg.Log, cfg.DB)))
+	homeCore := home.NewCore(cfg.Log, userCore, cfg.Delegate, homedb.NewStore(cfg.Log, cfg.DB))
 
 	authen := mid.Authenticate(cfg.Auth)
 	ruleAny := mid.Authorize(cfg.Auth, auth.RuleAny)
 	ruleUserOnly := mid.Authorize(cfg.Auth, auth.RuleUserOnly)
-	ruleAuthorizeHome := mid.AuthorizeHome(cfg.Auth, hmeCore)
+	ruleAuthorizeHome := mid.AuthorizeHome(cfg.Auth, homeCore)
 
-	hdl := new(hmeCore)
+	hdl := new(homeCore)
 	app.Handle(http.MethodGet, version, "/homes", hdl.query, authen, ruleAny)
 	app.Handle(http.MethodGet, version, "/homes/{home_id}", hdl.queryByID, authen, ruleAuthorizeHome)
 	app.Handle(http.MethodPost, version, "/homes", hdl.create, authen, ruleUserOnly)

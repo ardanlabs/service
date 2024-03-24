@@ -29,12 +29,12 @@ type Config struct {
 func Routes(app *web.App, cfg Config) {
 	const version = "v1"
 
-	usrCore := user.NewCore(cfg.Log, cfg.Delegate, usercache.NewStore(cfg.Log, userdb.NewStore(cfg.Log, cfg.DB)))
-	prdCore := product.NewCore(cfg.Log, usrCore, cfg.Delegate, productdb.NewStore(cfg.Log, cfg.DB))
+	userCore := user.NewCore(cfg.Log, cfg.Delegate, usercache.NewStore(cfg.Log, userdb.NewStore(cfg.Log, cfg.DB)))
+	productCore := product.NewCore(cfg.Log, userCore, cfg.Delegate, productdb.NewStore(cfg.Log, cfg.DB))
 
 	authen := mid.Authenticate(cfg.Auth)
 	tran := mid.ExecuteInTransaction(cfg.Log, sqldb.NewBeginner(cfg.DB))
 
-	hdl := new(usrCore, prdCore)
+	hdl := new(userCore, productCore)
 	app.Handle(http.MethodPost, version, "/tranexample", hdl.create, authen, tran)
 }

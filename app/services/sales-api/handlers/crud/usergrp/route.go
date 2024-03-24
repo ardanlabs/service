@@ -26,13 +26,13 @@ type Config struct {
 func Routes(app *web.App, cfg Config) {
 	const version = "v1"
 
-	usrCore := user.NewCore(cfg.Log, cfg.Delegate, usercache.NewStore(cfg.Log, userdb.NewStore(cfg.Log, cfg.DB)))
+	userCore := user.NewCore(cfg.Log, cfg.Delegate, usercache.NewStore(cfg.Log, userdb.NewStore(cfg.Log, cfg.DB)))
 
 	authen := mid.Authenticate(cfg.Auth)
 	ruleAdmin := mid.Authorize(cfg.Auth, auth.RuleAdminOnly)
-	ruleAuthorizeUser := mid.AuthorizeUser(cfg.Auth, usrCore)
+	ruleAuthorizeUser := mid.AuthorizeUser(cfg.Auth, userCore)
 
-	hdl := new(usrCore, cfg.Auth)
+	hdl := new(userCore, cfg.Auth)
 	app.Handle(http.MethodGet, version, "/users/token/{kid}", hdl.token)
 	app.Handle(http.MethodGet, version, "/users", hdl.query, authen, ruleAdmin)
 	app.Handle(http.MethodGet, version, "/users/{user_id}", hdl.queryByID, authen, ruleAuthorizeUser)

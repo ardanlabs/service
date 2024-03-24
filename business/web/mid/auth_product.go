@@ -35,7 +35,7 @@ func setProduct(ctx context.Context, prd product.Product) context.Context {
 // product from the DB if a product id is specified in the call. Depending on
 // the rule specified, the userid from the claims may be compared with the
 // specified user id from the product.
-func AuthorizeProduct(a *auth.Auth, prdCore *product.Core) web.MidHandler {
+func AuthorizeProduct(a *auth.Auth, productCore *product.Core) web.MidHandler {
 	m := func(handler web.Handler) web.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 			var userID uuid.UUID
@@ -47,7 +47,7 @@ func AuthorizeProduct(a *auth.Auth, prdCore *product.Core) web.MidHandler {
 					return errs.NewTrusted(ErrInvalidID, http.StatusBadRequest)
 				}
 
-				prd, err := prdCore.QueryByID(ctx, productID)
+				prd, err := productCore.QueryByID(ctx, productID)
 				if err != nil {
 					switch {
 					case errors.Is(err, product.ErrNotFound):

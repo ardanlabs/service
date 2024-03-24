@@ -24,16 +24,16 @@ func Test_Product(t *testing.T) {
 }
 
 func productCrud(t *testing.T) {
-	seed := func(ctx context.Context, usrCore *user.Core, prdCore *product.Core) ([]product.Product, error) {
+	seed := func(ctx context.Context, userCore *user.Core, productCore *product.Core) ([]product.Product, error) {
 		var filter user.QueryFilter
 		filter.WithName("Admin Gopher")
 
-		usrs, err := usrCore.Query(ctx, filter, user.DefaultOrderBy, 1, 1)
+		usrs, err := userCore.Query(ctx, filter, user.DefaultOrderBy, 1, 1)
 		if err != nil {
 			return nil, fmt.Errorf("seeding users : %w", err)
 		}
 
-		prds, err := product.TestGenerateSeedProducts(1, prdCore, usrs[0].ID)
+		prds, err := product.TestGenerateSeedProducts(1, productCore, usrs[0].ID)
 		if err != nil {
 			return nil, fmt.Errorf("seeding products : %w", err)
 		}
@@ -52,21 +52,21 @@ func productCrud(t *testing.T) {
 		dbTest.Teardown()
 	}()
 
-	api := dbTest.CoreAPIs
+	api := dbTest.Core
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	t.Log("Go seeding ...")
 
-	prds, err := seed(ctx, api.User, api.Product)
+	prds, err := seed(ctx, api.Crud.User, api.Crud.Product)
 	if err != nil {
 		t.Fatalf("Seeding error: %s", err)
 	}
 
 	// -------------------------------------------------------------------------
 
-	saved, err := api.Product.QueryByID(ctx, prds[0].ID)
+	saved, err := api.Crud.Product.QueryByID(ctx, prds[0].ID)
 	if err != nil {
 		t.Fatalf("Should be able to retrieve product by ID: %s", err)
 	}
@@ -102,11 +102,11 @@ func productCrud(t *testing.T) {
 		Quantity: dbtest.IntPointer(40),
 	}
 
-	if _, err := api.Product.Update(ctx, saved, upd); err != nil {
+	if _, err := api.Crud.Product.Update(ctx, saved, upd); err != nil {
 		t.Errorf("Should be able to update product : %s", err)
 	}
 
-	saved, err = api.Product.QueryByID(ctx, prds[0].ID)
+	saved, err = api.Crud.Product.QueryByID(ctx, prds[0].ID)
 	if err != nil {
 		t.Fatalf("Should be able to retrieve updated product : %s", err)
 	}
@@ -116,7 +116,7 @@ func productCrud(t *testing.T) {
 		t.Fatalf("Should have a larger DateUpdated : sav %v, prd %v, dif %v", saved.DateUpdated, saved.DateUpdated, diff)
 	}
 
-	products, err := api.Product.Query(ctx, product.QueryFilter{}, product.DefaultOrderBy, 1, 3)
+	products, err := api.Crud.Product.Query(ctx, product.QueryFilter{}, product.DefaultOrderBy, 1, 3)
 	if err != nil {
 		t.Fatalf("Should be able to retrieve updated product : %s", err)
 	}
@@ -146,11 +146,11 @@ func productCrud(t *testing.T) {
 		Name: dbtest.StringPointer("Graphic Novels"),
 	}
 
-	if _, err := api.Product.Update(ctx, saved, upd); err != nil {
+	if _, err := api.Crud.Product.Update(ctx, saved, upd); err != nil {
 		t.Fatalf("Should be able to update just some fields of product : %s", err)
 	}
 
-	saved, err = api.Product.QueryByID(ctx, prds[0].ID)
+	saved, err = api.Crud.Product.QueryByID(ctx, prds[0].ID)
 	if err != nil {
 		t.Fatalf("Should be able to retrieve updated product : %s", err)
 	}
@@ -164,27 +164,27 @@ func productCrud(t *testing.T) {
 		t.Fatalf("Should be able to see updated Name field : got %q want %q", saved.Name, *upd.Name)
 	}
 
-	if err := api.Product.Delete(ctx, saved); err != nil {
+	if err := api.Crud.Product.Delete(ctx, saved); err != nil {
 		t.Fatalf("Should be able to delete product : %s", err)
 	}
 
-	_, err = api.Product.QueryByID(ctx, prds[0].ID)
+	_, err = api.Crud.Product.QueryByID(ctx, prds[0].ID)
 	if !errors.Is(err, product.ErrNotFound) {
 		t.Fatalf("Should NOT be able to retrieve deleted product : %s", err)
 	}
 }
 
 func productPaging(t *testing.T) {
-	seed := func(ctx context.Context, usrCore *user.Core, prdCore *product.Core) ([]product.Product, error) {
+	seed := func(ctx context.Context, userCore *user.Core, productCore *product.Core) ([]product.Product, error) {
 		var filter user.QueryFilter
 		filter.WithName("Admin Gopher")
 
-		usrs, err := usrCore.Query(ctx, filter, user.DefaultOrderBy, 1, 1)
+		usrs, err := userCore.Query(ctx, filter, user.DefaultOrderBy, 1, 1)
 		if err != nil {
 			return nil, fmt.Errorf("seeding products : %w", err)
 		}
 
-		prds, err := product.TestGenerateSeedProducts(2, prdCore, usrs[0].ID)
+		prds, err := product.TestGenerateSeedProducts(2, productCore, usrs[0].ID)
 		if err != nil {
 			return nil, fmt.Errorf("seeding products : %w", err)
 		}
@@ -194,23 +194,23 @@ func productPaging(t *testing.T) {
 
 	// -------------------------------------------------------------------------
 
-	test := dbtest.NewTest(t, c, "Test_Product/paging")
+	dbTest := dbtest.NewTest(t, c, "Test_Product/paging")
 	defer func() {
 		if r := recover(); r != nil {
 			t.Log(r)
 			t.Error(string(debug.Stack()))
 		}
-		test.Teardown()
+		dbTest.Teardown()
 	}()
 
-	api := test.CoreAPIs
+	api := dbTest.Core
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	t.Log("Go seeding ...")
 
-	prds, err := seed(ctx, api.User, api.Product)
+	prds, err := seed(ctx, api.Crud.User, api.Crud.Product)
 	if err != nil {
 		t.Fatalf("Seeding error: %s", err)
 	}
@@ -218,12 +218,12 @@ func productPaging(t *testing.T) {
 	// -------------------------------------------------------------------------
 
 	name := prds[0].Name
-	prd1, err := api.Product.Query(ctx, product.QueryFilter{Name: &name}, product.DefaultOrderBy, 1, 1)
+	prd1, err := api.Crud.Product.Query(ctx, product.QueryFilter{Name: &name}, product.DefaultOrderBy, 1, 1)
 	if err != nil {
 		t.Fatalf("Should be able to retrieve products %q : %s", name, err)
 	}
 
-	n, err := api.Product.Count(ctx, product.QueryFilter{Name: &name})
+	n, err := api.Crud.Product.Count(ctx, product.QueryFilter{Name: &name})
 	if err != nil {
 		t.Fatalf("Should be able to retrieve product count %q : %s", name, err)
 	}
@@ -235,12 +235,12 @@ func productPaging(t *testing.T) {
 	}
 
 	name = prds[1].Name
-	prd2, err := api.Product.Query(ctx, product.QueryFilter{Name: &name}, product.DefaultOrderBy, 1, 1)
+	prd2, err := api.Crud.Product.Query(ctx, product.QueryFilter{Name: &name}, product.DefaultOrderBy, 1, 1)
 	if err != nil {
 		t.Fatalf("Should be able to retrieve products %q : %s", name, err)
 	}
 
-	n, err = api.Product.Count(ctx, product.QueryFilter{Name: &name})
+	n, err = api.Crud.Product.Count(ctx, product.QueryFilter{Name: &name})
 	if err != nil {
 		t.Fatalf("Should be able to retrieve product count %q : %s", name, err)
 	}
@@ -251,12 +251,12 @@ func productPaging(t *testing.T) {
 		t.Fatalf("Should have a single product for %q", name)
 	}
 
-	prd3, err := api.Product.Query(ctx, product.QueryFilter{}, product.DefaultOrderBy, 1, 2)
+	prd3, err := api.Crud.Product.Query(ctx, product.QueryFilter{}, product.DefaultOrderBy, 1, 2)
 	if err != nil {
 		t.Fatalf("Should be able to retrieve 2 products for page 1 : %s", err)
 	}
 
-	n, err = api.Product.Count(ctx, product.QueryFilter{})
+	n, err = api.Crud.Product.Count(ctx, product.QueryFilter{})
 	if err != nil {
 		t.Fatalf("Should be able to retrieve product count %q : %s", name, err)
 	}
@@ -275,16 +275,16 @@ func productPaging(t *testing.T) {
 }
 
 func productTran(t *testing.T) {
-	test := dbtest.NewTest(t, c, "Test_Product/tran")
+	dbTest := dbtest.NewTest(t, c, "Test_Product/tran")
 	defer func() {
 		if r := recover(); r != nil {
 			t.Log(r)
 			t.Error(string(debug.Stack()))
 		}
-		test.Teardown()
+		dbTest.Teardown()
 	}()
 
-	api := test.CoreAPIs
+	api := dbTest.Core
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -293,12 +293,12 @@ func productTran(t *testing.T) {
 	// Execute under a transaction with rollback
 
 	f := func(tx transaction.Transaction) error {
-		usrCore, err := api.User.ExecuteUnderTransaction(tx)
+		userCore, err := api.Crud.User.ExecuteUnderTransaction(tx)
 		if err != nil {
 			t.Fatalf("Should be able to create new user core: %s.", err)
 		}
 
-		prdCore, err := api.Product.ExecuteUnderTransaction(tx)
+		productCore, err := api.Crud.Product.ExecuteUnderTransaction(tx)
 		if err != nil {
 			t.Fatalf("Should be able to create new product core: %s.", err)
 		}
@@ -317,7 +317,7 @@ func productTran(t *testing.T) {
 			PasswordConfirm: "some",
 		}
 
-		usr, err := usrCore.Create(ctx, nu)
+		usr, err := userCore.Create(ctx, nu)
 		if err != nil {
 			return err
 		}
@@ -329,7 +329,7 @@ func productTran(t *testing.T) {
 			Quantity: 1,
 		}
 
-		_, err = prdCore.Create(ctx, np)
+		_, err = productCore.Create(ctx, np)
 		if err != nil {
 			return err
 		}
@@ -337,7 +337,7 @@ func productTran(t *testing.T) {
 		return nil
 	}
 
-	err := transaction.ExecuteUnderTransaction(ctx, test.Log, sqldb.NewBeginner(test.DB), f)
+	err := transaction.ExecuteUnderTransaction(ctx, dbTest.Log, sqldb.NewBeginner(dbTest.DB), f)
 	if !errors.Is(err, product.ErrInvalidCost) {
 		t.Fatalf("Should NOT be able to add product : %s.", err)
 	}
@@ -350,7 +350,7 @@ func productTran(t *testing.T) {
 		t.Fatalf("Should be able to parse email: %s.", err)
 	}
 
-	usr, err := api.User.QueryByEmail(ctx, *email)
+	usr, err := api.Crud.User.QueryByEmail(ctx, *email)
 	if err == nil {
 		t.Fatalf("Should NOT be able to retrieve user but got: %+v.", usr)
 	}
@@ -358,7 +358,7 @@ func productTran(t *testing.T) {
 		t.Fatalf("Should get ErrNotFound but got: %s.", err)
 	}
 
-	count, err := api.Product.Count(ctx, product.QueryFilter{})
+	count, err := api.Crud.Product.Count(ctx, product.QueryFilter{})
 	if err != nil {
 		t.Fatalf("Should be able to count products: %s.", err)
 	}
@@ -371,12 +371,12 @@ func productTran(t *testing.T) {
 	// Good transaction
 
 	f = func(tx transaction.Transaction) error {
-		usrCore, err := api.User.ExecuteUnderTransaction(tx)
+		userCore, err := api.Crud.User.ExecuteUnderTransaction(tx)
 		if err != nil {
 			t.Fatalf("Should be able to create new user core: %s.", err)
 		}
 
-		prdCore, err := api.Product.ExecuteUnderTransaction(tx)
+		productCore, err := api.Crud.Product.ExecuteUnderTransaction(tx)
 		if err != nil {
 			t.Fatalf("Should be able to create new product core: %s.", err)
 		}
@@ -395,7 +395,7 @@ func productTran(t *testing.T) {
 			PasswordConfirm: "some",
 		}
 
-		usr, err := usrCore.Create(ctx, nu)
+		usr, err := userCore.Create(ctx, nu)
 		if err != nil {
 			return err
 		}
@@ -407,7 +407,7 @@ func productTran(t *testing.T) {
 			Quantity: 1,
 		}
 
-		_, err = prdCore.Create(ctx, np)
+		_, err = productCore.Create(ctx, np)
 		if err != nil {
 			return err
 		}
@@ -415,7 +415,7 @@ func productTran(t *testing.T) {
 		return nil
 	}
 
-	err = transaction.ExecuteUnderTransaction(ctx, test.Log, sqldb.NewBeginner(test.DB), f)
+	err = transaction.ExecuteUnderTransaction(ctx, dbTest.Log, sqldb.NewBeginner(dbTest.DB), f)
 	if errors.Is(err, product.ErrInvalidCost) {
 		t.Fatalf("Should be able to add product : %s.", err)
 	}
@@ -423,12 +423,12 @@ func productTran(t *testing.T) {
 	// -------------------------------------------------------------------------
 	// Validate
 
-	usr, err = api.User.QueryByEmail(ctx, *email)
+	usr, err = api.Crud.User.QueryByEmail(ctx, *email)
 	if err != nil {
 		t.Fatalf("Should be able to retrieve user but got: %+v.", usr)
 	}
 
-	count, err = api.Product.Count(ctx, product.QueryFilter{})
+	count, err = api.Crud.Product.Count(ctx, product.QueryFilter{})
 	if err != nil {
 		t.Fatalf("Should be able to count products: %s.", err)
 	}

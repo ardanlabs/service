@@ -57,7 +57,7 @@ type Config struct {
 // set of user claims and recreate the claims by parsing the token.
 type Auth struct {
 	keyLookup KeyLookup
-	usrCore   *user.Core
+	userCore  *user.Core
 	method    jwt.SigningMethod
 	parser    *jwt.Parser
 	issuer    string
@@ -68,14 +68,14 @@ func New(cfg Config) (*Auth, error) {
 
 	// If a database connection is not provided, we won't perform the
 	// user enabled check.
-	var usrCore *user.Core
+	var userCore *user.Core
 	if cfg.DB != nil {
-		usrCore = user.NewCore(cfg.Log, nil, userdb.NewStore(cfg.Log, cfg.DB))
+		userCore = user.NewCore(cfg.Log, nil, userdb.NewStore(cfg.Log, cfg.DB))
 	}
 
 	a := Auth{
 		keyLookup: cfg.KeyLookup,
-		usrCore:   usrCore,
+		userCore:  userCore,
 		method:    jwt.GetSigningMethod(jwt.SigningMethodRS256.Name),
 		parser:    jwt.NewParser(jwt.WithValidMethods([]string{jwt.SigningMethodRS256.Name})),
 		issuer:    cfg.Issuer,
@@ -204,7 +204,7 @@ func (a *Auth) opaPolicyEvaluation(ctx context.Context, opaPolicy string, rule s
 // isUserEnabled hits the database and checks the user is not disabled. If the
 // no database connection was provided, this check is skipped.
 func (a *Auth) isUserEnabled(ctx context.Context, claims Claims) error {
-	if a.usrCore == nil {
+	if a.userCore == nil {
 		return nil
 	}
 
@@ -213,7 +213,7 @@ func (a *Auth) isUserEnabled(ctx context.Context, claims Claims) error {
 		return fmt.Errorf("parse user: %w", err)
 	}
 
-	if _, err := a.usrCore.QueryByID(ctx, userID); err != nil {
+	if _, err := a.userCore.QueryByID(ctx, userID); err != nil {
 		return fmt.Errorf("query user: %w", err)
 	}
 

@@ -20,7 +20,7 @@ func Test_User(t *testing.T) {
 }
 
 func userCrud(t *testing.T) {
-	seed := func(ctx context.Context, usrCore *user.Core) ([]user.User, error) {
+	seed := func(ctx context.Context, userCore *user.Core) ([]user.User, error) {
 		usrs := make([]user.User, 2)
 
 		nu1 := user.NewUser{
@@ -31,7 +31,7 @@ func userCrud(t *testing.T) {
 			Password:        "12345",
 			PasswordConfirm: "12345",
 		}
-		usr1, err := usrCore.Create(ctx, nu1)
+		usr1, err := userCore.Create(ctx, nu1)
 		if err != nil {
 			return nil, fmt.Errorf("seeding user 1 : %w", err)
 		}
@@ -44,7 +44,7 @@ func userCrud(t *testing.T) {
 			Password:        "12345",
 			PasswordConfirm: "12345",
 		}
-		usr2, err := usrCore.Create(ctx, nu2)
+		usr2, err := userCore.Create(ctx, nu2)
 		if err != nil {
 			return nil, fmt.Errorf("seeding user 2 : %w", err)
 		}
@@ -66,21 +66,21 @@ func userCrud(t *testing.T) {
 		dbTest.Teardown()
 	}()
 
-	api := dbTest.CoreAPIs
+	api := dbTest.Core
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	t.Log("Go seeding ...")
 
-	usrs, err := seed(ctx, api.User)
+	usrs, err := seed(ctx, api.Crud.User)
 	if err != nil {
 		t.Fatalf("Seeding error: %s", err)
 	}
 
 	// -------------------------------------------------------------------------
 
-	saved, err := api.User.QueryByID(ctx, usrs[0].ID)
+	saved, err := api.Crud.User.QueryByID(ctx, usrs[0].ID)
 	if err != nil {
 		t.Fatalf("Should be able to retrieve user by ID: %s.", err)
 	}
@@ -121,11 +121,11 @@ func userCrud(t *testing.T) {
 		Department: dbtest.StringPointer("development"),
 	}
 
-	if _, err := api.User.Update(ctx, usrs[0], upd); err != nil {
+	if _, err := api.Crud.User.Update(ctx, usrs[0], upd); err != nil {
 		t.Fatalf("Should be able to update user : %s.", err)
 	}
 
-	saved, err = api.User.QueryByEmail(ctx, *upd.Email)
+	saved, err = api.Crud.User.QueryByEmail(ctx, *upd.Email)
 	if err != nil {
 		t.Fatalf("Should be able to retrieve user by Email : %s.", err)
 	}
@@ -155,18 +155,18 @@ func userCrud(t *testing.T) {
 
 	// -------------------------------------------------------------------------
 
-	if err := api.User.Delete(ctx, saved); err != nil {
+	if err := api.Crud.User.Delete(ctx, saved); err != nil {
 		t.Fatalf("Should be able to delete user : %s.", err)
 	}
 
-	_, err = api.User.QueryByID(ctx, saved.ID)
+	_, err = api.Crud.User.QueryByID(ctx, saved.ID)
 	if !errors.Is(err, user.ErrNotFound) {
 		t.Fatalf("Should NOT be able to retrieve user : %s.", err)
 	}
 }
 
 func userPaging(t *testing.T) {
-	seed := func(ctx context.Context, usrCore *user.Core) ([]user.User, error) {
+	seed := func(ctx context.Context, userCore *user.Core) ([]user.User, error) {
 		usrs := make([]user.User, 2)
 
 		nu1 := user.NewUser{
@@ -177,7 +177,7 @@ func userPaging(t *testing.T) {
 			Password:        "12345",
 			PasswordConfirm: "12345",
 		}
-		usr1, err := usrCore.Create(ctx, nu1)
+		usr1, err := userCore.Create(ctx, nu1)
 		if err != nil {
 			return nil, fmt.Errorf("seeding user 1 : %w", err)
 		}
@@ -190,7 +190,7 @@ func userPaging(t *testing.T) {
 			Password:        "12345",
 			PasswordConfirm: "12345",
 		}
-		usr2, err := usrCore.Create(ctx, nu2)
+		usr2, err := userCore.Create(ctx, nu2)
 		if err != nil {
 			return nil, fmt.Errorf("seeding user 2 : %w", err)
 		}
@@ -203,23 +203,23 @@ func userPaging(t *testing.T) {
 
 	// -------------------------------------------------------------------------
 
-	test := dbtest.NewTest(t, c, "Test_User/paging")
+	dbTest := dbtest.NewTest(t, c, "Test_User/paging")
 	defer func() {
 		if r := recover(); r != nil {
 			t.Log(r)
 			t.Error(string(debug.Stack()))
 		}
-		test.Teardown()
+		dbTest.Teardown()
 	}()
 
-	api := test.CoreAPIs
+	api := dbTest.Core
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	t.Log("Go seeding ...")
 
-	_, err := seed(ctx, api.User)
+	_, err := seed(ctx, api.Crud.User)
 	if err != nil {
 		t.Fatalf("Seeding error: %s", err)
 	}
@@ -227,12 +227,12 @@ func userPaging(t *testing.T) {
 	// -------------------------------------------------------------------------
 
 	name := "Ale Kennedy"
-	users1, err := api.User.Query(ctx, user.QueryFilter{Name: &name}, user.DefaultOrderBy, 1, 1)
+	users1, err := api.Crud.User.Query(ctx, user.QueryFilter{Name: &name}, user.DefaultOrderBy, 1, 1)
 	if err != nil {
 		t.Fatalf("Should be able to retrieve user %q : %s.", name, err)
 	}
 
-	n, err := api.User.Count(ctx, user.QueryFilter{Name: &name})
+	n, err := api.Crud.User.Count(ctx, user.QueryFilter{Name: &name})
 	if err != nil {
 		t.Fatalf("Should be able to retrieve user count %q : %s.", name, err)
 	}
@@ -242,12 +242,12 @@ func userPaging(t *testing.T) {
 	}
 
 	name = "Bill Kennedy"
-	users2, err := api.User.Query(ctx, user.QueryFilter{Name: &name}, user.DefaultOrderBy, 1, 1)
+	users2, err := api.Crud.User.Query(ctx, user.QueryFilter{Name: &name}, user.DefaultOrderBy, 1, 1)
 	if err != nil {
 		t.Fatalf("Should be able to retrieve user %q : %s.", name, err)
 	}
 
-	n, err = api.User.Count(ctx, user.QueryFilter{Name: &name})
+	n, err = api.Crud.User.Count(ctx, user.QueryFilter{Name: &name})
 	if err != nil {
 		t.Fatalf("Should be able to retrieve user count %q : %s.", name, err)
 	}
@@ -256,12 +256,12 @@ func userPaging(t *testing.T) {
 		t.Errorf("Should have a single user for %q.", name)
 	}
 
-	users3, err := api.User.Query(ctx, user.QueryFilter{}, user.DefaultOrderBy, 1, 4)
+	users3, err := api.Crud.User.Query(ctx, user.QueryFilter{}, user.DefaultOrderBy, 1, 4)
 	if err != nil {
 		t.Fatalf("Should be able to retrieve 2 users for page 1 : %s.", err)
 	}
 
-	n, err = api.User.Count(ctx, user.QueryFilter{})
+	n, err = api.Crud.User.Count(ctx, user.QueryFilter{})
 	if err != nil {
 		t.Fatalf("Should be able to retrieve user count %q : %s.", name, err)
 	}

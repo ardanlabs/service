@@ -28,15 +28,15 @@ type Config struct {
 func Routes(app *web.App, cfg Config) {
 	const version = "v1"
 
-	usrCore := user.NewCore(cfg.Log, cfg.Delegate, usercache.NewStore(cfg.Log, userdb.NewStore(cfg.Log, cfg.DB)))
-	prdCore := product.NewCore(cfg.Log, usrCore, cfg.Delegate, productdb.NewStore(cfg.Log, cfg.DB))
+	userCore := user.NewCore(cfg.Log, cfg.Delegate, usercache.NewStore(cfg.Log, userdb.NewStore(cfg.Log, cfg.DB)))
+	productCore := product.NewCore(cfg.Log, userCore, cfg.Delegate, productdb.NewStore(cfg.Log, cfg.DB))
 
 	authen := mid.Authenticate(cfg.Auth)
 	ruleAny := mid.Authorize(cfg.Auth, auth.RuleAny)
 	ruleUserOnly := mid.Authorize(cfg.Auth, auth.RuleUserOnly)
-	ruleAuthorizeProduct := mid.AuthorizeProduct(cfg.Auth, prdCore)
+	ruleAuthorizeProduct := mid.AuthorizeProduct(cfg.Auth, productCore)
 
-	hdl := new(prdCore)
+	hdl := new(productCore)
 	app.Handle(http.MethodGet, version, "/products", hdl.query, authen, ruleAny)
 	app.Handle(http.MethodGet, version, "/products/{product_id}", hdl.queryByID, authen, ruleAuthorizeProduct)
 	app.Handle(http.MethodPost, version, "/products", hdl.create, authen, ruleUserOnly)

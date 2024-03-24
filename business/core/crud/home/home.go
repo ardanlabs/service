@@ -37,16 +37,16 @@ type Storer interface {
 // Core manages the set of APIs for home api access.
 type Core struct {
 	log      *logger.Logger
-	usrCore  *user.Core
+	userCore *user.Core
 	delegate *delegate.Delegate
 	storer   Storer
 }
 
 // NewCore constructs a home core API for use.
-func NewCore(log *logger.Logger, usrCore *user.Core, delegate *delegate.Delegate, storer Storer) *Core {
+func NewCore(log *logger.Logger, userCore *user.Core, delegate *delegate.Delegate, storer Storer) *Core {
 	return &Core{
 		log:      log,
-		usrCore:  usrCore,
+		userCore: userCore,
 		delegate: delegate,
 		storer:   storer,
 	}
@@ -60,14 +60,14 @@ func (c *Core) ExecuteUnderTransaction(tx transaction.Transaction) (*Core, error
 		return nil, err
 	}
 
-	usrCore, err := c.usrCore.ExecuteUnderTransaction(tx)
+	userCore, err := c.userCore.ExecuteUnderTransaction(tx)
 	if err != nil {
 		return nil, err
 	}
 
 	core := Core{
 		log:      c.log,
-		usrCore:  usrCore,
+		userCore: userCore,
 		delegate: c.delegate,
 		storer:   storer,
 	}
@@ -77,7 +77,7 @@ func (c *Core) ExecuteUnderTransaction(tx transaction.Transaction) (*Core, error
 
 // Create adds a new home to the system.
 func (c *Core) Create(ctx context.Context, nh NewHome) (Home, error) {
-	usr, err := c.usrCore.QueryByID(ctx, nh.UserID)
+	usr, err := c.userCore.QueryByID(ctx, nh.UserID)
 	if err != nil {
 		return Home{}, fmt.Errorf("user.querybyid: %s: %w", nh.UserID, err)
 	}

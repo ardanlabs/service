@@ -52,7 +52,7 @@ func setUser(ctx context.Context, usr user.User) context.Context {
 // from the DB if a user id is specified in the call. Depending on the rule
 // specified, the userid from the claims may be compared with the specified
 // user id.
-func AuthorizeUser(a *auth.Auth, usrCore *user.Core) web.MidHandler {
+func AuthorizeUser(a *auth.Auth, userCore *user.Core) web.MidHandler {
 	m := func(handler web.Handler) web.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 			var userID uuid.UUID
@@ -64,7 +64,7 @@ func AuthorizeUser(a *auth.Auth, usrCore *user.Core) web.MidHandler {
 					return errs.NewTrusted(ErrInvalidID, http.StatusBadRequest)
 				}
 
-				usr, err := usrCore.QueryByID(ctx, userID)
+				usr, err := userCore.QueryByID(ctx, userID)
 				if err != nil {
 					switch {
 					case errors.Is(err, user.ErrNotFound):

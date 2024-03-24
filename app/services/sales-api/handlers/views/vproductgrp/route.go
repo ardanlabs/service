@@ -23,11 +23,11 @@ type Config struct {
 func Routes(app *web.App, cfg Config) {
 	const version = "v1"
 
-	vPrdCore := vproduct.NewCore(vproductdb.NewStore(cfg.Log, cfg.DB))
+	vproductCore := vproduct.NewCore(vproductdb.NewStore(cfg.Log, cfg.DB))
 
 	authen := mid.Authenticate(cfg.Auth)
 	ruleAdmin := mid.Authorize(cfg.Auth, auth.RuleAdminOnly)
 
-	hdl := new(vPrdCore)
+	hdl := new(vproductCore)
 	app.Handle(http.MethodGet, version, "/vproducts", hdl.Query, authen, ruleAdmin)
 }

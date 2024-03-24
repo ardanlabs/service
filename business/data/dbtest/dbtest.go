@@ -54,12 +54,55 @@ func StopDB(c *docker.Container) {
 	fmt.Println("Stopped:", c.ID)
 }
 
+// =============================================================================
+
+// Crud provides core business crud apis.
+type Crud struct {
+	Home    *home.Core
+	Product *product.Core
+	User    *user.Core
+}
+
+// View provides core business view apis.
+type View struct {
+	Product *vproduct.Core
+}
+
+// Core represents all the core api's needed for testing.
+type Core struct {
+	Delegate *delegate.Delegate
+	Crud     Crud
+	View     View
+}
+
+func newCoreAPIs(log *logger.Logger, db *sqlx.DB) Core {
+	delegate := delegate.New(log)
+	userCore := user.NewCore(log, delegate, userdb.NewStore(log, db))
+	productCore := product.NewCore(log, userCore, delegate, productdb.NewStore(log, db))
+	homeCore := home.NewCore(log, userCore, delegate, homedb.NewStore(log, db))
+	vproductCore := vproduct.NewCore(vproductdb.NewStore(log, db))
+
+	return Core{
+		Delegate: delegate,
+		Crud: Crud{
+			Home:    homeCore,
+			Product: productCore,
+			User:    userCore,
+		},
+		View: View{
+			Product: vproductCore,
+		},
+	}
+}
+
+// =============================================================================
+
 // Test owns state for running and shutting down tests.
 type Test struct {
 	DB       *sqlx.DB
 	Log      *logger.Logger
 	Auth     *auth.Auth
-	CoreAPIs CoreAPIs
+	Core     Core
 	Teardown func()
 	t        *testing.T
 }
@@ -150,23 +193,23 @@ func NewTest(t *testing.T, c *docker.Container, testName string) *Test {
 		fmt.Printf("******************** LOGS (%s) ********************\n", testName)
 	}
 
-	test := Test{
+	tst := Test{
 		DB:       db,
 		Log:      log,
 		Auth:     auth,
-		CoreAPIs: newCoreAPIs(log, db),
+		Core:     newCoreAPIs(log, db),
 		Teardown: teardown,
 		t:        t,
 	}
 
-	return &test
+	return &tst
 }
 
 // TokenV1 generates an authenticated token for a user.
-func (test *Test) TokenV1(email string, pass string) string {
+func (tst *Test) TokenV1(email string, pass string) string {
 	addr, _ := mail.ParseAddress(email)
 
-	store := userdb.NewStore(test.Log, test.DB)
+	store := userdb.NewStore(tst.Log, tst.DB)
 	dbUsr, err := store.QueryByEmail(context.Background(), *addr)
 	if err != nil {
 		return ""
@@ -182,13 +225,15 @@ func (test *Test) TokenV1(email string, pass string) string {
 		Roles: dbUsr.Roles,
 	}
 
-	token, err := test.Auth.GenerateToken(kid, claims)
+	token, err := tst.Auth.GenerateToken(kid, claims)
 	if err != nil {
-		test.t.Fatal(err)
+		tst.t.Fatal(err)
 	}
 
 	return token
 }
+
+// =============================================================================
 
 // StringPointer is a helper to get a *string from a string. It is in the tests
 // package because we normally don't want to deal with pointers to basic types
@@ -211,30 +256,7 @@ func FloatPointer(f float64) *float64 {
 	return &f
 }
 
-// CoreAPIs represents all the core api's needed for testing.
-type CoreAPIs struct {
-	Delegate *delegate.Delegate
-	User     *user.Core
-	Product  *product.Core
-	Home     *home.Core
-	VProduct *vproduct.Core
-}
-
-func newCoreAPIs(log *logger.Logger, db *sqlx.DB) CoreAPIs {
-	delegate := delegate.New(log)
-	usrCore := user.NewCore(log, delegate, userdb.NewStore(log, db))
-	prdCore := product.NewCore(log, usrCore, delegate, productdb.NewStore(log, db))
-	hmeCore := home.NewCore(log, usrCore, delegate, homedb.NewStore(log, db))
-	vPrdCore := vproduct.NewCore(vproductdb.NewStore(log, db))
-
-	return CoreAPIs{
-		Delegate: delegate,
-		User:     usrCore,
-		Product:  prdCore,
-		Home:     hmeCore,
-		VProduct: vPrdCore,
-	}
-}
+// =============================================================================
 
 type keyStore struct{}
 

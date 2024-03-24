@@ -20,16 +20,16 @@ func Test_Home(t *testing.T) {
 }
 
 func homeCrud(t *testing.T) {
-	seed := func(ctx context.Context, usrCore *user.Core, hmeCore *home.Core) ([]home.Home, error) {
+	seed := func(ctx context.Context, userCore *user.Core, homeCore *home.Core) ([]home.Home, error) {
 		var filter user.QueryFilter
 		filter.WithName("Admin Gopher")
 
-		usrs, err := usrCore.Query(ctx, filter, user.DefaultOrderBy, 1, 1)
+		usrs, err := userCore.Query(ctx, filter, user.DefaultOrderBy, 1, 1)
 		if err != nil {
 			return nil, fmt.Errorf("seeding users : %w", err)
 		}
 
-		hmes, err := home.TestGenerateSeedHomes(1, hmeCore, usrs[0].ID)
+		hmes, err := home.TestGenerateSeedHomes(1, homeCore, usrs[0].ID)
 		if err != nil {
 			return nil, fmt.Errorf("seeding homes : %w", err)
 		}
@@ -49,21 +49,21 @@ func homeCrud(t *testing.T) {
 		dbTest.Teardown()
 	}()
 
-	api := dbTest.CoreAPIs
+	api := dbTest.Core
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	t.Log("Go seeding ...")
 
-	hmes, err := seed(ctx, api.User, api.Home)
+	hmes, err := seed(ctx, api.Crud.User, api.Crud.Home)
 	if err != nil {
 		t.Fatalf("Seeding error: %s", err)
 	}
 
 	// ---------------------------------------------------------------------------
 
-	saved, err := api.Home.QueryByID(ctx, hmes[0].ID)
+	saved, err := api.Crud.Home.QueryByID(ctx, hmes[0].ID)
 	if err != nil {
 		t.Fatalf("Should be able to retrieve home by ID: %s", err)
 	}
@@ -105,11 +105,11 @@ func homeCrud(t *testing.T) {
 		Type: &home.TypeSingle,
 	}
 
-	if _, err := api.Home.Update(ctx, saved, upd); err != nil {
+	if _, err := api.Crud.Home.Update(ctx, saved, upd); err != nil {
 		t.Errorf("Should be able to update home : %s", err)
 	}
 
-	saved, err = api.Home.QueryByID(ctx, hmes[0].ID)
+	saved, err = api.Crud.Home.QueryByID(ctx, hmes[0].ID)
 	if err != nil {
 		t.Fatalf("Should be able to retrieve updated home : %s", err)
 	}
@@ -119,7 +119,7 @@ func homeCrud(t *testing.T) {
 		t.Fatalf("Should have a larger DateUpdated : sav %v, hme %v, dif %v", saved.DateUpdated, saved.DateUpdated, diff)
 	}
 
-	homes, err := api.Home.Query(ctx, home.QueryFilter{}, user.DefaultOrderBy, 1, 3)
+	homes, err := api.Crud.Home.Query(ctx, home.QueryFilter{}, user.DefaultOrderBy, 1, 3)
 	if err != nil {
 		t.Fatalf("Should be able to retrieve updated home : %s", err)
 	}
@@ -149,11 +149,11 @@ func homeCrud(t *testing.T) {
 		Type: &home.TypeCondo,
 	}
 
-	if _, err := api.Home.Update(ctx, saved, upd); err != nil {
+	if _, err := api.Crud.Home.Update(ctx, saved, upd); err != nil {
 		t.Fatalf("Should be able to update just some fields of home : %s", err)
 	}
 
-	saved, err = api.Home.QueryByID(ctx, hmes[0].ID)
+	saved, err = api.Crud.Home.QueryByID(ctx, hmes[0].ID)
 	if err != nil {
 		t.Fatalf("Should be able to retrieve updated home : %s", err)
 	}
@@ -167,27 +167,27 @@ func homeCrud(t *testing.T) {
 		t.Fatalf("Should be able to see updated Type field : got %q want %q", saved.Type, *upd.Type)
 	}
 
-	if err := api.Home.Delete(ctx, saved); err != nil {
+	if err := api.Crud.Home.Delete(ctx, saved); err != nil {
 		t.Fatalf("Should be able to delete home : %s", err)
 	}
 
-	_, err = api.Home.QueryByID(ctx, hmes[0].ID)
+	_, err = api.Crud.Home.QueryByID(ctx, hmes[0].ID)
 	if !errors.Is(err, home.ErrNotFound) {
 		t.Fatalf("Should NOT be able to retrieve deleted home : %s", err)
 	}
 }
 
 func homePaging(t *testing.T) {
-	seed := func(ctx context.Context, usrCore *user.Core, hmeCore *home.Core) ([]home.Home, error) {
+	seed := func(ctx context.Context, userCore *user.Core, homeCore *home.Core) ([]home.Home, error) {
 		var filter user.QueryFilter
 		filter.WithName("Admin Gopher")
 
-		usrs, err := usrCore.Query(ctx, filter, user.DefaultOrderBy, 1, 1)
+		usrs, err := userCore.Query(ctx, filter, user.DefaultOrderBy, 1, 1)
 		if err != nil {
 			return nil, fmt.Errorf("seeding homes : %w", err)
 		}
 
-		hmes, err := home.TestGenerateSeedHomes(2, hmeCore, usrs[0].ID)
+		hmes, err := home.TestGenerateSeedHomes(2, homeCore, usrs[0].ID)
 		if err != nil {
 			return nil, fmt.Errorf("seeding homes : %w", err)
 		}
@@ -197,23 +197,23 @@ func homePaging(t *testing.T) {
 
 	// -------------------------------------------------------------------------
 
-	test := dbtest.NewTest(t, c, "Test_Home/paging")
+	dbTest := dbtest.NewTest(t, c, "Test_Home/paging")
 	defer func() {
 		if r := recover(); r != nil {
 			t.Log(r)
 			t.Error(string(debug.Stack()))
 		}
-		test.Teardown()
+		dbTest.Teardown()
 	}()
 
-	api := test.CoreAPIs
+	api := dbTest.Core
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	t.Log("Go seeding ...")
 
-	hmes, err := seed(ctx, api.User, api.Home)
+	hmes, err := seed(ctx, api.Crud.User, api.Crud.Home)
 	if err != nil {
 		t.Fatalf("Seeding error: %s", err)
 	}
@@ -221,12 +221,12 @@ func homePaging(t *testing.T) {
 	// -------------------------------------------------------------------------
 
 	homeType := hmes[0].Type
-	hme1, err := api.Home.Query(ctx, home.QueryFilter{Type: &homeType}, user.DefaultOrderBy, 1, 2)
+	hme1, err := api.Crud.Home.Query(ctx, home.QueryFilter{Type: &homeType}, user.DefaultOrderBy, 1, 2)
 	if err != nil {
 		t.Fatalf("Should be able to retrieve homes %q : %s", homeType, err)
 	}
 
-	n, err := api.Home.Count(ctx, home.QueryFilter{Type: &homeType})
+	n, err := api.Crud.Home.Count(ctx, home.QueryFilter{Type: &homeType})
 	if err != nil {
 		t.Fatalf("Should be able to retrieve home count %q : %s", homeType, err)
 	}
@@ -237,12 +237,12 @@ func homePaging(t *testing.T) {
 		t.Fatal("Should have the correct number of homes")
 	}
 
-	hme2, err := api.Home.Query(ctx, home.QueryFilter{}, user.DefaultOrderBy, 1, 2)
+	hme2, err := api.Crud.Home.Query(ctx, home.QueryFilter{}, user.DefaultOrderBy, 1, 2)
 	if err != nil {
 		t.Fatalf("Should be able to retrieve 2 homes for page 1 : %s", err)
 	}
 
-	n, err = api.Home.Count(ctx, home.QueryFilter{})
+	n, err = api.Crud.Home.Count(ctx, home.QueryFilter{})
 	if err != nil {
 		t.Fatalf("Should be able to retrieve home count %q : %s", homeType, err)
 	}
