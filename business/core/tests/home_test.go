@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/mail"
 	"runtime/debug"
 	"testing"
 	"time"
@@ -24,12 +25,20 @@ func homeCrud(t *testing.T) {
 		var filter user.QueryFilter
 		filter.WithName("Admin Gopher")
 
-		usrs, err := userCore.Query(ctx, filter, user.DefaultOrderBy, 1, 1)
+		nu1 := user.NewUser{
+			Name:            "Bill Kennedy",
+			Email:           mail.Address{Address: "bill@ardanlabs.com"},
+			Roles:           []user.Role{user.RoleAdmin},
+			Department:      "IT",
+			Password:        "12345",
+			PasswordConfirm: "12345",
+		}
+		usr1, err := userCore.Create(ctx, nu1)
 		if err != nil {
-			return nil, fmt.Errorf("seeding users : %w", err)
+			return nil, fmt.Errorf("seeding user 1 : %w", err)
 		}
 
-		hmes, err := home.TestGenerateSeedHomes(1, homeCore, usrs[0].ID)
+		hmes, err := home.TestGenerateSeedHomes(1, homeCore, usr1.ID)
 		if err != nil {
 			return nil, fmt.Errorf("seeding homes : %w", err)
 		}

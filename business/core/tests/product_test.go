@@ -28,12 +28,20 @@ func productCrud(t *testing.T) {
 		var filter user.QueryFilter
 		filter.WithName("Admin Gopher")
 
-		usrs, err := userCore.Query(ctx, filter, user.DefaultOrderBy, 1, 1)
+		nu1 := user.NewUser{
+			Name:            "Bill Kennedy",
+			Email:           mail.Address{Address: "bill@ardanlabs.com"},
+			Roles:           []user.Role{user.RoleAdmin},
+			Department:      "IT",
+			Password:        "12345",
+			PasswordConfirm: "12345",
+		}
+		usr1, err := userCore.Create(ctx, nu1)
 		if err != nil {
-			return nil, fmt.Errorf("seeding users : %w", err)
+			return nil, fmt.Errorf("seeding user 1 : %w", err)
 		}
 
-		prds, err := product.TestGenerateSeedProducts(1, productCore, usrs[0].ID)
+		prds, err := product.TestGenerateSeedProducts(1, productCore, usr1.ID)
 		if err != nil {
 			return nil, fmt.Errorf("seeding products : %w", err)
 		}
