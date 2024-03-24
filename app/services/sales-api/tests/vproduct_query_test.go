@@ -8,16 +8,16 @@ import (
 )
 
 func vproductQuery200(sd seedData) []tableData {
-	total := len(sd.admins[1].products) + len(sd.users[1].products)
+	total := len(sd.admins[0].products) + len(sd.users[0].products)
 
-	allProducts := toAppVProducts(sd.admins[1].User, sd.admins[1].products)
-	allProducts = append(allProducts, toAppVProducts(sd.users[1].User, sd.users[1].products)...)
+	allProducts := toAppVProducts(sd.admins[0].User, sd.admins[0].products)
+	allProducts = append(allProducts, toAppVProducts(sd.users[0].User, sd.users[0].products)...)
 
 	table := []tableData{
 		{
 			name:       "basic",
 			url:        "/v1/vproducts?page=1&rows=10&orderBy=product_id,DESC",
-			token:      sd.admins[1].token,
+			token:      sd.admins[0].token,
 			statusCode: http.StatusOK,
 			method:     http.MethodGet,
 			resp:       &page.Document[vproductgrp.AppProduct]{},

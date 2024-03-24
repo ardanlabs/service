@@ -15,8 +15,8 @@ func productUpdate200(sd seedData) []tableData {
 	table := []tableData{
 		{
 			name:       "basic",
-			url:        fmt.Sprintf("/v1/products/%s", sd.users[1].products[0].ID),
-			token:      sd.users[1].token,
+			url:        fmt.Sprintf("/v1/products/%s", sd.users[0].products[0].ID),
+			token:      sd.users[0].token,
 			method:     http.MethodPut,
 			statusCode: http.StatusOK,
 			model: &productgrp.AppUpdateProduct{
@@ -27,7 +27,7 @@ func productUpdate200(sd seedData) []tableData {
 			resp: &productgrp.AppProduct{},
 			expResp: &productgrp.AppProduct{
 				Name:     "Guitar",
-				UserID:   sd.users[1].ID.String(),
+				UserID:   sd.users[0].ID.String(),
 				Cost:     10.34,
 				Quantity: 10,
 			},
@@ -63,8 +63,8 @@ func productUpdate400(sd seedData) []tableData {
 	table := []tableData{
 		{
 			name:       "bad-input",
-			url:        fmt.Sprintf("/v1/products/%s", sd.users[1].products[0].ID),
-			token:      sd.users[1].token,
+			url:        fmt.Sprintf("/v1/products/%s", sd.users[0].products[0].ID),
+			token:      sd.users[0].token,
 			method:     http.MethodPut,
 			statusCode: http.StatusBadRequest,
 			model: &productgrp.AppUpdateProduct{
@@ -89,7 +89,7 @@ func productUpdate401(sd seedData) []tableData {
 	table := []tableData{
 		{
 			name:       "emptytoken",
-			url:        fmt.Sprintf("/v1/products/%s", sd.users[1].products[0].ID),
+			url:        fmt.Sprintf("/v1/products/%s", sd.users[0].products[0].ID),
 			token:      "",
 			method:     http.MethodPut,
 			statusCode: http.StatusUnauthorized,
@@ -101,8 +101,8 @@ func productUpdate401(sd seedData) []tableData {
 		},
 		{
 			name:       "badsig",
-			url:        fmt.Sprintf("/v1/products/%s", sd.users[1].products[0].ID),
-			token:      sd.users[1].token + "A",
+			url:        fmt.Sprintf("/v1/products/%s", sd.users[0].products[0].ID),
+			token:      sd.users[0].token + "A",
 			method:     http.MethodPut,
 			statusCode: http.StatusUnauthorized,
 			resp:       &errs.Response{},
@@ -113,7 +113,7 @@ func productUpdate401(sd seedData) []tableData {
 		},
 		{
 			name:       "wronguser",
-			url:        fmt.Sprintf("/v1/products/%s", sd.admins[1].products[0].ID),
+			url:        fmt.Sprintf("/v1/products/%s", sd.admins[0].products[0].ID),
 			token:      sd.users[0].token,
 			method:     http.MethodPut,
 			statusCode: http.StatusUnauthorized,

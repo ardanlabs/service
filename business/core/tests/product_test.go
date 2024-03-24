@@ -28,12 +28,21 @@ func productCrud(t *testing.T) {
 		var filter user.QueryFilter
 		filter.WithName("Admin Gopher")
 
-		usrs, err := userCore.Query(ctx, filter, user.DefaultOrderBy, 1, 1)
-		if err != nil {
-			return nil, fmt.Errorf("seeding users : %w", err)
+		nu := user.NewUser{
+			Name:            "Bill Kennedy",
+			Email:           mail.Address{Address: "bill@ardanlabs.com"},
+			Roles:           []user.Role{user.RoleAdmin},
+			Department:      "IT",
+			Password:        "12345",
+			PasswordConfirm: "12345",
 		}
 
-		prds, err := product.TestGenerateSeedProducts(1, productCore, usrs[0].ID)
+		usr, err := userCore.Create(ctx, nu)
+		if err != nil {
+			return nil, fmt.Errorf("seeding user : %w", err)
+		}
+
+		prds, err := product.TestGenerateSeedProducts(1, productCore, usr.ID)
 		if err != nil {
 			return nil, fmt.Errorf("seeding products : %w", err)
 		}
@@ -179,12 +188,21 @@ func productPaging(t *testing.T) {
 		var filter user.QueryFilter
 		filter.WithName("Admin Gopher")
 
-		usrs, err := userCore.Query(ctx, filter, user.DefaultOrderBy, 1, 1)
-		if err != nil {
-			return nil, fmt.Errorf("seeding products : %w", err)
+		nu := user.NewUser{
+			Name:            "Bill Kennedy",
+			Email:           mail.Address{Address: "bill@ardanlabs.com"},
+			Roles:           []user.Role{user.RoleAdmin},
+			Department:      "IT",
+			Password:        "12345",
+			PasswordConfirm: "12345",
 		}
 
-		prds, err := product.TestGenerateSeedProducts(2, productCore, usrs[0].ID)
+		usr, err := userCore.Create(ctx, nu)
+		if err != nil {
+			return nil, fmt.Errorf("seeding user : %w", err)
+		}
+
+		prds, err := product.TestGenerateSeedProducts(2, productCore, usr.ID)
 		if err != nil {
 			return nil, fmt.Errorf("seeding products : %w", err)
 		}

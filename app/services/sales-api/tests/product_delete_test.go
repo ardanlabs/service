@@ -12,15 +12,15 @@ func productDelete200(sd seedData) []tableData {
 	table := []tableData{
 		{
 			name:       "asuser",
-			url:        fmt.Sprintf("/v1/products/%s", sd.users[1].products[0].ID),
-			token:      sd.users[1].token,
+			url:        fmt.Sprintf("/v1/products/%s", sd.users[0].products[0].ID),
+			token:      sd.users[0].token,
 			method:     http.MethodDelete,
 			statusCode: http.StatusNoContent,
 		},
 		{
 			name:       "asadmin",
-			url:        fmt.Sprintf("/v1/products/%s", sd.admins[1].products[0].ID),
-			token:      sd.admins[1].token,
+			url:        fmt.Sprintf("/v1/products/%s", sd.admins[0].products[0].ID),
+			token:      sd.admins[0].token,
 			method:     http.MethodDelete,
 			statusCode: http.StatusNoContent,
 		},
@@ -33,7 +33,7 @@ func productDelete401(sd seedData) []tableData {
 	table := []tableData{
 		{
 			name:       "emptytoken",
-			url:        fmt.Sprintf("/v1/products/%s", sd.users[1].products[1].ID),
+			url:        fmt.Sprintf("/v1/products/%s", sd.users[0].products[1].ID),
 			token:      "",
 			method:     http.MethodDelete,
 			statusCode: http.StatusUnauthorized,
@@ -45,8 +45,8 @@ func productDelete401(sd seedData) []tableData {
 		},
 		{
 			name:       "badsig",
-			url:        fmt.Sprintf("/v1/products/%s", sd.users[1].products[1].ID),
-			token:      sd.users[1].token + "A",
+			url:        fmt.Sprintf("/v1/products/%s", sd.users[0].products[1].ID),
+			token:      sd.users[0].token + "A",
 			method:     http.MethodDelete,
 			statusCode: http.StatusUnauthorized,
 			resp:       &errs.Response{},
@@ -57,7 +57,7 @@ func productDelete401(sd seedData) []tableData {
 		},
 		{
 			name:       "wronguser",
-			url:        fmt.Sprintf("/v1/products/%s", sd.users[1].products[1].ID),
+			url:        fmt.Sprintf("/v1/products/%s", sd.admins[0].products[1].ID),
 			token:      sd.users[0].token,
 			method:     http.MethodDelete,
 			statusCode: http.StatusUnauthorized,

@@ -10,13 +10,13 @@ import (
 )
 
 func productQuery200(sd seedData) []tableData {
-	total := len(sd.admins[1].products) + len(sd.users[1].products)
+	total := len(sd.admins[0].products) + len(sd.users[0].products)
 
 	table := []tableData{
 		{
 			name:       "basic",
 			url:        "/v1/products?page=1&rows=10&orderBy=product_id,DESC",
-			token:      sd.admins[1].token,
+			token:      sd.admins[0].token,
 			statusCode: http.StatusOK,
 			method:     http.MethodGet,
 			resp:       &page.Document[productgrp.AppProduct]{},
@@ -24,7 +24,7 @@ func productQuery200(sd seedData) []tableData {
 				Page:        1,
 				RowsPerPage: 10,
 				Total:       total,
-				Items:       toAppProducts(append(sd.admins[1].products, sd.users[1].products...)),
+				Items:       toAppProducts(append(sd.admins[0].products, sd.users[0].products...)),
 			},
 			cmpFunc: func(x interface{}, y interface{}) string {
 				resp := x.(*page.Document[productgrp.AppProduct])
@@ -56,12 +56,12 @@ func productQueryByID200(sd seedData) []tableData {
 	table := []tableData{
 		{
 			name:       "basic",
-			url:        fmt.Sprintf("/v1/products/%s", sd.users[1].products[0].ID),
-			token:      sd.users[1].token,
+			url:        fmt.Sprintf("/v1/products/%s", sd.users[0].products[0].ID),
+			token:      sd.users[0].token,
 			statusCode: http.StatusOK,
 			method:     http.MethodGet,
 			resp:       &productgrp.AppProduct{},
-			expResp:    toAppProductPtr(sd.users[1].products[0]),
+			expResp:    toAppProductPtr(sd.users[0].products[0]),
 			cmpFunc: func(x interface{}, y interface{}) string {
 				return cmp.Diff(x, y)
 			},
