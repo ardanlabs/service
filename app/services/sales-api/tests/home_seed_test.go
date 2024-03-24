@@ -9,12 +9,14 @@ import (
 )
 
 func insertHomeSeed(dbTest *dbtest.Test) (seedData, error) {
-	usrs, err := user.TestGenerateSeedUsers(1, user.RoleUser, dbTest.Core.Crud.User)
+	api := dbTest.Core.Crud
+
+	usrs, err := user.TestGenerateSeedUsers(1, user.RoleUser, api.User)
 	if err != nil {
 		return seedData{}, fmt.Errorf("seeding users : %w", err)
 	}
 
-	hmes, err := home.TestGenerateSeedHomes(2, dbTest.Core.Crud.Home, usrs[0].ID)
+	hmes, err := home.TestGenerateSeedHomes(2, api.Home, usrs[0].ID)
 	if err != nil {
 		return seedData{}, fmt.Errorf("seeding homes : %w", err)
 	}
@@ -27,7 +29,7 @@ func insertHomeSeed(dbTest *dbtest.Test) (seedData, error) {
 
 	// -------------------------------------------------------------------------
 
-	usrs, err = user.TestGenerateSeedUsers(1, user.RoleUser, dbTest.Core.Crud.User)
+	usrs, err = user.TestGenerateSeedUsers(1, user.RoleUser, api.User)
 	if err != nil {
 		return seedData{}, fmt.Errorf("seeding users : %w", err)
 	}
@@ -39,12 +41,12 @@ func insertHomeSeed(dbTest *dbtest.Test) (seedData, error) {
 
 	// -------------------------------------------------------------------------
 
-	usrs, err = user.TestGenerateSeedUsers(1, user.RoleAdmin, dbTest.Core.Crud.User)
+	usrs, err = user.TestGenerateSeedUsers(1, user.RoleAdmin, api.User)
 	if err != nil {
 		return seedData{}, fmt.Errorf("seeding users : %w", err)
 	}
 
-	hmes, err = home.TestGenerateSeedHomes(2, dbTest.Core.Crud.Home, usrs[0].ID)
+	hmes, err = home.TestGenerateSeedHomes(2, api.Home, usrs[0].ID)
 	if err != nil {
 		return seedData{}, fmt.Errorf("seeding homes : %w", err)
 	}
@@ -57,7 +59,7 @@ func insertHomeSeed(dbTest *dbtest.Test) (seedData, error) {
 
 	// -------------------------------------------------------------------------
 
-	usrs, err = user.TestGenerateSeedUsers(1, user.RoleAdmin, dbTest.Core.Crud.User)
+	usrs, err = user.TestGenerateSeedUsers(1, user.RoleAdmin, api.User)
 	if err != nil {
 		return seedData{}, fmt.Errorf("seeding users : %w", err)
 	}
