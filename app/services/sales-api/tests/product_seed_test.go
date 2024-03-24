@@ -1,38 +1,19 @@
 package tests
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/ardanlabs/service/business/core/crud/product"
 	"github.com/ardanlabs/service/business/core/crud/user"
 	"github.com/ardanlabs/service/business/data/dbtest"
-	"github.com/ardanlabs/service/business/web/order"
 )
 
 func insertProductSeed(dbTest *dbtest.Test) (seedData, error) {
 	api := dbTest.Core.Crud
 
-	usrs, err := api.User.Query(context.Background(), user.QueryFilter{}, order.By{Field: user.OrderByName, Direction: order.ASC}, 1, 2)
-	if err != nil {
-		return seedData{}, fmt.Errorf("seeding users : %w", err)
-	}
-
 	// -------------------------------------------------------------------------
 
-	tu1 := testUser{
-		User:  usrs[0],
-		token: dbTest.TokenV1(usrs[0].Email.Address, "gophers"),
-	}
-
-	tu2 := testUser{
-		User:  usrs[1],
-		token: dbTest.TokenV1(usrs[1].Email.Address, "gophers"),
-	}
-
-	// -------------------------------------------------------------------------
-
-	usrs, err = user.TestGenerateSeedUsers(1, user.RoleUser, api.User)
+	usrs, err := user.TestGenerateSeedUsers(1, user.RoleUser, api.User)
 	if err != nil {
 		return seedData{}, fmt.Errorf("seeding users : %w", err)
 	}
@@ -69,8 +50,8 @@ func insertProductSeed(dbTest *dbtest.Test) (seedData, error) {
 	// -------------------------------------------------------------------------
 
 	sd := seedData{
-		admins: []testUser{tu1, tu4},
-		users:  []testUser{tu2, tu3},
+		admins: []testUser{tu4},
+		users:  []testUser{tu3},
 	}
 
 	return sd, nil
