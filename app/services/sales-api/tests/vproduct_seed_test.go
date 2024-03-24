@@ -25,8 +25,6 @@ func insertVProductSeed(dbTest *dbtest.Test) (seedData, error) {
 
 	// -------------------------------------------------------------------------
 
-	// -------------------------------------------------------------------------
-
 	usrs, err = user.TestGenerateSeedUsers(1, user.RoleAdmin, api.User)
 	if err != nil {
 		return seedData{}, fmt.Errorf("seeding users : %w", err)
