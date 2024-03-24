@@ -159,11 +159,6 @@ func NewTest(t *testing.T, c *docker.Container, testName string) *Test {
 		t.Fatalf("Migrating error: %s", err)
 	}
 
-	if err := migrate.Seed(ctx, db); err != nil {
-		t.Logf("Logs for %s\n%s:", c.ID, docker.DumpContainerLogs(c.ID))
-		t.Fatalf("Seeding error: %s", err)
-	}
-
 	// -------------------------------------------------------------------------
 
 	var buf bytes.Buffer
