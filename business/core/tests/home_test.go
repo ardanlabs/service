@@ -22,6 +22,8 @@ func Test_Home(t *testing.T) {
 
 func homeCrud(t *testing.T) {
 	seed := func(ctx context.Context, userCore *user.Core, homeCore *home.Core) ([]home.Home, error) {
+		hmes := make([]home.Home, 1)
+
 		var filter user.QueryFilter
 		filter.WithName("Admin Gopher")
 
@@ -39,10 +41,25 @@ func homeCrud(t *testing.T) {
 			return nil, fmt.Errorf("seeding user : %w", err)
 		}
 
-		hmes, err := home.TestGenerateSeedHomes(1, homeCore, usr.ID)
-		if err != nil {
-			return nil, fmt.Errorf("seeding homes : %w", err)
+		nh := home.NewHome{
+			UserID: usr.ID,
+			Type:   home.TypeSingle,
+			Address: home.Address{
+				Address1: "Address1",
+				Address2: "Address1",
+				ZipCode:  "12345",
+				City:     "City1",
+				State:    "State1",
+				Country:  "Country1",
+			},
 		}
+
+		hme, err := homeCore.Create(ctx, nh)
+		if err != nil {
+			return nil, fmt.Errorf("seeding home : %w", err)
+		}
+
+		hmes[0] = hme
 
 		return hmes, nil
 	}
@@ -189,6 +206,8 @@ func homeCrud(t *testing.T) {
 
 func homePaging(t *testing.T) {
 	seed := func(ctx context.Context, userCore *user.Core, homeCore *home.Core) ([]home.Home, error) {
+		hmes := make([]home.Home, 2)
+
 		var filter user.QueryFilter
 		filter.WithName("Admin Gopher")
 
@@ -206,10 +225,44 @@ func homePaging(t *testing.T) {
 			return nil, fmt.Errorf("seeding user : %w", err)
 		}
 
-		hmes, err := home.TestGenerateSeedHomes(2, homeCore, usr.ID)
-		if err != nil {
-			return nil, fmt.Errorf("seeding homes : %w", err)
+		nh1 := home.NewHome{
+			UserID: usr.ID,
+			Type:   home.TypeSingle,
+			Address: home.Address{
+				Address1: "Address1",
+				Address2: "Address1",
+				ZipCode:  "12345",
+				City:     "City1",
+				State:    "State1",
+				Country:  "Country1",
+			},
 		}
+
+		hme1, err := homeCore.Create(ctx, nh1)
+		if err != nil {
+			return nil, fmt.Errorf("seeding home 1 : %w", err)
+		}
+
+		nh2 := home.NewHome{
+			UserID: usr.ID,
+			Type:   home.TypeSingle,
+			Address: home.Address{
+				Address1: "Address2",
+				Address2: "Address2",
+				ZipCode:  "67891",
+				City:     "City2",
+				State:    "State2",
+				Country:  "Country2",
+			},
+		}
+
+		hme2, err := homeCore.Create(ctx, nh2)
+		if err != nil {
+			return nil, fmt.Errorf("seeding home 2 : %w", err)
+		}
+
+		hmes[0] = hme1
+		hmes[0] = hme2
 
 		return hmes, nil
 	}

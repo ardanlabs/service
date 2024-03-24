@@ -25,6 +25,8 @@ func Test_Product(t *testing.T) {
 
 func productCrud(t *testing.T) {
 	seed := func(ctx context.Context, userCore *user.Core, productCore *product.Core) ([]product.Product, error) {
+		prds := make([]product.Product, 1)
+
 		var filter user.QueryFilter
 		filter.WithName("Admin Gopher")
 
@@ -42,10 +44,19 @@ func productCrud(t *testing.T) {
 			return nil, fmt.Errorf("seeding user : %w", err)
 		}
 
-		prds, err := product.TestGenerateSeedProducts(1, productCore, usr.ID)
-		if err != nil {
-			return nil, fmt.Errorf("seeding products : %w", err)
+		np := product.NewProduct{
+			Name:     "Name1",
+			Cost:     500,
+			Quantity: 10,
+			UserID:   usr.ID,
 		}
+
+		prd, err := productCore.Create(ctx, np)
+		if err != nil {
+			return nil, fmt.Errorf("seeding product : %w", err)
+		}
+
+		prds[0] = prd
 
 		return prds, nil
 	}
@@ -185,6 +196,8 @@ func productCrud(t *testing.T) {
 
 func productPaging(t *testing.T) {
 	seed := func(ctx context.Context, userCore *user.Core, productCore *product.Core) ([]product.Product, error) {
+		prds := make([]product.Product, 2)
+
 		var filter user.QueryFilter
 		filter.WithName("Admin Gopher")
 
@@ -202,10 +215,32 @@ func productPaging(t *testing.T) {
 			return nil, fmt.Errorf("seeding user : %w", err)
 		}
 
-		prds, err := product.TestGenerateSeedProducts(2, productCore, usr.ID)
-		if err != nil {
-			return nil, fmt.Errorf("seeding products : %w", err)
+		np1 := product.NewProduct{
+			Name:     "Name1",
+			Cost:     500,
+			Quantity: 10,
+			UserID:   usr.ID,
 		}
+
+		prd1, err := productCore.Create(ctx, np1)
+		if err != nil {
+			return nil, fmt.Errorf("seeding product 1 : %w", err)
+		}
+
+		np2 := product.NewProduct{
+			Name:     "Name2",
+			Cost:     600,
+			Quantity: 5,
+			UserID:   usr.ID,
+		}
+
+		prd2, err := productCore.Create(ctx, np2)
+		if err != nil {
+			return nil, fmt.Errorf("seeding product 2 : %w", err)
+		}
+
+		prds[0] = prd1
+		prds[1] = prd2
 
 		return prds, nil
 	}
