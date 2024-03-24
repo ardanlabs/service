@@ -93,6 +93,8 @@ func userCrud(t *testing.T) {
 		Name:       dbtest.StringPointer("Jacob Walker"),
 		Email:      email,
 		Department: dbtest.StringPointer("development"),
+		Roles:      []user.Role{user.RoleUser},
+		Enabled:    dbtest.BoolPointer(false),
 	}
 
 	if _, err := api.Crud.User.Update(ctx, usrs[0], upd); err != nil {
@@ -125,6 +127,27 @@ func userCrud(t *testing.T) {
 		t.Logf("got: %v", saved.Department)
 		t.Logf("exp: %v", *upd.Department)
 		t.Errorf("Should be able to see updates to Department")
+	}
+
+	if len(saved.Roles) != len(upd.Roles) {
+		t.Logf("got: %v", saved.Roles)
+		t.Logf("exp: %v", upd.Roles)
+		t.Errorf("Should be able to see updates to Roles")
+	} else {
+		for i := range saved.Roles {
+			if saved.Roles[i] != upd.Roles[i] {
+				t.Logf("got: %v", saved.Roles)
+				t.Logf("exp: %v", upd.Roles)
+				t.Errorf("Should be able to see updates to Roles")
+				break
+			}
+		}
+	}
+
+	if saved.Enabled != *upd.Enabled {
+		t.Logf("got: %v", saved.Enabled)
+		t.Logf("exp: %v", *upd.Enabled)
+		t.Errorf("Should be able to see updates to Enabled")
 	}
 
 	// -------------------------------------------------------------------------

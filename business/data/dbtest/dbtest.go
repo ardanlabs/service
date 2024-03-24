@@ -251,6 +251,13 @@ func FloatPointer(f float64) *float64 {
 	return &f
 }
 
+// BoolPointer is a helper to get a *bool from a bool. It is in the tests package
+// because we normally don't want to deal with pointers to basic types but it's
+// useful in some tests.
+func BoolPointer(b bool) *bool {
+	return &b
+}
+
 // =============================================================================
 
 type keyStore struct{}
