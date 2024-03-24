@@ -3,7 +3,6 @@ package tests
 import (
 	"context"
 	"fmt"
-	"net/mail"
 	"runtime/debug"
 	"testing"
 	"time"
@@ -20,29 +19,17 @@ func Test_VProduct(t *testing.T) {
 
 func vproductPaging(t *testing.T) {
 	seed := func(ctx context.Context, userCore *user.Core, productCore *product.Core) ([]product.Product, []user.User, error) {
-		var filter user.QueryFilter
-		filter.WithName("Admin Gopher")
-
-		nu := user.NewUser{
-			Name:            "Bill Kennedy",
-			Email:           mail.Address{Address: "bill@ardanlabs.com"},
-			Roles:           []user.Role{user.RoleAdmin},
-			Department:      "IT",
-			Password:        "12345",
-			PasswordConfirm: "12345",
-		}
-
-		usr, err := userCore.Create(ctx, nu)
+		usrs, err := user.TestGenerateSeedUsers(ctx, 1, user.RoleAdmin, userCore)
 		if err != nil {
 			return nil, nil, fmt.Errorf("seeding user : %w", err)
 		}
 
-		prds, err := product.TestGenerateSeedProducts(2, productCore, usr.ID)
+		prds, err := product.TestGenerateSeedProducts(ctx, 2, productCore, usrs[0].ID)
 		if err != nil {
 			return nil, nil, fmt.Errorf("seeding products : %w", err)
 		}
 
-		return prds, []user.User{usr}, nil
+		return prds, []user.User{usrs[0]}, nil
 	}
 
 	// -------------------------------------------------------------------------

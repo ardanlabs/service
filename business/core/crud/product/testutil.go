@@ -30,12 +30,12 @@ func TestGenerateNewProducts(n int, userID uuid.UUID) []NewProduct {
 }
 
 // TestGenerateSeedProducts is a helper method for testing.
-func TestGenerateSeedProducts(n int, api *Core, userID uuid.UUID) ([]Product, error) {
+func TestGenerateSeedProducts(ctx context.Context, n int, api *Core, userID uuid.UUID) ([]Product, error) {
 	newPrds := TestGenerateNewProducts(n, userID)
 
 	prds := make([]Product, len(newPrds))
 	for i, np := range newPrds {
-		prd, err := api.Create(context.Background(), np)
+		prd, err := api.Create(ctx, np)
 		if err != nil {
 			return nil, fmt.Errorf("seeding product: idx: %d : %w", i, err)
 		}

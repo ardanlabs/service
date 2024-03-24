@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/mail"
 	"runtime/debug"
 	"testing"
 	"time"
@@ -22,24 +21,12 @@ func Test_Home(t *testing.T) {
 
 func homeCrud(t *testing.T) {
 	seed := func(ctx context.Context, userCore *user.Core, homeCore *home.Core) ([]home.Home, error) {
-		var filter user.QueryFilter
-		filter.WithName("Admin Gopher")
-
-		nu := user.NewUser{
-			Name:            "Bill Kennedy",
-			Email:           mail.Address{Address: "bill@ardanlabs.com"},
-			Roles:           []user.Role{user.RoleAdmin},
-			Department:      "IT",
-			Password:        "12345",
-			PasswordConfirm: "12345",
-		}
-
-		usr, err := userCore.Create(ctx, nu)
+		usrs, err := user.TestGenerateSeedUsers(ctx, 1, user.RoleAdmin, userCore)
 		if err != nil {
 			return nil, fmt.Errorf("seeding user : %w", err)
 		}
 
-		hmes, err := home.TestGenerateSeedHomes(1, homeCore, usr.ID)
+		hmes, err := home.TestGenerateSeedHomes(ctx, 1, homeCore, usrs[0].ID)
 		if err != nil {
 			return nil, fmt.Errorf("seeding homes : %w", err)
 		}
@@ -189,24 +176,12 @@ func homeCrud(t *testing.T) {
 
 func homePaging(t *testing.T) {
 	seed := func(ctx context.Context, userCore *user.Core, homeCore *home.Core) ([]home.Home, error) {
-		var filter user.QueryFilter
-		filter.WithName("Admin Gopher")
-
-		nu := user.NewUser{
-			Name:            "Bill Kennedy",
-			Email:           mail.Address{Address: "bill@ardanlabs.com"},
-			Roles:           []user.Role{user.RoleAdmin},
-			Department:      "IT",
-			Password:        "12345",
-			PasswordConfirm: "12345",
-		}
-
-		usr, err := userCore.Create(ctx, nu)
+		usrs, err := user.TestGenerateSeedUsers(ctx, 1, user.RoleAdmin, userCore)
 		if err != nil {
 			return nil, fmt.Errorf("seeding user : %w", err)
 		}
 
-		hmes, err := home.TestGenerateSeedHomes(2, homeCore, usr.ID)
+		hmes, err := home.TestGenerateSeedHomes(ctx, 2, homeCore, usrs[0].ID)
 		if err != nil {
 			return nil, fmt.Errorf("seeding homes : %w", err)
 		}

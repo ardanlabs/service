@@ -31,12 +31,12 @@ func TestGenerateNewUsers(n int, role Role) []NewUser {
 }
 
 // TestGenerateSeedUsers is a helper method for testing.
-func TestGenerateSeedUsers(n int, role Role, api *Core) ([]User, error) {
+func TestGenerateSeedUsers(ctx context.Context, n int, role Role, api *Core) ([]User, error) {
 	newUsrs := TestGenerateNewUsers(n, role)
 
 	usrs := make([]User, len(newUsrs))
 	for i, nu := range newUsrs {
-		usr, err := api.Create(context.Background(), nu)
+		usr, err := api.Create(ctx, nu)
 		if err != nil {
 			return nil, fmt.Errorf("seeding user: idx: %d : %w", i, err)
 		}

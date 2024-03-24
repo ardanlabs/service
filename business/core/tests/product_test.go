@@ -25,24 +25,12 @@ func Test_Product(t *testing.T) {
 
 func productCrud(t *testing.T) {
 	seed := func(ctx context.Context, userCore *user.Core, productCore *product.Core) ([]product.Product, error) {
-		var filter user.QueryFilter
-		filter.WithName("Admin Gopher")
-
-		nu := user.NewUser{
-			Name:            "Bill Kennedy",
-			Email:           mail.Address{Address: "bill@ardanlabs.com"},
-			Roles:           []user.Role{user.RoleAdmin},
-			Department:      "IT",
-			Password:        "12345",
-			PasswordConfirm: "12345",
-		}
-
-		usr, err := userCore.Create(ctx, nu)
+		usrs, err := user.TestGenerateSeedUsers(ctx, 1, user.RoleAdmin, userCore)
 		if err != nil {
 			return nil, fmt.Errorf("seeding user : %w", err)
 		}
 
-		prds, err := product.TestGenerateSeedProducts(1, productCore, usr.ID)
+		prds, err := product.TestGenerateSeedProducts(ctx, 1, productCore, usrs[0].ID)
 		if err != nil {
 			return nil, fmt.Errorf("seeding products : %w", err)
 		}
@@ -185,24 +173,12 @@ func productCrud(t *testing.T) {
 
 func productPaging(t *testing.T) {
 	seed := func(ctx context.Context, userCore *user.Core, productCore *product.Core) ([]product.Product, error) {
-		var filter user.QueryFilter
-		filter.WithName("Admin Gopher")
-
-		nu := user.NewUser{
-			Name:            "Bill Kennedy",
-			Email:           mail.Address{Address: "bill@ardanlabs.com"},
-			Roles:           []user.Role{user.RoleAdmin},
-			Department:      "IT",
-			Password:        "12345",
-			PasswordConfirm: "12345",
-		}
-
-		usr, err := userCore.Create(ctx, nu)
+		usrs, err := user.TestGenerateSeedUsers(ctx, 1, user.RoleAdmin, userCore)
 		if err != nil {
 			return nil, fmt.Errorf("seeding user : %w", err)
 		}
 
-		prds, err := product.TestGenerateSeedProducts(2, productCore, usr.ID)
+		prds, err := product.TestGenerateSeedProducts(ctx, 2, productCore, usrs[0].ID)
 		if err != nil {
 			return nil, fmt.Errorf("seeding products : %w", err)
 		}

@@ -41,12 +41,12 @@ func TestGenerateNewHomes(n int, userID uuid.UUID) []NewHome {
 }
 
 // TestGenerateSeedHomes is a helper method for testing.
-func TestGenerateSeedHomes(n int, api *Core, userID uuid.UUID) ([]Home, error) {
+func TestGenerateSeedHomes(ctx context.Context, n int, api *Core, userID uuid.UUID) ([]Home, error) {
 	newHmes := TestGenerateNewHomes(n, userID)
 
 	hmes := make([]Home, len(newHmes))
 	for i, nh := range newHmes {
-		hme, err := api.Create(context.Background(), nh)
+		hme, err := api.Create(ctx, nh)
 		if err != nil {
 			return nil, fmt.Errorf("seeding home: idx: %d : %w", i, err)
 		}

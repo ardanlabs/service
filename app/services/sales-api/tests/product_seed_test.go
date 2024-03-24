@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/ardanlabs/service/business/core/crud/product"
@@ -9,14 +10,15 @@ import (
 )
 
 func insertProductSeed(dbTest *dbtest.Test) (seedData, error) {
+	ctx := context.Background()
 	api := dbTest.Core.Crud
 
-	usrs, err := user.TestGenerateSeedUsers(1, user.RoleUser, api.User)
+	usrs, err := user.TestGenerateSeedUsers(ctx, 1, user.RoleUser, api.User)
 	if err != nil {
 		return seedData{}, fmt.Errorf("seeding users : %w", err)
 	}
 
-	prds, err := product.TestGenerateSeedProducts(2, api.Product, usrs[0].ID)
+	prds, err := product.TestGenerateSeedProducts(ctx, 2, api.Product, usrs[0].ID)
 	if err != nil {
 		return seedData{}, fmt.Errorf("seeding products : %w", err)
 	}
@@ -29,12 +31,12 @@ func insertProductSeed(dbTest *dbtest.Test) (seedData, error) {
 
 	// -------------------------------------------------------------------------
 
-	usrs, err = user.TestGenerateSeedUsers(1, user.RoleAdmin, api.User)
+	usrs, err = user.TestGenerateSeedUsers(ctx, 1, user.RoleAdmin, api.User)
 	if err != nil {
 		return seedData{}, fmt.Errorf("seeding users : %w", err)
 	}
 
-	prds, err = product.TestGenerateSeedProducts(2, api.Product, usrs[0].ID)
+	prds, err = product.TestGenerateSeedProducts(ctx, 2, api.Product, usrs[0].ID)
 	if err != nil {
 		return seedData{}, fmt.Errorf("seeding products : %w", err)
 	}

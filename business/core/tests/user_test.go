@@ -21,36 +21,10 @@ func Test_User(t *testing.T) {
 
 func userCrud(t *testing.T) {
 	seed := func(ctx context.Context, userCore *user.Core) ([]user.User, error) {
-		usrs := make([]user.User, 2)
-
-		nu1 := user.NewUser{
-			Name:            "Bill Kennedy",
-			Email:           mail.Address{Address: "bill@ardanlabs.com"},
-			Roles:           []user.Role{user.RoleAdmin},
-			Department:      "IT",
-			Password:        "12345",
-			PasswordConfirm: "12345",
-		}
-		usr1, err := userCore.Create(ctx, nu1)
+		usrs, err := user.TestGenerateSeedUsers(ctx, 2, user.RoleAdmin, userCore)
 		if err != nil {
-			return nil, fmt.Errorf("seeding user 1 : %w", err)
+			return nil, fmt.Errorf("seeding user : %w", err)
 		}
-
-		nu2 := user.NewUser{
-			Name:            "Ale Kennedy",
-			Email:           mail.Address{Address: "ale@ardanlabs.com"},
-			Roles:           []user.Role{user.RoleUser},
-			Department:      "IT",
-			Password:        "12345",
-			PasswordConfirm: "12345",
-		}
-		usr2, err := userCore.Create(ctx, nu2)
-		if err != nil {
-			return nil, fmt.Errorf("seeding user 2 : %w", err)
-		}
-
-		usrs[0] = usr1
-		usrs[1] = usr2
 
 		return usrs, nil
 	}
