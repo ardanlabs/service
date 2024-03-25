@@ -213,8 +213,13 @@ func (a *Auth) isUserEnabled(ctx context.Context, claims Claims) error {
 		return fmt.Errorf("parse user: %w", err)
 	}
 
-	if _, err := a.userCore.QueryByID(ctx, userID); err != nil {
+	usr, err := a.userCore.QueryByID(ctx, userID)
+	if err != nil {
 		return fmt.Errorf("query user: %w", err)
+	}
+
+	if !usr.Enabled {
+		return fmt.Errorf("user disabled")
 	}
 
 	return nil
