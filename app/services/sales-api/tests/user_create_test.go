@@ -53,7 +53,7 @@ func userCreate200(sd seedData) []tableData {
 				expResp.DateCreated = resp.DateCreated
 				expResp.DateUpdated = resp.DateUpdated
 
-				return cmp.Diff(x, y)
+				return cmp.Diff(resp, expResp)
 			},
 		},
 	}
