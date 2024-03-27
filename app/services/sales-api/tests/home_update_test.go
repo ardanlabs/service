@@ -44,7 +44,7 @@ func homeUpdate200(sd seedData) []tableData {
 					Country:  "US",
 				},
 				DateCreated: sd.users[0].homes[0].DateCreated.Format(time.RFC3339),
-				DateUpdated: sd.users[0].homes[0].DateUpdated.Format(time.RFC3339),
+				DateUpdated: sd.users[0].homes[0].DateCreated.Format(time.RFC3339),
 			},
 			cmpFunc: func(got any, exp any) string {
 				gotResp, exists := got.(*homegrp.AppHome)

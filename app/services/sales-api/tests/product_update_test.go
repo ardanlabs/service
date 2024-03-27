@@ -32,7 +32,7 @@ func productUpdate200(sd seedData) []tableData {
 				Cost:        10.34,
 				Quantity:    10,
 				DateCreated: sd.users[0].products[0].DateCreated.Format(time.RFC3339),
-				DateUpdated: sd.users[0].products[0].DateUpdated.Format(time.RFC3339),
+				DateUpdated: sd.users[0].products[0].DateCreated.Format(time.RFC3339),
 			},
 			cmpFunc: func(got any, exp any) string {
 				gotResp, exists := got.(*productgrp.AppProduct)
