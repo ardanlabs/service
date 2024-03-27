@@ -21,7 +21,7 @@ type tableData struct {
 	model      any
 	resp       any
 	expResp    any
-	cmpFunc    func(x interface{}, y interface{}) string
+	cmpFunc    func(got any, exp any) string
 }
 
 type testUser struct {
