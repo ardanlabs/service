@@ -41,7 +41,7 @@ func productUpdate200(sd seedData) []tableData {
 				}
 
 				expResp := exp.(*productgrp.AppProduct)
-				expResp.DateUpdated = gotResp.DateCreated
+				gotResp.DateUpdated = expResp.DateCreated
 
 				return cmp.Diff(gotResp, expResp)
 			},

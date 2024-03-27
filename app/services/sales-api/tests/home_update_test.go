@@ -53,7 +53,7 @@ func homeUpdate200(sd seedData) []tableData {
 				}
 
 				expResp := exp.(*homegrp.AppHome)
-				expResp.DateUpdated = gotResp.DateCreated
+				gotResp.DateUpdated = expResp.DateCreated
 
 				return cmp.Diff(gotResp, expResp)
 			},
