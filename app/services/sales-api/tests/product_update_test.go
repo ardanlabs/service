@@ -3,12 +3,12 @@ package tests
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/ardanlabs/service/app/services/sales-api/handlers/crud/productgrp"
 	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/ardanlabs/service/business/web/errs"
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/uuid"
 )
 
 func productUpdate200(sd seedData) []tableData {
@@ -26,32 +26,24 @@ func productUpdate200(sd seedData) []tableData {
 			},
 			resp: &productgrp.AppProduct{},
 			expResp: &productgrp.AppProduct{
-				Name:     "Guitar",
-				UserID:   sd.users[0].ID.String(),
-				Cost:     10.34,
-				Quantity: 10,
+				ID:          sd.users[0].products[0].ID.String(),
+				UserID:      sd.users[0].ID.String(),
+				Name:        "Guitar",
+				Cost:        10.34,
+				Quantity:    10,
+				DateCreated: sd.users[0].products[0].DateCreated.Format(time.RFC3339),
+				DateUpdated: sd.users[0].products[0].DateUpdated.Format(time.RFC3339),
 			},
-			cmpFunc: func(x interface{}, y interface{}) string {
-				resp := x.(*productgrp.AppProduct)
-				expResp := y.(*productgrp.AppProduct)
-
-				if _, err := uuid.Parse(resp.ID); err != nil {
-					return "bad uuid for ID"
+			cmpFunc: func(got any, exp any) string {
+				gotResp, exists := got.(*productgrp.AppProduct)
+				if !exists {
+					return "error occurred"
 				}
 
-				if resp.DateCreated == "" {
-					return "missing date created"
-				}
+				expResp := exp.(*productgrp.AppProduct)
+				expResp.DateUpdated = gotResp.DateCreated
 
-				if resp.DateUpdated == "" {
-					return "missing date updated"
-				}
-
-				expResp.ID = resp.ID
-				expResp.DateCreated = resp.DateCreated
-				expResp.DateUpdated = resp.DateUpdated
-
-				return cmp.Diff(x, y)
+				return cmp.Diff(gotResp, expResp)
 			},
 		},
 	}
@@ -76,8 +68,8 @@ func productUpdate400(sd seedData) []tableData {
 				Error:  "data validation error",
 				Fields: map[string]string{"cost": "cost must be 0 or greater", "quantity": "quantity must be 1 or greater"},
 			},
-			cmpFunc: func(x interface{}, y interface{}) string {
-				return cmp.Diff(x, y)
+			cmpFunc: func(got any, exp any) string {
+				return cmp.Diff(got, exp)
 			},
 		},
 	}
@@ -95,8 +87,8 @@ func productUpdate401(sd seedData) []tableData {
 			statusCode: http.StatusUnauthorized,
 			resp:       &errs.Response{},
 			expResp:    &errs.Response{Error: "Unauthorized"},
-			cmpFunc: func(x interface{}, y interface{}) string {
-				return cmp.Diff(x, y)
+			cmpFunc: func(got any, exp any) string {
+				return cmp.Diff(got, exp)
 			},
 		},
 		{
@@ -107,8 +99,8 @@ func productUpdate401(sd seedData) []tableData {
 			statusCode: http.StatusUnauthorized,
 			resp:       &errs.Response{},
 			expResp:    &errs.Response{Error: "Unauthorized"},
-			cmpFunc: func(x interface{}, y interface{}) string {
-				return cmp.Diff(x, y)
+			cmpFunc: func(got any, exp any) string {
+				return cmp.Diff(got, exp)
 			},
 		},
 		{
@@ -124,8 +116,8 @@ func productUpdate401(sd seedData) []tableData {
 			},
 			resp:    &errs.Response{},
 			expResp: &errs.Response{Error: "Unauthorized"},
-			cmpFunc: func(x interface{}, y interface{}) string {
-				return cmp.Diff(x, y)
+			cmpFunc: func(got any, exp any) string {
+				return cmp.Diff(got, exp)
 			},
 		},
 	}

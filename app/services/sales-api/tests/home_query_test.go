@@ -3,29 +3,27 @@ package tests
 import (
 	"fmt"
 	"net/http"
+	"sort"
 
 	"github.com/ardanlabs/service/app/services/sales-api/handlers/crud/homegrp"
-	"github.com/ardanlabs/service/business/core/crud/user"
+	"github.com/ardanlabs/service/business/core/crud/home"
 	"github.com/ardanlabs/service/business/web/page"
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/uuid"
 )
 
 func homeQuery200(sd seedData) []tableData {
-	total := len(sd.admins[0].homes) + len(sd.users[0].homes)
-	usrsMap := make(map[uuid.UUID]user.User)
+	hmes := make([]home.Home, 0, len(sd.admins[0].homes)+len(sd.users[0].homes))
+	hmes = append(hmes, sd.admins[0].homes...)
+	hmes = append(hmes, sd.users[0].homes...)
 
-	for _, adm := range sd.admins {
-		usrsMap[adm.ID] = adm.User
-	}
-	for _, usr := range sd.users {
-		usrsMap[usr.ID] = usr.User
-	}
+	sort.Slice(hmes, func(i, j int) bool {
+		return hmes[i].ID.String() <= hmes[j].ID.String()
+	})
 
 	table := []tableData{
 		{
 			name:       "basic",
-			url:        "/v1/homes?page=1&rows=10&orderBy=user_id,DESC",
+			url:        "/v1/homes?page=1&rows=10&orderBy=home_id,ASC",
 			token:      sd.admins[0].token,
 			statusCode: http.StatusOK,
 			method:     http.MethodGet,
@@ -33,28 +31,11 @@ func homeQuery200(sd seedData) []tableData {
 			expResp: &page.Document[homegrp.AppHome]{
 				Page:        1,
 				RowsPerPage: 10,
-				Total:       total,
-				Items:       toAppHomes(append(sd.admins[0].homes, sd.users[0].homes...)),
+				Total:       len(hmes),
+				Items:       toAppHomes(hmes),
 			},
-			cmpFunc: func(x interface{}, y interface{}) string {
-				resp := x.(*page.Document[homegrp.AppHome])
-				exp := y.(*page.Document[homegrp.AppHome])
-
-				var found int
-				for _, r := range resp.Items {
-					for _, e := range exp.Items {
-						if e.ID == r.ID {
-							found++
-							break
-						}
-					}
-				}
-
-				if found != total {
-					return "number of expected homes didn't match"
-				}
-
-				return ""
+			cmpFunc: func(got any, exp any) string {
+				return cmp.Diff(got, exp)
 			},
 		},
 	}
@@ -72,8 +53,8 @@ func homeQueryByID200(sd seedData) []tableData {
 			method:     http.MethodGet,
 			resp:       &homegrp.AppHome{},
 			expResp:    toAppHomePtr(sd.users[0].homes[0]),
-			cmpFunc: func(x interface{}, y interface{}) string {
-				return cmp.Diff(x, y)
+			cmpFunc: func(got any, exp any) string {
+				return cmp.Diff(got, exp)
 			},
 		},
 	}

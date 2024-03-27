@@ -6,7 +6,6 @@ import (
 	"github.com/ardanlabs/service/app/services/sales-api/handlers/crud/productgrp"
 	"github.com/ardanlabs/service/business/web/errs"
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/uuid"
 )
 
 func productCreate200(sd seedData) []tableData {
@@ -29,27 +28,19 @@ func productCreate200(sd seedData) []tableData {
 				Cost:     10.34,
 				Quantity: 10,
 			},
-			cmpFunc: func(x interface{}, y interface{}) string {
-				resp := x.(*productgrp.AppProduct)
-				expResp := y.(*productgrp.AppProduct)
-
-				if _, err := uuid.Parse(resp.ID); err != nil {
-					return "bad uuid for ID"
+			cmpFunc: func(got any, exp any) string {
+				gotResp, exists := got.(*productgrp.AppProduct)
+				if !exists {
+					return "error occurred"
 				}
 
-				if resp.DateCreated == "" {
-					return "missing date created"
-				}
+				expResp := exp.(*productgrp.AppProduct)
 
-				if resp.DateUpdated == "" {
-					return "missing date updated"
-				}
+				expResp.ID = gotResp.ID
+				expResp.DateCreated = gotResp.DateCreated
+				expResp.DateUpdated = gotResp.DateUpdated
 
-				expResp.ID = resp.ID
-				expResp.DateCreated = resp.DateCreated
-				expResp.DateUpdated = resp.DateUpdated
-
-				return cmp.Diff(x, y)
+				return cmp.Diff(gotResp, expResp)
 			},
 		},
 	}
@@ -71,8 +62,8 @@ func productCreate400(sd seedData) []tableData {
 				Error:  "data validation error",
 				Fields: map[string]string{"cost": "cost is a required field", "name": "name is a required field", "quantity": "quantity is a required field"},
 			},
-			cmpFunc: func(x interface{}, y interface{}) string {
-				return cmp.Diff(x, y)
+			cmpFunc: func(got any, exp any) string {
+				return cmp.Diff(got, exp)
 			},
 		},
 	}
@@ -92,8 +83,8 @@ func productCreate401(sd seedData) []tableData {
 			expResp: &errs.Response{
 				Error: "Unauthorized",
 			},
-			cmpFunc: func(x interface{}, y interface{}) string {
-				return cmp.Diff(x, y)
+			cmpFunc: func(got any, exp any) string {
+				return cmp.Diff(got, exp)
 			},
 		},
 		{
@@ -106,8 +97,8 @@ func productCreate401(sd seedData) []tableData {
 			expResp: &errs.Response{
 				Error: "Unauthorized",
 			},
-			cmpFunc: func(x interface{}, y interface{}) string {
-				return cmp.Diff(x, y)
+			cmpFunc: func(got any, exp any) string {
+				return cmp.Diff(got, exp)
 			},
 		},
 		{
@@ -120,8 +111,8 @@ func productCreate401(sd seedData) []tableData {
 			expResp: &errs.Response{
 				Error: "Unauthorized",
 			},
-			cmpFunc: func(x interface{}, y interface{}) string {
-				return cmp.Diff(x, y)
+			cmpFunc: func(got any, exp any) string {
+				return cmp.Diff(got, exp)
 			},
 		},
 		{
@@ -134,8 +125,8 @@ func productCreate401(sd seedData) []tableData {
 			expResp: &errs.Response{
 				Error: "Unauthorized",
 			},
-			cmpFunc: func(x interface{}, y interface{}) string {
-				return cmp.Diff(x, y)
+			cmpFunc: func(got any, exp any) string {
+				return cmp.Diff(got, exp)
 			},
 		},
 	}

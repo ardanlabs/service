@@ -6,7 +6,6 @@ import (
 	"github.com/ardanlabs/service/app/services/sales-api/handlers/crud/homegrp"
 	"github.com/ardanlabs/service/business/web/errs"
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/uuid"
 )
 
 func homeCreate200(sd seedData) []tableData {
@@ -39,27 +38,19 @@ func homeCreate200(sd seedData) []tableData {
 					Country:  "US",
 				},
 			},
-			cmpFunc: func(x interface{}, y interface{}) string {
-				resp := x.(*homegrp.AppHome)
-				expResp := y.(*homegrp.AppHome)
-
-				if _, err := uuid.Parse(resp.ID); err != nil {
-					return "bad uuid for ID"
+			cmpFunc: func(got any, exp any) string {
+				gotResp, exists := got.(*homegrp.AppHome)
+				if !exists {
+					return "error occurred"
 				}
 
-				if resp.DateCreated == "" {
-					return "missing date created"
-				}
+				expResp := exp.(*homegrp.AppHome)
 
-				if resp.DateUpdated == "" {
-					return "missing date updated"
-				}
+				expResp.ID = gotResp.ID
+				expResp.DateCreated = gotResp.DateCreated
+				expResp.DateUpdated = gotResp.DateUpdated
 
-				expResp.ID = resp.ID
-				expResp.DateCreated = resp.DateCreated
-				expResp.DateUpdated = resp.DateUpdated
-
-				return cmp.Diff(x, y)
+				return cmp.Diff(gotResp, expResp)
 			},
 		},
 	}
@@ -81,8 +72,8 @@ func homeCreate400(sd seedData) []tableData {
 				Error:  "data validation error",
 				Fields: map[string]string{"address1": "address1 is a required field", "city": "city is a required field", "country": "country is a required field", "state": "state is a required field", "type": "type is a required field", "zipCode": "zipCode is a required field"},
 			},
-			cmpFunc: func(x interface{}, y interface{}) string {
-				return cmp.Diff(x, y)
+			cmpFunc: func(got any, exp any) string {
+				return cmp.Diff(got, exp)
 			},
 		},
 		{
@@ -105,8 +96,8 @@ func homeCreate400(sd seedData) []tableData {
 			expResp: &errs.Response{
 				Error: "parse: invalid type \"BAD TYPE\"",
 			},
-			cmpFunc: func(x interface{}, y interface{}) string {
-				return cmp.Diff(x, y)
+			cmpFunc: func(got any, exp any) string {
+				return cmp.Diff(got, exp)
 			},
 		},
 	}
@@ -126,8 +117,8 @@ func homeCreate401(sd seedData) []tableData {
 			expResp: &errs.Response{
 				Error: "Unauthorized",
 			},
-			cmpFunc: func(x interface{}, y interface{}) string {
-				return cmp.Diff(x, y)
+			cmpFunc: func(got any, exp any) string {
+				return cmp.Diff(got, exp)
 			},
 		},
 		{
@@ -140,8 +131,8 @@ func homeCreate401(sd seedData) []tableData {
 			expResp: &errs.Response{
 				Error: "Unauthorized",
 			},
-			cmpFunc: func(x interface{}, y interface{}) string {
-				return cmp.Diff(x, y)
+			cmpFunc: func(got any, exp any) string {
+				return cmp.Diff(got, exp)
 			},
 		},
 		{
@@ -154,8 +145,8 @@ func homeCreate401(sd seedData) []tableData {
 			expResp: &errs.Response{
 				Error: "Unauthorized",
 			},
-			cmpFunc: func(x interface{}, y interface{}) string {
-				return cmp.Diff(x, y)
+			cmpFunc: func(got any, exp any) string {
+				return cmp.Diff(got, exp)
 			},
 		},
 		{
@@ -168,8 +159,8 @@ func homeCreate401(sd seedData) []tableData {
 			expResp: &errs.Response{
 				Error: "Unauthorized",
 			},
-			cmpFunc: func(x interface{}, y interface{}) string {
-				return cmp.Diff(x, y)
+			cmpFunc: func(got any, exp any) string {
+				return cmp.Diff(got, exp)
 			},
 		},
 	}

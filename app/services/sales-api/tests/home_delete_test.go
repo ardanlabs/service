@@ -39,8 +39,8 @@ func homeDelete401(sd seedData) []tableData {
 			statusCode: http.StatusUnauthorized,
 			resp:       &errs.Response{},
 			expResp:    &errs.Response{Error: "Unauthorized"},
-			cmpFunc: func(x interface{}, y interface{}) string {
-				return cmp.Diff(x, y)
+			cmpFunc: func(got any, exp any) string {
+				return cmp.Diff(got, exp)
 			},
 		},
 		{
@@ -51,8 +51,8 @@ func homeDelete401(sd seedData) []tableData {
 			statusCode: http.StatusUnauthorized,
 			resp:       &errs.Response{},
 			expResp:    &errs.Response{Error: "Unauthorized"},
-			cmpFunc: func(x interface{}, y interface{}) string {
-				return cmp.Diff(x, y)
+			cmpFunc: func(got any, exp any) string {
+				return cmp.Diff(got, exp)
 			},
 		},
 		{
@@ -63,8 +63,8 @@ func homeDelete401(sd seedData) []tableData {
 			statusCode: http.StatusUnauthorized,
 			resp:       &errs.Response{},
 			expResp:    &errs.Response{Error: "Unauthorized"},
-			cmpFunc: func(x interface{}, y interface{}) string {
-				return cmp.Diff(x, y)
+			cmpFunc: func(got any, exp any) string {
+				return cmp.Diff(got, exp)
 			},
 		},
 	}

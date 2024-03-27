@@ -3,12 +3,12 @@ package tests
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/ardanlabs/service/app/services/sales-api/handlers/crud/homegrp"
 	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/ardanlabs/service/business/web/errs"
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/uuid"
 )
 
 func homeUpdate200(sd seedData) []tableData {
@@ -32,6 +32,7 @@ func homeUpdate200(sd seedData) []tableData {
 			},
 			resp: &homegrp.AppHome{},
 			expResp: &homegrp.AppHome{
+				ID:     sd.users[0].homes[0].ID.String(),
 				UserID: sd.users[0].ID.String(),
 				Type:   "SINGLE FAMILY",
 				Address: homegrp.AppAddress{
@@ -42,28 +43,19 @@ func homeUpdate200(sd seedData) []tableData {
 					State:    "AL",
 					Country:  "US",
 				},
+				DateCreated: sd.users[0].homes[0].DateCreated.Format(time.RFC3339),
+				DateUpdated: sd.users[0].homes[0].DateUpdated.Format(time.RFC3339),
 			},
-			cmpFunc: func(x interface{}, y interface{}) string {
-				resp := x.(*homegrp.AppHome)
-				expResp := y.(*homegrp.AppHome)
-
-				if _, err := uuid.Parse(resp.ID); err != nil {
-					return "bad uuid for ID"
+			cmpFunc: func(got any, exp any) string {
+				gotResp, exists := got.(*homegrp.AppHome)
+				if !exists {
+					return "error occurred"
 				}
 
-				if resp.DateCreated == "" {
-					return "missing date created"
-				}
+				expResp := exp.(*homegrp.AppHome)
+				expResp.DateUpdated = gotResp.DateCreated
 
-				if resp.DateUpdated == "" {
-					return "missing date updated"
-				}
-
-				expResp.ID = resp.ID
-				expResp.DateCreated = resp.DateCreated
-				expResp.DateUpdated = resp.DateUpdated
-
-				return cmp.Diff(x, y)
+				return cmp.Diff(gotResp, expResp)
 			},
 		},
 	}
@@ -94,8 +86,8 @@ func homeUpdate400(sd seedData) []tableData {
 				Error:  "data validation error",
 				Fields: map[string]string{"address1": "address1 must be at least 1 character in length", "country": "Key: 'AppUpdateHome.address.country' Error:Field validation for 'country' failed on the 'iso3166_1_alpha2' tag", "state": "state must be at least 1 character in length", "zipCode": "zipCode must be a valid numeric value"},
 			},
-			cmpFunc: func(x interface{}, y interface{}) string {
-				return cmp.Diff(x, y)
+			cmpFunc: func(got any, exp any) string {
+				return cmp.Diff(got, exp)
 			},
 		},
 		{
@@ -112,8 +104,8 @@ func homeUpdate400(sd seedData) []tableData {
 			expResp: &errs.Response{
 				Error: "parse: invalid type \"BAD TYPE\"",
 			},
-			cmpFunc: func(x interface{}, y interface{}) string {
-				return cmp.Diff(x, y)
+			cmpFunc: func(got any, exp any) string {
+				return cmp.Diff(got, exp)
 			},
 		},
 	}
@@ -131,8 +123,8 @@ func homeUpdate401(sd seedData) []tableData {
 			statusCode: http.StatusUnauthorized,
 			resp:       &errs.Response{},
 			expResp:    &errs.Response{Error: "Unauthorized"},
-			cmpFunc: func(x interface{}, y interface{}) string {
-				return cmp.Diff(x, y)
+			cmpFunc: func(got any, exp any) string {
+				return cmp.Diff(got, exp)
 			},
 		},
 		{
@@ -143,8 +135,8 @@ func homeUpdate401(sd seedData) []tableData {
 			statusCode: http.StatusUnauthorized,
 			resp:       &errs.Response{},
 			expResp:    &errs.Response{Error: "Unauthorized"},
-			cmpFunc: func(x interface{}, y interface{}) string {
-				return cmp.Diff(x, y)
+			cmpFunc: func(got any, exp any) string {
+				return cmp.Diff(got, exp)
 			},
 		},
 		{
@@ -166,8 +158,8 @@ func homeUpdate401(sd seedData) []tableData {
 			},
 			resp:    &errs.Response{},
 			expResp: &errs.Response{Error: "Unauthorized"},
-			cmpFunc: func(x interface{}, y interface{}) string {
-				return cmp.Diff(x, y)
+			cmpFunc: func(got any, exp any) string {
+				return cmp.Diff(got, exp)
 			},
 		},
 	}

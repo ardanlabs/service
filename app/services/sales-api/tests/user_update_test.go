@@ -3,12 +3,12 @@ package tests
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/ardanlabs/service/app/services/sales-api/handlers/crud/usergrp"
 	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/ardanlabs/service/business/web/errs"
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/uuid"
 )
 
 func userUpdate200(sd seedData) []tableData {
@@ -29,33 +29,25 @@ func userUpdate200(sd seedData) []tableData {
 			},
 			resp: &usergrp.AppUser{},
 			expResp: &usergrp.AppUser{
-				Name:       "Jack Kennedy",
-				Email:      "jack@ardanlabs.com",
-				Roles:      []string{"ADMIN"},
-				Department: "IT",
-				Enabled:    true,
+				ID:          sd.users[0].ID.String(),
+				Name:        "Jack Kennedy",
+				Email:       "jack@ardanlabs.com",
+				Roles:       []string{"ADMIN"},
+				Department:  "IT",
+				Enabled:     true,
+				DateCreated: sd.users[0].DateCreated.Format(time.RFC3339),
+				DateUpdated: sd.users[0].DateUpdated.Format(time.RFC3339),
 			},
-			cmpFunc: func(x interface{}, y interface{}) string {
-				resp := x.(*usergrp.AppUser)
-				expResp := y.(*usergrp.AppUser)
-
-				if _, err := uuid.Parse(resp.ID); err != nil {
-					return "bad uuid for ID"
+			cmpFunc: func(got any, exp any) string {
+				gotResp, exists := got.(*usergrp.AppUser)
+				if !exists {
+					return "error occurred"
 				}
 
-				if resp.DateCreated == "" {
-					return "missing date created"
-				}
+				expResp := exp.(*usergrp.AppUser)
+				expResp.DateUpdated = gotResp.DateCreated
 
-				if resp.DateUpdated == "" {
-					return "missing date updated"
-				}
-
-				expResp.ID = resp.ID
-				expResp.DateCreated = resp.DateCreated
-				expResp.DateUpdated = resp.DateUpdated
-
-				return cmp.Diff(x, y)
+				return cmp.Diff(gotResp, expResp)
 			},
 		},
 	}
@@ -80,8 +72,8 @@ func userUpdate400(sd seedData) []tableData {
 				Error:  "data validation error",
 				Fields: map[string]string{"email": "email must be a valid email address", "passwordConfirm": "passwordConfirm must be equal to Password"},
 			},
-			cmpFunc: func(x interface{}, y interface{}) string {
-				return cmp.Diff(x, y)
+			cmpFunc: func(got any, exp any) string {
+				return cmp.Diff(got, exp)
 			},
 		},
 		{
@@ -97,8 +89,8 @@ func userUpdate400(sd seedData) []tableData {
 			expResp: &errs.Response{
 				Error: "parse: invalid role \"BAD ROLE\"",
 			},
-			cmpFunc: func(x interface{}, y interface{}) string {
-				return cmp.Diff(x, y)
+			cmpFunc: func(got any, exp any) string {
+				return cmp.Diff(got, exp)
 			},
 		},
 	}
@@ -116,8 +108,8 @@ func userUpdate401(sd seedData) []tableData {
 			statusCode: http.StatusUnauthorized,
 			resp:       &errs.Response{},
 			expResp:    &errs.Response{Error: "Unauthorized"},
-			cmpFunc: func(x interface{}, y interface{}) string {
-				return cmp.Diff(x, y)
+			cmpFunc: func(got any, exp any) string {
+				return cmp.Diff(got, exp)
 			},
 		},
 		{
@@ -128,8 +120,8 @@ func userUpdate401(sd seedData) []tableData {
 			statusCode: http.StatusUnauthorized,
 			resp:       &errs.Response{},
 			expResp:    &errs.Response{Error: "Unauthorized"},
-			cmpFunc: func(x interface{}, y interface{}) string {
-				return cmp.Diff(x, y)
+			cmpFunc: func(got any, exp any) string {
+				return cmp.Diff(got, exp)
 			},
 		},
 		{
@@ -148,8 +140,8 @@ func userUpdate401(sd seedData) []tableData {
 			},
 			resp:    &errs.Response{},
 			expResp: &errs.Response{Error: "Unauthorized"},
-			cmpFunc: func(x interface{}, y interface{}) string {
-				return cmp.Diff(x, y)
+			cmpFunc: func(got any, exp any) string {
+				return cmp.Diff(got, exp)
 			},
 		},
 	}
