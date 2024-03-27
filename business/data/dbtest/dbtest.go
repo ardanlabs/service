@@ -200,8 +200,8 @@ func NewTest(t *testing.T, c *docker.Container, testName string) *Test {
 	return &tst
 }
 
-// TokenV1 generates an authenticated token for a user.
-func (tst *Test) TokenV1(email string, pass string) string {
+// Token generates an authenticated token for a user.
+func (tst *Test) Token(email string, pass string) string {
 	addr, _ := mail.ParseAddress(email)
 
 	store := userdb.NewStore(tst.Log, tst.DB)
