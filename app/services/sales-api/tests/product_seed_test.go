@@ -25,7 +25,7 @@ func insertProductSeed(dbTest *dbtest.Test) (seedData, error) {
 
 	tu1 := testUser{
 		User:     usrs[0],
-		token:    dbTest.TokenV1(usrs[0].Email.Address, fmt.Sprintf("Password%s", usrs[0].Name[4:])),
+		token:    dbTest.Token(usrs[0].Email.Address, fmt.Sprintf("Password%s", usrs[0].Name[4:])),
 		products: prds,
 	}
 
@@ -43,7 +43,7 @@ func insertProductSeed(dbTest *dbtest.Test) (seedData, error) {
 
 	tu2 := testUser{
 		User:     usrs[0],
-		token:    dbTest.TokenV1(usrs[0].Email.Address, fmt.Sprintf("Password%s", usrs[0].Name[4:])),
+		token:    dbTest.Token(usrs[0].Email.Address, fmt.Sprintf("Password%s", usrs[0].Name[4:])),
 		products: prds,
 	}
 
