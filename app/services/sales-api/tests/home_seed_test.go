@@ -25,7 +25,7 @@ func insertHomeSeed(dbTest *dbtest.Test) (seedData, error) {
 
 	tu1 := testUser{
 		User:  usrs[0],
-		token: dbTest.Token(usrs[0].Email.Address, fmt.Sprintf("Password%s", usrs[0].Name[4:])),
+		token: dbTest.Token(usrs[0].Email.Address),
 		homes: hmes,
 	}
 
@@ -38,7 +38,7 @@ func insertHomeSeed(dbTest *dbtest.Test) (seedData, error) {
 
 	tu2 := testUser{
 		User:  usrs[0],
-		token: dbTest.Token(usrs[0].Email.Address, fmt.Sprintf("Password%s", usrs[0].Name[4:])),
+		token: dbTest.Token(usrs[0].Email.Address),
 	}
 
 	// -------------------------------------------------------------------------
@@ -55,7 +55,7 @@ func insertHomeSeed(dbTest *dbtest.Test) (seedData, error) {
 
 	tu3 := testUser{
 		User:  usrs[0],
-		token: dbTest.Token(usrs[0].Email.Address, fmt.Sprintf("Password%s", usrs[0].Name[4:])),
+		token: dbTest.Token(usrs[0].Email.Address),
 		homes: hmes,
 	}
 
@@ -68,7 +68,7 @@ func insertHomeSeed(dbTest *dbtest.Test) (seedData, error) {
 
 	tu4 := testUser{
 		User:  usrs[0],
-		token: dbTest.Token(usrs[0].Email.Address, fmt.Sprintf("Password%s", usrs[0].Name[4:])),
+		token: dbTest.Token(usrs[0].Email.Address),
 	}
 
 	// -------------------------------------------------------------------------
