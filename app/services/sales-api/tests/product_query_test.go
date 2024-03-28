@@ -7,34 +7,35 @@ import (
 
 	"github.com/ardanlabs/service/app/services/sales-api/handlers/crud/productgrp"
 	"github.com/ardanlabs/service/business/core/crud/product"
+	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/ardanlabs/service/business/web/page"
 	"github.com/google/go-cmp/cmp"
 )
 
-func productQuery200(sd seedData) []tableData {
-	prds := make([]product.Product, 0, len(sd.admins[0].products)+len(sd.users[0].products))
-	prds = append(prds, sd.admins[0].products...)
-	prds = append(prds, sd.users[0].products...)
+func productQuery200(sd dbtest.SeedData) []dbtest.AppTable {
+	prds := make([]product.Product, 0, len(sd.Admins[0].Products)+len(sd.Users[0].Products))
+	prds = append(prds, sd.Admins[0].Products...)
+	prds = append(prds, sd.Users[0].Products...)
 
 	sort.Slice(prds, func(i, j int) bool {
 		return prds[i].ID.String() <= prds[j].ID.String()
 	})
 
-	table := []tableData{
+	table := []dbtest.AppTable{
 		{
-			name:       "basic",
-			url:        "/v1/products?page=1&rows=10&orderBy=product_id,ASC",
-			token:      sd.admins[0].token,
-			statusCode: http.StatusOK,
-			method:     http.MethodGet,
-			resp:       &page.Document[productgrp.AppProduct]{},
-			expResp: &page.Document[productgrp.AppProduct]{
+			Name:       "basic",
+			URL:        "/v1/products?page=1&rows=10&orderBy=product_id,ASC",
+			Token:      sd.Admins[0].Token,
+			StatusCode: http.StatusOK,
+			Method:     http.MethodGet,
+			Resp:       &page.Document[productgrp.AppProduct]{},
+			ExpResp: &page.Document[productgrp.AppProduct]{
 				Page:        1,
 				RowsPerPage: 10,
 				Total:       len(prds),
 				Items:       toAppProducts(prds),
 			},
-			cmpFunc: func(got any, exp any) string {
+			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
 		},
@@ -43,17 +44,17 @@ func productQuery200(sd seedData) []tableData {
 	return table
 }
 
-func productQueryByID200(sd seedData) []tableData {
-	table := []tableData{
+func productQueryByID200(sd dbtest.SeedData) []dbtest.AppTable {
+	table := []dbtest.AppTable{
 		{
-			name:       "basic",
-			url:        fmt.Sprintf("/v1/products/%s", sd.users[0].products[0].ID),
-			token:      sd.users[0].token,
-			statusCode: http.StatusOK,
-			method:     http.MethodGet,
-			resp:       &productgrp.AppProduct{},
-			expResp:    toAppProductPtr(sd.users[0].products[0]),
-			cmpFunc: func(got any, exp any) string {
+			Name:       "basic",
+			URL:        fmt.Sprintf("/v1/products/%s", sd.Users[0].Products[0].ID),
+			Token:      sd.Users[0].Token,
+			StatusCode: http.StatusOK,
+			Method:     http.MethodGet,
+			Resp:       &productgrp.AppProduct{},
+			ExpResp:    toAppProductPtr(sd.Users[0].Products[0]),
+			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
 		},

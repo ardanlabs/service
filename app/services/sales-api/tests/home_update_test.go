@@ -11,15 +11,15 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func homeUpdate200(sd seedData) []tableData {
-	table := []tableData{
+func homeUpdate200(sd dbtest.SeedData) []dbtest.AppTable {
+	table := []dbtest.AppTable{
 		{
-			name:       "basic",
-			url:        fmt.Sprintf("/v1/homes/%s", sd.users[0].homes[0].ID),
-			token:      sd.users[0].token,
-			method:     http.MethodPut,
-			statusCode: http.StatusOK,
-			model: &homegrp.AppUpdateHome{
+			Name:       "basic",
+			URL:        fmt.Sprintf("/v1/homes/%s", sd.Users[0].Homes[0].ID),
+			Token:      sd.Users[0].Token,
+			Method:     http.MethodPut,
+			StatusCode: http.StatusOK,
+			Model: &homegrp.AppUpdateHome{
 				Type: dbtest.StringPointer("SINGLE FAMILY"),
 				Address: &homegrp.AppUpdateAddress{
 					Address1: dbtest.StringPointer("123 Mocking Bird Lane"),
@@ -30,10 +30,10 @@ func homeUpdate200(sd seedData) []tableData {
 					Country:  dbtest.StringPointer("US"),
 				},
 			},
-			resp: &homegrp.AppHome{},
-			expResp: &homegrp.AppHome{
-				ID:     sd.users[0].homes[0].ID.String(),
-				UserID: sd.users[0].ID.String(),
+			Resp: &homegrp.AppHome{},
+			ExpResp: &homegrp.AppHome{
+				ID:     sd.Users[0].Homes[0].ID.String(),
+				UserID: sd.Users[0].ID.String(),
 				Type:   "SINGLE FAMILY",
 				Address: homegrp.AppAddress{
 					Address1: "123 Mocking Bird Lane",
@@ -43,10 +43,10 @@ func homeUpdate200(sd seedData) []tableData {
 					State:    "AL",
 					Country:  "US",
 				},
-				DateCreated: sd.users[0].homes[0].DateCreated.Format(time.RFC3339),
-				DateUpdated: sd.users[0].homes[0].DateCreated.Format(time.RFC3339),
+				DateCreated: sd.Users[0].Homes[0].DateCreated.Format(time.RFC3339),
+				DateUpdated: sd.Users[0].Homes[0].DateCreated.Format(time.RFC3339),
 			},
-			cmpFunc: func(got any, exp any) string {
+			CmpFunc: func(got any, exp any) string {
 				gotResp, exists := got.(*homegrp.AppHome)
 				if !exists {
 					return "error occurred"
@@ -63,15 +63,15 @@ func homeUpdate200(sd seedData) []tableData {
 	return table
 }
 
-func homeUpdate400(sd seedData) []tableData {
-	table := []tableData{
+func homeUpdate400(sd dbtest.SeedData) []dbtest.AppTable {
+	table := []dbtest.AppTable{
 		{
-			name:       "bad-input",
-			url:        fmt.Sprintf("/v1/homes/%s", sd.users[0].homes[0].ID),
-			token:      sd.users[0].token,
-			method:     http.MethodPut,
-			statusCode: http.StatusBadRequest,
-			model: &homegrp.AppUpdateHome{
+			Name:       "bad-input",
+			URL:        fmt.Sprintf("/v1/homes/%s", sd.Users[0].Homes[0].ID),
+			Token:      sd.Users[0].Token,
+			Method:     http.MethodPut,
+			StatusCode: http.StatusBadRequest,
+			Model: &homegrp.AppUpdateHome{
 				Address: &homegrp.AppUpdateAddress{
 					Address1: dbtest.StringPointer(""),
 					Address2: dbtest.StringPointer(""),
@@ -81,30 +81,30 @@ func homeUpdate400(sd seedData) []tableData {
 					Country:  dbtest.StringPointer(""),
 				},
 			},
-			resp: &errs.Response{},
-			expResp: &errs.Response{
+			Resp: &errs.Response{},
+			ExpResp: &errs.Response{
 				Error:  "data validation error",
 				Fields: map[string]string{"address1": "address1 must be at least 1 character in length", "country": "Key: 'AppUpdateHome.address.country' Error:Field validation for 'country' failed on the 'iso3166_1_alpha2' tag", "state": "state must be at least 1 character in length", "zipCode": "zipCode must be a valid numeric value"},
 			},
-			cmpFunc: func(got any, exp any) string {
+			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
 		},
 		{
-			name:       "bad-type",
-			url:        fmt.Sprintf("/v1/homes/%s", sd.users[0].homes[0].ID),
-			token:      sd.users[0].token,
-			method:     http.MethodPut,
-			statusCode: http.StatusBadRequest,
-			model: &homegrp.AppUpdateHome{
+			Name:       "bad-type",
+			URL:        fmt.Sprintf("/v1/homes/%s", sd.Users[0].Homes[0].ID),
+			Token:      sd.Users[0].Token,
+			Method:     http.MethodPut,
+			StatusCode: http.StatusBadRequest,
+			Model: &homegrp.AppUpdateHome{
 				Type:    dbtest.StringPointer("BAD TYPE"),
 				Address: &homegrp.AppUpdateAddress{},
 			},
-			resp: &errs.Response{},
-			expResp: &errs.Response{
+			Resp: &errs.Response{},
+			ExpResp: &errs.Response{
 				Error: "parse: invalid type \"BAD TYPE\"",
 			},
-			cmpFunc: func(got any, exp any) string {
+			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
 		},
@@ -113,39 +113,39 @@ func homeUpdate400(sd seedData) []tableData {
 	return table
 }
 
-func homeUpdate401(sd seedData) []tableData {
-	table := []tableData{
+func homeUpdate401(sd dbtest.SeedData) []dbtest.AppTable {
+	table := []dbtest.AppTable{
 		{
-			name:       "emptytoken",
-			url:        fmt.Sprintf("/v1/homes/%s", sd.users[0].homes[0].ID),
-			token:      "",
-			method:     http.MethodPut,
-			statusCode: http.StatusUnauthorized,
-			resp:       &errs.Response{},
-			expResp:    &errs.Response{Error: "Unauthorized"},
-			cmpFunc: func(got any, exp any) string {
+			Name:       "emptytoken",
+			URL:        fmt.Sprintf("/v1/homes/%s", sd.Users[0].Homes[0].ID),
+			Token:      "",
+			Method:     http.MethodPut,
+			StatusCode: http.StatusUnauthorized,
+			Resp:       &errs.Response{},
+			ExpResp:    &errs.Response{Error: "Unauthorized"},
+			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
 		},
 		{
-			name:       "badsig",
-			url:        fmt.Sprintf("/v1/homes/%s", sd.users[0].homes[0].ID),
-			token:      sd.users[0].token + "A",
-			method:     http.MethodPut,
-			statusCode: http.StatusUnauthorized,
-			resp:       &errs.Response{},
-			expResp:    &errs.Response{Error: "Unauthorized"},
-			cmpFunc: func(got any, exp any) string {
+			Name:       "badsig",
+			URL:        fmt.Sprintf("/v1/homes/%s", sd.Users[0].Homes[0].ID),
+			Token:      sd.Users[0].Token + "A",
+			Method:     http.MethodPut,
+			StatusCode: http.StatusUnauthorized,
+			Resp:       &errs.Response{},
+			ExpResp:    &errs.Response{Error: "Unauthorized"},
+			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
 		},
 		{
-			name:       "wronguser",
-			url:        fmt.Sprintf("/v1/homes/%s", sd.admins[0].homes[0].ID),
-			token:      sd.users[0].token,
-			method:     http.MethodPut,
-			statusCode: http.StatusUnauthorized,
-			model: &homegrp.AppUpdateHome{
+			Name:       "wronguser",
+			URL:        fmt.Sprintf("/v1/homes/%s", sd.Admins[0].Homes[0].ID),
+			Token:      sd.Users[0].Token,
+			Method:     http.MethodPut,
+			StatusCode: http.StatusUnauthorized,
+			Model: &homegrp.AppUpdateHome{
 				Type: dbtest.StringPointer("SINGLE FAMILY"),
 				Address: &homegrp.AppUpdateAddress{
 					Address1: dbtest.StringPointer("123 Mocking Bird Lane"),
@@ -156,9 +156,9 @@ func homeUpdate401(sd seedData) []tableData {
 					Country:  dbtest.StringPointer("US"),
 				},
 			},
-			resp:    &errs.Response{},
-			expResp: &errs.Response{Error: "Unauthorized"},
-			cmpFunc: func(got any, exp any) string {
+			Resp:    &errs.Response{},
+			ExpResp: &errs.Response{Error: "Unauthorized"},
+			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
 		},

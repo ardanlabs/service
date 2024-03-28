@@ -7,18 +7,19 @@ import (
 
 	"github.com/ardanlabs/service/app/services/sales-api/handlers/crud/usergrp"
 	"github.com/ardanlabs/service/business/core/crud/user"
+	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/ardanlabs/service/business/web/page"
 	"github.com/google/go-cmp/cmp"
 )
 
-func userQuery200(sd seedData) []tableData {
-	usrs := make([]user.User, 0, len(sd.admins)+len(sd.users))
+func userQuery200(sd dbtest.SeedData) []dbtest.AppTable {
+	usrs := make([]user.User, 0, len(sd.Admins)+len(sd.Users))
 
-	for _, adm := range sd.admins {
+	for _, adm := range sd.Admins {
 		usrs = append(usrs, adm.User)
 	}
 
-	for _, usr := range sd.users {
+	for _, usr := range sd.Users {
 		usrs = append(usrs, usr.User)
 	}
 
@@ -26,21 +27,21 @@ func userQuery200(sd seedData) []tableData {
 		return usrs[i].ID.String() <= usrs[j].ID.String()
 	})
 
-	table := []tableData{
+	table := []dbtest.AppTable{
 		{
-			name:       "basic",
-			url:        "/v1/users?page=1&rows=10&orderBy=user_id,ASC&name=Name",
-			token:      sd.admins[0].token,
-			statusCode: http.StatusOK,
-			method:     http.MethodGet,
-			resp:       &page.Document[usergrp.AppUser]{},
-			expResp: &page.Document[usergrp.AppUser]{
+			Name:       "basic",
+			URL:        "/v1/users?page=1&rows=10&orderBy=user_id,ASC&name=Name",
+			Token:      sd.Admins[0].Token,
+			StatusCode: http.StatusOK,
+			Method:     http.MethodGet,
+			Resp:       &page.Document[usergrp.AppUser]{},
+			ExpResp: &page.Document[usergrp.AppUser]{
 				Page:        1,
 				RowsPerPage: 10,
 				Total:       len(usrs),
 				Items:       toAppUsers(usrs),
 			},
-			cmpFunc: func(got any, exp any) string {
+			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
 		},
@@ -49,17 +50,17 @@ func userQuery200(sd seedData) []tableData {
 	return table
 }
 
-func userQueryByID200(sd seedData) []tableData {
-	table := []tableData{
+func userQueryByID200(sd dbtest.SeedData) []dbtest.AppTable {
+	table := []dbtest.AppTable{
 		{
-			name:       "basic",
-			url:        fmt.Sprintf("/v1/users/%s", sd.users[0].ID),
-			token:      sd.users[0].token,
-			statusCode: http.StatusOK,
-			method:     http.MethodGet,
-			resp:       &usergrp.AppUser{},
-			expResp:    toAppUserPtr(sd.users[0].User),
-			cmpFunc: func(got any, exp any) string {
+			Name:       "basic",
+			URL:        fmt.Sprintf("/v1/users/%s", sd.Users[0].ID),
+			Token:      sd.Users[0].Token,
+			StatusCode: http.StatusOK,
+			Method:     http.MethodGet,
+			Resp:       &usergrp.AppUser{},
+			ExpResp:    toAppUserPtr(sd.Users[0].User),
+			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
 		},

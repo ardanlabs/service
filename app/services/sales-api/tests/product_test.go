@@ -22,7 +22,7 @@ func Test_Product(t *testing.T) {
 		dbTest.Teardown()
 	}()
 
-	app := appTest{
+	app := dbtest.AppTest{
 		Handler: mux.WebAPI(mux.Config{
 			Shutdown: make(chan os.Signal, 1),
 			Log:      dbTest.Log,
@@ -41,17 +41,17 @@ func Test_Product(t *testing.T) {
 
 	// -------------------------------------------------------------------------
 
-	app.test(t, productQuery200(sd), "product-query-200")
-	app.test(t, productQueryByID200(sd), "product-querybyid-200")
+	app.Test(t, productQuery200(sd), "product-query-200")
+	app.Test(t, productQueryByID200(sd), "product-querybyid-200")
 
-	app.test(t, productCreate200(sd), "product-create-200")
-	app.test(t, productCreate401(sd), "product-create-401")
-	app.test(t, productCreate400(sd), "product-create-400")
+	app.Test(t, productCreate200(sd), "product-create-200")
+	app.Test(t, productCreate401(sd), "product-create-401")
+	app.Test(t, productCreate400(sd), "product-create-400")
 
-	app.test(t, productUpdate200(sd), "product-update-200")
-	app.test(t, productUpdate401(sd), "product-update-401")
-	app.test(t, productUpdate400(sd), "product-update-400")
+	app.Test(t, productUpdate200(sd), "product-update-200")
+	app.Test(t, productUpdate401(sd), "product-update-401")
+	app.Test(t, productUpdate400(sd), "product-update-400")
 
-	app.test(t, productDelete200(sd), "product-delete-200")
-	app.test(t, productDelete401(sd), "product-delete-401")
+	app.Test(t, productDelete200(sd), "product-delete-200")
+	app.Test(t, productDelete401(sd), "product-delete-401")
 }

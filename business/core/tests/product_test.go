@@ -2,45 +2,22 @@ package tests
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"net/mail"
 	"runtime/debug"
+	"sort"
 	"testing"
 	"time"
 
 	"github.com/ardanlabs/service/business/core/crud/product"
 	"github.com/ardanlabs/service/business/core/crud/user"
 	"github.com/ardanlabs/service/business/data/dbtest"
-	"github.com/ardanlabs/service/business/data/sqldb"
-	"github.com/ardanlabs/service/business/data/transaction"
 	"github.com/google/go-cmp/cmp"
 )
 
 func Test_Product(t *testing.T) {
-	t.Run("crud", productCrud)
-	t.Run("paging", productPaging)
-	t.Run("transaction", productTran)
-}
+	t.Parallel()
 
-func productCrud(t *testing.T) {
-	seed := func(ctx context.Context, userCore *user.Core, productCore *product.Core) ([]product.Product, error) {
-		usrs, err := user.TestGenerateSeedUsers(ctx, 1, user.RoleAdmin, userCore)
-		if err != nil {
-			return nil, fmt.Errorf("seeding user : %w", err)
-		}
-
-		prds, err := product.TestGenerateSeedProducts(ctx, 1, productCore, usrs[0].ID)
-		if err != nil {
-			return nil, fmt.Errorf("seeding products : %w", err)
-		}
-
-		return prds, nil
-	}
-
-	// -------------------------------------------------------------------------
-
-	dbTest := dbtest.NewTest(t, c, "Test_Product/crud")
+	dbTest := dbtest.NewTest(t, c, "Test_Product")
 	defer func() {
 		if r := recover(); r != nil {
 			t.Log(r)
@@ -49,385 +26,273 @@ func productCrud(t *testing.T) {
 		dbTest.Teardown()
 	}()
 
-	api := dbTest.Core
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	t.Log("Go seeding ...")
-
-	prds, err := seed(ctx, api.Crud.User, api.Crud.Product)
+	sd, err := insertProductSeedData(dbTest)
 	if err != nil {
 		t.Fatalf("Seeding error: %s", err)
 	}
 
 	// -------------------------------------------------------------------------
 
-	saved, err := api.Crud.Product.QueryByID(ctx, prds[0].ID)
-	if err != nil {
-		t.Fatalf("Should be able to retrieve product by ID: %s", err)
-	}
-
-	if prds[0].DateCreated.UnixMilli() != saved.DateCreated.UnixMilli() {
-		t.Logf("got: %v", saved.DateCreated)
-		t.Logf("exp: %v", prds[0].DateCreated)
-		t.Logf("dif: %v", saved.DateCreated.Sub(prds[0].DateCreated))
-		t.Errorf("Should get back the same date created")
-	}
-
-	if prds[0].DateUpdated.UnixMilli() != saved.DateUpdated.UnixMilli() {
-		t.Logf("got: %v", saved.DateUpdated)
-		t.Logf("exp: %v", prds[0].DateUpdated)
-		t.Logf("dif: %v", saved.DateUpdated.Sub(prds[0].DateUpdated))
-		t.Errorf("Should get back the same date updated")
-	}
-
-	prds[0].DateCreated = time.Time{}
-	prds[0].DateUpdated = time.Time{}
-	saved.DateCreated = time.Time{}
-	saved.DateUpdated = time.Time{}
-
-	if diff := cmp.Diff(prds[0], saved); diff != "" {
-		t.Errorf("Should get back the same product, dif:\n%s", diff)
-	}
-
-	// -------------------------------------------------------------------------
-
-	upd := product.UpdateProduct{
-		Name:     dbtest.StringPointer("Comics"),
-		Cost:     dbtest.FloatPointer(50),
-		Quantity: dbtest.IntPointer(40),
-	}
-
-	if _, err := api.Crud.Product.Update(ctx, saved, upd); err != nil {
-		t.Errorf("Should be able to update product : %s", err)
-	}
-
-	saved, err = api.Crud.Product.QueryByID(ctx, prds[0].ID)
-	if err != nil {
-		t.Fatalf("Should be able to retrieve updated product : %s", err)
-	}
-
-	diff := prds[0].DateUpdated.Sub(saved.DateUpdated)
-	if diff > 0 {
-		t.Fatalf("Should have a larger DateUpdated : sav %v, prd %v, dif %v", saved.DateUpdated, saved.DateUpdated, diff)
-	}
-
-	products, err := api.Crud.Product.Query(ctx, product.QueryFilter{}, product.DefaultOrderBy, 1, 3)
-	if err != nil {
-		t.Fatalf("Should be able to retrieve updated product : %s", err)
-	}
-
-	// Check specified fields were updated. Make a copy of the original product
-	// and change just the fields we expect then diff it with what was saved.
-
-	var idx int
-	for i, p := range products {
-		if p.ID == saved.ID {
-			idx = i
-		}
-	}
-
-	products[idx].DateCreated = time.Time{}
-	products[idx].DateUpdated = time.Time{}
-	saved.DateCreated = time.Time{}
-	saved.DateUpdated = time.Time{}
-
-	if diff := cmp.Diff(saved, products[idx]); diff != "" {
-		t.Fatalf("Should get back the same product, dif:\n%s", diff)
-	}
-
-	// -------------------------------------------------------------------------
-
-	upd = product.UpdateProduct{
-		Name: dbtest.StringPointer("Graphic Novels"),
-	}
-
-	if _, err := api.Crud.Product.Update(ctx, saved, upd); err != nil {
-		t.Fatalf("Should be able to update just some fields of product : %s", err)
-	}
-
-	saved, err = api.Crud.Product.QueryByID(ctx, prds[0].ID)
-	if err != nil {
-		t.Fatalf("Should be able to retrieve updated product : %s", err)
-	}
-
-	diff = prds[0].DateUpdated.Sub(saved.DateUpdated)
-	if diff > 0 {
-		t.Fatalf("Should have a larger DateUpdated : sav %v, prd %v, dif %v", saved.DateUpdated, prds[0].DateUpdated, diff)
-	}
-
-	if saved.Name != *upd.Name {
-		t.Fatalf("Should be able to see updated Name field : got %q want %q", saved.Name, *upd.Name)
-	}
-
-	if err := api.Crud.Product.Delete(ctx, saved); err != nil {
-		t.Fatalf("Should be able to delete product : %s", err)
-	}
-
-	_, err = api.Crud.Product.QueryByID(ctx, prds[0].ID)
-	if !errors.Is(err, product.ErrNotFound) {
-		t.Fatalf("Should NOT be able to retrieve deleted product : %s", err)
-	}
+	dbtest.UnitTest(t, productQuery(dbTest, sd), "product-query")
+	dbtest.UnitTest(t, productCreate(dbTest, sd), "product-create")
+	dbtest.UnitTest(t, productUpdate(dbTest, sd), "product-update")
+	dbtest.UnitTest(t, productDelete(dbTest, sd), "product-delete")
 }
 
-func productPaging(t *testing.T) {
-	seed := func(ctx context.Context, userCore *user.Core, productCore *product.Core) ([]product.Product, error) {
-		usrs, err := user.TestGenerateSeedUsers(ctx, 1, user.RoleAdmin, userCore)
-		if err != nil {
-			return nil, fmt.Errorf("seeding user : %w", err)
-		}
+// =============================================================================
 
-		prds, err := product.TestGenerateSeedProducts(ctx, 2, productCore, usrs[0].ID)
-		if err != nil {
-			return nil, fmt.Errorf("seeding products : %w", err)
-		}
+func insertProductSeedData(dbTest *dbtest.Test) (dbtest.SeedData, error) {
+	ctx := context.Background()
+	api := dbTest.Core.Crud
 
-		return prds, nil
+	usrs, err := user.TestGenerateSeedUsers(ctx, 1, user.RoleUser, api.User)
+	if err != nil {
+		return dbtest.SeedData{}, fmt.Errorf("seeding users : %w", err)
+	}
+
+	prds, err := product.TestGenerateSeedProducts(ctx, 2, api.Product, usrs[0].ID)
+	if err != nil {
+		return dbtest.SeedData{}, fmt.Errorf("seeding products : %w", err)
+	}
+
+	tu1 := dbtest.User{
+		User:     usrs[0],
+		Token:    dbTest.Token(usrs[0].Email.Address),
+		Products: prds,
 	}
 
 	// -------------------------------------------------------------------------
 
-	dbTest := dbtest.NewTest(t, c, "Test_Product/paging")
-	defer func() {
-		if r := recover(); r != nil {
-			t.Log(r)
-			t.Error(string(debug.Stack()))
-		}
-		dbTest.Teardown()
-	}()
-
-	api := dbTest.Core
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	t.Log("Go seeding ...")
-
-	prds, err := seed(ctx, api.Crud.User, api.Crud.Product)
+	usrs, err = user.TestGenerateSeedUsers(ctx, 1, user.RoleAdmin, api.User)
 	if err != nil {
-		t.Fatalf("Seeding error: %s", err)
+		return dbtest.SeedData{}, fmt.Errorf("seeding users : %w", err)
+	}
+
+	prds, err = product.TestGenerateSeedProducts(ctx, 2, api.Product, usrs[0].ID)
+	if err != nil {
+		return dbtest.SeedData{}, fmt.Errorf("seeding products : %w", err)
+	}
+
+	tu2 := dbtest.User{
+		User:     usrs[0],
+		Token:    dbTest.Token(usrs[0].Email.Address),
+		Products: prds,
 	}
 
 	// -------------------------------------------------------------------------
 
-	name := prds[0].Name
-	prd1, err := api.Crud.Product.Query(ctx, product.QueryFilter{Name: &name}, product.DefaultOrderBy, 1, 1)
-	if err != nil {
-		t.Fatalf("Should be able to retrieve products %q : %s", name, err)
+	sd := dbtest.SeedData{
+		Admins: []dbtest.User{tu2},
+		Users:  []dbtest.User{tu1},
 	}
 
-	n, err := api.Crud.Product.Count(ctx, product.QueryFilter{Name: &name})
-	if err != nil {
-		t.Fatalf("Should be able to retrieve product count %q : %s", name, err)
-	}
-
-	if len(prd1) == 0 || (len(prd1) != n && prd1[0].Name == name) {
-		t.Log("got:", len(prd1))
-		t.Log("exp:", n)
-		t.Fatalf("Should have a single product for %q", name)
-	}
-
-	name = prds[1].Name
-	prd2, err := api.Crud.Product.Query(ctx, product.QueryFilter{Name: &name}, product.DefaultOrderBy, 1, 1)
-	if err != nil {
-		t.Fatalf("Should be able to retrieve products %q : %s", name, err)
-	}
-
-	n, err = api.Crud.Product.Count(ctx, product.QueryFilter{Name: &name})
-	if err != nil {
-		t.Fatalf("Should be able to retrieve product count %q : %s", name, err)
-	}
-
-	if len(prd2) == 0 || (len(prd2) != n && prd2[0].Name == name) {
-		t.Log("got:", len(prd2))
-		t.Log("exp:", n)
-		t.Fatalf("Should have a single product for %q", name)
-	}
-
-	prd3, err := api.Crud.Product.Query(ctx, product.QueryFilter{}, product.DefaultOrderBy, 1, 2)
-	if err != nil {
-		t.Fatalf("Should be able to retrieve 2 products for page 1 : %s", err)
-	}
-
-	n, err = api.Crud.Product.Count(ctx, product.QueryFilter{})
-	if err != nil {
-		t.Fatalf("Should be able to retrieve product count %q : %s", name, err)
-	}
-
-	if len(prd3) == 0 || len(prd3) != n {
-		t.Logf("got: %v", len(prd3))
-		t.Logf("exp: %v", n)
-		t.Fatalf("Should have 2 products for page ")
-	}
-
-	if prd3[0].ID == prd3[1].ID {
-		t.Logf("product1: %v", prd3[0].ID)
-		t.Logf("product2: %v", prd3[1].ID)
-		t.Fatalf("Should have different product")
-	}
+	return sd, nil
 }
 
-func productTran(t *testing.T) {
-	dbTest := dbtest.NewTest(t, c, "Test_Product/tran")
-	defer func() {
-		if r := recover(); r != nil {
-			t.Log(r)
-			t.Error(string(debug.Stack()))
-		}
-		dbTest.Teardown()
-	}()
+// =============================================================================
 
-	api := dbTest.Core
+func productQuery(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
+	prds := make([]product.Product, 0, len(sd.Admins[0].Products)+len(sd.Users[0].Products))
+	prds = append(prds, sd.Admins[0].Products...)
+	prds = append(prds, sd.Users[0].Products...)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
+	sort.Slice(prds, func(i, j int) bool {
+		return prds[i].ID.String() <= prds[j].ID.String()
+	})
 
-	// -------------------------------------------------------------------------
-	// Execute under a transaction with rollback
+	table := []dbtest.UnitTable{
+		{
+			Name:    "all",
+			ExpResp: prds,
+			ExcFunc: func(ctx context.Context) any {
+				filter := product.QueryFilter{
+					Name: dbtest.StringPointer("Name"),
+				}
 
-	f := func(tx transaction.Transaction) error {
-		userCore, err := api.Crud.User.ExecuteUnderTransaction(tx)
-		if err != nil {
-			t.Fatalf("Should be able to create new user core: %s.", err)
-		}
+				resp, err := dbt.Core.Crud.Product.Query(ctx, filter, product.DefaultOrderBy, 1, 10)
+				if err != nil {
+					return err
+				}
 
-		productCore, err := api.Crud.Product.ExecuteUnderTransaction(tx)
-		if err != nil {
-			t.Fatalf("Should be able to create new product core: %s.", err)
-		}
+				return resp
+			},
+			CmpFunc: func(got any, exp any) string {
+				gotResp, exists := got.([]product.Product)
+				if !exists {
+					return "error occurred"
+				}
 
-		email, err := mail.ParseAddress("test@test.com")
-		if err != nil {
-			t.Fatalf("Should be able to parse email: %s.", err)
-		}
+				expResp := exp.([]product.Product)
 
-		nu := user.NewUser{
-			Name:            "test user",
-			Email:           *email,
-			Roles:           []user.Role{user.RoleAdmin},
-			Department:      "some",
-			Password:        "some",
-			PasswordConfirm: "some",
-		}
+				for i := range gotResp {
+					if gotResp[i].DateCreated.Format(time.RFC3339) == expResp[i].DateCreated.Format(time.RFC3339) {
+						expResp[i].DateCreated = gotResp[i].DateCreated
+					}
 
-		usr, err := userCore.Create(ctx, nu)
-		if err != nil {
-			return err
-		}
+					if gotResp[i].DateUpdated.Format(time.RFC3339) == expResp[i].DateUpdated.Format(time.RFC3339) {
+						expResp[i].DateUpdated = gotResp[i].DateUpdated
+					}
+				}
 
-		np := product.NewProduct{
-			UserID:   usr.ID,
-			Name:     "test product",
-			Cost:     -1.0,
-			Quantity: 1,
-		}
+				return cmp.Diff(gotResp, expResp)
+			},
+		},
+		{
+			Name:    "byid",
+			ExpResp: sd.Users[0].Products[0],
+			ExcFunc: func(ctx context.Context) any {
+				resp, err := dbt.Core.Crud.Product.QueryByID(ctx, sd.Users[0].Products[0].ID)
+				if err != nil {
+					return err
+				}
 
-		_, err = productCore.Create(ctx, np)
-		if err != nil {
-			return err
-		}
+				return resp
+			},
+			CmpFunc: func(got any, exp any) string {
+				gotResp, exists := got.(product.Product)
+				if !exists {
+					return "error occurred"
+				}
 
-		return nil
+				expResp := exp.(product.Product)
+
+				if gotResp.DateCreated.Format(time.RFC3339) == expResp.DateCreated.Format(time.RFC3339) {
+					expResp.DateCreated = gotResp.DateCreated
+				}
+
+				if gotResp.DateUpdated.Format(time.RFC3339) == expResp.DateUpdated.Format(time.RFC3339) {
+					expResp.DateUpdated = gotResp.DateUpdated
+				}
+
+				return cmp.Diff(gotResp, expResp)
+			},
+		},
 	}
 
-	err := transaction.ExecuteUnderTransaction(ctx, dbTest.Log, sqldb.NewBeginner(dbTest.DB), f)
-	if !errors.Is(err, product.ErrInvalidCost) {
-		t.Fatalf("Should NOT be able to add product : %s.", err)
+	return table
+}
+
+func productCreate(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
+	table := []dbtest.UnitTable{
+		{
+			Name: "basic",
+			ExpResp: product.Product{
+				UserID:   sd.Users[0].ID,
+				Name:     "Guitar",
+				Cost:     10.34,
+				Quantity: 10,
+			},
+			ExcFunc: func(ctx context.Context) any {
+				np := product.NewProduct{
+					UserID:   sd.Users[0].ID,
+					Name:     "Guitar",
+					Cost:     10.34,
+					Quantity: 10,
+				}
+
+				resp, err := dbt.Core.Crud.Product.Create(ctx, np)
+				if err != nil {
+					return err
+				}
+
+				return resp
+			},
+			CmpFunc: func(got any, exp any) string {
+				gotResp, exists := got.(product.Product)
+				if !exists {
+					return "error occurred"
+				}
+
+				expResp := exp.(product.Product)
+
+				expResp.ID = gotResp.ID
+				expResp.DateCreated = gotResp.DateCreated
+				expResp.DateUpdated = gotResp.DateUpdated
+
+				return cmp.Diff(gotResp, expResp)
+			},
+		},
 	}
 
-	// -------------------------------------------------------------------------
-	// Validate rollback
+	return table
+}
 
-	email, err := mail.ParseAddress("test@test.com")
-	if err != nil {
-		t.Fatalf("Should be able to parse email: %s.", err)
+func productUpdate(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
+	table := []dbtest.UnitTable{
+		{
+			Name: "basic",
+			ExpResp: product.Product{
+				ID:          sd.Users[0].Products[0].ID,
+				UserID:      sd.Users[0].ID,
+				Name:        "Guitar",
+				Cost:        10.34,
+				Quantity:    10,
+				DateCreated: sd.Users[0].Products[0].DateCreated,
+				DateUpdated: sd.Users[0].Products[0].DateCreated,
+			},
+			ExcFunc: func(ctx context.Context) any {
+				up := product.UpdateProduct{
+					Name:     dbtest.StringPointer("Guitar"),
+					Cost:     dbtest.FloatPointer(10.34),
+					Quantity: dbtest.IntPointer(10),
+				}
+
+				resp, err := dbt.Core.Crud.Product.Update(ctx, sd.Users[0].Products[0], up)
+				if err != nil {
+					return err
+				}
+
+				return resp
+			},
+			CmpFunc: func(got any, exp any) string {
+				gotResp, exists := got.(product.Product)
+				if !exists {
+					return "error occurred"
+				}
+
+				expResp := exp.(product.Product)
+
+				expResp.DateUpdated = gotResp.DateUpdated
+
+				return cmp.Diff(gotResp, expResp)
+			},
+		},
 	}
 
-	usr, err := api.Crud.User.QueryByEmail(ctx, *email)
-	if err == nil {
-		t.Fatalf("Should NOT be able to retrieve user but got: %+v.", usr)
-	}
-	if !errors.Is(err, user.ErrNotFound) {
-		t.Fatalf("Should get ErrNotFound but got: %s.", err)
-	}
+	return table
+}
 
-	count, err := api.Crud.Product.Count(ctx, product.QueryFilter{})
-	if err != nil {
-		t.Fatalf("Should be able to count products: %s.", err)
-	}
+func productDelete(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
+	table := []dbtest.UnitTable{
+		{
+			Name:    "user",
+			ExpResp: nil,
+			ExcFunc: func(ctx context.Context) any {
+				if err := dbt.Core.Crud.Product.Delete(ctx, sd.Users[0].Products[1]); err != nil {
+					return err
+				}
 
-	if count > 0 {
-		t.Fatalf("Should have no products in the DB, but have: %d.", count)
-	}
+				return nil
+			},
+			CmpFunc: func(got any, exp any) string {
+				return cmp.Diff(got, exp)
+			},
+		},
+		{
+			Name:    "admin",
+			ExpResp: nil,
+			ExcFunc: func(ctx context.Context) any {
+				if err := dbt.Core.Crud.Product.Delete(ctx, sd.Admins[0].Products[1]); err != nil {
+					return err
+				}
 
-	// -------------------------------------------------------------------------
-	// Good transaction
-
-	f = func(tx transaction.Transaction) error {
-		userCore, err := api.Crud.User.ExecuteUnderTransaction(tx)
-		if err != nil {
-			t.Fatalf("Should be able to create new user core: %s.", err)
-		}
-
-		productCore, err := api.Crud.Product.ExecuteUnderTransaction(tx)
-		if err != nil {
-			t.Fatalf("Should be able to create new product core: %s.", err)
-		}
-
-		email, err := mail.ParseAddress("test@test.com")
-		if err != nil {
-			t.Fatalf("Should be able to parse email: %s.", err)
-		}
-
-		nu := user.NewUser{
-			Name:            "test user",
-			Email:           *email,
-			Roles:           []user.Role{user.RoleAdmin},
-			Department:      "some",
-			Password:        "some",
-			PasswordConfirm: "some",
-		}
-
-		usr, err := userCore.Create(ctx, nu)
-		if err != nil {
-			return err
-		}
-
-		np := product.NewProduct{
-			UserID:   usr.ID,
-			Name:     "test product",
-			Cost:     1.0,
-			Quantity: 1,
-		}
-
-		_, err = productCore.Create(ctx, np)
-		if err != nil {
-			return err
-		}
-
-		return nil
+				return nil
+			},
+			CmpFunc: func(got any, exp any) string {
+				return cmp.Diff(got, exp)
+			},
+		},
 	}
 
-	err = transaction.ExecuteUnderTransaction(ctx, dbTest.Log, sqldb.NewBeginner(dbTest.DB), f)
-	if errors.Is(err, product.ErrInvalidCost) {
-		t.Fatalf("Should be able to add product : %s.", err)
-	}
-
-	// -------------------------------------------------------------------------
-	// Validate
-
-	usr, err = api.Crud.User.QueryByEmail(ctx, *email)
-	if err != nil {
-		t.Fatalf("Should be able to retrieve user but got: %+v.", usr)
-	}
-
-	count, err = api.Crud.Product.Count(ctx, product.QueryFilter{})
-	if err != nil {
-		t.Fatalf("Should be able to count products: %s.", err)
-	}
-
-	if count == 0 {
-		t.Fatal("Should have products in the DB.")
-	}
+	return table
 }

@@ -2,36 +2,23 @@ package tests
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/mail"
 	"runtime/debug"
+	"sort"
 	"testing"
 	"time"
 
 	"github.com/ardanlabs/service/business/core/crud/user"
 	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/google/go-cmp/cmp"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func Test_User(t *testing.T) {
-	t.Run("crud", userCrud)
-	t.Run("paging", userPaging)
-}
+	t.Parallel()
 
-func userCrud(t *testing.T) {
-	seed := func(ctx context.Context, userCore *user.Core) ([]user.User, error) {
-		usrs, err := user.TestGenerateSeedUsers(ctx, 2, user.RoleAdmin, userCore)
-		if err != nil {
-			return nil, fmt.Errorf("seeding user : %w", err)
-		}
-
-		return usrs, nil
-	}
-
-	// -------------------------------------------------------------------------
-
-	dbTest := dbtest.NewTest(t, c, "Test_User/crud")
+	dbTest := dbtest.NewTest(t, c, "Test_User")
 	defer func() {
 		if r := recover(); r != nil {
 			t.Log(r)
@@ -40,213 +27,293 @@ func userCrud(t *testing.T) {
 		dbTest.Teardown()
 	}()
 
-	api := dbTest.Core
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	t.Log("Go seeding ...")
-
-	usrs, err := seed(ctx, api.Crud.User)
+	sd, err := insertUserSeedData(dbTest)
 	if err != nil {
 		t.Fatalf("Seeding error: %s", err)
 	}
 
 	// -------------------------------------------------------------------------
 
-	saved, err := api.Crud.User.QueryByID(ctx, usrs[0].ID)
-	if err != nil {
-		t.Fatalf("Should be able to retrieve user by ID: %s.", err)
-	}
-
-	if usrs[0].DateCreated.UnixMilli() != saved.DateCreated.UnixMilli() {
-		t.Logf("got: %v", saved.DateCreated)
-		t.Logf("exp: %v", usrs[0].DateCreated)
-		t.Logf("dif: %v", saved.DateCreated.Sub(usrs[0].DateCreated))
-		t.Errorf("Should get back the same date created")
-	}
-
-	if usrs[0].DateUpdated.UnixMilli() != saved.DateUpdated.UnixMilli() {
-		t.Logf("got: %v", saved.DateUpdated)
-		t.Logf("exp: %v", usrs[0].DateUpdated)
-		t.Logf("dif: %v", saved.DateUpdated.Sub(usrs[0].DateUpdated))
-		t.Fatalf("Should get back the same date updated")
-	}
-
-	usrs[0].DateCreated = time.Time{}
-	usrs[0].DateUpdated = time.Time{}
-	saved.DateCreated = time.Time{}
-	saved.DateUpdated = time.Time{}
-
-	if diff := cmp.Diff(usrs[0], saved); diff != "" {
-		t.Fatalf("Should get back the same user. diff:\n%s", diff)
-	}
-
-	// -------------------------------------------------------------------------
-
-	email, err := mail.ParseAddress("jacob@ardanlabs.com")
-	if err != nil {
-		t.Fatalf("Should be able to parse email: %s.", err)
-	}
-
-	upd := user.UpdateUser{
-		Name:       dbtest.StringPointer("Jacob Walker"),
-		Email:      email,
-		Department: dbtest.StringPointer("development"),
-		Roles:      []user.Role{user.RoleUser},
-		Enabled:    dbtest.BoolPointer(false),
-	}
-
-	if _, err := api.Crud.User.Update(ctx, usrs[0], upd); err != nil {
-		t.Fatalf("Should be able to update user : %s.", err)
-	}
-
-	saved, err = api.Crud.User.QueryByEmail(ctx, *upd.Email)
-	if err != nil {
-		t.Fatalf("Should be able to retrieve user by Email : %s.", err)
-	}
-
-	diff := usrs[0].DateUpdated.Sub(saved.DateUpdated)
-	if diff > 0 {
-		t.Errorf("Should have a larger DateUpdated : sav %v, usr %v, dif %v", saved.DateUpdated, usrs[0].DateUpdated, diff)
-	}
-
-	if saved.Name != *upd.Name {
-		t.Logf("got: %v", saved.Name)
-		t.Logf("exp: %v", *upd.Name)
-		t.Errorf("Should be able to see updates to Name")
-	}
-
-	if saved.Email != *upd.Email {
-		t.Logf("got: %v", saved.Email)
-		t.Logf("exp: %v", *upd.Email)
-		t.Errorf("Should be able to see updates to Email")
-	}
-
-	if saved.Department != *upd.Department {
-		t.Logf("got: %v", saved.Department)
-		t.Logf("exp: %v", *upd.Department)
-		t.Errorf("Should be able to see updates to Department")
-	}
-
-	if !saved.Roles[0].Equal(upd.Roles[0]) {
-		t.Logf("got: %v", saved.Roles[0].Name())
-		t.Logf("exp: %v", upd.Roles[0].Name())
-		t.Errorf("Should be able to see updates to Role")
-	}
-
-	if saved.Enabled != *upd.Enabled {
-		t.Logf("got: %v", saved.Enabled)
-		t.Logf("exp: %v", *upd.Enabled)
-		t.Errorf("Should be able to see updates to Enabled")
-	}
-
-	// -------------------------------------------------------------------------
-
-	if err := api.Crud.User.Delete(ctx, saved); err != nil {
-		t.Fatalf("Should be able to delete user : %s.", err)
-	}
-
-	_, err = api.Crud.User.QueryByID(ctx, saved.ID)
-	if !errors.Is(err, user.ErrNotFound) {
-		t.Fatalf("Should NOT be able to retrieve user : %s.", err)
-	}
+	dbtest.UnitTest(t, userQuery(dbTest, sd), "user-query")
+	dbtest.UnitTest(t, userCreate(dbTest), "user-create")
+	dbtest.UnitTest(t, userUpdate(dbTest, sd), "user-update")
+	dbtest.UnitTest(t, userDelete(dbTest, sd), "user-delete")
 }
 
-func userPaging(t *testing.T) {
-	seed := func(ctx context.Context, userCore *user.Core) ([]user.User, error) {
-		usrs := make([]user.User, 2)
+// =============================================================================
 
-		usrsAdmin, err := user.TestGenerateSeedUsers(ctx, 1, user.RoleAdmin, userCore)
-		if err != nil {
-			return nil, fmt.Errorf("seeding user : %w", err)
-		}
+func insertUserSeedData(dbTest *dbtest.Test) (dbtest.SeedData, error) {
+	ctx := context.Background()
+	api := dbTest.Core.Crud
 
-		usrsUser, err := user.TestGenerateSeedUsers(ctx, 1, user.RoleUser, userCore)
-		if err != nil {
-			return nil, fmt.Errorf("seeding user : %w", err)
-		}
+	usrs, err := user.TestGenerateSeedUsers(ctx, 2, user.RoleAdmin, api.User)
+	if err != nil {
+		return dbtest.SeedData{}, fmt.Errorf("seeding users : %w", err)
+	}
 
-		usrs[0] = usrsAdmin[0]
-		usrs[1] = usrsUser[0]
+	tu1 := dbtest.User{
+		User: usrs[0],
+	}
 
-		return usrs, nil
+	tu2 := dbtest.User{
+		User: usrs[1],
 	}
 
 	// -------------------------------------------------------------------------
 
-	dbTest := dbtest.NewTest(t, c, "Test_User/paging")
-	defer func() {
-		if r := recover(); r != nil {
-			t.Log(r)
-			t.Error(string(debug.Stack()))
-		}
-		dbTest.Teardown()
-	}()
-
-	api := dbTest.Core
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	t.Log("Go seeding ...")
-
-	usrs, err := seed(ctx, api.Crud.User)
+	usrs, err = user.TestGenerateSeedUsers(ctx, 2, user.RoleUser, api.User)
 	if err != nil {
-		t.Fatalf("Seeding error: %s", err)
+		return dbtest.SeedData{}, fmt.Errorf("seeding users : %w", err)
+	}
+
+	tu3 := dbtest.User{
+		User: usrs[0],
+	}
+
+	tu4 := dbtest.User{
+		User: usrs[1],
 	}
 
 	// -------------------------------------------------------------------------
 
-	name := usrs[0].Name
-	users1, err := api.Crud.User.Query(ctx, user.QueryFilter{Name: &name}, user.DefaultOrderBy, 1, 1)
-	if err != nil {
-		t.Fatalf("Should be able to retrieve user %q : %s.", name, err)
+	sd := dbtest.SeedData{
+		Users:  []dbtest.User{tu3, tu4},
+		Admins: []dbtest.User{tu1, tu2},
 	}
 
-	n, err := api.Crud.User.Count(ctx, user.QueryFilter{Name: &name})
-	if err != nil {
-		t.Fatalf("Should be able to retrieve user count %q : %s.", name, err)
+	return sd, nil
+}
+
+// =============================================================================
+
+func userQuery(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
+	usrs := make([]user.User, 0, len(sd.Admins)+len(sd.Users))
+
+	for _, adm := range sd.Admins {
+		usrs = append(usrs, adm.User)
 	}
 
-	if len(users1) == 0 || (len(users1) != n && users1[0].Name == name) {
-		t.Errorf("Should have a single user for %q", name)
+	for _, usr := range sd.Users {
+		usrs = append(usrs, usr.User)
 	}
 
-	name = usrs[1].Name
-	users2, err := api.Crud.User.Query(ctx, user.QueryFilter{Name: &name}, user.DefaultOrderBy, 1, 1)
-	if err != nil {
-		t.Fatalf("Should be able to retrieve user %q : %s.", name, err)
+	sort.Slice(usrs, func(i, j int) bool {
+		return usrs[i].ID.String() <= usrs[j].ID.String()
+	})
+
+	table := []dbtest.UnitTable{
+		{
+			Name:    "all",
+			ExpResp: usrs,
+			ExcFunc: func(ctx context.Context) any {
+				filter := user.QueryFilter{
+					Name: dbtest.StringPointer("Name"),
+				}
+
+				resp, err := dbt.Core.Crud.User.Query(ctx, filter, user.DefaultOrderBy, 1, 10)
+				if err != nil {
+					return err
+				}
+
+				return resp
+			},
+			CmpFunc: func(got any, exp any) string {
+				gotResp, exists := got.([]user.User)
+				if !exists {
+					return "error occurred"
+				}
+
+				expResp := exp.([]user.User)
+
+				for i := range gotResp {
+					if gotResp[i].DateCreated.Format(time.RFC3339) == expResp[i].DateCreated.Format(time.RFC3339) {
+						expResp[i].DateCreated = gotResp[i].DateCreated
+					}
+
+					if gotResp[i].DateUpdated.Format(time.RFC3339) == expResp[i].DateUpdated.Format(time.RFC3339) {
+						expResp[i].DateUpdated = gotResp[i].DateUpdated
+					}
+				}
+
+				return cmp.Diff(gotResp, expResp)
+			},
+		},
+		{
+			Name:    "byid",
+			ExpResp: sd.Users[0].User,
+			ExcFunc: func(ctx context.Context) any {
+				resp, err := dbt.Core.Crud.User.QueryByID(ctx, sd.Users[0].ID)
+				if err != nil {
+					return err
+				}
+
+				return resp
+			},
+			CmpFunc: func(got any, exp any) string {
+				gotResp, exists := got.(user.User)
+				if !exists {
+					return "error occurred"
+				}
+
+				expResp := exp.(user.User)
+
+				if gotResp.DateCreated.Format(time.RFC3339) == expResp.DateCreated.Format(time.RFC3339) {
+					expResp.DateCreated = gotResp.DateCreated
+				}
+
+				if gotResp.DateUpdated.Format(time.RFC3339) == expResp.DateUpdated.Format(time.RFC3339) {
+					expResp.DateUpdated = gotResp.DateUpdated
+				}
+
+				return cmp.Diff(gotResp, expResp)
+			},
+		},
 	}
 
-	n, err = api.Crud.User.Count(ctx, user.QueryFilter{Name: &name})
-	if err != nil {
-		t.Fatalf("Should be able to retrieve user count %q : %s.", name, err)
+	return table
+}
+
+func userCreate(dbt *dbtest.Test) []dbtest.UnitTable {
+	email, _ := mail.ParseAddress("bill@ardanlabs.com")
+
+	table := []dbtest.UnitTable{
+		{
+			Name: "basic",
+			ExpResp: user.User{
+				Name:       "Bill Kennedy",
+				Email:      *email,
+				Roles:      []user.Role{user.RoleAdmin},
+				Department: "IT",
+				Enabled:    true,
+			},
+			ExcFunc: func(ctx context.Context) any {
+				nu := user.NewUser{
+					Name:            "Bill Kennedy",
+					Email:           *email,
+					Roles:           []user.Role{user.RoleAdmin},
+					Department:      "IT",
+					Password:        "123",
+					PasswordConfirm: "123",
+				}
+
+				resp, err := dbt.Core.Crud.User.Create(ctx, nu)
+				if err != nil {
+					return err
+				}
+
+				return resp
+			},
+			CmpFunc: func(got any, exp any) string {
+				gotResp, exists := got.(user.User)
+				if !exists {
+					return "error occurred"
+				}
+
+				if err := bcrypt.CompareHashAndPassword(gotResp.PasswordHash, []byte("123")); err != nil {
+					return err.Error()
+				}
+
+				expResp := exp.(user.User)
+
+				expResp.ID = gotResp.ID
+				expResp.PasswordHash = gotResp.PasswordHash
+				expResp.DateCreated = gotResp.DateCreated
+				expResp.DateUpdated = gotResp.DateUpdated
+
+				return cmp.Diff(gotResp, expResp)
+			},
+		},
 	}
 
-	if len(users2) == 0 || (len(users2) != n && users2[0].Name == name) {
-		t.Errorf("Should have a single user for %q.", name)
+	return table
+}
+
+func userUpdate(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
+	email, _ := mail.ParseAddress("jack@ardanlabs.com")
+
+	table := []dbtest.UnitTable{
+		{
+			Name: "basic",
+			ExpResp: user.User{
+				ID:          sd.Users[0].ID,
+				Name:        "Jack Kennedy",
+				Email:       *email,
+				Roles:       []user.Role{user.RoleAdmin},
+				Department:  "IT",
+				Enabled:     true,
+				DateCreated: sd.Users[0].DateCreated,
+			},
+			ExcFunc: func(ctx context.Context) any {
+				uu := user.UpdateUser{
+					Name:            dbtest.StringPointer("Jack Kennedy"),
+					Email:           email,
+					Roles:           []user.Role{user.RoleAdmin},
+					Department:      dbtest.StringPointer("IT"),
+					Password:        dbtest.StringPointer("1234"),
+					PasswordConfirm: dbtest.StringPointer("1234"),
+				}
+
+				resp, err := dbt.Core.Crud.User.Update(ctx, sd.Users[0].User, uu)
+				if err != nil {
+					return err
+				}
+
+				return resp
+			},
+			CmpFunc: func(got any, exp any) string {
+				gotResp, exists := got.(user.User)
+				if !exists {
+					return "error occurred"
+				}
+
+				if err := bcrypt.CompareHashAndPassword(gotResp.PasswordHash, []byte("1234")); err != nil {
+					return err.Error()
+				}
+
+				expResp := exp.(user.User)
+
+				expResp.PasswordHash = gotResp.PasswordHash
+				expResp.DateUpdated = gotResp.DateUpdated
+
+				return cmp.Diff(gotResp, expResp)
+			},
+		},
 	}
 
-	users3, err := api.Crud.User.Query(ctx, user.QueryFilter{}, user.DefaultOrderBy, 1, 4)
-	if err != nil {
-		t.Fatalf("Should be able to retrieve 2 users for page 1 : %s.", err)
+	return table
+}
+
+func userDelete(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
+	table := []dbtest.UnitTable{
+		{
+			Name:    "user",
+			ExpResp: nil,
+			ExcFunc: func(ctx context.Context) any {
+				if err := dbt.Core.Crud.User.Delete(ctx, sd.Users[1].User); err != nil {
+					return err
+				}
+
+				return nil
+			},
+			CmpFunc: func(got any, exp any) string {
+				return cmp.Diff(got, exp)
+			},
+		},
+		{
+			Name:    "admin",
+			ExpResp: nil,
+			ExcFunc: func(ctx context.Context) any {
+				if err := dbt.Core.Crud.User.Delete(ctx, sd.Admins[1].User); err != nil {
+					return err
+				}
+
+				return nil
+			},
+			CmpFunc: func(got any, exp any) string {
+				return cmp.Diff(got, exp)
+			},
+		},
 	}
 
-	n, err = api.Crud.User.Count(ctx, user.QueryFilter{})
-	if err != nil {
-		t.Fatalf("Should be able to retrieve user count %q : %s.", name, err)
-	}
-
-	if len(users3) == 0 || len(users3) != n {
-		t.Logf("got: %v", len(users3))
-		t.Logf("exp: %v", n)
-		t.Errorf("Should have 2 users for page 1")
-	}
-
-	if users3[0].ID == users3[1].ID {
-		t.Logf("User1: %v", users3[0].ID)
-		t.Logf("User2: %v", users3[1].ID)
-		t.Errorf("Should have different users")
-	}
+	return table
 }
