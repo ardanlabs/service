@@ -4,19 +4,20 @@ import (
 	"net/http"
 
 	"github.com/ardanlabs/service/app/services/sales-api/handlers/crud/usergrp"
+	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/ardanlabs/service/business/web/errs"
 	"github.com/google/go-cmp/cmp"
 )
 
-func userCreate200(sd seedData) []tableData {
-	table := []tableData{
+func userCreate200(sd dbtest.SeedData) []dbtest.AppTable {
+	table := []dbtest.AppTable{
 		{
-			name:       "basic",
-			url:        "/v1/users",
-			token:      sd.admins[0].token,
-			method:     http.MethodPost,
-			statusCode: http.StatusCreated,
-			model: &usergrp.AppNewUser{
+			Name:       "basic",
+			URL:        "/v1/users",
+			Token:      sd.Admins[0].Token,
+			Method:     http.MethodPost,
+			StatusCode: http.StatusCreated,
+			Model: &usergrp.AppNewUser{
 				Name:            "Bill Kennedy",
 				Email:           "bill@ardanlabs.com",
 				Roles:           []string{"ADMIN"},
@@ -24,15 +25,15 @@ func userCreate200(sd seedData) []tableData {
 				Password:        "123",
 				PasswordConfirm: "123",
 			},
-			resp: &usergrp.AppUser{},
-			expResp: &usergrp.AppUser{
+			Resp: &usergrp.AppUser{},
+			ExpResp: &usergrp.AppUser{
 				Name:       "Bill Kennedy",
 				Email:      "bill@ardanlabs.com",
 				Roles:      []string{"ADMIN"},
 				Department: "IT",
 				Enabled:    true,
 			},
-			cmpFunc: func(got any, exp any) string {
+			CmpFunc: func(got any, exp any) string {
 				gotResp, exists := got.(*usergrp.AppUser)
 				if !exists {
 					return "error occurred"
@@ -52,31 +53,31 @@ func userCreate200(sd seedData) []tableData {
 	return table
 }
 
-func userCreate400(sd seedData) []tableData {
-	table := []tableData{
+func userCreate400(sd dbtest.SeedData) []dbtest.AppTable {
+	table := []dbtest.AppTable{
 		{
-			name:       "missing-input",
-			url:        "/v1/users",
-			token:      sd.admins[0].token,
-			method:     http.MethodPost,
-			statusCode: http.StatusBadRequest,
-			model:      &usergrp.AppNewUser{},
-			resp:       &errs.Response{},
-			expResp: &errs.Response{
+			Name:       "missing-input",
+			URL:        "/v1/users",
+			Token:      sd.Admins[0].Token,
+			Method:     http.MethodPost,
+			StatusCode: http.StatusBadRequest,
+			Model:      &usergrp.AppNewUser{},
+			Resp:       &errs.Response{},
+			ExpResp: &errs.Response{
 				Error:  "data validation error",
 				Fields: map[string]string{"email": "email is a required field", "name": "name is a required field", "password": "password is a required field", "roles": "roles is a required field"},
 			},
-			cmpFunc: func(got any, exp any) string {
+			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
 		},
 		{
-			name:       "bad-role",
-			url:        "/v1/users",
-			token:      sd.admins[0].token,
-			method:     http.MethodPost,
-			statusCode: http.StatusBadRequest,
-			model: &usergrp.AppNewUser{
+			Name:       "bad-role",
+			URL:        "/v1/users",
+			Token:      sd.Admins[0].Token,
+			Method:     http.MethodPost,
+			StatusCode: http.StatusBadRequest,
+			Model: &usergrp.AppNewUser{
 				Name:            "Bill Kennedy",
 				Email:           "bill@ardanlabs.com",
 				Roles:           []string{"BAD ROLE"},
@@ -84,11 +85,11 @@ func userCreate400(sd seedData) []tableData {
 				Password:        "123",
 				PasswordConfirm: "123",
 			},
-			resp: &errs.Response{},
-			expResp: &errs.Response{
+			Resp: &errs.Response{},
+			ExpResp: &errs.Response{
 				Error: "parse: invalid role \"BAD ROLE\"",
 			},
-			cmpFunc: func(got any, exp any) string {
+			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
 		},
@@ -97,61 +98,61 @@ func userCreate400(sd seedData) []tableData {
 	return table
 }
 
-func userCreate401(sd seedData) []tableData {
-	table := []tableData{
+func userCreate401(sd dbtest.SeedData) []dbtest.AppTable {
+	table := []dbtest.AppTable{
 		{
-			name:       "emptytoken",
-			url:        "/v1/users",
-			token:      "",
-			method:     http.MethodPost,
-			statusCode: http.StatusUnauthorized,
-			resp:       &errs.Response{},
-			expResp: &errs.Response{
+			Name:       "emptytoken",
+			URL:        "/v1/users",
+			Token:      "",
+			Method:     http.MethodPost,
+			StatusCode: http.StatusUnauthorized,
+			Resp:       &errs.Response{},
+			ExpResp: &errs.Response{
 				Error: "Unauthorized",
 			},
-			cmpFunc: func(got any, exp any) string {
+			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
 		},
 		{
-			name:       "badtoken",
-			url:        "/v1/users",
-			token:      sd.admins[0].token[:10],
-			method:     http.MethodPost,
-			statusCode: http.StatusUnauthorized,
-			resp:       &errs.Response{},
-			expResp: &errs.Response{
+			Name:       "badtoken",
+			URL:        "/v1/users",
+			Token:      sd.Admins[0].Token[:10],
+			Method:     http.MethodPost,
+			StatusCode: http.StatusUnauthorized,
+			Resp:       &errs.Response{},
+			ExpResp: &errs.Response{
 				Error: "Unauthorized",
 			},
-			cmpFunc: func(got any, exp any) string {
+			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
 		},
 		{
-			name:       "badsig",
-			url:        "/v1/users",
-			token:      sd.admins[0].token + "A",
-			method:     http.MethodPost,
-			statusCode: http.StatusUnauthorized,
-			resp:       &errs.Response{},
-			expResp: &errs.Response{
+			Name:       "badsig",
+			URL:        "/v1/users",
+			Token:      sd.Admins[0].Token + "A",
+			Method:     http.MethodPost,
+			StatusCode: http.StatusUnauthorized,
+			Resp:       &errs.Response{},
+			ExpResp: &errs.Response{
 				Error: "Unauthorized",
 			},
-			cmpFunc: func(got any, exp any) string {
+			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
 		},
 		{
-			name:       "wronguser",
-			url:        "/v1/users",
-			token:      sd.users[0].token,
-			method:     http.MethodPost,
-			statusCode: http.StatusUnauthorized,
-			resp:       &errs.Response{},
-			expResp: &errs.Response{
+			Name:       "wronguser",
+			URL:        "/v1/users",
+			Token:      sd.Users[0].Token,
+			Method:     http.MethodPost,
+			StatusCode: http.StatusUnauthorized,
+			Resp:       &errs.Response{},
+			ExpResp: &errs.Response{
 				Error: "Unauthorized",
 			},
-			cmpFunc: func(got any, exp any) string {
+			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
 		},

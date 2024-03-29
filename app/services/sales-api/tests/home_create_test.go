@@ -4,19 +4,20 @@ import (
 	"net/http"
 
 	"github.com/ardanlabs/service/app/services/sales-api/handlers/crud/homegrp"
+	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/ardanlabs/service/business/web/errs"
 	"github.com/google/go-cmp/cmp"
 )
 
-func homeCreate200(sd seedData) []tableData {
-	table := []tableData{
+func homeCreate200(sd dbtest.SeedData) []dbtest.AppTable {
+	table := []dbtest.AppTable{
 		{
-			name:       "basic",
-			url:        "/v1/homes",
-			token:      sd.users[0].token,
-			method:     http.MethodPost,
-			statusCode: http.StatusCreated,
-			model: &homegrp.AppNewHome{
+			Name:       "basic",
+			URL:        "/v1/homes",
+			Token:      sd.Users[0].Token,
+			Method:     http.MethodPost,
+			StatusCode: http.StatusCreated,
+			Model: &homegrp.AppNewHome{
 				Type: "SINGLE FAMILY",
 				Address: homegrp.AppNewAddress{
 					Address1: "123 Mocking Bird Lane",
@@ -26,9 +27,9 @@ func homeCreate200(sd seedData) []tableData {
 					Country:  "US",
 				},
 			},
-			resp: &homegrp.AppHome{},
-			expResp: &homegrp.AppHome{
-				UserID: sd.users[0].ID.String(),
+			Resp: &homegrp.AppHome{},
+			ExpResp: &homegrp.AppHome{
+				UserID: sd.Users[0].ID.String(),
 				Type:   "SINGLE FAMILY",
 				Address: homegrp.AppAddress{
 					Address1: "123 Mocking Bird Lane",
@@ -38,7 +39,7 @@ func homeCreate200(sd seedData) []tableData {
 					Country:  "US",
 				},
 			},
-			cmpFunc: func(got any, exp any) string {
+			CmpFunc: func(got any, exp any) string {
 				gotResp, exists := got.(*homegrp.AppHome)
 				if !exists {
 					return "error occurred"
@@ -58,31 +59,31 @@ func homeCreate200(sd seedData) []tableData {
 	return table
 }
 
-func homeCreate400(sd seedData) []tableData {
-	table := []tableData{
+func homeCreate400(sd dbtest.SeedData) []dbtest.AppTable {
+	table := []dbtest.AppTable{
 		{
-			name:       "missing-input",
-			url:        "/v1/homes",
-			token:      sd.users[0].token,
-			method:     http.MethodPost,
-			statusCode: http.StatusBadRequest,
-			model:      &homegrp.AppNewHome{},
-			resp:       &errs.Response{},
-			expResp: &errs.Response{
+			Name:       "missing-input",
+			URL:        "/v1/homes",
+			Token:      sd.Users[0].Token,
+			Method:     http.MethodPost,
+			StatusCode: http.StatusBadRequest,
+			Model:      &homegrp.AppNewHome{},
+			Resp:       &errs.Response{},
+			ExpResp: &errs.Response{
 				Error:  "data validation error",
 				Fields: map[string]string{"address1": "address1 is a required field", "city": "city is a required field", "country": "country is a required field", "state": "state is a required field", "type": "type is a required field", "zipCode": "zipCode is a required field"},
 			},
-			cmpFunc: func(got any, exp any) string {
+			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
 		},
 		{
-			name:       "bad-type",
-			url:        "/v1/homes",
-			token:      sd.users[0].token,
-			method:     http.MethodPost,
-			statusCode: http.StatusBadRequest,
-			model: &homegrp.AppNewHome{
+			Name:       "bad-type",
+			URL:        "/v1/homes",
+			Token:      sd.Users[0].Token,
+			Method:     http.MethodPost,
+			StatusCode: http.StatusBadRequest,
+			Model: &homegrp.AppNewHome{
 				Type: "BAD TYPE",
 				Address: homegrp.AppNewAddress{
 					Address1: "123 Mocking Bird Lane",
@@ -92,11 +93,11 @@ func homeCreate400(sd seedData) []tableData {
 					Country:  "US",
 				},
 			},
-			resp: &errs.Response{},
-			expResp: &errs.Response{
+			Resp: &errs.Response{},
+			ExpResp: &errs.Response{
 				Error: "parse: invalid type \"BAD TYPE\"",
 			},
-			cmpFunc: func(got any, exp any) string {
+			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
 		},
@@ -105,61 +106,61 @@ func homeCreate400(sd seedData) []tableData {
 	return table
 }
 
-func homeCreate401(sd seedData) []tableData {
-	table := []tableData{
+func homeCreate401(sd dbtest.SeedData) []dbtest.AppTable {
+	table := []dbtest.AppTable{
 		{
-			name:       "emptytoken",
-			url:        "/v1/homes",
-			token:      "",
-			method:     http.MethodPost,
-			statusCode: http.StatusUnauthorized,
-			resp:       &errs.Response{},
-			expResp: &errs.Response{
+			Name:       "emptytoken",
+			URL:        "/v1/homes",
+			Token:      "",
+			Method:     http.MethodPost,
+			StatusCode: http.StatusUnauthorized,
+			Resp:       &errs.Response{},
+			ExpResp: &errs.Response{
 				Error: "Unauthorized",
 			},
-			cmpFunc: func(got any, exp any) string {
+			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
 		},
 		{
-			name:       "badtoken",
-			url:        "/v1/homes",
-			token:      sd.admins[0].token[:10],
-			method:     http.MethodPost,
-			statusCode: http.StatusUnauthorized,
-			resp:       &errs.Response{},
-			expResp: &errs.Response{
+			Name:       "badtoken",
+			URL:        "/v1/homes",
+			Token:      sd.Admins[0].Token[:10],
+			Method:     http.MethodPost,
+			StatusCode: http.StatusUnauthorized,
+			Resp:       &errs.Response{},
+			ExpResp: &errs.Response{
 				Error: "Unauthorized",
 			},
-			cmpFunc: func(got any, exp any) string {
+			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
 		},
 		{
-			name:       "badsig",
-			url:        "/v1/homes",
-			token:      sd.admins[0].token + "A",
-			method:     http.MethodPost,
-			statusCode: http.StatusUnauthorized,
-			resp:       &errs.Response{},
-			expResp: &errs.Response{
+			Name:       "badsig",
+			URL:        "/v1/homes",
+			Token:      sd.Admins[0].Token + "A",
+			Method:     http.MethodPost,
+			StatusCode: http.StatusUnauthorized,
+			Resp:       &errs.Response{},
+			ExpResp: &errs.Response{
 				Error: "Unauthorized",
 			},
-			cmpFunc: func(got any, exp any) string {
+			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
 		},
 		{
-			name:       "wronguser",
-			url:        "/v1/homes",
-			token:      sd.admins[0].token,
-			method:     http.MethodPost,
-			statusCode: http.StatusUnauthorized,
-			resp:       &errs.Response{},
-			expResp: &errs.Response{
+			Name:       "wronguser",
+			URL:        "/v1/homes",
+			Token:      sd.Admins[0].Token,
+			Method:     http.MethodPost,
+			StatusCode: http.StatusUnauthorized,
+			Resp:       &errs.Response{},
+			ExpResp: &errs.Response{
 				Error: "Unauthorized",
 			},
-			cmpFunc: func(got any, exp any) string {
+			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
 		},

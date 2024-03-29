@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"runtime/debug"
+	"sort"
 	"testing"
 	"time"
 
@@ -11,30 +12,13 @@ import (
 	"github.com/ardanlabs/service/business/core/crud/user"
 	"github.com/ardanlabs/service/business/core/views/vproduct"
 	"github.com/ardanlabs/service/business/data/dbtest"
+	"github.com/google/go-cmp/cmp"
 )
 
 func Test_VProduct(t *testing.T) {
-	t.Run("paging", vproductPaging)
-}
+	t.Parallel()
 
-func vproductPaging(t *testing.T) {
-	seed := func(ctx context.Context, userCore *user.Core, productCore *product.Core) ([]product.Product, []user.User, error) {
-		usrs, err := user.TestGenerateSeedUsers(ctx, 1, user.RoleAdmin, userCore)
-		if err != nil {
-			return nil, nil, fmt.Errorf("seeding user : %w", err)
-		}
-
-		prds, err := product.TestGenerateSeedProducts(ctx, 2, productCore, usrs[0].ID)
-		if err != nil {
-			return nil, nil, fmt.Errorf("seeding products : %w", err)
-		}
-
-		return prds, []user.User{usrs[0]}, nil
-	}
-
-	// -------------------------------------------------------------------------
-
-	dbTest := dbtest.NewTest(t, c, "Test_VProduct/paging")
+	dbTest := dbtest.NewTest(t, c, "Test_Product")
 	defer func() {
 		if r := recover(); r != nil {
 			t.Log(r)
@@ -43,91 +27,138 @@ func vproductPaging(t *testing.T) {
 		dbTest.Teardown()
 	}()
 
-	api := dbTest.Core
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	t.Log("Go seeding ...")
-
-	prds, usrs, err := seed(ctx, api.Crud.User, api.Crud.Product)
+	sd, err := insertVProductSeedData(dbTest)
 	if err != nil {
 		t.Fatalf("Seeding error: %s", err)
 	}
 
 	// -------------------------------------------------------------------------
 
-	name := prds[0].Name
-	prd1, err := api.View.Product.Query(ctx, vproduct.QueryFilter{Name: &name}, vproduct.DefaultOrderBy, 1, 1)
+	dbtest.UnitTest(t, vproductQuery(dbTest, sd), "vproduct-query")
+}
+
+// =============================================================================
+
+func insertVProductSeedData(dbTest *dbtest.Test) (dbtest.SeedData, error) {
+	ctx := context.Background()
+	api := dbTest.Core.Crud
+
+	usrs, err := user.TestGenerateSeedUsers(ctx, 1, user.RoleUser, api.User)
 	if err != nil {
-		t.Fatalf("Should be able to retrieve products %q : %s", name, err)
+		return dbtest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}
 
-	n, err := api.View.Product.Count(ctx, vproduct.QueryFilter{Name: &name})
+	prds, err := product.TestGenerateSeedProducts(ctx, 2, api.Product, usrs[0].ID)
 	if err != nil {
-		t.Fatalf("Should be able to retrieve product count %q : %s", name, err)
+		return dbtest.SeedData{}, fmt.Errorf("seeding products : %w", err)
 	}
 
-	if len(prd1) != n && prd1[0].Name == name {
-		t.Log("got:", len(prd1))
-		t.Log("exp:", n)
-		t.Fatalf("Should have a single product for %q", name)
+	tu1 := dbtest.User{
+		User:     usrs[0],
+		Token:    dbTest.Token(usrs[0].Email.Address),
+		Products: prds,
 	}
 
-	if prd1[0].UserName != usrs[0].Name {
-		t.Log("got:", prd1[0].UserName)
-		t.Log("exp:", usrs[0].Name)
-		t.Fatal("Should have the correct user name")
-	}
+	// -------------------------------------------------------------------------
 
-	name = prds[1].Name
-	prd2, err := api.View.Product.Query(ctx, vproduct.QueryFilter{Name: &name}, vproduct.DefaultOrderBy, 1, 1)
+	usrs, err = user.TestGenerateSeedUsers(ctx, 1, user.RoleAdmin, api.User)
 	if err != nil {
-		t.Fatalf("Should be able to retrieve products %q : %s", name, err)
+		return dbtest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}
 
-	n, err = api.View.Product.Count(ctx, vproduct.QueryFilter{Name: &name})
+	prds, err = product.TestGenerateSeedProducts(ctx, 2, api.Product, usrs[0].ID)
 	if err != nil {
-		t.Fatalf("Should be able to retrieve product count %q : %s", name, err)
+		return dbtest.SeedData{}, fmt.Errorf("seeding products : %w", err)
 	}
 
-	if len(prd2) != n && prd2[0].Name == name {
-		t.Log("got:", len(prd2))
-		t.Log("exp:", n)
-		t.Fatalf("Should have a single product for %q", name)
+	tu2 := dbtest.User{
+		User:     usrs[0],
+		Token:    dbTest.Token(usrs[0].Email.Address),
+		Products: prds,
 	}
 
-	if prd2[0].UserName != usrs[0].Name {
-		t.Log("got:", prd2[0].UserName)
-		t.Log("exp:", usrs[0].Name)
-		t.Fatal("Should have the correct user name")
+	// -------------------------------------------------------------------------
+
+	sd := dbtest.SeedData{
+		Admins: []dbtest.User{tu2},
+		Users:  []dbtest.User{tu1},
 	}
 
-	prd3, err := api.View.Product.Query(ctx, vproduct.QueryFilter{}, vproduct.DefaultOrderBy, 1, 2)
-	if err != nil {
-		t.Fatalf("Should be able to retrieve 2 products for page 1 : %s", err)
+	return sd, nil
+}
+
+// =============================================================================
+
+func toVProduct(usr user.User, prd product.Product) vproduct.Product {
+	return vproduct.Product{
+		ID:          prd.ID,
+		UserID:      prd.UserID,
+		Name:        prd.Name,
+		Cost:        prd.Cost,
+		Quantity:    prd.Quantity,
+		DateCreated: prd.DateCreated,
+		DateUpdated: prd.DateUpdated,
+		UserName:    usr.Name,
+	}
+}
+
+func toVProducts(usr user.User, prds []product.Product) []vproduct.Product {
+	items := make([]vproduct.Product, len(prds))
+	for i, prd := range prds {
+		items[i] = toVProduct(usr, prd)
 	}
 
-	n, err = api.View.Product.Count(ctx, vproduct.QueryFilter{})
-	if err != nil {
-		t.Fatalf("Should be able to retrieve product count %q : %s", name, err)
+	return items
+}
+
+// =============================================================================
+
+func vproductQuery(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
+	prds := toVProducts(sd.Admins[0].User, sd.Admins[0].Products)
+	prds = append(prds, toVProducts(sd.Users[0].User, sd.Users[0].Products)...)
+
+	sort.Slice(prds, func(i, j int) bool {
+		return prds[i].ID.String() <= prds[j].ID.String()
+	})
+
+	table := []dbtest.UnitTable{
+		{
+			Name:    "all",
+			ExpResp: prds,
+			ExcFunc: func(ctx context.Context) any {
+				filter := vproduct.QueryFilter{
+					Name: dbtest.StringPointer("Name"),
+				}
+
+				resp, err := dbt.Core.View.Product.Query(ctx, filter, vproduct.DefaultOrderBy, 1, 10)
+				if err != nil {
+					return err
+				}
+
+				return resp
+			},
+			CmpFunc: func(got any, exp any) string {
+				gotResp, exists := got.([]vproduct.Product)
+				if !exists {
+					return "error occurred"
+				}
+
+				expResp := exp.([]vproduct.Product)
+
+				for i := range gotResp {
+					if gotResp[i].DateCreated.Format(time.RFC3339) == expResp[i].DateCreated.Format(time.RFC3339) {
+						expResp[i].DateCreated = gotResp[i].DateCreated
+					}
+
+					if gotResp[i].DateUpdated.Format(time.RFC3339) == expResp[i].DateUpdated.Format(time.RFC3339) {
+						expResp[i].DateUpdated = gotResp[i].DateUpdated
+					}
+				}
+
+				return cmp.Diff(gotResp, expResp)
+			},
+		},
 	}
 
-	if len(prd3) != n {
-		t.Logf("got: %v", len(prd3))
-		t.Logf("exp: %v", n)
-		t.Fatalf("Should have 2 products for page ")
-	}
-
-	if prd3[0].ID == prd3[1].ID {
-		t.Logf("product1: %v", prd3[0].ID)
-		t.Logf("product2: %v", prd3[1].ID)
-		t.Fatalf("Should have different product")
-	}
-
-	if prd3[0].UserName != usrs[0].Name {
-		t.Log("got:", prd3[0].UserName)
-		t.Log("exp:", usrs[0].Name)
-		t.Fatal("Should have the correct user name")
-	}
+	return table
 }

@@ -12,30 +12,6 @@ import (
 	"github.com/ardanlabs/service/business/core/crud/user"
 )
 
-type tableData struct {
-	name       string
-	url        string
-	token      string
-	method     string
-	statusCode int
-	model      any
-	resp       any
-	expResp    any
-	cmpFunc    func(got any, exp any) string
-}
-
-type testUser struct {
-	user.User
-	token    string
-	products []product.Product
-	homes    []home.Home
-}
-
-type seedData struct {
-	users  []testUser
-	admins []testUser
-}
-
 func toAppUser(usr user.User) usergrp.AppUser {
 	roles := make([]string, len(usr.Roles))
 	for i, role := range usr.Roles {

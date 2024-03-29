@@ -2,9 +2,9 @@ package tests
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"runtime/debug"
+	"sort"
 	"testing"
 	"time"
 
@@ -15,29 +15,9 @@ import (
 )
 
 func Test_Home(t *testing.T) {
-	t.Run("crud", homeCrud)
-	t.Run("paging", homePaging)
-}
+	t.Parallel()
 
-func homeCrud(t *testing.T) {
-	seed := func(ctx context.Context, userCore *user.Core, homeCore *home.Core) ([]home.Home, error) {
-		usrs, err := user.TestGenerateSeedUsers(ctx, 1, user.RoleAdmin, userCore)
-		if err != nil {
-			return nil, fmt.Errorf("seeding user : %w", err)
-		}
-
-		hmes, err := home.TestGenerateSeedHomes(ctx, 1, homeCore, usrs[0].ID)
-		if err != nil {
-			return nil, fmt.Errorf("seeding homes : %w", err)
-		}
-
-		return hmes, nil
-	}
-
-	// ---------------------------------------------------------------------------
-
-	dbTest := dbtest.NewTest(t, c, "Test_Home/crud")
-
+	dbTest := dbtest.NewTest(t, c, "Test_Home")
 	defer func() {
 		if r := recover(); r != nil {
 			t.Log(r)
@@ -46,210 +26,317 @@ func homeCrud(t *testing.T) {
 		dbTest.Teardown()
 	}()
 
-	api := dbTest.Core
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	t.Log("Go seeding ...")
-
-	hmes, err := seed(ctx, api.Crud.User, api.Crud.Home)
+	sd, err := insertHomeSeedData(dbTest)
 	if err != nil {
 		t.Fatalf("Seeding error: %s", err)
 	}
 
-	// ---------------------------------------------------------------------------
+	// -------------------------------------------------------------------------
 
-	saved, err := api.Crud.Home.QueryByID(ctx, hmes[0].ID)
+	dbtest.UnitTest(t, homeQuery(dbTest, sd), "home-query")
+	dbtest.UnitTest(t, homeCreate(dbTest, sd), "home-create")
+	dbtest.UnitTest(t, homeUpdate(dbTest, sd), "home-update")
+	dbtest.UnitTest(t, homeDelete(dbTest, sd), "home-delete")
+}
+
+// =============================================================================
+
+func insertHomeSeedData(dbTest *dbtest.Test) (dbtest.SeedData, error) {
+	ctx := context.Background()
+	api := dbTest.Core.Crud
+
+	usrs, err := user.TestGenerateSeedUsers(ctx, 1, user.RoleUser, api.User)
 	if err != nil {
-		t.Fatalf("Should be able to retrieve home by ID: %s", err)
+		return dbtest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}
 
-	if hmes[0].DateCreated.UnixMilli() != saved.DateCreated.UnixMilli() {
-		t.Logf("got: %v", saved.DateCreated)
-		t.Logf("exp: %v", hmes[0].DateCreated)
-		t.Logf("dif: %v", saved.DateCreated.Sub(hmes[0].DateCreated))
-		t.Errorf("Should get back the same date created")
+	hmes, err := home.TestGenerateSeedHomes(ctx, 2, api.Home, usrs[0].ID)
+	if err != nil {
+		return dbtest.SeedData{}, fmt.Errorf("seeding homes : %w", err)
 	}
 
-	if hmes[0].DateUpdated.UnixMilli() != saved.DateUpdated.UnixMilli() {
-		t.Logf("got: %v", saved.DateUpdated)
-		t.Logf("exp: %v", hmes[0].DateUpdated)
-		t.Logf("dif: %v", saved.DateUpdated.Sub(hmes[0].DateUpdated))
-		t.Errorf("Should get back the same date updated")
+	tu1 := dbtest.User{
+		User:  usrs[0],
+		Token: dbTest.Token(usrs[0].Email.Address),
+		Homes: hmes,
 	}
 
-	hmes[0].DateCreated = time.Time{}
-	hmes[0].DateUpdated = time.Time{}
-	saved.DateCreated = time.Time{}
-	saved.DateUpdated = time.Time{}
+	// -------------------------------------------------------------------------
 
-	if diff := cmp.Diff(hmes[0], saved); diff != "" {
-		t.Errorf("Should get back the same home, dif:\n%s", diff)
+	usrs, err = user.TestGenerateSeedUsers(ctx, 1, user.RoleUser, api.User)
+	if err != nil {
+		return dbtest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}
 
-	// ---------------------------------------------------------------------------
+	tu2 := dbtest.User{
+		User:  usrs[0],
+		Token: dbTest.Token(usrs[0].Email.Address),
+	}
 
-	upd := home.UpdateHome{
-		Address: &home.UpdateAddress{
-			Address1: dbtest.StringPointer("Fake St. 123"),
-			Address2: dbtest.StringPointer("Apt 6942"),
-			ZipCode:  dbtest.StringPointer("443223"),
-			City:     dbtest.StringPointer("Austin"),
-			State:    dbtest.StringPointer("Texas"),
-			Country:  dbtest.StringPointer("US"),
+	// -------------------------------------------------------------------------
+
+	usrs, err = user.TestGenerateSeedUsers(ctx, 1, user.RoleAdmin, api.User)
+	if err != nil {
+		return dbtest.SeedData{}, fmt.Errorf("seeding users : %w", err)
+	}
+
+	hmes, err = home.TestGenerateSeedHomes(ctx, 2, api.Home, usrs[0].ID)
+	if err != nil {
+		return dbtest.SeedData{}, fmt.Errorf("seeding homes : %w", err)
+	}
+
+	tu3 := dbtest.User{
+		User:  usrs[0],
+		Token: dbTest.Token(usrs[0].Email.Address),
+		Homes: hmes,
+	}
+
+	// -------------------------------------------------------------------------
+
+	usrs, err = user.TestGenerateSeedUsers(ctx, 1, user.RoleAdmin, api.User)
+	if err != nil {
+		return dbtest.SeedData{}, fmt.Errorf("seeding users : %w", err)
+	}
+
+	tu4 := dbtest.User{
+		User:  usrs[0],
+		Token: dbTest.Token(usrs[0].Email.Address),
+	}
+
+	// -------------------------------------------------------------------------
+
+	sd := dbtest.SeedData{
+		Users:  []dbtest.User{tu1, tu2},
+		Admins: []dbtest.User{tu3, tu4},
+	}
+
+	return sd, nil
+}
+
+// =============================================================================
+
+func homeQuery(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
+	hmes := make([]home.Home, 0, len(sd.Admins[0].Homes)+len(sd.Users[0].Homes))
+	hmes = append(hmes, sd.Admins[0].Homes...)
+	hmes = append(hmes, sd.Users[0].Homes...)
+
+	sort.Slice(hmes, func(i, j int) bool {
+		return hmes[i].ID.String() <= hmes[j].ID.String()
+	})
+
+	table := []dbtest.UnitTable{
+		{
+			Name:    "all",
+			ExpResp: hmes,
+			ExcFunc: func(ctx context.Context) any {
+				resp, err := dbt.Core.Crud.Home.Query(ctx, home.QueryFilter{}, home.DefaultOrderBy, 1, 10)
+				if err != nil {
+					return err
+				}
+
+				return resp
+			},
+			CmpFunc: func(got any, exp any) string {
+				gotResp, exists := got.([]home.Home)
+				if !exists {
+					return "error occurred"
+				}
+
+				expResp := exp.([]home.Home)
+
+				for i := range gotResp {
+					if gotResp[i].DateCreated.Format(time.RFC3339) == expResp[i].DateCreated.Format(time.RFC3339) {
+						expResp[i].DateCreated = gotResp[i].DateCreated
+					}
+
+					if gotResp[i].DateUpdated.Format(time.RFC3339) == expResp[i].DateUpdated.Format(time.RFC3339) {
+						expResp[i].DateUpdated = gotResp[i].DateUpdated
+					}
+				}
+
+				return cmp.Diff(gotResp, expResp)
+			},
 		},
-		Type: &home.TypeSingle,
+		{
+			Name:    "byid",
+			ExpResp: sd.Users[0].Homes[0],
+			ExcFunc: func(ctx context.Context) any {
+				resp, err := dbt.Core.Crud.Home.QueryByID(ctx, sd.Users[0].Homes[0].ID)
+				if err != nil {
+					return err
+				}
+
+				return resp
+			},
+			CmpFunc: func(got any, exp any) string {
+				gotResp, exists := got.(home.Home)
+				if !exists {
+					return "error occurred"
+				}
+
+				expResp := exp.(home.Home)
+
+				if gotResp.DateCreated.Format(time.RFC3339) == expResp.DateCreated.Format(time.RFC3339) {
+					expResp.DateCreated = gotResp.DateCreated
+				}
+
+				if gotResp.DateUpdated.Format(time.RFC3339) == expResp.DateUpdated.Format(time.RFC3339) {
+					expResp.DateUpdated = gotResp.DateUpdated
+				}
+
+				return cmp.Diff(gotResp, expResp)
+			},
+		},
 	}
 
-	if _, err := api.Crud.Home.Update(ctx, saved, upd); err != nil {
-		t.Errorf("Should be able to update home : %s", err)
-	}
-
-	saved, err = api.Crud.Home.QueryByID(ctx, hmes[0].ID)
-	if err != nil {
-		t.Fatalf("Should be able to retrieve updated home : %s", err)
-	}
-
-	diff := hmes[0].DateUpdated.Sub(saved.DateUpdated)
-	if diff > 0 {
-		t.Fatalf("Should have a larger DateUpdated : sav %v, hme %v, dif %v", saved.DateUpdated, saved.DateUpdated, diff)
-	}
-
-	homes, err := api.Crud.Home.Query(ctx, home.QueryFilter{}, user.DefaultOrderBy, 1, 3)
-	if err != nil {
-		t.Fatalf("Should be able to retrieve updated home : %s", err)
-	}
-
-	// Check specified fields were updated. Make a copy of the original home
-	// and change just the fields we expect then diff it with what was saved.
-
-	var idx int
-	for i, h := range homes {
-		if h.ID == saved.ID {
-			idx = i
-		}
-	}
-
-	homes[idx].DateCreated = time.Time{}
-	homes[idx].DateUpdated = time.Time{}
-	saved.DateCreated = time.Time{}
-	saved.DateUpdated = time.Time{}
-
-	if diff := cmp.Diff(saved, homes[idx]); diff != "" {
-		t.Fatalf("Should get back the same home, dif:\n%s", diff)
-	}
-
-	// -------------------------------------------------------------------------
-
-	upd = home.UpdateHome{
-		Type: &home.TypeCondo,
-	}
-
-	if _, err := api.Crud.Home.Update(ctx, saved, upd); err != nil {
-		t.Fatalf("Should be able to update just some fields of home : %s", err)
-	}
-
-	saved, err = api.Crud.Home.QueryByID(ctx, hmes[0].ID)
-	if err != nil {
-		t.Fatalf("Should be able to retrieve updated home : %s", err)
-	}
-
-	diff = hmes[0].DateUpdated.Sub(saved.DateUpdated)
-	if diff > 0 {
-		t.Fatalf("Should have a larger DateUpdated : sav %v, hme %v, dif %v", saved.DateUpdated, hmes[0].DateUpdated, diff)
-	}
-
-	if saved.Type != *upd.Type {
-		t.Fatalf("Should be able to see updated Type field : got %q want %q", saved.Type, *upd.Type)
-	}
-
-	if err := api.Crud.Home.Delete(ctx, saved); err != nil {
-		t.Fatalf("Should be able to delete home : %s", err)
-	}
-
-	_, err = api.Crud.Home.QueryByID(ctx, hmes[0].ID)
-	if !errors.Is(err, home.ErrNotFound) {
-		t.Fatalf("Should NOT be able to retrieve deleted home : %s", err)
-	}
+	return table
 }
 
-func homePaging(t *testing.T) {
-	seed := func(ctx context.Context, userCore *user.Core, homeCore *home.Core) ([]home.Home, error) {
-		usrs, err := user.TestGenerateSeedUsers(ctx, 1, user.RoleAdmin, userCore)
-		if err != nil {
-			return nil, fmt.Errorf("seeding user : %w", err)
-		}
+func homeCreate(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
+	table := []dbtest.UnitTable{
+		{
+			Name: "basic",
+			ExpResp: home.Home{
+				UserID: sd.Users[0].ID,
+				Type:   home.TypeSingle,
+				Address: home.Address{
+					Address1: "123 Mocking Bird Lane",
+					ZipCode:  "35810",
+					City:     "Huntsville",
+					State:    "AL",
+					Country:  "US",
+				},
+			},
+			ExcFunc: func(ctx context.Context) any {
+				nh := home.NewHome{
+					UserID: sd.Users[0].ID,
+					Type:   home.TypeSingle,
+					Address: home.Address{
+						Address1: "123 Mocking Bird Lane",
+						ZipCode:  "35810",
+						City:     "Huntsville",
+						State:    "AL",
+						Country:  "US",
+					},
+				}
 
-		hmes, err := home.TestGenerateSeedHomes(ctx, 2, homeCore, usrs[0].ID)
-		if err != nil {
-			return nil, fmt.Errorf("seeding homes : %w", err)
-		}
+				resp, err := dbt.Core.Crud.Home.Create(ctx, nh)
+				if err != nil {
+					return err
+				}
 
-		return hmes, nil
+				return resp
+			},
+			CmpFunc: func(got any, exp any) string {
+				gotResp, exists := got.(home.Home)
+				if !exists {
+					return "error occurred"
+				}
+
+				expResp := exp.(home.Home)
+
+				expResp.ID = gotResp.ID
+				expResp.DateCreated = gotResp.DateCreated
+				expResp.DateUpdated = gotResp.DateUpdated
+
+				return cmp.Diff(gotResp, expResp)
+			},
+		},
 	}
 
-	// -------------------------------------------------------------------------
+	return table
+}
 
-	dbTest := dbtest.NewTest(t, c, "Test_Home/paging")
-	defer func() {
-		if r := recover(); r != nil {
-			t.Log(r)
-			t.Error(string(debug.Stack()))
-		}
-		dbTest.Teardown()
-	}()
+func homeUpdate(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
+	table := []dbtest.UnitTable{
+		{
+			Name: "basic",
+			ExpResp: home.Home{
+				ID:     sd.Users[0].Homes[0].ID,
+				UserID: sd.Users[0].ID,
+				Type:   home.TypeSingle,
+				Address: home.Address{
+					Address1: "123 Mocking Bird Lane",
+					Address2: "apt 105",
+					ZipCode:  "35810",
+					City:     "Huntsville",
+					State:    "AL",
+					Country:  "US",
+				},
+				DateCreated: sd.Users[0].Homes[0].DateCreated,
+				DateUpdated: sd.Users[0].Homes[0].DateCreated,
+			},
+			ExcFunc: func(ctx context.Context) any {
+				uh := home.UpdateHome{
+					Type: &home.TypeSingle,
+					Address: &home.UpdateAddress{
+						Address1: dbtest.StringPointer("123 Mocking Bird Lane"),
+						Address2: dbtest.StringPointer("apt 105"),
+						ZipCode:  dbtest.StringPointer("35810"),
+						City:     dbtest.StringPointer("Huntsville"),
+						State:    dbtest.StringPointer("AL"),
+						Country:  dbtest.StringPointer("US"),
+					},
+				}
 
-	api := dbTest.Core
+				resp, err := dbt.Core.Crud.Home.Update(ctx, sd.Users[0].Homes[0], uh)
+				if err != nil {
+					return err
+				}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
+				resp.DateUpdated = resp.DateCreated
 
-	t.Log("Go seeding ...")
+				return resp
+			},
+			CmpFunc: func(got any, exp any) string {
+				gotResp, exists := got.(home.Home)
+				if !exists {
+					return "error occurred"
+				}
 
-	hmes, err := seed(ctx, api.Crud.User, api.Crud.Home)
-	if err != nil {
-		t.Fatalf("Seeding error: %s", err)
+				expResp := exp.(home.Home)
+
+				expResp.DateUpdated = gotResp.DateUpdated
+
+				return cmp.Diff(gotResp, expResp)
+			},
+		},
 	}
 
-	// -------------------------------------------------------------------------
+	return table
+}
 
-	homeType := hmes[0].Type
-	hme1, err := api.Crud.Home.Query(ctx, home.QueryFilter{Type: &homeType}, user.DefaultOrderBy, 1, 2)
-	if err != nil {
-		t.Fatalf("Should be able to retrieve homes %q : %s", homeType, err)
+func homeDelete(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
+	table := []dbtest.UnitTable{
+		{
+			Name:    "user",
+			ExpResp: nil,
+			ExcFunc: func(ctx context.Context) any {
+				if err := dbt.Core.Crud.Home.Delete(ctx, sd.Users[0].Homes[1]); err != nil {
+					return err
+				}
+
+				return nil
+			},
+			CmpFunc: func(got any, exp any) string {
+				return cmp.Diff(got, exp)
+			},
+		},
+		{
+			Name:    "admin",
+			ExpResp: nil,
+			ExcFunc: func(ctx context.Context) any {
+				if err := dbt.Core.Crud.Home.Delete(ctx, sd.Admins[0].Homes[1]); err != nil {
+					return err
+				}
+
+				return nil
+			},
+			CmpFunc: func(got any, exp any) string {
+				return cmp.Diff(got, exp)
+			},
+		},
 	}
 
-	n, err := api.Crud.Home.Count(ctx, home.QueryFilter{Type: &homeType})
-	if err != nil {
-		t.Fatalf("Should be able to retrieve home count %q : %s", homeType, err)
-	}
-
-	if len(hme1) == 0 || len(hme1) != n {
-		t.Log("got:", len(hme1))
-		t.Log("exp:", n)
-		t.Fatal("Should have the correct number of homes")
-	}
-
-	hme2, err := api.Crud.Home.Query(ctx, home.QueryFilter{}, user.DefaultOrderBy, 1, 2)
-	if err != nil {
-		t.Fatalf("Should be able to retrieve 2 homes for page 1 : %s", err)
-	}
-
-	n, err = api.Crud.Home.Count(ctx, home.QueryFilter{})
-	if err != nil {
-		t.Fatalf("Should be able to retrieve home count %q : %s", homeType, err)
-	}
-
-	if len(hme2) == 0 || len(hme2) != n {
-		t.Logf("got: %v", len(hme2))
-		t.Logf("exp: %v", n)
-		t.Fatalf("Should have 2 homes for page ")
-	}
-
-	if hme2[0].ID == hme2[1].ID {
-		t.Logf("home1: %v", hme2[0].ID)
-		t.Logf("home2: %v", hme2[1].ID)
-		t.Fatalf("Should have different home")
-	}
+	return table
 }

@@ -22,7 +22,7 @@ func Test_VProduct(t *testing.T) {
 		dbTest.Teardown()
 	}()
 
-	app := appTest{
+	app := dbtest.AppTest{
 		Handler: mux.WebAPI(mux.Config{
 			Shutdown: make(chan os.Signal, 1),
 			Log:      dbTest.Log,
@@ -40,5 +40,5 @@ func Test_VProduct(t *testing.T) {
 
 	// -------------------------------------------------------------------------
 
-	app.test(t, vproductQuery200(sd), "vproduct-query-200")
+	app.Test(t, vproductQuery200(sd), "vproduct-query-200")
 }

@@ -1,16 +1,12 @@
 package tests
 
 import (
-	"bytes"
 	"fmt"
-	"net/http"
-	"net/http/httptest"
 	"os"
 	"testing"
 
 	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/ardanlabs/service/foundation/docker"
-	"github.com/go-json-experiment/json"
 )
 
 var c *docker.Container
@@ -34,52 +30,4 @@ func run(m *testing.M) (int, error) {
 	defer dbtest.StopDB(c)
 
 	return m.Run(), nil
-}
-
-type appTest struct {
-	http.Handler
-}
-
-func (at *appTest) test(t *testing.T, table []tableData, testName string) {
-	for _, tt := range table {
-		f := func(t *testing.T) {
-			r := httptest.NewRequest(tt.method, tt.url, nil)
-			w := httptest.NewRecorder()
-
-			if tt.model != nil {
-				var b bytes.Buffer
-				if err := json.MarshalWrite(&b, tt.model, json.FormatNilSliceAsNull(true)); err != nil {
-					t.Fatalf("Should be able to marshal the model : %s", err)
-				}
-
-				r = httptest.NewRequest(tt.method, tt.url, &b)
-			}
-
-			r.Header.Set("Authorization", "Bearer "+tt.token)
-			at.ServeHTTP(w, r)
-
-			if w.Code != tt.statusCode {
-				t.Fatalf("%s: Should receive a status code of %d for the response : %d", tt.name, tt.statusCode, w.Code)
-			}
-
-			if tt.statusCode == http.StatusNoContent {
-				return
-			}
-
-			if err := json.Unmarshal(w.Body.Bytes(), tt.resp); err != nil {
-				t.Fatalf("Should be able to unmarshal the response : %s", err)
-			}
-
-			diff := tt.cmpFunc(tt.resp, tt.expResp)
-			if diff != "" {
-				t.Log("GOT")
-				t.Logf("%#v", tt.resp)
-				t.Log("EXP")
-				t.Logf("%#v", tt.expResp)
-				t.Fatalf("Should get the expected response")
-			}
-		}
-
-		t.Run(testName+"-"+tt.name, f)
-	}
 }
