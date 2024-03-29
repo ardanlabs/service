@@ -11,7 +11,7 @@ type Product struct {
 	ID          uuid.UUID
 	UserID      uuid.UUID
 	Name        string
-	Cost        float64
+	Cost        decimal.Decimal
 	Quantity    int
 	DateCreated time.Time
 	DateUpdated time.Time
