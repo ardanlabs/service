@@ -194,10 +194,6 @@ The material has been designed to be taught in a classroom environment. The code
 	* Knows how to maneuver around the file system.
 	* Understands what environment variables are.
 
-## Important Reading
-
-Please check out this page of [important reading](.reading/README.md). You will find articles and videos around topics related to this repo.
-
 ## Joining the Go Slack Community
 
 We use a Slack channel to share links, code, and examples during the training.  This is free.  This is also the same Slack community you will use after training to ask for help and interact with may Go experts around the world in the community.
