@@ -53,7 +53,6 @@ hello@ardanlabs.com
 * [Teacher](https://github.com/ardanlabs/service#our-teacher)
 * [More About Go](https://github.com/ardanlabs/service#more-about-go)
 * [Minimal Qualified Student](https://github.com/ardanlabs/service#minimal-qualified-student)
-* [Important Reading](https://github.com/ardanlabs/service#important-reading)
 * [Joining the Go Slack Community](https://github.com/ardanlabs/service#joining-the-go-slack-community)
 
 ## Installation
