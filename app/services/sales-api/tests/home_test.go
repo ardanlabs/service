@@ -22,7 +22,7 @@ func Test_Home(t *testing.T) {
 		dbTest.Teardown()
 	}()
 
-	app := appTest{
+	app := dbtest.AppTest{
 		Handler: mux.WebAPI(mux.Config{
 			Shutdown: make(chan os.Signal, 1),
 			Log:      dbTest.Log,
@@ -41,17 +41,17 @@ func Test_Home(t *testing.T) {
 
 	// -------------------------------------------------------------------------
 
-	app.test(t, homeQuery200(sd), "home-query-200")
-	app.test(t, homeQueryByID200(sd), "home-querybyid-200")
+	app.Test(t, homeQuery200(sd), "home-query-200")
+	app.Test(t, homeQueryByID200(sd), "home-querybyid-200")
 
-	app.test(t, homeCreate200(sd), "home-create-200")
-	app.test(t, homeCreate401(sd), "home-create-401")
-	app.test(t, homeCreate400(sd), "home-create-400")
+	app.Test(t, homeCreate200(sd), "home-create-200")
+	app.Test(t, homeCreate401(sd), "home-create-401")
+	app.Test(t, homeCreate400(sd), "home-create-400")
 
-	app.test(t, homeUpdate200(sd), "home-update-200")
-	app.test(t, homeUpdate401(sd), "home-update-401")
-	app.test(t, homeUpdate400(sd), "home-update-400")
+	app.Test(t, homeUpdate200(sd), "home-update-200")
+	app.Test(t, homeUpdate401(sd), "home-update-401")
+	app.Test(t, homeUpdate400(sd), "home-update-400")
 
-	app.test(t, homeDelete200(sd), "home-delete-200")
-	app.test(t, homeDelete401(sd), "home-delete-401")
+	app.Test(t, homeDelete200(sd), "home-delete-200")
+	app.Test(t, homeDelete401(sd), "home-delete-401")
 }

@@ -4,66 +4,67 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/ardanlabs/service/business/web/errs"
 	"github.com/google/go-cmp/cmp"
 )
 
-func userDelete200(sd seedData) []tableData {
-	table := []tableData{
+func userDelete200(sd dbtest.SeedData) []dbtest.AppTable {
+	table := []dbtest.AppTable{
 		{
-			name:       "asuser",
-			url:        fmt.Sprintf("/v1/users/%s", sd.users[1].ID),
-			token:      sd.users[1].token,
-			method:     http.MethodDelete,
-			statusCode: http.StatusNoContent,
+			Name:       "asuser",
+			URL:        fmt.Sprintf("/v1/users/%s", sd.Users[1].ID),
+			Token:      sd.Users[1].Token,
+			Method:     http.MethodDelete,
+			StatusCode: http.StatusNoContent,
 		},
 		{
-			name:       "asadmin",
-			url:        fmt.Sprintf("/v1/users/%s", sd.admins[1].ID),
-			token:      sd.admins[1].token,
-			method:     http.MethodDelete,
-			statusCode: http.StatusNoContent,
+			Name:       "asadmin",
+			URL:        fmt.Sprintf("/v1/users/%s", sd.Admins[1].ID),
+			Token:      sd.Admins[1].Token,
+			Method:     http.MethodDelete,
+			StatusCode: http.StatusNoContent,
 		},
 	}
 
 	return table
 }
 
-func userDelete401(sd seedData) []tableData {
-	table := []tableData{
+func userDelete401(sd dbtest.SeedData) []dbtest.AppTable {
+	table := []dbtest.AppTable{
 		{
-			name:       "emptytoken",
-			url:        fmt.Sprintf("/v1/users/%s", sd.users[0].ID),
-			token:      "",
-			method:     http.MethodDelete,
-			statusCode: http.StatusUnauthorized,
-			resp:       &errs.Response{},
-			expResp:    &errs.Response{Error: "Unauthorized"},
-			cmpFunc: func(got any, exp any) string {
+			Name:       "emptytoken",
+			URL:        fmt.Sprintf("/v1/users/%s", sd.Users[0].ID),
+			Token:      "",
+			Method:     http.MethodDelete,
+			StatusCode: http.StatusUnauthorized,
+			Resp:       &errs.Response{},
+			ExpResp:    &errs.Response{Error: "Unauthorized"},
+			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
 		},
 		{
-			name:       "badsig",
-			url:        fmt.Sprintf("/v1/users/%s", sd.users[0].ID),
-			token:      sd.users[0].token + "A",
-			method:     http.MethodDelete,
-			statusCode: http.StatusUnauthorized,
-			resp:       &errs.Response{},
-			expResp:    &errs.Response{Error: "Unauthorized"},
-			cmpFunc: func(got any, exp any) string {
+			Name:       "badsig",
+			URL:        fmt.Sprintf("/v1/users/%s", sd.Users[0].ID),
+			Token:      sd.Users[0].Token + "A",
+			Method:     http.MethodDelete,
+			StatusCode: http.StatusUnauthorized,
+			Resp:       &errs.Response{},
+			ExpResp:    &errs.Response{Error: "Unauthorized"},
+			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
 		},
 		{
-			name:       "wronguser",
-			url:        fmt.Sprintf("/v1/users/%s", sd.users[0].ID),
-			token:      sd.users[1].token,
-			method:     http.MethodDelete,
-			statusCode: http.StatusUnauthorized,
-			resp:       &errs.Response{},
-			expResp:    &errs.Response{Error: "Unauthorized"},
-			cmpFunc: func(got any, exp any) string {
+			Name:       "wronguser",
+			URL:        fmt.Sprintf("/v1/users/%s", sd.Users[0].ID),
+			Token:      sd.Users[1].Token,
+			Method:     http.MethodDelete,
+			StatusCode: http.StatusUnauthorized,
+			Resp:       &errs.Response{},
+			ExpResp:    &errs.Response{Error: "Unauthorized"},
+			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
 		},

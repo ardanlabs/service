@@ -11,15 +11,15 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func userUpdate200(sd seedData) []tableData {
-	table := []tableData{
+func userUpdate200(sd dbtest.SeedData) []dbtest.AppTable {
+	table := []dbtest.AppTable{
 		{
-			name:       "basic",
-			url:        fmt.Sprintf("/v1/users/%s", sd.users[0].ID),
-			token:      sd.users[0].token,
-			method:     http.MethodPut,
-			statusCode: http.StatusOK,
-			model: &usergrp.AppUpdateUser{
+			Name:       "basic",
+			URL:        fmt.Sprintf("/v1/users/%s", sd.Users[0].ID),
+			Token:      sd.Users[0].Token,
+			Method:     http.MethodPut,
+			StatusCode: http.StatusOK,
+			Model: &usergrp.AppUpdateUser{
 				Name:            dbtest.StringPointer("Jack Kennedy"),
 				Email:           dbtest.StringPointer("jack@ardanlabs.com"),
 				Roles:           []string{"ADMIN"},
@@ -27,18 +27,18 @@ func userUpdate200(sd seedData) []tableData {
 				Password:        dbtest.StringPointer("123"),
 				PasswordConfirm: dbtest.StringPointer("123"),
 			},
-			resp: &usergrp.AppUser{},
-			expResp: &usergrp.AppUser{
-				ID:          sd.users[0].ID.String(),
+			Resp: &usergrp.AppUser{},
+			ExpResp: &usergrp.AppUser{
+				ID:          sd.Users[0].ID.String(),
 				Name:        "Jack Kennedy",
 				Email:       "jack@ardanlabs.com",
 				Roles:       []string{"ADMIN"},
 				Department:  "IT",
 				Enabled:     true,
-				DateCreated: sd.users[0].DateCreated.Format(time.RFC3339),
-				DateUpdated: sd.users[0].DateUpdated.Format(time.RFC3339),
+				DateCreated: sd.Users[0].DateCreated.Format(time.RFC3339),
+				DateUpdated: sd.Users[0].DateUpdated.Format(time.RFC3339),
 			},
-			cmpFunc: func(got any, exp any) string {
+			CmpFunc: func(got any, exp any) string {
 				gotResp, exists := got.(*usergrp.AppUser)
 				if !exists {
 					return "error occurred"
@@ -55,41 +55,41 @@ func userUpdate200(sd seedData) []tableData {
 	return table
 }
 
-func userUpdate400(sd seedData) []tableData {
-	table := []tableData{
+func userUpdate400(sd dbtest.SeedData) []dbtest.AppTable {
+	table := []dbtest.AppTable{
 		{
-			name:       "bad-input",
-			url:        fmt.Sprintf("/v1/users/%s", sd.users[0].ID),
-			token:      sd.users[0].token,
-			method:     http.MethodPut,
-			statusCode: http.StatusBadRequest,
-			model: &usergrp.AppUpdateUser{
+			Name:       "bad-input",
+			URL:        fmt.Sprintf("/v1/users/%s", sd.Users[0].ID),
+			Token:      sd.Users[0].Token,
+			Method:     http.MethodPut,
+			StatusCode: http.StatusBadRequest,
+			Model: &usergrp.AppUpdateUser{
 				Email:           dbtest.StringPointer("bill@"),
 				PasswordConfirm: dbtest.StringPointer("jack"),
 			},
-			resp: &errs.Response{},
-			expResp: &errs.Response{
+			Resp: &errs.Response{},
+			ExpResp: &errs.Response{
 				Error:  "data validation error",
 				Fields: map[string]string{"email": "email must be a valid email address", "passwordConfirm": "passwordConfirm must be equal to Password"},
 			},
-			cmpFunc: func(got any, exp any) string {
+			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
 		},
 		{
-			name:       "bad-role",
-			url:        fmt.Sprintf("/v1/users/%s", sd.users[0].ID),
-			token:      sd.users[0].token,
-			method:     http.MethodPut,
-			statusCode: http.StatusBadRequest,
-			model: &usergrp.AppUpdateUser{
+			Name:       "bad-role",
+			URL:        fmt.Sprintf("/v1/users/%s", sd.Users[0].ID),
+			Token:      sd.Users[0].Token,
+			Method:     http.MethodPut,
+			StatusCode: http.StatusBadRequest,
+			Model: &usergrp.AppUpdateUser{
 				Roles: []string{"BAD ROLE"},
 			},
-			resp: &errs.Response{},
-			expResp: &errs.Response{
+			Resp: &errs.Response{},
+			ExpResp: &errs.Response{
 				Error: "parse: invalid role \"BAD ROLE\"",
 			},
-			cmpFunc: func(got any, exp any) string {
+			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
 		},
@@ -98,39 +98,39 @@ func userUpdate400(sd seedData) []tableData {
 	return table
 }
 
-func userUpdate401(sd seedData) []tableData {
-	table := []tableData{
+func userUpdate401(sd dbtest.SeedData) []dbtest.AppTable {
+	table := []dbtest.AppTable{
 		{
-			name:       "emptytoken",
-			url:        fmt.Sprintf("/v1/users/%s", sd.users[0].ID),
-			token:      "",
-			method:     http.MethodPut,
-			statusCode: http.StatusUnauthorized,
-			resp:       &errs.Response{},
-			expResp:    &errs.Response{Error: "Unauthorized"},
-			cmpFunc: func(got any, exp any) string {
+			Name:       "emptytoken",
+			URL:        fmt.Sprintf("/v1/users/%s", sd.Users[0].ID),
+			Token:      "",
+			Method:     http.MethodPut,
+			StatusCode: http.StatusUnauthorized,
+			Resp:       &errs.Response{},
+			ExpResp:    &errs.Response{Error: "Unauthorized"},
+			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
 		},
 		{
-			name:       "badsig",
-			url:        fmt.Sprintf("/v1/users/%s", sd.users[0].ID),
-			token:      sd.users[0].token + "A",
-			method:     http.MethodPut,
-			statusCode: http.StatusUnauthorized,
-			resp:       &errs.Response{},
-			expResp:    &errs.Response{Error: "Unauthorized"},
-			cmpFunc: func(got any, exp any) string {
+			Name:       "badsig",
+			URL:        fmt.Sprintf("/v1/users/%s", sd.Users[0].ID),
+			Token:      sd.Users[0].Token + "A",
+			Method:     http.MethodPut,
+			StatusCode: http.StatusUnauthorized,
+			Resp:       &errs.Response{},
+			ExpResp:    &errs.Response{Error: "Unauthorized"},
+			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
 		},
 		{
-			name:       "wronguser",
-			url:        fmt.Sprintf("/v1/users/%s", sd.admins[0].ID),
-			token:      sd.users[0].token,
-			method:     http.MethodPut,
-			statusCode: http.StatusUnauthorized,
-			model: &usergrp.AppUpdateUser{
+			Name:       "wronguser",
+			URL:        fmt.Sprintf("/v1/users/%s", sd.Admins[0].ID),
+			Token:      sd.Users[0].Token,
+			Method:     http.MethodPut,
+			StatusCode: http.StatusUnauthorized,
+			Model: &usergrp.AppUpdateUser{
 				Name:            dbtest.StringPointer("Bill Kennedy"),
 				Email:           dbtest.StringPointer("bill@ardanlabs.com"),
 				Roles:           []string{"ADMIN"},
@@ -138,9 +138,9 @@ func userUpdate401(sd seedData) []tableData {
 				Password:        dbtest.StringPointer("123"),
 				PasswordConfirm: dbtest.StringPointer("123"),
 			},
-			resp:    &errs.Response{},
-			expResp: &errs.Response{Error: "Unauthorized"},
-			cmpFunc: func(got any, exp any) string {
+			Resp:    &errs.Response{},
+			ExpResp: &errs.Response{Error: "Unauthorized"},
+			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
 		},
