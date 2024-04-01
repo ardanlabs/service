@@ -96,18 +96,12 @@ func (app AppNewUser) Validate() error {
 	return nil
 }
 
-// AppUpdateUser defines the data needed to update a user.
-type AppUpdateUser struct {
-	Name            *string  `json:"name"`
-	Email           *string  `json:"email" validate:"omitempty,email"`
-	Roles           []string `json:"roles"`
-	Department      *string  `json:"department"`
-	Password        *string  `json:"password"`
-	PasswordConfirm *string  `json:"passwordConfirm" validate:"omitempty,eqfield=Password"`
-	Enabled         *bool    `json:"enabled"`
+// AppUpdateUserRole defines the data needed to update a user role.
+type AppUpdateUserRole struct {
+	Roles []string `json:"roles"`
 }
 
-func toCoreUpdateUser(app AppUpdateUser) (user.UpdateUser, error) {
+func toCoreUpdateUserRole(app AppUpdateUserRole) (user.UpdateUser, error) {
 	var roles []user.Role
 	if app.Roles != nil {
 		roles = make([]user.Role, len(app.Roles))
@@ -120,6 +114,24 @@ func toCoreUpdateUser(app AppUpdateUser) (user.UpdateUser, error) {
 		}
 	}
 
+	nu := user.UpdateUser{
+		Roles: roles,
+	}
+
+	return nu, nil
+}
+
+// AppUpdateUser defines the data needed to update a user.
+type AppUpdateUser struct {
+	Name            *string `json:"name"`
+	Email           *string `json:"email" validate:"omitempty,email"`
+	Department      *string `json:"department"`
+	Password        *string `json:"password"`
+	PasswordConfirm *string `json:"passwordConfirm" validate:"omitempty,eqfield=Password"`
+	Enabled         *bool   `json:"enabled"`
+}
+
+func toCoreUpdateUser(app AppUpdateUser) (user.UpdateUser, error) {
 	var addr *mail.Address
 	if app.Email != nil {
 		var err error
@@ -132,7 +144,6 @@ func toCoreUpdateUser(app AppUpdateUser) (user.UpdateUser, error) {
 	nu := user.UpdateUser{
 		Name:            app.Name,
 		Email:           addr,
-		Roles:           roles,
 		Department:      app.Department,
 		Password:        app.Password,
 		PasswordConfirm: app.PasswordConfirm,

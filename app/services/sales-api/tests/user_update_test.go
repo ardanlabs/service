@@ -22,7 +22,6 @@ func userUpdate200(sd dbtest.SeedData) []dbtest.AppTable {
 			Model: &usergrp.AppUpdateUser{
 				Name:            dbtest.StringPointer("Jack Kennedy"),
 				Email:           dbtest.StringPointer("jack@ardanlabs.com"),
-				Roles:           []string{"ADMIN"},
 				Department:      dbtest.StringPointer("IT"),
 				Password:        dbtest.StringPointer("123"),
 				PasswordConfirm: dbtest.StringPointer("123"),
@@ -32,11 +31,43 @@ func userUpdate200(sd dbtest.SeedData) []dbtest.AppTable {
 				ID:          sd.Users[0].ID.String(),
 				Name:        "Jack Kennedy",
 				Email:       "jack@ardanlabs.com",
-				Roles:       []string{"ADMIN"},
+				Roles:       []string{"USER"},
 				Department:  "IT",
 				Enabled:     true,
 				DateCreated: sd.Users[0].DateCreated.Format(time.RFC3339),
 				DateUpdated: sd.Users[0].DateUpdated.Format(time.RFC3339),
+			},
+			CmpFunc: func(got any, exp any) string {
+				gotResp, exists := got.(*usergrp.AppUser)
+				if !exists {
+					return "error occurred"
+				}
+
+				expResp := exp.(*usergrp.AppUser)
+				gotResp.DateUpdated = expResp.DateUpdated
+
+				return cmp.Diff(gotResp, expResp)
+			},
+		},
+		{
+			Name:       "role",
+			URL:        fmt.Sprintf("/v1/users/role/%s", sd.Admins[0].ID),
+			Token:      sd.Admins[0].Token,
+			Method:     http.MethodPut,
+			StatusCode: http.StatusOK,
+			Model: &usergrp.AppUpdateUserRole{
+				Roles: []string{"USER"},
+			},
+			Resp: &usergrp.AppUser{},
+			ExpResp: &usergrp.AppUser{
+				ID:          sd.Admins[0].ID.String(),
+				Name:        sd.Admins[0].Name,
+				Email:       sd.Admins[0].Email.Address,
+				Roles:       []string{"USER"},
+				Department:  sd.Admins[0].Department,
+				Enabled:     true,
+				DateCreated: sd.Admins[0].DateCreated.Format(time.RFC3339),
+				DateUpdated: sd.Admins[0].DateUpdated.Format(time.RFC3339),
 			},
 			CmpFunc: func(got any, exp any) string {
 				gotResp, exists := got.(*usergrp.AppUser)
@@ -78,11 +109,11 @@ func userUpdate400(sd dbtest.SeedData) []dbtest.AppTable {
 		},
 		{
 			Name:       "bad-role",
-			URL:        fmt.Sprintf("/v1/users/%s", sd.Users[0].ID),
-			Token:      sd.Users[0].Token,
+			URL:        fmt.Sprintf("/v1/users/role/%s", sd.Admins[0].ID),
+			Token:      sd.Admins[0].Token,
 			Method:     http.MethodPut,
 			StatusCode: http.StatusBadRequest,
-			Model: &usergrp.AppUpdateUser{
+			Model: &usergrp.AppUpdateUserRole{
 				Roles: []string{"BAD ROLE"},
 			},
 			Resp: &errs.Response{},
@@ -133,10 +164,24 @@ func userUpdate401(sd dbtest.SeedData) []dbtest.AppTable {
 			Model: &usergrp.AppUpdateUser{
 				Name:            dbtest.StringPointer("Bill Kennedy"),
 				Email:           dbtest.StringPointer("bill@ardanlabs.com"),
-				Roles:           []string{"ADMIN"},
 				Department:      dbtest.StringPointer("IT"),
 				Password:        dbtest.StringPointer("123"),
 				PasswordConfirm: dbtest.StringPointer("123"),
+			},
+			Resp:    &errs.Response{},
+			ExpResp: &errs.Response{Error: "Unauthorized"},
+			CmpFunc: func(got any, exp any) string {
+				return cmp.Diff(got, exp)
+			},
+		},
+		{
+			Name:       "roleadminonly",
+			URL:        fmt.Sprintf("/v1/users/role/%s", sd.Users[0].ID),
+			Token:      sd.Users[0].Token,
+			Method:     http.MethodPut,
+			StatusCode: http.StatusUnauthorized,
+			Model: &usergrp.AppUpdateUserRole{
+				Roles: []string{"ADMIN"},
 			},
 			Resp:    &errs.Response{},
 			ExpResp: &errs.Response{Error: "Unauthorized"},

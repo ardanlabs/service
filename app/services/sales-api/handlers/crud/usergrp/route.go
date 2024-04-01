@@ -30,13 +30,15 @@ func Routes(app *web.App, cfg Config) {
 
 	authen := mid.Authenticate(cfg.Auth)
 	ruleAdmin := mid.Authorize(cfg.Auth, auth.RuleAdminOnly)
-	ruleAuthorizeUser := mid.AuthorizeUser(cfg.Auth, userCore)
+	ruleAuthorizeUser := mid.AuthorizeUser(cfg.Auth, userCore, auth.RuleAdminOrSubject)
+	ruleAuthorizeAdmin := mid.AuthorizeUser(cfg.Auth, userCore, auth.RuleAdminOnly)
 
 	hdl := new(userCore, cfg.Auth)
 	app.Handle(http.MethodGet, version, "/users/token/{kid}", hdl.token)
 	app.Handle(http.MethodGet, version, "/users", hdl.query, authen, ruleAdmin)
 	app.Handle(http.MethodGet, version, "/users/{user_id}", hdl.queryByID, authen, ruleAuthorizeUser)
 	app.Handle(http.MethodPost, version, "/users", hdl.create, authen, ruleAdmin)
+	app.Handle(http.MethodPut, version, "/users/role/{user_id}", hdl.updateRole, authen, ruleAuthorizeAdmin)
 	app.Handle(http.MethodPut, version, "/users/{user_id}", hdl.update, authen, ruleAuthorizeUser)
 	app.Handle(http.MethodDelete, version, "/users/{user_id}", hdl.delete, authen, ruleAuthorizeUser)
 }

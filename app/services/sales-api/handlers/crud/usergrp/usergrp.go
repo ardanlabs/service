@@ -79,6 +79,31 @@ func (h *handlers) update(ctx context.Context, w http.ResponseWriter, r *http.Re
 	return web.Respond(ctx, w, toAppUser(updUsr), http.StatusOK)
 }
 
+// updateRole updates a user role in the system.
+func (h *handlers) updateRole(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	var app AppUpdateUserRole
+	if err := web.Decode(r, &app); err != nil {
+		return errs.NewTrusted(err, http.StatusBadRequest)
+	}
+
+	uu, err := toCoreUpdateUserRole(app)
+	if err != nil {
+		return errs.NewTrusted(err, http.StatusBadRequest)
+	}
+
+	usr, err := mid.GetUser(ctx)
+	if err != nil {
+		return fmt.Errorf("updaterole: %w", err)
+	}
+
+	updUsr, err := h.user.Update(ctx, usr, uu)
+	if err != nil {
+		return fmt.Errorf("updaterole: userID[%s] uu[%+v]: %w", usr.ID, uu, err)
+	}
+
+	return web.Respond(ctx, w, toAppUser(updUsr), http.StatusOK)
+}
+
 // delete removes a user from the system.
 func (h *handlers) delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	usr, err := mid.GetUser(ctx)
