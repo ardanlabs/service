@@ -4,7 +4,6 @@ package homeapi
 import (
 	"context"
 	"errors"
-	"net/http"
 
 	"github.com/ardanlabs/service/business/api/errs"
 	"github.com/ardanlabs/service/business/api/mid"
@@ -33,12 +32,12 @@ func New(home *home.Core) *API {
 func (api *API) Create(ctx context.Context, app AppNewHome) (AppHome, error) {
 	nh, err := toCoreNewHome(ctx, app)
 	if err != nil {
-		return AppHome{}, errs.New(http.StatusBadRequest, err)
+		return AppHome{}, errs.New(errs.FailedPrecondition, err)
 	}
 
 	hme, err := api.home.Create(ctx, nh)
 	if err != nil {
-		return AppHome{}, errs.Newf(http.StatusInternalServerError, "create: hme[%+v]: %s", app, err)
+		return AppHome{}, errs.Newf(errs.Internal, "create: hme[%+v]: %s", app, err)
 	}
 
 	return toAppHome(hme), nil
@@ -48,17 +47,17 @@ func (api *API) Create(ctx context.Context, app AppNewHome) (AppHome, error) {
 func (api *API) Update(ctx context.Context, app AppUpdateHome) (AppHome, error) {
 	uh, err := toCoreUpdateHome(app)
 	if err != nil {
-		return AppHome{}, errs.New(http.StatusBadRequest, err)
+		return AppHome{}, errs.New(errs.FailedPrecondition, err)
 	}
 
 	hme, err := mid.GetHome(ctx)
 	if err != nil {
-		return AppHome{}, errs.Newf(http.StatusInternalServerError, "home missing in context: %s", err)
+		return AppHome{}, errs.Newf(errs.Internal, "home missing in context: %s", err)
 	}
 
 	updUsr, err := api.home.Update(ctx, hme, uh)
 	if err != nil {
-		return AppHome{}, errs.Newf(http.StatusInternalServerError, "update: homeID[%s] uh[%+v]: %s", hme.ID, uh, err)
+		return AppHome{}, errs.Newf(errs.Internal, "update: homeID[%s] uh[%+v]: %s", hme.ID, uh, err)
 	}
 
 	return toAppHome(updUsr), nil
@@ -68,11 +67,11 @@ func (api *API) Update(ctx context.Context, app AppUpdateHome) (AppHome, error) 
 func (api *API) Delete(ctx context.Context) error {
 	hme, err := mid.GetHome(ctx)
 	if err != nil {
-		return errs.Newf(http.StatusInternalServerError, "homeID missing in context: %s", err)
+		return errs.Newf(errs.Internal, "homeID missing in context: %s", err)
 	}
 
 	if err := api.home.Delete(ctx, hme); err != nil {
-		return errs.Newf(http.StatusInternalServerError, "delete: homeID[%s]: %s", hme.ID, err)
+		return errs.Newf(errs.Internal, "delete: homeID[%s]: %s", hme.ID, err)
 	}
 
 	return nil
@@ -96,12 +95,12 @@ func (api *API) Query(ctx context.Context, qp QueryParams) (page.Document[AppHom
 
 	hmes, err := api.home.Query(ctx, filter, orderBy, qp.Page, qp.Rows)
 	if err != nil {
-		return page.Document[AppHome]{}, errs.Newf(http.StatusInternalServerError, "query: %s", err)
+		return page.Document[AppHome]{}, errs.Newf(errs.Internal, "query: %s", err)
 	}
 
 	total, err := api.home.Count(ctx, filter)
 	if err != nil {
-		return page.Document[AppHome]{}, errs.Newf(http.StatusInternalServerError, "count: %s", err)
+		return page.Document[AppHome]{}, errs.Newf(errs.Internal, "count: %s", err)
 	}
 
 	return page.NewDocument(toAppHomes(hmes), total, qp.Page, qp.Rows), nil
@@ -111,7 +110,7 @@ func (api *API) Query(ctx context.Context, qp QueryParams) (page.Document[AppHom
 func (api *API) QueryByID(ctx context.Context) (AppHome, error) {
 	hme, err := mid.GetHome(ctx)
 	if err != nil {
-		return AppHome{}, errs.Newf(http.StatusInternalServerError, "querybyid: %s", err)
+		return AppHome{}, errs.Newf(errs.Internal, "querybyid: %s", err)
 	}
 
 	return toAppHome(hme), nil

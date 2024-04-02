@@ -31,17 +31,17 @@ func (h *handlers) create(ctx context.Context, w http.ResponseWriter, r *http.Re
 
 	var app AppNewTran
 	if err := web.Decode(r, &app); err != nil {
-		return errs.New(http.StatusBadRequest, err)
+		return errs.New(errs.FailedPrecondition, err)
 	}
 
 	np, err := toCoreNewProduct(app.Product)
 	if err != nil {
-		return errs.New(http.StatusBadRequest, err)
+		return errs.New(errs.FailedPrecondition, err)
 	}
 
 	nu, err := toCoreNewUser(app.User)
 	if err != nil {
-		return errs.New(http.StatusBadRequest, err)
+		return errs.New(errs.FailedPrecondition, err)
 	}
 
 	usr, err := h.user.Create(ctx, nu)

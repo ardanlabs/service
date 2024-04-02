@@ -99,7 +99,7 @@ func userUpdate400(sd dbtest.SeedData) []dbtest.AppTable {
 				PasswordConfirm: dbtest.StringPointer("jack"),
 			},
 			Resp:    &errs.Error{},
-			ExpResp: toErrorPtr(errs.Newf(http.StatusBadRequest, "validate: [{\"field\":\"email\",\"error\":\"email must be a valid email address\"},{\"field\":\"passwordConfirm\",\"error\":\"passwordConfirm must be equal to Password\"}]")),
+			ExpResp: toErrorPtr(errs.Newf(errs.FailedPrecondition, "validate: [{\"field\":\"email\",\"error\":\"email must be a valid email address\"},{\"field\":\"passwordConfirm\",\"error\":\"passwordConfirm must be equal to Password\"}]")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -114,7 +114,7 @@ func userUpdate400(sd dbtest.SeedData) []dbtest.AppTable {
 				Roles: []string{"BAD ROLE"},
 			},
 			Resp:    &errs.Error{},
-			ExpResp: toErrorPtr(errs.Newf(http.StatusBadRequest, "parse: invalid role \"BAD ROLE\"")),
+			ExpResp: toErrorPtr(errs.Newf(errs.FailedPrecondition, "parse: invalid role \"BAD ROLE\"")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -133,7 +133,7 @@ func userUpdate401(sd dbtest.SeedData) []dbtest.AppTable {
 			Method:     http.MethodPut,
 			StatusCode: http.StatusUnauthorized,
 			Resp:       &errs.Error{},
-			ExpResp:    toErrorPtr(errs.Newf(http.StatusUnauthorized, "error parsing token: token contains an invalid number of segments")),
+			ExpResp:    toErrorPtr(errs.Newf(errs.Unauthenticated, "error parsing token: token contains an invalid number of segments")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -145,7 +145,7 @@ func userUpdate401(sd dbtest.SeedData) []dbtest.AppTable {
 			Method:     http.MethodPut,
 			StatusCode: http.StatusUnauthorized,
 			Resp:       &errs.Error{},
-			ExpResp:    toErrorPtr(errs.Newf(http.StatusUnauthorized, "authentication failed : bindings results[[{[true] map[x:false]}]] ok[true]")),
+			ExpResp:    toErrorPtr(errs.Newf(errs.Unauthenticated, "authentication failed : bindings results[[{[true] map[x:false]}]] ok[true]")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -164,7 +164,7 @@ func userUpdate401(sd dbtest.SeedData) []dbtest.AppTable {
 				PasswordConfirm: dbtest.StringPointer("123"),
 			},
 			Resp:    &errs.Error{},
-			ExpResp: toErrorPtr(errs.Newf(http.StatusUnauthorized, "authorize: you are not authorized for that action, claims[[{USER}]] rule[rule_admin_or_subject]: rego evaluation failed : bindings results[[{[true] map[x:false]}]] ok[true]")),
+			ExpResp: toErrorPtr(errs.Newf(errs.Unauthenticated, "authorize: you are not authorized for that action, claims[[{USER}]] rule[rule_admin_or_subject]: rego evaluation failed : bindings results[[{[true] map[x:false]}]] ok[true]")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -179,7 +179,7 @@ func userUpdate401(sd dbtest.SeedData) []dbtest.AppTable {
 				Roles: []string{"ADMIN"},
 			},
 			Resp:    &errs.Error{},
-			ExpResp: toErrorPtr(errs.Newf(http.StatusUnauthorized, "authorize: you are not authorized for that action, claims[[{USER}]] rule[rule_admin_only]: rego evaluation failed : bindings results[[{[true] map[x:false]}]] ok[true]")),
+			ExpResp: toErrorPtr(errs.Newf(errs.Unauthenticated, "authorize: you are not authorized for that action, claims[[{USER}]] rule[rule_admin_only]: rego evaluation failed : bindings results[[{[true] map[x:false]}]] ok[true]")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},

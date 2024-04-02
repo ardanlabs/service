@@ -2,7 +2,6 @@ package userapi
 
 import (
 	"fmt"
-	"net/http"
 	"net/mail"
 	"time"
 
@@ -104,7 +103,7 @@ func toCoreNewUser(app AppNewUser) (user.NewUser, error) {
 // Validate checks the data in the model is considered clean.
 func (app AppNewUser) Validate() error {
 	if err := validate.Check(app); err != nil {
-		return errs.Newf(http.StatusBadRequest, "validate: %s", err)
+		return errs.Newf(errs.FailedPrecondition, "validate: %s", err)
 	}
 
 	return nil
@@ -170,7 +169,7 @@ func toCoreUpdateUser(app AppUpdateUser) (user.UpdateUser, error) {
 // Validate checks the data in the model is considered clean.
 func (app AppUpdateUser) Validate() error {
 	if err := validate.Check(app); err != nil {
-		return errs.Newf(http.StatusBadRequest, "validate: %s", err)
+		return errs.Newf(errs.FailedPrecondition, "validate: %s", err)
 	}
 
 	return nil

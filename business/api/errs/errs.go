@@ -7,20 +7,6 @@ import (
 	"net/http"
 )
 
-var errMap = map[int]ErrCode{
-	http.StatusOK:                  OK,
-	http.StatusInternalServerError: Internal,
-	http.StatusBadRequest:          FailedPrecondition,
-	http.StatusGatewayTimeout:      DeadlineExceeded,
-	http.StatusNotFound:            NotFound,
-	http.StatusConflict:            Aborted,
-	http.StatusForbidden:           PermissionDenied,
-	http.StatusTooManyRequests:     ResourceExhausted,
-	http.StatusNotImplemented:      Unimplemented,
-	http.StatusServiceUnavailable:  Unavailable,
-	http.StatusUnauthorized:        Unauthenticated,
-}
-
 // Details provides the caller with more error context.
 type Details struct {
 	HTTPStatusCode int    `json:"httpStatusCode"`
@@ -35,25 +21,25 @@ type Error struct {
 }
 
 // New constructs an error based on an app error.
-func New(httpStatus int, err error) Error {
+func New(code ErrCode, err error) Error {
 	return Error{
-		Code:    errMap[httpStatus],
+		Code:    code,
 		Message: err.Error(),
 		Details: Details{
-			HTTPStatusCode: httpStatus,
-			HTTPStatus:     http.StatusText(httpStatus),
+			HTTPStatusCode: code.HTTPStatus(),
+			HTTPStatus:     http.StatusText(code.HTTPStatus()),
 		},
 	}
 }
 
 // Newf constructs an error based on a error message.
-func Newf(httpStatus int, format string, v ...any) Error {
+func Newf(code ErrCode, format string, v ...any) Error {
 	return Error{
-		Code:    errMap[httpStatus],
+		Code:    code,
 		Message: fmt.Sprintf(format, v...),
 		Details: Details{
-			HTTPStatusCode: httpStatus,
-			HTTPStatus:     http.StatusText(httpStatus),
+			HTTPStatusCode: code.HTTPStatus(),
+			HTTPStatus:     http.StatusText(code.HTTPStatus()),
 		},
 	}
 }

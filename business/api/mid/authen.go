@@ -23,16 +23,16 @@ func Authenticate(a *auth.Auth) web.MidHandler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 			claims, err := a.Authenticate(ctx, r.Header.Get("authorization"))
 			if err != nil {
-				return errs.New(http.StatusUnauthorized, err)
+				return errs.New(errs.Unauthenticated, err)
 			}
 
 			if claims.Subject == "" {
-				return errs.Newf(http.StatusUnauthorized, "authorize: you are not authorized for that action, no claims")
+				return errs.Newf(errs.Unauthenticated, "authorize: you are not authorized for that action, no claims")
 			}
 
 			subjectID, err := uuid.Parse(claims.Subject)
 			if err != nil {
-				return errs.New(http.StatusUnauthorized, fmt.Errorf("parsing subject: %w", err))
+				return errs.New(errs.Unauthenticated, fmt.Errorf("parsing subject: %w", err))
 			}
 
 			ctx = setUserID(ctx, subjectID)
@@ -53,7 +53,7 @@ func Authorize(a *auth.Auth, rule string) web.MidHandler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 			claims := getClaims(ctx)
 			if err := a.Authorize(ctx, claims, uuid.UUID{}, rule); err != nil {
-				return errs.Newf(http.StatusUnauthorized, "authorize: you are not authorized for that action, claims[%v] rule[%v]: %s", claims.Roles, rule, err)
+				return errs.Newf(errs.Unauthenticated, "authorize: you are not authorized for that action, claims[%v] rule[%v]: %s", claims.Roles, rule, err)
 			}
 
 			return handler(ctx, w, r)

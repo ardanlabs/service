@@ -4,7 +4,6 @@ package productapi
 import (
 	"context"
 	"errors"
-	"net/http"
 
 	"github.com/ardanlabs/service/business/api/errs"
 	"github.com/ardanlabs/service/business/api/mid"
@@ -33,12 +32,12 @@ func New(product *product.Core) *API {
 func (api *API) Create(ctx context.Context, app AppNewProduct) (AppProduct, error) {
 	np, err := toCoreNewProduct(ctx, app)
 	if err != nil {
-		return AppProduct{}, errs.New(http.StatusBadRequest, err)
+		return AppProduct{}, errs.New(errs.FailedPrecondition, err)
 	}
 
 	prd, err := api.product.Create(ctx, np)
 	if err != nil {
-		return AppProduct{}, errs.Newf(http.StatusInternalServerError, "create: prd[%+v]: %s", prd, err)
+		return AppProduct{}, errs.Newf(errs.Internal, "create: prd[%+v]: %s", prd, err)
 	}
 
 	return toAppProduct(prd), nil
@@ -48,12 +47,12 @@ func (api *API) Create(ctx context.Context, app AppNewProduct) (AppProduct, erro
 func (api *API) Update(ctx context.Context, app AppUpdateProduct) (AppProduct, error) {
 	prd, err := mid.GetProduct(ctx)
 	if err != nil {
-		return AppProduct{}, errs.Newf(http.StatusInternalServerError, "product missing in context: %s", err)
+		return AppProduct{}, errs.Newf(errs.Internal, "product missing in context: %s", err)
 	}
 
 	updPrd, err := api.product.Update(ctx, prd, toCoreUpdateProduct(app))
 	if err != nil {
-		return AppProduct{}, errs.Newf(http.StatusInternalServerError, "update: productID[%s] up[%+v]: %s", prd.ID, app, err)
+		return AppProduct{}, errs.Newf(errs.Internal, "update: productID[%s] up[%+v]: %s", prd.ID, app, err)
 	}
 
 	return toAppProduct(updPrd), nil
@@ -63,11 +62,11 @@ func (api *API) Update(ctx context.Context, app AppUpdateProduct) (AppProduct, e
 func (api *API) Delete(ctx context.Context) error {
 	prd, err := mid.GetProduct(ctx)
 	if err != nil {
-		return errs.Newf(http.StatusInternalServerError, "productID missing in context: %s", err)
+		return errs.Newf(errs.Internal, "productID missing in context: %s", err)
 	}
 
 	if err := api.product.Delete(ctx, prd); err != nil {
-		return errs.Newf(http.StatusInternalServerError, "delete: productID[%s]: %s", prd.ID, err)
+		return errs.Newf(errs.Internal, "delete: productID[%s]: %s", prd.ID, err)
 	}
 
 	return nil
@@ -91,12 +90,12 @@ func (api *API) Query(ctx context.Context, qp QueryParams) (page.Document[AppPro
 
 	prds, err := api.product.Query(ctx, filter, orderBy, qp.Page, qp.Rows)
 	if err != nil {
-		return page.Document[AppProduct]{}, errs.Newf(http.StatusInternalServerError, "query: %s", err)
+		return page.Document[AppProduct]{}, errs.Newf(errs.Internal, "query: %s", err)
 	}
 
 	total, err := api.product.Count(ctx, filter)
 	if err != nil {
-		return page.Document[AppProduct]{}, errs.Newf(http.StatusInternalServerError, "count: %s", err)
+		return page.Document[AppProduct]{}, errs.Newf(errs.Internal, "count: %s", err)
 	}
 
 	return page.NewDocument(toAppProducts(prds), total, qp.Page, qp.Rows), nil
@@ -106,7 +105,7 @@ func (api *API) Query(ctx context.Context, qp QueryParams) (page.Document[AppPro
 func (api *API) QueryByID(ctx context.Context) (AppProduct, error) {
 	prd, err := mid.GetProduct(ctx)
 	if err != nil {
-		return AppProduct{}, errs.Newf(http.StatusInternalServerError, "querybyid: %s", err)
+		return AppProduct{}, errs.Newf(errs.Internal, "querybyid: %s", err)
 	}
 
 	return toAppProduct(prd), nil

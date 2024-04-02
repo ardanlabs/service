@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/http"
 	"net/mail"
 	"time"
 
@@ -37,9 +36,9 @@ func (api *API) Token(ctx context.Context, kid string, addr mail.Address, passwo
 	if err != nil {
 		switch {
 		case errors.Is(err, user.ErrNotFound):
-			return Token{}, errs.New(http.StatusBadRequest, err)
+			return Token{}, errs.New(errs.FailedPrecondition, err)
 		case errors.Is(err, user.ErrAuthenticationFailure):
-			return Token{}, errs.New(http.StatusUnauthorized, err)
+			return Token{}, errs.New(errs.Unauthenticated, err)
 		default:
 			return Token{}, fmt.Errorf("authenticate: %w", err)
 		}
@@ -57,7 +56,7 @@ func (api *API) Token(ctx context.Context, kid string, addr mail.Address, passwo
 
 	tkn, err := api.auth.GenerateToken(kid, claims)
 	if err != nil {
-		return Token{}, errs.New(http.StatusInternalServerError, err)
+		return Token{}, errs.New(errs.Internal, err)
 	}
 
 	return toToken(tkn), nil
@@ -67,15 +66,15 @@ func (api *API) Token(ctx context.Context, kid string, addr mail.Address, passwo
 func (api *API) Create(ctx context.Context, app AppNewUser) (AppUser, error) {
 	nc, err := toCoreNewUser(app)
 	if err != nil {
-		return AppUser{}, errs.New(http.StatusBadRequest, err)
+		return AppUser{}, errs.New(errs.FailedPrecondition, err)
 	}
 
 	usr, err := api.user.Create(ctx, nc)
 	if err != nil {
 		if errors.Is(err, user.ErrUniqueEmail) {
-			return AppUser{}, errs.New(http.StatusConflict, user.ErrUniqueEmail)
+			return AppUser{}, errs.New(errs.Aborted, user.ErrUniqueEmail)
 		}
-		return AppUser{}, errs.Newf(http.StatusInternalServerError, "create: usr[%+v]: %s", usr, err)
+		return AppUser{}, errs.Newf(errs.Internal, "create: usr[%+v]: %s", usr, err)
 	}
 
 	return toAppUser(usr), nil
@@ -85,17 +84,17 @@ func (api *API) Create(ctx context.Context, app AppNewUser) (AppUser, error) {
 func (api *API) Update(ctx context.Context, app AppUpdateUser) (AppUser, error) {
 	uu, err := toCoreUpdateUser(app)
 	if err != nil {
-		return AppUser{}, errs.New(http.StatusBadRequest, err)
+		return AppUser{}, errs.New(errs.FailedPrecondition, err)
 	}
 
 	usr, err := mid.GetUser(ctx)
 	if err != nil {
-		return AppUser{}, errs.Newf(http.StatusInternalServerError, "user missing in context: %s", err)
+		return AppUser{}, errs.Newf(errs.Internal, "user missing in context: %s", err)
 	}
 
 	updUsr, err := api.user.Update(ctx, usr, uu)
 	if err != nil {
-		return AppUser{}, errs.Newf(http.StatusInternalServerError, "update: userID[%s] uu[%+v]: %s", usr.ID, uu, err)
+		return AppUser{}, errs.Newf(errs.Internal, "update: userID[%s] uu[%+v]: %s", usr.ID, uu, err)
 	}
 
 	return toAppUser(updUsr), nil
@@ -105,17 +104,17 @@ func (api *API) Update(ctx context.Context, app AppUpdateUser) (AppUser, error) 
 func (api *API) UpdateRole(ctx context.Context, app AppUpdateUserRole) (AppUser, error) {
 	uu, err := toCoreUpdateUserRole(app)
 	if err != nil {
-		return AppUser{}, errs.New(http.StatusBadRequest, err)
+		return AppUser{}, errs.New(errs.FailedPrecondition, err)
 	}
 
 	usr, err := mid.GetUser(ctx)
 	if err != nil {
-		return AppUser{}, errs.Newf(http.StatusInternalServerError, "user missing in context: %s", err)
+		return AppUser{}, errs.Newf(errs.Internal, "user missing in context: %s", err)
 	}
 
 	updUsr, err := api.user.Update(ctx, usr, uu)
 	if err != nil {
-		return AppUser{}, errs.Newf(http.StatusInternalServerError, "updaterole: userID[%s] uu[%+v]: %s", usr.ID, uu, err)
+		return AppUser{}, errs.Newf(errs.Internal, "updaterole: userID[%s] uu[%+v]: %s", usr.ID, uu, err)
 	}
 
 	return toAppUser(updUsr), nil
@@ -125,11 +124,11 @@ func (api *API) UpdateRole(ctx context.Context, app AppUpdateUserRole) (AppUser,
 func (api *API) Delete(ctx context.Context) error {
 	usr, err := mid.GetUser(ctx)
 	if err != nil {
-		return errs.Newf(http.StatusInternalServerError, "userID missing in context: %s", err)
+		return errs.Newf(errs.Internal, "userID missing in context: %s", err)
 	}
 
 	if err := api.user.Delete(ctx, usr); err != nil {
-		return errs.Newf(http.StatusInternalServerError, "delete: userID[%s]: %s", usr.ID, err)
+		return errs.Newf(errs.Internal, "delete: userID[%s]: %s", usr.ID, err)
 	}
 
 	return nil
@@ -153,12 +152,12 @@ func (api *API) Query(ctx context.Context, qp QueryParams) (page.Document[AppUse
 
 	usrs, err := api.user.Query(ctx, filter, orderBy, qp.Page, qp.Rows)
 	if err != nil {
-		return page.Document[AppUser]{}, errs.Newf(http.StatusInternalServerError, "query: %s", err)
+		return page.Document[AppUser]{}, errs.Newf(errs.Internal, "query: %s", err)
 	}
 
 	total, err := api.user.Count(ctx, filter)
 	if err != nil {
-		return page.Document[AppUser]{}, errs.Newf(http.StatusInternalServerError, "count: %s", err)
+		return page.Document[AppUser]{}, errs.Newf(errs.Internal, "count: %s", err)
 	}
 
 	return page.NewDocument(toAppUsers(usrs), total, qp.Page, qp.Rows), nil
@@ -168,7 +167,7 @@ func (api *API) Query(ctx context.Context, qp QueryParams) (page.Document[AppUse
 func (api *API) QueryByID(ctx context.Context) (AppUser, error) {
 	usr, err := mid.GetUser(ctx)
 	if err != nil {
-		return AppUser{}, errs.Newf(http.StatusInternalServerError, "querybyid: %s", err)
+		return AppUser{}, errs.Newf(errs.Internal, "querybyid: %s", err)
 	}
 
 	return toAppUser(usr), nil

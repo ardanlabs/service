@@ -3,7 +3,6 @@ package vproductapi
 
 import (
 	"context"
-	"net/http"
 
 	"github.com/ardanlabs/service/business/api/errs"
 	"github.com/ardanlabs/service/business/api/page"
@@ -40,12 +39,12 @@ func (h *Handlers) Query(ctx context.Context, qp QueryParams) (page.Document[App
 
 	prds, err := h.vproduct.Query(ctx, filter, orderBy, qp.Page, qp.Rows)
 	if err != nil {
-		return page.Document[AppProduct]{}, errs.Newf(http.StatusInternalServerError, "query: %s", err)
+		return page.Document[AppProduct]{}, errs.Newf(errs.Internal, "query: %s", err)
 	}
 
 	total, err := h.vproduct.Count(ctx, filter)
 	if err != nil {
-		return page.Document[AppProduct]{}, errs.Newf(http.StatusInternalServerError, "count: %s", err)
+		return page.Document[AppProduct]{}, errs.Newf(errs.Internal, "count: %s", err)
 	}
 
 	return page.NewDocument(toAppProducts(prds), total, qp.Page, qp.Rows), nil

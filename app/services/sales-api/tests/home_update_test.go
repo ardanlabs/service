@@ -82,7 +82,7 @@ func homeUpdate400(sd dbtest.SeedData) []dbtest.AppTable {
 				},
 			},
 			Resp:    &errs.Error{},
-			ExpResp: toErrorPtr(errs.Newf(http.StatusBadRequest, "validate: [{\"field\":\"address1\",\"error\":\"address1 must be at least 1 character in length\"},{\"field\":\"zipCode\",\"error\":\"zipCode must be a valid numeric value\"},{\"field\":\"state\",\"error\":\"state must be at least 1 character in length\"},{\"field\":\"country\",\"error\":\"Key: 'AppUpdateHome.address.country' Error:Field validation for 'country' failed on the 'iso3166_1_alpha2' tag\"}]")),
+			ExpResp: toErrorPtr(errs.Newf(errs.FailedPrecondition, "validate: [{\"field\":\"address1\",\"error\":\"address1 must be at least 1 character in length\"},{\"field\":\"zipCode\",\"error\":\"zipCode must be a valid numeric value\"},{\"field\":\"state\",\"error\":\"state must be at least 1 character in length\"},{\"field\":\"country\",\"error\":\"Key: 'AppUpdateHome.address.country' Error:Field validation for 'country' failed on the 'iso3166_1_alpha2' tag\"}]")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -98,7 +98,7 @@ func homeUpdate400(sd dbtest.SeedData) []dbtest.AppTable {
 				Address: &homeapi.AppUpdateAddress{},
 			},
 			Resp:    &errs.Error{},
-			ExpResp: toErrorPtr(errs.Newf(http.StatusBadRequest, "parse: invalid type \"BAD TYPE\"")),
+			ExpResp: toErrorPtr(errs.Newf(errs.FailedPrecondition, "parse: invalid type \"BAD TYPE\"")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -117,7 +117,7 @@ func homeUpdate401(sd dbtest.SeedData) []dbtest.AppTable {
 			Method:     http.MethodPut,
 			StatusCode: http.StatusUnauthorized,
 			Resp:       &errs.Error{},
-			ExpResp:    toErrorPtr(errs.Newf(http.StatusUnauthorized, "error parsing token: token contains an invalid number of segments")),
+			ExpResp:    toErrorPtr(errs.Newf(errs.Unauthenticated, "error parsing token: token contains an invalid number of segments")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -129,7 +129,7 @@ func homeUpdate401(sd dbtest.SeedData) []dbtest.AppTable {
 			Method:     http.MethodPut,
 			StatusCode: http.StatusUnauthorized,
 			Resp:       &errs.Error{},
-			ExpResp:    toErrorPtr(errs.Newf(http.StatusUnauthorized, "authentication failed : bindings results[[{[true] map[x:false]}]] ok[true]")),
+			ExpResp:    toErrorPtr(errs.Newf(errs.Unauthenticated, "authentication failed : bindings results[[{[true] map[x:false]}]] ok[true]")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -152,7 +152,7 @@ func homeUpdate401(sd dbtest.SeedData) []dbtest.AppTable {
 				},
 			},
 			Resp:    &errs.Error{},
-			ExpResp: toErrorPtr(errs.Newf(http.StatusUnauthorized, "authorize: you are not authorized for that action, claims[[{USER}]] rule[rule_admin_or_subject]: rego evaluation failed : bindings results[[{[true] map[x:false]}]] ok[true]")),
+			ExpResp: toErrorPtr(errs.Newf(errs.Unauthenticated, "authorize: you are not authorized for that action, claims[[{USER}]] rule[rule_admin_or_subject]: rego evaluation failed : bindings results[[{[true] map[x:false]}]] ok[true]")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},

@@ -3,7 +3,6 @@ package productapi
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/ardanlabs/service/business/api/errs"
@@ -81,7 +80,7 @@ func toCoreNewProduct(ctx context.Context, app AppNewProduct) (product.NewProduc
 // Validate checks the data in the model is considered clean.
 func (app AppNewProduct) Validate() error {
 	if err := validate.Check(app); err != nil {
-		return errs.Newf(http.StatusBadRequest, "validate: %s", err)
+		return errs.Newf(errs.FailedPrecondition, "validate: %s", err)
 	}
 
 	return nil
@@ -107,7 +106,7 @@ func toCoreUpdateProduct(app AppUpdateProduct) product.UpdateProduct {
 // Validate checks the data in the model is considered clean.
 func (app AppUpdateProduct) Validate() error {
 	if err := validate.Check(app); err != nil {
-		return errs.Newf(http.StatusBadRequest, "validate: %s", err)
+		return errs.Newf(errs.FailedPrecondition, "validate: %s", err)
 	}
 
 	return nil

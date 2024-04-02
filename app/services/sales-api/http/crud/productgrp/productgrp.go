@@ -23,7 +23,7 @@ func new(product *productapi.API) *handlers {
 func (h *handlers) create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app productapi.AppNewProduct
 	if err := web.Decode(r, &app); err != nil {
-		return errs.New(http.StatusBadRequest, err)
+		return errs.New(errs.FailedPrecondition, err)
 	}
 
 	prd, err := h.product.Create(ctx, app)
@@ -37,7 +37,7 @@ func (h *handlers) create(ctx context.Context, w http.ResponseWriter, r *http.Re
 func (h *handlers) update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app productapi.AppUpdateProduct
 	if err := web.Decode(r, &app); err != nil {
-		return errs.New(http.StatusBadRequest, err)
+		return errs.New(errs.FailedPrecondition, err)
 	}
 
 	prd, err := h.product.Update(ctx, app)

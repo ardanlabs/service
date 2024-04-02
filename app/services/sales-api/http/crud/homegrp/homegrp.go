@@ -23,7 +23,7 @@ func new(home *homeapi.API) *handlers {
 func (h *handlers) create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app homeapi.AppNewHome
 	if err := web.Decode(r, &app); err != nil {
-		return errs.New(http.StatusBadRequest, err)
+		return errs.New(errs.FailedPrecondition, err)
 	}
 
 	hme, err := h.home.Create(ctx, app)
@@ -37,7 +37,7 @@ func (h *handlers) create(ctx context.Context, w http.ResponseWriter, r *http.Re
 func (h *handlers) update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app homeapi.AppUpdateHome
 	if err := web.Decode(r, &app); err != nil {
-		return errs.New(http.StatusBadRequest, err)
+		return errs.New(errs.FailedPrecondition, err)
 	}
 
 	hme, err := h.home.Update(ctx, app)

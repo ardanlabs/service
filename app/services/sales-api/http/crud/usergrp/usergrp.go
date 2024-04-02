@@ -26,7 +26,7 @@ func new(user *userapi.API) *handlers {
 func (h *handlers) create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app userapi.AppNewUser
 	if err := web.Decode(r, &app); err != nil {
-		return errs.New(http.StatusBadRequest, err)
+		return errs.New(errs.FailedPrecondition, err)
 	}
 
 	usr, err := h.user.Create(ctx, app)
@@ -40,7 +40,7 @@ func (h *handlers) create(ctx context.Context, w http.ResponseWriter, r *http.Re
 func (h *handlers) update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app userapi.AppUpdateUser
 	if err := web.Decode(r, &app); err != nil {
-		return errs.New(http.StatusBadRequest, err)
+		return errs.New(errs.FailedPrecondition, err)
 	}
 
 	usr, err := h.user.Update(ctx, app)
@@ -54,7 +54,7 @@ func (h *handlers) update(ctx context.Context, w http.ResponseWriter, r *http.Re
 func (h *handlers) updateRole(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app userapi.AppUpdateUserRole
 	if err := web.Decode(r, &app); err != nil {
-		return errs.New(http.StatusBadRequest, err)
+		return errs.New(errs.FailedPrecondition, err)
 	}
 
 	usr, err := h.user.UpdateRole(ctx, app)
@@ -104,12 +104,12 @@ func (h *handlers) token(ctx context.Context, w http.ResponseWriter, r *http.Req
 
 	email, pass, ok := r.BasicAuth()
 	if !ok {
-		return errs.Newf(http.StatusUnauthorized, "authorize: must provide email and password in Basic auth")
+		return errs.Newf(errs.Unauthenticated, "authorize: must provide email and password in Basic auth")
 	}
 
 	addr, err := mail.ParseAddress(email)
 	if err != nil {
-		return errs.Newf(http.StatusUnauthorized, "authorize: invalid email format")
+		return errs.Newf(errs.Unauthenticated, "authorize: invalid email format")
 	}
 
 	usr, err := h.user.Token(ctx, kid, *addr, pass)
