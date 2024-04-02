@@ -7,8 +7,12 @@ import (
 	"os"
 
 	"github.com/ardanlabs/service/business/api/auth"
-	"github.com/ardanlabs/service/business/api/mid"
+	midhttp "github.com/ardanlabs/service/business/api/mid/http"
 	"github.com/ardanlabs/service/business/core/crud/delegate"
+	"github.com/ardanlabs/service/business/core/crud/home"
+	"github.com/ardanlabs/service/business/core/crud/product"
+	"github.com/ardanlabs/service/business/core/crud/user"
+	"github.com/ardanlabs/service/business/core/views/vproduct"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/jmoiron/sqlx"
@@ -27,15 +31,29 @@ func WithCORS(origins []string) func(opts *Options) {
 	}
 }
 
+// BusCrud represents the set of core business packages.
+type BusCrud struct {
+	Delegate *delegate.Delegate
+	Home     *home.Core
+	Product  *product.Core
+	User     *user.Core
+}
+
+// BusView represents the set of view business packages.
+type BusView struct {
+	Product *vproduct.Core
+}
+
 // Config contains all the mandatory systems required by handlers.
 type Config struct {
 	Build    string
 	Shutdown chan os.Signal
 	Log      *logger.Logger
-	Delegate *delegate.Delegate
 	Auth     *auth.Auth
 	DB       *sqlx.DB
 	Tracer   trace.Tracer
+	BusCrud  BusCrud
+	BusView  BusView
 }
 
 // RouteAdder defines behavior that sets the routes to bind for an instance
@@ -54,14 +72,14 @@ func WebAPI(cfg Config, routeAdder RouteAdder, options ...func(opts *Options)) h
 	app := web.NewApp(
 		cfg.Shutdown,
 		cfg.Tracer,
-		mid.Logger(cfg.Log),
-		mid.Errors(cfg.Log),
-		mid.Metrics(),
-		mid.Panics(),
+		midhttp.Logger(cfg.Log),
+		midhttp.Errors(cfg.Log),
+		midhttp.Metrics(),
+		midhttp.Panics(),
 	)
 
 	if len(opts.corsOrigin) > 0 {
-		app.EnableCORS(mid.Cors(opts.corsOrigin))
+		app.EnableCORS(midhttp.Cors(opts.corsOrigin))
 	}
 
 	routeAdder.Add(app, cfg)

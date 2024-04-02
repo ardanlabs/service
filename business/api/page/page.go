@@ -14,9 +14,9 @@ type Page struct {
 	RowsPerPage int
 }
 
-// Parse parses the request for the page and rows query string. The
+// ParseHTTP parses the request for the page and rows query string. The
 // defaults are provided as well.
-func Parse(r *http.Request) (Page, error) {
+func ParseHTTP(r *http.Request) (Page, error) {
 	values := r.URL.Query()
 
 	number := 1

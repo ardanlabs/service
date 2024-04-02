@@ -1,4 +1,5 @@
-// Package mid contains the set of middleware functions.
+// Package mid contains the set of values the middleware is responsible
+// to extract and set.
 package mid
 
 import (
@@ -22,11 +23,11 @@ const (
 	homeKey
 )
 
-func setClaims(ctx context.Context, claims auth.Claims) context.Context {
+func SetClaims(ctx context.Context, claims auth.Claims) context.Context {
 	return context.WithValue(ctx, claimKey, claims)
 }
 
-func getClaims(ctx context.Context) auth.Claims {
+func GetClaims(ctx context.Context) auth.Claims {
 	v, ok := ctx.Value(claimKey).(auth.Claims)
 	if !ok {
 		return auth.Claims{}
@@ -54,11 +55,11 @@ func GetUser(ctx context.Context) (user.User, error) {
 	return v, nil
 }
 
-func setUserID(ctx context.Context, userID uuid.UUID) context.Context {
+func SetUserID(ctx context.Context, userID uuid.UUID) context.Context {
 	return context.WithValue(ctx, userIDKey, userID)
 }
 
-func setUser(ctx context.Context, usr user.User) context.Context {
+func SetUser(ctx context.Context, usr user.User) context.Context {
 	return context.WithValue(ctx, userKey, usr)
 }
 
@@ -72,7 +73,7 @@ func GetProduct(ctx context.Context) (product.Product, error) {
 	return v, nil
 }
 
-func setProduct(ctx context.Context, prd product.Product) context.Context {
+func SetProduct(ctx context.Context, prd product.Product) context.Context {
 	return context.WithValue(ctx, productKey, prd)
 }
 
@@ -86,6 +87,6 @@ func GetHome(ctx context.Context) (home.Home, error) {
 	return v, nil
 }
 
-func setHome(ctx context.Context, hme home.Home) context.Context {
+func SetHome(ctx context.Context, hme home.Home) context.Context {
 	return context.WithValue(ctx, homeKey, hme)
 }

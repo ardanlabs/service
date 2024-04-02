@@ -56,23 +56,23 @@ func StopDB(c *docker.Container) {
 
 // =============================================================================
 
-// Crud provides core business crud apis.
-type Crud struct {
-	Home    *home.Core
-	Product *product.Core
-	User    *user.Core
+// BusCrud provides core business crud apis.
+type BusCrud struct {
+	Delegate *delegate.Delegate
+	Home     *home.Core
+	Product  *product.Core
+	User     *user.Core
 }
 
-// View provides core business view apis.
-type View struct {
+// BusView provides core business view apis.
+type BusView struct {
 	Product *vproduct.Core
 }
 
 // Core represents all the core api's needed for testing.
 type Core struct {
-	Delegate *delegate.Delegate
-	Crud     Crud
-	View     View
+	BusCrud BusCrud
+	BusView BusView
 }
 
 func newCoreAPIs(log *logger.Logger, db *sqlx.DB) Core {
@@ -83,13 +83,13 @@ func newCoreAPIs(log *logger.Logger, db *sqlx.DB) Core {
 	vproductCore := vproduct.NewCore(vproductdb.NewStore(log, db))
 
 	return Core{
-		Delegate: delegate,
-		Crud: Crud{
-			Home:    homeCore,
-			Product: productCore,
-			User:    userCore,
+		BusCrud: BusCrud{
+			Delegate: delegate,
+			Home:     homeCore,
+			Product:  productCore,
+			User:     userCore,
 		},
-		View: View{
+		BusView: BusView{
 			Product: vproductCore,
 		},
 	}

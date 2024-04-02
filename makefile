@@ -86,11 +86,11 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 #   common code needed for all domains.
 #
 #   Generating Documentation
-#   $ go run app/tooling/docs/main.go --browser
-#   $ go run app/tooling/docs/main.go -out json
+#   $ go run apis/tooling/docs/main.go --browser
+#   $ go run apis/tooling/docs/main.go -out json
 #
 #   Adding New Domain To System
-#   $ go run app/tooling/sales-admin/main.go domain sale
+#   $ go run apis/tooling/sales-admin/main.go domain sale
 
 # ==============================================================================
 # CLASS NOTES
@@ -251,7 +251,7 @@ dev-update: all dev-load dev-restart
 dev-update-apply: all dev-load dev-apply
 
 dev-logs:
-	kubectl logs --namespace=$(NAMESPACE) -l app=$(APP) --all-containers=true -f --tail=100 --max-log-requests=6 | go run app/tooling/logfmt/main.go -service=$(SERVICE_NAME)
+	kubectl logs --namespace=$(NAMESPACE) -l app=$(APP) --all-containers=true -f --tail=100 --max-log-requests=6 | go run apis/tooling/logfmt/main.go -service=$(SERVICE_NAME)
 
 # ------------------------------------------------------------------------------
 
@@ -320,10 +320,10 @@ dev-database-restart:
 # Administration
 
 migrate:
-	export SALES_DB_HOST_PORT=localhost; go run app/tooling/sales-admin/main.go migrate
+	export SALES_DB_HOST_PORT=localhost; go run apis/tooling/sales-admin/main.go migrate
 
 seed: migrate
-	export SALES_DB_HOST_PORT=localhost; go run app/tooling/sales-admin/main.go seed
+	export SALES_DB_HOST_PORT=localhost; go run apis/tooling/sales-admin/main.go seed
 
 pgcli:
 	pgcli postgresql://postgres:postgres@localhost
@@ -335,10 +335,10 @@ readiness:
 	curl -il http://localhost:3000/v1/readiness
 
 token-gen:
-	export SALES_DB_HOST_PORT=localhost; go run app/tooling/sales-admin/main.go gentoken 5cf37266-3473-4006-984f-9325122678b7 54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
+	export SALES_DB_HOST_PORT=localhost; go run apis/tooling/sales-admin/main.go gentoken 5cf37266-3473-4006-984f-9325122678b7 54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
 
 docs:
-	go run app/tooling/docs/main.go --browser
+	go run apis/tooling/docs/main.go --browser
 
 # ==============================================================================
 # Metrics and Tracing
@@ -427,10 +427,10 @@ list:
 # Class Stuff
 
 run:
-	go run app/services/sales-api/main.go | go run app/tooling/logfmt/main.go
+	go run apis/services/sales-api/http/main.go | go run apis/tooling/logfmt/main.go
 
 run-help:
-	go run app/services/sales-api/main.go --help | go run app/tooling/logfmt/main.go
+	go run apis/services/sales-api/http/main.go --help | go run apis/tooling/logfmt/main.go
 
 curl:
 	curl -il http://localhost:3000/v1/hack
@@ -442,7 +442,7 @@ load-hack:
 	hey -m GET -c 100 -n 100000 "http://localhost:3000/v1/hack"
 
 admin:
-	go run app/tooling/sales-admin/main.go
+	go run apis/tooling/sales-admin/main.go
 
 ready:
 	curl -il http://localhost:3000/v1/readiness
@@ -500,7 +500,7 @@ talk-metrics:
 # ==============================================================================
 # Admin Frontend
 
-ADMIN_FRONTEND_PREFIX := ./app/frontends/admin
+ADMIN_FRONTEND_PREFIX := ./apis/frontends/admin
 
 write-token-to-env:
 	echo "VITE_SERVICE_API=http://localhost:3000/v1" > ${ADMIN_FRONTEND_PREFIX}/.env
