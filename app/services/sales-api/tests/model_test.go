@@ -3,22 +3,27 @@ package tests
 import (
 	"time"
 
-	"github.com/ardanlabs/service/app/services/sales-api/handlers/crud/homegrp"
-	"github.com/ardanlabs/service/app/services/sales-api/handlers/crud/productgrp"
-	"github.com/ardanlabs/service/app/services/sales-api/handlers/crud/usergrp"
-	"github.com/ardanlabs/service/app/services/sales-api/handlers/views/vproductgrp"
+	"github.com/ardanlabs/service/app/services/sales-api/apis/crud/homeapi"
+	"github.com/ardanlabs/service/app/services/sales-api/apis/crud/productapi"
+	"github.com/ardanlabs/service/app/services/sales-api/apis/crud/userapi"
+	"github.com/ardanlabs/service/app/services/sales-api/apis/views/vproductapi"
+	"github.com/ardanlabs/service/business/api/errs"
 	"github.com/ardanlabs/service/business/core/crud/home"
 	"github.com/ardanlabs/service/business/core/crud/product"
 	"github.com/ardanlabs/service/business/core/crud/user"
 )
 
-func toAppUser(usr user.User) usergrp.AppUser {
+func toErrorPtr(err errs.Error) *errs.Error {
+	return &err
+}
+
+func toAppUser(usr user.User) userapi.AppUser {
 	roles := make([]string, len(usr.Roles))
 	for i, role := range usr.Roles {
 		roles[i] = role.Name()
 	}
 
-	return usergrp.AppUser{
+	return userapi.AppUser{
 		ID:           usr.ID.String(),
 		Name:         usr.Name,
 		Email:        usr.Email.Address,
@@ -31,8 +36,8 @@ func toAppUser(usr user.User) usergrp.AppUser {
 	}
 }
 
-func toAppUsers(users []user.User) []usergrp.AppUser {
-	items := make([]usergrp.AppUser, len(users))
+func toAppUsers(users []user.User) []userapi.AppUser {
+	items := make([]userapi.AppUser, len(users))
 	for i, usr := range users {
 		items[i] = toAppUser(usr)
 	}
@@ -40,13 +45,13 @@ func toAppUsers(users []user.User) []usergrp.AppUser {
 	return items
 }
 
-func toAppUserPtr(usr user.User) *usergrp.AppUser {
+func toAppUserPtr(usr user.User) *userapi.AppUser {
 	appUsr := toAppUser(usr)
 	return &appUsr
 }
 
-func toAppProduct(prd product.Product) productgrp.AppProduct {
-	return productgrp.AppProduct{
+func toAppProduct(prd product.Product) productapi.AppProduct {
+	return productapi.AppProduct{
 		ID:          prd.ID.String(),
 		UserID:      prd.UserID.String(),
 		Name:        prd.Name,
@@ -57,13 +62,13 @@ func toAppProduct(prd product.Product) productgrp.AppProduct {
 	}
 }
 
-func toAppProductPtr(prd product.Product) *productgrp.AppProduct {
+func toAppProductPtr(prd product.Product) *productapi.AppProduct {
 	appPrd := toAppProduct(prd)
 	return &appPrd
 }
 
-func toAppProducts(prds []product.Product) []productgrp.AppProduct {
-	items := make([]productgrp.AppProduct, len(prds))
+func toAppProducts(prds []product.Product) []productapi.AppProduct {
+	items := make([]productapi.AppProduct, len(prds))
 	for i, prd := range prds {
 		items[i] = toAppProduct(prd)
 	}
@@ -71,12 +76,12 @@ func toAppProducts(prds []product.Product) []productgrp.AppProduct {
 	return items
 }
 
-func toAppHome(hme home.Home) homegrp.AppHome {
-	return homegrp.AppHome{
+func toAppHome(hme home.Home) homeapi.AppHome {
+	return homeapi.AppHome{
 		ID:     hme.ID.String(),
 		UserID: hme.UserID.String(),
 		Type:   hme.Type.Name(),
-		Address: homegrp.AppAddress{
+		Address: homeapi.AppAddress{
 			Address1: hme.Address.Address1,
 			Address2: hme.Address.Address2,
 			ZipCode:  hme.Address.ZipCode,
@@ -89,8 +94,8 @@ func toAppHome(hme home.Home) homegrp.AppHome {
 	}
 }
 
-func toAppHomes(homes []home.Home) []homegrp.AppHome {
-	items := make([]homegrp.AppHome, len(homes))
+func toAppHomes(homes []home.Home) []homeapi.AppHome {
+	items := make([]homeapi.AppHome, len(homes))
 	for i, hme := range homes {
 		items[i] = toAppHome(hme)
 	}
@@ -98,13 +103,13 @@ func toAppHomes(homes []home.Home) []homegrp.AppHome {
 	return items
 }
 
-func toAppHomePtr(hme home.Home) *homegrp.AppHome {
+func toAppHomePtr(hme home.Home) *homeapi.AppHome {
 	appHme := toAppHome(hme)
 	return &appHme
 }
 
-func toAppVProduct(usr user.User, prd product.Product) vproductgrp.AppProduct {
-	return vproductgrp.AppProduct{
+func toAppVProduct(usr user.User, prd product.Product) vproductapi.AppProduct {
+	return vproductapi.AppProduct{
 		ID:          prd.ID.String(),
 		UserID:      prd.UserID.String(),
 		Name:        prd.Name,
@@ -116,8 +121,8 @@ func toAppVProduct(usr user.User, prd product.Product) vproductgrp.AppProduct {
 	}
 }
 
-func toAppVProducts(usr user.User, prds []product.Product) []vproductgrp.AppProduct {
-	items := make([]vproductgrp.AppProduct, len(prds))
+func toAppVProducts(usr user.User, prds []product.Product) []vproductapi.AppProduct {
+	items := make([]vproductapi.AppProduct, len(prds))
 	for i, prd := range prds {
 		items[i] = toAppVProduct(usr, prd)
 	}

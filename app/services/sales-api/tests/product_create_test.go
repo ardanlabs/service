@@ -3,9 +3,9 @@ package tests
 import (
 	"net/http"
 
-	"github.com/ardanlabs/service/app/services/sales-api/handlers/crud/productgrp"
+	"github.com/ardanlabs/service/app/services/sales-api/apis/crud/productapi"
+	"github.com/ardanlabs/service/business/api/errs"
 	"github.com/ardanlabs/service/business/data/dbtest"
-	"github.com/ardanlabs/service/business/web/errs"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -17,25 +17,25 @@ func productCreate200(sd dbtest.SeedData) []dbtest.AppTable {
 			Token:      sd.Users[0].Token,
 			Method:     http.MethodPost,
 			StatusCode: http.StatusCreated,
-			Model: &productgrp.AppNewProduct{
+			Model: &productapi.AppNewProduct{
 				Name:     "Guitar",
 				Cost:     10.34,
 				Quantity: 10,
 			},
-			Resp: &productgrp.AppProduct{},
-			ExpResp: &productgrp.AppProduct{
+			Resp: &productapi.AppProduct{},
+			ExpResp: &productapi.AppProduct{
 				Name:     "Guitar",
 				UserID:   sd.Users[0].ID.String(),
 				Cost:     10.34,
 				Quantity: 10,
 			},
 			CmpFunc: func(got any, exp any) string {
-				gotResp, exists := got.(*productgrp.AppProduct)
+				gotResp, exists := got.(*productapi.AppProduct)
 				if !exists {
 					return "error occurred"
 				}
 
-				expResp := exp.(*productgrp.AppProduct)
+				expResp := exp.(*productapi.AppProduct)
 
 				expResp.ID = gotResp.ID
 				expResp.DateCreated = gotResp.DateCreated
@@ -57,12 +57,9 @@ func productCreate400(sd dbtest.SeedData) []dbtest.AppTable {
 			Token:      sd.Users[0].Token,
 			Method:     http.MethodPost,
 			StatusCode: http.StatusBadRequest,
-			Model:      &productgrp.AppNewProduct{},
-			Resp:       &errs.Response{},
-			ExpResp: &errs.Response{
-				Error:  "data validation error",
-				Fields: map[string]string{"cost": "cost is a required field", "name": "name is a required field", "quantity": "quantity is a required field"},
-			},
+			Model:      &productapi.AppNewProduct{},
+			Resp:       &errs.Error{},
+			ExpResp:    toErrorPtr(errs.Newf(http.StatusBadRequest, "validate: [{\"field\":\"name\",\"error\":\"name is a required field\"},{\"field\":\"cost\",\"error\":\"cost is a required field\"},{\"field\":\"quantity\",\"error\":\"quantity is a required field\"}]")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -80,10 +77,8 @@ func productCreate401(sd dbtest.SeedData) []dbtest.AppTable {
 			Token:      "",
 			Method:     http.MethodPost,
 			StatusCode: http.StatusUnauthorized,
-			Resp:       &errs.Response{},
-			ExpResp: &errs.Response{
-				Error: "Unauthorized",
-			},
+			Resp:       &errs.Error{},
+			ExpResp:    toErrorPtr(errs.Newf(http.StatusUnauthorized, "error parsing token: token contains an invalid number of segments")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -94,10 +89,8 @@ func productCreate401(sd dbtest.SeedData) []dbtest.AppTable {
 			Token:      sd.Admins[0].Token[:10],
 			Method:     http.MethodPost,
 			StatusCode: http.StatusUnauthorized,
-			Resp:       &errs.Response{},
-			ExpResp: &errs.Response{
-				Error: "Unauthorized",
-			},
+			Resp:       &errs.Error{},
+			ExpResp:    toErrorPtr(errs.Newf(http.StatusUnauthorized, "error parsing token: token contains an invalid number of segments")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -108,10 +101,8 @@ func productCreate401(sd dbtest.SeedData) []dbtest.AppTable {
 			Token:      sd.Admins[0].Token + "A",
 			Method:     http.MethodPost,
 			StatusCode: http.StatusUnauthorized,
-			Resp:       &errs.Response{},
-			ExpResp: &errs.Response{
-				Error: "Unauthorized",
-			},
+			Resp:       &errs.Error{},
+			ExpResp:    toErrorPtr(errs.Newf(http.StatusUnauthorized, "authentication failed : bindings results[[{[true] map[x:false]}]] ok[true]")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -122,10 +113,8 @@ func productCreate401(sd dbtest.SeedData) []dbtest.AppTable {
 			Token:      sd.Admins[0].Token,
 			Method:     http.MethodPost,
 			StatusCode: http.StatusUnauthorized,
-			Resp:       &errs.Response{},
-			ExpResp: &errs.Response{
-				Error: "Unauthorized",
-			},
+			Resp:       &errs.Error{},
+			ExpResp:    toErrorPtr(errs.Newf(http.StatusUnauthorized, "authorize: you are not authorized for that action, claims[[{ADMIN}]] rule[rule_user_only]: rego evaluation failed : bindings results[[{[true] map[x:false]}]] ok[true]")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},

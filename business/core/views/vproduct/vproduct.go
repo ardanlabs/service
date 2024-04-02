@@ -6,7 +6,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/ardanlabs/service/business/web/order"
+	"github.com/ardanlabs/service/business/api/order"
 )
 
 // Storer interface declares the behavior this package needs to perists and

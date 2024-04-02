@@ -8,11 +8,11 @@ import (
 	"fmt"
 	"net/mail"
 
+	"github.com/ardanlabs/service/business/api/order"
 	"github.com/ardanlabs/service/business/core/crud/user"
 	"github.com/ardanlabs/service/business/data/sqldb"
 	"github.com/ardanlabs/service/business/data/sqldb/dbarray"
 	"github.com/ardanlabs/service/business/data/transaction"
-	"github.com/ardanlabs/service/business/web/order"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"

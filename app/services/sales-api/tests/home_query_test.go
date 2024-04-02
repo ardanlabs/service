@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"sort"
 
-	"github.com/ardanlabs/service/app/services/sales-api/handlers/crud/homegrp"
+	"github.com/ardanlabs/service/app/services/sales-api/apis/crud/homeapi"
+	"github.com/ardanlabs/service/business/api/page"
 	"github.com/ardanlabs/service/business/core/crud/home"
 	"github.com/ardanlabs/service/business/data/dbtest"
-	"github.com/ardanlabs/service/business/web/page"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -28,8 +28,8 @@ func homeQuery200(sd dbtest.SeedData) []dbtest.AppTable {
 			Token:      sd.Admins[0].Token,
 			StatusCode: http.StatusOK,
 			Method:     http.MethodGet,
-			Resp:       &page.Document[homegrp.AppHome]{},
-			ExpResp: &page.Document[homegrp.AppHome]{
+			Resp:       &page.Document[homeapi.AppHome]{},
+			ExpResp: &page.Document[homeapi.AppHome]{
 				Page:        1,
 				RowsPerPage: 10,
 				Total:       len(hmes),
@@ -52,7 +52,7 @@ func homeQueryByID200(sd dbtest.SeedData) []dbtest.AppTable {
 			Token:      sd.Users[0].Token,
 			StatusCode: http.StatusOK,
 			Method:     http.MethodGet,
-			Resp:       &homegrp.AppHome{},
+			Resp:       &homeapi.AppHome{},
 			ExpResp:    toAppHomePtr(sd.Users[0].Homes[0]),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)

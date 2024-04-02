@@ -6,9 +6,9 @@ import (
 	"net/mail"
 	"sync"
 
+	"github.com/ardanlabs/service/business/api/order"
 	"github.com/ardanlabs/service/business/core/crud/user"
 	"github.com/ardanlabs/service/business/data/transaction"
-	"github.com/ardanlabs/service/business/web/order"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/google/uuid"
 )

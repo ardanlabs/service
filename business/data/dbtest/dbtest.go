@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ardanlabs/service/business/api/auth"
 	"github.com/ardanlabs/service/business/core/crud/delegate"
 	"github.com/ardanlabs/service/business/core/crud/home"
 	"github.com/ardanlabs/service/business/core/crud/home/stores/homedb"
@@ -21,7 +22,6 @@ import (
 	"github.com/ardanlabs/service/business/core/views/vproduct/stores/vproductdb"
 	"github.com/ardanlabs/service/business/data/migrate"
 	"github.com/ardanlabs/service/business/data/sqldb"
-	"github.com/ardanlabs/service/business/web/auth"
 	"github.com/ardanlabs/service/foundation/docker"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/web"

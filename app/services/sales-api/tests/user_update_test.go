@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ardanlabs/service/app/services/sales-api/handlers/crud/usergrp"
+	"github.com/ardanlabs/service/app/services/sales-api/apis/crud/userapi"
+	"github.com/ardanlabs/service/business/api/errs"
 	"github.com/ardanlabs/service/business/data/dbtest"
-	"github.com/ardanlabs/service/business/web/errs"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -19,15 +19,15 @@ func userUpdate200(sd dbtest.SeedData) []dbtest.AppTable {
 			Token:      sd.Users[0].Token,
 			Method:     http.MethodPut,
 			StatusCode: http.StatusOK,
-			Model: &usergrp.AppUpdateUser{
+			Model: &userapi.AppUpdateUser{
 				Name:            dbtest.StringPointer("Jack Kennedy"),
 				Email:           dbtest.StringPointer("jack@ardanlabs.com"),
 				Department:      dbtest.StringPointer("IT"),
 				Password:        dbtest.StringPointer("123"),
 				PasswordConfirm: dbtest.StringPointer("123"),
 			},
-			Resp: &usergrp.AppUser{},
-			ExpResp: &usergrp.AppUser{
+			Resp: &userapi.AppUser{},
+			ExpResp: &userapi.AppUser{
 				ID:          sd.Users[0].ID.String(),
 				Name:        "Jack Kennedy",
 				Email:       "jack@ardanlabs.com",
@@ -38,12 +38,12 @@ func userUpdate200(sd dbtest.SeedData) []dbtest.AppTable {
 				DateUpdated: sd.Users[0].DateUpdated.Format(time.RFC3339),
 			},
 			CmpFunc: func(got any, exp any) string {
-				gotResp, exists := got.(*usergrp.AppUser)
+				gotResp, exists := got.(*userapi.AppUser)
 				if !exists {
 					return "error occurred"
 				}
 
-				expResp := exp.(*usergrp.AppUser)
+				expResp := exp.(*userapi.AppUser)
 				gotResp.DateUpdated = expResp.DateUpdated
 
 				return cmp.Diff(gotResp, expResp)
@@ -55,11 +55,11 @@ func userUpdate200(sd dbtest.SeedData) []dbtest.AppTable {
 			Token:      sd.Admins[0].Token,
 			Method:     http.MethodPut,
 			StatusCode: http.StatusOK,
-			Model: &usergrp.AppUpdateUserRole{
+			Model: &userapi.AppUpdateUserRole{
 				Roles: []string{"USER"},
 			},
-			Resp: &usergrp.AppUser{},
-			ExpResp: &usergrp.AppUser{
+			Resp: &userapi.AppUser{},
+			ExpResp: &userapi.AppUser{
 				ID:          sd.Admins[0].ID.String(),
 				Name:        sd.Admins[0].Name,
 				Email:       sd.Admins[0].Email.Address,
@@ -70,12 +70,12 @@ func userUpdate200(sd dbtest.SeedData) []dbtest.AppTable {
 				DateUpdated: sd.Admins[0].DateUpdated.Format(time.RFC3339),
 			},
 			CmpFunc: func(got any, exp any) string {
-				gotResp, exists := got.(*usergrp.AppUser)
+				gotResp, exists := got.(*userapi.AppUser)
 				if !exists {
 					return "error occurred"
 				}
 
-				expResp := exp.(*usergrp.AppUser)
+				expResp := exp.(*userapi.AppUser)
 				gotResp.DateUpdated = expResp.DateUpdated
 
 				return cmp.Diff(gotResp, expResp)
@@ -94,15 +94,12 @@ func userUpdate400(sd dbtest.SeedData) []dbtest.AppTable {
 			Token:      sd.Users[0].Token,
 			Method:     http.MethodPut,
 			StatusCode: http.StatusBadRequest,
-			Model: &usergrp.AppUpdateUser{
+			Model: &userapi.AppUpdateUser{
 				Email:           dbtest.StringPointer("bill@"),
 				PasswordConfirm: dbtest.StringPointer("jack"),
 			},
-			Resp: &errs.Response{},
-			ExpResp: &errs.Response{
-				Error:  "data validation error",
-				Fields: map[string]string{"email": "email must be a valid email address", "passwordConfirm": "passwordConfirm must be equal to Password"},
-			},
+			Resp:    &errs.Error{},
+			ExpResp: toErrorPtr(errs.Newf(http.StatusBadRequest, "validate: [{\"field\":\"email\",\"error\":\"email must be a valid email address\"},{\"field\":\"passwordConfirm\",\"error\":\"passwordConfirm must be equal to Password\"}]")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -113,13 +110,11 @@ func userUpdate400(sd dbtest.SeedData) []dbtest.AppTable {
 			Token:      sd.Admins[0].Token,
 			Method:     http.MethodPut,
 			StatusCode: http.StatusBadRequest,
-			Model: &usergrp.AppUpdateUserRole{
+			Model: &userapi.AppUpdateUserRole{
 				Roles: []string{"BAD ROLE"},
 			},
-			Resp: &errs.Response{},
-			ExpResp: &errs.Response{
-				Error: "parse: invalid role \"BAD ROLE\"",
-			},
+			Resp:    &errs.Error{},
+			ExpResp: toErrorPtr(errs.Newf(http.StatusBadRequest, "parse: invalid role \"BAD ROLE\"")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -137,8 +132,8 @@ func userUpdate401(sd dbtest.SeedData) []dbtest.AppTable {
 			Token:      "",
 			Method:     http.MethodPut,
 			StatusCode: http.StatusUnauthorized,
-			Resp:       &errs.Response{},
-			ExpResp:    &errs.Response{Error: "Unauthorized"},
+			Resp:       &errs.Error{},
+			ExpResp:    toErrorPtr(errs.Newf(http.StatusUnauthorized, "error parsing token: token contains an invalid number of segments")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -149,8 +144,8 @@ func userUpdate401(sd dbtest.SeedData) []dbtest.AppTable {
 			Token:      sd.Users[0].Token + "A",
 			Method:     http.MethodPut,
 			StatusCode: http.StatusUnauthorized,
-			Resp:       &errs.Response{},
-			ExpResp:    &errs.Response{Error: "Unauthorized"},
+			Resp:       &errs.Error{},
+			ExpResp:    toErrorPtr(errs.Newf(http.StatusUnauthorized, "authentication failed : bindings results[[{[true] map[x:false]}]] ok[true]")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -161,15 +156,15 @@ func userUpdate401(sd dbtest.SeedData) []dbtest.AppTable {
 			Token:      sd.Users[0].Token,
 			Method:     http.MethodPut,
 			StatusCode: http.StatusUnauthorized,
-			Model: &usergrp.AppUpdateUser{
+			Model: &userapi.AppUpdateUser{
 				Name:            dbtest.StringPointer("Bill Kennedy"),
 				Email:           dbtest.StringPointer("bill@ardanlabs.com"),
 				Department:      dbtest.StringPointer("IT"),
 				Password:        dbtest.StringPointer("123"),
 				PasswordConfirm: dbtest.StringPointer("123"),
 			},
-			Resp:    &errs.Response{},
-			ExpResp: &errs.Response{Error: "Unauthorized"},
+			Resp:    &errs.Error{},
+			ExpResp: toErrorPtr(errs.Newf(http.StatusUnauthorized, "authorize: you are not authorized for that action, claims[[{USER}]] rule[rule_admin_or_subject]: rego evaluation failed : bindings results[[{[true] map[x:false]}]] ok[true]")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -180,11 +175,11 @@ func userUpdate401(sd dbtest.SeedData) []dbtest.AppTable {
 			Token:      sd.Users[0].Token,
 			Method:     http.MethodPut,
 			StatusCode: http.StatusUnauthorized,
-			Model: &usergrp.AppUpdateUserRole{
+			Model: &userapi.AppUpdateUserRole{
 				Roles: []string{"ADMIN"},
 			},
-			Resp:    &errs.Response{},
-			ExpResp: &errs.Response{Error: "Unauthorized"},
+			Resp:    &errs.Error{},
+			ExpResp: toErrorPtr(errs.Newf(http.StatusUnauthorized, "authorize: you are not authorized for that action, claims[[{USER}]] rule[rule_admin_only]: rego evaluation failed : bindings results[[{[true] map[x:false]}]] ok[true]")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},

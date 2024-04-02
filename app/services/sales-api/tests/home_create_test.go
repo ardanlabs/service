@@ -3,9 +3,9 @@ package tests
 import (
 	"net/http"
 
-	"github.com/ardanlabs/service/app/services/sales-api/handlers/crud/homegrp"
+	"github.com/ardanlabs/service/app/services/sales-api/apis/crud/homeapi"
+	"github.com/ardanlabs/service/business/api/errs"
 	"github.com/ardanlabs/service/business/data/dbtest"
-	"github.com/ardanlabs/service/business/web/errs"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -17,9 +17,9 @@ func homeCreate200(sd dbtest.SeedData) []dbtest.AppTable {
 			Token:      sd.Users[0].Token,
 			Method:     http.MethodPost,
 			StatusCode: http.StatusCreated,
-			Model: &homegrp.AppNewHome{
+			Model: &homeapi.AppNewHome{
 				Type: "SINGLE FAMILY",
-				Address: homegrp.AppNewAddress{
+				Address: homeapi.AppNewAddress{
 					Address1: "123 Mocking Bird Lane",
 					ZipCode:  "35810",
 					City:     "Huntsville",
@@ -27,11 +27,11 @@ func homeCreate200(sd dbtest.SeedData) []dbtest.AppTable {
 					Country:  "US",
 				},
 			},
-			Resp: &homegrp.AppHome{},
-			ExpResp: &homegrp.AppHome{
+			Resp: &homeapi.AppHome{},
+			ExpResp: &homeapi.AppHome{
 				UserID: sd.Users[0].ID.String(),
 				Type:   "SINGLE FAMILY",
-				Address: homegrp.AppAddress{
+				Address: homeapi.AppAddress{
 					Address1: "123 Mocking Bird Lane",
 					ZipCode:  "35810",
 					City:     "Huntsville",
@@ -40,12 +40,12 @@ func homeCreate200(sd dbtest.SeedData) []dbtest.AppTable {
 				},
 			},
 			CmpFunc: func(got any, exp any) string {
-				gotResp, exists := got.(*homegrp.AppHome)
+				gotResp, exists := got.(*homeapi.AppHome)
 				if !exists {
 					return "error occurred"
 				}
 
-				expResp := exp.(*homegrp.AppHome)
+				expResp := exp.(*homeapi.AppHome)
 
 				expResp.ID = gotResp.ID
 				expResp.DateCreated = gotResp.DateCreated
@@ -67,12 +67,9 @@ func homeCreate400(sd dbtest.SeedData) []dbtest.AppTable {
 			Token:      sd.Users[0].Token,
 			Method:     http.MethodPost,
 			StatusCode: http.StatusBadRequest,
-			Model:      &homegrp.AppNewHome{},
-			Resp:       &errs.Response{},
-			ExpResp: &errs.Response{
-				Error:  "data validation error",
-				Fields: map[string]string{"address1": "address1 is a required field", "city": "city is a required field", "country": "country is a required field", "state": "state is a required field", "type": "type is a required field", "zipCode": "zipCode is a required field"},
-			},
+			Model:      &homeapi.AppNewHome{},
+			Resp:       &errs.Error{},
+			ExpResp:    toErrorPtr(errs.Newf(http.StatusBadRequest, "validate: [{\"field\":\"type\",\"error\":\"type is a required field\"},{\"field\":\"address1\",\"error\":\"address1 is a required field\"},{\"field\":\"zipCode\",\"error\":\"zipCode is a required field\"},{\"field\":\"city\",\"error\":\"city is a required field\"},{\"field\":\"state\",\"error\":\"state is a required field\"},{\"field\":\"country\",\"error\":\"country is a required field\"}]")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -83,9 +80,9 @@ func homeCreate400(sd dbtest.SeedData) []dbtest.AppTable {
 			Token:      sd.Users[0].Token,
 			Method:     http.MethodPost,
 			StatusCode: http.StatusBadRequest,
-			Model: &homegrp.AppNewHome{
+			Model: &homeapi.AppNewHome{
 				Type: "BAD TYPE",
-				Address: homegrp.AppNewAddress{
+				Address: homeapi.AppNewAddress{
 					Address1: "123 Mocking Bird Lane",
 					ZipCode:  "35810",
 					City:     "Huntsville",
@@ -93,10 +90,8 @@ func homeCreate400(sd dbtest.SeedData) []dbtest.AppTable {
 					Country:  "US",
 				},
 			},
-			Resp: &errs.Response{},
-			ExpResp: &errs.Response{
-				Error: "parse: invalid type \"BAD TYPE\"",
-			},
+			Resp:    &errs.Error{},
+			ExpResp: toErrorPtr(errs.Newf(http.StatusBadRequest, "parse: invalid type \"BAD TYPE\"")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -114,10 +109,8 @@ func homeCreate401(sd dbtest.SeedData) []dbtest.AppTable {
 			Token:      "",
 			Method:     http.MethodPost,
 			StatusCode: http.StatusUnauthorized,
-			Resp:       &errs.Response{},
-			ExpResp: &errs.Response{
-				Error: "Unauthorized",
-			},
+			Resp:       &errs.Error{},
+			ExpResp:    toErrorPtr(errs.Newf(http.StatusUnauthorized, "error parsing token: token contains an invalid number of segments")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -128,10 +121,8 @@ func homeCreate401(sd dbtest.SeedData) []dbtest.AppTable {
 			Token:      sd.Admins[0].Token[:10],
 			Method:     http.MethodPost,
 			StatusCode: http.StatusUnauthorized,
-			Resp:       &errs.Response{},
-			ExpResp: &errs.Response{
-				Error: "Unauthorized",
-			},
+			Resp:       &errs.Error{},
+			ExpResp:    toErrorPtr(errs.Newf(http.StatusUnauthorized, "error parsing token: token contains an invalid number of segments")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -142,10 +133,8 @@ func homeCreate401(sd dbtest.SeedData) []dbtest.AppTable {
 			Token:      sd.Admins[0].Token + "A",
 			Method:     http.MethodPost,
 			StatusCode: http.StatusUnauthorized,
-			Resp:       &errs.Response{},
-			ExpResp: &errs.Response{
-				Error: "Unauthorized",
-			},
+			Resp:       &errs.Error{},
+			ExpResp:    toErrorPtr(errs.Newf(http.StatusUnauthorized, "authentication failed : bindings results[[{[true] map[x:false]}]] ok[true]")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -156,10 +145,8 @@ func homeCreate401(sd dbtest.SeedData) []dbtest.AppTable {
 			Token:      sd.Admins[0].Token,
 			Method:     http.MethodPost,
 			StatusCode: http.StatusUnauthorized,
-			Resp:       &errs.Response{},
-			ExpResp: &errs.Response{
-				Error: "Unauthorized",
-			},
+			Resp:       &errs.Error{},
+			ExpResp:    toErrorPtr(errs.Newf(http.StatusUnauthorized, "authorize: you are not authorized for that action, claims[[{ADMIN}]] rule[rule_user_only]: rego evaluation failed : bindings results[[{[true] map[x:false]}]] ok[true]")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},

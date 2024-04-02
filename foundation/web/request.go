@@ -27,7 +27,7 @@ func Decode(r *http.Request, val any) error {
 
 	if v, ok := val.(validator); ok {
 		if err := v.Validate(); err != nil {
-			return fmt.Errorf("unable to validate payload: %w", err)
+			return err
 		}
 	}
 

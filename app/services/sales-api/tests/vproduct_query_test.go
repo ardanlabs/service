@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"sort"
 
-	"github.com/ardanlabs/service/app/services/sales-api/handlers/views/vproductgrp"
+	"github.com/ardanlabs/service/app/services/sales-api/apis/views/vproductapi"
+	"github.com/ardanlabs/service/business/api/page"
 	"github.com/ardanlabs/service/business/data/dbtest"
-	"github.com/ardanlabs/service/business/web/page"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -25,8 +25,8 @@ func vproductQuery200(sd dbtest.SeedData) []dbtest.AppTable {
 			Token:      sd.Admins[0].Token,
 			StatusCode: http.StatusOK,
 			Method:     http.MethodGet,
-			Resp:       &page.Document[vproductgrp.AppProduct]{},
-			ExpResp: &page.Document[vproductgrp.AppProduct]{
+			Resp:       &page.Document[vproductapi.AppProduct]{},
+			ExpResp: &page.Document[vproductapi.AppProduct]{
 				Page:        1,
 				RowsPerPage: 10,
 				Total:       len(prds),

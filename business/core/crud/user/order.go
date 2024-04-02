@@ -1,6 +1,6 @@
 package user
 
-import "github.com/ardanlabs/service/business/web/order"
+import "github.com/ardanlabs/service/business/api/order"
 
 // DefaultOrderBy represents the default way we sort.
 var DefaultOrderBy = order.NewBy(OrderByID, order.ASC)

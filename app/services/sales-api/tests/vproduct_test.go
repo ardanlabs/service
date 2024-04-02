@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/ardanlabs/service/app/services/sales-api/build/all"
+	"github.com/ardanlabs/service/business/api/mux"
 	"github.com/ardanlabs/service/business/data/dbtest"
-	"github.com/ardanlabs/service/business/web/mux"
 )
 
 func Test_VProduct(t *testing.T) {

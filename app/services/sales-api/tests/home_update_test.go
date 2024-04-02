@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ardanlabs/service/app/services/sales-api/handlers/crud/homegrp"
+	"github.com/ardanlabs/service/app/services/sales-api/apis/crud/homeapi"
+	"github.com/ardanlabs/service/business/api/errs"
 	"github.com/ardanlabs/service/business/data/dbtest"
-	"github.com/ardanlabs/service/business/web/errs"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -19,9 +19,9 @@ func homeUpdate200(sd dbtest.SeedData) []dbtest.AppTable {
 			Token:      sd.Users[0].Token,
 			Method:     http.MethodPut,
 			StatusCode: http.StatusOK,
-			Model: &homegrp.AppUpdateHome{
+			Model: &homeapi.AppUpdateHome{
 				Type: dbtest.StringPointer("SINGLE FAMILY"),
-				Address: &homegrp.AppUpdateAddress{
+				Address: &homeapi.AppUpdateAddress{
 					Address1: dbtest.StringPointer("123 Mocking Bird Lane"),
 					Address2: dbtest.StringPointer("apt 105"),
 					ZipCode:  dbtest.StringPointer("35810"),
@@ -30,12 +30,12 @@ func homeUpdate200(sd dbtest.SeedData) []dbtest.AppTable {
 					Country:  dbtest.StringPointer("US"),
 				},
 			},
-			Resp: &homegrp.AppHome{},
-			ExpResp: &homegrp.AppHome{
+			Resp: &homeapi.AppHome{},
+			ExpResp: &homeapi.AppHome{
 				ID:     sd.Users[0].Homes[0].ID.String(),
 				UserID: sd.Users[0].ID.String(),
 				Type:   "SINGLE FAMILY",
-				Address: homegrp.AppAddress{
+				Address: homeapi.AppAddress{
 					Address1: "123 Mocking Bird Lane",
 					Address2: "apt 105",
 					ZipCode:  "35810",
@@ -47,12 +47,12 @@ func homeUpdate200(sd dbtest.SeedData) []dbtest.AppTable {
 				DateUpdated: sd.Users[0].Homes[0].DateCreated.Format(time.RFC3339),
 			},
 			CmpFunc: func(got any, exp any) string {
-				gotResp, exists := got.(*homegrp.AppHome)
+				gotResp, exists := got.(*homeapi.AppHome)
 				if !exists {
 					return "error occurred"
 				}
 
-				expResp := exp.(*homegrp.AppHome)
+				expResp := exp.(*homeapi.AppHome)
 				gotResp.DateUpdated = expResp.DateUpdated
 
 				return cmp.Diff(gotResp, expResp)
@@ -71,8 +71,8 @@ func homeUpdate400(sd dbtest.SeedData) []dbtest.AppTable {
 			Token:      sd.Users[0].Token,
 			Method:     http.MethodPut,
 			StatusCode: http.StatusBadRequest,
-			Model: &homegrp.AppUpdateHome{
-				Address: &homegrp.AppUpdateAddress{
+			Model: &homeapi.AppUpdateHome{
+				Address: &homeapi.AppUpdateAddress{
 					Address1: dbtest.StringPointer(""),
 					Address2: dbtest.StringPointer(""),
 					ZipCode:  dbtest.StringPointer(""),
@@ -81,11 +81,8 @@ func homeUpdate400(sd dbtest.SeedData) []dbtest.AppTable {
 					Country:  dbtest.StringPointer(""),
 				},
 			},
-			Resp: &errs.Response{},
-			ExpResp: &errs.Response{
-				Error:  "data validation error",
-				Fields: map[string]string{"address1": "address1 must be at least 1 character in length", "country": "Key: 'AppUpdateHome.address.country' Error:Field validation for 'country' failed on the 'iso3166_1_alpha2' tag", "state": "state must be at least 1 character in length", "zipCode": "zipCode must be a valid numeric value"},
-			},
+			Resp:    &errs.Error{},
+			ExpResp: toErrorPtr(errs.Newf(http.StatusBadRequest, "validate: [{\"field\":\"address1\",\"error\":\"address1 must be at least 1 character in length\"},{\"field\":\"zipCode\",\"error\":\"zipCode must be a valid numeric value\"},{\"field\":\"state\",\"error\":\"state must be at least 1 character in length\"},{\"field\":\"country\",\"error\":\"Key: 'AppUpdateHome.address.country' Error:Field validation for 'country' failed on the 'iso3166_1_alpha2' tag\"}]")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -96,14 +93,12 @@ func homeUpdate400(sd dbtest.SeedData) []dbtest.AppTable {
 			Token:      sd.Users[0].Token,
 			Method:     http.MethodPut,
 			StatusCode: http.StatusBadRequest,
-			Model: &homegrp.AppUpdateHome{
+			Model: &homeapi.AppUpdateHome{
 				Type:    dbtest.StringPointer("BAD TYPE"),
-				Address: &homegrp.AppUpdateAddress{},
+				Address: &homeapi.AppUpdateAddress{},
 			},
-			Resp: &errs.Response{},
-			ExpResp: &errs.Response{
-				Error: "parse: invalid type \"BAD TYPE\"",
-			},
+			Resp:    &errs.Error{},
+			ExpResp: toErrorPtr(errs.Newf(http.StatusBadRequest, "parse: invalid type \"BAD TYPE\"")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -121,8 +116,8 @@ func homeUpdate401(sd dbtest.SeedData) []dbtest.AppTable {
 			Token:      "",
 			Method:     http.MethodPut,
 			StatusCode: http.StatusUnauthorized,
-			Resp:       &errs.Response{},
-			ExpResp:    &errs.Response{Error: "Unauthorized"},
+			Resp:       &errs.Error{},
+			ExpResp:    toErrorPtr(errs.Newf(http.StatusUnauthorized, "error parsing token: token contains an invalid number of segments")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -133,8 +128,8 @@ func homeUpdate401(sd dbtest.SeedData) []dbtest.AppTable {
 			Token:      sd.Users[0].Token + "A",
 			Method:     http.MethodPut,
 			StatusCode: http.StatusUnauthorized,
-			Resp:       &errs.Response{},
-			ExpResp:    &errs.Response{Error: "Unauthorized"},
+			Resp:       &errs.Error{},
+			ExpResp:    toErrorPtr(errs.Newf(http.StatusUnauthorized, "authentication failed : bindings results[[{[true] map[x:false]}]] ok[true]")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -145,9 +140,9 @@ func homeUpdate401(sd dbtest.SeedData) []dbtest.AppTable {
 			Token:      sd.Users[0].Token,
 			Method:     http.MethodPut,
 			StatusCode: http.StatusUnauthorized,
-			Model: &homegrp.AppUpdateHome{
+			Model: &homeapi.AppUpdateHome{
 				Type: dbtest.StringPointer("SINGLE FAMILY"),
-				Address: &homegrp.AppUpdateAddress{
+				Address: &homeapi.AppUpdateAddress{
 					Address1: dbtest.StringPointer("123 Mocking Bird Lane"),
 					Address2: dbtest.StringPointer("apt 105"),
 					ZipCode:  dbtest.StringPointer("35810"),
@@ -156,8 +151,8 @@ func homeUpdate401(sd dbtest.SeedData) []dbtest.AppTable {
 					Country:  dbtest.StringPointer("US"),
 				},
 			},
-			Resp:    &errs.Response{},
-			ExpResp: &errs.Response{Error: "Unauthorized"},
+			Resp:    &errs.Error{},
+			ExpResp: toErrorPtr(errs.Newf(http.StatusUnauthorized, "authorize: you are not authorized for that action, claims[[{USER}]] rule[rule_admin_or_subject]: rego evaluation failed : bindings results[[{[true] map[x:false]}]] ok[true]")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},

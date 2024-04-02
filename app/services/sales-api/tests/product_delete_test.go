@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/ardanlabs/service/business/api/errs"
 	"github.com/ardanlabs/service/business/data/dbtest"
-	"github.com/ardanlabs/service/business/web/errs"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -38,8 +38,8 @@ func productDelete401(sd dbtest.SeedData) []dbtest.AppTable {
 			Token:      "",
 			Method:     http.MethodDelete,
 			StatusCode: http.StatusUnauthorized,
-			Resp:       &errs.Response{},
-			ExpResp:    &errs.Response{Error: "Unauthorized"},
+			Resp:       &errs.Error{},
+			ExpResp:    toErrorPtr(errs.Newf(http.StatusUnauthorized, "error parsing token: token contains an invalid number of segments")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -50,8 +50,8 @@ func productDelete401(sd dbtest.SeedData) []dbtest.AppTable {
 			Token:      sd.Users[0].Token + "A",
 			Method:     http.MethodDelete,
 			StatusCode: http.StatusUnauthorized,
-			Resp:       &errs.Response{},
-			ExpResp:    &errs.Response{Error: "Unauthorized"},
+			Resp:       &errs.Error{},
+			ExpResp:    toErrorPtr(errs.Newf(http.StatusUnauthorized, "authentication failed : bindings results[[{[true] map[x:false]}]] ok[true]")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -62,8 +62,8 @@ func productDelete401(sd dbtest.SeedData) []dbtest.AppTable {
 			Token:      sd.Users[0].Token,
 			Method:     http.MethodDelete,
 			StatusCode: http.StatusUnauthorized,
-			Resp:       &errs.Response{},
-			ExpResp:    &errs.Response{Error: "Unauthorized"},
+			Resp:       &errs.Error{},
+			ExpResp:    toErrorPtr(errs.Newf(http.StatusUnauthorized, "authorize: you are not authorized for that action, claims[[{USER}]] rule[rule_admin_or_subject]: rego evaluation failed : bindings results[[{[true] map[x:false]}]] ok[true]")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},

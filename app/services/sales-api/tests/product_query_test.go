@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"sort"
 
-	"github.com/ardanlabs/service/app/services/sales-api/handlers/crud/productgrp"
+	"github.com/ardanlabs/service/app/services/sales-api/apis/crud/productapi"
+	"github.com/ardanlabs/service/business/api/page"
 	"github.com/ardanlabs/service/business/core/crud/product"
 	"github.com/ardanlabs/service/business/data/dbtest"
-	"github.com/ardanlabs/service/business/web/page"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -28,8 +28,8 @@ func productQuery200(sd dbtest.SeedData) []dbtest.AppTable {
 			Token:      sd.Admins[0].Token,
 			StatusCode: http.StatusOK,
 			Method:     http.MethodGet,
-			Resp:       &page.Document[productgrp.AppProduct]{},
-			ExpResp: &page.Document[productgrp.AppProduct]{
+			Resp:       &page.Document[productapi.AppProduct]{},
+			ExpResp: &page.Document[productapi.AppProduct]{
 				Page:        1,
 				RowsPerPage: 10,
 				Total:       len(prds),
@@ -52,7 +52,7 @@ func productQueryByID200(sd dbtest.SeedData) []dbtest.AppTable {
 			Token:      sd.Users[0].Token,
 			StatusCode: http.StatusOK,
 			Method:     http.MethodGet,
-			Resp:       &productgrp.AppProduct{},
+			Resp:       &productapi.AppProduct{},
 			ExpResp:    toAppProductPtr(sd.Users[0].Products[0]),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
