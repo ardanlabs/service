@@ -1,5 +1,5 @@
-// Package homegrp maintains the group of handlers for home access.
-package homegrp
+// Package homeapi maintains the web based api for home access.
+package homeapi
 
 import (
 	"context"
@@ -10,23 +10,23 @@ import (
 	"github.com/ardanlabs/service/foundation/web"
 )
 
-type handlers struct {
+type api struct {
 	home *homeapp.Core
 }
 
-func new(home *homeapp.Core) *handlers {
-	return &handlers{
+func newAPI(home *homeapp.Core) *api {
+	return &api{
 		home: home,
 	}
 }
 
-func (h *handlers) create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (api *api) create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app homeapp.NewHome
 	if err := web.Decode(r, &app); err != nil {
 		return errs.New(errs.FailedPrecondition, err)
 	}
 
-	hme, err := h.home.Create(ctx, app)
+	hme, err := api.home.Create(ctx, app)
 	if err != nil {
 		return err
 	}
@@ -34,13 +34,13 @@ func (h *handlers) create(ctx context.Context, w http.ResponseWriter, r *http.Re
 	return web.Respond(ctx, w, hme, http.StatusCreated)
 }
 
-func (h *handlers) update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (api *api) update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app homeapp.UpdateHome
 	if err := web.Decode(r, &app); err != nil {
 		return errs.New(errs.FailedPrecondition, err)
 	}
 
-	hme, err := h.home.Update(ctx, app)
+	hme, err := api.home.Update(ctx, app)
 	if err != nil {
 		return err
 	}
@@ -48,21 +48,21 @@ func (h *handlers) update(ctx context.Context, w http.ResponseWriter, r *http.Re
 	return web.Respond(ctx, w, hme, http.StatusOK)
 }
 
-func (h *handlers) delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	if err := h.home.Delete(ctx); err != nil {
+func (api *api) delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	if err := api.home.Delete(ctx); err != nil {
 		return err
 	}
 
 	return web.Respond(ctx, w, nil, http.StatusNoContent)
 }
 
-func (h *handlers) query(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (api *api) query(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	qp, err := parseQueryParams(r)
 	if err != nil {
 		return err
 	}
 
-	hme, err := h.home.Query(ctx, qp)
+	hme, err := api.home.Query(ctx, qp)
 	if err != nil {
 		return err
 	}
@@ -70,8 +70,8 @@ func (h *handlers) query(ctx context.Context, w http.ResponseWriter, r *http.Req
 	return web.Respond(ctx, w, hme, http.StatusOK)
 }
 
-func (h *handlers) queryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	hme, err := h.home.QueryByID(ctx)
+func (api *api) queryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	hme, err := api.home.QueryByID(ctx)
 	if err != nil {
 		return err
 	}

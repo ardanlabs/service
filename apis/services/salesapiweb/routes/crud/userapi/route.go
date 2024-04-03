@@ -1,4 +1,4 @@
-package usergrp
+package userapi
 
 import (
 	"net/http"
@@ -25,12 +25,12 @@ func Routes(app *web.App, cfg Config) {
 	ruleAuthorizeUser := midhttp.AuthorizeUser(cfg.Auth, cfg.UserCore, auth.RuleAdminOrSubject)
 	ruleAuthorizeAdmin := midhttp.AuthorizeUser(cfg.Auth, cfg.UserCore, auth.RuleAdminOnly)
 
-	hdl := new(userapp.New(cfg.UserCore, cfg.Auth))
-	app.Handle(http.MethodGet, version, "/users/token/{kid}", hdl.token)
-	app.Handle(http.MethodGet, version, "/users", hdl.query, authen, ruleAdmin)
-	app.Handle(http.MethodGet, version, "/users/{user_id}", hdl.queryByID, authen, ruleAuthorizeUser)
-	app.Handle(http.MethodPost, version, "/users", hdl.create, authen, ruleAdmin)
-	app.Handle(http.MethodPut, version, "/users/role/{user_id}", hdl.updateRole, authen, ruleAuthorizeAdmin)
-	app.Handle(http.MethodPut, version, "/users/{user_id}", hdl.update, authen, ruleAuthorizeUser)
-	app.Handle(http.MethodDelete, version, "/users/{user_id}", hdl.delete, authen, ruleAuthorizeUser)
+	api := newAPI(userapp.NewCore(cfg.UserCore, cfg.Auth))
+	app.Handle(http.MethodGet, version, "/users/token/{kid}", api.token)
+	app.Handle(http.MethodGet, version, "/users", api.query, authen, ruleAdmin)
+	app.Handle(http.MethodGet, version, "/users/{user_id}", api.queryByID, authen, ruleAuthorizeUser)
+	app.Handle(http.MethodPost, version, "/users", api.create, authen, ruleAdmin)
+	app.Handle(http.MethodPut, version, "/users/role/{user_id}", api.updateRole, authen, ruleAuthorizeAdmin)
+	app.Handle(http.MethodPut, version, "/users/{user_id}", api.update, authen, ruleAuthorizeUser)
+	app.Handle(http.MethodDelete, version, "/users/{user_id}", api.delete, authen, ruleAuthorizeUser)
 }

@@ -1,4 +1,4 @@
-package usergrp
+package userapi
 
 import (
 	"net/http"

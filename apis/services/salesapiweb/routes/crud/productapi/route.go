@@ -1,4 +1,4 @@
-package productgrp
+package productapi
 
 import (
 	"net/http"
@@ -25,10 +25,10 @@ func Routes(app *web.App, cfg Config) {
 	ruleUserOnly := midhttp.Authorize(cfg.Auth, auth.RuleUserOnly)
 	ruleAuthorizeProduct := midhttp.AuthorizeProduct(cfg.Auth, cfg.ProductCore)
 
-	hdl := new(productapp.New(cfg.ProductCore))
-	app.Handle(http.MethodGet, version, "/products", hdl.query, authen, ruleAny)
-	app.Handle(http.MethodGet, version, "/products/{product_id}", hdl.queryByID, authen, ruleAuthorizeProduct)
-	app.Handle(http.MethodPost, version, "/products", hdl.create, authen, ruleUserOnly)
-	app.Handle(http.MethodPut, version, "/products/{product_id}", hdl.update, authen, ruleAuthorizeProduct)
-	app.Handle(http.MethodDelete, version, "/products/{product_id}", hdl.delete, authen, ruleAuthorizeProduct)
+	api := newAPI(productapp.NewCore(cfg.ProductCore))
+	app.Handle(http.MethodGet, version, "/products", api.query, authen, ruleAny)
+	app.Handle(http.MethodGet, version, "/products/{product_id}", api.queryByID, authen, ruleAuthorizeProduct)
+	app.Handle(http.MethodPost, version, "/products", api.create, authen, ruleUserOnly)
+	app.Handle(http.MethodPut, version, "/products/{product_id}", api.update, authen, ruleAuthorizeProduct)
+	app.Handle(http.MethodDelete, version, "/products/{product_id}", api.delete, authen, ruleAuthorizeProduct)
 }

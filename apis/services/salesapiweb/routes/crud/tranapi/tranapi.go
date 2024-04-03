@@ -1,5 +1,5 @@
-// Package trangrp maintains the group of handlers for transaction example.
-package trangrp
+// Package tranapi maintains the web based api for tran access.
+package tranapi
 
 import (
 	"context"
@@ -10,23 +10,23 @@ import (
 	"github.com/ardanlabs/service/foundation/web"
 )
 
-type handlers struct {
+type api struct {
 	tran *tranapp.Core
 }
 
-func new(tran *tranapp.Core) *handlers {
-	return &handlers{
+func newAPI(tran *tranapp.Core) *api {
+	return &api{
 		tran: tran,
 	}
 }
 
-func (h *handlers) create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (api *api) create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app tranapp.NewTran
 	if err := web.Decode(r, &app); err != nil {
 		return errs.New(errs.FailedPrecondition, err)
 	}
 
-	prd, err := h.tran.Create(ctx, app)
+	prd, err := api.tran.Create(ctx, app)
 	if err != nil {
 		return err
 	}

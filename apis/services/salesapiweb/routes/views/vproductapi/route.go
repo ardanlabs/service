@@ -1,4 +1,4 @@
-package vproductgrp
+package vproductapi
 
 import (
 	"net/http"
@@ -23,6 +23,6 @@ func Routes(app *web.App, cfg Config) {
 	authen := midhttp.Authenticate(cfg.Auth)
 	ruleAdmin := midhttp.Authorize(cfg.Auth, auth.RuleAdminOnly)
 
-	hdl := new(vproductapp.New(cfg.VProductCore))
-	app.Handle(http.MethodGet, version, "/vproducts", hdl.query, authen, ruleAdmin)
+	api := newAPI(vproductapp.NewCore(cfg.VProductCore))
+	app.Handle(http.MethodGet, version, "/vproducts", api.query, authen, ruleAdmin)
 }

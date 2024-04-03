@@ -1,5 +1,5 @@
-// Package productgrp maintains the group of handlers for product access.
-package productgrp
+// Package productapi maintains the web based api for product access.
+package productapi
 
 import (
 	"context"
@@ -10,23 +10,23 @@ import (
 	"github.com/ardanlabs/service/foundation/web"
 )
 
-type handlers struct {
+type api struct {
 	product *productapp.Core
 }
 
-func new(product *productapp.Core) *handlers {
-	return &handlers{
+func newAPI(product *productapp.Core) *api {
+	return &api{
 		product: product,
 	}
 }
 
-func (h *handlers) create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (api *api) create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app productapp.NewProduct
 	if err := web.Decode(r, &app); err != nil {
 		return errs.New(errs.FailedPrecondition, err)
 	}
 
-	prd, err := h.product.Create(ctx, app)
+	prd, err := api.product.Create(ctx, app)
 	if err != nil {
 		return err
 	}
@@ -34,13 +34,13 @@ func (h *handlers) create(ctx context.Context, w http.ResponseWriter, r *http.Re
 	return web.Respond(ctx, w, prd, http.StatusCreated)
 }
 
-func (h *handlers) update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (api *api) update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app productapp.UpdateProduct
 	if err := web.Decode(r, &app); err != nil {
 		return errs.New(errs.FailedPrecondition, err)
 	}
 
-	prd, err := h.product.Update(ctx, app)
+	prd, err := api.product.Update(ctx, app)
 	if err != nil {
 		return err
 	}
@@ -48,21 +48,21 @@ func (h *handlers) update(ctx context.Context, w http.ResponseWriter, r *http.Re
 	return web.Respond(ctx, w, prd, http.StatusOK)
 }
 
-func (h *handlers) delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	if err := h.product.Delete(ctx); err != nil {
+func (api *api) delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	if err := api.product.Delete(ctx); err != nil {
 		return err
 	}
 
 	return web.Respond(ctx, w, nil, http.StatusNoContent)
 }
 
-func (h *handlers) query(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (api *api) query(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	qp, err := parseQueryParams(r)
 	if err != nil {
 		return err
 	}
 
-	hme, err := h.product.Query(ctx, qp)
+	hme, err := api.product.Query(ctx, qp)
 	if err != nil {
 		return err
 	}
@@ -70,8 +70,8 @@ func (h *handlers) query(ctx context.Context, w http.ResponseWriter, r *http.Req
 	return web.Respond(ctx, w, hme, http.StatusOK)
 }
 
-func (h *handlers) queryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	hme, err := h.product.QueryByID(ctx)
+func (api *api) queryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	hme, err := api.product.QueryByID(ctx)
 	if err != nil {
 		return err
 	}

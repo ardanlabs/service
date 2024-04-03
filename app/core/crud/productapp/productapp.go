@@ -21,8 +21,8 @@ type Core struct {
 	product *product.Core
 }
 
-// New constructs a Handlers for use.
-func New(product *product.Core) *Core {
+// NewCore constructs a product core API for use.
+func NewCore(product *product.Core) *Core {
 	return &Core{
 		product: product,
 	}

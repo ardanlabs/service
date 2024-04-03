@@ -16,8 +16,8 @@ type Core struct {
 	product *product.Core
 }
 
-// New constructs a Handlers for use.
-func New(user *user.Core, product *product.Core) *Core {
+// NewCore constructs a tran core API for use.
+func NewCore(user *user.Core, product *product.Core) *Core {
 	return &Core{
 		user:    user,
 		product: product,

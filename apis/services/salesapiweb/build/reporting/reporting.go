@@ -2,8 +2,8 @@
 package reporting
 
 import (
-	"github.com/ardanlabs/service/apis/services/salesapiweb/routes/sys/checkgrp"
-	"github.com/ardanlabs/service/apis/services/salesapiweb/routes/views/vproductgrp"
+	"github.com/ardanlabs/service/apis/services/salesapiweb/routes/sys/checkapi"
+	"github.com/ardanlabs/service/apis/services/salesapiweb/routes/views/vproductapi"
 	"github.com/ardanlabs/service/business/api/mux"
 	"github.com/ardanlabs/service/foundation/web"
 )
@@ -18,13 +18,13 @@ type add struct{}
 
 // Add implements the RouterAdder interface.
 func (add) Add(app *web.App, cfg mux.Config) {
-	checkgrp.Routes(app, checkgrp.Config{
+	checkapi.Routes(app, checkapi.Config{
 		Build: cfg.Build,
 		Log:   cfg.Log,
 		DB:    cfg.DB,
 	})
 
-	vproductgrp.Routes(app, vproductgrp.Config{
+	vproductapi.Routes(app, vproductapi.Config{
 		VProductCore: cfg.BusView.Product,
 		Auth:         cfg.Auth,
 	})

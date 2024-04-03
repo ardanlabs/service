@@ -109,13 +109,13 @@ func run(ctx context.Context, log *logger.Logger) error {
 		DB:       service.DB,
 		Tracer:   service.Tracer,
 		BusCrud: mux.BusCrud{
-			Delegate: service.Bus.Crud.Delegate,
-			Home:     service.Bus.Crud.Home,
-			Product:  service.Bus.Crud.Product,
-			User:     service.Bus.Crud.User,
+			Delegate: service.BusCrud.Delegate,
+			Home:     service.BusCrud.Home,
+			Product:  service.BusCrud.Product,
+			User:     service.BusCrud.User,
 		},
 		BusView: mux.BusView{
-			Product: service.Bus.View.Product,
+			Product: service.BusView.Product,
 		},
 	}
 
@@ -149,6 +149,8 @@ func run(ctx context.Context, log *logger.Logger) error {
 
 		ctx, cancel := context.WithTimeout(ctx, cfg.Web.ShutdownTimeout)
 		defer cancel()
+
+		defer service.Shutdown(ctx)
 
 		if err := api.Shutdown(ctx); err != nil {
 			api.Close()

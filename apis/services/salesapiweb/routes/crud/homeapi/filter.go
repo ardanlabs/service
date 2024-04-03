@@ -1,4 +1,4 @@
-package homegrp
+package homeapi
 
 import (
 	"net/http"

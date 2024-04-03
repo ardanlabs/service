@@ -22,8 +22,8 @@ type Core struct {
 	auth *auth.Auth
 }
 
-// New constructs a Handlers for use.
-func New(user *user.Core, auth *auth.Auth) *Core {
+// NewCore constructs a user core API for use.
+func NewCore(user *user.Core, auth *auth.Auth) *Core {
 	return &Core{
 		user: user,
 		auth: auth,

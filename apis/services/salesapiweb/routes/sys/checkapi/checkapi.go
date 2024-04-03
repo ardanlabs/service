@@ -1,5 +1,5 @@
-// Package checkgrp maintains the group of handlers for health checking.
-package checkgrp
+// Package checkapi maintains the web based api for system access.
+package checkapi
 
 import (
 	"context"
@@ -14,14 +14,14 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type handlers struct {
+type api struct {
 	build string
 	log   *logger.Logger
 	db    *sqlx.DB
 }
 
-func new(build string, log *logger.Logger, db *sqlx.DB) *handlers {
-	return &handlers{
+func newAPI(build string, log *logger.Logger, db *sqlx.DB) *api {
+	return &api{
 		build: build,
 		db:    db,
 		log:   log,
@@ -31,16 +31,16 @@ func new(build string, log *logger.Logger, db *sqlx.DB) *handlers {
 // readiness checks if the database is ready and if not will return a 500 status.
 // Do not respond by just returning an error because further up in the call
 // stack it will interpret that as a non-trusted error.
-func (h *handlers) readiness(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (api *api) readiness(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 
 	status := "ok"
 	statusCode := http.StatusOK
-	if err := sqldb.StatusCheck(ctx, h.db); err != nil {
+	if err := sqldb.StatusCheck(ctx, api.db); err != nil {
 		status = "db not ready"
 		statusCode = http.StatusInternalServerError
-		h.log.Info(ctx, "readiness failure", "status", status)
+		api.log.Info(ctx, "readiness failure", "status", status)
 	}
 
 	data := struct {
@@ -56,7 +56,7 @@ func (h *handlers) readiness(ctx context.Context, w http.ResponseWriter, r *http
 // app is deployed to a Kubernetes cluster, it will also return pod, node, and
 // namespace details via the Downward API. The Kubernetes environment variables
 // need to be set within your Pod/Deployment manifest.
-func (h *handlers) liveness(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (api *api) liveness(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	host, err := os.Hostname()
 	if err != nil {
 		host = "unavailable"
@@ -73,7 +73,7 @@ func (h *handlers) liveness(ctx context.Context, w http.ResponseWriter, r *http.
 		GOMAXPROCS int    `json:"GOMAXPROCS,omitempty"`
 	}{
 		Status:     "up",
-		Build:      h.build,
+		Build:      api.build,
 		Host:       host,
 		Name:       os.Getenv("KUBERNETES_NAME"),
 		PodIP:      os.Getenv("KUBERNETES_POD_IP"),

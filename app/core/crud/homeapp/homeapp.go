@@ -21,8 +21,8 @@ type Core struct {
 	home *home.Core
 }
 
-// New constructs a Handlers for use.
-func New(home *home.Core) *Core {
+// NewCore constructs a home core API for use.
+func NewCore(home *home.Core) *Core {
 	return &Core{
 		home: home,
 	}

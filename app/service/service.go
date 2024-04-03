@@ -10,11 +10,6 @@ import (
 	"time"
 
 	"github.com/ardanlabs/conf/v3"
-	"github.com/ardanlabs/service/app/core/crud/homeapp"
-	"github.com/ardanlabs/service/app/core/crud/productapp"
-	"github.com/ardanlabs/service/app/core/crud/tranapp"
-	"github.com/ardanlabs/service/app/core/crud/userapp"
-	"github.com/ardanlabs/service/app/core/views/vproductapp"
 	"github.com/ardanlabs/service/business/api/auth"
 	"github.com/ardanlabs/service/business/core/crud/delegate"
 	"github.com/ardanlabs/service/business/core/crud/home"
@@ -46,8 +41,8 @@ type Service struct {
 	Auth     *auth.Auth
 	Tracer   otrace.Tracer
 	Provider *trace.TracerProvider
-	App      App
-	Bus      Business
+	BusCrud  BusCrud
+	BusView  BusView
 }
 
 // New is called to create a new encore Service.
@@ -150,31 +145,30 @@ func New(ctx context.Context, log *logger.Logger, cfg Config) (*Service, error) 
 		Auth:     auth,
 		Tracer:   tracer,
 		Provider: traceProvider,
-		App: App{
-			Crud: CrudApp{
-				User:    userapp.New(userCore, auth),
-				Product: productapp.New(productCore),
-				Home:    homeapp.New(homeCore),
-				Tran:    tranapp.New(userCore, productCore),
-			},
-			View: ViewApp{
-				Product: vproductapp.New(vproductCore),
-			},
+		BusCrud: BusCrud{
+			Delegate: delegate,
+			Home:     homeCore,
+			Product:  productCore,
+			User:     userCore,
 		},
-		Bus: Business{
-			Crud: CrudBus{
-				Delegate: delegate,
-				Home:     homeCore,
-				Product:  productCore,
-				User:     userCore,
-			},
-			View: ViewBus{
-				Product: vproductCore,
-			},
+		BusView: BusView{
+			Product: vproductCore,
 		},
 	}
 
 	return &s, nil
+}
+
+// Shutdown implements a function that will be called by encore when the service
+// is signaled to shutdown.
+func (s *Service) Shutdown(ctx context.Context) {
+	defer s.Log.Info(ctx, "shutdown", "status", "shutdown complete")
+
+	s.Log.Info(ctx, "shutdown", "status", "stopping tracing provideer")
+	s.Provider.Shutdown(context.Background())
+
+	s.Log.Info(ctx, "shutdown", "status", "stopping database support")
+	s.DB.Close()
 }
 
 // startTracing configure open telemetry to be used with Grafana Tempo.
@@ -223,16 +217,4 @@ func startTracing(serviceName string, reporterURI string, probability float64) (
 	))
 
 	return traceProvider, nil
-}
-
-// Shutdown implements a function that will be called by encore when the service
-// is signaled to shutdown.
-func (s *Service) Shutdown(ctx context.Context) {
-	defer s.Log.Info(ctx, "shutdown", "status", "shutdown complete")
-
-	s.Log.Info(ctx, "shutdown", "status", "stopping tracing provideer")
-	s.Provider.Shutdown(context.Background())
-
-	s.Log.Info(ctx, "shutdown", "status", "stopping database support")
-	s.DB.Close()
 }

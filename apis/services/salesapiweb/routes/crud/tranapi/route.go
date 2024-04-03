@@ -1,4 +1,4 @@
-package trangrp
+package tranapi
 
 import (
 	"net/http"
@@ -30,6 +30,6 @@ func Routes(app *web.App, cfg Config) {
 	authen := midhttp.Authenticate(cfg.Auth)
 	tran := midhttp.ExecuteInTransaction(cfg.Log, sqldb.NewBeginner(cfg.DB))
 
-	hdl := new(tranapp.New(cfg.UserCore, cfg.ProductCore))
-	app.Handle(http.MethodPost, version, "/tranexample", hdl.create, authen, tran)
+	api := newAPI(tranapp.NewCore(cfg.UserCore, cfg.ProductCore))
+	app.Handle(http.MethodPost, version, "/tranexample", api.create, authen, tran)
 }

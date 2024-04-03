@@ -2,12 +2,12 @@
 package all
 
 import (
-	"github.com/ardanlabs/service/apis/services/salesapiweb/routes/crud/homegrp"
-	"github.com/ardanlabs/service/apis/services/salesapiweb/routes/crud/productgrp"
-	"github.com/ardanlabs/service/apis/services/salesapiweb/routes/crud/trangrp"
-	"github.com/ardanlabs/service/apis/services/salesapiweb/routes/crud/usergrp"
-	"github.com/ardanlabs/service/apis/services/salesapiweb/routes/sys/checkgrp"
-	"github.com/ardanlabs/service/apis/services/salesapiweb/routes/views/vproductgrp"
+	"github.com/ardanlabs/service/apis/services/salesapiweb/routes/crud/homeapi"
+	"github.com/ardanlabs/service/apis/services/salesapiweb/routes/crud/productapi"
+	"github.com/ardanlabs/service/apis/services/salesapiweb/routes/crud/tranapi"
+	"github.com/ardanlabs/service/apis/services/salesapiweb/routes/crud/userapi"
+	"github.com/ardanlabs/service/apis/services/salesapiweb/routes/sys/checkapi"
+	"github.com/ardanlabs/service/apis/services/salesapiweb/routes/views/vproductapi"
 	"github.com/ardanlabs/service/business/api/mux"
 	"github.com/ardanlabs/service/foundation/web"
 )
@@ -22,23 +22,23 @@ type add struct{}
 
 // Add implements the RouterAdder interface.
 func (add) Add(app *web.App, cfg mux.Config) {
-	checkgrp.Routes(app, checkgrp.Config{
+	checkapi.Routes(app, checkapi.Config{
 		Build: cfg.Build,
 		Log:   cfg.Log,
 		DB:    cfg.DB,
 	})
 
-	homegrp.Routes(app, homegrp.Config{
+	homeapi.Routes(app, homeapi.Config{
 		HomeCore: cfg.BusCrud.Home,
 		Auth:     cfg.Auth,
 	})
 
-	productgrp.Routes(app, productgrp.Config{
+	productapi.Routes(app, productapi.Config{
 		ProductCore: cfg.BusCrud.Product,
 		Auth:        cfg.Auth,
 	})
 
-	trangrp.Routes(app, trangrp.Config{
+	tranapi.Routes(app, tranapi.Config{
 		UserCore:    cfg.BusCrud.User,
 		ProductCore: cfg.BusCrud.Product,
 		Log:         cfg.Log,
@@ -46,12 +46,12 @@ func (add) Add(app *web.App, cfg mux.Config) {
 		DB:          cfg.DB,
 	})
 
-	usergrp.Routes(app, usergrp.Config{
+	userapi.Routes(app, userapi.Config{
 		UserCore: cfg.BusCrud.User,
 		Auth:     cfg.Auth,
 	})
 
-	vproductgrp.Routes(app, vproductgrp.Config{
+	vproductapi.Routes(app, vproductapi.Config{
 		VProductCore: cfg.BusView.Product,
 		Auth:         cfg.Auth,
 	})

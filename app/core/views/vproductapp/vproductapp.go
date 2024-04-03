@@ -14,8 +14,8 @@ type Core struct {
 	vproduct *vproduct.Core
 }
 
-// New constructs a Handlers for use.
-func New(vproduct *vproduct.Core) *Core {
+// NewCore constructs a view product core API for use.
+func NewCore(vproduct *vproduct.Core) *Core {
 	return &Core{
 		vproduct: vproduct,
 	}

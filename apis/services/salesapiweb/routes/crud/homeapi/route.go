@@ -1,4 +1,4 @@
-package homegrp
+package homeapi
 
 import (
 	"net/http"
@@ -25,10 +25,10 @@ func Routes(app *web.App, cfg Config) {
 	ruleUserOnly := midhttp.Authorize(cfg.Auth, auth.RuleUserOnly)
 	ruleAuthorizeHome := midhttp.AuthorizeHome(cfg.Auth, cfg.HomeCore)
 
-	hdl := new(homeapp.New(cfg.HomeCore))
-	app.Handle(http.MethodGet, version, "/homes", hdl.query, authen, ruleAny)
-	app.Handle(http.MethodGet, version, "/homes/{home_id}", hdl.queryByID, authen, ruleAuthorizeHome)
-	app.Handle(http.MethodPost, version, "/homes", hdl.create, authen, ruleUserOnly)
-	app.Handle(http.MethodPut, version, "/homes/{home_id}", hdl.update, authen, ruleAuthorizeHome)
-	app.Handle(http.MethodDelete, version, "/homes/{home_id}", hdl.delete, authen, ruleAuthorizeHome)
+	api := newAPI(homeapp.NewCore(cfg.HomeCore))
+	app.Handle(http.MethodGet, version, "/homes", api.query, authen, ruleAny)
+	app.Handle(http.MethodGet, version, "/homes/{home_id}", api.queryByID, authen, ruleAuthorizeHome)
+	app.Handle(http.MethodPost, version, "/homes", api.create, authen, ruleUserOnly)
+	app.Handle(http.MethodPut, version, "/homes/{home_id}", api.update, authen, ruleAuthorizeHome)
+	app.Handle(http.MethodDelete, version, "/homes/{home_id}", api.delete, authen, ruleAuthorizeHome)
 }

@@ -1,5 +1,5 @@
-// Package usergrp maintains the group of handlers for user access.
-package usergrp
+// Package userapi maintains the web based api for user access.
+package userapi
 
 import (
 	"context"
@@ -13,23 +13,23 @@ import (
 	"github.com/ardanlabs/service/foundation/web"
 )
 
-type handlers struct {
+type api struct {
 	user *userapp.Core
 }
 
-func new(user *userapp.Core) *handlers {
-	return &handlers{
+func newAPI(user *userapp.Core) *api {
+	return &api{
 		user: user,
 	}
 }
 
-func (h *handlers) create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (api *api) create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app userapp.NewUser
 	if err := web.Decode(r, &app); err != nil {
 		return errs.New(errs.FailedPrecondition, err)
 	}
 
-	usr, err := h.user.Create(ctx, app)
+	usr, err := api.user.Create(ctx, app)
 	if err != nil {
 		return err
 	}
@@ -37,13 +37,13 @@ func (h *handlers) create(ctx context.Context, w http.ResponseWriter, r *http.Re
 	return web.Respond(ctx, w, usr, http.StatusCreated)
 }
 
-func (h *handlers) update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (api *api) update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app userapp.UpdateUser
 	if err := web.Decode(r, &app); err != nil {
 		return errs.New(errs.FailedPrecondition, err)
 	}
 
-	usr, err := h.user.Update(ctx, app)
+	usr, err := api.user.Update(ctx, app)
 	if err != nil {
 		return err
 	}
@@ -51,13 +51,13 @@ func (h *handlers) update(ctx context.Context, w http.ResponseWriter, r *http.Re
 	return web.Respond(ctx, w, usr, http.StatusOK)
 }
 
-func (h *handlers) updateRole(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (api *api) updateRole(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	var app userapp.UpdateUserRole
 	if err := web.Decode(r, &app); err != nil {
 		return errs.New(errs.FailedPrecondition, err)
 	}
 
-	usr, err := h.user.UpdateRole(ctx, app)
+	usr, err := api.user.UpdateRole(ctx, app)
 	if err != nil {
 		return err
 	}
@@ -65,21 +65,21 @@ func (h *handlers) updateRole(ctx context.Context, w http.ResponseWriter, r *htt
 	return web.Respond(ctx, w, usr, http.StatusOK)
 }
 
-func (h *handlers) delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	if err := h.user.Delete(ctx); err != nil {
+func (api *api) delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	if err := api.user.Delete(ctx); err != nil {
 		return err
 	}
 
 	return web.Respond(ctx, w, nil, http.StatusNoContent)
 }
 
-func (h *handlers) query(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (api *api) query(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	qp, err := parseQueryParams(r)
 	if err != nil {
 		return err
 	}
 
-	usr, err := h.user.Query(ctx, qp)
+	usr, err := api.user.Query(ctx, qp)
 	if err != nil {
 		return err
 	}
@@ -87,8 +87,8 @@ func (h *handlers) query(ctx context.Context, w http.ResponseWriter, r *http.Req
 	return web.Respond(ctx, w, usr, http.StatusOK)
 }
 
-func (h *handlers) queryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	usr, err := h.user.QueryByID(ctx)
+func (api *api) queryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	usr, err := api.user.QueryByID(ctx)
 	if err != nil {
 		return err
 	}
@@ -96,7 +96,7 @@ func (h *handlers) queryByID(ctx context.Context, w http.ResponseWriter, r *http
 	return web.Respond(ctx, w, usr, http.StatusOK)
 }
 
-func (h *handlers) token(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (api *api) token(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	kid := web.Param(r, "kid")
 	if kid == "" {
 		return validate.NewFieldsError("kid", errors.New("missing kid"))
@@ -112,7 +112,7 @@ func (h *handlers) token(ctx context.Context, w http.ResponseWriter, r *http.Req
 		return errs.Newf(errs.Unauthenticated, "authorize: invalid email format")
 	}
 
-	usr, err := h.user.Token(ctx, kid, *addr, pass)
+	usr, err := api.user.Token(ctx, kid, *addr, pass)
 	if err != nil {
 		return err
 	}

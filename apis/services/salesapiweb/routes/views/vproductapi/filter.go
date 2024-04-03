@@ -1,13 +1,13 @@
-package productgrp
+package vproductapi
 
 import (
 	"net/http"
 
-	"github.com/ardanlabs/service/app/core/crud/productapp"
+	"github.com/ardanlabs/service/app/core/views/vproductapp"
 	"github.com/ardanlabs/service/business/api/page"
 )
 
-func parseQueryParams(r *http.Request) (productapp.QueryParams, error) {
+func parseQueryParams(r *http.Request) (vproductapp.QueryParams, error) {
 	const (
 		orderBy          = "orderBy"
 		filterPage       = "page"
@@ -16,15 +16,16 @@ func parseQueryParams(r *http.Request) (productapp.QueryParams, error) {
 		filterByCost     = "cost"
 		filterByQuantity = "quantity"
 		filterByName     = "name"
+		filterByUserName = "user_name"
 	)
 
 	values := r.URL.Query()
 
-	var filter productapp.QueryParams
+	var filter vproductapp.QueryParams
 
 	pg, err := page.ParseHTTP(r)
 	if err != nil {
-		return productapp.QueryParams{}, err
+		return vproductapp.QueryParams{}, err
 	}
 	filter.Page = pg.Number
 	filter.Rows = pg.RowsPerPage
@@ -47,6 +48,10 @@ func parseQueryParams(r *http.Request) (productapp.QueryParams, error) {
 
 	if name := values.Get(filterByName); name != "" {
 		filter.Name = name
+	}
+
+	if userName := values.Get(filterByUserName); userName != "" {
+		filter.UserName = userName
 	}
 
 	return filter, nil

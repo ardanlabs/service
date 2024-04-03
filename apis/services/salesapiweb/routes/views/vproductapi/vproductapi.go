@@ -1,5 +1,5 @@
-// Package vproductgrp maintains the group of handlers for detailed product data.
-package vproductgrp
+// Package vproductapi maintains the web based api for product view access.
+package vproductapi
 
 import (
 	"context"
@@ -9,23 +9,23 @@ import (
 	"github.com/ardanlabs/service/foundation/web"
 )
 
-type handlers struct {
+type api struct {
 	product *vproductapp.Core
 }
 
-func new(product *vproductapp.Core) *handlers {
-	return &handlers{
+func newAPI(product *vproductapp.Core) *api {
+	return &api{
 		product: product,
 	}
 }
 
-func (h *handlers) query(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (api *api) query(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	qp, err := parseQueryParams(r)
 	if err != nil {
 		return err
 	}
 
-	hme, err := h.product.Query(ctx, qp)
+	hme, err := api.product.Query(ctx, qp)
 	if err != nil {
 		return err
 	}
