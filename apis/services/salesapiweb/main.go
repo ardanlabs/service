@@ -3,21 +3,42 @@ package main
 import (
 	"context"
 	"errors"
+	"expvar"
 	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
+	"runtime"
 	"syscall"
+	"time"
 
 	"github.com/ardanlabs/conf/v3"
 	"github.com/ardanlabs/service/apis/services/salesapiweb/build/all"
 	"github.com/ardanlabs/service/apis/services/salesapiweb/build/crud"
 	"github.com/ardanlabs/service/apis/services/salesapiweb/build/reporting"
-	"github.com/ardanlabs/service/app/service"
+	"github.com/ardanlabs/service/business/api/auth"
 	"github.com/ardanlabs/service/business/api/debug"
 	"github.com/ardanlabs/service/business/api/mux"
+	"github.com/ardanlabs/service/business/core/crud/delegate"
+	"github.com/ardanlabs/service/business/core/crud/homebus"
+	"github.com/ardanlabs/service/business/core/crud/homebus/stores/homedb"
+	"github.com/ardanlabs/service/business/core/crud/productbus"
+	"github.com/ardanlabs/service/business/core/crud/productbus/stores/productdb"
+	"github.com/ardanlabs/service/business/core/crud/userbus"
+	"github.com/ardanlabs/service/business/core/crud/userbus/stores/userdb"
+	"github.com/ardanlabs/service/business/core/views/vproductbus"
+	"github.com/ardanlabs/service/business/core/views/vproductbus/stores/vproductdb"
+	"github.com/ardanlabs/service/business/data/sqldb"
+	"github.com/ardanlabs/service/foundation/keystore"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/web"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
+	"go.opentelemetry.io/otel/propagation"
+	"go.opentelemetry.io/otel/sdk/resource"
+	"go.opentelemetry.io/otel/sdk/trace"
+	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 )
 
 /*
@@ -55,9 +76,47 @@ func main() {
 func run(ctx context.Context, log *logger.Logger) error {
 
 	// -------------------------------------------------------------------------
+	// GOMAXPROCS
+
+	log.Info(ctx, "startup", "GOMAXPROCS", runtime.GOMAXPROCS(0))
+
+	// -------------------------------------------------------------------------
 	// Configuration
 
-	cfg := service.Config{
+	cfg := struct {
+		conf.Version
+		Web struct {
+			ReadTimeout        time.Duration `conf:"default:5s"`
+			WriteTimeout       time.Duration `conf:"default:10s"`
+			IdleTimeout        time.Duration `conf:"default:120s"`
+			ShutdownTimeout    time.Duration `conf:"default:20s"`
+			APIHost            string        `conf:"default:0.0.0.0:3000"`
+			DebugHost          string        `conf:"default:0.0.0.0:4000"`
+			CORSAllowedOrigins []string      `conf:"default:*"`
+		}
+		Auth struct {
+			KeysFolder string `conf:"default:zarf/keys/"`
+			ActiveKID  string `conf:"default:54bb2165-71e1-41a6-af3e-7da4a0e1e2c1"`
+			Issuer     string `conf:"default:service project"`
+		}
+		DB struct {
+			User         string `conf:"default:postgres"`
+			Password     string `conf:"default:postgres,mask"`
+			HostPort     string `conf:"default:database-service.sales-system.svc.cluster.local"`
+			Name         string `conf:"default:postgres"`
+			MaxIdleConns int    `conf:"default:2"`
+			MaxOpenConns int    `conf:"default:0"`
+			DisableTLS   bool   `conf:"default:true"`
+		}
+		Tempo struct {
+			ReporterURI string  `conf:"default:tempo.sales-system.svc.cluster.local:4317"`
+			ServiceName string  `conf:"default:sales-api"`
+			Probability float64 `conf:"default:0.05"`
+			// Shouldn't use a high Probability value in non-developer systems.
+			// 0.05 should be enough for most systems. Some might want to have
+			// this even lower.
+		}
+	}{
 		Version: conf.Version{
 			Build: build,
 			Desc:  "Service Project",
@@ -75,12 +134,91 @@ func run(ctx context.Context, log *logger.Logger) error {
 	}
 
 	// -------------------------------------------------------------------------
-	// Construct Service
+	// App Starting
 
-	service, err := service.New(ctx, log, cfg)
+	log.Info(ctx, "starting service", "version", cfg.Version.Build)
+	defer log.Info(ctx, "shutdown complete")
+
+	out, err := conf.String(&cfg)
 	if err != nil {
-		return fmt.Errorf("constructing service: %w", err)
+		return fmt.Errorf("generating config for output: %w", err)
 	}
+	log.Info(ctx, "startup", "config", out)
+
+	expvar.NewString("build").Set(cfg.Version.Build)
+
+	// -------------------------------------------------------------------------
+	// Database Support
+
+	log.Info(ctx, "startup", "status", "initializing database support", "hostport", cfg.DB.HostPort)
+
+	db, err := sqldb.Open(sqldb.Config{
+		User:         cfg.DB.User,
+		Password:     cfg.DB.Password,
+		HostPort:     cfg.DB.HostPort,
+		Name:         cfg.DB.Name,
+		MaxIdleConns: cfg.DB.MaxIdleConns,
+		MaxOpenConns: cfg.DB.MaxOpenConns,
+		DisableTLS:   cfg.DB.DisableTLS,
+	})
+	if err != nil {
+		return fmt.Errorf("connecting to db: %w", err)
+	}
+
+	defer db.Close()
+
+	// -------------------------------------------------------------------------
+	// Initialize authentication support
+
+	log.Info(ctx, "startup", "status", "initializing authentication support")
+
+	// Load the private keys files from disk. We can assume some system like
+	// Vault has created these files already. How that happens is not our
+	// concern.
+	ks := keystore.New()
+	if err := ks.LoadRSAKeys(os.DirFS(cfg.Auth.KeysFolder)); err != nil {
+		return fmt.Errorf("reading keys: %w", err)
+	}
+
+	authCfg := auth.Config{
+		Log:       log,
+		DB:        db,
+		KeyLookup: ks,
+	}
+
+	auth, err := auth.New(authCfg)
+	if err != nil {
+		return fmt.Errorf("constructing auth: %w", err)
+	}
+
+	// -------------------------------------------------------------------------
+	// Start Tracing Support
+
+	log.Info(ctx, "startup", "status", "initializing tracing support")
+
+	traceProvider, err := startTracing(
+		cfg.Tempo.ServiceName,
+		cfg.Tempo.ReporterURI,
+		cfg.Tempo.Probability,
+	)
+	if err != nil {
+		return fmt.Errorf("starting tracing: %w", err)
+	}
+
+	defer traceProvider.Shutdown(context.Background())
+
+	tracer := traceProvider.Tracer("service")
+
+	// -------------------------------------------------------------------------
+	// Build Core APIs
+
+	log.Info(ctx, "startup", "status", "initializing business support")
+
+	delegate := delegate.New(log)
+	userBus := userbus.NewCore(log, delegate, userdb.NewStore(log, db))
+	productBus := productbus.NewCore(log, userBus, delegate, productdb.NewStore(log, db))
+	homeBus := homebus.NewCore(log, userBus, delegate, homedb.NewStore(log, db))
+	vproductBus := vproductbus.NewCore(vproductdb.NewStore(log, db))
 
 	// -------------------------------------------------------------------------
 	// Start Debug Service
@@ -105,17 +243,17 @@ func run(ctx context.Context, log *logger.Logger) error {
 		Build:    build,
 		Shutdown: shutdown,
 		Log:      log,
-		Auth:     service.Auth,
-		DB:       service.DB,
-		Tracer:   service.Tracer,
+		Auth:     auth,
+		DB:       db,
+		Tracer:   tracer,
 		BusCrud: mux.BusCrud{
-			Delegate: service.BusCrud.Delegate,
-			Home:     service.BusCrud.Home,
-			Product:  service.BusCrud.Product,
-			User:     service.BusCrud.User,
+			Delegate: delegate,
+			Home:     homeBus,
+			Product:  productBus,
+			User:     userBus,
 		},
 		BusView: mux.BusView{
-			Product: service.BusView.Product,
+			Product: vproductBus,
 		},
 	}
 
@@ -150,8 +288,6 @@ func run(ctx context.Context, log *logger.Logger) error {
 		ctx, cancel := context.WithTimeout(ctx, cfg.Web.ShutdownTimeout)
 		defer cancel()
 
-		defer service.Shutdown(ctx)
-
 		if err := api.Shutdown(ctx); err != nil {
 			api.Close()
 			return fmt.Errorf("could not stop server gracefully: %w", err)
@@ -183,4 +319,52 @@ func buildRoutes() mux.RouteAdder {
 	}
 
 	return all.Routes()
+}
+
+// startTracing configure open telemetry to be used with Grafana Tempo.
+func startTracing(serviceName string, reporterURI string, probability float64) (*trace.TracerProvider, error) {
+
+	// WARNING: The current settings are using defaults which may not be
+	// compatible with your project. Please review the documentation for
+	// opentelemetry.
+
+	exporter, err := otlptrace.New(
+		context.Background(),
+		otlptracegrpc.NewClient(
+			otlptracegrpc.WithInsecure(), // This should be configurable
+			otlptracegrpc.WithEndpoint(reporterURI),
+		),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("creating new exporter: %w", err)
+	}
+
+	traceProvider := trace.NewTracerProvider(
+		trace.WithSampler(trace.TraceIDRatioBased(probability)),
+		trace.WithBatcher(exporter,
+			trace.WithMaxExportBatchSize(trace.DefaultMaxExportBatchSize),
+			trace.WithBatchTimeout(trace.DefaultScheduleDelay*time.Millisecond),
+			trace.WithMaxExportBatchSize(trace.DefaultMaxExportBatchSize),
+		),
+		trace.WithResource(
+			resource.NewWithAttributes(
+				semconv.SchemaURL,
+				semconv.ServiceNameKey.String(serviceName),
+			),
+		),
+	)
+
+	// We must set this provider as the global provider for things to work,
+	// but we pass this provider around the program where needed to collect
+	// our traces.
+	otel.SetTracerProvider(traceProvider)
+
+	// Chooses the HTTP header formats we extract incoming trace contexts from,
+	// and the headers we set in outgoing requests.
+	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(
+		propagation.TraceContext{},
+		propagation.Baggage{},
+	))
+
+	return traceProvider, nil
 }
