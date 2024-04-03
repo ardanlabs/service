@@ -20,7 +20,7 @@ type Core struct {
 	storer Storer
 }
 
-// Core manages the set of APIs for view product access.
+// NewCore manages the set of APIs for view product access.
 func NewCore(storer Storer) *Core {
 	return &Core{
 		storer: storer,
