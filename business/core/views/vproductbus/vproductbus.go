@@ -15,12 +15,12 @@ type Storer interface {
 	Count(ctx context.Context, filter QueryFilter) (int, error)
 }
 
-// Core manages the set of APIs for user access.
+// Core manages the set of APIs for view product access.
 type Core struct {
 	storer Storer
 }
 
-// NewCore constructs a usersummary core API for use.
+// Core manages the set of APIs for view product access.
 func NewCore(storer Storer) *Core {
 	return &Core{
 		storer: storer,
