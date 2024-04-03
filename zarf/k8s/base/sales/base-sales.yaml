@@ -27,7 +27,7 @@ spec:
       initContainers:
       - name: init-migrate-seed
         image: service-image
-        command: ['./sales-admin', 'migrate-seed']
+        command: ['./admin', 'migrate-seed']
         env:
         - name: SALES_DB_USER
           valueFrom:

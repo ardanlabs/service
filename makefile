@@ -79,20 +79,6 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 #   You can use `make dev-status` to look at the status of your KIND cluster.
 
 # ==============================================================================
-# Project Tooling
-#
-#   There is tooling that can generate documentation and add a new domain to
-#   the code base. The code that is generated for a new domain provides the
-#   common code needed for all domains.
-#
-#   Generating Documentation
-#   $ go run apis/tooling/docs/main.go --browser
-#   $ go run apis/tooling/docs/main.go -out json
-#
-#   Adding New Domain To System
-#   $ go run apis/tooling/sales-admin/main.go domain sale
-
-# ==============================================================================
 # CLASS NOTES
 #
 # Kind
@@ -102,7 +88,7 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 # 	To generate a private/public key PEM file.
 # 	$ openssl genpkey -algorithm RSA -out private.pem -pkeyopt rsa_keygen_bits:2048
 # 	$ openssl rsa -pubout -in private.pem -out public.pem
-# 	$ ./sales-admin genkey
+# 	$ ./admin genkey
 #
 # Testing Coverage
 # 	$ go test -coverprofile p.out
@@ -320,10 +306,10 @@ dev-database-restart:
 # Administration
 
 migrate:
-	export SALES_DB_HOST_PORT=localhost; go run apis/tooling/sales-admin/main.go migrate
+	export SALES_DB_HOST_PORT=localhost; go run apis/tooling/admin/main.go migrate
 
 seed: migrate
-	export SALES_DB_HOST_PORT=localhost; go run apis/tooling/sales-admin/main.go seed
+	export SALES_DB_HOST_PORT=localhost; go run apis/tooling/admin/main.go seed
 
 pgcli:
 	pgcli postgresql://postgres:postgres@localhost
@@ -335,10 +321,7 @@ readiness:
 	curl -il http://localhost:3000/v1/readiness
 
 token-gen:
-	export SALES_DB_HOST_PORT=localhost; go run apis/tooling/sales-admin/main.go gentoken 5cf37266-3473-4006-984f-9325122678b7 54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
-
-docs:
-	go run apis/tooling/docs/main.go --browser
+	export SALES_DB_HOST_PORT=localhost; go run apis/tooling/admin/main.go gentoken 5cf37266-3473-4006-984f-9325122678b7 54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
 
 # ==============================================================================
 # Metrics and Tracing
@@ -442,7 +425,7 @@ load-hack:
 	hey -m GET -c 100 -n 100000 "http://localhost:3000/v1/hack"
 
 admin:
-	go run apis/tooling/sales-admin/main.go
+	go run apis/tooling/admin/main.go
 
 ready:
 	curl -il http://localhost:3000/v1/readiness

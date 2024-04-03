@@ -15,7 +15,7 @@ ARG BUILD_REF
 COPY . /service
 
 # Build the admin binary.
-WORKDIR /service/apis/tooling/sales-admin
+WORKDIR /service/apis/tooling/admin
 RUN go build -ldflags "-X main.build=${BUILD_REF}"
 
 # Build the service binary.
@@ -30,7 +30,7 @@ ARG BUILD_REF
 RUN addgroup -g 1000 -S sales && \
     adduser -u 1000 -h /service -G sales -S sales
 COPY --from=build_sales-api --chown=sales:sales /service/zarf/keys/. /service/zarf/keys/.
-COPY --from=build_sales-api --chown=sales:sales /service/apis/tooling/sales-admin/sales-admin /service/sales-admin
+COPY --from=build_sales-api --chown=sales:sales /service/apis/tooling/admin/admin /service/admin
 COPY --from=build_sales-api --chown=sales:sales /service/apis/services/salesapiweb/salesapiweb /service/salesapiweb
 WORKDIR /service
 USER sales
