@@ -4,8 +4,8 @@ package vproductapp
 import (
 	"context"
 
-	"github.com/ardanlabs/service/business/api/errs"
-	"github.com/ardanlabs/service/business/api/page"
+	"github.com/ardanlabs/service/app/api/errs"
+	"github.com/ardanlabs/service/app/api/page"
 	"github.com/ardanlabs/service/business/core/views/vproductbus"
 )
 

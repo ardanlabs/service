@@ -8,7 +8,7 @@ import (
 	"github.com/ardanlabs/service/apis/services/salesapiweb/routes/crud/userapi"
 	"github.com/ardanlabs/service/apis/services/salesapiweb/routes/sys/checkapi"
 	"github.com/ardanlabs/service/apis/services/salesapiweb/routes/views/vproductapi"
-	"github.com/ardanlabs/service/business/api/mux"
+	"github.com/ardanlabs/service/app/api/mux"
 	"github.com/ardanlabs/service/foundation/web"
 )
 

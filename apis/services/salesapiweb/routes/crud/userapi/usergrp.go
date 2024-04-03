@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"net/mail"
 
+	"github.com/ardanlabs/service/app/api/errs"
 	"github.com/ardanlabs/service/app/core/crud/userapp"
-	"github.com/ardanlabs/service/business/api/errs"
 	"github.com/ardanlabs/service/foundation/validate"
 	"github.com/ardanlabs/service/foundation/web"
 )

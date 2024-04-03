@@ -3,8 +3,8 @@ package homeapi
 import (
 	"net/http"
 
+	"github.com/ardanlabs/service/app/api/page"
 	"github.com/ardanlabs/service/app/core/crud/homeapp"
-	"github.com/ardanlabs/service/business/api/page"
 )
 
 func parseQueryParams(r *http.Request) (homeapp.QueryParams, error) {

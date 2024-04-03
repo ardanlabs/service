@@ -5,7 +5,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/ardanlabs/service/business/api/errs"
+	"github.com/ardanlabs/service/app/api/errs"
 	"github.com/ardanlabs/service/business/core/crud/productbus"
 	"github.com/ardanlabs/service/business/core/crud/userbus"
 )

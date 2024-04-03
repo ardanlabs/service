@@ -3,8 +3,8 @@ package productapi
 import (
 	"net/http"
 
+	"github.com/ardanlabs/service/app/api/page"
 	"github.com/ardanlabs/service/app/core/crud/productapp"
-	"github.com/ardanlabs/service/business/api/page"
 )
 
 func parseQueryParams(r *http.Request) (productapp.QueryParams, error) {

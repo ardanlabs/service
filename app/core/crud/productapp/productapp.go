@@ -4,9 +4,9 @@ package productapp
 import (
 	"context"
 
-	"github.com/ardanlabs/service/business/api/errs"
-	"github.com/ardanlabs/service/business/api/mid"
-	"github.com/ardanlabs/service/business/api/page"
+	"github.com/ardanlabs/service/app/api/errs"
+	"github.com/ardanlabs/service/app/api/mid"
+	"github.com/ardanlabs/service/app/api/page"
 	"github.com/ardanlabs/service/business/core/crud/productbus"
 )
 

@@ -3,8 +3,8 @@ package userapi
 import (
 	"net/http"
 
+	"github.com/ardanlabs/service/app/api/page"
 	"github.com/ardanlabs/service/app/core/crud/userapp"
-	"github.com/ardanlabs/service/business/api/page"
 )
 
 func parseQueryParams(r *http.Request) (userapp.QueryParams, error) {

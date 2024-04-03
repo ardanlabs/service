@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/ardanlabs/service/apis/services/salesapiweb/build/all"
-	"github.com/ardanlabs/service/business/api/mux"
+	"github.com/ardanlabs/service/app/api/mux"
 	"github.com/ardanlabs/service/business/data/dbtest"
 )
 

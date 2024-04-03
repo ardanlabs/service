@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/ardanlabs/service/app/api/errs"
+	"github.com/ardanlabs/service/app/api/mid"
 	"github.com/ardanlabs/service/business/api/auth"
-	"github.com/ardanlabs/service/business/api/errs"
-	"github.com/ardanlabs/service/business/api/mid"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/google/uuid"
 )

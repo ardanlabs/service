@@ -3,8 +3,8 @@ package vproductapi
 import (
 	"net/http"
 
+	"github.com/ardanlabs/service/app/api/page"
 	"github.com/ardanlabs/service/app/core/views/vproductapp"
-	"github.com/ardanlabs/service/business/api/page"
 )
 
 func parseQueryParams(r *http.Request) (vproductapp.QueryParams, error) {

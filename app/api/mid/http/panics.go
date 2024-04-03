@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"runtime/debug"
 
-	"github.com/ardanlabs/service/business/api/metrics"
+	"github.com/ardanlabs/service/app/api/metrics"
 	"github.com/ardanlabs/service/foundation/web"
 )
 

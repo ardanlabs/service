@@ -5,7 +5,7 @@ import (
 	"net/mail"
 	"time"
 
-	"github.com/ardanlabs/service/business/api/errs"
+	"github.com/ardanlabs/service/app/api/errs"
 	"github.com/ardanlabs/service/business/core/crud/userbus"
 	"github.com/ardanlabs/service/foundation/validate"
 )
