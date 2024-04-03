@@ -11,12 +11,12 @@ import (
 )
 
 type api struct {
-	tran *tranapp.Core
+	tranApp *tranapp.Core
 }
 
-func newAPI(tran *tranapp.Core) *api {
+func newAPI(tranApp *tranapp.Core) *api {
 	return &api{
-		tran: tran,
+		tranApp: tranApp,
 	}
 }
 
@@ -26,7 +26,7 @@ func (api *api) create(ctx context.Context, w http.ResponseWriter, r *http.Reque
 		return errs.New(errs.FailedPrecondition, err)
 	}
 
-	prd, err := api.tran.Create(ctx, app)
+	prd, err := api.tranApp.Create(ctx, app)
 	if err != nil {
 		return err
 	}

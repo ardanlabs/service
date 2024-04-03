@@ -11,12 +11,12 @@ import (
 )
 
 type api struct {
-	product *productapp.Core
+	productApp *productapp.Core
 }
 
-func newAPI(product *productapp.Core) *api {
+func newAPI(productApp *productapp.Core) *api {
 	return &api{
-		product: product,
+		productApp: productApp,
 	}
 }
 
@@ -26,7 +26,7 @@ func (api *api) create(ctx context.Context, w http.ResponseWriter, r *http.Reque
 		return errs.New(errs.FailedPrecondition, err)
 	}
 
-	prd, err := api.product.Create(ctx, app)
+	prd, err := api.productApp.Create(ctx, app)
 	if err != nil {
 		return err
 	}
@@ -40,7 +40,7 @@ func (api *api) update(ctx context.Context, w http.ResponseWriter, r *http.Reque
 		return errs.New(errs.FailedPrecondition, err)
 	}
 
-	prd, err := api.product.Update(ctx, app)
+	prd, err := api.productApp.Update(ctx, app)
 	if err != nil {
 		return err
 	}
@@ -49,7 +49,7 @@ func (api *api) update(ctx context.Context, w http.ResponseWriter, r *http.Reque
 }
 
 func (api *api) delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	if err := api.product.Delete(ctx); err != nil {
+	if err := api.productApp.Delete(ctx); err != nil {
 		return err
 	}
 
@@ -62,7 +62,7 @@ func (api *api) query(ctx context.Context, w http.ResponseWriter, r *http.Reques
 		return err
 	}
 
-	hme, err := api.product.Query(ctx, qp)
+	hme, err := api.productApp.Query(ctx, qp)
 	if err != nil {
 		return err
 	}
@@ -71,7 +71,7 @@ func (api *api) query(ctx context.Context, w http.ResponseWriter, r *http.Reques
 }
 
 func (api *api) queryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	hme, err := api.product.QueryByID(ctx)
+	hme, err := api.productApp.QueryByID(ctx)
 	if err != nil {
 		return err
 	}

@@ -10,12 +10,12 @@ import (
 )
 
 type api struct {
-	product *vproductapp.Core
+	vproductApp *vproductapp.Core
 }
 
-func newAPI(product *vproductapp.Core) *api {
+func newAPI(vproductApp *vproductapp.Core) *api {
 	return &api{
-		product: product,
+		vproductApp: vproductApp,
 	}
 }
 
@@ -25,7 +25,7 @@ func (api *api) query(ctx context.Context, w http.ResponseWriter, r *http.Reques
 		return err
 	}
 
-	hme, err := api.product.Query(ctx, qp)
+	hme, err := api.vproductApp.Query(ctx, qp)
 	if err != nil {
 		return err
 	}

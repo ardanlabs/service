@@ -11,12 +11,12 @@ import (
 )
 
 type api struct {
-	home *homeapp.Core
+	homeApp *homeapp.Core
 }
 
-func newAPI(home *homeapp.Core) *api {
+func newAPI(homeApp *homeapp.Core) *api {
 	return &api{
-		home: home,
+		homeApp: homeApp,
 	}
 }
 
@@ -26,7 +26,7 @@ func (api *api) create(ctx context.Context, w http.ResponseWriter, r *http.Reque
 		return errs.New(errs.FailedPrecondition, err)
 	}
 
-	hme, err := api.home.Create(ctx, app)
+	hme, err := api.homeApp.Create(ctx, app)
 	if err != nil {
 		return err
 	}
@@ -40,7 +40,7 @@ func (api *api) update(ctx context.Context, w http.ResponseWriter, r *http.Reque
 		return errs.New(errs.FailedPrecondition, err)
 	}
 
-	hme, err := api.home.Update(ctx, app)
+	hme, err := api.homeApp.Update(ctx, app)
 	if err != nil {
 		return err
 	}
@@ -49,7 +49,7 @@ func (api *api) update(ctx context.Context, w http.ResponseWriter, r *http.Reque
 }
 
 func (api *api) delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	if err := api.home.Delete(ctx); err != nil {
+	if err := api.homeApp.Delete(ctx); err != nil {
 		return err
 	}
 
@@ -62,7 +62,7 @@ func (api *api) query(ctx context.Context, w http.ResponseWriter, r *http.Reques
 		return err
 	}
 
-	hme, err := api.home.Query(ctx, qp)
+	hme, err := api.homeApp.Query(ctx, qp)
 	if err != nil {
 		return err
 	}
@@ -71,7 +71,7 @@ func (api *api) query(ctx context.Context, w http.ResponseWriter, r *http.Reques
 }
 
 func (api *api) queryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	hme, err := api.home.QueryByID(ctx)
+	hme, err := api.homeApp.QueryByID(ctx)
 	if err != nil {
 		return err
 	}
