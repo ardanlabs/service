@@ -177,11 +177,11 @@ dev-docker:
 # ==============================================================================
 # Building containers
 
-all: service metrics
+build: salesapiweb metrics
 
-service:
+salesapiweb:
 	docker build \
-		-f zarf/docker/dockerfile.service \
+		-f zarf/docker/dockerfile.salesapiweb \
 		-t $(SERVICE_IMAGE) \
 		--build-arg BUILD_REF=$(VERSION) \
 		--build-arg BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ") \
@@ -246,9 +246,9 @@ dev-apply:
 dev-restart:
 	kubectl rollout restart deployment $(APP) --namespace=$(NAMESPACE)
 
-dev-update: all dev-load dev-restart
+dev-update: build dev-load dev-restart
 
-dev-update-apply: all dev-load dev-apply
+dev-update-apply: build dev-load dev-apply
 
 dev-logs:
 	kubectl logs --namespace=$(NAMESPACE) -l app=$(APP) --all-containers=true -f --tail=100 --max-log-requests=6 | go run apis/tooling/logfmt/main.go -service=$(SERVICE_NAME)
@@ -427,10 +427,10 @@ list:
 # Class Stuff
 
 run:
-	go run apis/services/sales-api/http/main.go | go run apis/tooling/logfmt/main.go
+	go run apis/services/salesapiweb/main.go | go run apis/tooling/logfmt/main.go
 
 run-help:
-	go run apis/services/sales-api/http/main.go --help | go run apis/tooling/logfmt/main.go
+	go run apis/services/salesapiweb/main.go --help | go run apis/tooling/logfmt/main.go
 
 curl:
 	curl -il http://localhost:3000/v1/hack

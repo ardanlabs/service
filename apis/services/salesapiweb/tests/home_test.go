@@ -5,15 +5,15 @@ import (
 	"runtime/debug"
 	"testing"
 
-	"github.com/ardanlabs/service/apis/services/sales-api/http/build/all"
+	"github.com/ardanlabs/service/apis/services/salesapiweb/build/all"
 	"github.com/ardanlabs/service/business/api/mux"
 	"github.com/ardanlabs/service/business/data/dbtest"
 )
 
-func Test_User(t *testing.T) {
+func Test_Home(t *testing.T) {
 	t.Parallel()
 
-	dbTest := dbtest.NewTest(t, c, "Test_User")
+	dbTest := dbtest.NewTest(t, c, "Test_Home")
 	defer func() {
 		if r := recover(); r != nil {
 			t.Log(r)
@@ -42,24 +42,24 @@ func Test_User(t *testing.T) {
 
 	// -------------------------------------------------------------------------
 
-	sd, err := insertUserSeed(dbTest)
+	sd, err := insertHomeSeed(dbTest)
 	if err != nil {
 		t.Fatalf("Seeding error: %s", err)
 	}
 
 	// -------------------------------------------------------------------------
 
-	app.Test(t, userQuery200(sd), "user-query-200")
-	app.Test(t, userQueryByID200(sd), "user-querybyid-200")
+	app.Test(t, homeQuery200(sd), "home-query-200")
+	app.Test(t, homeQueryByID200(sd), "home-querybyid-200")
 
-	app.Test(t, userCreate200(sd), "user-create-200")
-	app.Test(t, userCreate401(sd), "user-create-401")
-	app.Test(t, userCreate400(sd), "user-create-400")
+	app.Test(t, homeCreate200(sd), "home-create-200")
+	app.Test(t, homeCreate401(sd), "home-create-401")
+	app.Test(t, homeCreate400(sd), "home-create-400")
 
-	app.Test(t, userUpdate200(sd), "user-update-200")
-	app.Test(t, userUpdate401(sd), "user-update-401")
-	app.Test(t, userUpdate400(sd), "user-update-400")
+	app.Test(t, homeUpdate200(sd), "home-update-200")
+	app.Test(t, homeUpdate401(sd), "home-update-401")
+	app.Test(t, homeUpdate400(sd), "home-update-400")
 
-	app.Test(t, userDelete200(sd), "user-delete-200")
-	app.Test(t, userDelete401(sd), "user-delete-401")
+	app.Test(t, homeDelete200(sd), "home-delete-200")
+	app.Test(t, homeDelete401(sd), "home-delete-401")
 }

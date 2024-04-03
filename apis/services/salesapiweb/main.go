@@ -10,9 +10,9 @@ import (
 	"syscall"
 
 	"github.com/ardanlabs/conf/v3"
-	"github.com/ardanlabs/service/apis/services/sales-api/http/build/all"
-	"github.com/ardanlabs/service/apis/services/sales-api/http/build/crud"
-	"github.com/ardanlabs/service/apis/services/sales-api/http/build/reporting"
+	"github.com/ardanlabs/service/apis/services/salesapiweb/build/all"
+	"github.com/ardanlabs/service/apis/services/salesapiweb/build/crud"
+	"github.com/ardanlabs/service/apis/services/salesapiweb/build/reporting"
 	"github.com/ardanlabs/service/app/service"
 	"github.com/ardanlabs/service/business/api/debug"
 	"github.com/ardanlabs/service/business/api/mux"

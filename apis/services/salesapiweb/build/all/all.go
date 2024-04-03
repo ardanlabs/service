@@ -1,12 +1,13 @@
-// Package crud binds the crud domain set of routes into the specified app.
-package crud
+// Package all binds all the routes into the specified app.
+package all
 
 import (
-	"github.com/ardanlabs/service/apis/services/sales-api/http/routes/crud/homegrp"
-	"github.com/ardanlabs/service/apis/services/sales-api/http/routes/crud/productgrp"
-	"github.com/ardanlabs/service/apis/services/sales-api/http/routes/crud/trangrp"
-	"github.com/ardanlabs/service/apis/services/sales-api/http/routes/crud/usergrp"
-	"github.com/ardanlabs/service/apis/services/sales-api/http/routes/sys/checkgrp"
+	"github.com/ardanlabs/service/apis/services/salesapiweb/routes/crud/homegrp"
+	"github.com/ardanlabs/service/apis/services/salesapiweb/routes/crud/productgrp"
+	"github.com/ardanlabs/service/apis/services/salesapiweb/routes/crud/trangrp"
+	"github.com/ardanlabs/service/apis/services/salesapiweb/routes/crud/usergrp"
+	"github.com/ardanlabs/service/apis/services/salesapiweb/routes/sys/checkgrp"
+	"github.com/ardanlabs/service/apis/services/salesapiweb/routes/views/vproductgrp"
 	"github.com/ardanlabs/service/business/api/mux"
 	"github.com/ardanlabs/service/foundation/web"
 )
@@ -48,5 +49,10 @@ func (add) Add(app *web.App, cfg mux.Config) {
 	usergrp.Routes(app, usergrp.Config{
 		UserCore: cfg.BusCrud.User,
 		Auth:     cfg.Auth,
+	})
+
+	vproductgrp.Routes(app, vproductgrp.Config{
+		VProductCore: cfg.BusView.Product,
+		Auth:         cfg.Auth,
 	})
 }
