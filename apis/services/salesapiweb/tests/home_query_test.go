@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"sort"
 
+	"github.com/ardanlabs/service/app/api/apptest"
 	"github.com/ardanlabs/service/app/api/page"
 	"github.com/ardanlabs/service/app/core/crud/homeapp"
 	"github.com/ardanlabs/service/business/core/crud/homebus"
@@ -12,7 +13,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func homeQuery200(sd dbtest.SeedData) []dbtest.AppTable {
+func homeQuery200(sd dbtest.SeedData) []apptest.AppTable {
 	hmes := make([]homebus.Home, 0, len(sd.Admins[0].Homes)+len(sd.Users[0].Homes))
 	hmes = append(hmes, sd.Admins[0].Homes...)
 	hmes = append(hmes, sd.Users[0].Homes...)
@@ -21,7 +22,7 @@ func homeQuery200(sd dbtest.SeedData) []dbtest.AppTable {
 		return hmes[i].ID.String() <= hmes[j].ID.String()
 	})
 
-	table := []dbtest.AppTable{
+	table := []apptest.AppTable{
 		{
 			Name:       "basic",
 			URL:        "/v1/homes?page=1&rows=10&orderBy=home_id,ASC",
@@ -44,8 +45,8 @@ func homeQuery200(sd dbtest.SeedData) []dbtest.AppTable {
 	return table
 }
 
-func homeQueryByID200(sd dbtest.SeedData) []dbtest.AppTable {
-	table := []dbtest.AppTable{
+func homeQueryByID200(sd dbtest.SeedData) []apptest.AppTable {
+	table := []apptest.AppTable{
 		{
 			Name:       "basic",
 			URL:        fmt.Sprintf("/v1/homes/%s", sd.Users[0].Homes[0].ID),

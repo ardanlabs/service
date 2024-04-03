@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"sort"
 
+	"github.com/ardanlabs/service/app/api/apptest"
 	"github.com/ardanlabs/service/app/api/page"
 	"github.com/ardanlabs/service/app/core/crud/productapp"
 	"github.com/ardanlabs/service/business/core/crud/productbus"
@@ -12,7 +13,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func productQuery200(sd dbtest.SeedData) []dbtest.AppTable {
+func productQuery200(sd dbtest.SeedData) []apptest.AppTable {
 	prds := make([]productbus.Product, 0, len(sd.Admins[0].Products)+len(sd.Users[0].Products))
 	prds = append(prds, sd.Admins[0].Products...)
 	prds = append(prds, sd.Users[0].Products...)
@@ -21,7 +22,7 @@ func productQuery200(sd dbtest.SeedData) []dbtest.AppTable {
 		return prds[i].ID.String() <= prds[j].ID.String()
 	})
 
-	table := []dbtest.AppTable{
+	table := []apptest.AppTable{
 		{
 			Name:       "basic",
 			URL:        "/v1/products?page=1&rows=10&orderBy=product_id,ASC",
@@ -44,8 +45,8 @@ func productQuery200(sd dbtest.SeedData) []dbtest.AppTable {
 	return table
 }
 
-func productQueryByID200(sd dbtest.SeedData) []dbtest.AppTable {
-	table := []dbtest.AppTable{
+func productQueryByID200(sd dbtest.SeedData) []apptest.AppTable {
+	table := []apptest.AppTable{
 		{
 			Name:       "basic",
 			URL:        fmt.Sprintf("/v1/products/%s", sd.Users[0].Products[0].ID),

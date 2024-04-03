@@ -4,13 +4,14 @@ import (
 	"net/http"
 	"sort"
 
+	"github.com/ardanlabs/service/app/api/apptest"
 	"github.com/ardanlabs/service/app/api/page"
 	"github.com/ardanlabs/service/app/core/views/vproductapp"
 	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/google/go-cmp/cmp"
 )
 
-func vproductQuery200(sd dbtest.SeedData) []dbtest.AppTable {
+func vproductQuery200(sd dbtest.SeedData) []apptest.AppTable {
 	prds := toAppVProducts(sd.Admins[0].User, sd.Admins[0].Products)
 	prds = append(prds, toAppVProducts(sd.Users[0].User, sd.Users[0].Products)...)
 
@@ -18,7 +19,7 @@ func vproductQuery200(sd dbtest.SeedData) []dbtest.AppTable {
 		return prds[i].ID <= prds[j].ID
 	})
 
-	table := []dbtest.AppTable{
+	table := []apptest.AppTable{
 		{
 			Name:       "basic",
 			URL:        "/v1/vproducts?page=1&rows=10&orderBy=product_id,ASC",

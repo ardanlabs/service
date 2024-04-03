@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"sort"
 
+	"github.com/ardanlabs/service/app/api/apptest"
 	"github.com/ardanlabs/service/app/api/page"
 	"github.com/ardanlabs/service/app/core/crud/userapp"
 	"github.com/ardanlabs/service/business/core/crud/userbus"
@@ -12,7 +13,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func userQuery200(sd dbtest.SeedData) []dbtest.AppTable {
+func userQuery200(sd dbtest.SeedData) []apptest.AppTable {
 	usrs := make([]userbus.User, 0, len(sd.Admins)+len(sd.Users))
 
 	for _, adm := range sd.Admins {
@@ -27,7 +28,7 @@ func userQuery200(sd dbtest.SeedData) []dbtest.AppTable {
 		return usrs[i].ID.String() <= usrs[j].ID.String()
 	})
 
-	table := []dbtest.AppTable{
+	table := []apptest.AppTable{
 		{
 			Name:       "basic",
 			URL:        "/v1/users?page=1&rows=10&orderBy=user_id,ASC&name=Name",
@@ -50,8 +51,8 @@ func userQuery200(sd dbtest.SeedData) []dbtest.AppTable {
 	return table
 }
 
-func userQueryByID200(sd dbtest.SeedData) []dbtest.AppTable {
-	table := []dbtest.AppTable{
+func userQueryByID200(sd dbtest.SeedData) []apptest.AppTable {
+	table := []apptest.AppTable{
 		{
 			Name:       "basic",
 			URL:        fmt.Sprintf("/v1/users/%s", sd.Users[0].ID),

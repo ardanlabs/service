@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/ardanlabs/service/apis/services/salesapiweb/build/all"
+	"github.com/ardanlabs/service/app/api/apptest"
 	"github.com/ardanlabs/service/app/api/mux"
 	"github.com/ardanlabs/service/business/data/dbtest"
 )
@@ -22,23 +23,21 @@ func Test_Product(t *testing.T) {
 		dbTest.Teardown()
 	}()
 
-	app := dbtest.AppTest{
-		Handler: mux.WebAPI(mux.Config{
-			Shutdown: make(chan os.Signal, 1),
-			Log:      dbTest.Log,
-			Auth:     dbTest.Auth,
-			DB:       dbTest.DB,
-			BusCrud: mux.BusCrud{
-				Delegate: dbTest.Core.BusCrud.Delegate,
-				Home:     dbTest.Core.BusCrud.Home,
-				Product:  dbTest.Core.BusCrud.Product,
-				User:     dbTest.Core.BusCrud.User,
-			},
-			BusView: mux.BusView{
-				Product: dbTest.Core.BusView.Product,
-			},
-		}, all.Routes()),
-	}
+	app := apptest.New(mux.WebAPI(mux.Config{
+		Shutdown: make(chan os.Signal, 1),
+		Log:      dbTest.Log,
+		Auth:     dbTest.Auth,
+		DB:       dbTest.DB,
+		BusCrud: mux.BusCrud{
+			Delegate: dbTest.Core.BusCrud.Delegate,
+			Home:     dbTest.Core.BusCrud.Home,
+			Product:  dbTest.Core.BusCrud.Product,
+			User:     dbTest.Core.BusCrud.User,
+		},
+		BusView: mux.BusView{
+			Product: dbTest.Core.BusView.Product,
+		},
+	}, all.Routes()))
 
 	// -------------------------------------------------------------------------
 

@@ -5,14 +5,15 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ardanlabs/service/app/api/apptest"
 	"github.com/ardanlabs/service/app/api/errs"
 	"github.com/ardanlabs/service/app/core/crud/userapp"
 	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/google/go-cmp/cmp"
 )
 
-func userUpdate200(sd dbtest.SeedData) []dbtest.AppTable {
-	table := []dbtest.AppTable{
+func userUpdate200(sd dbtest.SeedData) []apptest.AppTable {
+	table := []apptest.AppTable{
 		{
 			Name:       "basic",
 			URL:        fmt.Sprintf("/v1/users/%s", sd.Users[0].ID),
@@ -86,8 +87,8 @@ func userUpdate200(sd dbtest.SeedData) []dbtest.AppTable {
 	return table
 }
 
-func userUpdate400(sd dbtest.SeedData) []dbtest.AppTable {
-	table := []dbtest.AppTable{
+func userUpdate400(sd dbtest.SeedData) []apptest.AppTable {
+	table := []apptest.AppTable{
 		{
 			Name:       "bad-input",
 			URL:        fmt.Sprintf("/v1/users/%s", sd.Users[0].ID),
@@ -124,8 +125,8 @@ func userUpdate400(sd dbtest.SeedData) []dbtest.AppTable {
 	return table
 }
 
-func userUpdate401(sd dbtest.SeedData) []dbtest.AppTable {
-	table := []dbtest.AppTable{
+func userUpdate401(sd dbtest.SeedData) []apptest.AppTable {
+	table := []apptest.AppTable{
 		{
 			Name:       "emptytoken",
 			URL:        fmt.Sprintf("/v1/users/%s", sd.Users[0].ID),

@@ -1,4 +1,5 @@
-package dbtest
+// Package apptest contains supporting code for running app layer tests.
+package apptest
 
 import (
 	"bytes"
@@ -26,7 +27,13 @@ type AppTable struct {
 
 // AppTest contains functions for executing an app test.
 type AppTest struct {
-	http.Handler
+	handler http.Handler
+}
+
+func New(handler http.Handler) *AppTest {
+	return &AppTest{
+		handler: handler,
+	}
 }
 
 // Test performs the actual test logic based on the table data.
@@ -46,7 +53,7 @@ func (at *AppTest) Test(t *testing.T, table []AppTable, testName string) {
 			}
 
 			r.Header.Set("Authorization", "Bearer "+tt.Token)
-			at.ServeHTTP(w, r)
+			at.handler.ServeHTTP(w, r)
 
 			if w.Code != tt.StatusCode {
 				t.Fatalf("%s: Should receive a status code of %d for the response : %d", tt.Name, tt.StatusCode, w.Code)
