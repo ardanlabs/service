@@ -9,7 +9,7 @@ import (
 	"github.com/ardanlabs/service/business/core/views/vproduct"
 )
 
-// Core manages the set of handler functions for this domain.
+// Core manages the set of app layer api functions for the view product domain.
 type Core struct {
 	vproduct *vproduct.Core
 }

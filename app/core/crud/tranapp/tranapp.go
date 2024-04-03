@@ -10,7 +10,7 @@ import (
 	"github.com/ardanlabs/service/business/core/crud/user"
 )
 
-// Core manages the set of handler functions for this domain.
+// Core manages the set of app layer api functions for the tran domain.
 type Core struct {
 	user    *user.Core
 	product *product.Core

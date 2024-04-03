@@ -16,7 +16,7 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
-// Core manages the set of handler functions for this domain.
+// Core manages the set of app layer api functions for the user domain.
 type Core struct {
 	user *user.Core
 	auth *auth.Auth
