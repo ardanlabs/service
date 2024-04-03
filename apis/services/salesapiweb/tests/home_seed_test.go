@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/ardanlabs/service/business/core/crud/home"
-	"github.com/ardanlabs/service/business/core/crud/user"
+	"github.com/ardanlabs/service/business/core/crud/homebus"
+	"github.com/ardanlabs/service/business/core/crud/userbus"
 	"github.com/ardanlabs/service/business/data/dbtest"
 )
 
@@ -13,12 +13,12 @@ func insertHomeSeed(dbTest *dbtest.Test) (dbtest.SeedData, error) {
 	ctx := context.Background()
 	api := dbTest.Core.BusCrud
 
-	usrs, err := user.TestGenerateSeedUsers(ctx, 1, user.RoleUser, api.User)
+	usrs, err := userbus.TestGenerateSeedUsers(ctx, 1, userbus.RoleUser, api.User)
 	if err != nil {
 		return dbtest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}
 
-	hmes, err := home.TestGenerateSeedHomes(ctx, 2, api.Home, usrs[0].ID)
+	hmes, err := homebus.TestGenerateSeedHomes(ctx, 2, api.Home, usrs[0].ID)
 	if err != nil {
 		return dbtest.SeedData{}, fmt.Errorf("seeding homes : %w", err)
 	}
@@ -31,7 +31,7 @@ func insertHomeSeed(dbTest *dbtest.Test) (dbtest.SeedData, error) {
 
 	// -------------------------------------------------------------------------
 
-	usrs, err = user.TestGenerateSeedUsers(ctx, 1, user.RoleUser, api.User)
+	usrs, err = userbus.TestGenerateSeedUsers(ctx, 1, userbus.RoleUser, api.User)
 	if err != nil {
 		return dbtest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}
@@ -43,12 +43,12 @@ func insertHomeSeed(dbTest *dbtest.Test) (dbtest.SeedData, error) {
 
 	// -------------------------------------------------------------------------
 
-	usrs, err = user.TestGenerateSeedUsers(ctx, 1, user.RoleAdmin, api.User)
+	usrs, err = userbus.TestGenerateSeedUsers(ctx, 1, userbus.RoleAdmin, api.User)
 	if err != nil {
 		return dbtest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}
 
-	hmes, err = home.TestGenerateSeedHomes(ctx, 2, api.Home, usrs[0].ID)
+	hmes, err = homebus.TestGenerateSeedHomes(ctx, 2, api.Home, usrs[0].ID)
 	if err != nil {
 		return dbtest.SeedData{}, fmt.Errorf("seeding homes : %w", err)
 	}
@@ -61,7 +61,7 @@ func insertHomeSeed(dbTest *dbtest.Test) (dbtest.SeedData, error) {
 
 	// -------------------------------------------------------------------------
 
-	usrs, err = user.TestGenerateSeedUsers(ctx, 1, user.RoleAdmin, api.User)
+	usrs, err = userbus.TestGenerateSeedUsers(ctx, 1, userbus.RoleAdmin, api.User)
 	if err != nil {
 		return dbtest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}

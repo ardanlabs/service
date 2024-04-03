@@ -7,7 +7,7 @@ import (
 
 	"github.com/ardanlabs/service/business/api/errs"
 	"github.com/ardanlabs/service/business/api/mid"
-	"github.com/ardanlabs/service/business/core/crud/product"
+	"github.com/ardanlabs/service/business/core/crud/productbus"
 	"github.com/ardanlabs/service/foundation/validate"
 )
 
@@ -33,7 +33,7 @@ type Product struct {
 	DateUpdated string  `json:"dateUpdated"`
 }
 
-func toAppProduct(prd product.Product) Product {
+func toAppProduct(prd productbus.Product) Product {
 	return Product{
 		ID:          prd.ID.String(),
 		UserID:      prd.UserID.String(),
@@ -45,7 +45,7 @@ func toAppProduct(prd product.Product) Product {
 	}
 }
 
-func toAppProducts(prds []product.Product) []Product {
+func toAppProducts(prds []productbus.Product) []Product {
 	items := make([]Product, len(prds))
 	for i, prd := range prds {
 		items[i] = toAppProduct(prd)
@@ -61,13 +61,13 @@ type NewProduct struct {
 	Quantity int     `json:"quantity" validate:"required,gte=1"`
 }
 
-func toBusNewProduct(ctx context.Context, app NewProduct) (product.NewProduct, error) {
+func toBusNewProduct(ctx context.Context, app NewProduct) (productbus.NewProduct, error) {
 	userID, err := mid.GetUserID(ctx)
 	if err != nil {
-		return product.NewProduct{}, fmt.Errorf("getuserid: %w", err)
+		return productbus.NewProduct{}, fmt.Errorf("getuserid: %w", err)
 	}
 
-	prd := product.NewProduct{
+	prd := productbus.NewProduct{
 		UserID:   userID,
 		Name:     app.Name,
 		Cost:     app.Cost,
@@ -93,8 +93,8 @@ type UpdateProduct struct {
 	Quantity *int     `json:"quantity" validate:"omitempty,gte=1"`
 }
 
-func toBusUpdateProduct(app UpdateProduct) product.UpdateProduct {
-	core := product.UpdateProduct{
+func toBusUpdateProduct(app UpdateProduct) productbus.UpdateProduct {
+	core := productbus.UpdateProduct{
 		Name:     app.Name,
 		Cost:     app.Cost,
 		Quantity: app.Quantity,

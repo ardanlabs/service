@@ -12,32 +12,32 @@ import (
 	"github.com/ardanlabs/service/business/api/errs"
 	"github.com/ardanlabs/service/business/api/mid"
 	"github.com/ardanlabs/service/business/api/page"
-	"github.com/ardanlabs/service/business/core/crud/user"
+	"github.com/ardanlabs/service/business/core/crud/userbus"
 	"github.com/golang-jwt/jwt/v4"
 )
 
 // Core manages the set of app layer api functions for the user domain.
 type Core struct {
-	user *user.Core
-	auth *auth.Auth
+	userBus *userbus.Core
+	auth    *auth.Auth
 }
 
 // NewCore constructs a user core API for use.
-func NewCore(user *user.Core, auth *auth.Auth) *Core {
+func NewCore(userBus *userbus.Core, auth *auth.Auth) *Core {
 	return &Core{
-		user: user,
-		auth: auth,
+		userBus: userBus,
+		auth:    auth,
 	}
 }
 
 // Token provides an API token for the authenticated user.
 func (c *Core) Token(ctx context.Context, kid string, addr mail.Address, password string) (Token, error) {
-	usr, err := c.user.Authenticate(ctx, addr, password)
+	usr, err := c.userBus.Authenticate(ctx, addr, password)
 	if err != nil {
 		switch {
-		case errors.Is(err, user.ErrNotFound):
+		case errors.Is(err, userbus.ErrNotFound):
 			return Token{}, errs.New(errs.FailedPrecondition, err)
-		case errors.Is(err, user.ErrAuthenticationFailure):
+		case errors.Is(err, userbus.ErrAuthenticationFailure):
 			return Token{}, errs.New(errs.Unauthenticated, err)
 		default:
 			return Token{}, fmt.Errorf("authenticate: %w", err)
@@ -69,10 +69,10 @@ func (c *Core) Create(ctx context.Context, app NewUser) (User, error) {
 		return User{}, errs.New(errs.FailedPrecondition, err)
 	}
 
-	usr, err := c.user.Create(ctx, nc)
+	usr, err := c.userBus.Create(ctx, nc)
 	if err != nil {
-		if errors.Is(err, user.ErrUniqueEmail) {
-			return User{}, errs.New(errs.Aborted, user.ErrUniqueEmail)
+		if errors.Is(err, userbus.ErrUniqueEmail) {
+			return User{}, errs.New(errs.Aborted, userbus.ErrUniqueEmail)
 		}
 		return User{}, errs.Newf(errs.Internal, "create: usr[%+v]: %s", usr, err)
 	}
@@ -92,7 +92,7 @@ func (c *Core) Update(ctx context.Context, app UpdateUser) (User, error) {
 		return User{}, errs.Newf(errs.Internal, "user missing in context: %s", err)
 	}
 
-	updUsr, err := c.user.Update(ctx, usr, uu)
+	updUsr, err := c.userBus.Update(ctx, usr, uu)
 	if err != nil {
 		return User{}, errs.Newf(errs.Internal, "update: userID[%s] uu[%+v]: %s", usr.ID, uu, err)
 	}
@@ -112,7 +112,7 @@ func (c *Core) UpdateRole(ctx context.Context, app UpdateUserRole) (User, error)
 		return User{}, errs.Newf(errs.Internal, "user missing in context: %s", err)
 	}
 
-	updUsr, err := c.user.Update(ctx, usr, uu)
+	updUsr, err := c.userBus.Update(ctx, usr, uu)
 	if err != nil {
 		return User{}, errs.Newf(errs.Internal, "updaterole: userID[%s] uu[%+v]: %s", usr.ID, uu, err)
 	}
@@ -127,7 +127,7 @@ func (c *Core) Delete(ctx context.Context) error {
 		return errs.Newf(errs.Internal, "userID missing in context: %s", err)
 	}
 
-	if err := c.user.Delete(ctx, usr); err != nil {
+	if err := c.userBus.Delete(ctx, usr); err != nil {
 		return errs.Newf(errs.Internal, "delete: userID[%s]: %s", usr.ID, err)
 	}
 
@@ -150,12 +150,12 @@ func (c *Core) Query(ctx context.Context, qp QueryParams) (page.Document[User], 
 		return page.Document[User]{}, err
 	}
 
-	usrs, err := c.user.Query(ctx, filter, orderBy, qp.Page, qp.Rows)
+	usrs, err := c.userBus.Query(ctx, filter, orderBy, qp.Page, qp.Rows)
 	if err != nil {
 		return page.Document[User]{}, errs.Newf(errs.Internal, "query: %s", err)
 	}
 
-	total, err := c.user.Count(ctx, filter)
+	total, err := c.userBus.Count(ctx, filter)
 	if err != nil {
 		return page.Document[User]{}, errs.Newf(errs.Internal, "count: %s", err)
 	}

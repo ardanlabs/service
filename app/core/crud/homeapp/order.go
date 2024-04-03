@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"github.com/ardanlabs/service/business/api/order"
-	"github.com/ardanlabs/service/business/core/crud/home"
+	"github.com/ardanlabs/service/business/core/crud/homebus"
 	"github.com/ardanlabs/service/foundation/validate"
 )
 
@@ -16,9 +16,9 @@ func parseOrder(qp QueryParams) (order.By, error) {
 	)
 
 	var orderByFields = map[string]string{
-		orderByID:     home.OrderByID,
-		orderByType:   home.OrderByType,
-		orderByUserID: home.OrderByUserID,
+		orderByID:     homebus.OrderByID,
+		orderByType:   homebus.OrderByType,
+		orderByUserID: homebus.OrderByUserID,
 	}
 
 	orderBy, err := order.Parse(qp.OrderBy, order.NewBy(orderByID, order.ASC))

@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/ardanlabs/service/business/core/crud/user"
+	"github.com/ardanlabs/service/business/core/crud/userbus"
 	"github.com/ardanlabs/service/business/data/dbtest"
 )
 
@@ -12,7 +12,7 @@ func insertUserSeed(dbTest *dbtest.Test) (dbtest.SeedData, error) {
 	ctx := context.Background()
 	api := dbTest.Core.BusCrud
 
-	usrs, err := user.TestGenerateSeedUsers(ctx, 2, user.RoleAdmin, api.User)
+	usrs, err := userbus.TestGenerateSeedUsers(ctx, 2, userbus.RoleAdmin, api.User)
 	if err != nil {
 		return dbtest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}
@@ -29,7 +29,7 @@ func insertUserSeed(dbTest *dbtest.Test) (dbtest.SeedData, error) {
 
 	// -------------------------------------------------------------------------
 
-	usrs, err = user.TestGenerateSeedUsers(ctx, 2, user.RoleUser, api.User)
+	usrs, err = userbus.TestGenerateSeedUsers(ctx, 2, userbus.RoleUser, api.User)
 	if err != nil {
 		return dbtest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}

@@ -8,9 +8,9 @@ import (
 	"github.com/ardanlabs/service/business/api/auth"
 	"github.com/ardanlabs/service/business/api/errs"
 	"github.com/ardanlabs/service/business/api/mid"
-	"github.com/ardanlabs/service/business/core/crud/home"
-	"github.com/ardanlabs/service/business/core/crud/product"
-	"github.com/ardanlabs/service/business/core/crud/user"
+	"github.com/ardanlabs/service/business/core/crud/homebus"
+	"github.com/ardanlabs/service/business/core/crud/productbus"
+	"github.com/ardanlabs/service/business/core/crud/userbus"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/google/uuid"
 )
@@ -19,7 +19,7 @@ import (
 // from the DB if a user id is specified in the call. Depending on the rule
 // specified, the userid from the claims may be compared with the specified
 // user id.
-func AuthorizeUser(a *auth.Auth, userCore *user.Core, rule string) web.MidHandler {
+func AuthorizeUser(a *auth.Auth, userBus *userbus.Core, rule string) web.MidHandler {
 	m := func(handler web.Handler) web.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 			var userID uuid.UUID
@@ -31,10 +31,10 @@ func AuthorizeUser(a *auth.Auth, userCore *user.Core, rule string) web.MidHandle
 					return errs.New(errs.Unauthenticated, ErrInvalidID)
 				}
 
-				usr, err := userCore.QueryByID(ctx, userID)
+				usr, err := userBus.QueryByID(ctx, userID)
 				if err != nil {
 					switch {
-					case errors.Is(err, user.ErrNotFound):
+					case errors.Is(err, userbus.ErrNotFound):
 						return errs.New(errs.Unauthenticated, err)
 					default:
 						return errs.Newf(errs.Unauthenticated, "querybyid: userID[%s]: %s", userID, err)
@@ -62,7 +62,7 @@ func AuthorizeUser(a *auth.Auth, userCore *user.Core, rule string) web.MidHandle
 // product from the DB if a product id is specified in the call. Depending on
 // the rule specified, the userid from the claims may be compared with the
 // specified user id from the product.
-func AuthorizeProduct(a *auth.Auth, productCore *product.Core) web.MidHandler {
+func AuthorizeProduct(a *auth.Auth, productBus *productbus.Core) web.MidHandler {
 	m := func(handler web.Handler) web.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 			var userID uuid.UUID
@@ -74,10 +74,10 @@ func AuthorizeProduct(a *auth.Auth, productCore *product.Core) web.MidHandler {
 					return errs.New(errs.Unauthenticated, ErrInvalidID)
 				}
 
-				prd, err := productCore.QueryByID(ctx, productID)
+				prd, err := productBus.QueryByID(ctx, productID)
 				if err != nil {
 					switch {
-					case errors.Is(err, product.ErrNotFound):
+					case errors.Is(err, productbus.ErrNotFound):
 						return errs.New(errs.Unauthenticated, err)
 					default:
 						return errs.Newf(errs.Internal, "querybyid: productID[%s]: %s", productID, err)
@@ -107,7 +107,7 @@ func AuthorizeProduct(a *auth.Auth, productCore *product.Core) web.MidHandler {
 // home from the DB if a home id is specified in the call. Depending on
 // the rule specified, the userid from the claims may be compared with the
 // specified user id from the home.
-func AuthorizeHome(a *auth.Auth, homeCore *home.Core) web.MidHandler {
+func AuthorizeHome(a *auth.Auth, homeBus *homebus.Core) web.MidHandler {
 	m := func(handler web.Handler) web.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 			var userID uuid.UUID
@@ -119,10 +119,10 @@ func AuthorizeHome(a *auth.Auth, homeCore *home.Core) web.MidHandler {
 					return errs.New(errs.Unauthenticated, ErrInvalidID)
 				}
 
-				hme, err := homeCore.QueryByID(ctx, homeID)
+				hme, err := homeBus.QueryByID(ctx, homeID)
 				if err != nil {
 					switch {
-					case errors.Is(err, home.ErrNotFound):
+					case errors.Is(err, homebus.ErrNotFound):
 						return errs.New(errs.Unauthenticated, err)
 					default:
 						return errs.Newf(errs.Unauthenticated, "querybyid: homeID[%s]: %s", homeID, err)

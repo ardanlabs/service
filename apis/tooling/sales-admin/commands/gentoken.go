@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/api/auth"
-	"github.com/ardanlabs/service/business/core/crud/user"
-	"github.com/ardanlabs/service/business/core/crud/user/stores/userdb"
+	"github.com/ardanlabs/service/business/core/crud/userbus"
+	"github.com/ardanlabs/service/business/core/crud/userbus/stores/userdb"
 	"github.com/ardanlabs/service/business/data/sqldb"
 	"github.com/ardanlabs/service/foundation/keystore"
 	"github.com/ardanlabs/service/foundation/logger"
@@ -32,9 +32,9 @@ func GenToken(log *logger.Logger, dbConfig sqldb.Config, keyPath string, userID 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	core := user.NewCore(log, nil, userdb.NewStore(log, db))
+	userBus := userbus.NewCore(log, nil, userdb.NewStore(log, db))
 
-	usr, err := core.QueryByID(ctx, userID)
+	usr, err := userBus.QueryByID(ctx, userID)
 	if err != nil {
 		return fmt.Errorf("retrieve user: %w", err)
 	}

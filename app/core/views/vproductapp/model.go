@@ -3,7 +3,7 @@ package vproductapp
 import (
 	"time"
 
-	"github.com/ardanlabs/service/business/core/views/vproduct"
+	"github.com/ardanlabs/service/business/core/views/vproductbus"
 )
 
 // QueryParams represents the set of possible query strings.
@@ -31,7 +31,7 @@ type Product struct {
 	UserName    string  `json:"userName"`
 }
 
-func toAppProduct(prd vproduct.Product) Product {
+func toAppProduct(prd vproductbus.Product) Product {
 	return Product{
 		ID:          prd.ID.String(),
 		UserID:      prd.UserID.String(),
@@ -44,7 +44,7 @@ func toAppProduct(prd vproduct.Product) Product {
 	}
 }
 
-func toAppProducts(prds []vproduct.Product) []Product {
+func toAppProducts(prds []vproductbus.Product) []Product {
 	items := make([]Product, len(prds))
 	for i, prd := range prds {
 		items[i] = toAppProduct(prd)

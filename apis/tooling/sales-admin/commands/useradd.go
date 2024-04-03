@@ -6,8 +6,8 @@ import (
 	"net/mail"
 	"time"
 
-	"github.com/ardanlabs/service/business/core/crud/user"
-	"github.com/ardanlabs/service/business/core/crud/user/stores/userdb"
+	"github.com/ardanlabs/service/business/core/crud/userbus"
+	"github.com/ardanlabs/service/business/core/crud/userbus/stores/userdb"
 	"github.com/ardanlabs/service/business/data/sqldb"
 	"github.com/ardanlabs/service/foundation/logger"
 )
@@ -28,22 +28,22 @@ func UserAdd(log *logger.Logger, cfg sqldb.Config, name, email, password string)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	core := user.NewCore(log, nil, userdb.NewStore(log, db))
+	userBus := userbus.NewCore(log, nil, userdb.NewStore(log, db))
 
 	addr, err := mail.ParseAddress(email)
 	if err != nil {
 		return fmt.Errorf("parsing email: %w", err)
 	}
 
-	nu := user.NewUser{
+	nu := userbus.NewUser{
 		Name:            name,
 		Email:           *addr,
 		Password:        password,
 		PasswordConfirm: password,
-		Roles:           []user.Role{user.RoleAdmin, user.RoleUser},
+		Roles:           []userbus.Role{userbus.RoleAdmin, userbus.RoleUser},
 	}
 
-	usr, err := core.Create(ctx, nu)
+	usr, err := userBus.Create(ctx, nu)
 	if err != nil {
 		return fmt.Errorf("create user: %w", err)
 	}

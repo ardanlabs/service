@@ -8,9 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ardanlabs/service/business/core/crud/product"
-	"github.com/ardanlabs/service/business/core/crud/user"
-	"github.com/ardanlabs/service/business/core/views/vproduct"
+	"github.com/ardanlabs/service/business/core/crud/productbus"
+	"github.com/ardanlabs/service/business/core/crud/userbus"
+	"github.com/ardanlabs/service/business/core/views/vproductbus"
 	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/google/go-cmp/cmp"
 )
@@ -43,12 +43,12 @@ func insertVProductSeedData(dbTest *dbtest.Test) (dbtest.SeedData, error) {
 	ctx := context.Background()
 	api := dbTest.Core.BusCrud
 
-	usrs, err := user.TestGenerateSeedUsers(ctx, 1, user.RoleUser, api.User)
+	usrs, err := userbus.TestGenerateSeedUsers(ctx, 1, userbus.RoleUser, api.User)
 	if err != nil {
 		return dbtest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}
 
-	prds, err := product.TestGenerateSeedProducts(ctx, 2, api.Product, usrs[0].ID)
+	prds, err := productbus.TestGenerateSeedProducts(ctx, 2, api.Product, usrs[0].ID)
 	if err != nil {
 		return dbtest.SeedData{}, fmt.Errorf("seeding products : %w", err)
 	}
@@ -61,12 +61,12 @@ func insertVProductSeedData(dbTest *dbtest.Test) (dbtest.SeedData, error) {
 
 	// -------------------------------------------------------------------------
 
-	usrs, err = user.TestGenerateSeedUsers(ctx, 1, user.RoleAdmin, api.User)
+	usrs, err = userbus.TestGenerateSeedUsers(ctx, 1, userbus.RoleAdmin, api.User)
 	if err != nil {
 		return dbtest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}
 
-	prds, err = product.TestGenerateSeedProducts(ctx, 2, api.Product, usrs[0].ID)
+	prds, err = productbus.TestGenerateSeedProducts(ctx, 2, api.Product, usrs[0].ID)
 	if err != nil {
 		return dbtest.SeedData{}, fmt.Errorf("seeding products : %w", err)
 	}
@@ -89,8 +89,8 @@ func insertVProductSeedData(dbTest *dbtest.Test) (dbtest.SeedData, error) {
 
 // =============================================================================
 
-func toVProduct(usr user.User, prd product.Product) vproduct.Product {
-	return vproduct.Product{
+func toVProduct(usr userbus.User, prd productbus.Product) vproductbus.Product {
+	return vproductbus.Product{
 		ID:          prd.ID,
 		UserID:      prd.UserID,
 		Name:        prd.Name,
@@ -102,8 +102,8 @@ func toVProduct(usr user.User, prd product.Product) vproduct.Product {
 	}
 }
 
-func toVProducts(usr user.User, prds []product.Product) []vproduct.Product {
-	items := make([]vproduct.Product, len(prds))
+func toVProducts(usr userbus.User, prds []productbus.Product) []vproductbus.Product {
+	items := make([]vproductbus.Product, len(prds))
 	for i, prd := range prds {
 		items[i] = toVProduct(usr, prd)
 	}
@@ -126,11 +126,11 @@ func vproductQuery(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
 			Name:    "all",
 			ExpResp: prds,
 			ExcFunc: func(ctx context.Context) any {
-				filter := vproduct.QueryFilter{
+				filter := vproductbus.QueryFilter{
 					Name: dbtest.StringPointer("Name"),
 				}
 
-				resp, err := dbt.Core.BusView.Product.Query(ctx, filter, vproduct.DefaultOrderBy, 1, 10)
+				resp, err := dbt.Core.BusView.Product.Query(ctx, filter, vproductbus.DefaultOrderBy, 1, 10)
 				if err != nil {
 					return err
 				}
@@ -138,12 +138,12 @@ func vproductQuery(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
 				return resp
 			},
 			CmpFunc: func(got any, exp any) string {
-				gotResp, exists := got.([]vproduct.Product)
+				gotResp, exists := got.([]vproductbus.Product)
 				if !exists {
 					return "error occurred"
 				}
 
-				expResp := exp.([]vproduct.Product)
+				expResp := exp.([]vproductbus.Product)
 
 				for i := range gotResp {
 					if gotResp[i].DateCreated.Format(time.RFC3339) == expResp[i].DateCreated.Format(time.RFC3339) {

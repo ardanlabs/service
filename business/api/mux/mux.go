@@ -9,10 +9,10 @@ import (
 	"github.com/ardanlabs/service/business/api/auth"
 	midhttp "github.com/ardanlabs/service/business/api/mid/http"
 	"github.com/ardanlabs/service/business/core/crud/delegate"
-	"github.com/ardanlabs/service/business/core/crud/home"
-	"github.com/ardanlabs/service/business/core/crud/product"
-	"github.com/ardanlabs/service/business/core/crud/user"
-	"github.com/ardanlabs/service/business/core/views/vproduct"
+	"github.com/ardanlabs/service/business/core/crud/homebus"
+	"github.com/ardanlabs/service/business/core/crud/productbus"
+	"github.com/ardanlabs/service/business/core/crud/userbus"
+	"github.com/ardanlabs/service/business/core/views/vproductbus"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/jmoiron/sqlx"
@@ -34,14 +34,14 @@ func WithCORS(origins []string) func(opts *Options) {
 // BusCrud represents the set of core business packages.
 type BusCrud struct {
 	Delegate *delegate.Delegate
-	Home     *home.Core
-	Product  *product.Core
-	User     *user.Core
+	Home     *homebus.Core
+	Product  *productbus.Core
+	User     *userbus.Core
 }
 
 // BusView represents the set of view business packages.
 type BusView struct {
-	Product *vproduct.Core
+	Product *vproductbus.Core
 }
 
 // Config contains all the mandatory systems required by handlers.

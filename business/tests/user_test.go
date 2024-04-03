@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ardanlabs/service/business/core/crud/user"
+	"github.com/ardanlabs/service/business/core/crud/userbus"
 	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/crypto/bcrypt"
@@ -46,7 +46,7 @@ func insertUserSeedData(dbTest *dbtest.Test) (dbtest.SeedData, error) {
 	ctx := context.Background()
 	api := dbTest.Core.BusCrud
 
-	usrs, err := user.TestGenerateSeedUsers(ctx, 2, user.RoleAdmin, api.User)
+	usrs, err := userbus.TestGenerateSeedUsers(ctx, 2, userbus.RoleAdmin, api.User)
 	if err != nil {
 		return dbtest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}
@@ -61,7 +61,7 @@ func insertUserSeedData(dbTest *dbtest.Test) (dbtest.SeedData, error) {
 
 	// -------------------------------------------------------------------------
 
-	usrs, err = user.TestGenerateSeedUsers(ctx, 2, user.RoleUser, api.User)
+	usrs, err = userbus.TestGenerateSeedUsers(ctx, 2, userbus.RoleUser, api.User)
 	if err != nil {
 		return dbtest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}
@@ -87,7 +87,7 @@ func insertUserSeedData(dbTest *dbtest.Test) (dbtest.SeedData, error) {
 // =============================================================================
 
 func userQuery(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
-	usrs := make([]user.User, 0, len(sd.Admins)+len(sd.Users))
+	usrs := make([]userbus.User, 0, len(sd.Admins)+len(sd.Users))
 
 	for _, adm := range sd.Admins {
 		usrs = append(usrs, adm.User)
@@ -106,11 +106,11 @@ func userQuery(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
 			Name:    "all",
 			ExpResp: usrs,
 			ExcFunc: func(ctx context.Context) any {
-				filter := user.QueryFilter{
+				filter := userbus.QueryFilter{
 					Name: dbtest.StringPointer("Name"),
 				}
 
-				resp, err := dbt.Core.BusCrud.User.Query(ctx, filter, user.DefaultOrderBy, 1, 10)
+				resp, err := dbt.Core.BusCrud.User.Query(ctx, filter, userbus.DefaultOrderBy, 1, 10)
 				if err != nil {
 					return err
 				}
@@ -118,12 +118,12 @@ func userQuery(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
 				return resp
 			},
 			CmpFunc: func(got any, exp any) string {
-				gotResp, exists := got.([]user.User)
+				gotResp, exists := got.([]userbus.User)
 				if !exists {
 					return "error occurred"
 				}
 
-				expResp := exp.([]user.User)
+				expResp := exp.([]userbus.User)
 
 				for i := range gotResp {
 					if gotResp[i].DateCreated.Format(time.RFC3339) == expResp[i].DateCreated.Format(time.RFC3339) {
@@ -150,12 +150,12 @@ func userQuery(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
 				return resp
 			},
 			CmpFunc: func(got any, exp any) string {
-				gotResp, exists := got.(user.User)
+				gotResp, exists := got.(userbus.User)
 				if !exists {
 					return "error occurred"
 				}
 
-				expResp := exp.(user.User)
+				expResp := exp.(userbus.User)
 
 				if gotResp.DateCreated.Format(time.RFC3339) == expResp.DateCreated.Format(time.RFC3339) {
 					expResp.DateCreated = gotResp.DateCreated
@@ -179,18 +179,18 @@ func userCreate(dbt *dbtest.Test) []dbtest.UnitTable {
 	table := []dbtest.UnitTable{
 		{
 			Name: "basic",
-			ExpResp: user.User{
+			ExpResp: userbus.User{
 				Name:       "Bill Kennedy",
 				Email:      *email,
-				Roles:      []user.Role{user.RoleAdmin},
+				Roles:      []userbus.Role{userbus.RoleAdmin},
 				Department: "IT",
 				Enabled:    true,
 			},
 			ExcFunc: func(ctx context.Context) any {
-				nu := user.NewUser{
+				nu := userbus.NewUser{
 					Name:            "Bill Kennedy",
 					Email:           *email,
-					Roles:           []user.Role{user.RoleAdmin},
+					Roles:           []userbus.Role{userbus.RoleAdmin},
 					Department:      "IT",
 					Password:        "123",
 					PasswordConfirm: "123",
@@ -204,7 +204,7 @@ func userCreate(dbt *dbtest.Test) []dbtest.UnitTable {
 				return resp
 			},
 			CmpFunc: func(got any, exp any) string {
-				gotResp, exists := got.(user.User)
+				gotResp, exists := got.(userbus.User)
 				if !exists {
 					return "error occurred"
 				}
@@ -213,7 +213,7 @@ func userCreate(dbt *dbtest.Test) []dbtest.UnitTable {
 					return err.Error()
 				}
 
-				expResp := exp.(user.User)
+				expResp := exp.(userbus.User)
 
 				expResp.ID = gotResp.ID
 				expResp.PasswordHash = gotResp.PasswordHash
@@ -234,20 +234,20 @@ func userUpdate(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
 	table := []dbtest.UnitTable{
 		{
 			Name: "basic",
-			ExpResp: user.User{
+			ExpResp: userbus.User{
 				ID:          sd.Users[0].ID,
 				Name:        "Jack Kennedy",
 				Email:       *email,
-				Roles:       []user.Role{user.RoleAdmin},
+				Roles:       []userbus.Role{userbus.RoleAdmin},
 				Department:  "IT",
 				Enabled:     true,
 				DateCreated: sd.Users[0].DateCreated,
 			},
 			ExcFunc: func(ctx context.Context) any {
-				uu := user.UpdateUser{
+				uu := userbus.UpdateUser{
 					Name:            dbtest.StringPointer("Jack Kennedy"),
 					Email:           email,
-					Roles:           []user.Role{user.RoleAdmin},
+					Roles:           []userbus.Role{userbus.RoleAdmin},
 					Department:      dbtest.StringPointer("IT"),
 					Password:        dbtest.StringPointer("1234"),
 					PasswordConfirm: dbtest.StringPointer("1234"),
@@ -261,7 +261,7 @@ func userUpdate(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
 				return resp
 			},
 			CmpFunc: func(got any, exp any) string {
-				gotResp, exists := got.(user.User)
+				gotResp, exists := got.(userbus.User)
 				if !exists {
 					return "error occurred"
 				}
@@ -270,7 +270,7 @@ func userUpdate(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
 					return err.Error()
 				}
 
-				expResp := exp.(user.User)
+				expResp := exp.(userbus.User)
 
 				expResp.PasswordHash = gotResp.PasswordHash
 				expResp.DateUpdated = gotResp.DateUpdated

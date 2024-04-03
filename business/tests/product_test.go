@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ardanlabs/service/business/core/crud/product"
-	"github.com/ardanlabs/service/business/core/crud/user"
+	"github.com/ardanlabs/service/business/core/crud/productbus"
+	"github.com/ardanlabs/service/business/core/crud/userbus"
 	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/google/go-cmp/cmp"
 )
@@ -45,12 +45,12 @@ func insertProductSeedData(dbTest *dbtest.Test) (dbtest.SeedData, error) {
 	ctx := context.Background()
 	api := dbTest.Core.BusCrud
 
-	usrs, err := user.TestGenerateSeedUsers(ctx, 1, user.RoleUser, api.User)
+	usrs, err := userbus.TestGenerateSeedUsers(ctx, 1, userbus.RoleUser, api.User)
 	if err != nil {
 		return dbtest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}
 
-	prds, err := product.TestGenerateSeedProducts(ctx, 2, api.Product, usrs[0].ID)
+	prds, err := productbus.TestGenerateSeedProducts(ctx, 2, api.Product, usrs[0].ID)
 	if err != nil {
 		return dbtest.SeedData{}, fmt.Errorf("seeding products : %w", err)
 	}
@@ -63,12 +63,12 @@ func insertProductSeedData(dbTest *dbtest.Test) (dbtest.SeedData, error) {
 
 	// -------------------------------------------------------------------------
 
-	usrs, err = user.TestGenerateSeedUsers(ctx, 1, user.RoleAdmin, api.User)
+	usrs, err = userbus.TestGenerateSeedUsers(ctx, 1, userbus.RoleAdmin, api.User)
 	if err != nil {
 		return dbtest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}
 
-	prds, err = product.TestGenerateSeedProducts(ctx, 2, api.Product, usrs[0].ID)
+	prds, err = productbus.TestGenerateSeedProducts(ctx, 2, api.Product, usrs[0].ID)
 	if err != nil {
 		return dbtest.SeedData{}, fmt.Errorf("seeding products : %w", err)
 	}
@@ -92,7 +92,7 @@ func insertProductSeedData(dbTest *dbtest.Test) (dbtest.SeedData, error) {
 // =============================================================================
 
 func productQuery(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
-	prds := make([]product.Product, 0, len(sd.Admins[0].Products)+len(sd.Users[0].Products))
+	prds := make([]productbus.Product, 0, len(sd.Admins[0].Products)+len(sd.Users[0].Products))
 	prds = append(prds, sd.Admins[0].Products...)
 	prds = append(prds, sd.Users[0].Products...)
 
@@ -105,11 +105,11 @@ func productQuery(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
 			Name:    "all",
 			ExpResp: prds,
 			ExcFunc: func(ctx context.Context) any {
-				filter := product.QueryFilter{
+				filter := productbus.QueryFilter{
 					Name: dbtest.StringPointer("Name"),
 				}
 
-				resp, err := dbt.Core.BusCrud.Product.Query(ctx, filter, product.DefaultOrderBy, 1, 10)
+				resp, err := dbt.Core.BusCrud.Product.Query(ctx, filter, productbus.DefaultOrderBy, 1, 10)
 				if err != nil {
 					return err
 				}
@@ -117,12 +117,12 @@ func productQuery(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
 				return resp
 			},
 			CmpFunc: func(got any, exp any) string {
-				gotResp, exists := got.([]product.Product)
+				gotResp, exists := got.([]productbus.Product)
 				if !exists {
 					return "error occurred"
 				}
 
-				expResp := exp.([]product.Product)
+				expResp := exp.([]productbus.Product)
 
 				for i := range gotResp {
 					if gotResp[i].DateCreated.Format(time.RFC3339) == expResp[i].DateCreated.Format(time.RFC3339) {
@@ -149,12 +149,12 @@ func productQuery(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
 				return resp
 			},
 			CmpFunc: func(got any, exp any) string {
-				gotResp, exists := got.(product.Product)
+				gotResp, exists := got.(productbus.Product)
 				if !exists {
 					return "error occurred"
 				}
 
-				expResp := exp.(product.Product)
+				expResp := exp.(productbus.Product)
 
 				if gotResp.DateCreated.Format(time.RFC3339) == expResp.DateCreated.Format(time.RFC3339) {
 					expResp.DateCreated = gotResp.DateCreated
@@ -176,14 +176,14 @@ func productCreate(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
 	table := []dbtest.UnitTable{
 		{
 			Name: "basic",
-			ExpResp: product.Product{
+			ExpResp: productbus.Product{
 				UserID:   sd.Users[0].ID,
 				Name:     "Guitar",
 				Cost:     10.34,
 				Quantity: 10,
 			},
 			ExcFunc: func(ctx context.Context) any {
-				np := product.NewProduct{
+				np := productbus.NewProduct{
 					UserID:   sd.Users[0].ID,
 					Name:     "Guitar",
 					Cost:     10.34,
@@ -198,12 +198,12 @@ func productCreate(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
 				return resp
 			},
 			CmpFunc: func(got any, exp any) string {
-				gotResp, exists := got.(product.Product)
+				gotResp, exists := got.(productbus.Product)
 				if !exists {
 					return "error occurred"
 				}
 
-				expResp := exp.(product.Product)
+				expResp := exp.(productbus.Product)
 
 				expResp.ID = gotResp.ID
 				expResp.DateCreated = gotResp.DateCreated
@@ -221,7 +221,7 @@ func productUpdate(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
 	table := []dbtest.UnitTable{
 		{
 			Name: "basic",
-			ExpResp: product.Product{
+			ExpResp: productbus.Product{
 				ID:          sd.Users[0].Products[0].ID,
 				UserID:      sd.Users[0].ID,
 				Name:        "Guitar",
@@ -231,7 +231,7 @@ func productUpdate(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
 				DateUpdated: sd.Users[0].Products[0].DateCreated,
 			},
 			ExcFunc: func(ctx context.Context) any {
-				up := product.UpdateProduct{
+				up := productbus.UpdateProduct{
 					Name:     dbtest.StringPointer("Guitar"),
 					Cost:     dbtest.FloatPointer(10.34),
 					Quantity: dbtest.IntPointer(10),
@@ -245,12 +245,12 @@ func productUpdate(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
 				return resp
 			},
 			CmpFunc: func(got any, exp any) string {
-				gotResp, exists := got.(product.Product)
+				gotResp, exists := got.(productbus.Product)
 				if !exists {
 					return "error occurred"
 				}
 
-				expResp := exp.(product.Product)
+				expResp := exp.(productbus.Product)
 
 				expResp.DateUpdated = gotResp.DateUpdated
 

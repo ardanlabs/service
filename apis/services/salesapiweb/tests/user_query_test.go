@@ -7,13 +7,13 @@ import (
 
 	"github.com/ardanlabs/service/app/core/crud/userapp"
 	"github.com/ardanlabs/service/business/api/page"
-	"github.com/ardanlabs/service/business/core/crud/user"
+	"github.com/ardanlabs/service/business/core/crud/userbus"
 	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/google/go-cmp/cmp"
 )
 
 func userQuery200(sd dbtest.SeedData) []dbtest.AppTable {
-	usrs := make([]user.User, 0, len(sd.Admins)+len(sd.Users))
+	usrs := make([]userbus.User, 0, len(sd.Admins)+len(sd.Users))
 
 	for _, adm := range sd.Admins {
 		usrs = append(usrs, adm.User)

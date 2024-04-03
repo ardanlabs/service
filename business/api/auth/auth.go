@@ -9,8 +9,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ardanlabs/service/business/core/crud/user"
-	"github.com/ardanlabs/service/business/core/crud/user/stores/userdb"
+	"github.com/ardanlabs/service/business/core/crud/userbus"
+	"github.com/ardanlabs/service/business/core/crud/userbus/stores/userdb"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
@@ -24,11 +24,11 @@ var ErrForbidden = errors.New("attempted action is not allowed")
 // Claims represents the authorization claims transmitted via a JWT.
 type Claims struct {
 	jwt.RegisteredClaims
-	Roles []user.Role `json:"roles"`
+	Roles []userbus.Role `json:"roles"`
 }
 
 // HasRole checks if the specified role exists.
-func (c Claims) HasRole(r user.Role) bool {
+func (c Claims) HasRole(r userbus.Role) bool {
 	for _, role := range c.Roles {
 		if role == r {
 			return true
@@ -57,7 +57,7 @@ type Config struct {
 // set of user claims and recreate the claims by parsing the token.
 type Auth struct {
 	keyLookup KeyLookup
-	userCore  *user.Core
+	userBus   *userbus.Core
 	method    jwt.SigningMethod
 	parser    *jwt.Parser
 	issuer    string
@@ -68,14 +68,14 @@ func New(cfg Config) (*Auth, error) {
 
 	// If a database connection is not provided, we won't perform the
 	// user enabled check.
-	var userCore *user.Core
+	var userBus *userbus.Core
 	if cfg.DB != nil {
-		userCore = user.NewCore(cfg.Log, nil, userdb.NewStore(cfg.Log, cfg.DB))
+		userBus = userbus.NewCore(cfg.Log, nil, userdb.NewStore(cfg.Log, cfg.DB))
 	}
 
 	a := Auth{
 		keyLookup: cfg.KeyLookup,
-		userCore:  userCore,
+		userBus:   userBus,
 		method:    jwt.GetSigningMethod(jwt.SigningMethodRS256.Name),
 		parser:    jwt.NewParser(jwt.WithValidMethods([]string{jwt.SigningMethodRS256.Name})),
 		issuer:    cfg.Issuer,
@@ -204,7 +204,7 @@ func (a *Auth) opaPolicyEvaluation(ctx context.Context, opaPolicy string, rule s
 // isUserEnabled hits the database and checks the user is not disabled. If the
 // no database connection was provided, this check is skipped.
 func (a *Auth) isUserEnabled(ctx context.Context, claims Claims) error {
-	if a.userCore == nil {
+	if a.userBus == nil {
 		return nil
 	}
 
@@ -213,7 +213,7 @@ func (a *Auth) isUserEnabled(ctx context.Context, claims Claims) error {
 		return fmt.Errorf("parse user: %w", err)
 	}
 
-	usr, err := a.userCore.QueryByID(ctx, userID)
+	usr, err := a.userBus.QueryByID(ctx, userID)
 	if err != nil {
 		return fmt.Errorf("query user: %w", err)
 	}

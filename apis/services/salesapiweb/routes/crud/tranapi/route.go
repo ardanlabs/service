@@ -6,8 +6,8 @@ import (
 	"github.com/ardanlabs/service/app/core/crud/tranapp"
 	"github.com/ardanlabs/service/business/api/auth"
 	midhttp "github.com/ardanlabs/service/business/api/mid/http"
-	"github.com/ardanlabs/service/business/core/crud/product"
-	"github.com/ardanlabs/service/business/core/crud/user"
+	"github.com/ardanlabs/service/business/core/crud/productbus"
+	"github.com/ardanlabs/service/business/core/crud/userbus"
 	"github.com/ardanlabs/service/business/data/sqldb"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/web"
@@ -16,11 +16,11 @@ import (
 
 // Config contains all the mandatory systems required by handlers.
 type Config struct {
-	UserCore    *user.Core
-	ProductCore *product.Core
-	Log         *logger.Logger
-	DB          *sqlx.DB
-	Auth        *auth.Auth
+	UserBus    *userbus.Core
+	ProductBus *productbus.Core
+	Log        *logger.Logger
+	DB         *sqlx.DB
+	Auth       *auth.Auth
 }
 
 // Routes adds specific routes for this group.
@@ -30,6 +30,6 @@ func Routes(app *web.App, cfg Config) {
 	authen := midhttp.Authenticate(cfg.Auth)
 	tran := midhttp.ExecuteInTransaction(cfg.Log, sqldb.NewBeginner(cfg.DB))
 
-	api := newAPI(tranapp.NewCore(cfg.UserCore, cfg.ProductCore))
+	api := newAPI(tranapp.NewCore(cfg.UserBus, cfg.ProductBus))
 	app.Handle(http.MethodPost, version, "/tranexample", api.create, authen, tran)
 }

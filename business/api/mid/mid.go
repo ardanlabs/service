@@ -7,9 +7,9 @@ import (
 	"errors"
 
 	"github.com/ardanlabs/service/business/api/auth"
-	"github.com/ardanlabs/service/business/core/crud/home"
-	"github.com/ardanlabs/service/business/core/crud/product"
-	"github.com/ardanlabs/service/business/core/crud/user"
+	"github.com/ardanlabs/service/business/core/crud/homebus"
+	"github.com/ardanlabs/service/business/core/crud/productbus"
+	"github.com/ardanlabs/service/business/core/crud/userbus"
 	"github.com/google/uuid"
 )
 
@@ -46,10 +46,10 @@ func GetUserID(ctx context.Context) (uuid.UUID, error) {
 }
 
 // GetUser returns the user from the context.
-func GetUser(ctx context.Context) (user.User, error) {
-	v, ok := ctx.Value(userKey).(user.User)
+func GetUser(ctx context.Context) (userbus.User, error) {
+	v, ok := ctx.Value(userKey).(userbus.User)
 	if !ok {
-		return user.User{}, errors.New("user not found in context")
+		return userbus.User{}, errors.New("user not found in context")
 	}
 
 	return v, nil
@@ -59,34 +59,34 @@ func SetUserID(ctx context.Context, userID uuid.UUID) context.Context {
 	return context.WithValue(ctx, userIDKey, userID)
 }
 
-func SetUser(ctx context.Context, usr user.User) context.Context {
+func SetUser(ctx context.Context, usr userbus.User) context.Context {
 	return context.WithValue(ctx, userKey, usr)
 }
 
 // GetProduct returns the product from the context.
-func GetProduct(ctx context.Context) (product.Product, error) {
-	v, ok := ctx.Value(productKey).(product.Product)
+func GetProduct(ctx context.Context) (productbus.Product, error) {
+	v, ok := ctx.Value(productKey).(productbus.Product)
 	if !ok {
-		return product.Product{}, errors.New("product not found in context")
+		return productbus.Product{}, errors.New("product not found in context")
 	}
 
 	return v, nil
 }
 
-func SetProduct(ctx context.Context, prd product.Product) context.Context {
+func SetProduct(ctx context.Context, prd productbus.Product) context.Context {
 	return context.WithValue(ctx, productKey, prd)
 }
 
 // GetHome returns the home from the context.
-func GetHome(ctx context.Context) (home.Home, error) {
-	v, ok := ctx.Value(homeKey).(home.Home)
+func GetHome(ctx context.Context) (homebus.Home, error) {
+	v, ok := ctx.Value(homeKey).(homebus.Home)
 	if !ok {
-		return home.Home{}, errors.New("home not found in context")
+		return homebus.Home{}, errors.New("home not found in context")
 	}
 
 	return v, nil
 }
 
-func SetHome(ctx context.Context, hme home.Home) context.Context {
+func SetHome(ctx context.Context, hme homebus.Home) context.Context {
 	return context.WithValue(ctx, homeKey, hme)
 }

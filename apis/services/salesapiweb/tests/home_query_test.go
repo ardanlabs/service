@@ -7,13 +7,13 @@ import (
 
 	"github.com/ardanlabs/service/app/core/crud/homeapp"
 	"github.com/ardanlabs/service/business/api/page"
-	"github.com/ardanlabs/service/business/core/crud/home"
+	"github.com/ardanlabs/service/business/core/crud/homebus"
 	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/google/go-cmp/cmp"
 )
 
 func homeQuery200(sd dbtest.SeedData) []dbtest.AppTable {
-	hmes := make([]home.Home, 0, len(sd.Admins[0].Homes)+len(sd.Users[0].Homes))
+	hmes := make([]homebus.Home, 0, len(sd.Admins[0].Homes)+len(sd.Users[0].Homes))
 	hmes = append(hmes, sd.Admins[0].Homes...)
 	hmes = append(hmes, sd.Users[0].Homes...)
 

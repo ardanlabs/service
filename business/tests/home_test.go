@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ardanlabs/service/business/core/crud/home"
-	"github.com/ardanlabs/service/business/core/crud/user"
+	"github.com/ardanlabs/service/business/core/crud/homebus"
+	"github.com/ardanlabs/service/business/core/crud/userbus"
 	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/google/go-cmp/cmp"
 )
@@ -45,12 +45,12 @@ func insertHomeSeedData(dbTest *dbtest.Test) (dbtest.SeedData, error) {
 	ctx := context.Background()
 	api := dbTest.Core.BusCrud
 
-	usrs, err := user.TestGenerateSeedUsers(ctx, 1, user.RoleUser, api.User)
+	usrs, err := userbus.TestGenerateSeedUsers(ctx, 1, userbus.RoleUser, api.User)
 	if err != nil {
 		return dbtest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}
 
-	hmes, err := home.TestGenerateSeedHomes(ctx, 2, api.Home, usrs[0].ID)
+	hmes, err := homebus.TestGenerateSeedHomes(ctx, 2, api.Home, usrs[0].ID)
 	if err != nil {
 		return dbtest.SeedData{}, fmt.Errorf("seeding homes : %w", err)
 	}
@@ -63,7 +63,7 @@ func insertHomeSeedData(dbTest *dbtest.Test) (dbtest.SeedData, error) {
 
 	// -------------------------------------------------------------------------
 
-	usrs, err = user.TestGenerateSeedUsers(ctx, 1, user.RoleUser, api.User)
+	usrs, err = userbus.TestGenerateSeedUsers(ctx, 1, userbus.RoleUser, api.User)
 	if err != nil {
 		return dbtest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}
@@ -75,12 +75,12 @@ func insertHomeSeedData(dbTest *dbtest.Test) (dbtest.SeedData, error) {
 
 	// -------------------------------------------------------------------------
 
-	usrs, err = user.TestGenerateSeedUsers(ctx, 1, user.RoleAdmin, api.User)
+	usrs, err = userbus.TestGenerateSeedUsers(ctx, 1, userbus.RoleAdmin, api.User)
 	if err != nil {
 		return dbtest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}
 
-	hmes, err = home.TestGenerateSeedHomes(ctx, 2, api.Home, usrs[0].ID)
+	hmes, err = homebus.TestGenerateSeedHomes(ctx, 2, api.Home, usrs[0].ID)
 	if err != nil {
 		return dbtest.SeedData{}, fmt.Errorf("seeding homes : %w", err)
 	}
@@ -93,7 +93,7 @@ func insertHomeSeedData(dbTest *dbtest.Test) (dbtest.SeedData, error) {
 
 	// -------------------------------------------------------------------------
 
-	usrs, err = user.TestGenerateSeedUsers(ctx, 1, user.RoleAdmin, api.User)
+	usrs, err = userbus.TestGenerateSeedUsers(ctx, 1, userbus.RoleAdmin, api.User)
 	if err != nil {
 		return dbtest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}
@@ -116,7 +116,7 @@ func insertHomeSeedData(dbTest *dbtest.Test) (dbtest.SeedData, error) {
 // =============================================================================
 
 func homeQuery(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
-	hmes := make([]home.Home, 0, len(sd.Admins[0].Homes)+len(sd.Users[0].Homes))
+	hmes := make([]homebus.Home, 0, len(sd.Admins[0].Homes)+len(sd.Users[0].Homes))
 	hmes = append(hmes, sd.Admins[0].Homes...)
 	hmes = append(hmes, sd.Users[0].Homes...)
 
@@ -129,7 +129,7 @@ func homeQuery(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
 			Name:    "all",
 			ExpResp: hmes,
 			ExcFunc: func(ctx context.Context) any {
-				resp, err := dbt.Core.BusCrud.Home.Query(ctx, home.QueryFilter{}, home.DefaultOrderBy, 1, 10)
+				resp, err := dbt.Core.BusCrud.Home.Query(ctx, homebus.QueryFilter{}, homebus.DefaultOrderBy, 1, 10)
 				if err != nil {
 					return err
 				}
@@ -137,12 +137,12 @@ func homeQuery(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
 				return resp
 			},
 			CmpFunc: func(got any, exp any) string {
-				gotResp, exists := got.([]home.Home)
+				gotResp, exists := got.([]homebus.Home)
 				if !exists {
 					return "error occurred"
 				}
 
-				expResp := exp.([]home.Home)
+				expResp := exp.([]homebus.Home)
 
 				for i := range gotResp {
 					if gotResp[i].DateCreated.Format(time.RFC3339) == expResp[i].DateCreated.Format(time.RFC3339) {
@@ -169,12 +169,12 @@ func homeQuery(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
 				return resp
 			},
 			CmpFunc: func(got any, exp any) string {
-				gotResp, exists := got.(home.Home)
+				gotResp, exists := got.(homebus.Home)
 				if !exists {
 					return "error occurred"
 				}
 
-				expResp := exp.(home.Home)
+				expResp := exp.(homebus.Home)
 
 				if gotResp.DateCreated.Format(time.RFC3339) == expResp.DateCreated.Format(time.RFC3339) {
 					expResp.DateCreated = gotResp.DateCreated
@@ -196,10 +196,10 @@ func homeCreate(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
 	table := []dbtest.UnitTable{
 		{
 			Name: "basic",
-			ExpResp: home.Home{
+			ExpResp: homebus.Home{
 				UserID: sd.Users[0].ID,
-				Type:   home.TypeSingle,
-				Address: home.Address{
+				Type:   homebus.TypeSingle,
+				Address: homebus.Address{
 					Address1: "123 Mocking Bird Lane",
 					ZipCode:  "35810",
 					City:     "Huntsville",
@@ -208,10 +208,10 @@ func homeCreate(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
 				},
 			},
 			ExcFunc: func(ctx context.Context) any {
-				nh := home.NewHome{
+				nh := homebus.NewHome{
 					UserID: sd.Users[0].ID,
-					Type:   home.TypeSingle,
-					Address: home.Address{
+					Type:   homebus.TypeSingle,
+					Address: homebus.Address{
 						Address1: "123 Mocking Bird Lane",
 						ZipCode:  "35810",
 						City:     "Huntsville",
@@ -228,12 +228,12 @@ func homeCreate(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
 				return resp
 			},
 			CmpFunc: func(got any, exp any) string {
-				gotResp, exists := got.(home.Home)
+				gotResp, exists := got.(homebus.Home)
 				if !exists {
 					return "error occurred"
 				}
 
-				expResp := exp.(home.Home)
+				expResp := exp.(homebus.Home)
 
 				expResp.ID = gotResp.ID
 				expResp.DateCreated = gotResp.DateCreated
@@ -251,11 +251,11 @@ func homeUpdate(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
 	table := []dbtest.UnitTable{
 		{
 			Name: "basic",
-			ExpResp: home.Home{
+			ExpResp: homebus.Home{
 				ID:     sd.Users[0].Homes[0].ID,
 				UserID: sd.Users[0].ID,
-				Type:   home.TypeSingle,
-				Address: home.Address{
+				Type:   homebus.TypeSingle,
+				Address: homebus.Address{
 					Address1: "123 Mocking Bird Lane",
 					Address2: "apt 105",
 					ZipCode:  "35810",
@@ -267,9 +267,9 @@ func homeUpdate(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
 				DateUpdated: sd.Users[0].Homes[0].DateCreated,
 			},
 			ExcFunc: func(ctx context.Context) any {
-				uh := home.UpdateHome{
-					Type: &home.TypeSingle,
-					Address: &home.UpdateAddress{
+				uh := homebus.UpdateHome{
+					Type: &homebus.TypeSingle,
+					Address: &homebus.UpdateAddress{
 						Address1: dbtest.StringPointer("123 Mocking Bird Lane"),
 						Address2: dbtest.StringPointer("apt 105"),
 						ZipCode:  dbtest.StringPointer("35810"),
@@ -289,12 +289,12 @@ func homeUpdate(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
 				return resp
 			},
 			CmpFunc: func(got any, exp any) string {
-				gotResp, exists := got.(home.Home)
+				gotResp, exists := got.(homebus.Home)
 				if !exists {
 					return "error occurred"
 				}
 
-				expResp := exp.(home.Home)
+				expResp := exp.(homebus.Home)
 
 				expResp.DateUpdated = gotResp.DateUpdated
 

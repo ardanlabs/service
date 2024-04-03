@@ -5,8 +5,8 @@ import (
 	"net/mail"
 	"time"
 
-	"github.com/ardanlabs/service/business/core/crud/product"
-	"github.com/ardanlabs/service/business/core/crud/user"
+	"github.com/ardanlabs/service/business/core/crud/productbus"
+	"github.com/ardanlabs/service/business/core/crud/userbus"
 	"github.com/ardanlabs/service/foundation/validate"
 )
 
@@ -21,7 +21,7 @@ type Product struct {
 	DateUpdated string  `json:"dateUpdated"`
 }
 
-func toAppProduct(prd product.Product) Product {
+func toAppProduct(prd productbus.Product) Product {
 	return Product{
 		ID:          prd.ID.String(),
 		UserID:      prd.UserID.String(),
@@ -50,22 +50,22 @@ type NewUser struct {
 	PasswordConfirm string   `json:"passwordConfirm" validate:"eqfield=Password"`
 }
 
-func toBusNewUser(app NewUser) (user.NewUser, error) {
-	roles := make([]user.Role, len(app.Roles))
+func toBusNewUser(app NewUser) (userbus.NewUser, error) {
+	roles := make([]userbus.Role, len(app.Roles))
 	for i, roleStr := range app.Roles {
-		role, err := user.ParseRole(roleStr)
+		role, err := userbus.ParseRole(roleStr)
 		if err != nil {
-			return user.NewUser{}, fmt.Errorf("parsing role: %w", err)
+			return userbus.NewUser{}, fmt.Errorf("parsing role: %w", err)
 		}
 		roles[i] = role
 	}
 
 	addr, err := mail.ParseAddress(app.Email)
 	if err != nil {
-		return user.NewUser{}, fmt.Errorf("parsing email: %w", err)
+		return userbus.NewUser{}, fmt.Errorf("parsing email: %w", err)
 	}
 
-	usr := user.NewUser{
+	usr := userbus.NewUser{
 		Name:            app.Name,
 		Email:           *addr,
 		Roles:           roles,
@@ -93,8 +93,8 @@ type NewProduct struct {
 	Quantity int     `json:"quantity" validate:"required,gte=1"`
 }
 
-func toBusNewProduct(app NewProduct) (product.NewProduct, error) {
-	prd := product.NewProduct{
+func toBusNewProduct(app NewProduct) (productbus.NewProduct, error) {
+	prd := productbus.NewProduct{
 		Name:     app.Name,
 		Cost:     app.Cost,
 		Quantity: app.Quantity,

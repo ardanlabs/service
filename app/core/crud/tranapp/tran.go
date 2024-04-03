@@ -10,19 +10,19 @@ import (
 // using a store transaction that was created via middleware.
 func (c *Core) executeUnderTransaction(ctx context.Context) (*Core, error) {
 	if tx, ok := transaction.Get(ctx); ok {
-		user, err := c.user.ExecuteUnderTransaction(tx)
+		userBus, err := c.userBus.ExecuteUnderTransaction(tx)
 		if err != nil {
 			return nil, err
 		}
 
-		product, err := c.product.ExecuteUnderTransaction(tx)
+		productBus, err := c.productBus.ExecuteUnderTransaction(tx)
 		if err != nil {
 			return nil, err
 		}
 
 		handlers := Core{
-			user:    user,
-			product: product,
+			userBus:    userBus,
+			productBus: productBus,
 		}
 
 		return &handlers, nil

@@ -7,18 +7,18 @@ import (
 	"github.com/ardanlabs/service/business/api/errs"
 	"github.com/ardanlabs/service/business/api/mid"
 	"github.com/ardanlabs/service/business/api/page"
-	"github.com/ardanlabs/service/business/core/crud/home"
+	"github.com/ardanlabs/service/business/core/crud/homebus"
 )
 
 // Core manages the set of app layer api functions for the home domain.
 type Core struct {
-	home *home.Core
+	homeBus *homebus.Core
 }
 
 // NewCore constructs a home core API for use.
-func NewCore(home *home.Core) *Core {
+func NewCore(homeBus *homebus.Core) *Core {
 	return &Core{
-		home: home,
+		homeBus: homeBus,
 	}
 }
 
@@ -29,7 +29,7 @@ func (c *Core) Create(ctx context.Context, app NewHome) (Home, error) {
 		return Home{}, errs.New(errs.FailedPrecondition, err)
 	}
 
-	hme, err := c.home.Create(ctx, nh)
+	hme, err := c.homeBus.Create(ctx, nh)
 	if err != nil {
 		return Home{}, errs.Newf(errs.Internal, "create: hme[%+v]: %s", app, err)
 	}
@@ -49,7 +49,7 @@ func (c *Core) Update(ctx context.Context, app UpdateHome) (Home, error) {
 		return Home{}, errs.Newf(errs.Internal, "home missing in context: %s", err)
 	}
 
-	updUsr, err := c.home.Update(ctx, hme, uh)
+	updUsr, err := c.homeBus.Update(ctx, hme, uh)
 	if err != nil {
 		return Home{}, errs.Newf(errs.Internal, "update: homeID[%s] uh[%+v]: %s", hme.ID, uh, err)
 	}
@@ -64,7 +64,7 @@ func (c *Core) Delete(ctx context.Context) error {
 		return errs.Newf(errs.Internal, "homeID missing in context: %s", err)
 	}
 
-	if err := c.home.Delete(ctx, hme); err != nil {
+	if err := c.homeBus.Delete(ctx, hme); err != nil {
 		return errs.Newf(errs.Internal, "delete: homeID[%s]: %s", hme.ID, err)
 	}
 
@@ -87,12 +87,12 @@ func (c *Core) Query(ctx context.Context, qp QueryParams) (page.Document[Home], 
 		return page.Document[Home]{}, err
 	}
 
-	hmes, err := c.home.Query(ctx, filter, orderBy, qp.Page, qp.Rows)
+	hmes, err := c.homeBus.Query(ctx, filter, orderBy, qp.Page, qp.Rows)
 	if err != nil {
 		return page.Document[Home]{}, errs.Newf(errs.Internal, "query: %s", err)
 	}
 
-	total, err := c.home.Count(ctx, filter)
+	total, err := c.homeBus.Count(ctx, filter)
 	if err != nil {
 		return page.Document[Home]{}, errs.Newf(errs.Internal, "count: %s", err)
 	}

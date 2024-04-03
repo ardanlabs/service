@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/ardanlabs/service/business/core/crud/user"
-	"github.com/ardanlabs/service/business/core/crud/user/stores/userdb"
+	"github.com/ardanlabs/service/business/core/crud/userbus"
+	"github.com/ardanlabs/service/business/core/crud/userbus/stores/userdb"
 	"github.com/ardanlabs/service/business/data/sqldb"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/go-json-experiment/json"
@@ -35,9 +35,9 @@ func Users(log *logger.Logger, cfg sqldb.Config, pageNumber string, rowsPerPage 
 		return fmt.Errorf("converting rows per page: %w", err)
 	}
 
-	core := user.NewCore(log, nil, userdb.NewStore(log, db))
+	userBus := userbus.NewCore(log, nil, userdb.NewStore(log, db))
 
-	users, err := core.Query(ctx, user.QueryFilter{}, user.DefaultOrderBy, page, rows)
+	users, err := userBus.Query(ctx, userbus.QueryFilter{}, userbus.DefaultOrderBy, page, rows)
 	if err != nil {
 		return fmt.Errorf("retrieve users: %w", err)
 	}

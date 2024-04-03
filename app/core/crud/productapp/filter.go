@@ -3,18 +3,18 @@ package productapp
 import (
 	"strconv"
 
-	"github.com/ardanlabs/service/business/core/crud/product"
+	"github.com/ardanlabs/service/business/core/crud/productbus"
 	"github.com/ardanlabs/service/foundation/validate"
 	"github.com/google/uuid"
 )
 
-func parseFilter(qp QueryParams) (product.QueryFilter, error) {
-	var filter product.QueryFilter
+func parseFilter(qp QueryParams) (productbus.QueryFilter, error) {
+	var filter productbus.QueryFilter
 
 	if qp.ID != "" {
 		id, err := uuid.Parse(qp.ID)
 		if err != nil {
-			return product.QueryFilter{}, validate.NewFieldsError("product_id", err)
+			return productbus.QueryFilter{}, validate.NewFieldsError("product_id", err)
 		}
 		filter.WithProductID(id)
 	}
@@ -26,7 +26,7 @@ func parseFilter(qp QueryParams) (product.QueryFilter, error) {
 	if qp.Cost != "" {
 		cst, err := strconv.ParseFloat(qp.Cost, 64)
 		if err != nil {
-			return product.QueryFilter{}, validate.NewFieldsError("cost", err)
+			return productbus.QueryFilter{}, validate.NewFieldsError("cost", err)
 		}
 		filter.WithCost(cst)
 	}
@@ -34,7 +34,7 @@ func parseFilter(qp QueryParams) (product.QueryFilter, error) {
 	if qp.Quantity != "" {
 		qua, err := strconv.ParseInt(qp.Quantity, 10, 64)
 		if err != nil {
-			return product.QueryFilter{}, validate.NewFieldsError("quantity", err)
+			return productbus.QueryFilter{}, validate.NewFieldsError("quantity", err)
 		}
 		filter.WithQuantity(int(qua))
 	}

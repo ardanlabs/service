@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/api/errs"
-	"github.com/ardanlabs/service/business/core/crud/user"
+	"github.com/ardanlabs/service/business/core/crud/userbus"
 	"github.com/ardanlabs/service/foundation/validate"
 )
 
@@ -35,7 +35,7 @@ type User struct {
 	DateUpdated  string   `json:"dateUpdated"`
 }
 
-func toAppUser(usr user.User) User {
+func toAppUser(usr userbus.User) User {
 	roles := make([]string, len(usr.Roles))
 	for i, role := range usr.Roles {
 		roles[i] = role.Name()
@@ -54,7 +54,7 @@ func toAppUser(usr user.User) User {
 	}
 }
 
-func toAppUsers(users []user.User) []User {
+func toAppUsers(users []userbus.User) []User {
 	items := make([]User, len(users))
 	for i, usr := range users {
 		items[i] = toAppUser(usr)
@@ -73,22 +73,22 @@ type NewUser struct {
 	PasswordConfirm string   `json:"passwordConfirm" validate:"eqfield=Password"`
 }
 
-func toBusNewUser(app NewUser) (user.NewUser, error) {
-	roles := make([]user.Role, len(app.Roles))
+func toBusNewUser(app NewUser) (userbus.NewUser, error) {
+	roles := make([]userbus.Role, len(app.Roles))
 	for i, roleStr := range app.Roles {
-		role, err := user.ParseRole(roleStr)
+		role, err := userbus.ParseRole(roleStr)
 		if err != nil {
-			return user.NewUser{}, fmt.Errorf("parse: %w", err)
+			return userbus.NewUser{}, fmt.Errorf("parse: %w", err)
 		}
 		roles[i] = role
 	}
 
 	addr, err := mail.ParseAddress(app.Email)
 	if err != nil {
-		return user.NewUser{}, fmt.Errorf("parse: %w", err)
+		return userbus.NewUser{}, fmt.Errorf("parse: %w", err)
 	}
 
-	usr := user.NewUser{
+	usr := userbus.NewUser{
 		Name:            app.Name,
 		Email:           *addr,
 		Roles:           roles,
@@ -114,20 +114,20 @@ type UpdateUserRole struct {
 	Roles []string `json:"roles"`
 }
 
-func toBusUpdateUserRole(app UpdateUserRole) (user.UpdateUser, error) {
-	var roles []user.Role
+func toBusUpdateUserRole(app UpdateUserRole) (userbus.UpdateUser, error) {
+	var roles []userbus.Role
 	if app.Roles != nil {
-		roles = make([]user.Role, len(app.Roles))
+		roles = make([]userbus.Role, len(app.Roles))
 		for i, roleStr := range app.Roles {
-			role, err := user.ParseRole(roleStr)
+			role, err := userbus.ParseRole(roleStr)
 			if err != nil {
-				return user.UpdateUser{}, fmt.Errorf("parse: %w", err)
+				return userbus.UpdateUser{}, fmt.Errorf("parse: %w", err)
 			}
 			roles[i] = role
 		}
 	}
 
-	nu := user.UpdateUser{
+	nu := userbus.UpdateUser{
 		Roles: roles,
 	}
 
@@ -144,17 +144,17 @@ type UpdateUser struct {
 	Enabled         *bool   `json:"enabled"`
 }
 
-func toBusUpdateUser(app UpdateUser) (user.UpdateUser, error) {
+func toBusUpdateUser(app UpdateUser) (userbus.UpdateUser, error) {
 	var addr *mail.Address
 	if app.Email != nil {
 		var err error
 		addr, err = mail.ParseAddress(*app.Email)
 		if err != nil {
-			return user.UpdateUser{}, fmt.Errorf("parse: %w", err)
+			return userbus.UpdateUser{}, fmt.Errorf("parse: %w", err)
 		}
 	}
 
-	nu := user.UpdateUser{
+	nu := userbus.UpdateUser{
 		Name:            app.Name,
 		Email:           addr,
 		Department:      app.Department,

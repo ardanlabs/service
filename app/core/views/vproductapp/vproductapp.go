@@ -6,18 +6,18 @@ import (
 
 	"github.com/ardanlabs/service/business/api/errs"
 	"github.com/ardanlabs/service/business/api/page"
-	"github.com/ardanlabs/service/business/core/views/vproduct"
+	"github.com/ardanlabs/service/business/core/views/vproductbus"
 )
 
 // Core manages the set of app layer api functions for the view product domain.
 type Core struct {
-	vproduct *vproduct.Core
+	vproductBus *vproductbus.Core
 }
 
 // NewCore constructs a view product core API for use.
-func NewCore(vproduct *vproduct.Core) *Core {
+func NewCore(vproductBus *vproductbus.Core) *Core {
 	return &Core{
-		vproduct: vproduct,
+		vproductBus: vproductBus,
 	}
 }
 
@@ -37,12 +37,12 @@ func (c *Core) Query(ctx context.Context, qp QueryParams) (page.Document[Product
 		return page.Document[Product]{}, err
 	}
 
-	prds, err := c.vproduct.Query(ctx, filter, orderBy, qp.Page, qp.Rows)
+	prds, err := c.vproductBus.Query(ctx, filter, orderBy, qp.Page, qp.Rows)
 	if err != nil {
 		return page.Document[Product]{}, errs.Newf(errs.Internal, "query: %s", err)
 	}
 
-	total, err := c.vproduct.Count(ctx, filter)
+	total, err := c.vproductBus.Count(ctx, filter)
 	if err != nil {
 		return page.Document[Product]{}, errs.Newf(errs.Internal, "count: %s", err)
 	}

@@ -8,16 +8,16 @@ import (
 	"github.com/ardanlabs/service/app/core/crud/userapp"
 	"github.com/ardanlabs/service/app/core/views/vproductapp"
 	"github.com/ardanlabs/service/business/api/errs"
-	"github.com/ardanlabs/service/business/core/crud/home"
-	"github.com/ardanlabs/service/business/core/crud/product"
-	"github.com/ardanlabs/service/business/core/crud/user"
+	"github.com/ardanlabs/service/business/core/crud/homebus"
+	"github.com/ardanlabs/service/business/core/crud/productbus"
+	"github.com/ardanlabs/service/business/core/crud/userbus"
 )
 
 func toErrorPtr(err errs.Error) *errs.Error {
 	return &err
 }
 
-func toAppUser(usr user.User) userapp.User {
+func toAppUser(usr userbus.User) userapp.User {
 	roles := make([]string, len(usr.Roles))
 	for i, role := range usr.Roles {
 		roles[i] = role.Name()
@@ -36,7 +36,7 @@ func toAppUser(usr user.User) userapp.User {
 	}
 }
 
-func toAppUsers(users []user.User) []userapp.User {
+func toAppUsers(users []userbus.User) []userapp.User {
 	items := make([]userapp.User, len(users))
 	for i, usr := range users {
 		items[i] = toAppUser(usr)
@@ -45,12 +45,12 @@ func toAppUsers(users []user.User) []userapp.User {
 	return items
 }
 
-func toAppUserPtr(usr user.User) *userapp.User {
+func toAppUserPtr(usr userbus.User) *userapp.User {
 	appUsr := toAppUser(usr)
 	return &appUsr
 }
 
-func toAppProduct(prd product.Product) productapp.Product {
+func toAppProduct(prd productbus.Product) productapp.Product {
 	return productapp.Product{
 		ID:          prd.ID.String(),
 		UserID:      prd.UserID.String(),
@@ -62,12 +62,12 @@ func toAppProduct(prd product.Product) productapp.Product {
 	}
 }
 
-func toAppProductPtr(prd product.Product) *productapp.Product {
+func toAppProductPtr(prd productbus.Product) *productapp.Product {
 	appPrd := toAppProduct(prd)
 	return &appPrd
 }
 
-func toAppProducts(prds []product.Product) []productapp.Product {
+func toAppProducts(prds []productbus.Product) []productapp.Product {
 	items := make([]productapp.Product, len(prds))
 	for i, prd := range prds {
 		items[i] = toAppProduct(prd)
@@ -76,7 +76,7 @@ func toAppProducts(prds []product.Product) []productapp.Product {
 	return items
 }
 
-func toAppHome(hme home.Home) homeapp.Home {
+func toAppHome(hme homebus.Home) homeapp.Home {
 	return homeapp.Home{
 		ID:     hme.ID.String(),
 		UserID: hme.UserID.String(),
@@ -94,7 +94,7 @@ func toAppHome(hme home.Home) homeapp.Home {
 	}
 }
 
-func toAppHomes(homes []home.Home) []homeapp.Home {
+func toAppHomes(homes []homebus.Home) []homeapp.Home {
 	items := make([]homeapp.Home, len(homes))
 	for i, hme := range homes {
 		items[i] = toAppHome(hme)
@@ -103,12 +103,12 @@ func toAppHomes(homes []home.Home) []homeapp.Home {
 	return items
 }
 
-func toAppHomePtr(hme home.Home) *homeapp.Home {
+func toAppHomePtr(hme homebus.Home) *homeapp.Home {
 	appHme := toAppHome(hme)
 	return &appHme
 }
 
-func toAppVProduct(usr user.User, prd product.Product) vproductapp.Product {
+func toAppVProduct(usr userbus.User, prd productbus.Product) vproductapp.Product {
 	return vproductapp.Product{
 		ID:          prd.ID.String(),
 		UserID:      prd.UserID.String(),
@@ -121,7 +121,7 @@ func toAppVProduct(usr user.User, prd product.Product) vproductapp.Product {
 	}
 }
 
-func toAppVProducts(usr user.User, prds []product.Product) []vproductapp.Product {
+func toAppVProducts(usr userbus.User, prds []productbus.Product) []vproductapp.Product {
 	items := make([]vproductapp.Product, len(prds))
 	for i, prd := range prds {
 		items[i] = toAppVProduct(usr, prd)
