@@ -5,7 +5,7 @@ import (
 	"runtime/debug"
 	"testing"
 
-	"github.com/ardanlabs/service/apis/services/sales/build/all"
+	"github.com/ardanlabs/service/apis/services/sales/http/build/all"
 	"github.com/ardanlabs/service/app/api/apptest"
 	"github.com/ardanlabs/service/app/api/mux"
 	"github.com/ardanlabs/service/business/data/dbtest"
