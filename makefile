@@ -124,10 +124,10 @@ KIND_CLUSTER    := ardan-starter-cluster
 NAMESPACE       := sales-system
 APP             := sales
 BASE_IMAGE_NAME := localhost/ardanlabs/service
-SERVICE_NAME    := sales-api
+SERVICE_NAME    := sales
 VERSION         := 0.0.1
 SERVICE_IMAGE   := $(BASE_IMAGE_NAME)/$(SERVICE_NAME):$(VERSION)
-METRICS_IMAGE   := $(BASE_IMAGE_NAME)/$(SERVICE_NAME)-metrics:$(VERSION)
+METRICS_IMAGE   := $(BASE_IMAGE_NAME)/metrics:$(VERSION)
 
 # VERSION       := "0.0.1-$(shell git rev-parse --short HEAD)"
 
@@ -163,11 +163,11 @@ dev-docker:
 # ==============================================================================
 # Building containers
 
-build: salesapiweb metrics
+build: sales metrics
 
-salesapiweb:
+sales:
 	docker build \
-		-f zarf/docker/dockerfile.salesapiweb \
+		-f zarf/docker/dockerfile.sales \
 		-t $(SERVICE_IMAGE) \
 		--build-arg BUILD_REF=$(VERSION) \
 		--build-arg BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ") \
@@ -410,10 +410,10 @@ list:
 # Class Stuff
 
 run:
-	go run apis/services/salesapiweb/main.go | go run apis/tooling/logfmt/main.go
+	go run apis/services/sales/main.go | go run apis/tooling/logfmt/main.go
 
 run-help:
-	go run apis/services/salesapiweb/main.go --help | go run apis/tooling/logfmt/main.go
+	go run apis/services/sales/main.go --help | go run apis/tooling/logfmt/main.go
 
 curl:
 	curl -il http://localhost:3000/v1/hack

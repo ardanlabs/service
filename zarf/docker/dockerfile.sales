@@ -19,7 +19,7 @@ WORKDIR /service/apis/tooling/admin
 RUN go build -ldflags "-X main.build=${BUILD_REF}"
 
 # Build the service binary.
-WORKDIR /service/apis/services/salesapiweb
+WORKDIR /service/apis/services/sales
 RUN go build -ldflags "-X main.build=${BUILD_REF}"
 
 
@@ -31,14 +31,14 @@ RUN addgroup -g 1000 -S sales && \
     adduser -u 1000 -h /service -G sales -S sales
 COPY --from=build_sales-api --chown=sales:sales /service/zarf/keys/. /service/zarf/keys/.
 COPY --from=build_sales-api --chown=sales:sales /service/apis/tooling/admin/admin /service/admin
-COPY --from=build_sales-api --chown=sales:sales /service/apis/services/salesapiweb/salesapiweb /service/salesapiweb
+COPY --from=build_sales-api --chown=sales:sales /service/apis/services/sales/sales /service/sales
 WORKDIR /service
 USER sales
-CMD ["./salesapiweb"]
+CMD ["./sales"]
 
 LABEL org.opencontainers.image.created="${BUILD_DATE}" \
       org.opencontainers.image.title="sales-api" \
       org.opencontainers.image.authors="William Kennedy <bill@ardanlabs.com>" \
-      org.opencontainers.image.source="https://github.com/ardanlabs/service/tree/master/apis/services/salesapiweb" \
+      org.opencontainers.image.source="https://github.com/ardanlabs/service/tree/master/apis/services/sales" \
       org.opencontainers.image.revision="${BUILD_REF}" \
       org.opencontainers.image.vendor="Ardan Labs"
