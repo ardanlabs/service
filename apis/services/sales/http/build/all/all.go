@@ -29,11 +29,13 @@ func (add) Add(app *web.App, cfg mux.Config) {
 	})
 
 	homeapi.Routes(app, homeapi.Config{
+		UserBus: cfg.BusCrud.User,
 		HomeBus: cfg.BusCrud.Home,
 		Auth:    cfg.Auth,
 	})
 
 	productapi.Routes(app, productapi.Config{
+		UserBus:    cfg.BusCrud.User,
 		ProductBus: cfg.BusCrud.Product,
 		Auth:       cfg.Auth,
 	})
@@ -52,6 +54,7 @@ func (add) Add(app *web.App, cfg mux.Config) {
 	})
 
 	vproductapi.Routes(app, vproductapi.Config{
+		UserBus:     cfg.BusCrud.User,
 		VProductBus: cfg.BusView.Product,
 		Auth:        cfg.Auth,
 	})

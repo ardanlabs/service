@@ -7,11 +7,13 @@ import (
 	"github.com/ardanlabs/service/app/core/crud/productapp"
 	"github.com/ardanlabs/service/business/api/auth"
 	"github.com/ardanlabs/service/business/core/crud/productbus"
+	"github.com/ardanlabs/service/business/core/crud/userbus"
 	"github.com/ardanlabs/service/foundation/web"
 )
 
 // Config contains all the mandatory systems required by handlers.
 type Config struct {
+	UserBus    *userbus.Core
 	ProductBus *productbus.Core
 	Auth       *auth.Auth
 }
@@ -20,7 +22,7 @@ type Config struct {
 func Routes(app *web.App, cfg Config) {
 	const version = "v1"
 
-	authen := midhttp.Authenticate(cfg.Auth)
+	authen := midhttp.Authenticate(cfg.UserBus, cfg.Auth)
 	ruleAny := midhttp.Authorize(cfg.Auth, auth.RuleAny)
 	ruleUserOnly := midhttp.Authorize(cfg.Auth, auth.RuleUserOnly)
 	ruleAuthorizeProduct := midhttp.AuthorizeProduct(cfg.Auth, cfg.ProductBus)

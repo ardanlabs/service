@@ -1,9 +1,9 @@
-// Package reporting binds the reporting domain set of routes into the specified app.
-package reporting
+// Package all binds all the routes into the specified app.
+package all
 
 import (
-	"github.com/ardanlabs/service/apis/services/sales/http/routes/sys/checkapi"
-	"github.com/ardanlabs/service/apis/services/sales/http/routes/views/vproductapi"
+	"github.com/ardanlabs/service/apis/services/auth/routes/authapi"
+	"github.com/ardanlabs/service/apis/services/auth/routes/checkapi"
 	"github.com/ardanlabs/service/app/api/mux"
 	"github.com/ardanlabs/service/foundation/web"
 )
@@ -24,9 +24,8 @@ func (add) Add(app *web.App, cfg mux.Config) {
 		DB:    cfg.DB,
 	})
 
-	vproductapi.Routes(app, vproductapi.Config{
-		UserBus:     cfg.BusCrud.User,
-		VProductBus: cfg.BusView.Product,
-		Auth:        cfg.Auth,
+	authapi.Routes(app, authapi.Config{
+		UserBus: cfg.BusCrud.User,
+		Auth:    cfg.Auth,
 	})
 }

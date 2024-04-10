@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"net/http"
-	"net/mail"
 
 	"github.com/ardanlabs/service/app/api/errs"
 	"github.com/ardanlabs/service/app/core/crud/userapp"
@@ -102,20 +101,10 @@ func (api *api) token(ctx context.Context, w http.ResponseWriter, r *http.Reques
 		return validate.NewFieldsError("kid", errors.New("missing kid"))
 	}
 
-	email, pass, ok := r.BasicAuth()
-	if !ok {
-		return errs.Newf(errs.Unauthenticated, "authorize: must provide email and password in Basic auth")
-	}
-
-	addr, err := mail.ParseAddress(email)
-	if err != nil {
-		return errs.Newf(errs.Unauthenticated, "authorize: invalid email format")
-	}
-
-	usr, err := api.userApp.Token(ctx, kid, *addr, pass)
+	token, err := api.userApp.Token(ctx, kid)
 	if err != nil {
 		return err
 	}
 
-	return web.Respond(ctx, w, usr, http.StatusOK)
+	return web.Respond(ctx, w, token, http.StatusOK)
 }

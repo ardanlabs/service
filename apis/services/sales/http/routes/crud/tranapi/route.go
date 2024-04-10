@@ -27,7 +27,7 @@ type Config struct {
 func Routes(app *web.App, cfg Config) {
 	const version = "v1"
 
-	authen := midhttp.Authenticate(cfg.Auth)
+	authen := midhttp.Authenticate(cfg.UserBus, cfg.Auth)
 	tran := midhttp.ExecuteInTransaction(cfg.Log, sqldb.NewBeginner(cfg.DB))
 
 	api := newAPI(tranapp.NewCore(cfg.UserBus, cfg.ProductBus))

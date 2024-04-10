@@ -13,21 +13,13 @@ import (
 	"time"
 
 	"github.com/ardanlabs/conf/v3"
-	"github.com/ardanlabs/service/apis/services/sales/http/build/all"
-	"github.com/ardanlabs/service/apis/services/sales/http/build/crud"
-	"github.com/ardanlabs/service/apis/services/sales/http/build/reporting"
+	"github.com/ardanlabs/service/apis/services/auth/build/all"
 	"github.com/ardanlabs/service/app/api/debug"
 	"github.com/ardanlabs/service/app/api/mux"
 	"github.com/ardanlabs/service/business/api/auth"
 	"github.com/ardanlabs/service/business/core/crud/delegate"
-	"github.com/ardanlabs/service/business/core/crud/homebus"
-	"github.com/ardanlabs/service/business/core/crud/homebus/stores/homedb"
-	"github.com/ardanlabs/service/business/core/crud/productbus"
-	"github.com/ardanlabs/service/business/core/crud/productbus/stores/productdb"
 	"github.com/ardanlabs/service/business/core/crud/userbus"
 	"github.com/ardanlabs/service/business/core/crud/userbus/stores/userdb"
-	"github.com/ardanlabs/service/business/core/views/vproductbus"
-	"github.com/ardanlabs/service/business/core/views/vproductbus/stores/vproductdb"
 	"github.com/ardanlabs/service/business/data/sqldb"
 	"github.com/ardanlabs/service/foundation/keystore"
 	"github.com/ardanlabs/service/foundation/logger"
@@ -41,12 +33,7 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 )
 
-/*
-	Need to figure out timeouts for http service.
-*/
-
 var build = "develop"
-var routes = "all" // go build -ldflags "-X main.routes=crud"
 
 func main() {
 	var log *logger.Logger
@@ -61,7 +48,7 @@ func main() {
 		return web.GetTraceID(ctx)
 	}
 
-	log = logger.NewWithEvents(os.Stdout, logger.LevelInfo, "SALES", traceIDFn, events)
+	log = logger.NewWithEvents(os.Stdout, logger.LevelInfo, "AUTH", traceIDFn, events)
 
 	// -------------------------------------------------------------------------
 
@@ -90,8 +77,8 @@ func run(ctx context.Context, log *logger.Logger) error {
 			WriteTimeout       time.Duration `conf:"default:10s"`
 			IdleTimeout        time.Duration `conf:"default:120s"`
 			ShutdownTimeout    time.Duration `conf:"default:20s"`
-			APIHost            string        `conf:"default:0.0.0.0:3000"`
-			DebugHost          string        `conf:"default:0.0.0.0:4000"`
+			APIHost            string        `conf:"default:0.0.0.0:3100"`
+			DebugHost          string        `conf:"default:0.0.0.0:4100"`
 			CORSAllowedOrigins []string      `conf:"default:*"`
 		}
 		Auth struct {
@@ -110,20 +97,17 @@ func run(ctx context.Context, log *logger.Logger) error {
 		}
 		Tempo struct {
 			ReporterURI string  `conf:"default:tempo.sales-system.svc.cluster.local:4317"`
-			ServiceName string  `conf:"default:sales"`
+			ServiceName string  `conf:"default:auth"`
 			Probability float64 `conf:"default:0.05"`
-			// Shouldn't use a high Probability value in non-developer systems.
-			// 0.05 should be enough for most systems. Some might want to have
-			// this even lower.
 		}
 	}{
 		Version: conf.Version{
 			Build: build,
-			Desc:  "Sales",
+			Desc:  "Auth",
 		},
 	}
 
-	const prefix = "SALES"
+	const prefix = "AUTH"
 	help, err := conf.Parse(prefix, &cfg)
 	if err != nil {
 		if errors.Is(err, conf.ErrHelpWanted) {
@@ -216,9 +200,6 @@ func run(ctx context.Context, log *logger.Logger) error {
 
 	delegate := delegate.New(log)
 	userBus := userbus.NewCore(log, delegate, userdb.NewStore(log, db))
-	productBus := productbus.NewCore(log, userBus, delegate, productdb.NewStore(log, db))
-	homeBus := homebus.NewCore(log, userBus, delegate, homedb.NewStore(log, db))
-	vproductBus := vproductbus.NewCore(vproductdb.NewStore(log, db))
 
 	// -------------------------------------------------------------------------
 	// Start Debug Service
@@ -248,18 +229,13 @@ func run(ctx context.Context, log *logger.Logger) error {
 		Tracer:   tracer,
 		BusCrud: mux.BusCrud{
 			Delegate: delegate,
-			Home:     homeBus,
-			Product:  productBus,
 			User:     userBus,
-		},
-		BusView: mux.BusView{
-			Product: vproductBus,
 		},
 	}
 
 	api := http.Server{
 		Addr:         cfg.Web.APIHost,
-		Handler:      mux.WebAPI(cfgMux, buildRoutes(), mux.WithCORS(cfg.Web.CORSAllowedOrigins)),
+		Handler:      mux.WebAPI(cfgMux, all.Routes(), mux.WithCORS(cfg.Web.CORSAllowedOrigins)),
 		ReadTimeout:  cfg.Web.ReadTimeout,
 		WriteTimeout: cfg.Web.WriteTimeout,
 		IdleTimeout:  cfg.Web.IdleTimeout,
@@ -295,30 +271,6 @@ func run(ctx context.Context, log *logger.Logger) error {
 	}
 
 	return nil
-}
-
-func buildRoutes() mux.RouteAdder {
-
-	// The idea here is that we can build different versions of the binary
-	// with different sets of exposed web APIs. By default we build a single
-	// an instance with all the web APIs.
-	//
-	// Here is the scenario. It would be nice to build two binaries, one for the
-	// transactional APIs (CRUD) and one for the reporting APIs. This would allow
-	// the system to run two instances of the database. One instance tuned for the
-	// transactional database calls and the other tuned for the reporting calls.
-	// Tuning meaning indexing and memory requirements. The two databases can be
-	// kept in sync with replication.
-
-	switch routes {
-	case "crud":
-		return crud.Routes()
-
-	case "reporting":
-		return reporting.Routes()
-	}
-
-	return all.Routes()
 }
 
 // startTracing configure open telemetry to be used with Grafana Tempo.
