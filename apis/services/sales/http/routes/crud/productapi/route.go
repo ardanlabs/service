@@ -8,24 +8,27 @@ import (
 	"github.com/ardanlabs/service/business/api/auth"
 	"github.com/ardanlabs/service/business/core/crud/productbus"
 	"github.com/ardanlabs/service/business/core/crud/userbus"
+	"github.com/ardanlabs/service/foundation/authapi"
+	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/web"
 )
 
 // Config contains all the mandatory systems required by handlers.
 type Config struct {
+	Log        *logger.Logger
 	UserBus    *userbus.Core
 	ProductBus *productbus.Core
-	Auth       *auth.Auth
+	AuthAPI    *authapi.AuthAPI
 }
 
 // Routes adds specific routes for this group.
 func Routes(app *web.App, cfg Config) {
 	const version = "v1"
 
-	authen := midhttp.Authenticate(cfg.UserBus, cfg.Auth)
-	ruleAny := midhttp.Authorize(cfg.Auth, auth.RuleAny)
-	ruleUserOnly := midhttp.Authorize(cfg.Auth, auth.RuleUserOnly)
-	ruleAuthorizeProduct := midhttp.AuthorizeProduct(cfg.Auth, cfg.ProductBus)
+	authen := midhttp.AuthenticateWeb(cfg.Log, cfg.AuthAPI)
+	ruleAny := midhttp.Authorize(cfg.Log, cfg.AuthAPI, auth.RuleAny)
+	ruleUserOnly := midhttp.Authorize(cfg.Log, cfg.AuthAPI, auth.RuleUserOnly)
+	ruleAuthorizeProduct := midhttp.AuthorizeProduct(cfg.Log, cfg.AuthAPI, cfg.ProductBus)
 
 	api := newAPI(productapp.NewCore(cfg.ProductBus))
 	app.Handle(http.MethodGet, version, "/products", api.query, authen, ruleAny)

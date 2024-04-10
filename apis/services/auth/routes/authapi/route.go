@@ -22,7 +22,8 @@ func Routes(app *web.App, cfg Config) {
 
 	authen := midhttp.Authenticate(cfg.UserBus, cfg.Auth)
 
-	api := newAPI(userapp.NewCore(cfg.UserBus, cfg.Auth), cfg.Auth)
-	app.Handle(http.MethodGet, version, "/users/token/{kid}", api.token, authen)
-	app.Handle(http.MethodPost, version, "/users/authorize", api.authorize)
+	api := newAPI(userapp.NewCoreWithAuth(cfg.UserBus, cfg.Auth), cfg.Auth)
+	app.Handle(http.MethodGet, version, "/auth/token/{kid}", api.token, authen)
+	app.Handle(http.MethodGet, version, "/auth/authenticate", api.authenticate, authen)
+	app.Handle(http.MethodPost, version, "/auth/authorize", api.authorize)
 }

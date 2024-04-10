@@ -4,7 +4,6 @@ package authapi
 import (
 	"bytes"
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -15,7 +14,7 @@ import (
 
 // This provides a default client configuration, but it's recommended
 // this is replaced by the user with application specific settings using
-// the WithClient function at the time a GraphQL is constructed.
+// the WithClient function at the time a AuthAPI is constructed.
 var defaultClient = http.Client{
 	Transport: &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
@@ -32,68 +31,71 @@ var defaultClient = http.Client{
 	},
 }
 
-// Auth represents a client that can talk to the auth service.
-type Auth struct {
+// AuthAPI represents a client that can talk to the auth service.
+type AuthAPI struct {
 	url     string
+	logFunc func(ctx context.Context, s string)
 	client  *http.Client
-	logFunc func(s string)
 }
 
 // New constructs an Auth that can be used to talk with the auth service.
-func New(url string, options ...func(auth *Auth)) *Auth {
-	auth := Auth{
-		url:    url,
-		client: &defaultClient,
+func New(url string, logFunc func(ctx context.Context, s string), options ...func(authAPI *AuthAPI)) *AuthAPI {
+	authAPI := AuthAPI{
+		url:     url,
+		logFunc: logFunc,
+		client:  &defaultClient,
 	}
 
 	for _, option := range options {
-		option(&auth)
+		option(&authAPI)
 	}
 
-	return &auth
+	return &authAPI
 }
 
 // WithClient adds a custom client for processing requests. It's recommend
 // to not use the default client and provide your own.
-func WithClient(client *http.Client) func(auth *Auth) {
-	return func(auth *Auth) {
-		auth.client = client
+func WithClient(client *http.Client) func(authAPI *AuthAPI) {
+	return func(authAPI *AuthAPI) {
+		authAPI.client = client
 	}
 }
 
-// WithLogging acceps a function for capturing raw execution messages for the
-// purpose of application logging.
-func WithLogging(logFunc func(s string)) func(auth *Auth) {
-	return func(auth *Auth) {
-		auth.logFunc = logFunc
-	}
-}
+// Authenticate calls the auth service to authenticate the user.
+func (api *AuthAPI) Authenticate(ctx context.Context, authorization string) (AuthResp, error) {
+	endpoint := fmt.Sprintf("%s/v1/auth/authenticate", api.url)
 
-// Token returns a token for the specified user and kid.
-func (ath *Auth) Token(ctx context.Context, userName string, password string, kid string) (Token, error) {
-	endpoint := fmt.Sprintf("%s/users/token/%s", ath.url, kid)
-
-	userPass := fmt.Sprintf("%s:%s", userName, password)
 	headers := map[string]string{
-		"Basic": base64.StdEncoding.EncodeToString([]byte(userPass)),
+		"authorization": authorization,
 	}
 
-	var token Token
-	if err := ath.rawRequest(ctx, http.MethodGet, endpoint, headers, nil, &token); err != nil {
-		return Token{}, err
+	var resp AuthResp
+	if err := api.rawRequest(ctx, http.MethodGet, endpoint, headers, nil, &resp); err != nil {
+		return AuthResp{}, err
 	}
 
-	return token, nil
+	return resp, nil
 }
 
-func (ath *Auth) rawRequest(ctx context.Context, method string, url string, headers map[string]string, r io.Reader, response interface{}) error {
+// Authorize calls the auth service to authorize the user.
+func (api *AuthAPI) Authorize(ctx context.Context, authInfo AuthInfo) error {
+	endpoint := fmt.Sprintf("%s/v1/auth/authorize", api.url)
 
-	// Use the TeeReader to capture the request being sent. This is needed if the
-	// requrest fails for the error being returned or for logging if a log
-	// function is provided. The TeeReader will write the request to this buffer
-	// during the http operation.
-	var request bytes.Buffer
-	r = io.TeeReader(r, &request)
+	var b bytes.Buffer
+	if err := json.NewEncoder(&b).Encode(authInfo); err != nil {
+		return fmt.Errorf("encoding error: %w", err)
+	}
+
+	if err := api.rawRequest(ctx, http.MethodPost, endpoint, nil, &b, nil); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (api *AuthAPI) rawRequest(ctx context.Context, method string, url string, headers map[string]string, r io.Reader, v any) error {
+	api.logFunc(ctx, fmt.Sprintf("rawRequest: started: method: %s, url: %s", method, url))
+	defer api.logFunc(ctx, "rawRequest: completed")
 
 	req, err := http.NewRequestWithContext(ctx, method, url, r)
 	if err != nil {
@@ -104,43 +106,45 @@ func (ath *Auth) rawRequest(ctx context.Context, method string, url string, head
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
 	for key, value := range headers {
+		api.logFunc(ctx, fmt.Sprintf("rawRequest: header: key: %s, value: %s", key, value))
 		req.Header.Set(key, value)
 	}
 
-	resp, err := ath.client.Do(req)
+	resp, err := api.client.Do(req)
 	if err != nil {
-		return fmt.Errorf("request error: %w", err)
+		return fmt.Errorf("do: error: %w", err)
 	}
 	defer resp.Body.Close()
+
+	api.logFunc(ctx, fmt.Sprintf("rawRequest: client do: status: %d", resp.StatusCode))
+
+	if resp.StatusCode == http.StatusNoContent {
+		return nil
+	}
 
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return fmt.Errorf("copy error: %w", err)
 	}
 
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("op error: status code: %s", resp.Status)
-	}
+	switch resp.StatusCode {
+	case http.StatusNoContent:
+		return nil
 
-	if ath.logFunc != nil {
-		ath.logFunc(fmt.Sprintf("request:[%s] data:[%s]", request.String(), string(data)))
-	}
-
-	result := struct {
-		Data   interface{}
-		Errors []struct {
-			Message string
+	case http.StatusOK:
+		if err := json.Unmarshal(data, v); err != nil {
+			return fmt.Errorf("failed: response: %s, decoding error: %w ", string(data), err)
 		}
-	}{
-		Data: response,
-	}
-	if err := json.Unmarshal(data, &result); err != nil {
-		return fmt.Errorf("decoding error: %w response: %s", err, string(data))
-	}
+		return nil
 
-	if len(result.Errors) > 0 {
-		return fmt.Errorf("op error: request:[%s] error:[%s]", request.String(), result.Errors[0].Message)
-	}
+	case http.StatusUnauthorized:
+		var err Error
+		if err := json.Unmarshal(data, &err); err != nil {
+			return fmt.Errorf("failed: response: %s, decoding error: %w ", string(data), err)
+		}
+		return err
 
-	return nil
+	default:
+		return fmt.Errorf("failed: response: %s", string(data))
+	}
 }

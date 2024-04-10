@@ -144,3 +144,10 @@ spec:
             cpu: "100m"
           limits:
             cpu: "100m"
+
+      - name: auth
+        resources:
+          requests:
+            cpu: "250m"
+          limits:
+            cpu: "250m"

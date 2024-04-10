@@ -131,7 +131,7 @@ func NamedExecContext(ctx context.Context, log *logger.Logger, db sqlx.ExtContex
 		}
 	}()
 
-	ctx, span := web.AddSpan(ctx, "business.sys.database.exec", attribute.String("query", q))
+	ctx, span := web.AddSpan(ctx, "business.data.sqldb.exec", attribute.String("query", q))
 	defer span.End()
 
 	if _, err := sqlx.NamedExecContext(ctx, db, query, data); err != nil {
@@ -178,7 +178,7 @@ func namedQuerySlice[T any](ctx context.Context, log *logger.Logger, db sqlx.Ext
 		}
 	}()
 
-	ctx, span := web.AddSpan(ctx, "business.sys.database.queryslice", attribute.String("query", q))
+	ctx, span := web.AddSpan(ctx, "business.data.sqldb.queryslice", attribute.String("query", q))
 	defer span.End()
 
 	var rows *sqlx.Rows
@@ -253,7 +253,7 @@ func namedQueryStruct(ctx context.Context, log *logger.Logger, db sqlx.ExtContex
 		}
 	}()
 
-	ctx, span := web.AddSpan(ctx, "business.sys.database.query", attribute.String("query", q))
+	ctx, span := web.AddSpan(ctx, "business.data.sqldb.query", attribute.String("query", q))
 	defer span.End()
 
 	var rows *sqlx.Rows

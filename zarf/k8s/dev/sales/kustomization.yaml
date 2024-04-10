@@ -13,3 +13,6 @@ images:
   - name: metrics-image
     newName: localhost/ardanlabs/service/metrics
     newTag: 0.0.1
+  - name: auth-image
+    newName: localhost/ardanlabs/service/auth
+    newTag: 0.0.1

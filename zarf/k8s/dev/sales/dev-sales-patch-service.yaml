@@ -12,11 +12,20 @@ spec:
     port: 3000
     targetPort: sales-api
   - name: sales-api-debug
-    port: 4000
+    port: 3010
     targetPort: sales-api-debug
   - name: metrics
-    port: 3001
+    port: 4000
     targetPort: metrics
+  - name: metrics-debug
+    port: 4010
+    targetPort: metrics-debug
   - name: prometheus
-    port: 3002
-    targetPort: prometheus
+    port: 4020
+    targetPort: metrics-prom
+  - name: auth
+    port: 6000
+    targetPort: auth
+  - name: auth-debug
+    port: 6010
+    targetPort: auth-debug

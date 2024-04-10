@@ -11,15 +11,48 @@ import (
 	"github.com/ardanlabs/service/business/core/crud/homebus"
 	"github.com/ardanlabs/service/business/core/crud/productbus"
 	"github.com/ardanlabs/service/business/core/crud/userbus"
+	"github.com/ardanlabs/service/foundation/authapi"
+	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/google/uuid"
 )
+
+// ErrInvalidID represents a condition where the id is not a uuid.
+var ErrInvalidID = errors.New("ID is not in its proper form")
+
+// Authorize executes the specified role and does not extract any domain data.
+func Authorize(log *logger.Logger, authAPI *authapi.AuthAPI, rule string) web.MidHandler {
+	m := func(handler web.Handler) web.Handler {
+		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+			userID, err := mid.GetUserID(ctx)
+			if err != nil {
+				return errs.New(errs.Unauthenticated, err)
+			}
+
+			authInfo := authapi.AuthInfo{
+				Claims: mid.GetClaims(ctx),
+				UserID: userID,
+				Rule:   rule,
+			}
+
+			if err := authAPI.Authorize(ctx, authInfo); err != nil {
+				return errs.New(errs.Unauthenticated, err)
+			}
+
+			return handler(ctx, w, r)
+		}
+
+		return h
+	}
+
+	return m
+}
 
 // AuthorizeUser executes the specified role and extracts the specified user
 // from the DB if a user id is specified in the call. Depending on the rule
 // specified, the userid from the claims may be compared with the specified
 // user id.
-func AuthorizeUser(a *auth.Auth, userBus *userbus.Core, rule string) web.MidHandler {
+func AuthorizeUser(log *logger.Logger, authAPI *authapi.AuthAPI, userBus *userbus.Core, rule string) web.MidHandler {
 	m := func(handler web.Handler) web.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 			var userID uuid.UUID
@@ -44,9 +77,14 @@ func AuthorizeUser(a *auth.Auth, userBus *userbus.Core, rule string) web.MidHand
 				ctx = mid.SetUser(ctx, usr)
 			}
 
-			claims := mid.GetClaims(ctx)
-			if err := a.Authorize(ctx, claims, userID, rule); err != nil {
-				return errs.Newf(errs.Unauthenticated, "authorize: you are not authorized for that action, claims[%v] rule[%v]: %s", claims.Roles, rule, err)
+			authInfo := authapi.AuthInfo{
+				Claims: mid.GetClaims(ctx),
+				UserID: userID,
+				Rule:   rule,
+			}
+
+			if err := authAPI.Authorize(ctx, authInfo); err != nil {
+				return errs.New(errs.Unauthenticated, err)
 			}
 
 			return handler(ctx, w, r)
@@ -62,7 +100,7 @@ func AuthorizeUser(a *auth.Auth, userBus *userbus.Core, rule string) web.MidHand
 // product from the DB if a product id is specified in the call. Depending on
 // the rule specified, the userid from the claims may be compared with the
 // specified user id from the product.
-func AuthorizeProduct(a *auth.Auth, productBus *productbus.Core) web.MidHandler {
+func AuthorizeProduct(log *logger.Logger, authAPI *authapi.AuthAPI, productBus *productbus.Core) web.MidHandler {
 	m := func(handler web.Handler) web.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 			var userID uuid.UUID
@@ -88,10 +126,14 @@ func AuthorizeProduct(a *auth.Auth, productBus *productbus.Core) web.MidHandler 
 				ctx = mid.SetProduct(ctx, prd)
 			}
 
-			claims := mid.GetClaims(ctx)
+			authInfo := authapi.AuthInfo{
+				Claims: mid.GetClaims(ctx),
+				UserID: userID,
+				Rule:   auth.RuleAdminOrSubject,
+			}
 
-			if err := a.Authorize(ctx, claims, userID, auth.RuleAdminOrSubject); err != nil {
-				return errs.Newf(errs.Unauthenticated, "authorize: you are not authorized for that action, claims[%v] rule[%v]: %s", claims.Roles, auth.RuleAdminOrSubject, err)
+			if err := authAPI.Authorize(ctx, authInfo); err != nil {
+				return errs.New(errs.Unauthenticated, err)
 			}
 
 			return handler(ctx, w, r)
@@ -107,7 +149,7 @@ func AuthorizeProduct(a *auth.Auth, productBus *productbus.Core) web.MidHandler 
 // home from the DB if a home id is specified in the call. Depending on
 // the rule specified, the userid from the claims may be compared with the
 // specified user id from the home.
-func AuthorizeHome(a *auth.Auth, homeBus *homebus.Core) web.MidHandler {
+func AuthorizeHome(log *logger.Logger, authAPI *authapi.AuthAPI, homeBus *homebus.Core) web.MidHandler {
 	m := func(handler web.Handler) web.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 			var userID uuid.UUID
@@ -133,9 +175,14 @@ func AuthorizeHome(a *auth.Auth, homeBus *homebus.Core) web.MidHandler {
 				ctx = mid.SetHome(ctx, hme)
 			}
 
-			claims := mid.GetClaims(ctx)
-			if err := a.Authorize(ctx, claims, userID, auth.RuleAdminOrSubject); err != nil {
-				return errs.Newf(errs.Unauthenticated, "authorize: you are not authorized for that action, claims[%v] rule[%v]: %s", claims.Roles, auth.RuleAdminOrSubject, err)
+			authInfo := authapi.AuthInfo{
+				Claims: mid.GetClaims(ctx),
+				UserID: userID,
+				Rule:   auth.RuleAdminOrSubject,
+			}
+
+			if err := authAPI.Authorize(ctx, authInfo); err != nil {
+				return errs.New(errs.Unauthenticated, err)
 			}
 
 			return handler(ctx, w, r)

@@ -20,9 +20,9 @@ func Errors(log *logger.Logger) web.MidHandler {
 				return nil
 			}
 
-			log.Error(ctx, "message", "msg", err)
+			log.Error(ctx, "message", "ERROR", err.Error())
 
-			ctx, span := web.AddSpan(ctx, "business.web.request.mid.error")
+			ctx, span := web.AddSpan(ctx, "app.api.mid.http.error")
 			span.RecordError(err)
 			span.End()
 

@@ -13,6 +13,7 @@ import (
 	"github.com/ardanlabs/service/business/core/crud/productbus"
 	"github.com/ardanlabs/service/business/core/crud/userbus"
 	"github.com/ardanlabs/service/business/core/views/vproductbus"
+	"github.com/ardanlabs/service/foundation/authapi"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/jmoiron/sqlx"
@@ -50,6 +51,7 @@ type Config struct {
 	Shutdown chan os.Signal
 	Log      *logger.Logger
 	Auth     *auth.Auth
+	AuthAPI  *authapi.AuthAPI
 	DB       *sqlx.DB
 	Tracer   trace.Tracer
 	BusCrud  BusCrud

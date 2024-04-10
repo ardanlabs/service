@@ -7,22 +7,44 @@ import (
 	"net/http"
 
 	"github.com/ardanlabs/service/app/api/errs"
+	"github.com/ardanlabs/service/app/api/mid"
 	"github.com/ardanlabs/service/app/core/crud/userapp"
 	"github.com/ardanlabs/service/business/api/auth"
 	"github.com/ardanlabs/service/foundation/validate"
 	"github.com/ardanlabs/service/foundation/web"
+	"github.com/google/uuid"
 )
 
 type api struct {
 	userApp *userapp.Core
-	authBus *auth.Auth
+	auth    *auth.Auth
 }
 
-func newAPI(userApp *userapp.Core, authBus *auth.Auth) *api {
+func newAPI(userApp *userapp.Core, auth *auth.Auth) *api {
 	return &api{
 		userApp: userApp,
-		authBus: authBus,
+		auth:    auth,
 	}
+}
+
+func (api *api) authenticate(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	// The middleware is actually handling the authentication. So if the code
+	// gets to this handler, authentication passed.
+
+	userID, err := mid.GetUserID(ctx)
+	if err != nil {
+		return errs.New(errs.Unauthenticated, err)
+	}
+
+	resp := struct {
+		UserID uuid.UUID
+		Claims auth.Claims
+	}{
+		UserID: userID,
+		Claims: mid.GetClaims(ctx),
+	}
+
+	return web.Respond(ctx, w, resp, http.StatusOK)
 }
 
 func (api *api) authorize(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
@@ -31,7 +53,7 @@ func (api *api) authorize(ctx context.Context, w http.ResponseWriter, r *http.Re
 		return errs.New(errs.FailedPrecondition, err)
 	}
 
-	if err := api.authBus.Authorize(ctx, authInfo.Claims, authInfo.UserID, authInfo.Rule); err != nil {
+	if err := api.auth.Authorize(ctx, authInfo.Claims, authInfo.UserID, authInfo.Rule); err != nil {
 		return errs.Newf(errs.Unauthenticated, "authorize: you are not authorized for that action, claims[%v] rule[%v]: %s", authInfo.Claims.Roles, authInfo.Rule, err)
 	}
 

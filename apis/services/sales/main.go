@@ -29,6 +29,7 @@ import (
 	"github.com/ardanlabs/service/business/core/views/vproductbus"
 	"github.com/ardanlabs/service/business/core/views/vproductbus/stores/vproductdb"
 	"github.com/ardanlabs/service/business/data/sqldb"
+	"github.com/ardanlabs/service/foundation/authapi"
 	"github.com/ardanlabs/service/foundation/keystore"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/web"
@@ -53,7 +54,7 @@ func main() {
 
 	events := logger.Events{
 		Error: func(ctx context.Context, r logger.Record) {
-			log.Info(ctx, "******* SEND ALERT ******")
+			log.Info(ctx, "******* SEND ALERT *******")
 		},
 	}
 
@@ -91,13 +92,14 @@ func run(ctx context.Context, log *logger.Logger) error {
 			IdleTimeout        time.Duration `conf:"default:120s"`
 			ShutdownTimeout    time.Duration `conf:"default:20s"`
 			APIHost            string        `conf:"default:0.0.0.0:3000"`
-			DebugHost          string        `conf:"default:0.0.0.0:4000"`
+			DebugHost          string        `conf:"default:0.0.0.0:3010"`
 			CORSAllowedOrigins []string      `conf:"default:*"`
 		}
 		Auth struct {
 			KeysFolder string `conf:"default:zarf/keys/"`
 			ActiveKID  string `conf:"default:54bb2165-71e1-41a6-af3e-7da4a0e1e2c1"`
 			Issuer     string `conf:"default:service project"`
+			Host       string `conf:"default:http://localhost:6000"`
 		}
 		DB struct {
 			User         string `conf:"default:postgres"`
@@ -191,6 +193,11 @@ func run(ctx context.Context, log *logger.Logger) error {
 		return fmt.Errorf("constructing auth: %w", err)
 	}
 
+	logFunc := func(ctx context.Context, msg string) {
+		log.Info(ctx, "authapi", "message", msg)
+	}
+	authAPI := authapi.New(cfg.Auth.Host, logFunc)
+
 	// -------------------------------------------------------------------------
 	// Start Tracing Support
 
@@ -244,6 +251,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 		Shutdown: shutdown,
 		Log:      log,
 		Auth:     auth,
+		AuthAPI:  authAPI,
 		DB:       db,
 		Tracer:   tracer,
 		BusCrud: mux.BusCrud{

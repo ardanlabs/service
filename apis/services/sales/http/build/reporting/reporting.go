@@ -27,6 +27,6 @@ func (add) Add(app *web.App, cfg mux.Config) {
 	vproductapi.Routes(app, vproductapi.Config{
 		UserBus:     cfg.BusCrud.User,
 		VProductBus: cfg.BusView.Product,
-		Auth:        cfg.Auth,
+		AuthAPI:     cfg.AuthAPI,
 	})
 }

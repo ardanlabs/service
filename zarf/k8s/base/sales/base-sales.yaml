@@ -62,7 +62,7 @@ spec:
         - name: sales-api
           containerPort: 3000
         - name: sales-api-debug
-          containerPort: 4000
+          containerPort: 3010
 
         readinessProbe: # readiness probes mark the service available to accept traffic.
           httpGet:
@@ -145,9 +145,26 @@ spec:
 
         ports:
         - name: metrics
-          containerPort: 3001
-        - name: prometheus
-          containerPort: 3002
+          containerPort: 4000
+        - name: metrics-debug
+          containerPort: 4010
+        - name: metrics-prom
+          containerPort: 4020
+
+        env:
+        - name: GOMAXPROCS
+          valueFrom:
+            resourceFieldRef:
+              resource: limits.cpu
+
+      - name: auth
+        image: auth-image
+
+        ports:
+        - name: auth
+          containerPort: 6000
+        - name: sales-api-debug
+          containerPort: 6010
 
         env:
         - name: GOMAXPROCS
@@ -160,7 +177,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: sales-api
+  name: sales-service
   namespace: sales-system
 
 spec:

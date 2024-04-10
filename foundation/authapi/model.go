@@ -5,6 +5,16 @@ import (
 	"github.com/google/uuid"
 )
 
+// Error represents an error in the system.
+type Error struct {
+	Message string `json:"message"`
+}
+
+// Error implements the error interface.
+func (err Error) Error() string {
+	return err.Message
+}
+
 // AuthInfo defines the information required to perform an authorization.
 type AuthInfo struct {
 	Claims auth.Claims
@@ -12,7 +22,7 @@ type AuthInfo struct {
 	Rule   string
 }
 
-// Token represents the response for the token call.
-type Token struct {
-	Token string `json:"token"`
+type AuthResp struct {
+	UserID uuid.UUID
+	Claims auth.Claims
 }
