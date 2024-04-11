@@ -26,8 +26,8 @@ func Test_Home(t *testing.T) {
 	app := apptest.New(mux.WebAPI(mux.Config{
 		Shutdown: make(chan os.Signal, 1),
 		Log:      dbTest.Log,
-		//Auth:     dbTest.Auth,
-		DB: dbTest.DB,
+		AuthSrv:  dbTest.AuthSrv,
+		DB:       dbTest.DB,
 		BusCrud: mux.BusCrud{
 			Delegate: dbTest.Core.BusCrud.Delegate,
 			Home:     dbTest.Core.BusCrud.Home,

@@ -36,7 +36,7 @@ func productDelete401(sd dbtest.SeedData) []apptest.AppTable {
 		{
 			Name:       "emptytoken",
 			URL:        fmt.Sprintf("/v1/products/%s", sd.Users[0].Products[1].ID),
-			Token:      "",
+			Token:      "&nbsp;",
 			Method:     http.MethodDelete,
 			StatusCode: http.StatusUnauthorized,
 			Resp:       &errs.Error{},

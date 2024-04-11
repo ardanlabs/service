@@ -99,7 +99,7 @@ func userCreate401(sd dbtest.SeedData) []apptest.AppTable {
 		{
 			Name:       "emptytoken",
 			URL:        "/v1/users",
-			Token:      "",
+			Token:      "&nbsp;",
 			Method:     http.MethodPost,
 			StatusCode: http.StatusUnauthorized,
 			Resp:       &errs.Error{},

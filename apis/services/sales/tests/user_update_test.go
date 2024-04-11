@@ -130,7 +130,7 @@ func userUpdate401(sd dbtest.SeedData) []apptest.AppTable {
 		{
 			Name:       "emptytoken",
 			URL:        fmt.Sprintf("/v1/users/%s", sd.Users[0].ID),
-			Token:      "",
+			Token:      "&nbsp;",
 			Method:     http.MethodPut,
 			StatusCode: http.StatusUnauthorized,
 			Resp:       &errs.Error{},

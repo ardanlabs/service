@@ -36,7 +36,7 @@ func homeDelete401(sd dbtest.SeedData) []apptest.AppTable {
 		{
 			Name:       "emptytoken",
 			URL:        fmt.Sprintf("/v1/homes/%s", sd.Users[0].Homes[1].ID),
-			Token:      "",
+			Token:      "&nbsp;",
 			Method:     http.MethodDelete,
 			StatusCode: http.StatusUnauthorized,
 			Resp:       &errs.Error{},

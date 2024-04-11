@@ -75,7 +75,7 @@ func productCreate401(sd dbtest.SeedData) []apptest.AppTable {
 		{
 			Name:       "emptytoken",
 			URL:        "/v1/products",
-			Token:      "",
+			Token:      "&nbsp;",
 			Method:     http.MethodPost,
 			StatusCode: http.StatusUnauthorized,
 			Resp:       &errs.Error{},

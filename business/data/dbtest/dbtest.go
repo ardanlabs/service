@@ -6,10 +6,15 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
+	"net/http/httptest"
 	"net/mail"
+	"os"
 	"testing"
 	"time"
 
+	"github.com/ardanlabs/service/apis/services/auth/http/build/all"
+	"github.com/ardanlabs/service/apis/services/auth/http/mux"
+	"github.com/ardanlabs/service/app/api/authsrv"
 	"github.com/ardanlabs/service/business/api/auth"
 	"github.com/ardanlabs/service/business/core/crud/delegate"
 	"github.com/ardanlabs/service/business/core/crud/homebus"
@@ -102,6 +107,7 @@ type Test struct {
 	DB       *sqlx.DB
 	Log      *logger.Logger
 	Auth     *auth.Auth
+	AuthSrv  *authsrv.AuthSrv
 	Core     Core
 	Teardown func()
 	t        *testing.T
@@ -166,6 +172,10 @@ func NewTest(t *testing.T, c *docker.Container, testName string) *Test {
 
 	// -------------------------------------------------------------------------
 
+	core := newCoreAPIs(log, db)
+
+	// -------------------------------------------------------------------------
+
 	auth, err := auth.New(auth.Config{
 		Log:       log,
 		DB:        db,
@@ -176,11 +186,34 @@ func NewTest(t *testing.T, c *docker.Container, testName string) *Test {
 	}
 
 	// -------------------------------------------------------------------------
+	// This will run the auth service so middleware will function.
+
+	mux := mux.WebAPI(mux.Config{
+		Shutdown: make(chan os.Signal, 1),
+		Log:      log,
+		Auth:     auth,
+		DB:       db,
+		BusCrud: mux.BusCrud{
+			Delegate: core.BusCrud.Delegate,
+			User:     core.BusCrud.User,
+		},
+	}, all.Routes())
+
+	logFunc := func(ctx context.Context, msg string) {
+		t.Logf("authapi: message: %s", msg)
+	}
+
+	server := httptest.NewServer(mux)
+	authSrv := authsrv.New(server.URL, logFunc)
+
+	// -------------------------------------------------------------------------
 
 	// teardown is the function that should be invoked when the caller is done
 	// with the database.
 	teardown := func() {
 		t.Helper()
+
+		server.Close()
 		db.Close()
 
 		fmt.Printf("******************** LOGS (%s) ********************\n", testName)
@@ -192,7 +225,8 @@ func NewTest(t *testing.T, c *docker.Container, testName string) *Test {
 		DB:       db,
 		Log:      log,
 		Auth:     auth,
-		Core:     newCoreAPIs(log, db),
+		AuthSrv:  authSrv,
+		Core:     core,
 		Teardown: teardown,
 		t:        t,
 	}

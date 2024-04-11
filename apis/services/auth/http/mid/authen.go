@@ -24,9 +24,6 @@ func Authenticate(userBus *userbus.Core, auth *auth.Auth) web.MidHandler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 			authorization := r.Header.Get("authorization")
 			parts := strings.Split(authorization, " ")
-			if len(parts) != 2 {
-				return errs.Newf(errs.Unauthenticated, "invalid authorization value")
-			}
 
 			var err error
 

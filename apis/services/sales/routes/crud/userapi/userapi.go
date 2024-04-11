@@ -3,12 +3,10 @@ package userapi
 
 import (
 	"context"
-	"errors"
 	"net/http"
 
 	"github.com/ardanlabs/service/app/api/errs"
 	"github.com/ardanlabs/service/app/core/crud/userapp"
-	"github.com/ardanlabs/service/foundation/validate"
 	"github.com/ardanlabs/service/foundation/web"
 )
 
@@ -93,18 +91,4 @@ func (api *api) queryByID(ctx context.Context, w http.ResponseWriter, r *http.Re
 	}
 
 	return web.Respond(ctx, w, usr, http.StatusOK)
-}
-
-func (api *api) token(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	kid := web.Param(r, "kid")
-	if kid == "" {
-		return validate.NewFieldsError("kid", errors.New("missing kid"))
-	}
-
-	token, err := api.userApp.Token(ctx, kid)
-	if err != nil {
-		return err
-	}
-
-	return web.Respond(ctx, w, token, http.StatusOK)
 }
