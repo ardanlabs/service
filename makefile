@@ -122,13 +122,13 @@ PROMTAIL        := grafana/promtail:2.9.0
 
 KIND_CLUSTER    := ardan-starter-cluster
 NAMESPACE       := sales-system
-APP             := sales
-BASE_IMAGE_NAME := localhost/ardanlabs/service
-SERVICE_NAME    := sales
+SALES_APP       := sales
+AUTH_APP        := auth
+BASE_IMAGE_NAME := localhost/ardanlabs
 VERSION         := 0.0.1
-SERVICE_IMAGE   := $(BASE_IMAGE_NAME)/$(SERVICE_NAME):$(VERSION)
+SALES_IMAGE     := $(BASE_IMAGE_NAME)/$(SALES_APP):$(VERSION)
 METRICS_IMAGE   := $(BASE_IMAGE_NAME)/metrics:$(VERSION)
-AUTH_IMAGE      := $(BASE_IMAGE_NAME)/auth:$(VERSION)
+AUTH_IMAGE      := $(BASE_IMAGE_NAME)/$(AUTH_APP):$(VERSION)
 
 # VERSION       := "0.0.1-$(shell git rev-parse --short HEAD)"
 
@@ -169,7 +169,7 @@ build: sales metrics auth
 sales:
 	docker build \
 		-f zarf/docker/dockerfile.sales \
-		-t $(SERVICE_IMAGE) \
+		-t $(SALES_IMAGE) \
 		--build-arg BUILD_REF=$(VERSION) \
 		--build-arg BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ") \
 		.
@@ -222,7 +222,7 @@ dev-status:
 # ------------------------------------------------------------------------------
 
 dev-load:
-	kind load docker-image $(SERVICE_IMAGE) --name $(KIND_CLUSTER)
+	kind load docker-image $(SALES_IMAGE) --name $(KIND_CLUSTER)
 	kind load docker-image $(METRICS_IMAGE) --name $(KIND_CLUSTER)
 	kind load docker-image $(AUTH_IMAGE) --name $(KIND_CLUSTER)
 
@@ -236,32 +236,41 @@ dev-apply:
 	kustomize build zarf/k8s/dev/database | kubectl apply -f -
 	kubectl rollout status --namespace=$(NAMESPACE) --watch --timeout=120s sts/database
 
+	kustomize build zarf/k8s/dev/auth | kubectl apply -f -
+	kubectl wait pods --namespace=$(NAMESPACE) --selector app=$(AUTH_APP) --timeout=120s --for=condition=Ready
+
 	kustomize build zarf/k8s/dev/sales | kubectl apply -f -
-	kubectl wait pods --namespace=$(NAMESPACE) --selector app=$(APP) --timeout=120s --for=condition=Ready
+	kubectl wait pods --namespace=$(NAMESPACE) --selector app=$(SALES_APP) --timeout=120s --for=condition=Ready
 
 dev-restart:
-	kubectl rollout restart deployment $(APP) --namespace=$(NAMESPACE)
+	kubectl rollout restart deployment $(SALES_APP) --namespace=$(NAMESPACE)
 
 dev-update: build dev-load dev-restart
 
 dev-update-apply: build dev-load dev-apply
 
 dev-logs:
-	kubectl logs --namespace=$(NAMESPACE) -l app=$(APP) --all-containers=true -f --tail=100 --max-log-requests=6 | go run apis/tooling/logfmt/main.go -service=$(SERVICE_NAME)
+	kubectl logs --namespace=$(NAMESPACE) -l app=$(SALES_APP) --all-containers=true -f --tail=100 --max-log-requests=6 | go run apis/tooling/logfmt/main.go -service=$(SALES_APP)
+
+dev-logs-auth:
+	kubectl logs --namespace=$(NAMESPACE) -l app=$(AUTH_APP) --all-containers=true -f --tail=100 | go run apis/tooling/logfmt/main.go
 
 # ------------------------------------------------------------------------------
 
 dev-logs-init:
-	kubectl logs --namespace=$(NAMESPACE) -l app=$(APP) -f --tail=100 -c init-migrate-seed
+	kubectl logs --namespace=$(NAMESPACE) -l app=$(SALES_APP) -f --tail=100 -c init-migrate-seed
 
 dev-describe-node:
 	kubectl describe node
 
 dev-describe-deployment:
-	kubectl describe deployment --namespace=$(NAMESPACE) $(APP)
+	kubectl describe deployment --namespace=$(NAMESPACE) $(SALES_APP)
 
 dev-describe-sales:
-	kubectl describe pod --namespace=$(NAMESPACE) -l app=$(APP)
+	kubectl describe pod --namespace=$(NAMESPACE) -l app=$(SALES_APP)
+
+dev-describe-auth:
+	kubectl describe pod --namespace=$(NAMESPACE) -l app=$(AUTH_APP)
 
 dev-describe-database:
 	kubectl describe pod --namespace=$(NAMESPACE) -l app=database
@@ -298,7 +307,7 @@ dev-services-delete:
 
 dev-describe-replicaset:
 	kubectl get rs
-	kubectl describe rs --namespace=$(NAMESPACE) -l app=$(APP)
+	kubectl describe rs --namespace=$(NAMESPACE) -l app=$(SALES_APP)
 
 dev-events:
 	kubectl get ev --sort-by metadata.creationTimestamp
@@ -468,7 +477,7 @@ talk-apply:
 	kubectl rollout status --namespace=$(NAMESPACE) --watch --timeout=120s sts/database
 
 	kustomize build zarf/k8s/dev/sales | kubectl apply -f -
-	kubectl wait pods --namespace=$(NAMESPACE) --selector app=$(APP) --timeout=120s --for=condition=Ready
+	kubectl wait pods --namespace=$(NAMESPACE) --selector app=$(SALES_APP) --timeout=120s --for=condition=Ready
 
 talk-build: all dev-load talk-apply
 
@@ -476,16 +485,16 @@ talk-load:
 	hey -m GET -c 10 -n 1000 -H "Authorization: Bearer ${TOKEN}" "http://localhost:3000/v1/users?page=1&rows=2"
 
 talk-logs:
-	kubectl logs --namespace=$(NAMESPACE) -l app=$(APP) --all-containers=true -f --tail=100 --max-log-requests=6
+	kubectl logs --namespace=$(NAMESPACE) -l app=$(SALES_APP) --all-containers=true -f --tail=100 --max-log-requests=6
 
 talk-logs-cpu:
-	kubectl logs --namespace=$(NAMESPACE) -l app=$(APP) --all-containers=true -f --tail=100 --max-log-requests=6 | grep SCHED
+	kubectl logs --namespace=$(NAMESPACE) -l app=$(SALES_APP) --all-containers=true -f --tail=100 --max-log-requests=6 | grep SCHED
 
 talk-logs-mem:
-	kubectl logs --namespace=$(NAMESPACE) -l app=$(APP) --all-containers=true -f --tail=100 --max-log-requests=6 | grep "ms clock"
+	kubectl logs --namespace=$(NAMESPACE) -l app=$(SALES_APP) --all-containers=true -f --tail=100 --max-log-requests=6 | grep "ms clock"
 
 talk-describe:
-	kubectl describe pod --namespace=$(NAMESPACE) -l app=$(APP)
+	kubectl describe pod --namespace=$(NAMESPACE) -l app=$(SALES_APP)
 
 talk-metrics:
 	expvarmon -ports="localhost:4000" -vars="build,requests,goroutines,errors,panics,mem:memstats.HeapAlloc,mem:memstats.HeapSys,mem:memstats.Sys"

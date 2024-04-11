@@ -26,7 +26,7 @@ spec:
 
       initContainers:
       - name: init-migrate-seed
-        image: service-image
+        image: sales-image
         command: ['./admin', 'migrate-seed']
         env:
         - name: SALES_DB_USER
@@ -55,13 +55,13 @@ spec:
               optional: true
 
       containers:
-      - name: sales-api
-        image: service-image
+      - name: sales
+        image: sales-image
 
         ports:
-        - name: sales-api
+        - name: sales
           containerPort: 3000
-        - name: sales-api-debug
+        - name: sales-debug
           containerPort: 3010
 
         readinessProbe: # readiness probes mark the service available to accept traffic.
@@ -150,21 +150,6 @@ spec:
           containerPort: 4010
         - name: metrics-prom
           containerPort: 4020
-
-        env:
-        - name: GOMAXPROCS
-          valueFrom:
-            resourceFieldRef:
-              resource: limits.cpu
-
-      - name: auth
-        image: auth-image
-
-        ports:
-        - name: auth
-          containerPort: 6000
-        - name: sales-api-debug
-          containerPort: 6010
 
         env:
         - name: GOMAXPROCS

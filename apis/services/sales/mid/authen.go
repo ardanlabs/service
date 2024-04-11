@@ -16,10 +16,10 @@ import (
 func Authenticate(log *logger.Logger, authSrv *authsrv.AuthSrv) web.MidHandler {
 	m := func(handler web.Handler) web.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-			ctx, cancel := context.WithTimeout(ctx, time.Second)
+			ctxAuth, cancel := context.WithTimeout(ctx, time.Second)
 			defer cancel()
 
-			resp, err := authSrv.Authenticate(ctx, r.Header.Get("authorization"))
+			resp, err := authSrv.Authenticate(ctxAuth, r.Header.Get("authorization"))
 			if err != nil {
 				return errs.New(errs.Unauthenticated, err)
 			}

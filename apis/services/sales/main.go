@@ -94,7 +94,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 			CORSAllowedOrigins []string      `conf:"default:*"`
 		}
 		Auth struct {
-			Host string `conf:"default:http://localhost:6000"`
+			Host string `conf:"default:http://auth-service.sales-system.svc.cluster.local:6000"`
 		}
 		DB struct {
 			User         string `conf:"default:postgres"`

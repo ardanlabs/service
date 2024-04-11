@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: sales-system
+data:
+  db_hostport: "database-service.sales-system.svc.cluster.local"
+  db_user: "postgres"
+  db_password: "postgres"
+  db_disabletls: "true"

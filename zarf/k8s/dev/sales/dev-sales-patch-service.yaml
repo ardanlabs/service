@@ -1,19 +1,19 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: sales-api
+  name: sales-service
   namespace: sales-system
 
 spec:
   type: ClusterIP
 
   ports:
-  - name: sales-api
+  - name: sales
     port: 3000
-    targetPort: sales-api
-  - name: sales-api-debug
+    targetPort: sales
+  - name: sales-debug
     port: 3010
-    targetPort: sales-api-debug
+    targetPort: sales-debug
   - name: metrics
     port: 4000
     targetPort: metrics
@@ -23,9 +23,3 @@ spec:
   - name: prometheus
     port: 4020
     targetPort: metrics-prom
-  - name: auth
-    port: 6000
-    targetPort: auth
-  - name: auth-debug
-    port: 6010
-    targetPort: auth-debug

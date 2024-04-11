@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/ardanlabs/service/app/api/authsrv"
 	"github.com/ardanlabs/service/app/api/errs"
@@ -29,13 +30,16 @@ func Authorize(log *logger.Logger, authSrv *authsrv.AuthSrv, rule string) web.Mi
 				return errs.New(errs.Unauthenticated, err)
 			}
 
+			ctxAuth, cancel := context.WithTimeout(ctx, time.Second)
+			defer cancel()
+
 			auth := authsrv.Authorize{
 				Claims: mid.GetClaims(ctx),
 				UserID: userID,
 				Rule:   rule,
 			}
 
-			if err := authSrv.Authorize(ctx, auth); err != nil {
+			if err := authSrv.Authorize(ctxAuth, auth); err != nil {
 				return errs.New(errs.Unauthenticated, err)
 			}
 
@@ -77,13 +81,16 @@ func AuthorizeUser(log *logger.Logger, authSrv *authsrv.AuthSrv, userBus *userbu
 				ctx = mid.SetUser(ctx, usr)
 			}
 
+			ctxAuth, cancel := context.WithTimeout(ctx, time.Second)
+			defer cancel()
+
 			auth := authsrv.Authorize{
 				Claims: mid.GetClaims(ctx),
 				UserID: userID,
 				Rule:   rule,
 			}
 
-			if err := authSrv.Authorize(ctx, auth); err != nil {
+			if err := authSrv.Authorize(ctxAuth, auth); err != nil {
 				return errs.New(errs.Unauthenticated, err)
 			}
 
@@ -126,13 +133,16 @@ func AuthorizeProduct(log *logger.Logger, authSrv *authsrv.AuthSrv, productBus *
 				ctx = mid.SetProduct(ctx, prd)
 			}
 
+			ctxAuth, cancel := context.WithTimeout(ctx, time.Second)
+			defer cancel()
+
 			auth := authsrv.Authorize{
 				Claims: mid.GetClaims(ctx),
 				UserID: userID,
 				Rule:   auth.RuleAdminOrSubject,
 			}
 
-			if err := authSrv.Authorize(ctx, auth); err != nil {
+			if err := authSrv.Authorize(ctxAuth, auth); err != nil {
 				return errs.New(errs.Unauthenticated, err)
 			}
 
@@ -175,13 +185,16 @@ func AuthorizeHome(log *logger.Logger, authSrv *authsrv.AuthSrv, homeBus *homebu
 				ctx = mid.SetHome(ctx, hme)
 			}
 
+			ctxAuth, cancel := context.WithTimeout(ctx, time.Second)
+			defer cancel()
+
 			auth := authsrv.Authorize{
 				Claims: mid.GetClaims(ctx),
 				UserID: userID,
 				Rule:   auth.RuleAdminOrSubject,
 			}
 
-			if err := authSrv.Authorize(ctx, auth); err != nil {
+			if err := authSrv.Authorize(ctxAuth, auth); err != nil {
 				return errs.New(errs.Unauthenticated, err)
 			}
 
