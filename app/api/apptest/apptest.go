@@ -36,8 +36,8 @@ func New(handler http.Handler) *AppTest {
 	}
 }
 
-// Test performs the actual test logic based on the table data.
-func (at *AppTest) Test(t *testing.T, table []AppTable, testName string) {
+// Run performs the actual test logic based on the table data.
+func (at *AppTest) Run(t *testing.T, table []AppTable, testName string) {
 	for _, tt := range table {
 		f := func(t *testing.T) {
 			r := httptest.NewRequest(tt.Method, tt.URL, nil)
