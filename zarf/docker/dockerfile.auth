@@ -26,14 +26,14 @@ ARG BUILD_DATE
 ARG BUILD_REF
 RUN addgroup -g 1000 -S auth && \
     adduser -u 1000 -h /service -G auth -S auth
-COPY --from=build_auth --chown=sales:sales /service/zarf/keys/. /service/zarf/keys/.
-COPY --from=build_auth --chown=metrics:auth /service/apis/services/auth/auth /service/auth
+COPY --from=build_auth --chown=auth:auth /service/zarf/keys/. /service/zarf/keys/.
+COPY --from=build_auth --chown=auth:auth /service/apis/services/auth/auth /service/auth
 WORKDIR /service
 USER auth
 CMD ["./auth"]
 
 LABEL org.opencontainers.image.created="${BUILD_DATE}" \
-      org.opencontainers.image.title="metrics" \
+      org.opencontainers.image.title="auth" \
       org.opencontainers.image.authors="William Kennedy <bill@ardanlabs.com>" \
       org.opencontainers.image.source="https://github.com/ardanlabs/service/tree/master/apis/services/auth" \
       org.opencontainers.image.revision="${BUILD_REF}" \
