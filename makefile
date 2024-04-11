@@ -128,6 +128,7 @@ SERVICE_NAME    := sales
 VERSION         := 0.0.1
 SERVICE_IMAGE   := $(BASE_IMAGE_NAME)/$(SERVICE_NAME):$(VERSION)
 METRICS_IMAGE   := $(BASE_IMAGE_NAME)/metrics:$(VERSION)
+AUTH_IMAGE      := $(BASE_IMAGE_NAME)/auth:$(VERSION)
 
 # VERSION       := "0.0.1-$(shell git rev-parse --short HEAD)"
 
@@ -163,7 +164,7 @@ dev-docker:
 # ==============================================================================
 # Building containers
 
-build: sales metrics
+build: sales metrics auth
 
 sales:
 	docker build \
@@ -177,6 +178,14 @@ metrics:
 	docker build \
 		-f zarf/docker/dockerfile.metrics \
 		-t $(METRICS_IMAGE) \
+		--build-arg BUILD_REF=$(VERSION) \
+		--build-arg BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ") \
+		.
+
+auth:
+	docker build \
+		-f zarf/docker/dockerfile.auth \
+		-t $(AUTH_IMAGE) \
 		--build-arg BUILD_REF=$(VERSION) \
 		--build-arg BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ") \
 		.
@@ -215,6 +224,7 @@ dev-status:
 dev-load:
 	kind load docker-image $(SERVICE_IMAGE) --name $(KIND_CLUSTER)
 	kind load docker-image $(METRICS_IMAGE) --name $(KIND_CLUSTER)
+	kind load docker-image $(AUTH_IMAGE) --name $(KIND_CLUSTER)
 
 dev-apply:
 	kustomize build zarf/k8s/dev/grafana | kubectl apply -f -
@@ -327,16 +337,16 @@ token-gen:
 # Metrics and Tracing
 
 metrics-view-sc:
-	expvarmon -ports="localhost:4000" -vars="build,requests,goroutines,errors,panics,mem:memstats.HeapAlloc,mem:memstats.HeapSys,mem:memstats.Sys"
+	expvarmon -ports="localhost:3010" -vars="build,requests,goroutines,errors,panics,mem:memstats.HeapAlloc,mem:memstats.HeapSys,mem:memstats.Sys"
 
 metrics-view:
-	expvarmon -ports="localhost:3001" -endpoint="/metrics" -vars="build,requests,goroutines,errors,panics,mem:memstats.HeapAlloc,mem:memstats.HeapSys,mem:memstats.Sys"
+	expvarmon -ports="localhost:4020" -endpoint="/metrics" -vars="build,requests,goroutines,errors,panics,mem:memstats.HeapAlloc,mem:memstats.HeapSys,mem:memstats.Sys"
 
 grafana:
 	open -a "Google Chrome" http://localhost:3100/
 
 statsviz:
-	open -a "Google Chrome" http://localhost:4000/debug/statsviz
+	open -a "Google Chrome" http://localhost:3010/debug/statsviz
 
 # ==============================================================================
 # Running tests within the local computer
@@ -363,7 +373,7 @@ test-race: test-r lint vuln-check
 
 token:
 	curl -il \
-	--user "admin@example.com:gophers" http://localhost:3000/v1/users/token/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
+	--user "admin@example.com:gophers" http://localhost:6000/v1/auth/token/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
 
 # export TOKEN="COPY TOKEN STRING FROM LAST CALL"
 

@@ -7,14 +7,23 @@ nodes:
   - containerPort: 3000
     hostPort: 3000
   # Sales-Api debug
+  - containerPort: 3010
+    hostPort: 3010
+  # Metrics
   - containerPort: 4000
     hostPort: 4000
-  # Metrics
-  - containerPort: 3001
-    hostPort: 3001
   # Metrics debug
-  - containerPort: 4001
-    hostPort: 4001
+  - containerPort: 4010
+    hostPort: 4010
+  # Metrics Prometheus
+  - containerPort: 4020
+    hostPort: 4020
+  # Auth
+  - containerPort: 6000
+    hostPort: 6000
+  # Auth debug
+  - containerPort: 6010
+    hostPort: 6010
   # Grafana
   - containerPort: 3100
     hostPort: 3100
