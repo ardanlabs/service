@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/ardanlabs/service/apis/services/sales/http/build/all"
+	"github.com/ardanlabs/service/apis/services/sales/http/mux"
 	"github.com/ardanlabs/service/app/api/apptest"
-	"github.com/ardanlabs/service/app/api/mux"
 	"github.com/ardanlabs/service/business/data/dbtest"
 )
 
@@ -26,8 +26,8 @@ func Test_Home(t *testing.T) {
 	app := apptest.New(mux.WebAPI(mux.Config{
 		Shutdown: make(chan os.Signal, 1),
 		Log:      dbTest.Log,
-		Auth:     dbTest.Auth,
-		DB:       dbTest.DB,
+		//Auth:     dbTest.Auth,
+		DB: dbTest.DB,
 		BusCrud: mux.BusCrud{
 			Delegate: dbTest.Core.BusCrud.Delegate,
 			Home:     dbTest.Core.BusCrud.Home,

@@ -9,11 +9,7 @@ import (
 	midhttp "github.com/ardanlabs/service/app/api/mid/http"
 	"github.com/ardanlabs/service/business/api/auth"
 	"github.com/ardanlabs/service/business/core/crud/delegate"
-	"github.com/ardanlabs/service/business/core/crud/homebus"
-	"github.com/ardanlabs/service/business/core/crud/productbus"
 	"github.com/ardanlabs/service/business/core/crud/userbus"
-	"github.com/ardanlabs/service/business/core/views/vproductbus"
-	"github.com/ardanlabs/service/foundation/authapi"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/jmoiron/sqlx"
@@ -35,14 +31,7 @@ func WithCORS(origins []string) func(opts *Options) {
 // BusCrud represents the set of core business packages.
 type BusCrud struct {
 	Delegate *delegate.Delegate
-	Home     *homebus.Core
-	Product  *productbus.Core
 	User     *userbus.Core
-}
-
-// BusView represents the set of view business packages.
-type BusView struct {
-	Product *vproductbus.Core
 }
 
 // Config contains all the mandatory systems required by handlers.
@@ -51,11 +40,9 @@ type Config struct {
 	Shutdown chan os.Signal
 	Log      *logger.Logger
 	Auth     *auth.Auth
-	AuthAPI  *authapi.AuthAPI
 	DB       *sqlx.DB
 	Tracer   trace.Tracer
 	BusCrud  BusCrud
-	BusView  BusView
 }
 
 // RouteAdder defines behavior that sets the routes to bind for an instance

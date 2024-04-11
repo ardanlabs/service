@@ -2,13 +2,13 @@
 package all
 
 import (
+	"github.com/ardanlabs/service/apis/services/sales/http/mux"
 	"github.com/ardanlabs/service/apis/services/sales/http/routes/crud/homeapi"
 	"github.com/ardanlabs/service/apis/services/sales/http/routes/crud/productapi"
 	"github.com/ardanlabs/service/apis/services/sales/http/routes/crud/tranapi"
 	"github.com/ardanlabs/service/apis/services/sales/http/routes/crud/userapi"
 	"github.com/ardanlabs/service/apis/services/sales/http/routes/sys/checkapi"
 	"github.com/ardanlabs/service/apis/services/sales/http/routes/views/vproductapi"
-	"github.com/ardanlabs/service/app/api/mux"
 	"github.com/ardanlabs/service/foundation/web"
 )
 
@@ -32,14 +32,14 @@ func (add) Add(app *web.App, cfg mux.Config) {
 		Log:     cfg.Log,
 		UserBus: cfg.BusCrud.User,
 		HomeBus: cfg.BusCrud.Home,
-		AuthAPI: cfg.AuthAPI,
+		AuthSrv: cfg.AuthSrv,
 	})
 
 	productapi.Routes(app, productapi.Config{
 		Log:        cfg.Log,
 		UserBus:    cfg.BusCrud.User,
 		ProductBus: cfg.BusCrud.Product,
-		AuthAPI:    cfg.AuthAPI,
+		AuthSrv:    cfg.AuthSrv,
 	})
 
 	tranapi.Routes(app, tranapi.Config{
@@ -47,19 +47,19 @@ func (add) Add(app *web.App, cfg mux.Config) {
 		DB:         cfg.DB,
 		UserBus:    cfg.BusCrud.User,
 		ProductBus: cfg.BusCrud.Product,
-		AuthAPI:    cfg.AuthAPI,
+		AuthSrv:    cfg.AuthSrv,
 	})
 
 	userapi.Routes(app, userapi.Config{
 		Log:     cfg.Log,
 		UserBus: cfg.BusCrud.User,
-		AuthAPI: cfg.AuthAPI,
+		AuthSrv: cfg.AuthSrv,
 	})
 
 	vproductapi.Routes(app, vproductapi.Config{
 		Log:         cfg.Log,
 		UserBus:     cfg.BusCrud.User,
 		VProductBus: cfg.BusView.Product,
-		AuthAPI:     cfg.AuthAPI,
+		AuthSrv:     cfg.AuthSrv,
 	})
 }

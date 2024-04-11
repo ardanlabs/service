@@ -1,17 +1,17 @@
-package http
+package mid
 
 import (
 	"context"
 	"errors"
 	"net/http"
 
+	"github.com/ardanlabs/service/app/api/authsrv"
 	"github.com/ardanlabs/service/app/api/errs"
 	"github.com/ardanlabs/service/app/api/mid"
 	"github.com/ardanlabs/service/business/api/auth"
 	"github.com/ardanlabs/service/business/core/crud/homebus"
 	"github.com/ardanlabs/service/business/core/crud/productbus"
 	"github.com/ardanlabs/service/business/core/crud/userbus"
-	"github.com/ardanlabs/service/foundation/authapi"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/google/uuid"
@@ -21,7 +21,7 @@ import (
 var ErrInvalidID = errors.New("ID is not in its proper form")
 
 // Authorize executes the specified role and does not extract any domain data.
-func Authorize(log *logger.Logger, authAPI *authapi.AuthAPI, rule string) web.MidHandler {
+func Authorize(log *logger.Logger, authSrv *authsrv.AuthSrv, rule string) web.MidHandler {
 	m := func(handler web.Handler) web.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 			userID, err := mid.GetUserID(ctx)
@@ -29,13 +29,13 @@ func Authorize(log *logger.Logger, authAPI *authapi.AuthAPI, rule string) web.Mi
 				return errs.New(errs.Unauthenticated, err)
 			}
 
-			authInfo := authapi.AuthInfo{
+			auth := authsrv.Authorize{
 				Claims: mid.GetClaims(ctx),
 				UserID: userID,
 				Rule:   rule,
 			}
 
-			if err := authAPI.Authorize(ctx, authInfo); err != nil {
+			if err := authSrv.Authorize(ctx, auth); err != nil {
 				return errs.New(errs.Unauthenticated, err)
 			}
 
@@ -52,7 +52,7 @@ func Authorize(log *logger.Logger, authAPI *authapi.AuthAPI, rule string) web.Mi
 // from the DB if a user id is specified in the call. Depending on the rule
 // specified, the userid from the claims may be compared with the specified
 // user id.
-func AuthorizeUser(log *logger.Logger, authAPI *authapi.AuthAPI, userBus *userbus.Core, rule string) web.MidHandler {
+func AuthorizeUser(log *logger.Logger, authSrv *authsrv.AuthSrv, userBus *userbus.Core, rule string) web.MidHandler {
 	m := func(handler web.Handler) web.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 			var userID uuid.UUID
@@ -77,13 +77,13 @@ func AuthorizeUser(log *logger.Logger, authAPI *authapi.AuthAPI, userBus *userbu
 				ctx = mid.SetUser(ctx, usr)
 			}
 
-			authInfo := authapi.AuthInfo{
+			auth := authsrv.Authorize{
 				Claims: mid.GetClaims(ctx),
 				UserID: userID,
 				Rule:   rule,
 			}
 
-			if err := authAPI.Authorize(ctx, authInfo); err != nil {
+			if err := authSrv.Authorize(ctx, auth); err != nil {
 				return errs.New(errs.Unauthenticated, err)
 			}
 
@@ -100,7 +100,7 @@ func AuthorizeUser(log *logger.Logger, authAPI *authapi.AuthAPI, userBus *userbu
 // product from the DB if a product id is specified in the call. Depending on
 // the rule specified, the userid from the claims may be compared with the
 // specified user id from the product.
-func AuthorizeProduct(log *logger.Logger, authAPI *authapi.AuthAPI, productBus *productbus.Core) web.MidHandler {
+func AuthorizeProduct(log *logger.Logger, authSrv *authsrv.AuthSrv, productBus *productbus.Core) web.MidHandler {
 	m := func(handler web.Handler) web.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 			var userID uuid.UUID
@@ -126,13 +126,13 @@ func AuthorizeProduct(log *logger.Logger, authAPI *authapi.AuthAPI, productBus *
 				ctx = mid.SetProduct(ctx, prd)
 			}
 
-			authInfo := authapi.AuthInfo{
+			auth := authsrv.Authorize{
 				Claims: mid.GetClaims(ctx),
 				UserID: userID,
 				Rule:   auth.RuleAdminOrSubject,
 			}
 
-			if err := authAPI.Authorize(ctx, authInfo); err != nil {
+			if err := authSrv.Authorize(ctx, auth); err != nil {
 				return errs.New(errs.Unauthenticated, err)
 			}
 
@@ -149,7 +149,7 @@ func AuthorizeProduct(log *logger.Logger, authAPI *authapi.AuthAPI, productBus *
 // home from the DB if a home id is specified in the call. Depending on
 // the rule specified, the userid from the claims may be compared with the
 // specified user id from the home.
-func AuthorizeHome(log *logger.Logger, authAPI *authapi.AuthAPI, homeBus *homebus.Core) web.MidHandler {
+func AuthorizeHome(log *logger.Logger, authSrv *authsrv.AuthSrv, homeBus *homebus.Core) web.MidHandler {
 	m := func(handler web.Handler) web.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 			var userID uuid.UUID
@@ -175,13 +175,13 @@ func AuthorizeHome(log *logger.Logger, authAPI *authapi.AuthAPI, homeBus *homebu
 				ctx = mid.SetHome(ctx, hme)
 			}
 
-			authInfo := authapi.AuthInfo{
+			auth := authsrv.Authorize{
 				Claims: mid.GetClaims(ctx),
 				UserID: userID,
 				Rule:   auth.RuleAdminOrSubject,
 			}
 
-			if err := authAPI.Authorize(ctx, authInfo); err != nil {
+			if err := authSrv.Authorize(ctx, auth); err != nil {
 				return errs.New(errs.Unauthenticated, err)
 			}
 

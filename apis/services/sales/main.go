@@ -16,9 +16,9 @@ import (
 	"github.com/ardanlabs/service/apis/services/sales/http/build/all"
 	"github.com/ardanlabs/service/apis/services/sales/http/build/crud"
 	"github.com/ardanlabs/service/apis/services/sales/http/build/reporting"
+	"github.com/ardanlabs/service/apis/services/sales/http/mux"
+	"github.com/ardanlabs/service/app/api/authsrv"
 	"github.com/ardanlabs/service/app/api/debug"
-	"github.com/ardanlabs/service/app/api/mux"
-	"github.com/ardanlabs/service/business/api/auth"
 	"github.com/ardanlabs/service/business/core/crud/delegate"
 	"github.com/ardanlabs/service/business/core/crud/homebus"
 	"github.com/ardanlabs/service/business/core/crud/homebus/stores/homedb"
@@ -29,8 +29,6 @@ import (
 	"github.com/ardanlabs/service/business/core/views/vproductbus"
 	"github.com/ardanlabs/service/business/core/views/vproductbus/stores/vproductdb"
 	"github.com/ardanlabs/service/business/data/sqldb"
-	"github.com/ardanlabs/service/foundation/authapi"
-	"github.com/ardanlabs/service/foundation/keystore"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/web"
 	"go.opentelemetry.io/otel"
@@ -96,10 +94,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 			CORSAllowedOrigins []string      `conf:"default:*"`
 		}
 		Auth struct {
-			KeysFolder string `conf:"default:zarf/keys/"`
-			ActiveKID  string `conf:"default:54bb2165-71e1-41a6-af3e-7da4a0e1e2c1"`
-			Issuer     string `conf:"default:service project"`
-			Host       string `conf:"default:http://localhost:6000"`
+			Host string `conf:"default:http://localhost:6000"`
 		}
 		DB struct {
 			User         string `conf:"default:postgres"`
@@ -174,29 +169,10 @@ func run(ctx context.Context, log *logger.Logger) error {
 
 	log.Info(ctx, "startup", "status", "initializing authentication support")
 
-	// Load the private keys files from disk. We can assume some system like
-	// Vault has created these files already. How that happens is not our
-	// concern.
-	ks := keystore.New()
-	if err := ks.LoadRSAKeys(os.DirFS(cfg.Auth.KeysFolder)); err != nil {
-		return fmt.Errorf("reading keys: %w", err)
-	}
-
-	authCfg := auth.Config{
-		Log:       log,
-		DB:        db,
-		KeyLookup: ks,
-	}
-
-	auth, err := auth.New(authCfg)
-	if err != nil {
-		return fmt.Errorf("constructing auth: %w", err)
-	}
-
 	logFunc := func(ctx context.Context, msg string) {
 		log.Info(ctx, "authapi", "message", msg)
 	}
-	authAPI := authapi.New(cfg.Auth.Host, logFunc)
+	authSrv := authsrv.New(cfg.Auth.Host, logFunc)
 
 	// -------------------------------------------------------------------------
 	// Start Tracing Support
@@ -250,8 +226,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 		Build:    build,
 		Shutdown: shutdown,
 		Log:      log,
-		Auth:     auth,
-		AuthAPI:  authAPI,
+		AuthSrv:  authSrv,
 		DB:       db,
 		Tracer:   tracer,
 		BusCrud: mux.BusCrud{

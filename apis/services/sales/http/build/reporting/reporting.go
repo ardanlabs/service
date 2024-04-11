@@ -2,9 +2,9 @@
 package reporting
 
 import (
+	"github.com/ardanlabs/service/apis/services/sales/http/mux"
 	"github.com/ardanlabs/service/apis/services/sales/http/routes/sys/checkapi"
 	"github.com/ardanlabs/service/apis/services/sales/http/routes/views/vproductapi"
-	"github.com/ardanlabs/service/app/api/mux"
 	"github.com/ardanlabs/service/foundation/web"
 )
 
@@ -27,6 +27,6 @@ func (add) Add(app *web.App, cfg mux.Config) {
 	vproductapi.Routes(app, vproductapi.Config{
 		UserBus:     cfg.BusCrud.User,
 		VProductBus: cfg.BusView.Product,
-		AuthAPI:     cfg.AuthAPI,
+		AuthSrv:     cfg.AuthSrv,
 	})
 }

@@ -3,12 +3,12 @@ package homeapi
 import (
 	"net/http"
 
-	midhttp "github.com/ardanlabs/service/app/api/mid/http"
+	"github.com/ardanlabs/service/apis/services/sales/http/mid"
+	"github.com/ardanlabs/service/app/api/authsrv"
 	"github.com/ardanlabs/service/app/core/crud/homeapp"
 	"github.com/ardanlabs/service/business/api/auth"
 	"github.com/ardanlabs/service/business/core/crud/homebus"
 	"github.com/ardanlabs/service/business/core/crud/userbus"
-	"github.com/ardanlabs/service/foundation/authapi"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/web"
 )
@@ -18,17 +18,17 @@ type Config struct {
 	Log     *logger.Logger
 	UserBus *userbus.Core
 	HomeBus *homebus.Core
-	AuthAPI *authapi.AuthAPI
+	AuthSrv *authsrv.AuthSrv
 }
 
 // Routes adds specific routes for this group.
 func Routes(app *web.App, cfg Config) {
 	const version = "v1"
 
-	authen := midhttp.AuthenticateWeb(cfg.Log, cfg.AuthAPI)
-	ruleAny := midhttp.Authorize(cfg.Log, cfg.AuthAPI, auth.RuleAny)
-	ruleUserOnly := midhttp.Authorize(cfg.Log, cfg.AuthAPI, auth.RuleUserOnly)
-	ruleAuthorizeHome := midhttp.AuthorizeHome(cfg.Log, cfg.AuthAPI, cfg.HomeBus)
+	authen := mid.Authenticate(cfg.Log, cfg.AuthSrv)
+	ruleAny := mid.Authorize(cfg.Log, cfg.AuthSrv, auth.RuleAny)
+	ruleUserOnly := mid.Authorize(cfg.Log, cfg.AuthSrv, auth.RuleUserOnly)
+	ruleAuthorizeHome := mid.AuthorizeHome(cfg.Log, cfg.AuthSrv, cfg.HomeBus)
 
 	api := newAPI(homeapp.NewCore(cfg.HomeBus))
 	app.Handle(http.MethodGet, version, "/homes", api.query, authen, ruleAny)

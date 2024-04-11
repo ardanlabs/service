@@ -1,4 +1,4 @@
-package authapi
+package authsrv
 
 import (
 	"github.com/ardanlabs/service/business/api/auth"
@@ -15,14 +15,15 @@ func (err Error) Error() string {
 	return err.Message
 }
 
-// AuthInfo defines the information required to perform an authorization.
-type AuthInfo struct {
+// Authorize defines the information required to perform an authorization.
+type Authorize struct {
 	Claims auth.Claims
 	UserID uuid.UUID
 	Rule   string
 }
 
-type AuthResp struct {
+// AuthenticateResp defines the information that will be received on authenticate.
+type AuthenticateResp struct {
 	UserID uuid.UUID
 	Claims auth.Claims
 }

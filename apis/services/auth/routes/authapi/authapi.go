@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/ardanlabs/service/app/api/authsrv"
 	"github.com/ardanlabs/service/app/api/errs"
 	"github.com/ardanlabs/service/app/api/mid"
 	"github.com/ardanlabs/service/app/core/crud/userapp"
@@ -48,13 +49,13 @@ func (api *api) authenticate(ctx context.Context, w http.ResponseWriter, r *http
 }
 
 func (api *api) authorize(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	var authInfo AuthInfo
-	if err := web.Decode(r, &authInfo); err != nil {
+	var auth authsrv.Authorize
+	if err := web.Decode(r, &auth); err != nil {
 		return errs.New(errs.FailedPrecondition, err)
 	}
 
-	if err := api.auth.Authorize(ctx, authInfo.Claims, authInfo.UserID, authInfo.Rule); err != nil {
-		return errs.Newf(errs.Unauthenticated, "authorize: you are not authorized for that action, claims[%v] rule[%v]: %s", authInfo.Claims.Roles, authInfo.Rule, err)
+	if err := api.auth.Authorize(ctx, auth.Claims, auth.UserID, auth.Rule); err != nil {
+		return errs.Newf(errs.Unauthenticated, "authorize: you are not authorized for that action, claims[%v] rule[%v]: %s", auth.Claims.Roles, auth.Rule, err)
 	}
 
 	return web.Respond(ctx, w, nil, http.StatusNoContent)

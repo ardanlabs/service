@@ -3,12 +3,12 @@ package productapi
 import (
 	"net/http"
 
-	midhttp "github.com/ardanlabs/service/app/api/mid/http"
+	"github.com/ardanlabs/service/apis/services/sales/http/mid"
+	"github.com/ardanlabs/service/app/api/authsrv"
 	"github.com/ardanlabs/service/app/core/crud/productapp"
 	"github.com/ardanlabs/service/business/api/auth"
 	"github.com/ardanlabs/service/business/core/crud/productbus"
 	"github.com/ardanlabs/service/business/core/crud/userbus"
-	"github.com/ardanlabs/service/foundation/authapi"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/web"
 )
@@ -18,17 +18,17 @@ type Config struct {
 	Log        *logger.Logger
 	UserBus    *userbus.Core
 	ProductBus *productbus.Core
-	AuthAPI    *authapi.AuthAPI
+	AuthSrv    *authsrv.AuthSrv
 }
 
 // Routes adds specific routes for this group.
 func Routes(app *web.App, cfg Config) {
 	const version = "v1"
 
-	authen := midhttp.AuthenticateWeb(cfg.Log, cfg.AuthAPI)
-	ruleAny := midhttp.Authorize(cfg.Log, cfg.AuthAPI, auth.RuleAny)
-	ruleUserOnly := midhttp.Authorize(cfg.Log, cfg.AuthAPI, auth.RuleUserOnly)
-	ruleAuthorizeProduct := midhttp.AuthorizeProduct(cfg.Log, cfg.AuthAPI, cfg.ProductBus)
+	authen := mid.Authenticate(cfg.Log, cfg.AuthSrv)
+	ruleAny := mid.Authorize(cfg.Log, cfg.AuthSrv, auth.RuleAny)
+	ruleUserOnly := mid.Authorize(cfg.Log, cfg.AuthSrv, auth.RuleUserOnly)
+	ruleAuthorizeProduct := mid.AuthorizeProduct(cfg.Log, cfg.AuthSrv, cfg.ProductBus)
 
 	api := newAPI(productapp.NewCore(cfg.ProductBus))
 	app.Handle(http.MethodGet, version, "/products", api.query, authen, ruleAny)
