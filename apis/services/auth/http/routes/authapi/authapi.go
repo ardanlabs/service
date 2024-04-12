@@ -13,7 +13,6 @@ import (
 	"github.com/ardanlabs/service/business/api/auth"
 	"github.com/ardanlabs/service/foundation/validate"
 	"github.com/ardanlabs/service/foundation/web"
-	"github.com/google/uuid"
 )
 
 type api struct {
@@ -37,10 +36,7 @@ func (api *api) authenticate(ctx context.Context, w http.ResponseWriter, r *http
 		return errs.New(errs.Unauthenticated, err)
 	}
 
-	resp := struct {
-		UserID uuid.UUID
-		Claims auth.Claims
-	}{
+	resp := authsrv.AuthenticateResp{
 		UserID: userID,
 		Claims: mid.GetClaims(ctx),
 	}
