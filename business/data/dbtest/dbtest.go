@@ -152,10 +152,6 @@ func NewTest(t *testing.T, c *docker.Container, testName string) *Test {
 
 	// -------------------------------------------------------------------------
 
-	busDomain := newBusDomains(log, db)
-
-	// -------------------------------------------------------------------------
-
 	auth, err := auth.New(auth.Config{
 		Log:       log,
 		DB:        db,
@@ -183,7 +179,7 @@ func NewTest(t *testing.T, c *docker.Container, testName string) *Test {
 		DB:        db,
 		Log:       log,
 		Auth:      auth,
-		BusDomain: busDomain,
+		BusDomain: newBusDomains(log, db),
 		Teardown:  teardown,
 		t:         t,
 	}
