@@ -8,10 +8,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ardanlabs/service/business/core/crud/productbus"
-	"github.com/ardanlabs/service/business/core/crud/userbus"
-	"github.com/ardanlabs/service/business/core/views/vproductbus"
 	"github.com/ardanlabs/service/business/data/dbtest"
+	"github.com/ardanlabs/service/business/domain/productbus"
+	"github.com/ardanlabs/service/business/domain/userbus"
+	"github.com/ardanlabs/service/business/domain/vproductbus"
 	"github.com/google/go-cmp/cmp"
 )
 

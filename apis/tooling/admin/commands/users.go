@@ -7,9 +7,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/ardanlabs/service/business/core/crud/userbus"
-	"github.com/ardanlabs/service/business/core/crud/userbus/stores/userdb"
 	"github.com/ardanlabs/service/business/data/sqldb"
+	"github.com/ardanlabs/service/business/domain/userbus"
+	"github.com/ardanlabs/service/business/domain/userbus/stores/userdb"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/go-json-experiment/json"
 )

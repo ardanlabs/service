@@ -3,8 +3,8 @@ package all
 
 import (
 	"github.com/ardanlabs/service/apis/services/auth/http/mux"
-	"github.com/ardanlabs/service/apis/services/auth/http/routes/authapi"
-	"github.com/ardanlabs/service/apis/services/auth/http/routes/checkapi"
+	"github.com/ardanlabs/service/apis/services/auth/http/route/authapi"
+	"github.com/ardanlabs/service/apis/services/auth/http/route/checkapi"
 	"github.com/ardanlabs/service/foundation/web"
 )
 

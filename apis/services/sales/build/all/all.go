@@ -3,12 +3,12 @@ package all
 
 import (
 	"github.com/ardanlabs/service/apis/services/sales/mux"
-	"github.com/ardanlabs/service/apis/services/sales/routes/crud/homeapi"
-	"github.com/ardanlabs/service/apis/services/sales/routes/crud/productapi"
-	"github.com/ardanlabs/service/apis/services/sales/routes/crud/tranapi"
-	"github.com/ardanlabs/service/apis/services/sales/routes/crud/userapi"
-	"github.com/ardanlabs/service/apis/services/sales/routes/sys/checkapi"
-	"github.com/ardanlabs/service/apis/services/sales/routes/views/vproductapi"
+	"github.com/ardanlabs/service/apis/services/sales/route/domain/homeapi"
+	"github.com/ardanlabs/service/apis/services/sales/route/domain/productapi"
+	"github.com/ardanlabs/service/apis/services/sales/route/domain/tranapi"
+	"github.com/ardanlabs/service/apis/services/sales/route/domain/userapi"
+	"github.com/ardanlabs/service/apis/services/sales/route/domain/vproductapi"
+	"github.com/ardanlabs/service/apis/services/sales/route/sys/checkapi"
 	"github.com/ardanlabs/service/foundation/web"
 )
 

@@ -7,9 +7,9 @@ import (
 	"errors"
 
 	"github.com/ardanlabs/service/business/api/auth"
-	"github.com/ardanlabs/service/business/core/crud/homebus"
-	"github.com/ardanlabs/service/business/core/crud/productbus"
-	"github.com/ardanlabs/service/business/core/crud/userbus"
+	"github.com/ardanlabs/service/business/domain/homebus"
+	"github.com/ardanlabs/service/business/domain/productbus"
+	"github.com/ardanlabs/service/business/domain/userbus"
 	"github.com/google/uuid"
 )
 

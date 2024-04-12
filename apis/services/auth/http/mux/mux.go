@@ -8,8 +8,8 @@ import (
 
 	midhttp "github.com/ardanlabs/service/app/api/mid/http"
 	"github.com/ardanlabs/service/business/api/auth"
-	"github.com/ardanlabs/service/business/core/crud/delegate"
-	"github.com/ardanlabs/service/business/core/crud/userbus"
+	"github.com/ardanlabs/service/business/api/delegate"
+	"github.com/ardanlabs/service/business/domain/userbus"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/jmoiron/sqlx"

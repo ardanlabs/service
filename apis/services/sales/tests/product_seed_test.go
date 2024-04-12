@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/ardanlabs/service/business/core/crud/productbus"
-	"github.com/ardanlabs/service/business/core/crud/userbus"
 	"github.com/ardanlabs/service/business/data/dbtest"
+	"github.com/ardanlabs/service/business/domain/productbus"
+	"github.com/ardanlabs/service/business/domain/userbus"
 )
 
 func insertProductSeed(dbTest *dbtest.Test) (dbtest.SeedData, error) {

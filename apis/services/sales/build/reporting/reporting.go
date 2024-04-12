@@ -3,8 +3,8 @@ package reporting
 
 import (
 	"github.com/ardanlabs/service/apis/services/sales/mux"
-	"github.com/ardanlabs/service/apis/services/sales/routes/sys/checkapi"
-	"github.com/ardanlabs/service/apis/services/sales/routes/views/vproductapi"
+	"github.com/ardanlabs/service/apis/services/sales/route/domain/vproductapi"
+	"github.com/ardanlabs/service/apis/services/sales/route/sys/checkapi"
 	"github.com/ardanlabs/service/foundation/web"
 )
 

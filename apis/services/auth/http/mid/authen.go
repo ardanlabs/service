@@ -12,7 +12,7 @@ import (
 	"github.com/ardanlabs/service/app/api/errs"
 	"github.com/ardanlabs/service/app/api/mid"
 	"github.com/ardanlabs/service/business/api/auth"
-	"github.com/ardanlabs/service/business/core/crud/userbus"
+	"github.com/ardanlabs/service/business/domain/userbus"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"

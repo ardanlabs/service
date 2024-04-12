@@ -5,7 +5,7 @@ import (
 
 	"github.com/ardanlabs/service/app/api/apptest"
 	"github.com/ardanlabs/service/app/api/errs"
-	"github.com/ardanlabs/service/app/core/crud/homeapp"
+	"github.com/ardanlabs/service/app/domain/homeapp"
 	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/google/go-cmp/cmp"
 )

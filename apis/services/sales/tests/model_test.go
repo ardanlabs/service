@@ -4,13 +4,13 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/app/api/errs"
-	"github.com/ardanlabs/service/app/core/crud/homeapp"
-	"github.com/ardanlabs/service/app/core/crud/productapp"
-	"github.com/ardanlabs/service/app/core/crud/userapp"
-	"github.com/ardanlabs/service/app/core/views/vproductapp"
-	"github.com/ardanlabs/service/business/core/crud/homebus"
-	"github.com/ardanlabs/service/business/core/crud/productbus"
-	"github.com/ardanlabs/service/business/core/crud/userbus"
+	"github.com/ardanlabs/service/app/domain/homeapp"
+	"github.com/ardanlabs/service/app/domain/productapp"
+	"github.com/ardanlabs/service/app/domain/userapp"
+	"github.com/ardanlabs/service/app/domain/vproductapp"
+	"github.com/ardanlabs/service/business/domain/homebus"
+	"github.com/ardanlabs/service/business/domain/productbus"
+	"github.com/ardanlabs/service/business/domain/userbus"
 )
 
 func toErrorPtr(err errs.Error) *errs.Error {
