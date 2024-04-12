@@ -30,36 +30,36 @@ func (add) Add(app *web.App, cfg mux.Config) {
 
 	homeapi.Routes(app, homeapi.Config{
 		Log:     cfg.Log,
-		UserBus: cfg.BusCrud.User,
-		HomeBus: cfg.BusCrud.Home,
+		UserBus: cfg.BusDomain.User,
+		HomeBus: cfg.BusDomain.Home,
 		AuthSrv: cfg.AuthSrv,
 	})
 
 	productapi.Routes(app, productapi.Config{
 		Log:        cfg.Log,
-		UserBus:    cfg.BusCrud.User,
-		ProductBus: cfg.BusCrud.Product,
+		UserBus:    cfg.BusDomain.User,
+		ProductBus: cfg.BusDomain.Product,
 		AuthSrv:    cfg.AuthSrv,
 	})
 
 	tranapi.Routes(app, tranapi.Config{
 		Log:        cfg.Log,
 		DB:         cfg.DB,
-		UserBus:    cfg.BusCrud.User,
-		ProductBus: cfg.BusCrud.Product,
+		UserBus:    cfg.BusDomain.User,
+		ProductBus: cfg.BusDomain.Product,
 		AuthSrv:    cfg.AuthSrv,
 	})
 
 	userapi.Routes(app, userapi.Config{
 		Log:     cfg.Log,
-		UserBus: cfg.BusCrud.User,
+		UserBus: cfg.BusDomain.User,
 		AuthSrv: cfg.AuthSrv,
 	})
 
 	vproductapi.Routes(app, vproductapi.Config{
 		Log:         cfg.Log,
-		UserBus:     cfg.BusCrud.User,
-		VProductBus: cfg.BusView.Product,
+		UserBus:     cfg.BusDomain.User,
+		VProductBus: cfg.BusDomain.VProduct,
 		AuthSrv:     cfg.AuthSrv,
 	})
 }

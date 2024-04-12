@@ -43,14 +43,14 @@ func Test_Product(t *testing.T) {
 
 func insertProductSeedData(dbTest *dbtest.Test) (dbtest.SeedData, error) {
 	ctx := context.Background()
-	api := dbTest.Core.BusCrud
+	busDomain := dbTest.BusDomain
 
-	usrs, err := userbus.TestGenerateSeedUsers(ctx, 1, userbus.RoleUser, api.User)
+	usrs, err := userbus.TestGenerateSeedUsers(ctx, 1, userbus.RoleUser, busDomain.User)
 	if err != nil {
 		return dbtest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}
 
-	prds, err := productbus.TestGenerateSeedProducts(ctx, 2, api.Product, usrs[0].ID)
+	prds, err := productbus.TestGenerateSeedProducts(ctx, 2, busDomain.Product, usrs[0].ID)
 	if err != nil {
 		return dbtest.SeedData{}, fmt.Errorf("seeding products : %w", err)
 	}
@@ -63,12 +63,12 @@ func insertProductSeedData(dbTest *dbtest.Test) (dbtest.SeedData, error) {
 
 	// -------------------------------------------------------------------------
 
-	usrs, err = userbus.TestGenerateSeedUsers(ctx, 1, userbus.RoleAdmin, api.User)
+	usrs, err = userbus.TestGenerateSeedUsers(ctx, 1, userbus.RoleAdmin, busDomain.User)
 	if err != nil {
 		return dbtest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}
 
-	prds, err = productbus.TestGenerateSeedProducts(ctx, 2, api.Product, usrs[0].ID)
+	prds, err = productbus.TestGenerateSeedProducts(ctx, 2, busDomain.Product, usrs[0].ID)
 	if err != nil {
 		return dbtest.SeedData{}, fmt.Errorf("seeding products : %w", err)
 	}
@@ -109,7 +109,7 @@ func productQuery(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
 					Name: dbtest.StringPointer("Name"),
 				}
 
-				resp, err := dbt.Core.BusCrud.Product.Query(ctx, filter, productbus.DefaultOrderBy, 1, 10)
+				resp, err := dbt.BusDomain.Product.Query(ctx, filter, productbus.DefaultOrderBy, 1, 10)
 				if err != nil {
 					return err
 				}
@@ -141,7 +141,7 @@ func productQuery(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
 			Name:    "byid",
 			ExpResp: sd.Users[0].Products[0],
 			ExcFunc: func(ctx context.Context) any {
-				resp, err := dbt.Core.BusCrud.Product.QueryByID(ctx, sd.Users[0].Products[0].ID)
+				resp, err := dbt.BusDomain.Product.QueryByID(ctx, sd.Users[0].Products[0].ID)
 				if err != nil {
 					return err
 				}
@@ -190,7 +190,7 @@ func productCreate(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
 					Quantity: 10,
 				}
 
-				resp, err := dbt.Core.BusCrud.Product.Create(ctx, np)
+				resp, err := dbt.BusDomain.Product.Create(ctx, np)
 				if err != nil {
 					return err
 				}
@@ -237,7 +237,7 @@ func productUpdate(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
 					Quantity: dbtest.IntPointer(10),
 				}
 
-				resp, err := dbt.Core.BusCrud.Product.Update(ctx, sd.Users[0].Products[0], up)
+				resp, err := dbt.BusDomain.Product.Update(ctx, sd.Users[0].Products[0], up)
 				if err != nil {
 					return err
 				}
@@ -268,7 +268,7 @@ func productDelete(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
 			Name:    "user",
 			ExpResp: nil,
 			ExcFunc: func(ctx context.Context) any {
-				if err := dbt.Core.BusCrud.Product.Delete(ctx, sd.Users[0].Products[1]); err != nil {
+				if err := dbt.BusDomain.Product.Delete(ctx, sd.Users[0].Products[1]); err != nil {
 					return err
 				}
 
@@ -282,7 +282,7 @@ func productDelete(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
 			Name:    "admin",
 			ExpResp: nil,
 			ExcFunc: func(ctx context.Context) any {
-				if err := dbt.Core.BusCrud.Product.Delete(ctx, sd.Admins[0].Products[1]); err != nil {
+				if err := dbt.BusDomain.Product.Delete(ctx, sd.Admins[0].Products[1]); err != nil {
 					return err
 				}
 

@@ -44,9 +44,9 @@ func Test_User(t *testing.T) {
 
 func insertUserSeedData(dbTest *dbtest.Test) (dbtest.SeedData, error) {
 	ctx := context.Background()
-	api := dbTest.Core.BusCrud
+	busDomain := dbTest.BusDomain
 
-	usrs, err := userbus.TestGenerateSeedUsers(ctx, 2, userbus.RoleAdmin, api.User)
+	usrs, err := userbus.TestGenerateSeedUsers(ctx, 2, userbus.RoleAdmin, busDomain.User)
 	if err != nil {
 		return dbtest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}
@@ -61,7 +61,7 @@ func insertUserSeedData(dbTest *dbtest.Test) (dbtest.SeedData, error) {
 
 	// -------------------------------------------------------------------------
 
-	usrs, err = userbus.TestGenerateSeedUsers(ctx, 2, userbus.RoleUser, api.User)
+	usrs, err = userbus.TestGenerateSeedUsers(ctx, 2, userbus.RoleUser, busDomain.User)
 	if err != nil {
 		return dbtest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}
@@ -110,7 +110,7 @@ func userQuery(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
 					Name: dbtest.StringPointer("Name"),
 				}
 
-				resp, err := dbt.Core.BusCrud.User.Query(ctx, filter, userbus.DefaultOrderBy, 1, 10)
+				resp, err := dbt.BusDomain.User.Query(ctx, filter, userbus.DefaultOrderBy, 1, 10)
 				if err != nil {
 					return err
 				}
@@ -142,7 +142,7 @@ func userQuery(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
 			Name:    "byid",
 			ExpResp: sd.Users[0].User,
 			ExcFunc: func(ctx context.Context) any {
-				resp, err := dbt.Core.BusCrud.User.QueryByID(ctx, sd.Users[0].ID)
+				resp, err := dbt.BusDomain.User.QueryByID(ctx, sd.Users[0].ID)
 				if err != nil {
 					return err
 				}
@@ -196,7 +196,7 @@ func userCreate(dbt *dbtest.Test) []dbtest.UnitTable {
 					PasswordConfirm: "123",
 				}
 
-				resp, err := dbt.Core.BusCrud.User.Create(ctx, nu)
+				resp, err := dbt.BusDomain.User.Create(ctx, nu)
 				if err != nil {
 					return err
 				}
@@ -253,7 +253,7 @@ func userUpdate(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
 					PasswordConfirm: dbtest.StringPointer("1234"),
 				}
 
-				resp, err := dbt.Core.BusCrud.User.Update(ctx, sd.Users[0].User, uu)
+				resp, err := dbt.BusDomain.User.Update(ctx, sd.Users[0].User, uu)
 				if err != nil {
 					return err
 				}
@@ -289,7 +289,7 @@ func userDelete(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
 			Name:    "user",
 			ExpResp: nil,
 			ExcFunc: func(ctx context.Context) any {
-				if err := dbt.Core.BusCrud.User.Delete(ctx, sd.Users[1].User); err != nil {
+				if err := dbt.BusDomain.User.Delete(ctx, sd.Users[1].User); err != nil {
 					return err
 				}
 
@@ -303,7 +303,7 @@ func userDelete(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
 			Name:    "admin",
 			ExpResp: nil,
 			ExcFunc: func(ctx context.Context) any {
-				if err := dbt.Core.BusCrud.User.Delete(ctx, sd.Admins[1].User); err != nil {
+				if err := dbt.BusDomain.User.Delete(ctx, sd.Admins[1].User); err != nil {
 					return err
 				}
 

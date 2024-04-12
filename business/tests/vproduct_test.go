@@ -41,14 +41,14 @@ func Test_VProduct(t *testing.T) {
 
 func insertVProductSeedData(dbTest *dbtest.Test) (dbtest.SeedData, error) {
 	ctx := context.Background()
-	api := dbTest.Core.BusCrud
+	busDomain := dbTest.BusDomain
 
-	usrs, err := userbus.TestGenerateSeedUsers(ctx, 1, userbus.RoleUser, api.User)
+	usrs, err := userbus.TestGenerateSeedUsers(ctx, 1, userbus.RoleUser, busDomain.User)
 	if err != nil {
 		return dbtest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}
 
-	prds, err := productbus.TestGenerateSeedProducts(ctx, 2, api.Product, usrs[0].ID)
+	prds, err := productbus.TestGenerateSeedProducts(ctx, 2, busDomain.Product, usrs[0].ID)
 	if err != nil {
 		return dbtest.SeedData{}, fmt.Errorf("seeding products : %w", err)
 	}
@@ -61,12 +61,12 @@ func insertVProductSeedData(dbTest *dbtest.Test) (dbtest.SeedData, error) {
 
 	// -------------------------------------------------------------------------
 
-	usrs, err = userbus.TestGenerateSeedUsers(ctx, 1, userbus.RoleAdmin, api.User)
+	usrs, err = userbus.TestGenerateSeedUsers(ctx, 1, userbus.RoleAdmin, busDomain.User)
 	if err != nil {
 		return dbtest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}
 
-	prds, err = productbus.TestGenerateSeedProducts(ctx, 2, api.Product, usrs[0].ID)
+	prds, err = productbus.TestGenerateSeedProducts(ctx, 2, busDomain.Product, usrs[0].ID)
 	if err != nil {
 		return dbtest.SeedData{}, fmt.Errorf("seeding products : %w", err)
 	}
@@ -130,7 +130,7 @@ func vproductQuery(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
 					Name: dbtest.StringPointer("Name"),
 				}
 
-				resp, err := dbt.Core.BusView.Product.Query(ctx, filter, vproductbus.DefaultOrderBy, 1, 10)
+				resp, err := dbt.BusDomain.VProduct.Query(ctx, filter, vproductbus.DefaultOrderBy, 1, 10)
 				if err != nil {
 					return err
 				}

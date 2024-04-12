@@ -229,14 +229,12 @@ func run(ctx context.Context, log *logger.Logger) error {
 		AuthSrv:  authSrv,
 		DB:       db,
 		Tracer:   tracer,
-		BusCrud: mux.BusCrud{
+		BusDomain: mux.BusDomain{
 			Delegate: delegate,
 			Home:     homeBus,
 			Product:  productBus,
 			User:     userBus,
-		},
-		BusView: mux.BusView{
-			Product: vproductBus,
+			VProduct: vproductBus,
 		},
 	}
 

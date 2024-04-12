@@ -11,14 +11,14 @@ import (
 
 func insertProductSeed(dbTest *dbtest.Test) (dbtest.SeedData, error) {
 	ctx := context.Background()
-	api := dbTest.Core.BusCrud
+	busDomain := dbTest.BusDomain
 
-	usrs, err := userbus.TestGenerateSeedUsers(ctx, 1, userbus.RoleUser, api.User)
+	usrs, err := userbus.TestGenerateSeedUsers(ctx, 1, userbus.RoleUser, busDomain.User)
 	if err != nil {
 		return dbtest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}
 
-	prds, err := productbus.TestGenerateSeedProducts(ctx, 2, api.Product, usrs[0].ID)
+	prds, err := productbus.TestGenerateSeedProducts(ctx, 2, busDomain.Product, usrs[0].ID)
 	if err != nil {
 		return dbtest.SeedData{}, fmt.Errorf("seeding products : %w", err)
 	}
@@ -31,12 +31,12 @@ func insertProductSeed(dbTest *dbtest.Test) (dbtest.SeedData, error) {
 
 	// -------------------------------------------------------------------------
 
-	usrs, err = userbus.TestGenerateSeedUsers(ctx, 1, userbus.RoleAdmin, api.User)
+	usrs, err = userbus.TestGenerateSeedUsers(ctx, 1, userbus.RoleAdmin, busDomain.User)
 	if err != nil {
 		return dbtest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}
 
-	prds, err = productbus.TestGenerateSeedProducts(ctx, 2, api.Product, usrs[0].ID)
+	prds, err = productbus.TestGenerateSeedProducts(ctx, 2, busDomain.Product, usrs[0].ID)
 	if err != nil {
 		return dbtest.SeedData{}, fmt.Errorf("seeding products : %w", err)
 	}

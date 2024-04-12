@@ -227,7 +227,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 		Auth:     auth,
 		DB:       db,
 		Tracer:   tracer,
-		BusCrud: mux.BusCrud{
+		BusDomain: mux.BusDomain{
 			Delegate: delegate,
 			User:     userBus,
 		},

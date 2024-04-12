@@ -28,27 +28,27 @@ func (add) Add(app *web.App, cfg mux.Config) {
 	})
 
 	homeapi.Routes(app, homeapi.Config{
-		UserBus: cfg.BusCrud.User,
-		HomeBus: cfg.BusCrud.Home,
+		UserBus: cfg.BusDomain.User,
+		HomeBus: cfg.BusDomain.Home,
 		AuthSrv: cfg.AuthSrv,
 	})
 
 	productapi.Routes(app, productapi.Config{
-		UserBus:    cfg.BusCrud.User,
-		ProductBus: cfg.BusCrud.Product,
+		UserBus:    cfg.BusDomain.User,
+		ProductBus: cfg.BusDomain.Product,
 		AuthSrv:    cfg.AuthSrv,
 	})
 
 	tranapi.Routes(app, tranapi.Config{
-		UserBus:    cfg.BusCrud.User,
-		ProductBus: cfg.BusCrud.Product,
+		UserBus:    cfg.BusDomain.User,
+		ProductBus: cfg.BusDomain.Product,
 		Log:        cfg.Log,
 		AuthSrv:    cfg.AuthSrv,
 		DB:         cfg.DB,
 	})
 
 	userapi.Routes(app, userapi.Config{
-		UserBus: cfg.BusCrud.User,
+		UserBus: cfg.BusDomain.User,
 		AuthSrv: cfg.AuthSrv,
 	})
 }

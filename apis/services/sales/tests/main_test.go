@@ -50,9 +50,9 @@ func startTest(t *testing.T, testName string) (*dbtest.Test, *apptest.AppTest) {
 		Log:      dbTest.Log,
 		Auth:     dbTest.Auth,
 		DB:       dbTest.DB,
-		BusCrud: authmux.BusCrud{
-			Delegate: dbTest.Core.BusCrud.Delegate,
-			User:     dbTest.Core.BusCrud.User,
+		BusDomain: authmux.BusDomain{
+			Delegate: dbTest.BusDomain.Delegate,
+			User:     dbTest.BusDomain.User,
 		},
 	}, authbuild.Routes())
 
@@ -70,14 +70,12 @@ func startTest(t *testing.T, testName string) (*dbtest.Test, *apptest.AppTest) {
 		Log:      dbTest.Log,
 		AuthSrv:  authSrv,
 		DB:       dbTest.DB,
-		BusCrud: salesmux.BusCrud{
-			Delegate: dbTest.Core.BusCrud.Delegate,
-			Home:     dbTest.Core.BusCrud.Home,
-			Product:  dbTest.Core.BusCrud.Product,
-			User:     dbTest.Core.BusCrud.User,
-		},
-		BusView: salesmux.BusView{
-			Product: dbTest.Core.BusView.Product,
+		BusDomain: salesmux.BusDomain{
+			Delegate: dbTest.BusDomain.Delegate,
+			Home:     dbTest.BusDomain.Home,
+			Product:  dbTest.BusDomain.Product,
+			User:     dbTest.BusDomain.User,
+			VProduct: dbTest.BusDomain.VProduct,
 		},
 	}, salesbuild.Routes()))
 

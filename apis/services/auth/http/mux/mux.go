@@ -28,21 +28,21 @@ func WithCORS(origins []string) func(opts *Options) {
 	}
 }
 
-// BusCrud represents the set of core business packages.
-type BusCrud struct {
+// BusDomain represents the set of core business packages.
+type BusDomain struct {
 	Delegate *delegate.Delegate
 	User     *userbus.Core
 }
 
 // Config contains all the mandatory systems required by handlers.
 type Config struct {
-	Build    string
-	Shutdown chan os.Signal
-	Log      *logger.Logger
-	Auth     *auth.Auth
-	DB       *sqlx.DB
-	Tracer   trace.Tracer
-	BusCrud  BusCrud
+	Build     string
+	Shutdown  chan os.Signal
+	Log       *logger.Logger
+	Auth      *auth.Auth
+	DB        *sqlx.DB
+	Tracer    trace.Tracer
+	BusDomain BusDomain
 }
 
 // RouteAdder defines behavior that sets the routes to bind for an instance
