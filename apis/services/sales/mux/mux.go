@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/ardanlabs/service/app/api/authsrv"
-	midhttp "github.com/ardanlabs/service/app/api/mid/http"
+	"github.com/ardanlabs/service/app/api/mid"
 	"github.com/ardanlabs/service/business/api/delegate"
 	"github.com/ardanlabs/service/business/domain/homebus"
 	"github.com/ardanlabs/service/business/domain/productbus"
@@ -67,14 +67,14 @@ func WebAPI(cfg Config, routeAdder RouteAdder, options ...func(opts *Options)) h
 	app := web.NewApp(
 		cfg.Shutdown,
 		cfg.Tracer,
-		midhttp.Logger(cfg.Log),
-		midhttp.Errors(cfg.Log),
-		midhttp.Metrics(),
-		midhttp.Panics(),
+		mid.Logger(cfg.Log),
+		mid.Errors(cfg.Log),
+		mid.Metrics(),
+		mid.Panics(),
 	)
 
 	if len(opts.corsOrigin) > 0 {
-		app.EnableCORS(midhttp.Cors(opts.corsOrigin))
+		app.EnableCORS(mid.Cors(opts.corsOrigin))
 	}
 
 	routeAdder.Add(app, cfg)

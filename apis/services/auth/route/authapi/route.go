@@ -3,7 +3,7 @@ package authapi
 import (
 	"net/http"
 
-	"github.com/ardanlabs/service/apis/services/auth/http/mid"
+	"github.com/ardanlabs/service/apis/services/auth/mid"
 	"github.com/ardanlabs/service/app/domain/userapp"
 	"github.com/ardanlabs/service/business/api/auth"
 	"github.com/ardanlabs/service/business/domain/userbus"

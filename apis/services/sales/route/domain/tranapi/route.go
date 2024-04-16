@@ -5,7 +5,7 @@ import (
 
 	"github.com/ardanlabs/service/apis/services/sales/mid"
 	"github.com/ardanlabs/service/app/api/authsrv"
-	midapp "github.com/ardanlabs/service/app/api/mid/http"
+	midapp "github.com/ardanlabs/service/app/api/mid"
 	"github.com/ardanlabs/service/app/domain/tranapp"
 	"github.com/ardanlabs/service/business/data/sqldb"
 	"github.com/ardanlabs/service/business/domain/productbus"

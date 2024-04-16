@@ -7,8 +7,8 @@ import (
 	"os"
 	"testing"
 
-	authbuild "github.com/ardanlabs/service/apis/services/auth/http/build/all"
-	authmux "github.com/ardanlabs/service/apis/services/auth/http/mux"
+	authbuild "github.com/ardanlabs/service/apis/services/auth/build/all"
+	authmux "github.com/ardanlabs/service/apis/services/auth/mux"
 	salesbuild "github.com/ardanlabs/service/apis/services/sales/build/all"
 	salesmux "github.com/ardanlabs/service/apis/services/sales/mux"
 	"github.com/ardanlabs/service/app/api/apptest"
