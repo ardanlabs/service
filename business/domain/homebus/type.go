@@ -2,21 +2,24 @@ package homebus
 
 import "fmt"
 
+// Set of known housing types.
+var types = make(map[string]Type)
+
 // Set of possible roles for a housing type.
 var (
-	TypeSingle = Type{"SINGLE FAMILY"}
-	TypeCondo  = Type{"CONDO"}
+	TypeSingle = newType("SINGLE FAMILY")
+	TypeCondo  = newType("CONDO")
 )
-
-// Set of known housing types.
-var types = map[string]Type{
-	TypeSingle.name: TypeSingle,
-	TypeCondo.name:  TypeCondo,
-}
 
 // Type represents a type in the system.
 type Type struct {
 	name string
+}
+
+func newType(typ string) Type {
+	t := Type{typ}
+	types[typ] = t
+	return t
 }
 
 // ParseType parses the string value and returns a type if one exists.

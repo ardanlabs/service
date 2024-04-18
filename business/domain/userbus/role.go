@@ -2,21 +2,24 @@ package userbus
 
 import "fmt"
 
+// Set of known roles.
+var roles = make(map[string]Role)
+
 // Set of possible roles for a user.
 var (
-	RoleAdmin = Role{"ADMIN"}
-	RoleUser  = Role{"USER"}
+	RoleAdmin = newRole("ADMIN")
+	RoleUser  = newRole("USER")
 )
-
-// Set of known roles.
-var roles = map[string]Role{
-	RoleAdmin.name: RoleAdmin,
-	RoleUser.name:  RoleUser,
-}
 
 // Role represents a role in the system.
 type Role struct {
 	name string
+}
+
+func newRole(role string) Role {
+	r := Role{role}
+	roles[role] = r
+	return r
 }
 
 // ParseRole parses the string value and returns a role if one exists.
