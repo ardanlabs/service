@@ -3,8 +3,8 @@ package productapi
 import (
 	"net/http"
 
-	"github.com/ardanlabs/service/apis/api/authclient"
 	"github.com/ardanlabs/service/apis/api/mid"
+	"github.com/ardanlabs/service/app/api/authclient"
 	"github.com/ardanlabs/service/app/domain/productapp"
 	"github.com/ardanlabs/service/business/api/auth"
 	"github.com/ardanlabs/service/business/domain/productbus"

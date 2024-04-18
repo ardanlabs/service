@@ -3,8 +3,8 @@ package tranapi
 import (
 	"net/http"
 
-	"github.com/ardanlabs/service/apis/api/authclient"
 	"github.com/ardanlabs/service/apis/api/mid"
+	"github.com/ardanlabs/service/app/api/authclient"
 	"github.com/ardanlabs/service/app/domain/tranapp"
 	"github.com/ardanlabs/service/business/data/sqldb"
 	"github.com/ardanlabs/service/business/domain/productbus"

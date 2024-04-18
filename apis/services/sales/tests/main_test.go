@@ -8,11 +8,11 @@ import (
 	"testing"
 
 	"github.com/ardanlabs/service/apis/api/apptest"
-	"github.com/ardanlabs/service/apis/api/authclient"
 	authbuild "github.com/ardanlabs/service/apis/services/auth/build/all"
 	authmux "github.com/ardanlabs/service/apis/services/auth/mux"
 	salesbuild "github.com/ardanlabs/service/apis/services/sales/build/all"
 	salesmux "github.com/ardanlabs/service/apis/services/sales/mux"
+	"github.com/ardanlabs/service/app/api/authclient"
 	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/ardanlabs/service/foundation/docker"
 )

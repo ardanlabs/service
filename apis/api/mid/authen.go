@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/ardanlabs/service/apis/api/authclient"
+	"github.com/ardanlabs/service/app/api/authclient"
 	"github.com/ardanlabs/service/app/api/mid"
 	"github.com/ardanlabs/service/business/api/auth"
 	"github.com/ardanlabs/service/business/domain/userbus"
