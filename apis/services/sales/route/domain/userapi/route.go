@@ -3,8 +3,8 @@ package userapi
 import (
 	"net/http"
 
-	"github.com/ardanlabs/service/apis/services/sales/mid"
-	"github.com/ardanlabs/service/app/api/authsrv"
+	"github.com/ardanlabs/service/apis/api/authclient"
+	"github.com/ardanlabs/service/apis/api/mid"
 	"github.com/ardanlabs/service/app/domain/userapp"
 	"github.com/ardanlabs/service/business/api/auth"
 	"github.com/ardanlabs/service/business/domain/userbus"
@@ -14,19 +14,19 @@ import (
 
 // Config contains all the mandatory systems required by handlers.
 type Config struct {
-	Log     *logger.Logger
-	UserBus *userbus.Core
-	AuthSrv *authsrv.AuthSrv
+	Log        *logger.Logger
+	UserBus    *userbus.Core
+	AuthClient *authclient.Client
 }
 
 // Routes adds specific routes for this group.
 func Routes(app *web.App, cfg Config) {
 	const version = "v1"
 
-	authen := mid.Authenticate(cfg.Log, cfg.AuthSrv)
-	ruleAdmin := mid.Authorize(cfg.Log, cfg.AuthSrv, auth.RuleAdminOnly)
-	ruleAuthorizeUser := mid.AuthorizeUser(cfg.Log, cfg.AuthSrv, cfg.UserBus, auth.RuleAdminOrSubject)
-	ruleAuthorizeAdmin := mid.AuthorizeUser(cfg.Log, cfg.AuthSrv, cfg.UserBus, auth.RuleAdminOnly)
+	authen := mid.Authenticate(cfg.Log, cfg.AuthClient)
+	ruleAdmin := mid.Authorize(cfg.Log, cfg.AuthClient, auth.RuleAdminOnly)
+	ruleAuthorizeUser := mid.AuthorizeUser(cfg.Log, cfg.AuthClient, cfg.UserBus, auth.RuleAdminOrSubject)
+	ruleAuthorizeAdmin := mid.AuthorizeUser(cfg.Log, cfg.AuthClient, cfg.UserBus, auth.RuleAdminOnly)
 
 	api := newAPI(userapp.NewCore(cfg.UserBus))
 	app.Handle(http.MethodGet, version, "/users", api.query, authen, ruleAdmin)

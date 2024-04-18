@@ -1,5 +1,5 @@
-// Package authsrv provides support to access the auth service.
-package authsrv
+// Package authclient provides support to access the auth service.
+package authclient
 
 import (
 	"bytes"
@@ -31,46 +31,46 @@ var defaultClient = http.Client{
 	},
 }
 
-// AuthSrv represents a client that can talk to the auth service.
-type AuthSrv struct {
+// Client represents a client that can talk to the auth service.
+type Client struct {
 	url     string
 	logFunc func(ctx context.Context, s string)
-	client  *http.Client
+	http    *http.Client
 }
 
 // New constructs an Auth that can be used to talk with the auth service.
-func New(url string, logFunc func(ctx context.Context, s string), options ...func(authSrv *AuthSrv)) *AuthSrv {
-	authSrv := AuthSrv{
+func New(url string, logFunc func(ctx context.Context, s string), options ...func(cln *Client)) *Client {
+	cln := Client{
 		url:     url,
 		logFunc: logFunc,
-		client:  &defaultClient,
+		http:    &defaultClient,
 	}
 
 	for _, option := range options {
-		option(&authSrv)
+		option(&cln)
 	}
 
-	return &authSrv
+	return &cln
 }
 
 // WithClient adds a custom client for processing requests. It's recommend
 // to not use the default client and provide your own.
-func WithClient(client *http.Client) func(authAPI *AuthSrv) {
-	return func(authSrv *AuthSrv) {
-		authSrv.client = client
+func WithClient(http *http.Client) func(cln *Client) {
+	return func(cln *Client) {
+		cln.http = http
 	}
 }
 
 // Authenticate calls the auth service to authenticate the user.
-func (srv *AuthSrv) Authenticate(ctx context.Context, authorization string) (AuthenticateResp, error) {
-	endpoint := fmt.Sprintf("%s/v1/auth/authenticate", srv.url)
+func (cln *Client) Authenticate(ctx context.Context, authorization string) (AuthenticateResp, error) {
+	endpoint := fmt.Sprintf("%s/v1/auth/authenticate", cln.url)
 
 	headers := map[string]string{
 		"authorization": authorization,
 	}
 
 	var resp AuthenticateResp
-	if err := srv.rawRequest(ctx, http.MethodGet, endpoint, headers, nil, &resp); err != nil {
+	if err := cln.rawRequest(ctx, http.MethodGet, endpoint, headers, nil, &resp); err != nil {
 		return AuthenticateResp{}, err
 	}
 
@@ -78,24 +78,24 @@ func (srv *AuthSrv) Authenticate(ctx context.Context, authorization string) (Aut
 }
 
 // Authorize calls the auth service to authorize the user.
-func (srv *AuthSrv) Authorize(ctx context.Context, auth Authorize) error {
-	endpoint := fmt.Sprintf("%s/v1/auth/authorize", srv.url)
+func (cln *Client) Authorize(ctx context.Context, auth Authorize) error {
+	endpoint := fmt.Sprintf("%s/v1/auth/authorize", cln.url)
 
 	var b bytes.Buffer
 	if err := json.NewEncoder(&b).Encode(auth); err != nil {
 		return fmt.Errorf("encoding error: %w", err)
 	}
 
-	if err := srv.rawRequest(ctx, http.MethodPost, endpoint, nil, &b, nil); err != nil {
+	if err := cln.rawRequest(ctx, http.MethodPost, endpoint, nil, &b, nil); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (srv *AuthSrv) rawRequest(ctx context.Context, method string, url string, headers map[string]string, r io.Reader, v any) error {
-	srv.logFunc(ctx, fmt.Sprintf("rawRequest: started: method: %s, url: %s", method, url))
-	defer srv.logFunc(ctx, "rawRequest: completed")
+func (cln *Client) rawRequest(ctx context.Context, method string, url string, headers map[string]string, r io.Reader, v any) error {
+	cln.logFunc(ctx, fmt.Sprintf("rawRequest: started: method: %s, url: %s", method, url))
+	defer cln.logFunc(ctx, "rawRequest: completed")
 
 	req, err := http.NewRequestWithContext(ctx, method, url, r)
 	if err != nil {
@@ -106,17 +106,17 @@ func (srv *AuthSrv) rawRequest(ctx context.Context, method string, url string, h
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
 	for key, value := range headers {
-		srv.logFunc(ctx, fmt.Sprintf("rawRequest: header: key: %s, value: %s", key, value))
+		cln.logFunc(ctx, fmt.Sprintf("rawRequest: header: key: %s, value: %s", key, value))
 		req.Header.Set(key, value)
 	}
 
-	resp, err := srv.client.Do(req)
+	resp, err := cln.http.Do(req)
 	if err != nil {
 		return fmt.Errorf("do: error: %w", err)
 	}
 	defer resp.Body.Close()
 
-	srv.logFunc(ctx, fmt.Sprintf("rawRequest: client do: status: %d", resp.StatusCode))
+	cln.logFunc(ctx, fmt.Sprintf("rawRequest: client do: status: %d", resp.StatusCode))
 
 	if resp.StatusCode == http.StatusNoContent {
 		return nil

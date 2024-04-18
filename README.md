@@ -9,6 +9,14 @@
 Copyright 2018, 2019, 2020, 2021, 2022, 2023, 2024 Ardan Labs  
 hello@ardanlabs.com
 
+## My Information
+
+Name:    Bill Kennedy
+Company: Ardan Labs
+Title:   Managing Partner
+Email:   bill@ardanlabs.com
+Twitter: goinggodotnet
+
 ## Description
 
 _"As a program evolves and acquires more features, it becomes complicated, with subtle dependencies between components. Over time, complexity accumulates, and it becomes harder and harder for programmers to keep all the relevant factors in their minds as they modify the system. This slows down development and leads to bugs, which slow development even more and add to its cost. Complexity increases inevitably over the life of any program. The larger the program, and the more people that work on it, the more difficult it is to manage complexity."_ - John Ousterhout  

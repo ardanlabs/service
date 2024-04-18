@@ -1,4 +1,4 @@
-package authsrv
+package authclient
 
 import (
 	"github.com/ardanlabs/service/business/api/auth"

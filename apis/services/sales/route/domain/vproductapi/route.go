@@ -3,8 +3,8 @@ package vproductapi
 import (
 	"net/http"
 
-	"github.com/ardanlabs/service/apis/services/sales/mid"
-	"github.com/ardanlabs/service/app/api/authsrv"
+	"github.com/ardanlabs/service/apis/api/authclient"
+	"github.com/ardanlabs/service/apis/api/mid"
 	"github.com/ardanlabs/service/app/domain/vproductapp"
 	"github.com/ardanlabs/service/business/api/auth"
 	"github.com/ardanlabs/service/business/domain/userbus"
@@ -18,15 +18,15 @@ type Config struct {
 	Log         *logger.Logger
 	UserBus     *userbus.Core
 	VProductBus *vproductbus.Core
-	AuthSrv     *authsrv.AuthSrv
+	AuthClient  *authclient.Client
 }
 
 // Routes adds specific routes for this group.
 func Routes(app *web.App, cfg Config) {
 	const version = "v1"
 
-	authen := mid.Authenticate(cfg.Log, cfg.AuthSrv)
-	ruleAdmin := mid.Authorize(cfg.Log, cfg.AuthSrv, auth.RuleAdminOnly)
+	authen := mid.Authenticate(cfg.Log, cfg.AuthClient)
+	ruleAdmin := mid.Authorize(cfg.Log, cfg.AuthClient, auth.RuleAdminOnly)
 
 	api := newAPI(vproductapp.NewCore(cfg.VProductBus))
 	app.Handle(http.MethodGet, version, "/vproducts", api.query, authen, ruleAdmin)

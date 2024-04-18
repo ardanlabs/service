@@ -29,7 +29,7 @@ func insertUserSeed(dbTest *dbtest.Test) (dbtest.SeedData, error) {
 
 	// -------------------------------------------------------------------------
 
-	usrs, err = userbus.TestGenerateSeedUsers(ctx, 2, userbus.RoleUser, busDomain.User)
+	usrs, err = userbus.TestGenerateSeedUsers(ctx, 3, userbus.RoleUser, busDomain.User)
 	if err != nil {
 		return dbtest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}
@@ -44,10 +44,15 @@ func insertUserSeed(dbTest *dbtest.Test) (dbtest.SeedData, error) {
 		Token: dbTest.Token(usrs[1].Email.Address),
 	}
 
+	tu5 := dbtest.User{
+		User:  usrs[2],
+		Token: dbTest.Token(usrs[2].Email.Address),
+	}
+
 	// -------------------------------------------------------------------------
 
 	sd := dbtest.SeedData{
-		Users:  []dbtest.User{tu3, tu4},
+		Users:  []dbtest.User{tu3, tu4, tu5},
 		Admins: []dbtest.User{tu1, tu2},
 	}
 

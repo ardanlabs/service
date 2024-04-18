@@ -6,7 +6,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/ardanlabs/service/app/api/authsrv"
+	"github.com/ardanlabs/service/apis/api/authclient"
 	"github.com/ardanlabs/service/app/api/errs"
 	"github.com/ardanlabs/service/app/api/mid"
 	"github.com/ardanlabs/service/app/domain/userapp"
@@ -36,7 +36,7 @@ func (api *api) authenticate(ctx context.Context, w http.ResponseWriter, r *http
 		return errs.New(errs.Unauthenticated, err)
 	}
 
-	resp := authsrv.AuthenticateResp{
+	resp := authclient.AuthenticateResp{
 		UserID: userID,
 		Claims: mid.GetClaims(ctx),
 	}
@@ -45,7 +45,7 @@ func (api *api) authenticate(ctx context.Context, w http.ResponseWriter, r *http
 }
 
 func (api *api) authorize(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	var auth authsrv.Authorize
+	var auth authclient.Authorize
 	if err := web.Decode(r, &auth); err != nil {
 		return errs.New(errs.FailedPrecondition, err)
 	}

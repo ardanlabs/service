@@ -3,8 +3,8 @@ package homeapi
 import (
 	"net/http"
 
-	"github.com/ardanlabs/service/apis/services/sales/mid"
-	"github.com/ardanlabs/service/app/api/authsrv"
+	"github.com/ardanlabs/service/apis/api/authclient"
+	"github.com/ardanlabs/service/apis/api/mid"
 	"github.com/ardanlabs/service/app/domain/homeapp"
 	"github.com/ardanlabs/service/business/api/auth"
 	"github.com/ardanlabs/service/business/domain/homebus"
@@ -15,20 +15,20 @@ import (
 
 // Config contains all the mandatory systems required by handlers.
 type Config struct {
-	Log     *logger.Logger
-	UserBus *userbus.Core
-	HomeBus *homebus.Core
-	AuthSrv *authsrv.AuthSrv
+	Log        *logger.Logger
+	UserBus    *userbus.Core
+	HomeBus    *homebus.Core
+	AuthClient *authclient.Client
 }
 
 // Routes adds specific routes for this group.
 func Routes(app *web.App, cfg Config) {
 	const version = "v1"
 
-	authen := mid.Authenticate(cfg.Log, cfg.AuthSrv)
-	ruleAny := mid.Authorize(cfg.Log, cfg.AuthSrv, auth.RuleAny)
-	ruleUserOnly := mid.Authorize(cfg.Log, cfg.AuthSrv, auth.RuleUserOnly)
-	ruleAuthorizeHome := mid.AuthorizeHome(cfg.Log, cfg.AuthSrv, cfg.HomeBus)
+	authen := mid.Authenticate(cfg.Log, cfg.AuthClient)
+	ruleAny := mid.Authorize(cfg.Log, cfg.AuthClient, auth.RuleAny)
+	ruleUserOnly := mid.Authorize(cfg.Log, cfg.AuthClient, auth.RuleUserOnly)
+	ruleAuthorizeHome := mid.AuthorizeHome(cfg.Log, cfg.AuthClient, cfg.HomeBus)
 
 	api := newAPI(homeapp.NewCore(cfg.HomeBus))
 	app.Handle(http.MethodGet, version, "/homes", api.query, authen, ruleAny)

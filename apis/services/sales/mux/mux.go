@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/ardanlabs/service/app/api/authsrv"
-	"github.com/ardanlabs/service/app/api/mid"
+	"github.com/ardanlabs/service/apis/api/authclient"
+	"github.com/ardanlabs/service/apis/api/mid"
 	"github.com/ardanlabs/service/business/api/delegate"
 	"github.com/ardanlabs/service/business/domain/homebus"
 	"github.com/ardanlabs/service/business/domain/productbus"
@@ -42,13 +42,13 @@ type BusDomain struct {
 
 // Config contains all the mandatory systems required by handlers.
 type Config struct {
-	Build     string
-	Shutdown  chan os.Signal
-	Log       *logger.Logger
-	AuthSrv   *authsrv.AuthSrv
-	DB        *sqlx.DB
-	Tracer    trace.Tracer
-	BusDomain BusDomain
+	Build      string
+	Shutdown   chan os.Signal
+	Log        *logger.Logger
+	AuthClient *authclient.Client
+	DB         *sqlx.DB
+	Tracer     trace.Tracer
+	BusDomain  BusDomain
 }
 
 // RouteAdder defines behavior that sets the routes to bind for an instance

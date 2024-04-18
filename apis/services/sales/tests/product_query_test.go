@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"sort"
 
-	"github.com/ardanlabs/service/app/api/apptest"
+	"github.com/ardanlabs/service/apis/api/apptest"
 	"github.com/ardanlabs/service/app/api/page"
 	"github.com/ardanlabs/service/app/domain/productapp"
 	"github.com/ardanlabs/service/business/data/dbtest"

@@ -3,9 +3,8 @@ package tranapi
 import (
 	"net/http"
 
-	"github.com/ardanlabs/service/apis/services/sales/mid"
-	"github.com/ardanlabs/service/app/api/authsrv"
-	midapp "github.com/ardanlabs/service/app/api/mid"
+	"github.com/ardanlabs/service/apis/api/authclient"
+	"github.com/ardanlabs/service/apis/api/mid"
 	"github.com/ardanlabs/service/app/domain/tranapp"
 	"github.com/ardanlabs/service/business/data/sqldb"
 	"github.com/ardanlabs/service/business/domain/productbus"
@@ -21,15 +20,15 @@ type Config struct {
 	DB         *sqlx.DB
 	UserBus    *userbus.Core
 	ProductBus *productbus.Core
-	AuthSrv    *authsrv.AuthSrv
+	AuthClient *authclient.Client
 }
 
 // Routes adds specific routes for this group.
 func Routes(app *web.App, cfg Config) {
 	const version = "v1"
 
-	authen := mid.Authenticate(cfg.Log, cfg.AuthSrv)
-	tran := midapp.ExecuteInTransaction(cfg.Log, sqldb.NewBeginner(cfg.DB))
+	authen := mid.Authenticate(cfg.Log, cfg.AuthClient)
+	tran := mid.ExecuteInTransaction(cfg.Log, sqldb.NewBeginner(cfg.DB))
 
 	api := newAPI(tranapp.NewCore(cfg.UserBus, cfg.ProductBus))
 	app.Handle(http.MethodPost, version, "/tranexample", api.create, authen, tran)

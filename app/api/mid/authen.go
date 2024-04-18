@@ -4,48 +4,46 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"net/http"
 	"net/mail"
 	"strings"
 	"time"
 
+	"github.com/ardanlabs/service/apis/api/authclient"
 	"github.com/ardanlabs/service/app/api/errs"
-	"github.com/ardanlabs/service/app/api/mid"
 	"github.com/ardanlabs/service/business/api/auth"
 	"github.com/ardanlabs/service/business/domain/userbus"
-	"github.com/ardanlabs/service/foundation/web"
+	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 )
 
 // Authenticate validates a JWT from the `Authorization` header.
-func Authenticate(userBus *userbus.Core, auth *auth.Auth) web.MidHandler {
-	m := func(handler web.Handler) web.Handler {
-		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-			authorization := r.Header.Get("authorization")
-			parts := strings.Split(authorization, " ")
-
-			var err error
-
-			switch parts[0] {
-			case "Bearer":
-				ctx, err = processJWT(ctx, auth, authorization)
-
-			case "Basic":
-				ctx, err = processBasic(ctx, userBus, authorization)
-			}
-
-			if err != nil {
-				return err
-			}
-
-			return handler(ctx, w, r)
-		}
-
-		return h
+func Authenticate(ctx context.Context, log *logger.Logger, client *authclient.Client, authorization string) (context.Context, error) {
+	resp, err := client.Authenticate(ctx, authorization)
+	if err != nil {
+		return ctx, errs.New(errs.Unauthenticated, err)
 	}
 
-	return m
+	ctx = SetUserID(ctx, resp.UserID)
+	ctx = SetClaims(ctx, resp.Claims)
+
+	return ctx, nil
+}
+
+// Authorization validates a JWT from the `Authorization` header.
+func Authorization(ctx context.Context, userBus *userbus.Core, auth *auth.Auth, authorization string) (context.Context, error) {
+	var err error
+	parts := strings.Split(authorization, " ")
+
+	switch parts[0] {
+	case "Bearer":
+		ctx, err = processJWT(ctx, auth, authorization)
+
+	case "Basic":
+		ctx, err = processBasic(ctx, userBus, authorization)
+	}
+
+	return ctx, err
 }
 
 func processJWT(ctx context.Context, auth *auth.Auth, token string) (context.Context, error) {
@@ -63,8 +61,8 @@ func processJWT(ctx context.Context, auth *auth.Auth, token string) (context.Con
 		return ctx, errs.New(errs.Unauthenticated, fmt.Errorf("parsing subject: %w", err))
 	}
 
-	ctx = mid.SetUserID(ctx, subjectID)
-	ctx = mid.SetClaims(ctx, claims)
+	ctx = SetUserID(ctx, subjectID)
+	ctx = SetClaims(ctx, claims)
 
 	return ctx, nil
 }
@@ -100,8 +98,8 @@ func processBasic(ctx context.Context, userBus *userbus.Core, basic string) (con
 		return ctx, errs.Newf(errs.Unauthenticated, "parsing subject: %s", err)
 	}
 
-	ctx = mid.SetUserID(ctx, subjectID)
-	ctx = mid.SetClaims(ctx, claims)
+	ctx = SetUserID(ctx, subjectID)
+	ctx = SetClaims(ctx, claims)
 
 	return ctx, nil
 }

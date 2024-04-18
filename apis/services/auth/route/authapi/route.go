@@ -3,7 +3,7 @@ package authapi
 import (
 	"net/http"
 
-	"github.com/ardanlabs/service/apis/services/auth/mid"
+	"github.com/ardanlabs/service/apis/api/mid"
 	"github.com/ardanlabs/service/app/domain/userapp"
 	"github.com/ardanlabs/service/business/api/auth"
 	"github.com/ardanlabs/service/business/domain/userbus"
@@ -20,7 +20,7 @@ type Config struct {
 func Routes(app *web.App, cfg Config) {
 	const version = "v1"
 
-	authen := mid.Authenticate(cfg.UserBus, cfg.Auth)
+	authen := mid.Authorization(cfg.UserBus, cfg.Auth)
 
 	api := newAPI(userapp.NewCoreWithAuth(cfg.UserBus, cfg.Auth), cfg.Auth)
 	app.Handle(http.MethodGet, version, "/auth/token/{kid}", api.token, authen)

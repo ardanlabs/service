@@ -13,12 +13,12 @@ import (
 	"time"
 
 	"github.com/ardanlabs/conf/v3"
+	"github.com/ardanlabs/service/apis/api/authclient"
+	"github.com/ardanlabs/service/apis/api/debug"
 	"github.com/ardanlabs/service/apis/services/sales/build/all"
 	"github.com/ardanlabs/service/apis/services/sales/build/crud"
 	"github.com/ardanlabs/service/apis/services/sales/build/reporting"
 	"github.com/ardanlabs/service/apis/services/sales/mux"
-	"github.com/ardanlabs/service/app/api/authsrv"
-	"github.com/ardanlabs/service/app/api/debug"
 	"github.com/ardanlabs/service/business/api/delegate"
 	"github.com/ardanlabs/service/business/data/sqldb"
 	"github.com/ardanlabs/service/business/domain/homebus"
@@ -172,7 +172,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 	logFunc := func(ctx context.Context, msg string) {
 		log.Info(ctx, "authapi", "message", msg)
 	}
-	authSrv := authsrv.New(cfg.Auth.Host, logFunc)
+	authClient := authclient.New(cfg.Auth.Host, logFunc)
 
 	// -------------------------------------------------------------------------
 	// Start Tracing Support
@@ -223,12 +223,12 @@ func run(ctx context.Context, log *logger.Logger) error {
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
 
 	cfgMux := mux.Config{
-		Build:    build,
-		Shutdown: shutdown,
-		Log:      log,
-		AuthSrv:  authSrv,
-		DB:       db,
-		Tracer:   tracer,
+		Build:      build,
+		Shutdown:   shutdown,
+		Log:        log,
+		AuthClient: authClient,
+		DB:         db,
+		Tracer:     tracer,
 		BusDomain: mux.BusDomain{
 			Delegate: delegate,
 			Home:     homeBus,

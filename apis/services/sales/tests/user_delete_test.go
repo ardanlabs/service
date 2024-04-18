@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/ardanlabs/service/app/api/apptest"
+	"github.com/ardanlabs/service/apis/api/apptest"
 	"github.com/ardanlabs/service/app/api/errs"
 	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/google/go-cmp/cmp"
@@ -60,11 +60,11 @@ func userDelete401(sd dbtest.SeedData) []apptest.AppTable {
 		{
 			Name:       "wronguser",
 			URL:        fmt.Sprintf("/v1/users/%s", sd.Users[0].ID),
-			Token:      sd.Users[1].Token,
+			Token:      sd.Users[2].Token,
 			Method:     http.MethodDelete,
 			StatusCode: http.StatusUnauthorized,
 			Resp:       &errs.Error{},
-			ExpResp:    toErrorPtr(errs.Newf(errs.Unauthenticated, "user not enabled : query user: query: userID["+sd.Users[1].ID.String()+"]: db: user not found")),
+			ExpResp:    toErrorPtr(errs.Newf(errs.Unauthenticated, "authorize: you are not authorized for that action, claims[[{USER}]] rule[rule_admin_or_subject]: rego evaluation failed : bindings results[[{[true] map[x:false]}]] ok[true]")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
