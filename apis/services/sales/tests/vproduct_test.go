@@ -28,5 +28,5 @@ func Test_VProduct(t *testing.T) {
 
 	// -------------------------------------------------------------------------
 
-	appTest.Run(t, vproductQuery200(sd), "vproduct-query-200")
+	appTest.run(t, vproductQuery200(sd), "vproduct-query-200")
 }

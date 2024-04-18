@@ -3,15 +3,14 @@ package tests
 import (
 	"net/http"
 
-	"github.com/ardanlabs/service/apis/api/apptest"
 	"github.com/ardanlabs/service/app/api/errs"
 	"github.com/ardanlabs/service/app/domain/productapp"
 	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/google/go-cmp/cmp"
 )
 
-func productCreate200(sd dbtest.SeedData) []apptest.AppTable {
-	table := []apptest.AppTable{
+func productCreate200(sd dbtest.SeedData) []appTable {
+	table := []appTable{
 		{
 			Name:       "basic",
 			URL:        "/v1/products",
@@ -50,8 +49,8 @@ func productCreate200(sd dbtest.SeedData) []apptest.AppTable {
 	return table
 }
 
-func productCreate400(sd dbtest.SeedData) []apptest.AppTable {
-	table := []apptest.AppTable{
+func productCreate400(sd dbtest.SeedData) []appTable {
+	table := []appTable{
 		{
 			Name:       "missing-input",
 			URL:        "/v1/products",
@@ -70,8 +69,8 @@ func productCreate400(sd dbtest.SeedData) []apptest.AppTable {
 	return table
 }
 
-func productCreate401(sd dbtest.SeedData) []apptest.AppTable {
-	table := []apptest.AppTable{
+func productCreate401(sd dbtest.SeedData) []appTable {
+	table := []appTable{
 		{
 			Name:       "emptytoken",
 			URL:        "/v1/products",

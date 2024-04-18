@@ -5,15 +5,14 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ardanlabs/service/apis/api/apptest"
 	"github.com/ardanlabs/service/app/api/errs"
 	"github.com/ardanlabs/service/app/domain/productapp"
 	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/google/go-cmp/cmp"
 )
 
-func productUpdate200(sd dbtest.SeedData) []apptest.AppTable {
-	table := []apptest.AppTable{
+func productUpdate200(sd dbtest.SeedData) []appTable {
+	table := []appTable{
 		{
 			Name:       "basic",
 			URL:        fmt.Sprintf("/v1/products/%s", sd.Users[0].Products[0].ID),
@@ -52,8 +51,8 @@ func productUpdate200(sd dbtest.SeedData) []apptest.AppTable {
 	return table
 }
 
-func productUpdate400(sd dbtest.SeedData) []apptest.AppTable {
-	table := []apptest.AppTable{
+func productUpdate400(sd dbtest.SeedData) []appTable {
+	table := []appTable{
 		{
 			Name:       "bad-input",
 			URL:        fmt.Sprintf("/v1/products/%s", sd.Users[0].Products[0].ID),
@@ -75,8 +74,8 @@ func productUpdate400(sd dbtest.SeedData) []apptest.AppTable {
 	return table
 }
 
-func productUpdate401(sd dbtest.SeedData) []apptest.AppTable {
-	table := []apptest.AppTable{
+func productUpdate401(sd dbtest.SeedData) []appTable {
+	table := []appTable{
 		{
 			Name:       "emptytoken",
 			URL:        fmt.Sprintf("/v1/products/%s", sd.Users[0].Products[0].ID),

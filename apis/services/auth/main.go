@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/conf/v3"
-	"github.com/ardanlabs/service/apis/api/debug"
+	"github.com/ardanlabs/service/apis/services/api/debug"
 	"github.com/ardanlabs/service/apis/services/auth/build/all"
 	"github.com/ardanlabs/service/apis/services/auth/mux"
 	"github.com/ardanlabs/service/business/api/auth"

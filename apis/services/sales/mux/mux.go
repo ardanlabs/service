@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/ardanlabs/service/apis/api/mid"
+	"github.com/ardanlabs/service/apis/services/api/mid"
 	"github.com/ardanlabs/service/app/api/authclient"
 	"github.com/ardanlabs/service/business/api/delegate"
 	"github.com/ardanlabs/service/business/domain/homebus"

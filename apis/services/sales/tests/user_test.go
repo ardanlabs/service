@@ -28,17 +28,17 @@ func Test_User(t *testing.T) {
 
 	// -------------------------------------------------------------------------
 
-	appTest.Run(t, userQuery200(sd), "user-query-200")
-	appTest.Run(t, userQueryByID200(sd), "user-querybyid-200")
+	appTest.run(t, userQuery200(sd), "user-query-200")
+	appTest.run(t, userQueryByID200(sd), "user-querybyid-200")
 
-	appTest.Run(t, userCreate200(sd), "user-create-200")
-	appTest.Run(t, userCreate401(sd), "user-create-401")
-	appTest.Run(t, userCreate400(sd), "user-create-400")
+	appTest.run(t, userCreate200(sd), "user-create-200")
+	appTest.run(t, userCreate401(sd), "user-create-401")
+	appTest.run(t, userCreate400(sd), "user-create-400")
 
-	appTest.Run(t, userUpdate200(sd), "user-update-200")
-	appTest.Run(t, userUpdate401(sd), "user-update-401")
-	appTest.Run(t, userUpdate400(sd), "user-update-400")
+	appTest.run(t, userUpdate200(sd), "user-update-200")
+	appTest.run(t, userUpdate401(sd), "user-update-401")
+	appTest.run(t, userUpdate400(sd), "user-update-400")
 
-	appTest.Run(t, userDelete200(sd), "user-delete-200")
-	appTest.Run(t, userDelete401(sd), "user-delete-401")
+	appTest.run(t, userDelete200(sd), "user-delete-200")
+	appTest.run(t, userDelete401(sd), "user-delete-401")
 }

@@ -4,14 +4,13 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/ardanlabs/service/apis/api/apptest"
 	"github.com/ardanlabs/service/app/api/errs"
 	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/google/go-cmp/cmp"
 )
 
-func productDelete200(sd dbtest.SeedData) []apptest.AppTable {
-	table := []apptest.AppTable{
+func productDelete200(sd dbtest.SeedData) []appTable {
+	table := []appTable{
 		{
 			Name:       "asuser",
 			URL:        fmt.Sprintf("/v1/products/%s", sd.Users[0].Products[0].ID),
@@ -31,8 +30,8 @@ func productDelete200(sd dbtest.SeedData) []apptest.AppTable {
 	return table
 }
 
-func productDelete401(sd dbtest.SeedData) []apptest.AppTable {
-	table := []apptest.AppTable{
+func productDelete401(sd dbtest.SeedData) []appTable {
+	table := []appTable{
 		{
 			Name:       "emptytoken",
 			URL:        fmt.Sprintf("/v1/products/%s", sd.Users[0].Products[1].ID),

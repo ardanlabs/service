@@ -28,17 +28,17 @@ func Test_Home(t *testing.T) {
 
 	// -------------------------------------------------------------------------
 
-	appTest.Run(t, homeQuery200(sd), "home-query-200")
-	appTest.Run(t, homeQueryByID200(sd), "home-querybyid-200")
+	appTest.run(t, homeQuery200(sd), "home-query-200")
+	appTest.run(t, homeQueryByID200(sd), "home-querybyid-200")
 
-	appTest.Run(t, homeCreate200(sd), "home-create-200")
-	appTest.Run(t, homeCreate401(sd), "home-create-401")
-	appTest.Run(t, homeCreate400(sd), "home-create-400")
+	appTest.run(t, homeCreate200(sd), "home-create-200")
+	appTest.run(t, homeCreate401(sd), "home-create-401")
+	appTest.run(t, homeCreate400(sd), "home-create-400")
 
-	appTest.Run(t, homeUpdate200(sd), "home-update-200")
-	appTest.Run(t, homeUpdate401(sd), "home-update-401")
-	appTest.Run(t, homeUpdate400(sd), "home-update-400")
+	appTest.run(t, homeUpdate200(sd), "home-update-200")
+	appTest.run(t, homeUpdate401(sd), "home-update-401")
+	appTest.run(t, homeUpdate400(sd), "home-update-400")
 
-	appTest.Run(t, homeDelete200(sd), "home-delete-200")
-	appTest.Run(t, homeDelete401(sd), "home-delete-401")
+	appTest.run(t, homeDelete200(sd), "home-delete-200")
+	appTest.run(t, homeDelete401(sd), "home-delete-401")
 }

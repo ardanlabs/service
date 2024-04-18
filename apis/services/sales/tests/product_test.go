@@ -28,17 +28,17 @@ func Test_Product(t *testing.T) {
 
 	// -------------------------------------------------------------------------
 
-	appTest.Run(t, productQuery200(sd), "product-query-200")
-	appTest.Run(t, productQueryByID200(sd), "product-querybyid-200")
+	appTest.run(t, productQuery200(sd), "product-query-200")
+	appTest.run(t, productQueryByID200(sd), "product-querybyid-200")
 
-	appTest.Run(t, productCreate200(sd), "product-create-200")
-	appTest.Run(t, productCreate401(sd), "product-create-401")
-	appTest.Run(t, productCreate400(sd), "product-create-400")
+	appTest.run(t, productCreate200(sd), "product-create-200")
+	appTest.run(t, productCreate401(sd), "product-create-401")
+	appTest.run(t, productCreate400(sd), "product-create-400")
 
-	appTest.Run(t, productUpdate200(sd), "product-update-200")
-	appTest.Run(t, productUpdate401(sd), "product-update-401")
-	appTest.Run(t, productUpdate400(sd), "product-update-400")
+	appTest.run(t, productUpdate200(sd), "product-update-200")
+	appTest.run(t, productUpdate401(sd), "product-update-401")
+	appTest.run(t, productUpdate400(sd), "product-update-400")
 
-	appTest.Run(t, productDelete200(sd), "product-delete-200")
-	appTest.Run(t, productDelete401(sd), "product-delete-401")
+	appTest.run(t, productDelete200(sd), "product-delete-200")
+	appTest.run(t, productDelete401(sd), "product-delete-401")
 }
