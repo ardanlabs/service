@@ -54,14 +54,14 @@ hello@ardanlabs.com
 
 ## Index
 
-* [Installation](https://github.com/ardanlabs/service#installation)
-* [Create Your Own Version](https://github.com/ardanlabs/service#create-your-own-version)
-* [Purchase Video](https://github.com/ardanlabs/service#purchase-video)
-* [Experience](https://github.com/ardanlabs/service#our-experience)
-* [Teacher](https://github.com/ardanlabs/service#our-teacher)
-* [More About Go](https://github.com/ardanlabs/service#more-about-go)
-* [Minimal Qualified Student](https://github.com/ardanlabs/service#minimal-qualified-student)
-* [Joining the Go Slack Community](https://github.com/ardanlabs/service#joining-the-go-slack-community)
+* [Installation](https://github.com/ardanlabs/service?tab=readme-ov-file#installation)
+* [Create Your Own Version](https://github.com/ardanlabs/service?tab=readme-ov-file#create-your-own-version)
+* [Purchase Video](https://github.com/ardanlabs/service?tab=readme-ov-file#purchase-video)
+* [Experience](https://github.com/ardanlabs/service?tab=readme-ov-file#our-experience)
+* [Teacher](https://github.com/ardanlabs/service?tab=readme-ov-file#our-teacher)
+* [More About Go](https://github.com/ardanlabs/service?tab=readme-ov-file#more-about-go)
+* [Minimal Qualified Student](https://github.com/ardanlabs/service?tab=readme-ov-file#minimal-qualified-student)
+* [Joining the Go Slack Community](https://github.com/ardanlabs/service?tab=readme-ov-file#joining-the-go-slack-community)
 
 ## Installation
 
