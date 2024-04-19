@@ -7,7 +7,7 @@ import (
 )
 
 // Metrics updates program counters.
-func Metrics(ctx context.Context, handler func(context.Context) error) error {
+func Metrics(ctx context.Context, handler Handler) error {
 	ctx = metrics.Set(ctx)
 
 	err := handler(ctx)

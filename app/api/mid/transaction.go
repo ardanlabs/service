@@ -12,7 +12,7 @@ import (
 
 // ExecuteInTransaction starts a transaction around all the storage calls within
 // the scope of the handler function.
-func ExecuteInTransaction(ctx context.Context, log *logger.Logger, bgn transaction.Beginner, handler func(context.Context) error) error {
+func ExecuteInTransaction(ctx context.Context, log *logger.Logger, bgn transaction.Beginner, handler Handler) error {
 	hasCommitted := false
 
 	log.Info(ctx, "BEGIN TRANSACTION")

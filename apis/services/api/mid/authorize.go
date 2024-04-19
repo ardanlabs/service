@@ -17,11 +17,11 @@ import (
 func Authorize(log *logger.Logger, client *authclient.Client, rule string) web.MidHandler {
 	m := func(handler web.Handler) web.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-			if err := mid.Authorize(ctx, log, client, rule); err != nil {
-				return err
+			hdl := func(ctx context.Context) error {
+				return handler(ctx, w, r)
 			}
 
-			return handler(ctx, w, r)
+			return mid.Authorize(ctx, log, client, rule, hdl)
 		}
 
 		return h
@@ -34,12 +34,11 @@ func Authorize(log *logger.Logger, client *authclient.Client, rule string) web.M
 func AuthorizeUser(log *logger.Logger, client *authclient.Client, userBus *userbus.Core, rule string) web.MidHandler {
 	m := func(handler web.Handler) web.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-			ctx, err := mid.AuthorizeUser(ctx, log, client, userBus, rule, web.Param(r, "user_id"))
-			if err != nil {
-				return err
+			hdl := func(ctx context.Context) error {
+				return handler(ctx, w, r)
 			}
 
-			return handler(ctx, w, r)
+			return mid.AuthorizeUser(ctx, log, client, userBus, rule, web.Param(r, "user_id"), hdl)
 		}
 
 		return h
@@ -52,12 +51,11 @@ func AuthorizeUser(log *logger.Logger, client *authclient.Client, userBus *userb
 func AuthorizeProduct(log *logger.Logger, client *authclient.Client, productBus *productbus.Core) web.MidHandler {
 	m := func(handler web.Handler) web.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-			ctx, err := mid.AuthorizeProduct(ctx, log, client, productBus, web.Param(r, "product_id"))
-			if err != nil {
-				return err
+			hdl := func(ctx context.Context) error {
+				return handler(ctx, w, r)
 			}
 
-			return handler(ctx, w, r)
+			return mid.AuthorizeProduct(ctx, log, client, productBus, web.Param(r, "product_id"), hdl)
 		}
 
 		return h
@@ -70,12 +68,11 @@ func AuthorizeProduct(log *logger.Logger, client *authclient.Client, productBus 
 func AuthorizeHome(log *logger.Logger, client *authclient.Client, homeBus *homebus.Core) web.MidHandler {
 	m := func(handler web.Handler) web.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-			ctx, err := mid.AuthorizeHome(ctx, log, client, homeBus, web.Param(r, "home_id"))
-			if err != nil {
-				return err
+			hdl := func(ctx context.Context) error {
+				return handler(ctx, w, r)
 			}
 
-			return handler(ctx, w, r)
+			return mid.AuthorizeHome(ctx, log, client, homeBus, web.Param(r, "home_id"), hdl)
 		}
 
 		return h

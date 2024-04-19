@@ -12,11 +12,11 @@ import (
 func Metrics() web.MidHandler {
 	m := func(handler web.Handler) web.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-			f := func(ctx context.Context) error {
+			hdl := func(ctx context.Context) error {
 				return handler(ctx, w, r)
 			}
 
-			return mid.Metrics(ctx, f)
+			return mid.Metrics(ctx, hdl)
 		}
 
 		return h

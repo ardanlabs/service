@@ -12,6 +12,9 @@ import (
 	"github.com/google/uuid"
 )
 
+// Handler represents the handler function that needs to be called.
+type Handler func(context.Context) error
+
 type ctxKey int
 
 const (

@@ -18,20 +18,20 @@ import (
 )
 
 // Authenticate validates a JWT from the `Authorization` header.
-func Authenticate(ctx context.Context, log *logger.Logger, client *authclient.Client, authorization string) (context.Context, error) {
+func Authenticate(ctx context.Context, log *logger.Logger, client *authclient.Client, authorization string, handler Handler) error {
 	resp, err := client.Authenticate(ctx, authorization)
 	if err != nil {
-		return ctx, errs.New(errs.Unauthenticated, err)
+		return errs.New(errs.Unauthenticated, err)
 	}
 
 	ctx = SetUserID(ctx, resp.UserID)
 	ctx = SetClaims(ctx, resp.Claims)
 
-	return ctx, nil
+	return handler(ctx)
 }
 
 // Authorization validates a JWT from the `Authorization` header.
-func Authorization(ctx context.Context, userBus *userbus.Core, auth *auth.Auth, authorization string) (context.Context, error) {
+func Authorization(ctx context.Context, userBus *userbus.Core, auth *auth.Auth, authorization string, handler Handler) error {
 	var err error
 	parts := strings.Split(authorization, " ")
 
@@ -43,7 +43,11 @@ func Authorization(ctx context.Context, userBus *userbus.Core, auth *auth.Auth, 
 		ctx, err = processBasic(ctx, userBus, authorization)
 	}
 
-	return ctx, err
+	if err != nil {
+		return err
+	}
+
+	return handler(ctx)
 }
 
 func processJWT(ctx context.Context, auth *auth.Auth, token string) (context.Context, error) {

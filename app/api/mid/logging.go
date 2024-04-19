@@ -10,7 +10,7 @@ import (
 )
 
 // Logger writes information about the request to the logs.
-func Logger(ctx context.Context, log *logger.Logger, path string, rawQuery string, method string, remoteAddr string, handler func(context.Context) error) error {
+func Logger(ctx context.Context, log *logger.Logger, path string, rawQuery string, method string, remoteAddr string, handler Handler) error {
 	v := web.GetValues(ctx)
 
 	if rawQuery != "" {

@@ -12,11 +12,11 @@ import (
 func Panics() web.MidHandler {
 	m := func(handler web.Handler) web.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) (err error) {
-			f := func(ctx context.Context) error {
+			hdl := func(ctx context.Context) error {
 				return handler(ctx, w, r)
 			}
 
-			return mid.Panics(ctx, f)
+			return mid.Panics(ctx, hdl)
 		}
 
 		return h
