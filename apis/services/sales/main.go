@@ -142,7 +142,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 	}
 	log.Info(ctx, "startup", "config", out)
 
-	expvar.NewString("build").Set(cfg.Version.Build)
+	expvar.NewString("build").Set(cfg.Build)
 
 	// -------------------------------------------------------------------------
 	// Database Support
