@@ -133,7 +133,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 	// -------------------------------------------------------------------------
 	// App Starting
 
-	log.Info(ctx, "starting service", "version", cfg.Version.Build)
+	log.Info(ctx, "starting service", "version", cfg.Build)
 	defer log.Info(ctx, "shutdown complete")
 
 	out, err := conf.String(&cfg)
