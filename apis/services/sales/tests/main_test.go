@@ -48,10 +48,9 @@ func startTest(t *testing.T, testName string) (*dbtest.Test, *appTest) {
 	// -------------------------------------------------------------------------
 
 	authMux := authmux.WebAPI(authmux.Config{
-		Shutdown: make(chan os.Signal, 1),
-		Log:      dbTest.Log,
-		Auth:     dbTest.Auth,
-		DB:       dbTest.DB,
+		Log:  dbTest.Log,
+		Auth: dbTest.Auth,
+		DB:   dbTest.DB,
 		BusDomain: authmux.BusDomain{
 			Delegate: dbTest.BusDomain.Delegate,
 			User:     dbTest.BusDomain.User,
@@ -68,7 +67,6 @@ func startTest(t *testing.T, testName string) (*dbtest.Test, *appTest) {
 	// -------------------------------------------------------------------------
 
 	appTest := newAppTest(salesmux.WebAPI(salesmux.Config{
-		Shutdown:   make(chan os.Signal, 1),
 		Log:        dbTest.Log,
 		AuthClient: authClient,
 		DB:         dbTest.DB,

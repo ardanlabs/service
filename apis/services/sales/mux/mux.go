@@ -4,7 +4,6 @@ package mux
 
 import (
 	"net/http"
-	"os"
 
 	"github.com/ardanlabs/service/apis/services/api/mid"
 	"github.com/ardanlabs/service/app/api/authclient"
@@ -43,7 +42,6 @@ type BusDomain struct {
 // Config contains all the mandatory systems required by handlers.
 type Config struct {
 	Build      string
-	Shutdown   chan os.Signal
 	Log        *logger.Logger
 	AuthClient *authclient.Client
 	DB         *sqlx.DB
@@ -65,7 +63,6 @@ func WebAPI(cfg Config, routeAdder RouteAdder, options ...func(opts *Options)) h
 	}
 
 	app := web.NewApp(
-		cfg.Shutdown,
 		cfg.Tracer,
 		mid.Logger(cfg.Log),
 		mid.Errors(cfg.Log),

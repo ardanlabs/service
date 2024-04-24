@@ -224,7 +224,6 @@ func run(ctx context.Context, log *logger.Logger) error {
 
 	cfgMux := mux.Config{
 		Build:      build,
-		Shutdown:   shutdown,
 		Log:        log,
 		AuthClient: authClient,
 		DB:         db,

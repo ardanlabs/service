@@ -221,12 +221,11 @@ func run(ctx context.Context, log *logger.Logger) error {
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
 
 	cfgMux := mux.Config{
-		Build:    build,
-		Shutdown: shutdown,
-		Log:      log,
-		Auth:     auth,
-		DB:       db,
-		Tracer:   tracer,
+		Build:  build,
+		Log:    log,
+		Auth:   auth,
+		DB:     db,
+		Tracer: tracer,
 		BusDomain: mux.BusDomain{
 			Delegate: delegate,
 			User:     userBus,
