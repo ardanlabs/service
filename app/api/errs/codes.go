@@ -110,15 +110,14 @@ type ErrCode struct {
 	value int
 }
 
-// String returns the string representation of c.
-func (ec ErrCode) String() string {
-	return codeNames[ec.value]
+// Value returns the integer value of the error code.
+func (ec ErrCode) Value() int {
+	return ec.value
 }
 
-// HTTPStatus reports a suitable HTTP status code for an error, based on its code.
-// If err is nil it reports 200. If it's not an *Error it reports 500.
-func (ec ErrCode) HTTPStatus() int {
-	return codeStatus[ec.value]
+// String returns the string representation of the error code.
+func (ec ErrCode) String() string {
+	return codeNames[ec.value]
 }
 
 // UnmarshalText implement the unmarshal interface for JSON conversions.
@@ -145,9 +144,6 @@ func (ec ErrCode) Equal(ec2 ErrCode) bool {
 	return ec.value == ec2.value
 }
 
-var codeNames [17]string
-var codeStatus [17]int
-
 var codeNumbers = map[string]ErrCode{
 	"ok":                  OK,
 	"canceled":            Canceled,
@@ -168,6 +164,8 @@ var codeNumbers = map[string]ErrCode{
 	"unauthenticated":     Unauthenticated,
 }
 
+var codeNames [17]string
+
 func init() {
 	codeNames[OK.value] = "ok"
 	codeNames[Canceled.value] = "canceled"
@@ -186,22 +184,4 @@ func init() {
 	codeNames[Unavailable.value] = "unavailable"
 	codeNames[DataLoss.value] = "data_loss"
 	codeNames[Unauthenticated.value] = "unauthenticated"
-
-	codeStatus[OK.value] = 200
-	codeStatus[Canceled.value] = 499
-	codeStatus[Unknown.value] = 500
-	codeStatus[InvalidArgument.value] = 400
-	codeStatus[DeadlineExceeded.value] = 504
-	codeStatus[NotFound.value] = 404
-	codeStatus[AlreadyExists.value] = 409
-	codeStatus[PermissionDenied.value] = 403
-	codeStatus[ResourceExhausted.value] = 429
-	codeStatus[FailedPrecondition.value] = 400
-	codeStatus[Aborted.value] = 409
-	codeStatus[OutOfRange.value] = 400
-	codeStatus[Unimplemented.value] = 501
-	codeStatus[Internal.value] = 500
-	codeStatus[Unavailable.value] = 503
-	codeStatus[DataLoss.value] = 500
-	codeStatus[Unauthenticated.value] = 401
 }
