@@ -11,7 +11,7 @@ import (
 // collecting metrics. The expvar package is already based on a singleton
 // for the different metrics that are registered with the package so there
 // isn't much choice here.
-var m *metrics
+var m metrics
 
 // metrics represents the set of metrics we gather. These fields are
 // safe to be accessed concurrently thanks to expvar. No extra abstraction is required.
@@ -27,7 +27,7 @@ type metrics struct {
 // inside of expvar is registered as a singleton. The use of once will make
 // sure this initialization only happens once.
 func init() {
-	m = &metrics{
+	m = metrics{
 		goroutines: expvar.NewInt("goroutines"),
 		requests:   expvar.NewInt("requests"),
 		errors:     expvar.NewInt("errors"),
@@ -41,7 +41,7 @@ const key ctxKey = 1
 
 // Set sets the metrics data into the context.
 func Set(ctx context.Context) context.Context {
-	return context.WithValue(ctx, key, m)
+	return context.WithValue(ctx, key, &m)
 }
 
 // AddGoroutines refreshes the goroutine metric.
