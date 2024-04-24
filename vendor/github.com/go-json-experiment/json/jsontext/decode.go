@@ -132,7 +132,7 @@ func (d *Decoder) Reset(r io.Reader, opts ...Options) {
 	case d == nil:
 		panic("jsontext: invalid nil Decoder")
 	case r == nil:
-		panic("jsontext: invalid nil io.Writer")
+		panic("jsontext: invalid nil io.Reader")
 	case d.s.Flags.Get(jsonflags.WithinArshalCall):
 		panic("jsontext: cannot reset Decoder passed to json.UnmarshalerV2")
 	}
@@ -1037,7 +1037,7 @@ func (d *Decoder) StackDepth() int {
 // Each name and value in a JSON object is counted separately,
 // so the effective number of members would be half the length.
 // A complete JSON object must have an even length.
-func (d *Decoder) StackIndex(i int) (Kind, int) {
+func (d *Decoder) StackIndex(i int) (Kind, int64) {
 	// NOTE: Keep in sync with Encoder.StackIndex.
 	switch s := d.s.Tokens.index(i); {
 	case i > 0 && s.isObject():
@@ -1052,7 +1052,7 @@ func (d *Decoder) StackIndex(i int) (Kind, int) {
 // StackPointer returns a JSON Pointer (RFC 6901) to the most recently read value.
 // Object names are only present if [AllowDuplicateNames] is false, otherwise
 // object members are represented using their index within the object.
-func (d *Decoder) StackPointer() string {
+func (d *Decoder) StackPointer() Pointer {
 	d.s.Names.copyQuotedBuffer(d.s.buf)
-	return string(d.s.appendStackPointer(nil))
+	return Pointer(d.s.appendStackPointer(nil))
 }

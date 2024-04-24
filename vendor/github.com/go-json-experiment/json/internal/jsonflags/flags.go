@@ -14,7 +14,7 @@ import "github.com/go-json-experiment/json/internal"
 //
 // In common usage, this is OR'd with 0 or 1. For example:
 //   - (AllowInvalidUTF8 | 0) means "AllowInvalidUTF8 is false"
-//   - (Expand | Indent | 1) means "Expand and Indent are true"
+//   - (Multiline | Indent | 1) means "Multiline and Indent are true"
 type Bools uint64
 
 func (Bools) JSONOptions(internal.NotForPublicUse) {}
@@ -65,6 +65,14 @@ const (
 		SkipUnaddressableMethods |
 		StringifyWithLegacySemantics |
 		UnmarshalArrayFromAnyLength
+
+	// AnyWhitespace reports whether the encoded output might have any whitespace.
+	AnyWhitespace = Multiline | SpaceAfterColon | SpaceAfterComma
+
+	// WhitespaceFlags is the set of flags related to whitespace formatting.
+	// In contrast to AnyWhitespace, this includes Indent and IndentPrefix
+	// as those settings take no effect if Multiline is false.
+	WhitespaceFlags = AnyWhitespace | Indent | IndentPrefix
 )
 
 // Encoder and decoder flags.
@@ -79,7 +87,9 @@ const (
 	CanonicalizeNumbers // encode only; for internal use by jsontext.Value.Canonicalize
 	EscapeForHTML       // encode only
 	EscapeForJS         // encode only
-	Expand              // encode only
+	Multiline           // encode only
+	SpaceAfterColon     // encode only
+	SpaceAfterComma     // encode only
 	Indent              // encode only; non-boolean flag
 	IndentPrefix        // encode only; non-boolean flag
 	ByteLimit           // encode or decode; non-boolean flag

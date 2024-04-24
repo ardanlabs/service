@@ -5,6 +5,7 @@
 package jsontext
 
 import (
+	"bytes"
 	"math"
 	"strconv"
 
@@ -186,8 +187,7 @@ func (t Token) Clone() Token {
 		if uint64(raw.previousOffsetStart()) != t.num {
 			panic(invalidTokenPanic)
 		}
-		// TODO(https://go.dev/issue/45038): Use bytes.Clone.
-		buf := append([]byte(nil), raw.PreviousBuffer()...)
+		buf := bytes.Clone(raw.PreviousBuffer())
 		return Token{raw: &decodeBuffer{buf: buf, prevStart: 0, prevEnd: len(buf)}}
 	}
 	return t

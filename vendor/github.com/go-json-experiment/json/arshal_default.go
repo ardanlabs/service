@@ -30,15 +30,15 @@ const optimizeCommon = true
 
 var (
 	// Most natural Go type that correspond with each JSON type.
-	anyType          = reflect.TypeOf((*any)(nil)).Elem()            // JSON value
-	boolType         = reflect.TypeOf((*bool)(nil)).Elem()           // JSON bool
-	stringType       = reflect.TypeOf((*string)(nil)).Elem()         // JSON string
-	float64Type      = reflect.TypeOf((*float64)(nil)).Elem()        // JSON number
-	mapStringAnyType = reflect.TypeOf((*map[string]any)(nil)).Elem() // JSON object
-	sliceAnyType     = reflect.TypeOf((*[]any)(nil)).Elem()          // JSON array
+	anyType          = reflect.TypeFor[any]()            // JSON value
+	boolType         = reflect.TypeFor[bool]()           // JSON bool
+	stringType       = reflect.TypeFor[string]()         // JSON string
+	float64Type      = reflect.TypeFor[float64]()        // JSON number
+	mapStringAnyType = reflect.TypeFor[map[string]any]() // JSON object
+	sliceAnyType     = reflect.TypeFor[[]any]()          // JSON array
 
-	bytesType       = reflect.TypeOf((*[]byte)(nil)).Elem()
-	emptyStructType = reflect.TypeOf((*struct{})(nil)).Elem()
+	bytesType       = reflect.TypeFor[[]byte]()
+	emptyStructType = reflect.TypeFor[struct{}]()
 )
 
 const startDetectingCyclesAfter = 1000
@@ -126,7 +126,7 @@ func makeBoolArshaler(t reflect.Type) *arshaler {
 		}
 
 		// Optimize for marshaling without preceding whitespace.
-		if optimizeCommon && !xe.Flags.Get(jsonflags.Expand) && !xe.Tokens.Last.NeedObjectName() {
+		if optimizeCommon && !xe.Flags.Get(jsonflags.AnyWhitespace) && !xe.Tokens.Last.NeedObjectName() {
 			xe.Buf = strconv.AppendBool(xe.Tokens.MayAppendDelim(xe.Buf, 't'), va.Bool())
 			xe.Tokens.Last.Increment()
 			if xe.NeedFlush() {
@@ -170,7 +170,7 @@ func makeStringArshaler(t reflect.Type) *arshaler {
 
 		// Optimize for marshaling without preceding whitespace or string escaping.
 		s := va.String()
-		if optimizeCommon && !xe.Flags.Get(jsonflags.Expand) && !xe.Tokens.Last.NeedObjectName() && !jsonwire.NeedEscape(s) {
+		if optimizeCommon && !xe.Flags.Get(jsonflags.AnyWhitespace) && !xe.Tokens.Last.NeedObjectName() && !jsonwire.NeedEscape(s) {
 			b := xe.Buf
 			b = xe.Tokens.MayAppendDelim(b, '"')
 			b = append(b, '"')
@@ -373,7 +373,7 @@ func makeIntArshaler(t reflect.Type) *arshaler {
 		}
 
 		// Optimize for marshaling without preceding whitespace or string escaping.
-		if optimizeCommon && !xe.Flags.Get(jsonflags.Expand) && !mo.Flags.Get(jsonflags.StringifyNumbers) && !xe.Tokens.Last.NeedObjectName() {
+		if optimizeCommon && !xe.Flags.Get(jsonflags.AnyWhitespace) && !mo.Flags.Get(jsonflags.StringifyNumbers) && !xe.Tokens.Last.NeedObjectName() {
 			xe.Buf = strconv.AppendInt(xe.Tokens.MayAppendDelim(xe.Buf, '0'), va.Int(), 10)
 			xe.Tokens.Last.Increment()
 			if xe.NeedFlush() {
@@ -450,7 +450,7 @@ func makeUintArshaler(t reflect.Type) *arshaler {
 		}
 
 		// Optimize for marshaling without preceding whitespace or string escaping.
-		if optimizeCommon && !xe.Flags.Get(jsonflags.Expand) && !mo.Flags.Get(jsonflags.StringifyNumbers) && !xe.Tokens.Last.NeedObjectName() {
+		if optimizeCommon && !xe.Flags.Get(jsonflags.AnyWhitespace) && !mo.Flags.Get(jsonflags.StringifyNumbers) && !xe.Tokens.Last.NeedObjectName() {
 			xe.Buf = strconv.AppendUint(xe.Tokens.MayAppendDelim(xe.Buf, '0'), va.Uint(), 10)
 			xe.Tokens.Last.Increment()
 			if xe.NeedFlush() {
@@ -532,7 +532,7 @@ func makeFloatArshaler(t reflect.Type) *arshaler {
 		}
 
 		// Optimize for marshaling without preceding whitespace or string escaping.
-		if optimizeCommon && !xe.Flags.Get(jsonflags.Expand) && !mo.Flags.Get(jsonflags.StringifyNumbers) && !xe.Tokens.Last.NeedObjectName() {
+		if optimizeCommon && !xe.Flags.Get(jsonflags.AnyWhitespace) && !mo.Flags.Get(jsonflags.StringifyNumbers) && !xe.Tokens.Last.NeedObjectName() {
 			xe.Buf = jsonwire.AppendFloat(xe.Tokens.MayAppendDelim(xe.Buf, '0'), fv, bits)
 			xe.Tokens.Last.Increment()
 			if xe.NeedFlush() {
@@ -651,7 +651,7 @@ func makeMapArshaler(t reflect.Type) *arshaler {
 				return enc.WriteToken(jsontext.Null)
 			}
 			// Optimize for marshaling an empty map without any preceding whitespace.
-			if optimizeCommon && !xe.Flags.Get(jsonflags.Expand) && !xe.Tokens.Last.NeedObjectName() {
+			if optimizeCommon && !xe.Flags.Get(jsonflags.AnyWhitespace) && !xe.Tokens.Last.NeedObjectName() {
 				xe.Buf = append(xe.Tokens.MayAppendDelim(xe.Buf, '{'), "{}"...)
 				xe.Tokens.Last.Increment()
 				if xe.NeedFlush() {
@@ -976,8 +976,11 @@ func makeStructArshaler(t reflect.Type) *arshaler {
 				b := xe.Buf
 				if xe.Tokens.Last.Length() > 0 {
 					b = append(b, ',')
+					if xe.Flags.Get(jsonflags.SpaceAfterComma) {
+						b = append(b, ' ')
+					}
 				}
-				if xe.Flags.Get(jsonflags.Expand) {
+				if xe.Flags.Get(jsonflags.Multiline) {
 					b = xe.AppendIndent(b, xe.Tokens.NeedIndent('"'))
 				}
 
@@ -1252,7 +1255,7 @@ func makeSliceArshaler(t reflect.Type) *arshaler {
 				return enc.WriteToken(jsontext.Null)
 			}
 			// Optimize for marshaling an empty slice without any preceding whitespace.
-			if optimizeCommon && !xe.Flags.Get(jsonflags.Expand) && !xe.Tokens.Last.NeedObjectName() {
+			if optimizeCommon && !xe.Flags.Get(jsonflags.AnyWhitespace) && !xe.Tokens.Last.NeedObjectName() {
 				xe.Buf = append(xe.Tokens.MayAppendDelim(xe.Buf, '['), "[]"...)
 				xe.Tokens.Last.Increment()
 				if xe.NeedFlush() {

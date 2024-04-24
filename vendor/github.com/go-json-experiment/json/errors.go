@@ -28,7 +28,7 @@ type SemanticError struct {
 	ByteOffset int64
 	// JSONPointer indicates that an error occurred within this JSON value
 	// as indicated using the JSON Pointer notation (see RFC 6901).
-	JSONPointer string
+	JSONPointer jsontext.Pointer
 
 	// JSONKind is the JSON kind that could not be handled.
 	JSONKind jsontext.Kind // may be zero if unknown
@@ -98,7 +98,7 @@ func (e *SemanticError) Error() string {
 	switch {
 	case e.JSONPointer != "":
 		sb.WriteString(" within JSON value at ")
-		sb.WriteString(strconv.Quote(e.JSONPointer))
+		sb.WriteString(strconv.Quote(string(e.JSONPointer)))
 	case e.ByteOffset > 0:
 		sb.WriteString(" after byte offset ")
 		sb.WriteString(strconv.FormatInt(e.ByteOffset, 10))

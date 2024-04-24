@@ -29,7 +29,7 @@ import (
 // represent any arbitrary JSON object member. Explicitly named fields take
 // precedence over the inlined fallback. Only one inlined fallback is allowed.
 
-var jsontextValueType = reflect.TypeOf((*jsontext.Value)(nil)).Elem()
+var jsontextValueType = reflect.TypeFor[jsontext.Value]()
 
 // marshalInlinedFallbackAll marshals all the members in an inlined fallback.
 func marshalInlinedFallbackAll(enc *jsontext.Encoder, va addressableValue, mo *jsonopts.Struct, f *structField, insertUnquotedName func([]byte) bool) error {

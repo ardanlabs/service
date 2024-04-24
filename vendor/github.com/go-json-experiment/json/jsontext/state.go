@@ -7,6 +7,7 @@ package jsontext
 import (
 	"math"
 	"strconv"
+	"strings"
 
 	"github.com/go-json-experiment/json/internal/jsonwire"
 )
@@ -46,6 +47,24 @@ func (s *state) reset() {
 	s.Tokens.reset()
 	s.Names.reset()
 	s.Namespaces.reset()
+}
+
+// Pointer is a JSON Pointer (RFC 6901) that references a particular JSON value
+// relative to the root of the top-level JSON value.
+type Pointer string
+
+// nextToken returns the next token in the pointer, reducing the length of p.
+func (p *Pointer) nextToken() (token string) {
+	*p = Pointer(strings.TrimPrefix(string(*p), "/"))
+	i := min(uint(strings.IndexByte(string(*p), '/')), uint(len(*p)))
+	token = string(*p)[:i]
+	*p = (*p)[i:]
+	if strings.Contains(token, "~") {
+		// Per RFC 6901, section 3, unescape '~' and '/' characters.
+		token = strings.ReplaceAll(token, "~1", "/")
+		token = strings.ReplaceAll(token, "~0", "~")
+	}
+	return token
 }
 
 // appendStackPointer appends a JSON Pointer (RFC 6901) to the current value.
@@ -133,7 +152,7 @@ func (m *stateMachine) index(i int) *stateEntry {
 
 // DepthLength reports the current nested depth and
 // the length of the last JSON object or array.
-func (m stateMachine) DepthLength() (int, int) {
+func (m stateMachine) DepthLength() (int, int64) {
 	return m.Depth(), m.Last.Length()
 }
 
@@ -286,12 +305,12 @@ func (m stateMachine) needDelim(next Kind) (delim byte) {
 // checkDelim reports whether the specified delimiter should be there given
 // the kind of the next token that appears immediately afterwards.
 func (m stateMachine) checkDelim(delim byte, next Kind) error {
-	switch needDelim := m.needDelim(next); {
-	case needDelim == delim:
+	switch m.needDelim(next) {
+	case delim:
 		return nil
-	case needDelim == ':':
+	case ':':
 		return errMissingColon
-	case needDelim == ',':
+	case ',':
 		return errMissingComma
 	default:
 		return newInvalidCharacterError([]byte{delim}, "before next token")
@@ -342,8 +361,8 @@ const (
 
 // Length reports the number of elements in the JSON object or array.
 // Each name and value in an object entry is treated as a separate element.
-func (e stateEntry) Length() int {
-	return int(e & stateCountMask)
+func (e stateEntry) Length() int64 {
+	return int64(e & stateCountMask)
 }
 
 // isObject reports whether this is a JSON object.

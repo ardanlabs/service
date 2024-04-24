@@ -22,8 +22,8 @@ import (
 )
 
 var (
-	timeDurationType = reflect.TypeOf((*time.Duration)(nil)).Elem()
-	timeTimeType     = reflect.TypeOf((*time.Time)(nil)).Elem()
+	timeDurationType = reflect.TypeFor[time.Duration]()
+	timeTimeType     = reflect.TypeFor[time.Time]()
 )
 
 func makeTimeArshaler(fncs *arshaler, t reflect.Type) *arshaler {
