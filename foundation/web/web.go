@@ -15,22 +15,27 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-// A Handler is a type that handles a http request within our own little mini
-// framework.
+// Handler represents a function that handles a http request within our own
+// little mini framework.
 type Handler func(ctx context.Context, w http.ResponseWriter, r *http.Request) error
+
+// Logger represents a function that will be called to add information
+// to the logs.
+type Logger func(ctx context.Context, msg string, v ...any)
 
 // App is the entrypoint into our application and what configures our context
 // object for each of our http handlers. Feel free to add any configuration
 // data/logic on this App struct.
 type App struct {
+	log    Logger
+	tracer trace.Tracer
 	mux    *http.ServeMux
 	otmux  http.Handler
 	mw     []MidHandler
-	tracer trace.Tracer
 }
 
 // NewApp creates an App value that handle a set of routes for the application.
-func NewApp(tracer trace.Tracer, mw ...MidHandler) *App {
+func NewApp(log Logger, tracer trace.Tracer, mw ...MidHandler) *App {
 
 	// Create an OpenTelemetry HTTP Handler which wraps our router. This will start
 	// the initial span and annotate it with information about the request/trusted.
@@ -42,10 +47,11 @@ func NewApp(tracer trace.Tracer, mw ...MidHandler) *App {
 	mux := http.NewServeMux()
 
 	return &App{
+		log:    log,
+		tracer: tracer,
 		mux:    mux,
 		otmux:  otelhttp.NewHandler(mux, "request"),
 		mw:     mw,
-		tracer: tracer,
 	}
 }
 
@@ -88,11 +94,8 @@ func (a *App) HandleNoMiddleware(method string, group string, path string, handl
 		ctx := setValues(r.Context(), &v)
 
 		if err := handler(ctx, w, r); err != nil {
-
-			// The http package will capture this panic and we will see
-			// this in the logs. If the app is handling errors, this
-			// should never happen.
-			panic(err)
+			a.log(ctx, "web", "ERROR", err)
+			return
 		}
 	}
 
@@ -123,11 +126,8 @@ func (a *App) Handle(method string, group string, path string, handler Handler, 
 		ctx = setValues(ctx, &v)
 
 		if err := handler(ctx, w, r); err != nil {
-
-			// The http package will capture this panic and we will see
-			// this in the logs. If the app is handling errors, this
-			// should never happen.
-			panic(err)
+			a.log(ctx, "web", "ERROR", err)
+			return
 		}
 	}
 

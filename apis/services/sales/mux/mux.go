@@ -3,6 +3,7 @@
 package mux
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/ardanlabs/service/apis/services/api/mid"
@@ -57,18 +58,23 @@ type RouteAdder interface {
 
 // WebAPI constructs a http.Handler with all application routes bound.
 func WebAPI(cfg Config, routeAdder RouteAdder, options ...func(opts *Options)) http.Handler {
-	var opts Options
-	for _, option := range options {
-		option(&opts)
+	logger := func(ctx context.Context, msg string, v ...any) {
+		cfg.Log.Info(ctx, msg, v...)
 	}
 
 	app := web.NewApp(
+		logger,
 		cfg.Tracer,
 		mid.Logger(cfg.Log),
 		mid.Errors(cfg.Log),
 		mid.Metrics(),
 		mid.Panics(),
 	)
+
+	var opts Options
+	for _, option := range options {
+		option(&opts)
+	}
 
 	if len(opts.corsOrigin) > 0 {
 		app.EnableCORS(mid.Cors(opts.corsOrigin))
