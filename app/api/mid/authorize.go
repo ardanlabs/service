@@ -61,7 +61,7 @@ func AuthorizeUser(ctx context.Context, log *logger.Logger, client *authclient.C
 			}
 		}
 
-		ctx = SetUser(ctx, usr)
+		ctx = setUser(ctx, usr)
 	}
 
 	auth := authclient.Authorize{
@@ -102,7 +102,7 @@ func AuthorizeProduct(ctx context.Context, log *logger.Logger, client *authclien
 		}
 
 		userID = prd.UserID
-		ctx = SetProduct(ctx, prd)
+		ctx = setProduct(ctx, prd)
 	}
 
 	auth := authclient.Authorize{
@@ -143,7 +143,7 @@ func AuthorizeHome(ctx context.Context, log *logger.Logger, client *authclient.C
 		}
 
 		userID = hme.UserID
-		ctx = SetHome(ctx, hme)
+		ctx = setHome(ctx, hme)
 	}
 
 	auth := authclient.Authorize{
