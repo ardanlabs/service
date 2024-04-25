@@ -46,7 +46,6 @@ func Test_Auth(t *testing.T) {
 		},
 		Roles: []userbus.Role{userbus.RoleAdmin},
 	}
-	userID := uuid.MustParse(claims.Subject)
 
 	token, err := a.GenerateToken(kid, claims)
 	if err != nil {
@@ -57,6 +56,8 @@ func Test_Auth(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Should be able to authenticate the claims : %s", err)
 	}
+
+	userID := uuid.MustParse(claims.Subject)
 
 	err = a.Authorize(context.Background(), parsedClaims, userID, auth.RuleAdminOnly)
 	if err != nil {
@@ -84,7 +85,6 @@ func Test_Auth(t *testing.T) {
 		},
 		Roles: []userbus.Role{userbus.RoleUser},
 	}
-	userID = uuid.MustParse(claims.Subject)
 
 	token, err = a.GenerateToken(kid, claims)
 	if err != nil {
@@ -95,6 +95,8 @@ func Test_Auth(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Should be able to authenticate the claims : %s", err)
 	}
+
+	userID = uuid.MustParse(claims.Subject)
 
 	err = a.Authorize(context.Background(), parsedClaims, userID, auth.RuleUserOnly)
 	if err != nil {
@@ -127,7 +129,6 @@ func Test_Auth(t *testing.T) {
 		},
 		Roles: []userbus.Role{userbus.RoleUser},
 	}
-	userID = uuid.MustParse("9e979baa-61c9-4b50-81f2-f216d53f5c15")
 
 	token, err = a.GenerateToken(kid, claims)
 	if err != nil {
@@ -138,6 +139,8 @@ func Test_Auth(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Should be able to authenticate the claims : %s", err)
 	}
+
+	userID = uuid.MustParse("9e979baa-61c9-4b50-81f2-f216d53f5c15")
 
 	err = a.Authorize(context.Background(), parsedClaims, userID, auth.RuleAdminOrSubject)
 	if err == nil {
@@ -259,7 +262,7 @@ func (ks *keyStore) PublicKey(kid string) (string, error) {
 const (
 	kid = "s4sKIjD9kIRjxs2tulPqGLdxSfgPErRN1Mu3Hd9k9NQ"
 
-	privateKeyPEM = `-----BEGIN RSA PRIVATE KEY-----
+	privateKeyPEM = `-----BEGIN PRIVATE KEY-----
 MIIEpQIBAAKCAQEAvMAHb0IoLvoYuW2kA+LTmnk+hfnBq1eYIh4CT/rMPCxgtzjq
 U0guQOMnLg69ydyA5uu37v6rbS1+stuBTEiMQl/bxAhgLkGrUhgpZ10Bt6GzSEgw
 QNloZoGaxe4p20wMPpT4kcMKNHkQds3uONNcLxPUmfjbbH64g+seg28pbgQPwKFK
@@ -285,7 +288,7 @@ U3DxWDrL5L9NqKEwcNt7ZIDsdnfsJp5F7F6o/UiyOFd9YQb7YkxN0r5rUTg7Lpdx
 eMyv0/UCgYEAhX9MPzmTO4+N8naGFof1o8YP97pZj0HkEvM0hTaeAQFKJiwX5ijQ
 xumKGh//G0AYsjqP02ItzOm2mWnbI3FrNlKmGFvR6VxIZMOyXvpLofHucjJ5SWli
 eYjPklKcXaMftt1FVO4n+EKj1k1+Tv14nytq/J5WN+r4FBlNEYj/6vg=
------END RSA PRIVATE KEY-----
+-----END PRIVATE KEY-----
 `
 	publicKeyPEM = `-----BEGIN PUBLIC KEY-----
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvMAHb0IoLvoYuW2kA+LT
