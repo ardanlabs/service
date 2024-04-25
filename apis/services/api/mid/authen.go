@@ -12,7 +12,7 @@ import (
 	"github.com/ardanlabs/service/foundation/web"
 )
 
-// Authenticate validates a JWT from the `Authorization` header.
+// Authenticate validates authentication via the auth service.
 func Authenticate(log *logger.Logger, client *authclient.Client) web.MidHandler {
 	m := func(handler web.Handler) web.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
@@ -29,15 +29,15 @@ func Authenticate(log *logger.Logger, client *authclient.Client) web.MidHandler 
 	return m
 }
 
-// Authorization validates a JWT from the `Authorization` header.
-func Authorization(userBus *userbus.Core, auth *auth.Auth) web.MidHandler {
+// BearerBasic processes the actual authentication logic.
+func BearerBasic(userBus *userbus.Core, auth *auth.Auth) web.MidHandler {
 	m := func(handler web.Handler) web.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 			hdl := func(ctx context.Context) error {
 				return handler(ctx, w, r)
 			}
 
-			return mid.Authorization(ctx, userBus, auth, r.Header.Get("authorization"), hdl)
+			return mid.BearerBasic(ctx, userBus, auth, r.Header.Get("authorization"), hdl)
 		}
 
 		return h

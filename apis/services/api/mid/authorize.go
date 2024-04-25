@@ -13,7 +13,7 @@ import (
 	"github.com/ardanlabs/service/foundation/web"
 )
 
-// Authorize executes the authorize middleware functionality.
+// Authorize validates authorization via the auth service.
 func Authorize(log *logger.Logger, client *authclient.Client, rule string) web.MidHandler {
 	m := func(handler web.Handler) web.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
@@ -30,7 +30,10 @@ func Authorize(log *logger.Logger, client *authclient.Client, rule string) web.M
 	return m
 }
 
-// AuthorizeUser executes the authorize user middleware functionality.
+// AuthorizeUser executes the specified role and extracts the specified
+// user from the DB if a user id is specified in the call. Depending on the rule
+// specified, the userid from the claims may be compared with the specified
+// user id.
 func AuthorizeUser(log *logger.Logger, client *authclient.Client, userBus *userbus.Core, rule string) web.MidHandler {
 	m := func(handler web.Handler) web.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
@@ -47,7 +50,10 @@ func AuthorizeUser(log *logger.Logger, client *authclient.Client, userBus *userb
 	return m
 }
 
-// AuthorizeProduct executes the authorize product middleware functionality.
+// AuthorizeProduct executes the specified role and extracts the specified
+// product from the DB if a product id is specified in the call. Depending on
+// the rule specified, the userid from the claims may be compared with the
+// specified user id from the product.
 func AuthorizeProduct(log *logger.Logger, client *authclient.Client, productBus *productbus.Core) web.MidHandler {
 	m := func(handler web.Handler) web.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
@@ -64,7 +70,10 @@ func AuthorizeProduct(log *logger.Logger, client *authclient.Client, productBus 
 	return m
 }
 
-// AuthorizeHome executes the authorize home middleware functionality.
+// AuthorizeHome executes the specified role and extracts the specified
+// home from the DB if a home id is specified in the call. Depending on
+// the rule specified, the userid from the claims may be compared with the
+// specified user id from the home.
 func AuthorizeHome(log *logger.Logger, client *authclient.Client, homeBus *homebus.Core) web.MidHandler {
 	m := func(handler web.Handler) web.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {

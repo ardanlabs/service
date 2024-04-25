@@ -2,7 +2,6 @@ package tests
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -57,12 +56,8 @@ func startTest(t *testing.T, testName string) (*dbtest.Test, *appTest) {
 		},
 	}, authbuild.Routes())
 
-	logFunc := func(ctx context.Context, msg string) {
-		t.Logf("authapi: message: %s", msg)
-	}
-
 	server := httptest.NewServer(authMux)
-	authClient := authclient.New(server.URL, logFunc)
+	authClient := authclient.New(dbTest.Log, server.URL)
 
 	// -------------------------------------------------------------------------
 

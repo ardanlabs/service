@@ -120,7 +120,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 	// -------------------------------------------------------------------------
 	// App Starting
 
-	log.Info(ctx, "starting service", "version", cfg.Version.Build)
+	log.Info(ctx, "starting service", "version", cfg.Build)
 	defer log.Info(ctx, "shutdown complete")
 
 	out, err := conf.String(&cfg)
@@ -129,7 +129,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 	}
 	log.Info(ctx, "startup", "config", out)
 
-	expvar.NewString("build").Set(cfg.Version.Build)
+	expvar.NewString("build").Set(cfg.Build)
 
 	// -------------------------------------------------------------------------
 	// Database Support

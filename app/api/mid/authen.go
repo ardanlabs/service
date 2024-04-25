@@ -17,7 +17,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// Authenticate validates a JWT from the `Authorization` header.
+// Authenticate validates authentication via the auth service.
 func Authenticate(ctx context.Context, log *logger.Logger, client *authclient.Client, authorization string, handler Handler) error {
 	resp, err := client.Authenticate(ctx, authorization)
 	if err != nil {
@@ -30,8 +30,8 @@ func Authenticate(ctx context.Context, log *logger.Logger, client *authclient.Cl
 	return handler(ctx)
 }
 
-// Authorization validates a JWT from the `Authorization` header.
-func Authorization(ctx context.Context, userBus *userbus.Core, auth *auth.Auth, authorization string, handler Handler) error {
+// BearerBasic processes the actual authentication logic.
+func BearerBasic(ctx context.Context, userBus *userbus.Core, auth *auth.Auth, authorization string, handler Handler) error {
 	var err error
 	parts := strings.Split(authorization, " ")
 

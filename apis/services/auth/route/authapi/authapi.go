@@ -27,6 +27,20 @@ func newAPI(userApp *userapp.Core, auth *auth.Auth) *api {
 	}
 }
 
+func (api *api) token(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	kid := web.Param(r, "kid")
+	if kid == "" {
+		return validate.NewFieldsError("kid", errors.New("missing kid"))
+	}
+
+	token, err := api.userApp.Token(ctx, kid)
+	if err != nil {
+		return err
+	}
+
+	return web.Respond(ctx, w, token, http.StatusOK)
+}
+
 func (api *api) authenticate(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	// The middleware is actually handling the authentication. So if the code
 	// gets to this handler, authentication passed.
@@ -55,18 +69,4 @@ func (api *api) authorize(ctx context.Context, w http.ResponseWriter, r *http.Re
 	}
 
 	return web.Respond(ctx, w, nil, http.StatusNoContent)
-}
-
-func (api *api) token(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	kid := web.Param(r, "kid")
-	if kid == "" {
-		return validate.NewFieldsError("kid", errors.New("missing kid"))
-	}
-
-	token, err := api.userApp.Token(ctx, kid)
-	if err != nil {
-		return err
-	}
-
-	return web.Respond(ctx, w, token, http.StatusOK)
 }

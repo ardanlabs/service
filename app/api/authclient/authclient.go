@@ -10,6 +10,9 @@ import (
 	"net"
 	"net/http"
 	"time"
+
+	"github.com/ardanlabs/service/app/api/errs"
+	"github.com/ardanlabs/service/foundation/logger"
 )
 
 // This provides a default client configuration, but it's recommended
@@ -33,17 +36,17 @@ var defaultClient = http.Client{
 
 // Client represents a client that can talk to the auth service.
 type Client struct {
-	url     string
-	logFunc func(ctx context.Context, s string)
-	http    *http.Client
+	log  *logger.Logger
+	url  string
+	http *http.Client
 }
 
 // New constructs an Auth that can be used to talk with the auth service.
-func New(url string, logFunc func(ctx context.Context, s string), options ...func(cln *Client)) *Client {
+func New(log *logger.Logger, url string, options ...func(cln *Client)) *Client {
 	cln := Client{
-		url:     url,
-		logFunc: logFunc,
-		http:    &defaultClient,
+		log:  log,
+		url:  url,
+		http: &defaultClient,
 	}
 
 	for _, option := range options {
@@ -94,8 +97,8 @@ func (cln *Client) Authorize(ctx context.Context, auth Authorize) error {
 }
 
 func (cln *Client) rawRequest(ctx context.Context, method string, url string, headers map[string]string, r io.Reader, v any) error {
-	cln.logFunc(ctx, fmt.Sprintf("rawRequest: started: method: %s, url: %s", method, url))
-	defer cln.logFunc(ctx, "rawRequest: completed")
+	cln.log.Info(ctx, "authclient: rawRequest: started", "method", method, "url", url)
+	defer cln.log.Info(ctx, "authclient: rawRequest: completed")
 
 	req, err := http.NewRequestWithContext(ctx, method, url, r)
 	if err != nil {
@@ -106,7 +109,7 @@ func (cln *Client) rawRequest(ctx context.Context, method string, url string, he
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
 	for key, value := range headers {
-		cln.logFunc(ctx, fmt.Sprintf("rawRequest: header: key: %s, value: %s", key, value))
+		cln.log.Info(ctx, "authclient: rawRequest", "key", key, "value", value)
 		req.Header.Set(key, value)
 	}
 
@@ -116,7 +119,7 @@ func (cln *Client) rawRequest(ctx context.Context, method string, url string, he
 	}
 	defer resp.Body.Close()
 
-	cln.logFunc(ctx, fmt.Sprintf("rawRequest: client do: status: %d", resp.StatusCode))
+	cln.log.Info(ctx, "authclient: rawRequest", "statuscode", resp.StatusCode)
 
 	if resp.StatusCode == http.StatusNoContent {
 		return nil
@@ -138,7 +141,7 @@ func (cln *Client) rawRequest(ctx context.Context, method string, url string, he
 		return nil
 
 	case http.StatusUnauthorized:
-		var err Error
+		var err errs.Error
 		if err := json.Unmarshal(data, &err); err != nil {
 			return fmt.Errorf("failed: response: %s, decoding error: %w ", string(data), err)
 		}

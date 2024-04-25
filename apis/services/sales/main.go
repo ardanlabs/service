@@ -169,10 +169,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 
 	log.Info(ctx, "startup", "status", "initializing authentication support")
 
-	logFunc := func(ctx context.Context, msg string) {
-		log.Info(ctx, "authapi", "message", msg)
-	}
-	authClient := authclient.New(cfg.Auth.Host, logFunc)
+	authClient := authclient.New(log, cfg.Auth.Host)
 
 	// -------------------------------------------------------------------------
 	// Start Tracing Support

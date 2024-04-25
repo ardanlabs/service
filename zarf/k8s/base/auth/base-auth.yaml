@@ -85,21 +85,6 @@ spec:
               key: db_disabletls
               optional: true
 
-      - name: auth
-        image: auth-image
-
-        ports:
-        - name: auth
-          containerPort: 6000
-        - name: sales-debug
-          containerPort: 6010
-
-        env:
-        - name: GOMAXPROCS
-          valueFrom:
-            resourceFieldRef:
-              resource: limits.cpu
-
 ---
 
 apiVersion: v1

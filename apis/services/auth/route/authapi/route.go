@@ -20,7 +20,7 @@ type Config struct {
 func Routes(app *web.App, cfg Config) {
 	const version = "v1"
 
-	authen := mid.Authorization(cfg.UserBus, cfg.Auth)
+	authen := mid.BearerBasic(cfg.UserBus, cfg.Auth)
 
 	api := newAPI(userapp.NewCoreWithAuth(cfg.UserBus, cfg.Auth), cfg.Auth)
 	app.Handle(http.MethodGet, version, "/auth/token/{kid}", api.token, authen)
