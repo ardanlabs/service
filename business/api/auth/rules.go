@@ -21,8 +21,8 @@ const (
 // Core OPA policies.
 var (
 	//go:embed rego/authentication.rego
-	opaAuthentication string
+	regoAuthentication string
 
 	//go:embed rego/authorization.rego
-	opaAuthorization string
+	regoAuthorization string
 )
