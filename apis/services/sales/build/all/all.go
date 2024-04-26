@@ -2,13 +2,13 @@
 package all
 
 import (
+	"github.com/ardanlabs/service/apis/services/sales/domain/checkapi"
+	"github.com/ardanlabs/service/apis/services/sales/domain/homeapi"
+	"github.com/ardanlabs/service/apis/services/sales/domain/productapi"
+	"github.com/ardanlabs/service/apis/services/sales/domain/tranapi"
+	"github.com/ardanlabs/service/apis/services/sales/domain/userapi"
+	"github.com/ardanlabs/service/apis/services/sales/domain/vproductapi"
 	"github.com/ardanlabs/service/apis/services/sales/mux"
-	"github.com/ardanlabs/service/apis/services/sales/route/domain/homeapi"
-	"github.com/ardanlabs/service/apis/services/sales/route/domain/productapi"
-	"github.com/ardanlabs/service/apis/services/sales/route/domain/tranapi"
-	"github.com/ardanlabs/service/apis/services/sales/route/domain/userapi"
-	"github.com/ardanlabs/service/apis/services/sales/route/domain/vproductapi"
-	"github.com/ardanlabs/service/apis/services/sales/route/sys/checkapi"
 	"github.com/ardanlabs/service/foundation/web"
 )
 

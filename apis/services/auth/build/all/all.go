@@ -2,9 +2,9 @@
 package all
 
 import (
+	"github.com/ardanlabs/service/apis/services/auth/domain/authapi"
+	"github.com/ardanlabs/service/apis/services/auth/domain/checkapi"
 	"github.com/ardanlabs/service/apis/services/auth/mux"
-	"github.com/ardanlabs/service/apis/services/auth/route/authapi"
-	"github.com/ardanlabs/service/apis/services/auth/route/checkapi"
 	"github.com/ardanlabs/service/foundation/web"
 )
 
