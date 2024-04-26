@@ -138,9 +138,9 @@ AUTH_IMAGE      := $(BASE_IMAGE_NAME)/$(AUTH_APP):$(VERSION)
 dev-gotooling:
 	go install github.com/divan/expvarmon@latest
 	go install github.com/rakyll/hey@latest
-	go install honnef.co/go/tools/cmd/staticcheck@latest
-	go install golang.org/x/vuln/cmd/govulncheck@latest
-	go install golang.org/x/tools/cmd/goimports@latest
+	go install honnef.co/go/tools/programs/staticcheck@latest
+	go install golang.org/x/vuln/programs/govulncheck@latest
+	go install golang.org/x/tools/programs/goimports@latest
 
 dev-brew:
 	brew update

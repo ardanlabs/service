@@ -3,7 +3,7 @@
 .reading/
 .dockerignore
 .gitignore
-app/frontends/
+apis/programs/frontends/
 zarf/docker/
 zarf/k8s/
 CONTRIBUTORS
