@@ -89,12 +89,11 @@ func toBusNewUser(app NewUser) (userbus.NewUser, error) {
 	}
 
 	usr := userbus.NewUser{
-		Name:            app.Name,
-		Email:           *addr,
-		Roles:           roles,
-		Department:      app.Department,
-		Password:        app.Password,
-		PasswordConfirm: app.PasswordConfirm,
+		Name:       app.Name,
+		Email:      *addr,
+		Roles:      roles,
+		Department: app.Department,
+		Password:   app.Password,
 	}
 
 	return usr, nil
@@ -155,12 +154,11 @@ func toBusUpdateUser(app UpdateUser) (userbus.UpdateUser, error) {
 	}
 
 	nu := userbus.UpdateUser{
-		Name:            app.Name,
-		Email:           addr,
-		Department:      app.Department,
-		Password:        app.Password,
-		PasswordConfirm: app.PasswordConfirm,
-		Enabled:         app.Enabled,
+		Name:       app.Name,
+		Email:      addr,
+		Department: app.Department,
+		Password:   app.Password,
+		Enabled:    app.Enabled,
 	}
 
 	return nu, nil

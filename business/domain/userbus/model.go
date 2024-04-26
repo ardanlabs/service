@@ -22,21 +22,19 @@ type User struct {
 
 // NewUser contains information needed to create a new user.
 type NewUser struct {
-	Name            string
-	Email           mail.Address
-	Roles           []Role
-	Department      string
-	Password        string
-	PasswordConfirm string
+	Name       string
+	Email      mail.Address
+	Roles      []Role
+	Department string
+	Password   string
 }
 
 // UpdateUser contains information needed to update a user.
 type UpdateUser struct {
-	Name            *string
-	Email           *mail.Address
-	Roles           []Role
-	Department      *string
-	Password        *string
-	PasswordConfirm *string
-	Enabled         *bool
+	Name       *string
+	Email      *mail.Address
+	Roles      []Role
+	Department *string
+	Password   *string
+	Enabled    *bool
 }

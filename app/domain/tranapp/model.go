@@ -66,12 +66,11 @@ func toBusNewUser(app NewUser) (userbus.NewUser, error) {
 	}
 
 	usr := userbus.NewUser{
-		Name:            app.Name,
-		Email:           *addr,
-		Roles:           roles,
-		Department:      app.Department,
-		Password:        app.Password,
-		PasswordConfirm: app.PasswordConfirm,
+		Name:       app.Name,
+		Email:      *addr,
+		Roles:      roles,
+		Department: app.Department,
+		Password:   app.Password,
 	}
 
 	return usr, nil

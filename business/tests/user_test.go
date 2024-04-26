@@ -188,12 +188,11 @@ func userCreate(dbt *dbtest.Test) []dbtest.UnitTable {
 			},
 			ExcFunc: func(ctx context.Context) any {
 				nu := userbus.NewUser{
-					Name:            "Bill Kennedy",
-					Email:           *email,
-					Roles:           []userbus.Role{userbus.RoleAdmin},
-					Department:      "IT",
-					Password:        "123",
-					PasswordConfirm: "123",
+					Name:       "Bill Kennedy",
+					Email:      *email,
+					Roles:      []userbus.Role{userbus.RoleAdmin},
+					Department: "IT",
+					Password:   "123",
 				}
 
 				resp, err := dbt.BusDomain.User.Create(ctx, nu)
@@ -245,12 +244,11 @@ func userUpdate(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
 			},
 			ExcFunc: func(ctx context.Context) any {
 				uu := userbus.UpdateUser{
-					Name:            dbtest.StringPointer("Jack Kennedy"),
-					Email:           email,
-					Roles:           []userbus.Role{userbus.RoleAdmin},
-					Department:      dbtest.StringPointer("IT"),
-					Password:        dbtest.StringPointer("1234"),
-					PasswordConfirm: dbtest.StringPointer("1234"),
+					Name:       dbtest.StringPointer("Jack Kennedy"),
+					Email:      email,
+					Roles:      []userbus.Role{userbus.RoleAdmin},
+					Department: dbtest.StringPointer("IT"),
+					Password:   dbtest.StringPointer("1234"),
 				}
 
 				resp, err := dbt.BusDomain.User.Update(ctx, sd.Users[0].User, uu)

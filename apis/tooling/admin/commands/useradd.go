@@ -36,11 +36,10 @@ func UserAdd(log *logger.Logger, cfg sqldb.Config, name, email, password string)
 	}
 
 	nu := userbus.NewUser{
-		Name:            name,
-		Email:           *addr,
-		Password:        password,
-		PasswordConfirm: password,
-		Roles:           []userbus.Role{userbus.RoleAdmin, userbus.RoleUser},
+		Name:     name,
+		Email:    *addr,
+		Password: password,
+		Roles:    []userbus.Role{userbus.RoleAdmin, userbus.RoleUser},
 	}
 
 	usr, err := userBus.Create(ctx, nu)

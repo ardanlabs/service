@@ -16,12 +16,11 @@ func TestGenerateNewUsers(n int, role Role) []NewUser {
 		idx++
 
 		nu := NewUser{
-			Name:            fmt.Sprintf("Name%d", idx),
-			Email:           mail.Address{Address: fmt.Sprintf("Email%d@gmail.com", idx)},
-			Roles:           []Role{role},
-			Department:      fmt.Sprintf("Department%d", idx),
-			Password:        fmt.Sprintf("Password%d", idx),
-			PasswordConfirm: fmt.Sprintf("Password%d", idx),
+			Name:       fmt.Sprintf("Name%d", idx),
+			Email:      mail.Address{Address: fmt.Sprintf("Email%d@gmail.com", idx)},
+			Roles:      []Role{role},
+			Department: fmt.Sprintf("Department%d", idx),
+			Password:   fmt.Sprintf("Password%d", idx),
 		}
 
 		newUsrs[i] = nu
