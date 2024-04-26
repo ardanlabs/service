@@ -440,7 +440,7 @@ spec:
             requests:
               cpu: 100m
             limits:
-              cpu: 3750m
+              cpu: 3400m
           volumeMounts:
             - name: config-datasources
               mountPath: /etc/grafana/provisioning/datasources
