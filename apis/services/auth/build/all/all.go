@@ -2,9 +2,12 @@
 package all
 
 import (
-	"github.com/ardanlabs/service/apis/services/auth/domain/authapi"
-	"github.com/ardanlabs/service/apis/services/auth/domain/checkapi"
-	"github.com/ardanlabs/service/apis/services/auth/mux"
+	"github.com/ardanlabs/service/apis/api/mux"
+	"github.com/ardanlabs/service/apis/domain/authapi"
+	"github.com/ardanlabs/service/apis/domain/checkapi"
+	"github.com/ardanlabs/service/business/api/delegate"
+	"github.com/ardanlabs/service/business/domain/userbus"
+	"github.com/ardanlabs/service/business/domain/userbus/stores/userdb"
 	"github.com/ardanlabs/service/foundation/web"
 )
 
@@ -18,6 +21,12 @@ type add struct{}
 
 // Add implements the RouterAdder interface.
 func (add) Add(app *web.App, cfg mux.Config) {
+
+	// Construct the business domain packages we need here so we are using the
+	// sames instances for the different set of domain apis.
+	delegate := delegate.New(cfg.Log)
+	userBus := userbus.NewCore(cfg.Log, delegate, userdb.NewStore(cfg.Log, cfg.DB))
+
 	checkapi.Routes(app, checkapi.Config{
 		Build: cfg.Build,
 		Log:   cfg.Log,
@@ -25,7 +34,7 @@ func (add) Add(app *web.App, cfg mux.Config) {
 	})
 
 	authapi.Routes(app, authapi.Config{
-		UserBus: cfg.BusDomain.User,
+		UserBus: userBus,
 		Auth:    cfg.Auth,
 	})
 }

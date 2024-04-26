@@ -13,14 +13,11 @@ import (
 	"time"
 
 	"github.com/ardanlabs/conf/v3"
-	"github.com/ardanlabs/service/apis/services/api/debug"
+	"github.com/ardanlabs/service/apis/api/debug"
+	"github.com/ardanlabs/service/apis/api/mux"
 	"github.com/ardanlabs/service/apis/services/auth/build/all"
-	"github.com/ardanlabs/service/apis/services/auth/mux"
 	"github.com/ardanlabs/service/business/api/auth"
-	"github.com/ardanlabs/service/business/api/delegate"
 	"github.com/ardanlabs/service/business/data/sqldb"
-	"github.com/ardanlabs/service/business/domain/userbus"
-	"github.com/ardanlabs/service/business/domain/userbus/stores/userdb"
 	"github.com/ardanlabs/service/foundation/keystore"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/web"
@@ -194,14 +191,6 @@ func run(ctx context.Context, log *logger.Logger) error {
 	tracer := traceProvider.Tracer("service")
 
 	// -------------------------------------------------------------------------
-	// Build Core APIs
-
-	log.Info(ctx, "startup", "status", "initializing business support")
-
-	delegate := delegate.New(log)
-	userBus := userbus.NewCore(log, delegate, userdb.NewStore(log, db))
-
-	// -------------------------------------------------------------------------
 	// Start Debug Service
 
 	go func() {
@@ -226,10 +215,6 @@ func run(ctx context.Context, log *logger.Logger) error {
 		Auth:   auth,
 		DB:     db,
 		Tracer: tracer,
-		BusDomain: mux.BusDomain{
-			Delegate: delegate,
-			User:     userBus,
-		},
 	}
 
 	api := http.Server{

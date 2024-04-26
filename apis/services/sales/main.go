@@ -13,22 +13,13 @@ import (
 	"time"
 
 	"github.com/ardanlabs/conf/v3"
-	"github.com/ardanlabs/service/apis/services/api/debug"
+	"github.com/ardanlabs/service/apis/api/debug"
+	"github.com/ardanlabs/service/apis/api/mux"
 	"github.com/ardanlabs/service/apis/services/sales/build/all"
 	"github.com/ardanlabs/service/apis/services/sales/build/crud"
 	"github.com/ardanlabs/service/apis/services/sales/build/reporting"
-	"github.com/ardanlabs/service/apis/services/sales/mux"
 	"github.com/ardanlabs/service/app/api/authclient"
-	"github.com/ardanlabs/service/business/api/delegate"
 	"github.com/ardanlabs/service/business/data/sqldb"
-	"github.com/ardanlabs/service/business/domain/homebus"
-	"github.com/ardanlabs/service/business/domain/homebus/stores/homedb"
-	"github.com/ardanlabs/service/business/domain/productbus"
-	"github.com/ardanlabs/service/business/domain/productbus/stores/productdb"
-	"github.com/ardanlabs/service/business/domain/userbus"
-	"github.com/ardanlabs/service/business/domain/userbus/stores/userdb"
-	"github.com/ardanlabs/service/business/domain/vproductbus"
-	"github.com/ardanlabs/service/business/domain/vproductbus/stores/vproductdb"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/web"
 	"go.opentelemetry.io/otel"
@@ -190,17 +181,6 @@ func run(ctx context.Context, log *logger.Logger) error {
 	tracer := traceProvider.Tracer("service")
 
 	// -------------------------------------------------------------------------
-	// Build Core APIs
-
-	log.Info(ctx, "startup", "status", "initializing business support")
-
-	delegate := delegate.New(log)
-	userBus := userbus.NewCore(log, delegate, userdb.NewStore(log, db))
-	productBus := productbus.NewCore(log, userBus, delegate, productdb.NewStore(log, db))
-	homeBus := homebus.NewCore(log, userBus, delegate, homedb.NewStore(log, db))
-	vproductBus := vproductbus.NewCore(vproductdb.NewStore(log, db))
-
-	// -------------------------------------------------------------------------
 	// Start Debug Service
 
 	go func() {
@@ -225,13 +205,6 @@ func run(ctx context.Context, log *logger.Logger) error {
 		AuthClient: authClient,
 		DB:         db,
 		Tracer:     tracer,
-		BusDomain: mux.BusDomain{
-			Delegate: delegate,
-			Home:     homeBus,
-			Product:  productBus,
-			User:     userBus,
-			VProduct: vproductBus,
-		},
 	}
 
 	api := http.Server{

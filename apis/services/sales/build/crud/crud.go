@@ -2,12 +2,19 @@
 package crud
 
 import (
-	"github.com/ardanlabs/service/apis/services/sales/domain/checkapi"
-	"github.com/ardanlabs/service/apis/services/sales/domain/homeapi"
-	"github.com/ardanlabs/service/apis/services/sales/domain/productapi"
-	"github.com/ardanlabs/service/apis/services/sales/domain/tranapi"
-	"github.com/ardanlabs/service/apis/services/sales/domain/userapi"
-	"github.com/ardanlabs/service/apis/services/sales/mux"
+	"github.com/ardanlabs/service/apis/api/mux"
+	"github.com/ardanlabs/service/apis/domain/checkapi"
+	"github.com/ardanlabs/service/apis/domain/homeapi"
+	"github.com/ardanlabs/service/apis/domain/productapi"
+	"github.com/ardanlabs/service/apis/domain/tranapi"
+	"github.com/ardanlabs/service/apis/domain/userapi"
+	"github.com/ardanlabs/service/business/api/delegate"
+	"github.com/ardanlabs/service/business/domain/homebus"
+	"github.com/ardanlabs/service/business/domain/homebus/stores/homedb"
+	"github.com/ardanlabs/service/business/domain/productbus"
+	"github.com/ardanlabs/service/business/domain/productbus/stores/productdb"
+	"github.com/ardanlabs/service/business/domain/userbus"
+	"github.com/ardanlabs/service/business/domain/userbus/stores/userdb"
 	"github.com/ardanlabs/service/foundation/web"
 )
 
@@ -21,6 +28,14 @@ type add struct{}
 
 // Add implements the RouterAdder interface.
 func (add) Add(app *web.App, cfg mux.Config) {
+
+	// Construct the business domain packages we need here so we are using the
+	// sames instances for the different set of domain apis.
+	delegate := delegate.New(cfg.Log)
+	userBus := userbus.NewCore(cfg.Log, delegate, userdb.NewStore(cfg.Log, cfg.DB))
+	productBus := productbus.NewCore(cfg.Log, userBus, delegate, productdb.NewStore(cfg.Log, cfg.DB))
+	homeBus := homebus.NewCore(cfg.Log, userBus, delegate, homedb.NewStore(cfg.Log, cfg.DB))
+
 	checkapi.Routes(app, checkapi.Config{
 		Build: cfg.Build,
 		Log:   cfg.Log,
@@ -28,27 +43,27 @@ func (add) Add(app *web.App, cfg mux.Config) {
 	})
 
 	homeapi.Routes(app, homeapi.Config{
-		UserBus:    cfg.BusDomain.User,
-		HomeBus:    cfg.BusDomain.Home,
+		UserBus:    userBus,
+		HomeBus:    homeBus,
 		AuthClient: cfg.AuthClient,
 	})
 
 	productapi.Routes(app, productapi.Config{
-		UserBus:    cfg.BusDomain.User,
-		ProductBus: cfg.BusDomain.Product,
+		UserBus:    userBus,
+		ProductBus: productBus,
 		AuthClient: cfg.AuthClient,
 	})
 
 	tranapi.Routes(app, tranapi.Config{
-		UserBus:    cfg.BusDomain.User,
-		ProductBus: cfg.BusDomain.Product,
+		UserBus:    userBus,
+		ProductBus: productBus,
 		Log:        cfg.Log,
 		AuthClient: cfg.AuthClient,
 		DB:         cfg.DB,
 	})
 
 	userapi.Routes(app, userapi.Config{
-		UserBus:    cfg.BusDomain.User,
+		UserBus:    userBus,
 		AuthClient: cfg.AuthClient,
 	})
 }

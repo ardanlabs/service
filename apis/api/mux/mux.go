@@ -6,10 +6,9 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/ardanlabs/service/apis/services/api/mid"
+	"github.com/ardanlabs/service/apis/api/mid"
+	"github.com/ardanlabs/service/app/api/authclient"
 	"github.com/ardanlabs/service/business/api/auth"
-	"github.com/ardanlabs/service/business/api/delegate"
-	"github.com/ardanlabs/service/business/domain/userbus"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/jmoiron/sqlx"
@@ -28,20 +27,14 @@ func WithCORS(origins []string) func(opts *Options) {
 	}
 }
 
-// BusDomain represents the set of core business packages.
-type BusDomain struct {
-	Delegate *delegate.Delegate
-	User     *userbus.Core
-}
-
 // Config contains all the mandatory systems required by handlers.
 type Config struct {
-	Build     string
-	Log       *logger.Logger
-	Auth      *auth.Auth
-	DB        *sqlx.DB
-	Tracer    trace.Tracer
-	BusDomain BusDomain
+	Build      string
+	Log        *logger.Logger
+	Auth       *auth.Auth
+	AuthClient *authclient.Client
+	DB         *sqlx.DB
+	Tracer     trace.Tracer
 }
 
 // RouteAdder defines behavior that sets the routes to bind for an instance

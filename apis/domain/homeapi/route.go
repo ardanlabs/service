@@ -3,7 +3,7 @@ package homeapi
 import (
 	"net/http"
 
-	"github.com/ardanlabs/service/apis/services/api/mid"
+	"github.com/ardanlabs/service/apis/api/mid"
 	"github.com/ardanlabs/service/app/api/authclient"
 	"github.com/ardanlabs/service/app/domain/homeapp"
 	"github.com/ardanlabs/service/business/api/auth"

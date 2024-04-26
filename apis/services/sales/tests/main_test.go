@@ -8,10 +8,9 @@ import (
 	"os"
 	"testing"
 
+	"github.com/ardanlabs/service/apis/api/mux"
 	authbuild "github.com/ardanlabs/service/apis/services/auth/build/all"
-	authmux "github.com/ardanlabs/service/apis/services/auth/mux"
 	salesbuild "github.com/ardanlabs/service/apis/services/sales/build/all"
-	salesmux "github.com/ardanlabs/service/apis/services/sales/mux"
 	"github.com/ardanlabs/service/app/api/authclient"
 	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/ardanlabs/service/foundation/docker"
@@ -46,32 +45,20 @@ func startTest(t *testing.T, testName string) (*dbtest.Test, *appTest) {
 
 	// -------------------------------------------------------------------------
 
-	authMux := authmux.WebAPI(authmux.Config{
+	server := httptest.NewServer(mux.WebAPI(mux.Config{
 		Log:  dbTest.Log,
 		Auth: dbTest.Auth,
 		DB:   dbTest.DB,
-		BusDomain: authmux.BusDomain{
-			Delegate: dbTest.BusDomain.Delegate,
-			User:     dbTest.BusDomain.User,
-		},
-	}, authbuild.Routes())
+	}, authbuild.Routes()))
 
-	server := httptest.NewServer(authMux)
 	authClient := authclient.New(dbTest.Log, server.URL)
 
 	// -------------------------------------------------------------------------
 
-	appTest := newAppTest(salesmux.WebAPI(salesmux.Config{
+	appTest := newAppTest(mux.WebAPI(mux.Config{
 		Log:        dbTest.Log,
 		AuthClient: authClient,
 		DB:         dbTest.DB,
-		BusDomain: salesmux.BusDomain{
-			Delegate: dbTest.BusDomain.Delegate,
-			Home:     dbTest.BusDomain.Home,
-			Product:  dbTest.BusDomain.Product,
-			User:     dbTest.BusDomain.User,
-			VProduct: dbTest.BusDomain.VProduct,
-		},
 	}, salesbuild.Routes()))
 
 	return dbTest, appTest
