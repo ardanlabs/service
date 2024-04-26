@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/ardanlabs/service/app/api/mid"
-	"github.com/ardanlabs/service/business/data/transaction"
+	"github.com/ardanlabs/service/business/api/transaction"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/web"
 )

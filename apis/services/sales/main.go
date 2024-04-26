@@ -19,7 +19,7 @@ import (
 	"github.com/ardanlabs/service/apis/services/sales/build/crud"
 	"github.com/ardanlabs/service/apis/services/sales/build/reporting"
 	"github.com/ardanlabs/service/app/api/authclient"
-	"github.com/ardanlabs/service/business/data/sqldb"
+	"github.com/ardanlabs/service/business/api/sqldb"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/web"
 	"go.opentelemetry.io/otel"

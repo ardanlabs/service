@@ -7,11 +7,11 @@ import (
 
 	"github.com/ardanlabs/service/app/api/errs"
 	"github.com/ardanlabs/service/app/domain/userapp"
-	"github.com/ardanlabs/service/business/data/dbtest"
+	"github.com/ardanlabs/service/business/api/dbtest"
 	"github.com/google/go-cmp/cmp"
 )
 
-func userUpdate200(sd dbtest.SeedData) []appTable {
+func userUpdate200(sd appSeedData) []appTable {
 	table := []appTable{
 		{
 			Name:       "basic",
@@ -86,7 +86,7 @@ func userUpdate200(sd dbtest.SeedData) []appTable {
 	return table
 }
 
-func userUpdate400(sd dbtest.SeedData) []appTable {
+func userUpdate400(sd appSeedData) []appTable {
 	table := []appTable{
 		{
 			Name:       "bad-input",
@@ -124,7 +124,7 @@ func userUpdate400(sd dbtest.SeedData) []appTable {
 	return table
 }
 
-func userUpdate401(sd dbtest.SeedData) []appTable {
+func userUpdate401(sd appSeedData) []appTable {
 	table := []appTable{
 		{
 			Name:       "emptytoken",

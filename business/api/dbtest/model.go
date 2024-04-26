@@ -9,7 +9,6 @@ import (
 // User represents an app user specified for the test.
 type User struct {
 	userbus.User
-	Token    string
 	Products []productbus.Product
 	Homes    []homebus.Home
 }

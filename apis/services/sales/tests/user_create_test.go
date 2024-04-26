@@ -5,11 +5,10 @@ import (
 
 	"github.com/ardanlabs/service/app/api/errs"
 	"github.com/ardanlabs/service/app/domain/userapp"
-	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/google/go-cmp/cmp"
 )
 
-func userCreate200(sd dbtest.SeedData) []appTable {
+func userCreate200(sd appSeedData) []appTable {
 	table := []appTable{
 		{
 			Name:       "basic",
@@ -53,7 +52,7 @@ func userCreate200(sd dbtest.SeedData) []appTable {
 	return table
 }
 
-func userCreate400(sd dbtest.SeedData) []appTable {
+func userCreate400(sd appSeedData) []appTable {
 	table := []appTable{
 		{
 			Name:       "missing-input",
@@ -93,7 +92,7 @@ func userCreate400(sd dbtest.SeedData) []appTable {
 	return table
 }
 
-func userCreate401(sd dbtest.SeedData) []appTable {
+func userCreate401(sd appSeedData) []appTable {
 	table := []appTable{
 		{
 			Name:       "emptytoken",

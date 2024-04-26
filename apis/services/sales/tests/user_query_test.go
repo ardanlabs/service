@@ -7,20 +7,19 @@ import (
 
 	"github.com/ardanlabs/service/app/api/page"
 	"github.com/ardanlabs/service/app/domain/userapp"
-	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/ardanlabs/service/business/domain/userbus"
 	"github.com/google/go-cmp/cmp"
 )
 
-func userQuery200(sd dbtest.SeedData) []appTable {
+func userQuery200(sd appSeedData) []appTable {
 	usrs := make([]userbus.User, 0, len(sd.Admins)+len(sd.Users))
 
 	for _, adm := range sd.Admins {
-		usrs = append(usrs, adm.User)
+		usrs = append(usrs, adm.User.User)
 	}
 
 	for _, usr := range sd.Users {
-		usrs = append(usrs, usr.User)
+		usrs = append(usrs, usr.User.User)
 	}
 
 	sort.Slice(usrs, func(i, j int) bool {
@@ -50,7 +49,7 @@ func userQuery200(sd dbtest.SeedData) []appTable {
 	return table
 }
 
-func userQueryByID200(sd dbtest.SeedData) []appTable {
+func userQueryByID200(sd appSeedData) []appTable {
 	table := []appTable{
 		{
 			Name:       "basic",
@@ -59,7 +58,7 @@ func userQueryByID200(sd dbtest.SeedData) []appTable {
 			StatusCode: http.StatusOK,
 			Method:     http.MethodGet,
 			Resp:       &userapp.User{},
-			ExpResp:    toAppUserPtr(sd.Users[0].User),
+			ExpResp:    toAppUserPtr(sd.Users[0].User.User),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},

@@ -9,7 +9,7 @@ import (
 
 	"github.com/ardanlabs/service/business/api/delegate"
 	"github.com/ardanlabs/service/business/api/order"
-	"github.com/ardanlabs/service/business/data/transaction"
+	"github.com/ardanlabs/service/business/api/transaction"
 	"github.com/ardanlabs/service/business/domain/userbus"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/google/uuid"

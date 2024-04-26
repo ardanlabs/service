@@ -6,13 +6,12 @@ import (
 
 	"github.com/ardanlabs/service/app/api/page"
 	"github.com/ardanlabs/service/app/domain/vproductapp"
-	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/google/go-cmp/cmp"
 )
 
-func vproductQuery200(sd dbtest.SeedData) []appTable {
-	prds := toAppVProducts(sd.Admins[0].User, sd.Admins[0].Products)
-	prds = append(prds, toAppVProducts(sd.Users[0].User, sd.Users[0].Products)...)
+func vproductQuery200(sd appSeedData) []appTable {
+	prds := toAppVProducts(sd.Admins[0].User.User, sd.Admins[0].Products)
+	prds = append(prds, toAppVProducts(sd.Users[0].User.User, sd.Users[0].Products)...)
 
 	sort.Slice(prds, func(i, j int) bool {
 		return prds[i].ID <= prds[j].ID

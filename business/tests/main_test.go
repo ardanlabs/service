@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/ardanlabs/service/business/data/dbtest"
+	"github.com/ardanlabs/service/business/api/dbtest"
 	"github.com/ardanlabs/service/foundation/docker"
 )
 

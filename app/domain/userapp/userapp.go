@@ -5,10 +5,10 @@ import (
 	"context"
 	"errors"
 
+	"github.com/ardanlabs/service/app/api/auth"
 	"github.com/ardanlabs/service/app/api/errs"
 	"github.com/ardanlabs/service/app/api/mid"
 	"github.com/ardanlabs/service/app/api/page"
-	"github.com/ardanlabs/service/business/api/auth"
 	"github.com/ardanlabs/service/business/domain/userbus"
 )
 

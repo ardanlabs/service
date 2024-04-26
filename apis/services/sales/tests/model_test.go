@@ -8,10 +8,21 @@ import (
 	"github.com/ardanlabs/service/app/domain/productapp"
 	"github.com/ardanlabs/service/app/domain/userapp"
 	"github.com/ardanlabs/service/app/domain/vproductapp"
+	"github.com/ardanlabs/service/business/api/dbtest"
 	"github.com/ardanlabs/service/business/domain/homebus"
 	"github.com/ardanlabs/service/business/domain/productbus"
 	"github.com/ardanlabs/service/business/domain/userbus"
 )
+
+type appTestUser struct {
+	dbtest.User
+	Token string
+}
+
+type appSeedData struct {
+	Users  []appTestUser
+	Admins []appTestUser
+}
 
 func toErrorPtr(err errs.Error) *errs.Error {
 	return &err

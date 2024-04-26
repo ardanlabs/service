@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ardanlabs/service/business/data/dbtest"
+	"github.com/ardanlabs/service/business/api/dbtest"
 	"github.com/ardanlabs/service/business/domain/productbus"
 	"github.com/ardanlabs/service/business/domain/userbus"
 	"github.com/ardanlabs/service/business/domain/vproductbus"
@@ -55,7 +55,6 @@ func insertVProductSeedData(dbTest *dbtest.Test) (dbtest.SeedData, error) {
 
 	tu1 := dbtest.User{
 		User:     usrs[0],
-		Token:    dbTest.Token(usrs[0].Email.Address),
 		Products: prds,
 	}
 
@@ -73,7 +72,6 @@ func insertVProductSeedData(dbTest *dbtest.Test) (dbtest.SeedData, error) {
 
 	tu2 := dbtest.User{
 		User:     usrs[0],
-		Token:    dbTest.Token(usrs[0].Email.Address),
 		Products: prds,
 	}
 

@@ -7,12 +7,11 @@ import (
 
 	"github.com/ardanlabs/service/app/api/page"
 	"github.com/ardanlabs/service/app/domain/homeapp"
-	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/ardanlabs/service/business/domain/homebus"
 	"github.com/google/go-cmp/cmp"
 )
 
-func homeQuery200(sd dbtest.SeedData) []appTable {
+func homeQuery200(sd appSeedData) []appTable {
 	hmes := make([]homebus.Home, 0, len(sd.Admins[0].Homes)+len(sd.Users[0].Homes))
 	hmes = append(hmes, sd.Admins[0].Homes...)
 	hmes = append(hmes, sd.Users[0].Homes...)
@@ -44,7 +43,7 @@ func homeQuery200(sd dbtest.SeedData) []appTable {
 	return table
 }
 
-func homeQueryByID200(sd dbtest.SeedData) []appTable {
+func homeQueryByID200(sd appSeedData) []appTable {
 	table := []appTable{
 		{
 			Name:       "basic",

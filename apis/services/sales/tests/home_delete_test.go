@@ -5,11 +5,10 @@ import (
 	"net/http"
 
 	"github.com/ardanlabs/service/app/api/errs"
-	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/google/go-cmp/cmp"
 )
 
-func homeDelete200(sd dbtest.SeedData) []appTable {
+func homeDelete200(sd appSeedData) []appTable {
 	table := []appTable{
 		{
 			Name:       "asuser",
@@ -30,7 +29,7 @@ func homeDelete200(sd dbtest.SeedData) []appTable {
 	return table
 }
 
-func homeDelete401(sd dbtest.SeedData) []appTable {
+func homeDelete401(sd appSeedData) []appTable {
 	table := []appTable{
 		{
 			Name:       "emptytoken",

@@ -6,7 +6,7 @@ import (
 	"github.com/ardanlabs/service/apis/api/mid"
 	"github.com/ardanlabs/service/app/api/authclient"
 	"github.com/ardanlabs/service/app/domain/tranapp"
-	"github.com/ardanlabs/service/business/data/sqldb"
+	"github.com/ardanlabs/service/business/api/sqldb"
 	"github.com/ardanlabs/service/business/domain/productbus"
 	"github.com/ardanlabs/service/business/domain/userbus"
 	"github.com/ardanlabs/service/foundation/logger"

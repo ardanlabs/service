@@ -10,18 +10,18 @@ func Test_User(t *testing.T) {
 
 	// -------------------------------------------------------------------------
 
-	dbTest, appTest := startTest(t, "Test_User")
+	appTest := startTest(t, "Test_User")
 	defer func() {
 		if r := recover(); r != nil {
 			t.Log(r)
 			t.Error(string(debug.Stack()))
 		}
-		dbTest.Teardown()
+		appTest.dbTest.Teardown()
 	}()
 
 	// -------------------------------------------------------------------------
 
-	sd, err := insertUserSeed(dbTest)
+	sd, err := insertUserSeed(appTest.dbTest, appTest.auth)
 	if err != nil {
 		t.Fatalf("Seeding error: %s", err)
 	}

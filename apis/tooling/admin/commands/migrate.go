@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ardanlabs/service/business/data/migrate"
-	"github.com/ardanlabs/service/business/data/sqldb"
+	"github.com/ardanlabs/service/business/api/migrate"
+	"github.com/ardanlabs/service/business/api/sqldb"
 )
 
 // ErrHelp provides context that help was given.

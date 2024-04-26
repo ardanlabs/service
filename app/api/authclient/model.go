@@ -1,7 +1,7 @@
 package authclient
 
 import (
-	"github.com/ardanlabs/service/business/api/auth"
+	"github.com/ardanlabs/service/app/api/auth"
 	"github.com/google/uuid"
 )
 

@@ -10,18 +10,18 @@ func Test_VProduct(t *testing.T) {
 
 	// -------------------------------------------------------------------------
 
-	dbTest, appTest := startTest(t, "Test_VProduct")
+	appTest := startTest(t, "Test_VProduct")
 	defer func() {
 		if r := recover(); r != nil {
 			t.Log(r)
 			t.Error(string(debug.Stack()))
 		}
-		dbTest.Teardown()
+		appTest.dbTest.Teardown()
 	}()
 
 	// -------------------------------------------------------------------------
 
-	sd, err := insertVProductSeed(dbTest)
+	sd, err := insertVProductSeed(appTest.dbTest, appTest.auth)
 	if err != nil {
 		t.Fatalf("Seeding error: %s", err)
 	}

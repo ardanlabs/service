@@ -7,12 +7,11 @@ import (
 
 	"github.com/ardanlabs/service/app/api/page"
 	"github.com/ardanlabs/service/app/domain/productapp"
-	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/ardanlabs/service/business/domain/productbus"
 	"github.com/google/go-cmp/cmp"
 )
 
-func productQuery200(sd dbtest.SeedData) []appTable {
+func productQuery200(sd appSeedData) []appTable {
 	prds := make([]productbus.Product, 0, len(sd.Admins[0].Products)+len(sd.Users[0].Products))
 	prds = append(prds, sd.Admins[0].Products...)
 	prds = append(prds, sd.Users[0].Products...)
@@ -44,7 +43,7 @@ func productQuery200(sd dbtest.SeedData) []appTable {
 	return table
 }
 
-func productQueryByID200(sd dbtest.SeedData) []appTable {
+func productQueryByID200(sd appSeedData) []appTable {
 	table := []appTable{
 		{
 			Name:       "basic",

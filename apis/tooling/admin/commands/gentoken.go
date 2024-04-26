@@ -6,8 +6,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/ardanlabs/service/business/api/auth"
-	"github.com/ardanlabs/service/business/data/sqldb"
+	"github.com/ardanlabs/service/app/api/auth"
+	"github.com/ardanlabs/service/business/api/sqldb"
 	"github.com/ardanlabs/service/business/domain/userbus"
 	"github.com/ardanlabs/service/business/domain/userbus/stores/userdb"
 	"github.com/ardanlabs/service/foundation/keystore"

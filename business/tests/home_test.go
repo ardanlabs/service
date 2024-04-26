@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ardanlabs/service/business/data/dbtest"
+	"github.com/ardanlabs/service/business/api/dbtest"
 	"github.com/ardanlabs/service/business/domain/homebus"
 	"github.com/ardanlabs/service/business/domain/userbus"
 	"github.com/google/go-cmp/cmp"
@@ -57,7 +57,6 @@ func insertHomeSeedData(dbTest *dbtest.Test) (dbtest.SeedData, error) {
 
 	tu1 := dbtest.User{
 		User:  usrs[0],
-		Token: dbTest.Token(usrs[0].Email.Address),
 		Homes: hmes,
 	}
 
@@ -69,8 +68,7 @@ func insertHomeSeedData(dbTest *dbtest.Test) (dbtest.SeedData, error) {
 	}
 
 	tu2 := dbtest.User{
-		User:  usrs[0],
-		Token: dbTest.Token(usrs[0].Email.Address),
+		User: usrs[0],
 	}
 
 	// -------------------------------------------------------------------------
@@ -87,7 +85,6 @@ func insertHomeSeedData(dbTest *dbtest.Test) (dbtest.SeedData, error) {
 
 	tu3 := dbtest.User{
 		User:  usrs[0],
-		Token: dbTest.Token(usrs[0].Email.Address),
 		Homes: hmes,
 	}
 
@@ -99,8 +96,7 @@ func insertHomeSeedData(dbTest *dbtest.Test) (dbtest.SeedData, error) {
 	}
 
 	tu4 := dbtest.User{
-		User:  usrs[0],
-		Token: dbTest.Token(usrs[0].Email.Address),
+		User: usrs[0],
 	}
 
 	// -------------------------------------------------------------------------
