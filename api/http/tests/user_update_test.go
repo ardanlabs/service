@@ -11,8 +11,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func userUpdate200(sd appSeedData) []appTable {
-	table := []appTable{
+func userUpdate200(sd seedData) []table {
+	table := []table{
 		{
 			Name:       "basic",
 			URL:        fmt.Sprintf("/v1/users/%s", sd.Users[0].ID),
@@ -86,8 +86,8 @@ func userUpdate200(sd appSeedData) []appTable {
 	return table
 }
 
-func userUpdate400(sd appSeedData) []appTable {
-	table := []appTable{
+func userUpdate400(sd seedData) []table {
+	table := []table{
 		{
 			Name:       "bad-input",
 			URL:        fmt.Sprintf("/v1/users/%s", sd.Users[0].ID),
@@ -124,8 +124,8 @@ func userUpdate400(sd appSeedData) []appTable {
 	return table
 }
 
-func userUpdate401(sd appSeedData) []appTable {
-	table := []appTable{
+func userUpdate401(sd seedData) []table {
+	table := []table{
 		{
 			Name:       "emptytoken",
 			URL:        fmt.Sprintf("/v1/users/%s", sd.Users[0].ID),

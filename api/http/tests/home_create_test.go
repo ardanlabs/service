@@ -8,8 +8,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func homeCreate200(sd appSeedData) []appTable {
-	table := []appTable{
+func homeCreate200(sd seedData) []table {
+	table := []table{
 		{
 			Name:       "basic",
 			URL:        "/v1/homes",
@@ -58,8 +58,8 @@ func homeCreate200(sd appSeedData) []appTable {
 	return table
 }
 
-func homeCreate400(sd appSeedData) []appTable {
-	table := []appTable{
+func homeCreate400(sd seedData) []table {
+	table := []table{
 		{
 			Name:       "missing-input",
 			URL:        "/v1/homes",
@@ -100,8 +100,8 @@ func homeCreate400(sd appSeedData) []appTable {
 	return table
 }
 
-func homeCreate401(sd appSeedData) []appTable {
-	table := []appTable{
+func homeCreate401(sd seedData) []table {
+	table := []table{
 		{
 			Name:       "emptytoken",
 			URL:        "/v1/homes",

@@ -10,21 +10,21 @@ import (
 	"github.com/ardanlabs/service/business/domain/userbus"
 )
 
-func insertVProductSeed(dbTest *dbtest.Test, auth *auth.Auth) (appSeedData, error) {
+func insertVProductSeed(dbTest *dbtest.Test, auth *auth.Auth) (seedData, error) {
 	ctx := context.Background()
 	busDomain := dbTest.BusDomain
 
 	usrs, err := userbus.TestGenerateSeedUsers(ctx, 1, userbus.RoleUser, busDomain.User)
 	if err != nil {
-		return appSeedData{}, fmt.Errorf("seeding users : %w", err)
+		return seedData{}, fmt.Errorf("seeding users : %w", err)
 	}
 
 	prds, err := productbus.TestGenerateSeedProducts(ctx, 2, busDomain.Product, usrs[0].ID)
 	if err != nil {
-		return appSeedData{}, fmt.Errorf("seeding products : %w", err)
+		return seedData{}, fmt.Errorf("seeding products : %w", err)
 	}
 
-	tu1 := appTestUser{
+	tu1 := testUser{
 		User: dbtest.User{
 			User:     usrs[0],
 			Products: prds,
@@ -36,15 +36,15 @@ func insertVProductSeed(dbTest *dbtest.Test, auth *auth.Auth) (appSeedData, erro
 
 	usrs, err = userbus.TestGenerateSeedUsers(ctx, 1, userbus.RoleAdmin, busDomain.User)
 	if err != nil {
-		return appSeedData{}, fmt.Errorf("seeding users : %w", err)
+		return seedData{}, fmt.Errorf("seeding users : %w", err)
 	}
 
 	prds, err = productbus.TestGenerateSeedProducts(ctx, 2, busDomain.Product, usrs[0].ID)
 	if err != nil {
-		return appSeedData{}, fmt.Errorf("seeding products : %w", err)
+		return seedData{}, fmt.Errorf("seeding products : %w", err)
 	}
 
-	tu2 := appTestUser{
+	tu2 := testUser{
 		User: dbtest.User{
 			User:     usrs[0],
 			Products: prds,
@@ -54,9 +54,9 @@ func insertVProductSeed(dbTest *dbtest.Test, auth *auth.Auth) (appSeedData, erro
 
 	// -------------------------------------------------------------------------
 
-	sd := appSeedData{
-		Admins: []appTestUser{tu2},
-		Users:  []appTestUser{tu1},
+	sd := seedData{
+		Admins: []testUser{tu2},
+		Users:  []testUser{tu1},
 	}
 
 	return sd, nil

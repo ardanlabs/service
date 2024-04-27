@@ -9,7 +9,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func vproductQuery200(sd appSeedData) []appTable {
+func vproductQuery200(sd seedData) []table {
 	prds := toAppVProducts(sd.Admins[0].User.User, sd.Admins[0].Products)
 	prds = append(prds, toAppVProducts(sd.Users[0].User.User, sd.Users[0].Products)...)
 
@@ -17,7 +17,7 @@ func vproductQuery200(sd appSeedData) []appTable {
 		return prds[i].ID <= prds[j].ID
 	})
 
-	table := []appTable{
+	table := []table{
 		{
 			Name:       "basic",
 			URL:        "/v1/vproducts?page=1&rows=10&orderBy=product_id,ASC",

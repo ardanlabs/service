@@ -8,8 +8,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func userDelete200(sd appSeedData) []appTable {
-	table := []appTable{
+func userDelete200(sd seedData) []table {
+	table := []table{
 		{
 			Name:       "asuser",
 			URL:        fmt.Sprintf("/v1/users/%s", sd.Users[1].ID),
@@ -29,8 +29,8 @@ func userDelete200(sd appSeedData) []appTable {
 	return table
 }
 
-func userDelete401(sd appSeedData) []appTable {
-	table := []appTable{
+func userDelete401(sd seedData) []table {
+	table := []table{
 		{
 			Name:       "emptytoken",
 			URL:        fmt.Sprintf("/v1/users/%s", sd.Users[0].ID),

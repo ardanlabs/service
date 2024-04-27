@@ -10,35 +10,35 @@ func Test_Home(t *testing.T) {
 
 	// -------------------------------------------------------------------------
 
-	appTest := startTest(t, "Test_Home")
+	apiTest := startTest(t, "Test_Home")
 	defer func() {
 		if r := recover(); r != nil {
 			t.Log(r)
 			t.Error(string(debug.Stack()))
 		}
-		appTest.dbTest.Teardown()
+		apiTest.dbTest.Teardown()
 	}()
 
 	// -------------------------------------------------------------------------
 
-	sd, err := insertHomeSeed(appTest.dbTest, appTest.auth)
+	sd, err := insertHomeSeed(apiTest.dbTest, apiTest.auth)
 	if err != nil {
 		t.Fatalf("Seeding error: %s", err)
 	}
 
 	// -------------------------------------------------------------------------
 
-	appTest.run(t, homeQuery200(sd), "home-query-200")
-	appTest.run(t, homeQueryByID200(sd), "home-querybyid-200")
+	apiTest.run(t, homeQuery200(sd), "home-query-200")
+	apiTest.run(t, homeQueryByID200(sd), "home-querybyid-200")
 
-	appTest.run(t, homeCreate200(sd), "home-create-200")
-	appTest.run(t, homeCreate401(sd), "home-create-401")
-	appTest.run(t, homeCreate400(sd), "home-create-400")
+	apiTest.run(t, homeCreate200(sd), "home-create-200")
+	apiTest.run(t, homeCreate401(sd), "home-create-401")
+	apiTest.run(t, homeCreate400(sd), "home-create-400")
 
-	appTest.run(t, homeUpdate200(sd), "home-update-200")
-	appTest.run(t, homeUpdate401(sd), "home-update-401")
-	appTest.run(t, homeUpdate400(sd), "home-update-400")
+	apiTest.run(t, homeUpdate200(sd), "home-update-200")
+	apiTest.run(t, homeUpdate401(sd), "home-update-401")
+	apiTest.run(t, homeUpdate400(sd), "home-update-400")
 
-	appTest.run(t, homeDelete200(sd), "home-delete-200")
-	appTest.run(t, homeDelete401(sd), "home-delete-401")
+	apiTest.run(t, homeDelete200(sd), "home-delete-200")
+	apiTest.run(t, homeDelete401(sd), "home-delete-401")
 }

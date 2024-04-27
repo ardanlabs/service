@@ -11,7 +11,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func userQuery200(sd appSeedData) []appTable {
+func userQuery200(sd seedData) []table {
 	usrs := make([]userbus.User, 0, len(sd.Admins)+len(sd.Users))
 
 	for _, adm := range sd.Admins {
@@ -26,7 +26,7 @@ func userQuery200(sd appSeedData) []appTable {
 		return usrs[i].ID.String() <= usrs[j].ID.String()
 	})
 
-	table := []appTable{
+	table := []table{
 		{
 			Name:       "basic",
 			URL:        "/v1/users?page=1&rows=10&orderBy=user_id,ASC&name=Name",
@@ -49,8 +49,8 @@ func userQuery200(sd appSeedData) []appTable {
 	return table
 }
 
-func userQueryByID200(sd appSeedData) []appTable {
-	table := []appTable{
+func userQueryByID200(sd seedData) []table {
+	table := []table{
 		{
 			Name:       "basic",
 			URL:        fmt.Sprintf("/v1/users/%s", sd.Users[0].ID),
