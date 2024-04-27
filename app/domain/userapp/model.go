@@ -172,14 +172,3 @@ func (app UpdateUser) Validate() error {
 
 	return nil
 }
-
-// Token represents the user token when requested.
-type Token struct {
-	Token string `json:"token"`
-}
-
-func toToken(v string) Token {
-	return Token{
-		Token: v,
-	}
-}

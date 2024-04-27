@@ -5,7 +5,6 @@ import (
 
 	"github.com/ardanlabs/service/api/http/api/mid"
 	"github.com/ardanlabs/service/app/api/auth"
-	"github.com/ardanlabs/service/app/domain/userapp"
 	"github.com/ardanlabs/service/business/domain/userbus"
 	"github.com/ardanlabs/service/foundation/web"
 )
@@ -22,7 +21,7 @@ func Routes(app *web.App, cfg Config) {
 
 	authen := mid.BearerBasic(cfg.UserBus, cfg.Auth)
 
-	api := newAPI(userapp.NewCoreWithAuth(cfg.UserBus, cfg.Auth), cfg.Auth)
+	api := newAPI(cfg.Auth)
 	app.Handle(http.MethodGet, version, "/auth/token/{kid}", api.token, authen)
 	app.Handle(http.MethodGet, version, "/auth/authenticate", api.authenticate, authen)
 	app.Handle(http.MethodPost, version, "/auth/authorize", api.authorize)

@@ -10,20 +10,17 @@ import (
 	"github.com/ardanlabs/service/app/api/authclient"
 	"github.com/ardanlabs/service/app/api/errs"
 	"github.com/ardanlabs/service/app/api/mid"
-	"github.com/ardanlabs/service/app/domain/userapp"
 	"github.com/ardanlabs/service/foundation/validate"
 	"github.com/ardanlabs/service/foundation/web"
 )
 
 type api struct {
-	userApp *userapp.Core
-	auth    *auth.Auth
+	auth *auth.Auth
 }
 
-func newAPI(userApp *userapp.Core, auth *auth.Auth) *api {
+func newAPI(auth *auth.Auth) *api {
 	return &api{
-		userApp: userApp,
-		auth:    auth,
+		auth: auth,
 	}
 }
 
@@ -33,9 +30,18 @@ func (api *api) token(ctx context.Context, w http.ResponseWriter, r *http.Reques
 		return validate.NewFieldsError("kid", errors.New("missing kid"))
 	}
 
-	token, err := api.userApp.Token(ctx, kid)
+	// The BearerBasic middleware function generates the claims.
+	claims := mid.GetClaims(ctx)
+
+	tkn, err := api.auth.GenerateToken(kid, claims)
 	if err != nil {
-		return err
+		return errs.New(errs.Internal, err)
+	}
+
+	token := struct {
+		Token string `json:"token"`
+	}{
+		Token: tkn,
 	}
 
 	return web.Respond(ctx, w, token, http.StatusOK)
