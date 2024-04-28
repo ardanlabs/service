@@ -46,10 +46,10 @@ type apiTest struct {
 	handler http.Handler
 }
 
-func newAPITest(dbTest *dbtest.Test, auth *auth.Auth, handler http.Handler) *apiTest {
+func newAPITest(dbTest *dbtest.Test, ath *auth.Auth, handler http.Handler) *apiTest {
 	return &apiTest{
 		dbTest:  dbTest,
-		auth:    auth,
+		auth:    ath,
 		handler: handler,
 	}
 }

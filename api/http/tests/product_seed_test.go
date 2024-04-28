@@ -10,7 +10,7 @@ import (
 	"github.com/ardanlabs/service/business/domain/userbus"
 )
 
-func insertProductSeed(dbTest *dbtest.Test, auth *auth.Auth) (seedData, error) {
+func insertProductSeed(dbTest *dbtest.Test, ath *auth.Auth) (seedData, error) {
 	ctx := context.Background()
 	busDomain := dbTest.BusDomain
 
@@ -29,7 +29,7 @@ func insertProductSeed(dbTest *dbtest.Test, auth *auth.Auth) (seedData, error) {
 			User:     usrs[0],
 			Products: prds,
 		},
-		Token: token(dbTest, auth, usrs[0].Email.Address),
+		Token: token(dbTest, ath, usrs[0].Email.Address),
 	}
 
 	// -------------------------------------------------------------------------
@@ -49,7 +49,7 @@ func insertProductSeed(dbTest *dbtest.Test, auth *auth.Auth) (seedData, error) {
 			User:     usrs[0],
 			Products: prds,
 		},
-		Token: token(dbTest, auth, usrs[0].Email.Address),
+		Token: token(dbTest, ath, usrs[0].Email.Address),
 	}
 
 	// -------------------------------------------------------------------------

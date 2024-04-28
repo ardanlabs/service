@@ -18,9 +18,9 @@ type api struct {
 	auth *auth.Auth
 }
 
-func newAPI(auth *auth.Auth) *api {
+func newAPI(ath *auth.Auth) *api {
 	return &api{
-		auth: auth,
+		auth: ath,
 	}
 }
 

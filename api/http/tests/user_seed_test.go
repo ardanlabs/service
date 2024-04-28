@@ -9,7 +9,7 @@ import (
 	"github.com/ardanlabs/service/business/domain/userbus"
 )
 
-func insertUserSeed(dbTest *dbtest.Test, auth *auth.Auth) (seedData, error) {
+func insertUserSeed(dbTest *dbtest.Test, ath *auth.Auth) (seedData, error) {
 	ctx := context.Background()
 	busDomain := dbTest.BusDomain
 
@@ -22,14 +22,14 @@ func insertUserSeed(dbTest *dbtest.Test, auth *auth.Auth) (seedData, error) {
 		User: dbtest.User{
 			User: usrs[0],
 		},
-		Token: token(dbTest, auth, usrs[0].Email.Address),
+		Token: token(dbTest, ath, usrs[0].Email.Address),
 	}
 
 	tu2 := testUser{
 		User: dbtest.User{
 			User: usrs[1],
 		},
-		Token: token(dbTest, auth, usrs[1].Email.Address),
+		Token: token(dbTest, ath, usrs[1].Email.Address),
 	}
 
 	// -------------------------------------------------------------------------
@@ -43,21 +43,21 @@ func insertUserSeed(dbTest *dbtest.Test, auth *auth.Auth) (seedData, error) {
 		User: dbtest.User{
 			User: usrs[0],
 		},
-		Token: token(dbTest, auth, usrs[0].Email.Address),
+		Token: token(dbTest, ath, usrs[0].Email.Address),
 	}
 
 	tu4 := testUser{
 		User: dbtest.User{
 			User: usrs[1],
 		},
-		Token: token(dbTest, auth, usrs[1].Email.Address),
+		Token: token(dbTest, ath, usrs[1].Email.Address),
 	}
 
 	tu5 := testUser{
 		User: dbtest.User{
 			User: usrs[2],
 		},
-		Token: token(dbTest, auth, usrs[2].Email.Address),
+		Token: token(dbTest, ath, usrs[2].Email.Address),
 	}
 
 	// -------------------------------------------------------------------------

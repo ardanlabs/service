@@ -26,9 +26,9 @@ func NewCore(userBus *userbus.Core) *Core {
 }
 
 // NewCoreWithAuth constructs a user core API for use with auth support.
-func NewCoreWithAuth(userBus *userbus.Core, auth *auth.Auth) *Core {
+func NewCoreWithAuth(userBus *userbus.Core, ath *auth.Auth) *Core {
 	return &Core{
-		auth:    auth,
+		auth:    ath,
 		userBus: userBus,
 	}
 }

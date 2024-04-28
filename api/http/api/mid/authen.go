@@ -30,14 +30,14 @@ func Authenticate(log *logger.Logger, client *authclient.Client) web.MidHandler 
 }
 
 // Bearer processes JWT authentication logic.
-func Bearer(auth *auth.Auth) web.MidHandler {
+func Bearer(ath *auth.Auth) web.MidHandler {
 	m := func(handler web.Handler) web.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 			hdl := func(ctx context.Context) error {
 				return handler(ctx, w, r)
 			}
 
-			return mid.Bearer(ctx, auth, r.Header.Get("authorization"), hdl)
+			return mid.Bearer(ctx, ath, r.Header.Get("authorization"), hdl)
 		}
 
 		return h
@@ -47,14 +47,14 @@ func Bearer(auth *auth.Auth) web.MidHandler {
 }
 
 // Basic processes basic authentication logic.
-func Basic(userBus *userbus.Core, auth *auth.Auth) web.MidHandler {
+func Basic(userBus *userbus.Core, ath *auth.Auth) web.MidHandler {
 	m := func(handler web.Handler) web.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 			hdl := func(ctx context.Context) error {
 				return handler(ctx, w, r)
 			}
 
-			return mid.Basic(ctx, auth, userBus, r.Header.Get("authorization"), hdl)
+			return mid.Basic(ctx, ath, userBus, r.Header.Get("authorization"), hdl)
 		}
 
 		return h
