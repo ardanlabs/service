@@ -23,7 +23,7 @@ func parseQueryParams(r *http.Request) (homeapp.QueryParams, error) {
 
 	var filter homeapp.QueryParams
 
-	pg, err := page.ParseHTTP(r)
+	pg, err := page.Parse(values.Get("page"), values.Get("rows"))
 	if err != nil {
 		return homeapp.QueryParams{}, err
 	}
