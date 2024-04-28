@@ -25,7 +25,7 @@ type config struct {
 		Password     string `conf:"default:postgres,mask"`
 		HostPort     string `conf:"default:database-service.sales-system.svc.cluster.local"`
 		Name         string `conf:"default:postgres"`
-		MaxIdleConns int    `conf:"default:2"`
+		MaxIdleConns int    `conf:"default:0"`
 		MaxOpenConns int    `conf:"default:0"`
 		DisableTLS   bool   `conf:"default:true"`
 	}
