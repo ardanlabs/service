@@ -84,6 +84,11 @@ func New(cfg Config) (*Auth, error) {
 	return &a, nil
 }
 
+// Issuer provides the configured issuer used to authenticate tokens.
+func (a *Auth) Issuer() string {
+	return a.issuer
+}
+
 // GenerateToken generates a signed JWT token string representing the user Claims.
 func (a *Auth) GenerateToken(kid string, claims Claims) (string, error) {
 	token := jwt.NewWithClaims(a.method, claims)

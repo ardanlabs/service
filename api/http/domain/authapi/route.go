@@ -19,10 +19,11 @@ type Config struct {
 func Routes(app *web.App, cfg Config) {
 	const version = "v1"
 
-	authen := mid.BearerBasic(cfg.UserBus, cfg.Auth)
+	bearer := mid.Bearer(cfg.Auth)
+	basic := mid.Basic(cfg.UserBus, cfg.Auth)
 
 	api := newAPI(cfg.Auth)
-	app.Handle(http.MethodGet, version, "/auth/token/{kid}", api.token, authen)
-	app.Handle(http.MethodGet, version, "/auth/authenticate", api.authenticate, authen)
+	app.Handle(http.MethodGet, version, "/auth/token/{kid}", api.token, basic)
+	app.Handle(http.MethodGet, version, "/auth/authenticate", api.authenticate, bearer)
 	app.Handle(http.MethodPost, version, "/auth/authorize", api.authorize)
 }
