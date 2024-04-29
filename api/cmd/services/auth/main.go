@@ -167,7 +167,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 		KeyLookup: ks,
 	}
 
-	auth, err := auth.New(authCfg)
+	ath, err := auth.New(authCfg)
 	if err != nil {
 		return fmt.Errorf("constructing auth: %w", err)
 	}
@@ -212,7 +212,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 	cfgMux := mux.Config{
 		Build:  build,
 		Log:    log,
-		Auth:   auth,
+		Auth:   ath,
 		DB:     db,
 		Tracer: tracer,
 	}

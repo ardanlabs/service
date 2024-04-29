@@ -29,7 +29,6 @@ ARG BUILD_DATE
 ARG BUILD_REF
 RUN addgroup -g 1000 -S sales && \
     adduser -u 1000 -h /service -G sales -S sales
-COPY --from=build_sales --chown=sales:sales /service/zarf/keys/. /service/zarf/keys/.
 COPY --from=build_sales --chown=sales:sales /service/api/cmd/tooling/admin/admin /service/admin
 COPY --from=build_sales --chown=sales:sales /service/api/cmd/services/sales/sales /service/sales
 WORKDIR /service
