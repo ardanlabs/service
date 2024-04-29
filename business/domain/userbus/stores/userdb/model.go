@@ -74,7 +74,7 @@ func toBusUser(dbUsr user) (userbus.User, error) {
 	return bus, nil
 }
 
-func toBusUserSlice(dbUsers []user) ([]userbus.User, error) {
+func toBusUsers(dbUsers []user) ([]userbus.User, error) {
 	bus := make([]userbus.User, len(dbUsers))
 
 	for i, dbUsr := range dbUsers {

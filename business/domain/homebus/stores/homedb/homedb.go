@@ -135,7 +135,7 @@ func (s *Store) Query(ctx context.Context, filter homebus.QueryFilter, orderBy o
 		return nil, fmt.Errorf("namedqueryslice: %w", err)
 	}
 
-	hmes, err := toBusHomeSlice(dbHmes)
+	hmes, err := toBusHomes(dbHmes)
 	if err != nil {
 		return nil, err
 	}
@@ -214,5 +214,5 @@ func (s *Store) QueryByUserID(ctx context.Context, userID uuid.UUID) ([]homebus.
 		return nil, fmt.Errorf("db: %w", err)
 	}
 
-	return toBusHomeSlice(dbHmes)
+	return toBusHomes(dbHmes)
 }

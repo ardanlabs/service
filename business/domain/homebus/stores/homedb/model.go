@@ -65,7 +65,7 @@ func toBusHome(dbHme home) (homebus.Home, error) {
 	return bus, nil
 }
 
-func toBusHomeSlice(dbHomes []home) ([]homebus.Home, error) {
+func toBusHomes(dbHomes []home) ([]homebus.Home, error) {
 	bus := make([]homebus.Home, len(dbHomes))
 
 	for i, dbHme := range dbHomes {

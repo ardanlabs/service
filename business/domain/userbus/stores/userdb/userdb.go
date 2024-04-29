@@ -142,7 +142,7 @@ func (s *Store) Query(ctx context.Context, filter userbus.QueryFilter, orderBy o
 		return nil, fmt.Errorf("namedqueryslice: %w", err)
 	}
 
-	return toBusUserSlice(dbUsrs)
+	return toBusUsers(dbUsrs)
 }
 
 // Count returns the total number of users in the DB.
@@ -224,7 +224,7 @@ func (s *Store) QueryByIDs(ctx context.Context, userIDs []uuid.UUID) ([]userbus.
 		return nil, fmt.Errorf("db: %w", err)
 	}
 
-	return toBusUserSlice(dbUsrs)
+	return toBusUsers(dbUsrs)
 }
 
 // QueryByEmail gets the specified user from the database by email.
