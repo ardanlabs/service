@@ -22,55 +22,55 @@ type home struct {
 	DateUpdated time.Time `db:"date_updated"`
 }
 
-func toDBHome(hme homebus.Home) home {
+func toDBHome(bus homebus.Home) home {
 	db := home{
-		ID:          hme.ID,
-		UserID:      hme.UserID,
-		Type:        hme.Type.Name(),
-		Address1:    hme.Address.Address1,
-		Address2:    hme.Address.Address2,
-		ZipCode:     hme.Address.ZipCode,
-		City:        hme.Address.City,
-		Country:     hme.Address.Country,
-		State:       hme.Address.State,
-		DateCreated: hme.DateCreated.UTC(),
-		DateUpdated: hme.DateUpdated.UTC(),
+		ID:          bus.ID,
+		UserID:      bus.UserID,
+		Type:        bus.Type.Name(),
+		Address1:    bus.Address.Address1,
+		Address2:    bus.Address.Address2,
+		ZipCode:     bus.Address.ZipCode,
+		City:        bus.Address.City,
+		Country:     bus.Address.Country,
+		State:       bus.Address.State,
+		DateCreated: bus.DateCreated.UTC(),
+		DateUpdated: bus.DateUpdated.UTC(),
 	}
 
 	return db
 }
 
-func toBusHome(dbHme home) (homebus.Home, error) {
-	typ, err := homebus.ParseType(dbHme.Type)
+func toBusHome(db home) (homebus.Home, error) {
+	typ, err := homebus.ParseType(db.Type)
 	if err != nil {
 		return homebus.Home{}, fmt.Errorf("parse type: %w", err)
 	}
 
 	bus := homebus.Home{
-		ID:     dbHme.ID,
-		UserID: dbHme.UserID,
+		ID:     db.ID,
+		UserID: db.UserID,
 		Type:   typ,
 		Address: homebus.Address{
-			Address1: dbHme.Address1,
-			Address2: dbHme.Address2,
-			ZipCode:  dbHme.ZipCode,
-			City:     dbHme.City,
-			Country:  dbHme.Country,
-			State:    dbHme.State,
+			Address1: db.Address1,
+			Address2: db.Address2,
+			ZipCode:  db.ZipCode,
+			City:     db.City,
+			Country:  db.Country,
+			State:    db.State,
 		},
-		DateCreated: dbHme.DateCreated.In(time.Local),
-		DateUpdated: dbHme.DateUpdated.In(time.Local),
+		DateCreated: db.DateCreated.In(time.Local),
+		DateUpdated: db.DateUpdated.In(time.Local),
 	}
 
 	return bus, nil
 }
 
-func toBusHomes(dbHomes []home) ([]homebus.Home, error) {
-	bus := make([]homebus.Home, len(dbHomes))
+func toBusHomes(dbs []home) ([]homebus.Home, error) {
+	bus := make([]homebus.Home, len(dbs))
 
-	for i, dbHme := range dbHomes {
+	for i, db := range dbs {
 		var err error
-		bus[i], err = toBusHome(dbHme)
+		bus[i], err = toBusHome(db)
 		if err != nil {
 			return nil, fmt.Errorf("parse type: %w", err)
 		}

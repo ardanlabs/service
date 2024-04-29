@@ -17,39 +17,39 @@ type product struct {
 	DateUpdated time.Time `db:"date_updated"`
 }
 
-func toDBProduct(prd productbus.Product) product {
+func toDBProduct(bus productbus.Product) product {
 	db := product{
-		ID:          prd.ID,
-		UserID:      prd.UserID,
-		Name:        prd.Name,
-		Cost:        prd.Cost,
-		Quantity:    prd.Quantity,
-		DateCreated: prd.DateCreated.UTC(),
-		DateUpdated: prd.DateUpdated.UTC(),
+		ID:          bus.ID,
+		UserID:      bus.UserID,
+		Name:        bus.Name,
+		Cost:        bus.Cost,
+		Quantity:    bus.Quantity,
+		DateCreated: bus.DateCreated.UTC(),
+		DateUpdated: bus.DateUpdated.UTC(),
 	}
 
 	return db
 }
 
-func toBusProduct(dbPrd product) productbus.Product {
+func toBusProduct(db product) productbus.Product {
 	bus := productbus.Product{
-		ID:          dbPrd.ID,
-		UserID:      dbPrd.UserID,
-		Name:        dbPrd.Name,
-		Cost:        dbPrd.Cost,
-		Quantity:    dbPrd.Quantity,
-		DateCreated: dbPrd.DateCreated.In(time.Local),
-		DateUpdated: dbPrd.DateUpdated.In(time.Local),
+		ID:          db.ID,
+		UserID:      db.UserID,
+		Name:        db.Name,
+		Cost:        db.Cost,
+		Quantity:    db.Quantity,
+		DateCreated: db.DateCreated.In(time.Local),
+		DateUpdated: db.DateUpdated.In(time.Local),
 	}
 
 	return bus
 }
 
-func toBusProducts(dbPrds []product) []productbus.Product {
-	bus := make([]productbus.Product, len(dbPrds))
+func toBusProducts(dbs []product) []productbus.Product {
+	bus := make([]productbus.Product, len(dbs))
 
-	for i, dbPrd := range dbPrds {
-		bus[i] = toBusProduct(dbPrd)
+	for i, db := range dbs {
+		bus[i] = toBusProduct(db)
 	}
 
 	return bus
