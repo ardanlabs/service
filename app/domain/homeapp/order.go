@@ -5,18 +5,10 @@ import (
 	"github.com/ardanlabs/service/business/domain/homebus"
 )
 
-const (
-	orderByID     = "home_id"
-	orderByType   = "type"
-	orderByUserID = "user_id"
-)
+var defaultOrderBy = order.NewBy("home_id", order.ASC)
 
 var orderByFields = map[string]string{
-	orderByID:     homebus.OrderByID,
-	orderByType:   homebus.OrderByType,
-	orderByUserID: homebus.OrderByUserID,
-}
-
-func parseOrder(qp QueryParams) (order.By, error) {
-	return order.Parse(orderByFields, qp.OrderBy, order.NewBy(orderByID, order.ASC))
+	"home_id": homebus.OrderByID,
+	"type":    homebus.OrderByType,
+	"user_id": homebus.OrderByUserID,
 }

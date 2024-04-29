@@ -12,14 +12,14 @@ import (
 
 // QueryParams represents the set of possible query strings.
 type QueryParams struct {
-	Page             int    `query:"page"`
-	Rows             int    `query:"rows"`
-	OrderBy          string `query:"orderBy"`
-	ID               string `query:"user_id"`
-	Name             string `query:"name"`
-	Email            string `query:"email"`
-	StartCreatedDate string `query:"start_created_date"`
-	EndCreatedDate   string `query:"end_created_date"`
+	Page             string
+	Rows             string
+	OrderBy          string
+	ID               string
+	Name             string
+	Email            string
+	StartCreatedDate string
+	EndCreatedDate   string
 }
 
 // User represents information about an individual user.

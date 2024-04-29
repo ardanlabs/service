@@ -9,6 +9,7 @@ import (
 	"github.com/ardanlabs/service/app/api/errs"
 	"github.com/ardanlabs/service/app/api/mid"
 	"github.com/ardanlabs/service/app/api/page"
+	"github.com/ardanlabs/service/business/api/order"
 	"github.com/ardanlabs/service/business/domain/userbus"
 )
 
@@ -107,7 +108,8 @@ func (a *App) Delete(ctx context.Context) error {
 
 // Query returns a list of users with paging.
 func (a *App) Query(ctx context.Context, qp QueryParams) (page.Document[User], error) {
-	if err := validatePaging(qp); err != nil {
+	pg, err := page.Parse(qp.Page, qp.Rows)
+	if err != nil {
 		return page.Document[User]{}, err
 	}
 
@@ -116,12 +118,12 @@ func (a *App) Query(ctx context.Context, qp QueryParams) (page.Document[User], e
 		return page.Document[User]{}, err
 	}
 
-	orderBy, err := parseOrder(qp)
+	orderBy, err := order.Parse(orderByFields, qp.OrderBy, defaultOrderBy)
 	if err != nil {
 		return page.Document[User]{}, err
 	}
 
-	usrs, err := a.userBus.Query(ctx, filter, orderBy, qp.Page, qp.Rows)
+	usrs, err := a.userBus.Query(ctx, filter, orderBy, pg.Number, pg.RowsPerPage)
 	if err != nil {
 		return page.Document[User]{}, errs.Newf(errs.Internal, "query: %s", err)
 	}
@@ -131,7 +133,7 @@ func (a *App) Query(ctx context.Context, qp QueryParams) (page.Document[User], e
 		return page.Document[User]{}, errs.Newf(errs.Internal, "count: %s", err)
 	}
 
-	return page.NewDocument(toAppUsers(usrs), total, qp.Page, qp.Rows), nil
+	return page.NewDocument(toAppUsers(usrs), total, pg.Number, pg.RowsPerPage), nil
 }
 
 // QueryByID returns a user by its Ia.

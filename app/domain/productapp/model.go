@@ -13,13 +13,13 @@ import (
 
 // QueryParams represents the set of possible query strings.
 type QueryParams struct {
-	Page     int    `query:"page"`
-	Rows     int    `query:"rows"`
-	OrderBy  string `query:"orderBy"`
-	ID       string `query:"product_id"`
-	Name     string `query:"name"`
-	Cost     string `query:"cost"`
-	Quantity string `query:"quantity"`
+	Page     string
+	Rows     string
+	OrderBy  string
+	ID       string
+	Name     string
+	Cost     string
+	Quantity string
 }
 
 // Product represents information about an individual product.

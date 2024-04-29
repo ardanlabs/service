@@ -5,24 +5,13 @@ import (
 	"github.com/ardanlabs/service/business/domain/vproductbus"
 )
 
-const (
-	orderByProductID = "product_id"
-	orderByUserID    = "user_id"
-	orderByName      = "name"
-	orderByCost      = "cost"
-	orderByQuantity  = "quantity"
-	orderByUserName  = "user_name"
-)
+var defaultOrderBy = order.NewBy("product_id", order.ASC)
 
 var orderByFields = map[string]string{
-	orderByProductID: vproductbus.OrderByProductID,
-	orderByUserID:    vproductbus.OrderByUserID,
-	orderByName:      vproductbus.OrderByName,
-	orderByCost:      vproductbus.OrderByCost,
-	orderByQuantity:  vproductbus.OrderByQuantity,
-	orderByUserName:  vproductbus.OrderByUserName,
-}
-
-func parseOrder(qp QueryParams) (order.By, error) {
-	return order.Parse(orderByFields, qp.OrderBy, order.NewBy(orderByProductID, order.ASC))
+	"product_id": vproductbus.OrderByProductID,
+	"user_id":    vproductbus.OrderByUserID,
+	"name":       vproductbus.OrderByName,
+	"cost":       vproductbus.OrderByCost,
+	"quantity":   vproductbus.OrderByQuantity,
+	"user_name":  vproductbus.OrderByUserName,
 }
