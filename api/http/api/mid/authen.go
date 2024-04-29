@@ -47,7 +47,7 @@ func Bearer(ath *auth.Auth) web.MidHandler {
 }
 
 // Basic processes basic authentication logic.
-func Basic(userBus *userbus.Core, ath *auth.Auth) web.MidHandler {
+func Basic(userBus *userbus.Business, ath *auth.Auth) web.MidHandler {
 	m := func(handler web.Handler) web.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 			hdl := func(ctx context.Context) error {

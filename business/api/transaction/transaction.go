@@ -37,7 +37,7 @@ func Get(ctx context.Context) (Transaction, bool) {
 }
 
 // ExecuteUnderTransaction is a helper function that can be used in tests and
-// other apps to execute the core APIs under a transaction.
+// other apps to execute the domain APIs under a transaction.
 func ExecuteUnderTransaction(ctx context.Context, log *logger.Logger, bgn Beginner, fn func(tx Transaction) error) error {
 	hasCommitted := false
 

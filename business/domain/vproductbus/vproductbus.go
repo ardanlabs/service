@@ -15,25 +15,25 @@ type Storer interface {
 	Count(ctx context.Context, filter QueryFilter) (int, error)
 }
 
-// Core manages the set of APIs for view product access.
-type Core struct {
+// Business manages the set of APIs for view product access.
+type Business struct {
 	storer Storer
 }
 
-// NewCore manages the set of APIs for view product access.
-func NewCore(storer Storer) *Core {
-	return &Core{
+// NewBusiness constructs a vproduct business API for use.
+func NewBusiness(storer Storer) *Business {
+	return &Business{
 		storer: storer,
 	}
 }
 
 // Query retrieves a list of existing products.
-func (c *Core) Query(ctx context.Context, filter QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]Product, error) {
+func (b *Business) Query(ctx context.Context, filter QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]Product, error) {
 	if err := filter.Validate(); err != nil {
 		return nil, err
 	}
 
-	users, err := c.storer.Query(ctx, filter, orderBy, pageNumber, rowsPerPage)
+	users, err := b.storer.Query(ctx, filter, orderBy, pageNumber, rowsPerPage)
 	if err != nil {
 		return nil, fmt.Errorf("query: %w", err)
 	}
@@ -42,10 +42,10 @@ func (c *Core) Query(ctx context.Context, filter QueryFilter, orderBy order.By, 
 }
 
 // Count returns the total number of products.
-func (c *Core) Count(ctx context.Context, filter QueryFilter) (int, error) {
+func (b *Business) Count(ctx context.Context, filter QueryFilter) (int, error) {
 	if err := filter.Validate(); err != nil {
 		return 0, err
 	}
 
-	return c.storer.Count(ctx, filter)
+	return b.storer.Count(ctx, filter)
 }

@@ -9,20 +9,20 @@ import (
 	"github.com/ardanlabs/service/business/domain/vproductbus"
 )
 
-// Core manages the set of app layer api functions for the view product domain.
-type Core struct {
-	vproductBus *vproductbus.Core
+// App manages the set of app layer api functions for the view product domain.
+type App struct {
+	vproductBus *vproductbus.Business
 }
 
-// NewCore constructs a view product core API for use.
-func NewCore(vproductBus *vproductbus.Core) *Core {
-	return &Core{
+// NewApp constructs a view product app API for use.
+func NewApp(vproductBus *vproductbus.Business) *App {
+	return &App{
 		vproductBus: vproductBus,
 	}
 }
 
 // Query returns a list of products with paging.
-func (c *Core) Query(ctx context.Context, qp QueryParams) (page.Document[Product], error) {
+func (a *App) Query(ctx context.Context, qp QueryParams) (page.Document[Product], error) {
 	if err := validatePaging(qp); err != nil {
 		return page.Document[Product]{}, err
 	}
@@ -37,12 +37,12 @@ func (c *Core) Query(ctx context.Context, qp QueryParams) (page.Document[Product
 		return page.Document[Product]{}, err
 	}
 
-	prds, err := c.vproductBus.Query(ctx, filter, orderBy, qp.Page, qp.Rows)
+	prds, err := a.vproductBus.Query(ctx, filter, orderBy, qp.Page, qp.Rows)
 	if err != nil {
 		return page.Document[Product]{}, errs.Newf(errs.Internal, "query: %s", err)
 	}
 
-	total, err := c.vproductBus.Count(ctx, filter)
+	total, err := a.vproductBus.Count(ctx, filter)
 	if err != nil {
 		return page.Document[Product]{}, errs.Newf(errs.Internal, "count: %s", err)
 	}

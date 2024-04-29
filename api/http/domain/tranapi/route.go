@@ -18,8 +18,8 @@ import (
 type Config struct {
 	Log        *logger.Logger
 	DB         *sqlx.DB
-	UserBus    *userbus.Core
-	ProductBus *productbus.Core
+	UserBus    *userbus.Business
+	ProductBus *productbus.Business
 	AuthClient *authclient.Client
 }
 
@@ -30,6 +30,6 @@ func Routes(app *web.App, cfg Config) {
 	authen := mid.Authenticate(cfg.Log, cfg.AuthClient)
 	tran := mid.ExecuteInTransaction(cfg.Log, sqldb.NewBeginner(cfg.DB))
 
-	api := newAPI(tranapp.NewCore(cfg.UserBus, cfg.ProductBus))
+	api := newAPI(tranapp.NewApp(cfg.UserBus, cfg.ProductBus))
 	app.Handle(http.MethodPost, version, "/tranexample", api.create, authen, tran)
 }

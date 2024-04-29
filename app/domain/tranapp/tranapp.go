@@ -10,23 +10,23 @@ import (
 	"github.com/ardanlabs/service/business/domain/userbus"
 )
 
-// Core manages the set of app layer api functions for the tran domain.
-type Core struct {
-	userBus    *userbus.Core
-	productBus *productbus.Core
+// App manages the set of app layer api functions for the tran domain.
+type App struct {
+	userBus    *userbus.Business
+	productBus *productbus.Business
 }
 
-// NewCore constructs a tran core API for use.
-func NewCore(userBus *userbus.Core, productBus *productbus.Core) *Core {
-	return &Core{
+// NewApp constructs a tran app API for use.
+func NewApp(userBus *userbus.Business, productBus *productbus.Business) *App {
+	return &App{
 		userBus:    userBus,
 		productBus: productBus,
 	}
 }
 
 // Create adds a new user and product at the same time under a single transaction.
-func (c *Core) Create(ctx context.Context, app NewTran) (Product, error) {
-	api, err := c.executeUnderTransaction(ctx)
+func (a *App) Create(ctx context.Context, app NewTran) (Product, error) {
+	api, err := a.executeUnderTransaction(ctx)
 	if err != nil {
 		return Product{}, errs.New(errs.Internal, err)
 	}

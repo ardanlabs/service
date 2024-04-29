@@ -18,8 +18,8 @@ type dbProduct struct {
 	UserName    string    `db:"user_name"`
 }
 
-func toCoreProduct(dbPrd dbProduct) vproductbus.Product {
-	prd := vproductbus.Product{
+func toBusProduct(dbPrd dbProduct) vproductbus.Product {
+	bus := vproductbus.Product{
 		ID:          dbPrd.ID,
 		UserID:      dbPrd.UserID,
 		Name:        dbPrd.Name,
@@ -30,15 +30,15 @@ func toCoreProduct(dbPrd dbProduct) vproductbus.Product {
 		UserName:    dbPrd.UserName,
 	}
 
-	return prd
+	return bus
 }
 
-func toCoreProducts(dbPrds []dbProduct) []vproductbus.Product {
-	prds := make([]vproductbus.Product, len(dbPrds))
+func toBusProducts(dbPrds []dbProduct) []vproductbus.Product {
+	bus := make([]vproductbus.Product, len(dbPrds))
 
 	for i, dbPrd := range dbPrds {
-		prds[i] = toCoreProduct(dbPrd)
+		bus[i] = toBusProduct(dbPrd)
 	}
 
-	return prds
+	return bus
 }

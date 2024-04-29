@@ -34,7 +34,7 @@ func Authorize(log *logger.Logger, client *authclient.Client, rule string) web.M
 // user from the DB if a user id is specified in the call. Depending on the rule
 // specified, the userid from the claims may be compared with the specified
 // user id.
-func AuthorizeUser(log *logger.Logger, client *authclient.Client, userBus *userbus.Core, rule string) web.MidHandler {
+func AuthorizeUser(log *logger.Logger, client *authclient.Client, userBus *userbus.Business, rule string) web.MidHandler {
 	m := func(handler web.Handler) web.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 			hdl := func(ctx context.Context) error {
@@ -54,7 +54,7 @@ func AuthorizeUser(log *logger.Logger, client *authclient.Client, userBus *userb
 // product from the DB if a product id is specified in the call. Depending on
 // the rule specified, the userid from the claims may be compared with the
 // specified user id from the product.
-func AuthorizeProduct(log *logger.Logger, client *authclient.Client, productBus *productbus.Core) web.MidHandler {
+func AuthorizeProduct(log *logger.Logger, client *authclient.Client, productBus *productbus.Business) web.MidHandler {
 	m := func(handler web.Handler) web.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 			hdl := func(ctx context.Context) error {
@@ -74,7 +74,7 @@ func AuthorizeProduct(log *logger.Logger, client *authclient.Client, productBus 
 // home from the DB if a home id is specified in the call. Depending on
 // the rule specified, the userid from the claims may be compared with the
 // specified user id from the home.
-func AuthorizeHome(log *logger.Logger, client *authclient.Client, homeBus *homebus.Core) web.MidHandler {
+func AuthorizeHome(log *logger.Logger, client *authclient.Client, homeBus *homebus.Business) web.MidHandler {
 	m := func(handler web.Handler) web.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 			hdl := func(ctx context.Context) error {

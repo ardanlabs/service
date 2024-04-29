@@ -15,7 +15,7 @@ import (
 // Config contains all the mandatory systems required by handlers.
 type Config struct {
 	Log        *logger.Logger
-	UserBus    *userbus.Core
+	UserBus    *userbus.Business
 	AuthClient *authclient.Client
 }
 
@@ -28,7 +28,7 @@ func Routes(app *web.App, cfg Config) {
 	ruleAuthorizeUser := mid.AuthorizeUser(cfg.Log, cfg.AuthClient, cfg.UserBus, auth.RuleAdminOrSubject)
 	ruleAuthorizeAdmin := mid.AuthorizeUser(cfg.Log, cfg.AuthClient, cfg.UserBus, auth.RuleAdminOnly)
 
-	api := newAPI(userapp.NewCore(cfg.UserBus))
+	api := newAPI(userapp.NewApp(cfg.UserBus))
 	app.Handle(http.MethodGet, version, "/users", api.query, authen, ruleAdmin)
 	app.Handle(http.MethodGet, version, "/users/{user_id}", api.queryByID, authen, ruleAuthorizeUser)
 	app.Handle(http.MethodPost, version, "/users", api.create, authen, ruleAdmin)

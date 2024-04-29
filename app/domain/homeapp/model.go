@@ -62,12 +62,12 @@ func toAppHome(hme homebus.Home) Home {
 }
 
 func toAppHomes(homes []homebus.Home) []Home {
-	items := make([]Home, len(homes))
+	app := make([]Home, len(homes))
 	for i, hme := range homes {
-		items[i] = toAppHome(hme)
+		app[i] = toAppHome(hme)
 	}
 
-	return items
+	return app
 }
 
 // NewAddress defines the data needed to add a new address.
@@ -97,7 +97,7 @@ func toBusNewHome(ctx context.Context, app NewHome) (homebus.NewHome, error) {
 		return homebus.NewHome{}, fmt.Errorf("parse: %w", err)
 	}
 
-	hme := homebus.NewHome{
+	bus := homebus.NewHome{
 		UserID: userID,
 		Type:   typ,
 		Address: homebus.Address{
@@ -110,7 +110,7 @@ func toBusNewHome(ctx context.Context, app NewHome) (homebus.NewHome, error) {
 		},
 	}
 
-	return hme, nil
+	return bus, nil
 }
 
 // Validate checks if the data in the model is considered clean.
@@ -157,12 +157,12 @@ func toBusUpdateHome(app UpdateHome) (homebus.UpdateHome, error) {
 		}
 	}
 
-	core := homebus.UpdateHome{
+	bus := homebus.UpdateHome{
 		Type: &typ,
 	}
 
 	if app.Address != nil {
-		core.Address = &homebus.UpdateAddress{
+		bus.Address = &homebus.UpdateAddress{
 			Address1: app.Address.Address1,
 			Address2: app.Address.Address2,
 			ZipCode:  app.Address.ZipCode,
@@ -172,7 +172,7 @@ func toBusUpdateHome(app UpdateHome) (homebus.UpdateHome, error) {
 		}
 	}
 
-	return core, nil
+	return bus, nil
 }
 
 // Validate checks the data in the model is considered clean.

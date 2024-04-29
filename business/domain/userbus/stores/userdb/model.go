@@ -11,7 +11,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type dbUser struct {
+type user struct {
 	ID           uuid.UUID      `db:"user_id"`
 	Name         string         `db:"name"`
 	Email        string         `db:"email"`
@@ -23,13 +23,13 @@ type dbUser struct {
 	DateUpdated  time.Time      `db:"date_updated"`
 }
 
-func toDBUser(usr userbus.User) dbUser {
+func toDBUser(usr userbus.User) user {
 	roles := make([]string, len(usr.Roles))
 	for i, role := range usr.Roles {
 		roles[i] = role.Name()
 	}
 
-	return dbUser{
+	return user{
 		ID:           usr.ID,
 		Name:         usr.Name,
 		Email:        usr.Email.Address,
@@ -45,7 +45,7 @@ func toDBUser(usr userbus.User) dbUser {
 	}
 }
 
-func toCoreUser(dbUsr dbUser) (userbus.User, error) {
+func toBusUser(dbUsr user) (userbus.User, error) {
 	addr := mail.Address{
 		Address: dbUsr.Email,
 	}
@@ -59,7 +59,7 @@ func toCoreUser(dbUsr dbUser) (userbus.User, error) {
 		}
 	}
 
-	usr := userbus.User{
+	bus := userbus.User{
 		ID:           dbUsr.ID,
 		Name:         dbUsr.Name,
 		Email:        addr,
@@ -71,19 +71,19 @@ func toCoreUser(dbUsr dbUser) (userbus.User, error) {
 		DateUpdated:  dbUsr.DateUpdated.In(time.Local),
 	}
 
-	return usr, nil
+	return bus, nil
 }
 
-func toCoreUserSlice(dbUsers []dbUser) ([]userbus.User, error) {
-	usrs := make([]userbus.User, len(dbUsers))
+func toBusUserSlice(dbUsers []user) ([]userbus.User, error) {
+	bus := make([]userbus.User, len(dbUsers))
 
 	for i, dbUsr := range dbUsers {
 		var err error
-		usrs[i], err = toCoreUser(dbUsr)
+		bus[i], err = toBusUser(dbUsr)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	return usrs, nil
+	return bus, nil
 }

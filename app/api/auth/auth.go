@@ -57,7 +57,7 @@ type Config struct {
 // set of user claims and recreate the claims by parsing the token.
 type Auth struct {
 	keyLookup KeyLookup
-	userBus   *userbus.Core
+	userBus   *userbus.Business
 	method    jwt.SigningMethod
 	parser    *jwt.Parser
 	issuer    string
@@ -68,9 +68,9 @@ func New(cfg Config) (*Auth, error) {
 
 	// If a database connection is not provided, we won't perform the
 	// user enabled check.
-	var userBus *userbus.Core
+	var userBus *userbus.Business
 	if cfg.DB != nil {
-		userBus = userbus.NewCore(cfg.Log, nil, userdb.NewStore(cfg.Log, cfg.DB))
+		userBus = userbus.NewBusiness(cfg.Log, nil, userdb.NewStore(cfg.Log, cfg.DB))
 	}
 
 	a := Auth{

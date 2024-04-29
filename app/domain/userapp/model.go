@@ -55,12 +55,12 @@ func toAppUser(usr userbus.User) User {
 }
 
 func toAppUsers(users []userbus.User) []User {
-	items := make([]User, len(users))
+	app := make([]User, len(users))
 	for i, usr := range users {
-		items[i] = toAppUser(usr)
+		app[i] = toAppUser(usr)
 	}
 
-	return items
+	return app
 }
 
 // NewUser defines the data needed to add a new user.
@@ -88,7 +88,7 @@ func toBusNewUser(app NewUser) (userbus.NewUser, error) {
 		return userbus.NewUser{}, fmt.Errorf("parse: %w", err)
 	}
 
-	usr := userbus.NewUser{
+	bus := userbus.NewUser{
 		Name:       app.Name,
 		Email:      *addr,
 		Roles:      roles,
@@ -96,7 +96,7 @@ func toBusNewUser(app NewUser) (userbus.NewUser, error) {
 		Password:   app.Password,
 	}
 
-	return usr, nil
+	return bus, nil
 }
 
 // Validate checks the data in the model is considered clean.
@@ -126,11 +126,11 @@ func toBusUpdateUserRole(app UpdateUserRole) (userbus.UpdateUser, error) {
 		}
 	}
 
-	nu := userbus.UpdateUser{
+	bus := userbus.UpdateUser{
 		Roles: roles,
 	}
 
-	return nu, nil
+	return bus, nil
 }
 
 // UpdateUser defines the data needed to update a user.
@@ -153,7 +153,7 @@ func toBusUpdateUser(app UpdateUser) (userbus.UpdateUser, error) {
 		}
 	}
 
-	nu := userbus.UpdateUser{
+	bus := userbus.UpdateUser{
 		Name:       app.Name,
 		Email:      addr,
 		Department: app.Department,
@@ -161,7 +161,7 @@ func toBusUpdateUser(app UpdateUser) (userbus.UpdateUser, error) {
 		Enabled:    app.Enabled,
 	}
 
-	return nu, nil
+	return bus, nil
 }
 
 // Validate checks the data in the model is considered clean.

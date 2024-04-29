@@ -11,7 +11,7 @@ import (
 
 // Config contains all the mandatory systems required by handlers.
 type Config struct {
-	UserBus *userbus.Core
+	UserBus *userbus.Business
 	Auth    *auth.Auth
 }
 

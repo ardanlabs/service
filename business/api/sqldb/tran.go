@@ -7,7 +7,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-// dbBeginner implements the core coreTransaction interface,
+// dbBeginner implements the domain transaction interface,
 type dbBeginner struct {
 	sqlxDB *sqlx.DB
 }
@@ -21,13 +21,13 @@ func NewBeginner(sqlxDB *sqlx.DB) transaction.Beginner {
 }
 
 // Begin start a transaction and returns a value that implements
-// the core transactor interface.
+// the domain transactor interface.
 func (db *dbBeginner) Begin() (transaction.Transaction, error) {
 	return db.sqlxDB.Beginx()
 }
 
 // GetExtContext is a helper function that extracts the sqlx value
-// from the core transactor interface for transactional use.
+// from the domain transactor interface for transactional use.
 func GetExtContext(tx transaction.Transaction) (sqlx.ExtContext, error) {
 	ec, ok := tx.(sqlx.ExtContext)
 	if !ok {

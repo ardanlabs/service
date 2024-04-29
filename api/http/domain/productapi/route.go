@@ -16,8 +16,8 @@ import (
 // Config contains all the mandatory systems required by handlers.
 type Config struct {
 	Log        *logger.Logger
-	UserBus    *userbus.Core
-	ProductBus *productbus.Core
+	UserBus    *userbus.Business
+	ProductBus *productbus.Business
 	AuthClient *authclient.Client
 }
 
@@ -30,7 +30,7 @@ func Routes(app *web.App, cfg Config) {
 	ruleUserOnly := mid.Authorize(cfg.Log, cfg.AuthClient, auth.RuleUserOnly)
 	ruleAuthorizeProduct := mid.AuthorizeProduct(cfg.Log, cfg.AuthClient, cfg.ProductBus)
 
-	api := newAPI(productapp.NewCore(cfg.ProductBus))
+	api := newAPI(productapp.NewApp(cfg.ProductBus))
 	app.Handle(http.MethodGet, version, "/products", api.query, authen, ruleAny)
 	app.Handle(http.MethodGet, version, "/products/{product_id}", api.queryByID, authen, ruleAuthorizeProduct)
 	app.Handle(http.MethodPost, version, "/products", api.create, authen, ruleUserOnly)

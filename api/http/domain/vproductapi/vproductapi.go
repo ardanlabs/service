@@ -10,10 +10,10 @@ import (
 )
 
 type api struct {
-	vproductApp *vproductapp.Core
+	vproductApp *vproductapp.App
 }
 
-func newAPI(vproductApp *vproductapp.Core) *api {
+func newAPI(vproductApp *vproductapp.App) *api {
 	return &api{
 		vproductApp: vproductApp,
 	}

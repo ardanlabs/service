@@ -65,7 +65,7 @@ func toBusNewUser(app NewUser) (userbus.NewUser, error) {
 		return userbus.NewUser{}, fmt.Errorf("parsing email: %w", err)
 	}
 
-	usr := userbus.NewUser{
+	bus := userbus.NewUser{
 		Name:       app.Name,
 		Email:      *addr,
 		Roles:      roles,
@@ -73,7 +73,7 @@ func toBusNewUser(app NewUser) (userbus.NewUser, error) {
 		Password:   app.Password,
 	}
 
-	return usr, nil
+	return bus, nil
 }
 
 // Validate checks the data in the model is considered clean.
@@ -93,13 +93,13 @@ type NewProduct struct {
 }
 
 func toBusNewProduct(app NewProduct) (productbus.NewProduct, error) {
-	prd := productbus.NewProduct{
+	bus := productbus.NewProduct{
 		Name:     app.Name,
 		Cost:     app.Cost,
 		Quantity: app.Quantity,
 	}
 
-	return prd, nil
+	return bus, nil
 }
 
 // Validate checks the data in the model is considered clean.

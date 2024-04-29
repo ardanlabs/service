@@ -37,41 +37,41 @@ type Storer interface {
 	QueryByEmail(ctx context.Context, email mail.Address) (User, error)
 }
 
-// Core manages the set of APIs for user access.
-type Core struct {
+// Business manages the set of APIs for user access.
+type Business struct {
 	log      *logger.Logger
 	storer   Storer
 	delegate *delegate.Delegate
 }
 
-// NewCore constructs a user core API for use.
-func NewCore(log *logger.Logger, delegate *delegate.Delegate, storer Storer) *Core {
-	return &Core{
+// NewBusiness constructs a user business API for use.
+func NewBusiness(log *logger.Logger, delegate *delegate.Delegate, storer Storer) *Business {
+	return &Business{
 		log:      log,
 		delegate: delegate,
 		storer:   storer,
 	}
 }
 
-// ExecuteUnderTransaction constructs a new Core value that will use the
+// ExecuteUnderTransaction constructs a new business value that will use the
 // specified transaction in any store related calls.
-func (c *Core) ExecuteUnderTransaction(tx transaction.Transaction) (*Core, error) {
-	trS, err := c.storer.ExecuteUnderTransaction(tx)
+func (b *Business) ExecuteUnderTransaction(tx transaction.Transaction) (*Business, error) {
+	trS, err := b.storer.ExecuteUnderTransaction(tx)
 	if err != nil {
 		return nil, err
 	}
 
-	core := Core{
-		log:      c.log,
-		delegate: c.delegate,
+	bus := Business{
+		log:      b.log,
+		delegate: b.delegate,
 		storer:   trS,
 	}
 
-	return &core, nil
+	return &bus, nil
 }
 
 // Create adds a new user to the system.
-func (c *Core) Create(ctx context.Context, nu NewUser) (User, error) {
+func (b *Business) Create(ctx context.Context, nu NewUser) (User, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(nu.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return User{}, fmt.Errorf("generatefrompassword: %w", err)
@@ -91,7 +91,7 @@ func (c *Core) Create(ctx context.Context, nu NewUser) (User, error) {
 		DateUpdated:  now,
 	}
 
-	if err := c.storer.Create(ctx, usr); err != nil {
+	if err := b.storer.Create(ctx, usr); err != nil {
 		return User{}, fmt.Errorf("create: %w", err)
 	}
 
@@ -99,7 +99,7 @@ func (c *Core) Create(ctx context.Context, nu NewUser) (User, error) {
 }
 
 // Update modifies information about a user.
-func (c *Core) Update(ctx context.Context, usr User, uu UpdateUser) (User, error) {
+func (b *Business) Update(ctx context.Context, usr User, uu UpdateUser) (User, error) {
 	if uu.Name != nil {
 		usr.Name = *uu.Name
 	}
@@ -129,13 +129,13 @@ func (c *Core) Update(ctx context.Context, usr User, uu UpdateUser) (User, error
 	}
 	usr.DateUpdated = time.Now()
 
-	if err := c.storer.Update(ctx, usr); err != nil {
+	if err := b.storer.Update(ctx, usr); err != nil {
 		return User{}, fmt.Errorf("update: %w", err)
 	}
 
 	// Other domains may need to know when a user is updated so business
-	// logic can be applied. This represents a delegate call to other domains.
-	if err := c.delegate.Call(ctx, ActionUpdatedData(uu, usr.ID)); err != nil {
+	// logic can be applieb. This represents a delegate call to other domains.
+	if err := b.delegate.Call(ctx, ActionUpdatedData(uu, usr.ID)); err != nil {
 		return User{}, fmt.Errorf("failed to execute `%s` action: %w", ActionUpdated, err)
 	}
 
@@ -143,8 +143,8 @@ func (c *Core) Update(ctx context.Context, usr User, uu UpdateUser) (User, error
 }
 
 // Delete removes the specified user.
-func (c *Core) Delete(ctx context.Context, usr User) error {
-	if err := c.storer.Delete(ctx, usr); err != nil {
+func (b *Business) Delete(ctx context.Context, usr User) error {
+	if err := b.storer.Delete(ctx, usr); err != nil {
 		return fmt.Errorf("delete: %w", err)
 	}
 
@@ -152,12 +152,12 @@ func (c *Core) Delete(ctx context.Context, usr User) error {
 }
 
 // Query retrieves a list of existing users.
-func (c *Core) Query(ctx context.Context, filter QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]User, error) {
+func (b *Business) Query(ctx context.Context, filter QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]User, error) {
 	if err := filter.Validate(); err != nil {
 		return nil, err
 	}
 
-	users, err := c.storer.Query(ctx, filter, orderBy, pageNumber, rowsPerPage)
+	users, err := b.storer.Query(ctx, filter, orderBy, pageNumber, rowsPerPage)
 	if err != nil {
 		return nil, fmt.Errorf("query: %w", err)
 	}
@@ -166,17 +166,17 @@ func (c *Core) Query(ctx context.Context, filter QueryFilter, orderBy order.By, 
 }
 
 // Count returns the total number of users.
-func (c *Core) Count(ctx context.Context, filter QueryFilter) (int, error) {
+func (b *Business) Count(ctx context.Context, filter QueryFilter) (int, error) {
 	if err := filter.Validate(); err != nil {
 		return 0, err
 	}
 
-	return c.storer.Count(ctx, filter)
+	return b.storer.Count(ctx, filter)
 }
 
-// QueryByID finds the user by the specified ID.
-func (c *Core) QueryByID(ctx context.Context, userID uuid.UUID) (User, error) {
-	user, err := c.storer.QueryByID(ctx, userID)
+// QueryByID finds the user by the specified Ib.
+func (b *Business) QueryByID(ctx context.Context, userID uuid.UUID) (User, error) {
+	user, err := b.storer.QueryByID(ctx, userID)
 	if err != nil {
 		return User{}, fmt.Errorf("query: userID[%s]: %w", userID, err)
 	}
@@ -185,8 +185,8 @@ func (c *Core) QueryByID(ctx context.Context, userID uuid.UUID) (User, error) {
 }
 
 // QueryByIDs finds the users by a specified User IDs.
-func (c *Core) QueryByIDs(ctx context.Context, userIDs []uuid.UUID) ([]User, error) {
-	user, err := c.storer.QueryByIDs(ctx, userIDs)
+func (b *Business) QueryByIDs(ctx context.Context, userIDs []uuid.UUID) ([]User, error) {
+	user, err := b.storer.QueryByIDs(ctx, userIDs)
 	if err != nil {
 		return nil, fmt.Errorf("query: userIDs[%s]: %w", userIDs, err)
 	}
@@ -195,8 +195,8 @@ func (c *Core) QueryByIDs(ctx context.Context, userIDs []uuid.UUID) ([]User, err
 }
 
 // QueryByEmail finds the user by a specified user email.
-func (c *Core) QueryByEmail(ctx context.Context, email mail.Address) (User, error) {
-	user, err := c.storer.QueryByEmail(ctx, email)
+func (b *Business) QueryByEmail(ctx context.Context, email mail.Address) (User, error) {
+	user, err := b.storer.QueryByEmail(ctx, email)
 	if err != nil {
 		return User{}, fmt.Errorf("query: email[%s]: %w", email, err)
 	}
@@ -204,11 +204,11 @@ func (c *Core) QueryByEmail(ctx context.Context, email mail.Address) (User, erro
 	return user, nil
 }
 
-// Authenticate finds a user by their email and verifies their password. On
+// Authenticate finds a user by their email and verifies their passworb. On
 // success it returns a Claims User representing this user. The claims can be
 // used to generate a token for future authentication.
-func (c *Core) Authenticate(ctx context.Context, email mail.Address, password string) (User, error) {
-	usr, err := c.QueryByEmail(ctx, email)
+func (b *Business) Authenticate(ctx context.Context, email mail.Address, password string) (User, error) {
+	usr, err := b.QueryByEmail(ctx, email)
 	if err != nil {
 		return User{}, fmt.Errorf("query: email[%s]: %w", email, err)
 	}

@@ -1,5 +1,5 @@
 // Package delegate provides the ability to make function calls between
-// different core packages when an import is not possible.
+// different domain packages when an import is not possible.
 package delegate
 
 import (
@@ -15,7 +15,7 @@ type (
 	action string
 )
 
-// Delegate manages the set of functions to be called by core
+// Delegate manages the set of functions to be called by domain
 // packages when an import is not possible.
 type Delegate struct {
 	log   *logger.Logger

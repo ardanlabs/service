@@ -63,7 +63,7 @@ func (s *Store) Query(ctx context.Context, filter vproductbus.QueryFilter, order
 		return nil, fmt.Errorf("namedqueryslice: %w", err)
 	}
 
-	return toCoreProducts(dnPrd), nil
+	return toBusProducts(dnPrd), nil
 }
 
 // Count returns the total number of products in the DB.

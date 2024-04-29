@@ -6,21 +6,21 @@ import (
 	"github.com/ardanlabs/service/business/api/transaction"
 )
 
-// executeUnderTransaction constructs a new Handlers value with the core apis
+// executeUnderTransaction constructs a new Handlers value with the domain apis
 // using a store transaction that was created via middleware.
-func (c *Core) executeUnderTransaction(ctx context.Context) (*Core, error) {
+func (a *App) executeUnderTransaction(ctx context.Context) (*App, error) {
 	if tx, ok := transaction.Get(ctx); ok {
-		userBus, err := c.userBus.ExecuteUnderTransaction(tx)
+		userBus, err := a.userBus.ExecuteUnderTransaction(tx)
 		if err != nil {
 			return nil, err
 		}
 
-		productBus, err := c.productBus.ExecuteUnderTransaction(tx)
+		productBus, err := a.productBus.ExecuteUnderTransaction(tx)
 		if err != nil {
 			return nil, err
 		}
 
-		handlers := Core{
+		handlers := App{
 			userBus:    userBus,
 			productBus: productBus,
 		}
@@ -28,5 +28,5 @@ func (c *Core) executeUnderTransaction(ctx context.Context) (*Core, error) {
 		return &handlers, nil
 	}
 
-	return c, nil
+	return a, nil
 }

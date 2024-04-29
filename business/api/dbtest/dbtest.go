@@ -56,18 +56,18 @@ func StopDB(c *docker.Container) {
 // BusDomain represents all the business domain apis needed for testing.
 type BusDomain struct {
 	Delegate *delegate.Delegate
-	Home     *homebus.Core
-	Product  *productbus.Core
-	User     *userbus.Core
-	VProduct *vproductbus.Core
+	Home     *homebus.Business
+	Product  *productbus.Business
+	User     *userbus.Business
+	VProduct *vproductbus.Business
 }
 
 func newBusDomains(log *logger.Logger, db *sqlx.DB) BusDomain {
 	delegate := delegate.New(log)
-	userBus := userbus.NewCore(log, delegate, userdb.NewStore(log, db))
-	productBus := productbus.NewCore(log, userBus, delegate, productdb.NewStore(log, db))
-	homeBus := homebus.NewCore(log, userBus, delegate, homedb.NewStore(log, db))
-	vproductBus := vproductbus.NewCore(vproductdb.NewStore(log, db))
+	userBus := userbus.NewBusiness(log, delegate, userdb.NewStore(log, db))
+	productBus := productbus.NewBusiness(log, userBus, delegate, productdb.NewStore(log, db))
+	homeBus := homebus.NewBusiness(log, userBus, delegate, homedb.NewStore(log, db))
+	vproductBus := vproductbus.NewBusiness(vproductdb.NewStore(log, db))
 
 	return BusDomain{
 		Delegate: delegate,

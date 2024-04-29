@@ -45,10 +45,10 @@ func toAppProduct(prd vproductbus.Product) Product {
 }
 
 func toAppProducts(prds []vproductbus.Product) []Product {
-	items := make([]Product, len(prds))
+	app := make([]Product, len(prds))
 	for i, prd := range prds {
-		items[i] = toAppProduct(prd)
+		app[i] = toAppProduct(prd)
 	}
 
-	return items
+	return app
 }

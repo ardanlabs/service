@@ -130,12 +130,12 @@ func (s *Store) Query(ctx context.Context, filter homebus.QueryFilter, orderBy o
 	buf.WriteString(orderByClause)
 	buf.WriteString(" OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY")
 
-	var dbHmes []dbHome
+	var dbHmes []home
 	if err := sqldb.NamedQuerySlice(ctx, s.log, s.db, buf.String(), data, &dbHmes); err != nil {
 		return nil, fmt.Errorf("namedqueryslice: %w", err)
 	}
 
-	hmes, err := toCoreHomeSlice(dbHmes)
+	hmes, err := toBusHomeSlice(dbHmes)
 	if err != nil {
 		return nil, err
 	}
@@ -182,7 +182,7 @@ func (s *Store) QueryByID(ctx context.Context, homeID uuid.UUID) (homebus.Home, 
     WHERE
         home_id = :home_id`
 
-	var dbHme dbHome
+	var dbHme home
 	if err := sqldb.NamedQueryStruct(ctx, s.log, s.db, q, data, &dbHme); err != nil {
 		if errors.Is(err, sqldb.ErrDBNotFound) {
 			return homebus.Home{}, fmt.Errorf("db: %w", homebus.ErrNotFound)
@@ -190,7 +190,7 @@ func (s *Store) QueryByID(ctx context.Context, homeID uuid.UUID) (homebus.Home, 
 		return homebus.Home{}, fmt.Errorf("db: %w", err)
 	}
 
-	return toCoreHome(dbHme)
+	return toBusHome(dbHme)
 }
 
 // QueryByUserID gets the specified home from the database by user id.
@@ -209,10 +209,10 @@ func (s *Store) QueryByUserID(ctx context.Context, userID uuid.UUID) ([]homebus.
 	WHERE
 		user_id = :user_id`
 
-	var dbHmes []dbHome
+	var dbHmes []home
 	if err := sqldb.NamedQuerySlice(ctx, s.log, s.db, q, data, &dbHmes); err != nil {
 		return nil, fmt.Errorf("db: %w", err)
 	}
 
-	return toCoreHomeSlice(dbHmes)
+	return toBusHomeSlice(dbHmes)
 }

@@ -46,12 +46,12 @@ func toAppProduct(prd productbus.Product) Product {
 }
 
 func toAppProducts(prds []productbus.Product) []Product {
-	items := make([]Product, len(prds))
+	app := make([]Product, len(prds))
 	for i, prd := range prds {
-		items[i] = toAppProduct(prd)
+		app[i] = toAppProduct(prd)
 	}
 
-	return items
+	return app
 }
 
 // NewProduct defines the data needed to add a new product.
@@ -67,14 +67,14 @@ func toBusNewProduct(ctx context.Context, app NewProduct) (productbus.NewProduct
 		return productbus.NewProduct{}, fmt.Errorf("getuserid: %w", err)
 	}
 
-	prd := productbus.NewProduct{
+	bus := productbus.NewProduct{
 		UserID:   userID,
 		Name:     app.Name,
 		Cost:     app.Cost,
 		Quantity: app.Quantity,
 	}
 
-	return prd, nil
+	return bus, nil
 }
 
 // Validate checks the data in the model is considered clean.
@@ -94,13 +94,13 @@ type UpdateProduct struct {
 }
 
 func toBusUpdateProduct(app UpdateProduct) productbus.UpdateProduct {
-	core := productbus.UpdateProduct{
+	bus := productbus.UpdateProduct{
 		Name:     app.Name,
 		Cost:     app.Cost,
 		Quantity: app.Quantity,
 	}
 
-	return core
+	return bus
 }
 
 // Validate checks the data in the model is considered clean.

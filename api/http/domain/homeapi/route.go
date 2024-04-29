@@ -16,8 +16,8 @@ import (
 // Config contains all the mandatory systems required by handlers.
 type Config struct {
 	Log        *logger.Logger
-	UserBus    *userbus.Core
-	HomeBus    *homebus.Core
+	UserBus    *userbus.Business
+	HomeBus    *homebus.Business
 	AuthClient *authclient.Client
 }
 
@@ -30,7 +30,7 @@ func Routes(app *web.App, cfg Config) {
 	ruleUserOnly := mid.Authorize(cfg.Log, cfg.AuthClient, auth.RuleUserOnly)
 	ruleAuthorizeHome := mid.AuthorizeHome(cfg.Log, cfg.AuthClient, cfg.HomeBus)
 
-	api := newAPI(homeapp.NewCore(cfg.HomeBus))
+	api := newAPI(homeapp.NewApp(cfg.HomeBus))
 	app.Handle(http.MethodGet, version, "/homes", api.query, authen, ruleAny)
 	app.Handle(http.MethodGet, version, "/homes/{home_id}", api.queryByID, authen, ruleAuthorizeHome)
 	app.Handle(http.MethodPost, version, "/homes", api.create, authen, ruleUserOnly)

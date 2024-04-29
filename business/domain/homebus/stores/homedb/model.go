@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type dbHome struct {
+type home struct {
 	ID          uuid.UUID `db:"home_id"`
 	UserID      uuid.UUID `db:"user_id"`
 	Type        string    `db:"type"`
@@ -22,8 +22,8 @@ type dbHome struct {
 	DateUpdated time.Time `db:"date_updated"`
 }
 
-func toDBHome(hme homebus.Home) dbHome {
-	hmeDB := dbHome{
+func toDBHome(hme homebus.Home) home {
+	db := home{
 		ID:          hme.ID,
 		UserID:      hme.UserID,
 		Type:        hme.Type.Name(),
@@ -37,16 +37,16 @@ func toDBHome(hme homebus.Home) dbHome {
 		DateUpdated: hme.DateUpdated.UTC(),
 	}
 
-	return hmeDB
+	return db
 }
 
-func toCoreHome(dbHme dbHome) (homebus.Home, error) {
+func toBusHome(dbHme home) (homebus.Home, error) {
 	typ, err := homebus.ParseType(dbHme.Type)
 	if err != nil {
 		return homebus.Home{}, fmt.Errorf("parse type: %w", err)
 	}
 
-	hme := homebus.Home{
+	bus := homebus.Home{
 		ID:     dbHme.ID,
 		UserID: dbHme.UserID,
 		Type:   typ,
@@ -62,19 +62,19 @@ func toCoreHome(dbHme dbHome) (homebus.Home, error) {
 		DateUpdated: dbHme.DateUpdated.In(time.Local),
 	}
 
-	return hme, nil
+	return bus, nil
 }
 
-func toCoreHomeSlice(dbHomes []dbHome) ([]homebus.Home, error) {
-	hmes := make([]homebus.Home, len(dbHomes))
+func toBusHomeSlice(dbHomes []home) ([]homebus.Home, error) {
+	bus := make([]homebus.Home, len(dbHomes))
 
 	for i, dbHme := range dbHomes {
 		var err error
-		hmes[i], err = toCoreHome(dbHme)
+		bus[i], err = toBusHome(dbHme)
 		if err != nil {
 			return nil, fmt.Errorf("parse type: %w", err)
 		}
 	}
 
-	return hmes, nil
+	return bus, nil
 }
