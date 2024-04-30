@@ -11,8 +11,8 @@ import (
 )
 
 func vproductQuery200(sd apitest.SeedData) []apitest.Table {
-	prds := toAppVProducts(sd.Admins[0].User.User, sd.Admins[0].Products)
-	prds = append(prds, toAppVProducts(sd.Users[0].User.User, sd.Users[0].Products)...)
+	prds := toAppVProducts(sd.Admins[0].User, sd.Admins[0].Products)
+	prds = append(prds, toAppVProducts(sd.Users[0].User, sd.Users[0].Products)...)
 
 	sort.Slice(prds, func(i, j int) bool {
 		return prds[i].ID <= prds[j].ID

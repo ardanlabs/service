@@ -88,9 +88,9 @@ type Database struct {
 	Teardown  func()
 }
 
-// NewDatabase creates a test database inside a Docker container. It creates the
-// required table structure but the database is otherwise empty. It returns
-// the database to use as well as a function to call at the end of the test.
+// NewDatabase creates a new test database inside the database that was started
+// to handle testing. The database is migrated to the current version and
+// a connection pool is provided with business domain packages.
 func NewDatabase(t *testing.T, c *docker.Container, testName string) *Database {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()

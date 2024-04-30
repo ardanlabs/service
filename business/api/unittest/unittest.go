@@ -6,14 +6,6 @@ import (
 	"testing"
 )
 
-// Table represent fields needed for running an unit test.
-type Table struct {
-	Name    string
-	ExpResp any
-	ExcFunc func(ctx context.Context) any
-	CmpFunc func(got any, exp any) string
-}
-
 // Run performs the actual test logic based on the table data.
 func Run(t *testing.T, table []Table, testName string) {
 	log := func(diff string, got any, exp any) {

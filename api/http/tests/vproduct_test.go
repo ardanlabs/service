@@ -10,23 +10,23 @@ func Test_VProduct(t *testing.T) {
 
 	// -------------------------------------------------------------------------
 
-	apiTest := startTest(t, "Test_VProduct")
+	test := startTest(t, "Test_VProduct")
 	defer func() {
 		if r := recover(); r != nil {
 			t.Log(r)
 			t.Error(string(debug.Stack()))
 		}
-		apiTest.DB.Teardown()
+		test.DB.Teardown()
 	}()
 
 	// -------------------------------------------------------------------------
 
-	sd, err := insertVProductSeed(apiTest.DB, apiTest.Auth)
+	sd, err := insertVProductSeedData(test.DB, test.Auth)
 	if err != nil {
 		t.Fatalf("Seeding error: %s", err)
 	}
 
 	// -------------------------------------------------------------------------
 
-	apiTest.Run(t, vproductQuery200(sd), "vproduct-query-200")
+	test.Run(t, vproductQuery200(sd), "vproduct-query-200")
 }

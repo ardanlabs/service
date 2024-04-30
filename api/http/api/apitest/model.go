@@ -1,11 +1,17 @@
 package apitest
 
-import "github.com/ardanlabs/service/business/api/dbtest"
+import (
+	"github.com/ardanlabs/service/business/domain/homebus"
+	"github.com/ardanlabs/service/business/domain/productbus"
+	"github.com/ardanlabs/service/business/domain/userbus"
+)
 
 // User extends the dbtest user for api test support.
 type User struct {
-	dbtest.User
-	Token string
+	userbus.User
+	Products []productbus.Product
+	Homes    []homebus.Home
+	Token    string
 }
 
 // SeedData represents users for api tests.

@@ -99,7 +99,7 @@ func Token(db *dbtest.Database, ath *auth.Auth, email string) string {
 	claims := auth.Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
 			Subject:   dbUsr.ID.String(),
-			Issuer:    "service project",
+			Issuer:    ath.Issuer(),
 			ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
 		},

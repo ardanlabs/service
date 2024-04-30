@@ -10,7 +10,7 @@ import (
 	"github.com/ardanlabs/service/business/domain/userbus"
 )
 
-func userSeedData(db *dbtest.Database, ath *auth.Auth) (apitest.SeedData, error) {
+func insertUserSeedData(db *dbtest.Database, ath *auth.Auth) (apitest.SeedData, error) {
 	ctx := context.Background()
 	busDomain := db.BusDomain
 
@@ -20,16 +20,12 @@ func userSeedData(db *dbtest.Database, ath *auth.Auth) (apitest.SeedData, error)
 	}
 
 	tu1 := apitest.User{
-		User: dbtest.User{
-			User: usrs[0],
-		},
+		User:  usrs[0],
 		Token: apitest.Token(db, ath, usrs[0].Email.Address),
 	}
 
 	tu2 := apitest.User{
-		User: dbtest.User{
-			User: usrs[1],
-		},
+		User:  usrs[1],
 		Token: apitest.Token(db, ath, usrs[1].Email.Address),
 	}
 
@@ -41,23 +37,17 @@ func userSeedData(db *dbtest.Database, ath *auth.Auth) (apitest.SeedData, error)
 	}
 
 	tu3 := apitest.User{
-		User: dbtest.User{
-			User: usrs[0],
-		},
+		User:  usrs[0],
 		Token: apitest.Token(db, ath, usrs[0].Email.Address),
 	}
 
 	tu4 := apitest.User{
-		User: dbtest.User{
-			User: usrs[1],
-		},
+		User:  usrs[1],
 		Token: apitest.Token(db, ath, usrs[1].Email.Address),
 	}
 
 	tu5 := apitest.User{
-		User: dbtest.User{
-			User: usrs[2],
-		},
+		User:  usrs[2],
 		Token: apitest.Token(db, ath, usrs[2].Email.Address),
 	}
 

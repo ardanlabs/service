@@ -48,9 +48,10 @@ func GenToken(log *logger.Logger, dbConfig sqldb.Config, keyPath string, userID 
 		Log:       log,
 		DB:        db,
 		KeyLookup: ks,
+		Issuer:    "service project",
 	}
 
-	a, err := auth.New(authCfg)
+	ath, err := auth.New(authCfg)
 	if err != nil {
 		return fmt.Errorf("constructing auth: %w", err)
 	}
@@ -69,7 +70,7 @@ func GenToken(log *logger.Logger, dbConfig sqldb.Config, keyPath string, userID 
 	claims := auth.Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
 			Subject:   usr.ID.String(),
-			Issuer:    "service project",
+			Issuer:    ath.Issuer(),
 			ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(8760 * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
 		},
@@ -80,7 +81,7 @@ func GenToken(log *logger.Logger, dbConfig sqldb.Config, keyPath string, userID 
 	// with need to be configured with the information found in the public key
 	// file to validate these claims. Dgraph does not support key rotate at
 	// this time.
-	token, err := a.GenerateToken(kid, claims)
+	token, err := ath.GenerateToken(kid, claims)
 	if err != nil {
 		return fmt.Errorf("generating token: %w", err)
 	}

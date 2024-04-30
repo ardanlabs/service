@@ -1,6 +1,8 @@
-package dbtest
+package unittest
 
 import (
+	"context"
+
 	"github.com/ardanlabs/service/business/domain/homebus"
 	"github.com/ardanlabs/service/business/domain/productbus"
 	"github.com/ardanlabs/service/business/domain/userbus"
@@ -17,4 +19,12 @@ type User struct {
 type SeedData struct {
 	Users  []User
 	Admins []User
+}
+
+// Table represent fields needed for running an unit test.
+type Table struct {
+	Name    string
+	ExpResp any
+	ExcFunc func(ctx context.Context) any
+	CmpFunc func(got any, exp any) string
 }
