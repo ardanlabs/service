@@ -188,7 +188,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 
 	defer traceProvider.Shutdown(context.Background())
 
-	tracer := traceProvider.Tracer("service")
+	tracer := traceProvider.Tracer(cfg.Tempo.ServiceName)
 
 	// -------------------------------------------------------------------------
 	// Start Debug Service
