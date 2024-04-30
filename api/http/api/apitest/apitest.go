@@ -19,15 +19,15 @@ import (
 
 // Test contains functions for executing an api test.
 type Test struct {
-	DBTest  *dbtest.Test
+	DB      *dbtest.Database
 	Auth    *auth.Auth
 	handler http.Handler
 }
 
 // New constructs a Test value for running api tests.
-func New(dbTest *dbtest.Test, ath *auth.Auth, handler http.Handler) *Test {
+func New(db *dbtest.Database, ath *auth.Auth, handler http.Handler) *Test {
 	return &Test{
-		DBTest:  dbTest,
+		DB:      db,
 		Auth:    ath,
 		handler: handler,
 	}
@@ -83,10 +83,10 @@ func (at *Test) Run(t *testing.T, table []Table, testName string) {
 // =============================================================================
 
 // Token generates an authenticated token for a user.
-func Token(dbTest *dbtest.Test, ath *auth.Auth, email string) string {
+func Token(db *dbtest.Database, ath *auth.Auth, email string) string {
 	addr, _ := mail.ParseAddress(email)
 
-	store := userdb.NewStore(dbTest.Log, dbTest.DB)
+	store := userdb.NewStore(db.Log, db.DB)
 	dbUsr, err := store.QueryByEmail(context.Background(), *addr)
 	if err != nil {
 		return ""

@@ -16,12 +16,12 @@ func Test_Home(t *testing.T) {
 			t.Log(r)
 			t.Error(string(debug.Stack()))
 		}
-		apiTest.DBTest.Teardown()
+		apiTest.DB.Teardown()
 	}()
 
 	// -------------------------------------------------------------------------
 
-	sd, err := insertHomeSeed(apiTest.DBTest, apiTest.Auth)
+	sd, err := insertHomeSeed(apiTest.DB, apiTest.Auth)
 	if err != nil {
 		t.Fatalf("Seeding error: %s", err)
 	}

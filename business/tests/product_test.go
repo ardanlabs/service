@@ -18,7 +18,7 @@ import (
 func Test_Product(t *testing.T) {
 	t.Parallel()
 
-	dbTest := dbtest.NewTest(t, c, "Test_Product")
+	dbTest := dbtest.NewDatabase(t, c, "Test_Product")
 	defer func() {
 		if r := recover(); r != nil {
 			t.Log(r)
@@ -42,9 +42,9 @@ func Test_Product(t *testing.T) {
 
 // =============================================================================
 
-func insertProductSeedData(dbTest *dbtest.Test) (dbtest.SeedData, error) {
+func insertProductSeedData(db *dbtest.Database) (dbtest.SeedData, error) {
 	ctx := context.Background()
-	busDomain := dbTest.BusDomain
+	busDomain := db.BusDomain
 
 	usrs, err := userbus.TestGenerateSeedUsers(ctx, 1, userbus.RoleUser, busDomain.User)
 	if err != nil {
@@ -90,7 +90,7 @@ func insertProductSeedData(dbTest *dbtest.Test) (dbtest.SeedData, error) {
 
 // =============================================================================
 
-func productQuery(dbt *dbtest.Test, sd dbtest.SeedData) []unittest.Table {
+func productQuery(db *dbtest.Database, sd dbtest.SeedData) []unittest.Table {
 	prds := make([]productbus.Product, 0, len(sd.Admins[0].Products)+len(sd.Users[0].Products))
 	prds = append(prds, sd.Admins[0].Products...)
 	prds = append(prds, sd.Users[0].Products...)
@@ -108,7 +108,7 @@ func productQuery(dbt *dbtest.Test, sd dbtest.SeedData) []unittest.Table {
 					Name: dbtest.StringPointer("Name"),
 				}
 
-				resp, err := dbt.BusDomain.Product.Query(ctx, filter, productbus.DefaultOrderBy, 1, 10)
+				resp, err := db.BusDomain.Product.Query(ctx, filter, productbus.DefaultOrderBy, 1, 10)
 				if err != nil {
 					return err
 				}
@@ -140,7 +140,7 @@ func productQuery(dbt *dbtest.Test, sd dbtest.SeedData) []unittest.Table {
 			Name:    "byid",
 			ExpResp: sd.Users[0].Products[0],
 			ExcFunc: func(ctx context.Context) any {
-				resp, err := dbt.BusDomain.Product.QueryByID(ctx, sd.Users[0].Products[0].ID)
+				resp, err := db.BusDomain.Product.QueryByID(ctx, sd.Users[0].Products[0].ID)
 				if err != nil {
 					return err
 				}
@@ -171,7 +171,7 @@ func productQuery(dbt *dbtest.Test, sd dbtest.SeedData) []unittest.Table {
 	return table
 }
 
-func productCreate(dbt *dbtest.Test, sd dbtest.SeedData) []unittest.Table {
+func productCreate(db *dbtest.Database, sd dbtest.SeedData) []unittest.Table {
 	table := []unittest.Table{
 		{
 			Name: "basic",
@@ -189,7 +189,7 @@ func productCreate(dbt *dbtest.Test, sd dbtest.SeedData) []unittest.Table {
 					Quantity: 10,
 				}
 
-				resp, err := dbt.BusDomain.Product.Create(ctx, np)
+				resp, err := db.BusDomain.Product.Create(ctx, np)
 				if err != nil {
 					return err
 				}
@@ -216,7 +216,7 @@ func productCreate(dbt *dbtest.Test, sd dbtest.SeedData) []unittest.Table {
 	return table
 }
 
-func productUpdate(dbt *dbtest.Test, sd dbtest.SeedData) []unittest.Table {
+func productUpdate(db *dbtest.Database, sd dbtest.SeedData) []unittest.Table {
 	table := []unittest.Table{
 		{
 			Name: "basic",
@@ -236,7 +236,7 @@ func productUpdate(dbt *dbtest.Test, sd dbtest.SeedData) []unittest.Table {
 					Quantity: dbtest.IntPointer(10),
 				}
 
-				resp, err := dbt.BusDomain.Product.Update(ctx, sd.Users[0].Products[0], up)
+				resp, err := db.BusDomain.Product.Update(ctx, sd.Users[0].Products[0], up)
 				if err != nil {
 					return err
 				}
@@ -261,13 +261,13 @@ func productUpdate(dbt *dbtest.Test, sd dbtest.SeedData) []unittest.Table {
 	return table
 }
 
-func productDelete(dbt *dbtest.Test, sd dbtest.SeedData) []unittest.Table {
+func productDelete(db *dbtest.Database, sd dbtest.SeedData) []unittest.Table {
 	table := []unittest.Table{
 		{
 			Name:    "user",
 			ExpResp: nil,
 			ExcFunc: func(ctx context.Context) any {
-				if err := dbt.BusDomain.Product.Delete(ctx, sd.Users[0].Products[1]); err != nil {
+				if err := db.BusDomain.Product.Delete(ctx, sd.Users[0].Products[1]); err != nil {
 					return err
 				}
 
@@ -281,7 +281,7 @@ func productDelete(dbt *dbtest.Test, sd dbtest.SeedData) []unittest.Table {
 			Name:    "admin",
 			ExpResp: nil,
 			ExcFunc: func(ctx context.Context) any {
-				if err := dbt.BusDomain.Product.Delete(ctx, sd.Admins[0].Products[1]); err != nil {
+				if err := db.BusDomain.Product.Delete(ctx, sd.Admins[0].Products[1]); err != nil {
 					return err
 				}
 

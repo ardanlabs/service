@@ -40,7 +40,7 @@ func run(m *testing.M) (int, error) {
 }
 
 func startTest(t *testing.T, testName string) *apitest.Test {
-	dbTest := dbtest.NewTest(t, c, testName)
+	dbTest := dbtest.NewDatabase(t, c, testName)
 
 	// -------------------------------------------------------------------------
 

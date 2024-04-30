@@ -11,9 +11,9 @@ import (
 	"github.com/ardanlabs/service/business/domain/userbus"
 )
 
-func insertHomeSeed(dbTest *dbtest.Test, ath *auth.Auth) (apitest.SeedData, error) {
+func insertHomeSeed(db *dbtest.Database, ath *auth.Auth) (apitest.SeedData, error) {
 	ctx := context.Background()
-	busDomain := dbTest.BusDomain
+	busDomain := db.BusDomain
 
 	usrs, err := userbus.TestGenerateSeedUsers(ctx, 1, userbus.RoleUser, busDomain.User)
 	if err != nil {
@@ -30,7 +30,7 @@ func insertHomeSeed(dbTest *dbtest.Test, ath *auth.Auth) (apitest.SeedData, erro
 			User:  usrs[0],
 			Homes: hmes,
 		},
-		Token: apitest.Token(dbTest, ath, usrs[0].Email.Address),
+		Token: apitest.Token(db, ath, usrs[0].Email.Address),
 	}
 
 	// -------------------------------------------------------------------------
@@ -44,7 +44,7 @@ func insertHomeSeed(dbTest *dbtest.Test, ath *auth.Auth) (apitest.SeedData, erro
 		User: dbtest.User{
 			User: usrs[0],
 		},
-		Token: apitest.Token(dbTest, ath, usrs[0].Email.Address),
+		Token: apitest.Token(db, ath, usrs[0].Email.Address),
 	}
 
 	// -------------------------------------------------------------------------
@@ -64,7 +64,7 @@ func insertHomeSeed(dbTest *dbtest.Test, ath *auth.Auth) (apitest.SeedData, erro
 			User:  usrs[0],
 			Homes: hmes,
 		},
-		Token: apitest.Token(dbTest, ath, usrs[0].Email.Address),
+		Token: apitest.Token(db, ath, usrs[0].Email.Address),
 	}
 
 	// -------------------------------------------------------------------------
@@ -78,7 +78,7 @@ func insertHomeSeed(dbTest *dbtest.Test, ath *auth.Auth) (apitest.SeedData, erro
 		User: dbtest.User{
 			User: usrs[0],
 		},
-		Token: apitest.Token(dbTest, ath, usrs[0].Email.Address),
+		Token: apitest.Token(db, ath, usrs[0].Email.Address),
 	}
 
 	// -------------------------------------------------------------------------

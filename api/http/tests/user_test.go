@@ -16,12 +16,12 @@ func Test_User(t *testing.T) {
 			t.Log(r)
 			t.Error(string(debug.Stack()))
 		}
-		apiTest.DBTest.Teardown()
+		apiTest.DB.Teardown()
 	}()
 
 	// -------------------------------------------------------------------------
 
-	sd, err := insertUserSeed(apiTest.DBTest, apiTest.Auth)
+	sd, err := insertUserSeed(apiTest.DB, apiTest.Auth)
 	if err != nil {
 		t.Fatalf("Seeding error: %s", err)
 	}

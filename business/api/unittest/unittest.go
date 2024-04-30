@@ -14,8 +14,6 @@ type Table struct {
 	CmpFunc func(got any, exp any) string
 }
 
-// =============================================================================
-
 // Run performs the actual test logic based on the table data.
 func Run(t *testing.T, table []Table, testName string) {
 	log := func(diff string, got any, exp any) {

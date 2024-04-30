@@ -19,7 +19,7 @@ import (
 func Test_VProduct(t *testing.T) {
 	t.Parallel()
 
-	dbTest := dbtest.NewTest(t, c, "Test_Product")
+	dbTest := dbtest.NewDatabase(t, c, "Test_Product")
 	defer func() {
 		if r := recover(); r != nil {
 			t.Log(r)
@@ -40,9 +40,9 @@ func Test_VProduct(t *testing.T) {
 
 // =============================================================================
 
-func insertVProductSeedData(dbTest *dbtest.Test) (dbtest.SeedData, error) {
+func insertVProductSeedData(db *dbtest.Database) (dbtest.SeedData, error) {
 	ctx := context.Background()
-	busDomain := dbTest.BusDomain
+	busDomain := db.BusDomain
 
 	usrs, err := userbus.TestGenerateSeedUsers(ctx, 1, userbus.RoleUser, busDomain.User)
 	if err != nil {
@@ -112,7 +112,7 @@ func toVProducts(usr userbus.User, prds []productbus.Product) []vproductbus.Prod
 
 // =============================================================================
 
-func vproductQuery(dbt *dbtest.Test, sd dbtest.SeedData) []unittest.Table {
+func vproductQuery(db *dbtest.Database, sd dbtest.SeedData) []unittest.Table {
 	prds := toVProducts(sd.Admins[0].User, sd.Admins[0].Products)
 	prds = append(prds, toVProducts(sd.Users[0].User, sd.Users[0].Products)...)
 
@@ -129,7 +129,7 @@ func vproductQuery(dbt *dbtest.Test, sd dbtest.SeedData) []unittest.Table {
 					Name: dbtest.StringPointer("Name"),
 				}
 
-				resp, err := dbt.BusDomain.VProduct.Query(ctx, filter, vproductbus.DefaultOrderBy, 1, 10)
+				resp, err := db.BusDomain.VProduct.Query(ctx, filter, vproductbus.DefaultOrderBy, 1, 10)
 				if err != nil {
 					return err
 				}
