@@ -27,7 +27,7 @@ func Test_Home(t *testing.T) {
 		db.Teardown()
 	}()
 
-	sd, err := homeSeedData(db.BusDomain)
+	sd, err := insertHomeSeedData(db.BusDomain)
 	if err != nil {
 		t.Fatalf("Seeding error: %s", err)
 	}
@@ -42,7 +42,7 @@ func Test_Home(t *testing.T) {
 
 // =============================================================================
 
-func homeSeedData(busDomain dbtest.BusDomain) (unittest.SeedData, error) {
+func insertHomeSeedData(busDomain dbtest.BusDomain) (unittest.SeedData, error) {
 	ctx := context.Background()
 
 	usrs, err := userbus.TestSeedUsers(ctx, 1, userbus.RoleUser, busDomain.User)

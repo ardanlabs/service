@@ -27,7 +27,7 @@ func Test_Product(t *testing.T) {
 		db.Teardown()
 	}()
 
-	sd, err := productSeedData(db.BusDomain)
+	sd, err := insertProductSeedData(db.BusDomain)
 	if err != nil {
 		t.Fatalf("Seeding error: %s", err)
 	}
@@ -42,7 +42,7 @@ func Test_Product(t *testing.T) {
 
 // =============================================================================
 
-func productSeedData(busDomain dbtest.BusDomain) (unittest.SeedData, error) {
+func insertProductSeedData(busDomain dbtest.BusDomain) (unittest.SeedData, error) {
 	ctx := context.Background()
 
 	usrs, err := userbus.TestSeedUsers(ctx, 1, userbus.RoleUser, busDomain.User)
