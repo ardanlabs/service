@@ -86,7 +86,6 @@ type Database struct {
 	Log       *logger.Logger
 	BusDomain BusDomain
 	Teardown  func()
-	t         *testing.T
 }
 
 // NewDatabase creates a test database inside a Docker container. It creates the
@@ -110,6 +109,8 @@ func NewDatabase(t *testing.T, c *docker.Container, testName string) *Database {
 	if err := sqldb.StatusCheck(ctx, dbM); err != nil {
 		t.Fatalf("status check database: %v", err)
 	}
+
+	// -------------------------------------------------------------------------
 
 	const letterBytes = "abcdefghijklmnopqrstuvwxyz"
 	b := make([]byte, 4)
@@ -160,15 +161,12 @@ func NewDatabase(t *testing.T, c *docker.Container, testName string) *Database {
 		fmt.Printf("******************** LOGS (%s) ********************\n", testName)
 	}
 
-	tst := Database{
+	return &Database{
 		DB:        db,
 		Log:       log,
 		BusDomain: newBusDomains(log, db),
 		Teardown:  teardown,
-		t:         t,
 	}
-
-	return &tst
 }
 
 // =============================================================================
