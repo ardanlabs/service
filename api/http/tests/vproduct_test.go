@@ -16,17 +16,17 @@ func Test_VProduct(t *testing.T) {
 			t.Log(r)
 			t.Error(string(debug.Stack()))
 		}
-		apiTest.dbTest.Teardown()
+		apiTest.DBTest.Teardown()
 	}()
 
 	// -------------------------------------------------------------------------
 
-	sd, err := insertVProductSeed(apiTest.dbTest, apiTest.auth)
+	sd, err := insertVProductSeed(apiTest.DBTest, apiTest.Auth)
 	if err != nil {
 		t.Fatalf("Seeding error: %s", err)
 	}
 
 	// -------------------------------------------------------------------------
 
-	apiTest.run(t, vproductQuery200(sd), "vproduct-query-200")
+	apiTest.Run(t, vproductQuery200(sd), "vproduct-query-200")
 }

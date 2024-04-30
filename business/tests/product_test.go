@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/api/dbtest"
+	"github.com/ardanlabs/service/business/api/unittest"
 	"github.com/ardanlabs/service/business/domain/productbus"
 	"github.com/ardanlabs/service/business/domain/userbus"
 	"github.com/google/go-cmp/cmp"
@@ -33,10 +34,10 @@ func Test_Product(t *testing.T) {
 
 	// -------------------------------------------------------------------------
 
-	dbtest.UnitTest(t, productQuery(dbTest, sd), "product-query")
-	dbtest.UnitTest(t, productCreate(dbTest, sd), "product-create")
-	dbtest.UnitTest(t, productUpdate(dbTest, sd), "product-update")
-	dbtest.UnitTest(t, productDelete(dbTest, sd), "product-delete")
+	unittest.Run(t, productQuery(dbTest, sd), "product-query")
+	unittest.Run(t, productCreate(dbTest, sd), "product-create")
+	unittest.Run(t, productUpdate(dbTest, sd), "product-update")
+	unittest.Run(t, productDelete(dbTest, sd), "product-delete")
 }
 
 // =============================================================================
@@ -89,7 +90,7 @@ func insertProductSeedData(dbTest *dbtest.Test) (dbtest.SeedData, error) {
 
 // =============================================================================
 
-func productQuery(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
+func productQuery(dbt *dbtest.Test, sd dbtest.SeedData) []unittest.Table {
 	prds := make([]productbus.Product, 0, len(sd.Admins[0].Products)+len(sd.Users[0].Products))
 	prds = append(prds, sd.Admins[0].Products...)
 	prds = append(prds, sd.Users[0].Products...)
@@ -98,7 +99,7 @@ func productQuery(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
 		return prds[i].ID.String() <= prds[j].ID.String()
 	})
 
-	table := []dbtest.UnitTable{
+	table := []unittest.Table{
 		{
 			Name:    "all",
 			ExpResp: prds,
@@ -170,8 +171,8 @@ func productQuery(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
 	return table
 }
 
-func productCreate(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
-	table := []dbtest.UnitTable{
+func productCreate(dbt *dbtest.Test, sd dbtest.SeedData) []unittest.Table {
+	table := []unittest.Table{
 		{
 			Name: "basic",
 			ExpResp: productbus.Product{
@@ -215,8 +216,8 @@ func productCreate(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
 	return table
 }
 
-func productUpdate(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
-	table := []dbtest.UnitTable{
+func productUpdate(dbt *dbtest.Test, sd dbtest.SeedData) []unittest.Table {
+	table := []unittest.Table{
 		{
 			Name: "basic",
 			ExpResp: productbus.Product{
@@ -260,8 +261,8 @@ func productUpdate(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
 	return table
 }
 
-func productDelete(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
-	table := []dbtest.UnitTable{
+func productDelete(dbt *dbtest.Test, sd dbtest.SeedData) []unittest.Table {
+	table := []unittest.Table{
 		{
 			Name:    "user",
 			ExpResp: nil,

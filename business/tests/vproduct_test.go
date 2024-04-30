@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/api/dbtest"
+	"github.com/ardanlabs/service/business/api/unittest"
 	"github.com/ardanlabs/service/business/domain/productbus"
 	"github.com/ardanlabs/service/business/domain/userbus"
 	"github.com/ardanlabs/service/business/domain/vproductbus"
@@ -34,7 +35,7 @@ func Test_VProduct(t *testing.T) {
 
 	// -------------------------------------------------------------------------
 
-	dbtest.UnitTest(t, vproductQuery(dbTest, sd), "vproduct-query")
+	unittest.Run(t, vproductQuery(dbTest, sd), "vproduct-query")
 }
 
 // =============================================================================
@@ -111,7 +112,7 @@ func toVProducts(usr userbus.User, prds []productbus.Product) []vproductbus.Prod
 
 // =============================================================================
 
-func vproductQuery(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
+func vproductQuery(dbt *dbtest.Test, sd dbtest.SeedData) []unittest.Table {
 	prds := toVProducts(sd.Admins[0].User, sd.Admins[0].Products)
 	prds = append(prds, toVProducts(sd.Users[0].User, sd.Users[0].Products)...)
 
@@ -119,7 +120,7 @@ func vproductQuery(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
 		return prds[i].ID.String() <= prds[j].ID.String()
 	})
 
-	table := []dbtest.UnitTable{
+	table := []unittest.Table{
 		{
 			Name:    "all",
 			ExpResp: prds,

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/api/dbtest"
+	"github.com/ardanlabs/service/business/api/unittest"
 	"github.com/ardanlabs/service/business/domain/homebus"
 	"github.com/ardanlabs/service/business/domain/userbus"
 	"github.com/google/go-cmp/cmp"
@@ -33,10 +34,10 @@ func Test_Home(t *testing.T) {
 
 	// -------------------------------------------------------------------------
 
-	dbtest.UnitTest(t, homeQuery(dbTest, sd), "home-query")
-	dbtest.UnitTest(t, homeCreate(dbTest, sd), "home-create")
-	dbtest.UnitTest(t, homeUpdate(dbTest, sd), "home-update")
-	dbtest.UnitTest(t, homeDelete(dbTest, sd), "home-delete")
+	unittest.Run(t, homeQuery(dbTest, sd), "home-query")
+	unittest.Run(t, homeCreate(dbTest, sd), "home-create")
+	unittest.Run(t, homeUpdate(dbTest, sd), "home-update")
+	unittest.Run(t, homeDelete(dbTest, sd), "home-delete")
 }
 
 // =============================================================================
@@ -111,7 +112,7 @@ func insertHomeSeedData(dbTest *dbtest.Test) (dbtest.SeedData, error) {
 
 // =============================================================================
 
-func homeQuery(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
+func homeQuery(dbt *dbtest.Test, sd dbtest.SeedData) []unittest.Table {
 	hmes := make([]homebus.Home, 0, len(sd.Admins[0].Homes)+len(sd.Users[0].Homes))
 	hmes = append(hmes, sd.Admins[0].Homes...)
 	hmes = append(hmes, sd.Users[0].Homes...)
@@ -120,7 +121,7 @@ func homeQuery(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
 		return hmes[i].ID.String() <= hmes[j].ID.String()
 	})
 
-	table := []dbtest.UnitTable{
+	table := []unittest.Table{
 		{
 			Name:    "all",
 			ExpResp: hmes,
@@ -188,8 +189,8 @@ func homeQuery(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
 	return table
 }
 
-func homeCreate(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
-	table := []dbtest.UnitTable{
+func homeCreate(dbt *dbtest.Test, sd dbtest.SeedData) []unittest.Table {
+	table := []unittest.Table{
 		{
 			Name: "basic",
 			ExpResp: homebus.Home{
@@ -243,8 +244,8 @@ func homeCreate(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
 	return table
 }
 
-func homeUpdate(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
-	table := []dbtest.UnitTable{
+func homeUpdate(dbt *dbtest.Test, sd dbtest.SeedData) []unittest.Table {
+	table := []unittest.Table{
 		{
 			Name: "basic",
 			ExpResp: homebus.Home{
@@ -302,8 +303,8 @@ func homeUpdate(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
 	return table
 }
 
-func homeDelete(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
-	table := []dbtest.UnitTable{
+func homeDelete(dbt *dbtest.Test, sd dbtest.SeedData) []unittest.Table {
+	table := []unittest.Table{
 		{
 			Name:    "user",
 			ExpResp: nil,

@@ -5,13 +5,14 @@ import (
 	"net/http"
 	"sort"
 
+	"github.com/ardanlabs/service/api/http/api/apitest"
 	"github.com/ardanlabs/service/app/api/page"
 	"github.com/ardanlabs/service/app/domain/homeapp"
 	"github.com/ardanlabs/service/business/domain/homebus"
 	"github.com/google/go-cmp/cmp"
 )
 
-func homeQuery200(sd seedData) []table {
+func homeQuery200(sd apitest.SeedData) []apitest.Table {
 	hmes := make([]homebus.Home, 0, len(sd.Admins[0].Homes)+len(sd.Users[0].Homes))
 	hmes = append(hmes, sd.Admins[0].Homes...)
 	hmes = append(hmes, sd.Users[0].Homes...)
@@ -20,7 +21,7 @@ func homeQuery200(sd seedData) []table {
 		return hmes[i].ID.String() <= hmes[j].ID.String()
 	})
 
-	table := []table{
+	table := []apitest.Table{
 		{
 			Name:       "basic",
 			URL:        "/v1/homes?page=1&rows=10&orderBy=home_id,ASC",
@@ -43,8 +44,8 @@ func homeQuery200(sd seedData) []table {
 	return table
 }
 
-func homeQueryByID200(sd seedData) []table {
-	table := []table{
+func homeQueryByID200(sd apitest.SeedData) []apitest.Table {
+	table := []apitest.Table{
 		{
 			Name:       "basic",
 			URL:        fmt.Sprintf("/v1/homes/%s", sd.Users[0].Homes[0].ID),

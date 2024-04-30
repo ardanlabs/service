@@ -1,12 +1,13 @@
-package dbtest
+// Package unittest provides support for excuting unit test logic.
+package unittest
 
 import (
 	"context"
 	"testing"
 )
 
-// UnitTable represent fields needed for running an unit test.
-type UnitTable struct {
+// Table represent fields needed for running an unit test.
+type Table struct {
 	Name    string
 	ExpResp any
 	ExcFunc func(ctx context.Context) any
@@ -15,8 +16,8 @@ type UnitTable struct {
 
 // =============================================================================
 
-// UnitTest performs the actual test logic based on the table data.
-func UnitTest(t *testing.T, table []UnitTable, testName string) {
+// Run performs the actual test logic based on the table data.
+func Run(t *testing.T, table []Table, testName string) {
 	log := func(diff string, got any, exp any) {
 		t.Log("DIFF")
 		t.Logf("%s", diff)

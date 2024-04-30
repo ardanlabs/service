@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/api/dbtest"
+	"github.com/ardanlabs/service/business/api/unittest"
 	"github.com/ardanlabs/service/business/domain/userbus"
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/crypto/bcrypt"
@@ -34,10 +35,10 @@ func Test_User(t *testing.T) {
 
 	// -------------------------------------------------------------------------
 
-	dbtest.UnitTest(t, userQuery(dbTest, sd), "user-query")
-	dbtest.UnitTest(t, userCreate(dbTest), "user-create")
-	dbtest.UnitTest(t, userUpdate(dbTest, sd), "user-update")
-	dbtest.UnitTest(t, userDelete(dbTest, sd), "user-delete")
+	unittest.Run(t, userQuery(dbTest, sd), "user-query")
+	unittest.Run(t, userCreate(dbTest), "user-create")
+	unittest.Run(t, userUpdate(dbTest, sd), "user-update")
+	unittest.Run(t, userDelete(dbTest, sd), "user-delete")
 }
 
 // =============================================================================
@@ -86,7 +87,7 @@ func insertUserSeedData(dbTest *dbtest.Test) (dbtest.SeedData, error) {
 
 // =============================================================================
 
-func userQuery(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
+func userQuery(dbt *dbtest.Test, sd dbtest.SeedData) []unittest.Table {
 	usrs := make([]userbus.User, 0, len(sd.Admins)+len(sd.Users))
 
 	for _, adm := range sd.Admins {
@@ -101,7 +102,7 @@ func userQuery(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
 		return usrs[i].ID.String() <= usrs[j].ID.String()
 	})
 
-	table := []dbtest.UnitTable{
+	table := []unittest.Table{
 		{
 			Name:    "all",
 			ExpResp: usrs,
@@ -173,10 +174,10 @@ func userQuery(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
 	return table
 }
 
-func userCreate(dbt *dbtest.Test) []dbtest.UnitTable {
+func userCreate(dbt *dbtest.Test) []unittest.Table {
 	email, _ := mail.ParseAddress("bill@ardanlabs.com")
 
-	table := []dbtest.UnitTable{
+	table := []unittest.Table{
 		{
 			Name: "basic",
 			ExpResp: userbus.User{
@@ -227,10 +228,10 @@ func userCreate(dbt *dbtest.Test) []dbtest.UnitTable {
 	return table
 }
 
-func userUpdate(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
+func userUpdate(dbt *dbtest.Test, sd dbtest.SeedData) []unittest.Table {
 	email, _ := mail.ParseAddress("jack@ardanlabs.com")
 
-	table := []dbtest.UnitTable{
+	table := []unittest.Table{
 		{
 			Name: "basic",
 			ExpResp: userbus.User{
@@ -281,8 +282,8 @@ func userUpdate(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
 	return table
 }
 
-func userDelete(dbt *dbtest.Test, sd dbtest.SeedData) []dbtest.UnitTable {
-	table := []dbtest.UnitTable{
+func userDelete(dbt *dbtest.Test, sd dbtest.SeedData) []unittest.Table {
+	table := []unittest.Table{
 		{
 			Name:    "user",
 			ExpResp: nil,

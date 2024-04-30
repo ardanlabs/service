@@ -5,14 +5,15 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ardanlabs/service/api/http/api/apitest"
 	"github.com/ardanlabs/service/app/api/errs"
 	"github.com/ardanlabs/service/app/domain/homeapp"
 	"github.com/ardanlabs/service/business/api/dbtest"
 	"github.com/google/go-cmp/cmp"
 )
 
-func homeUpdate200(sd seedData) []table {
-	table := []table{
+func homeUpdate200(sd apitest.SeedData) []apitest.Table {
+	table := []apitest.Table{
 		{
 			Name:       "basic",
 			URL:        fmt.Sprintf("/v1/homes/%s", sd.Users[0].Homes[0].ID),
@@ -63,8 +64,8 @@ func homeUpdate200(sd seedData) []table {
 	return table
 }
 
-func homeUpdate400(sd seedData) []table {
-	table := []table{
+func homeUpdate400(sd apitest.SeedData) []apitest.Table {
+	table := []apitest.Table{
 		{
 			Name:       "bad-input",
 			URL:        fmt.Sprintf("/v1/homes/%s", sd.Users[0].Homes[0].ID),
@@ -108,8 +109,8 @@ func homeUpdate400(sd seedData) []table {
 	return table
 }
 
-func homeUpdate401(sd seedData) []table {
-	table := []table{
+func homeUpdate401(sd apitest.SeedData) []apitest.Table {
+	table := []apitest.Table{
 		{
 			Name:       "emptytoken",
 			URL:        fmt.Sprintf("/v1/homes/%s", sd.Users[0].Homes[0].ID),

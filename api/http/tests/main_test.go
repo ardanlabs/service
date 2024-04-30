@@ -8,6 +8,7 @@ import (
 
 	authbuild "github.com/ardanlabs/service/api/cmd/services/auth/build/all"
 	salesbuild "github.com/ardanlabs/service/api/cmd/services/sales/build/all"
+	"github.com/ardanlabs/service/api/http/api/apitest"
 	"github.com/ardanlabs/service/api/http/api/mux"
 	"github.com/ardanlabs/service/app/api/auth"
 	"github.com/ardanlabs/service/app/api/authclient"
@@ -38,7 +39,7 @@ func run(m *testing.M) (int, error) {
 	return m.Run(), nil
 }
 
-func startTest(t *testing.T, testName string) *apiTest {
+func startTest(t *testing.T, testName string) *apitest.Test {
 	dbTest := dbtest.NewTest(t, c, testName)
 
 	// -------------------------------------------------------------------------
@@ -46,7 +47,7 @@ func startTest(t *testing.T, testName string) *apiTest {
 	auth, err := auth.New(auth.Config{
 		Log:       dbTest.Log,
 		DB:        dbTest.DB,
-		KeyLookup: &keyStore{},
+		KeyLookup: &apitest.KeyStore{},
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -70,5 +71,5 @@ func startTest(t *testing.T, testName string) *apiTest {
 		DB:         dbTest.DB,
 	}, salesbuild.Routes())
 
-	return newAPITest(dbTest, auth, handler)
+	return apitest.New(dbTest, auth, handler)
 }

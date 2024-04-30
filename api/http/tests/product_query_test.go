@@ -5,13 +5,14 @@ import (
 	"net/http"
 	"sort"
 
+	"github.com/ardanlabs/service/api/http/api/apitest"
 	"github.com/ardanlabs/service/app/api/page"
 	"github.com/ardanlabs/service/app/domain/productapp"
 	"github.com/ardanlabs/service/business/domain/productbus"
 	"github.com/google/go-cmp/cmp"
 )
 
-func productQuery200(sd seedData) []table {
+func productQuery200(sd apitest.SeedData) []apitest.Table {
 	prds := make([]productbus.Product, 0, len(sd.Admins[0].Products)+len(sd.Users[0].Products))
 	prds = append(prds, sd.Admins[0].Products...)
 	prds = append(prds, sd.Users[0].Products...)
@@ -20,7 +21,7 @@ func productQuery200(sd seedData) []table {
 		return prds[i].ID.String() <= prds[j].ID.String()
 	})
 
-	table := []table{
+	table := []apitest.Table{
 		{
 			Name:       "basic",
 			URL:        "/v1/products?page=1&rows=10&orderBy=product_id,ASC",
@@ -43,8 +44,8 @@ func productQuery200(sd seedData) []table {
 	return table
 }
 
-func productQueryByID200(sd seedData) []table {
-	table := []table{
+func productQueryByID200(sd apitest.SeedData) []apitest.Table {
+	table := []apitest.Table{
 		{
 			Name:       "basic",
 			URL:        fmt.Sprintf("/v1/products/%s", sd.Users[0].Products[0].ID),

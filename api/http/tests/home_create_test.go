@@ -3,13 +3,14 @@ package tests
 import (
 	"net/http"
 
+	"github.com/ardanlabs/service/api/http/api/apitest"
 	"github.com/ardanlabs/service/app/api/errs"
 	"github.com/ardanlabs/service/app/domain/homeapp"
 	"github.com/google/go-cmp/cmp"
 )
 
-func homeCreate200(sd seedData) []table {
-	table := []table{
+func homeCreate200(sd apitest.SeedData) []apitest.Table {
+	table := []apitest.Table{
 		{
 			Name:       "basic",
 			URL:        "/v1/homes",
@@ -58,8 +59,8 @@ func homeCreate200(sd seedData) []table {
 	return table
 }
 
-func homeCreate400(sd seedData) []table {
-	table := []table{
+func homeCreate400(sd apitest.SeedData) []apitest.Table {
+	table := []apitest.Table{
 		{
 			Name:       "missing-input",
 			URL:        "/v1/homes",
@@ -100,8 +101,8 @@ func homeCreate400(sd seedData) []table {
 	return table
 }
 
-func homeCreate401(sd seedData) []table {
-	table := []table{
+func homeCreate401(sd apitest.SeedData) []apitest.Table {
+	table := []apitest.Table{
 		{
 			Name:       "emptytoken",
 			URL:        "/v1/homes",

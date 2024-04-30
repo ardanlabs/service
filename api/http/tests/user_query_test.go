@@ -5,13 +5,14 @@ import (
 	"net/http"
 	"sort"
 
+	"github.com/ardanlabs/service/api/http/api/apitest"
 	"github.com/ardanlabs/service/app/api/page"
 	"github.com/ardanlabs/service/app/domain/userapp"
 	"github.com/ardanlabs/service/business/domain/userbus"
 	"github.com/google/go-cmp/cmp"
 )
 
-func userQuery200(sd seedData) []table {
+func userQuery200(sd apitest.SeedData) []apitest.Table {
 	usrs := make([]userbus.User, 0, len(sd.Admins)+len(sd.Users))
 
 	for _, adm := range sd.Admins {
@@ -26,7 +27,7 @@ func userQuery200(sd seedData) []table {
 		return usrs[i].ID.String() <= usrs[j].ID.String()
 	})
 
-	table := []table{
+	table := []apitest.Table{
 		{
 			Name:       "basic",
 			URL:        "/v1/users?page=1&rows=10&orderBy=user_id,ASC&name=Name",
@@ -49,8 +50,8 @@ func userQuery200(sd seedData) []table {
 	return table
 }
 
-func userQueryByID200(sd seedData) []table {
-	table := []table{
+func userQueryByID200(sd apitest.SeedData) []apitest.Table {
+	table := []apitest.Table{
 		{
 			Name:       "basic",
 			URL:        fmt.Sprintf("/v1/users/%s", sd.Users[0].ID),

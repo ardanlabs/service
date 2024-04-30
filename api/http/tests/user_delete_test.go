@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/ardanlabs/service/api/http/api/apitest"
 	"github.com/ardanlabs/service/app/api/errs"
 	"github.com/google/go-cmp/cmp"
 )
 
-func userDelete200(sd seedData) []table {
-	table := []table{
+func userDelete200(sd apitest.SeedData) []apitest.Table {
+	table := []apitest.Table{
 		{
 			Name:       "asuser",
 			URL:        fmt.Sprintf("/v1/users/%s", sd.Users[1].ID),
@@ -29,8 +30,8 @@ func userDelete200(sd seedData) []table {
 	return table
 }
 
-func userDelete401(sd seedData) []table {
-	table := []table{
+func userDelete401(sd apitest.SeedData) []apitest.Table {
+	table := []apitest.Table{
 		{
 			Name:       "emptytoken",
 			URL:        fmt.Sprintf("/v1/users/%s", sd.Users[0].ID),
