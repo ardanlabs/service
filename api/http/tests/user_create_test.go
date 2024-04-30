@@ -17,7 +17,7 @@ func userCreate200(sd apitest.SeedData) []apitest.Table {
 			Token:      sd.Admins[0].Token,
 			Method:     http.MethodPost,
 			StatusCode: http.StatusCreated,
-			Model: &userapp.NewUser{
+			Input: &userapp.NewUser{
 				Name:            "Bill Kennedy",
 				Email:           "bill@ardanlabs.com",
 				Roles:           []string{"ADMIN"},
@@ -25,7 +25,7 @@ func userCreate200(sd apitest.SeedData) []apitest.Table {
 				Password:        "123",
 				PasswordConfirm: "123",
 			},
-			Resp: &userapp.User{},
+			GotResp: &userapp.User{},
 			ExpResp: &userapp.User{
 				Name:       "Bill Kennedy",
 				Email:      "bill@ardanlabs.com",
@@ -61,8 +61,8 @@ func userCreate400(sd apitest.SeedData) []apitest.Table {
 			Token:      sd.Admins[0].Token,
 			Method:     http.MethodPost,
 			StatusCode: http.StatusBadRequest,
-			Model:      &userapp.NewUser{},
-			Resp:       &errs.Error{},
+			Input:      &userapp.NewUser{},
+			GotResp:    &errs.Error{},
 			ExpResp:    toErrorPtr(errs.Newf(errs.FailedPrecondition, "validate: [{\"field\":\"name\",\"error\":\"name is a required field\"},{\"field\":\"email\",\"error\":\"email is a required field\"},{\"field\":\"roles\",\"error\":\"roles is a required field\"},{\"field\":\"password\",\"error\":\"password is a required field\"}]")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
@@ -74,7 +74,7 @@ func userCreate400(sd apitest.SeedData) []apitest.Table {
 			Token:      sd.Admins[0].Token,
 			Method:     http.MethodPost,
 			StatusCode: http.StatusBadRequest,
-			Model: &userapp.NewUser{
+			Input: &userapp.NewUser{
 				Name:            "Bill Kennedy",
 				Email:           "bill@ardanlabs.com",
 				Roles:           []string{"BAD ROLE"},
@@ -82,7 +82,7 @@ func userCreate400(sd apitest.SeedData) []apitest.Table {
 				Password:        "123",
 				PasswordConfirm: "123",
 			},
-			Resp:    &errs.Error{},
+			GotResp: &errs.Error{},
 			ExpResp: toErrorPtr(errs.Newf(errs.FailedPrecondition, "parse: invalid role \"BAD ROLE\"")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
@@ -101,7 +101,7 @@ func userCreate401(sd apitest.SeedData) []apitest.Table {
 			Token:      "&nbsp;",
 			Method:     http.MethodPost,
 			StatusCode: http.StatusUnauthorized,
-			Resp:       &errs.Error{},
+			GotResp:    &errs.Error{},
 			ExpResp:    toErrorPtr(errs.Newf(errs.Unauthenticated, "error parsing token: token contains an invalid number of segments")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
@@ -113,7 +113,7 @@ func userCreate401(sd apitest.SeedData) []apitest.Table {
 			Token:      sd.Admins[0].Token[:10],
 			Method:     http.MethodPost,
 			StatusCode: http.StatusUnauthorized,
-			Resp:       &errs.Error{},
+			GotResp:    &errs.Error{},
 			ExpResp:    toErrorPtr(errs.Newf(errs.Unauthenticated, "error parsing token: token contains an invalid number of segments")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
@@ -125,7 +125,7 @@ func userCreate401(sd apitest.SeedData) []apitest.Table {
 			Token:      sd.Admins[0].Token + "A",
 			Method:     http.MethodPost,
 			StatusCode: http.StatusUnauthorized,
-			Resp:       &errs.Error{},
+			GotResp:    &errs.Error{},
 			ExpResp:    toErrorPtr(errs.Newf(errs.Unauthenticated, "authentication failed : bindings results[[{[true] map[x:false]}]] ok[true]")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
@@ -137,7 +137,7 @@ func userCreate401(sd apitest.SeedData) []apitest.Table {
 			Token:      sd.Users[0].Token,
 			Method:     http.MethodPost,
 			StatusCode: http.StatusUnauthorized,
-			Resp:       &errs.Error{},
+			GotResp:    &errs.Error{},
 			ExpResp:    toErrorPtr(errs.Newf(errs.Unauthenticated, "authorize: you are not authorized for that action, claims[[{USER}]] rule[rule_admin_only]: rego evaluation failed : bindings results[[{[true] map[x:false]}]] ok[true]")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)

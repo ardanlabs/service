@@ -20,7 +20,7 @@ func homeUpdate200(sd apitest.SeedData) []apitest.Table {
 			Token:      sd.Users[0].Token,
 			Method:     http.MethodPut,
 			StatusCode: http.StatusOK,
-			Model: &homeapp.UpdateHome{
+			Input: &homeapp.UpdateHome{
 				Type: dbtest.StringPointer("SINGLE FAMILY"),
 				Address: &homeapp.UpdateAddress{
 					Address1: dbtest.StringPointer("123 Mocking Bird Lane"),
@@ -31,7 +31,7 @@ func homeUpdate200(sd apitest.SeedData) []apitest.Table {
 					Country:  dbtest.StringPointer("US"),
 				},
 			},
-			Resp: &homeapp.Home{},
+			GotResp: &homeapp.Home{},
 			ExpResp: &homeapp.Home{
 				ID:     sd.Users[0].Homes[0].ID.String(),
 				UserID: sd.Users[0].ID.String(),
@@ -72,7 +72,7 @@ func homeUpdate400(sd apitest.SeedData) []apitest.Table {
 			Token:      sd.Users[0].Token,
 			Method:     http.MethodPut,
 			StatusCode: http.StatusBadRequest,
-			Model: &homeapp.UpdateHome{
+			Input: &homeapp.UpdateHome{
 				Address: &homeapp.UpdateAddress{
 					Address1: dbtest.StringPointer(""),
 					Address2: dbtest.StringPointer(""),
@@ -82,7 +82,7 @@ func homeUpdate400(sd apitest.SeedData) []apitest.Table {
 					Country:  dbtest.StringPointer(""),
 				},
 			},
-			Resp:    &errs.Error{},
+			GotResp: &errs.Error{},
 			ExpResp: toErrorPtr(errs.Newf(errs.FailedPrecondition, "validate: [{\"field\":\"address1\",\"error\":\"address1 must be at least 1 character in length\"},{\"field\":\"zipCode\",\"error\":\"zipCode must be a valid numeric value\"},{\"field\":\"state\",\"error\":\"state must be at least 1 character in length\"},{\"field\":\"country\",\"error\":\"Key: 'UpdateHome.address.country' Error:Field validation for 'country' failed on the 'iso3166_1_alpha2' tag\"}]")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
@@ -94,11 +94,11 @@ func homeUpdate400(sd apitest.SeedData) []apitest.Table {
 			Token:      sd.Users[0].Token,
 			Method:     http.MethodPut,
 			StatusCode: http.StatusBadRequest,
-			Model: &homeapp.UpdateHome{
+			Input: &homeapp.UpdateHome{
 				Type:    dbtest.StringPointer("BAD TYPE"),
 				Address: &homeapp.UpdateAddress{},
 			},
-			Resp:    &errs.Error{},
+			GotResp: &errs.Error{},
 			ExpResp: toErrorPtr(errs.Newf(errs.FailedPrecondition, "parse: invalid type \"BAD TYPE\"")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
@@ -117,7 +117,7 @@ func homeUpdate401(sd apitest.SeedData) []apitest.Table {
 			Token:      "&nbsp;",
 			Method:     http.MethodPut,
 			StatusCode: http.StatusUnauthorized,
-			Resp:       &errs.Error{},
+			GotResp:    &errs.Error{},
 			ExpResp:    toErrorPtr(errs.Newf(errs.Unauthenticated, "error parsing token: token contains an invalid number of segments")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
@@ -129,7 +129,7 @@ func homeUpdate401(sd apitest.SeedData) []apitest.Table {
 			Token:      sd.Users[0].Token + "A",
 			Method:     http.MethodPut,
 			StatusCode: http.StatusUnauthorized,
-			Resp:       &errs.Error{},
+			GotResp:    &errs.Error{},
 			ExpResp:    toErrorPtr(errs.Newf(errs.Unauthenticated, "authentication failed : bindings results[[{[true] map[x:false]}]] ok[true]")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
@@ -141,7 +141,7 @@ func homeUpdate401(sd apitest.SeedData) []apitest.Table {
 			Token:      sd.Users[0].Token,
 			Method:     http.MethodPut,
 			StatusCode: http.StatusUnauthorized,
-			Model: &homeapp.UpdateHome{
+			Input: &homeapp.UpdateHome{
 				Type: dbtest.StringPointer("SINGLE FAMILY"),
 				Address: &homeapp.UpdateAddress{
 					Address1: dbtest.StringPointer("123 Mocking Bird Lane"),
@@ -152,7 +152,7 @@ func homeUpdate401(sd apitest.SeedData) []apitest.Table {
 					Country:  dbtest.StringPointer("US"),
 				},
 			},
-			Resp:    &errs.Error{},
+			GotResp: &errs.Error{},
 			ExpResp: toErrorPtr(errs.Newf(errs.Unauthenticated, "authorize: you are not authorized for that action, claims[[{USER}]] rule[rule_admin_or_subject]: rego evaluation failed : bindings results[[{[true] map[x:false]}]] ok[true]")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)

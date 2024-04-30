@@ -17,12 +17,12 @@ func productCreate200(sd apitest.SeedData) []apitest.Table {
 			Token:      sd.Users[0].Token,
 			Method:     http.MethodPost,
 			StatusCode: http.StatusCreated,
-			Model: &productapp.NewProduct{
+			Input: &productapp.NewProduct{
 				Name:     "Guitar",
 				Cost:     10.34,
 				Quantity: 10,
 			},
-			Resp: &productapp.Product{},
+			GotResp: &productapp.Product{},
 			ExpResp: &productapp.Product{
 				Name:     "Guitar",
 				UserID:   sd.Users[0].ID.String(),
@@ -57,8 +57,8 @@ func productCreate400(sd apitest.SeedData) []apitest.Table {
 			Token:      sd.Users[0].Token,
 			Method:     http.MethodPost,
 			StatusCode: http.StatusBadRequest,
-			Model:      &productapp.NewProduct{},
-			Resp:       &errs.Error{},
+			Input:      &productapp.NewProduct{},
+			GotResp:    &errs.Error{},
 			ExpResp:    toErrorPtr(errs.Newf(errs.FailedPrecondition, "validate: [{\"field\":\"name\",\"error\":\"name is a required field\"},{\"field\":\"cost\",\"error\":\"cost is a required field\"},{\"field\":\"quantity\",\"error\":\"quantity is a required field\"}]")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
@@ -77,7 +77,7 @@ func productCreate401(sd apitest.SeedData) []apitest.Table {
 			Token:      "&nbsp;",
 			Method:     http.MethodPost,
 			StatusCode: http.StatusUnauthorized,
-			Resp:       &errs.Error{},
+			GotResp:    &errs.Error{},
 			ExpResp:    toErrorPtr(errs.Newf(errs.Unauthenticated, "error parsing token: token contains an invalid number of segments")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
@@ -89,7 +89,7 @@ func productCreate401(sd apitest.SeedData) []apitest.Table {
 			Token:      sd.Admins[0].Token[:10],
 			Method:     http.MethodPost,
 			StatusCode: http.StatusUnauthorized,
-			Resp:       &errs.Error{},
+			GotResp:    &errs.Error{},
 			ExpResp:    toErrorPtr(errs.Newf(errs.Unauthenticated, "error parsing token: token contains an invalid number of segments")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
@@ -101,7 +101,7 @@ func productCreate401(sd apitest.SeedData) []apitest.Table {
 			Token:      sd.Admins[0].Token + "A",
 			Method:     http.MethodPost,
 			StatusCode: http.StatusUnauthorized,
-			Resp:       &errs.Error{},
+			GotResp:    &errs.Error{},
 			ExpResp:    toErrorPtr(errs.Newf(errs.Unauthenticated, "authentication failed : bindings results[[{[true] map[x:false]}]] ok[true]")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
@@ -113,7 +113,7 @@ func productCreate401(sd apitest.SeedData) []apitest.Table {
 			Token:      sd.Admins[0].Token,
 			Method:     http.MethodPost,
 			StatusCode: http.StatusUnauthorized,
-			Resp:       &errs.Error{},
+			GotResp:    &errs.Error{},
 			ExpResp:    toErrorPtr(errs.Newf(errs.Unauthenticated, "authorize: you are not authorized for that action, claims[[{ADMIN}]] rule[rule_user_only]: rego evaluation failed : bindings results[[{[true] map[x:false]}]] ok[true]")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)

@@ -28,7 +28,7 @@ func homeQuery200(sd apitest.SeedData) []apitest.Table {
 			Token:      sd.Admins[0].Token,
 			StatusCode: http.StatusOK,
 			Method:     http.MethodGet,
-			Resp:       &page.Document[homeapp.Home]{},
+			GotResp:    &page.Document[homeapp.Home]{},
 			ExpResp: &page.Document[homeapp.Home]{
 				Page:        1,
 				RowsPerPage: 10,
@@ -52,7 +52,7 @@ func homeQueryByID200(sd apitest.SeedData) []apitest.Table {
 			Token:      sd.Users[0].Token,
 			StatusCode: http.StatusOK,
 			Method:     http.MethodGet,
-			Resp:       &homeapp.Home{},
+			GotResp:    &homeapp.Home{},
 			ExpResp:    toAppHomePtr(sd.Users[0].Homes[0]),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)

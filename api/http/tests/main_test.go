@@ -40,13 +40,13 @@ func run(m *testing.M) (int, error) {
 }
 
 func startTest(t *testing.T, testName string) *apitest.Test {
-	dbTest := dbtest.NewDatabase(t, c, testName)
+	db := dbtest.NewDatabase(t, c, testName)
 
 	// -------------------------------------------------------------------------
 
 	auth, err := auth.New(auth.Config{
-		Log:       dbTest.Log,
-		DB:        dbTest.DB,
+		Log:       db.Log,
+		DB:        db.DB,
 		KeyLookup: &apitest.KeyStore{},
 	})
 	if err != nil {
@@ -56,20 +56,20 @@ func startTest(t *testing.T, testName string) *apitest.Test {
 	// -------------------------------------------------------------------------
 
 	server := httptest.NewServer(mux.WebAPI(mux.Config{
-		Log:  dbTest.Log,
+		Log:  db.Log,
 		Auth: auth,
-		DB:   dbTest.DB,
+		DB:   db.DB,
 	}, authbuild.Routes()))
 
-	authClient := authclient.New(dbTest.Log, server.URL)
+	authClient := authclient.New(db.Log, server.URL)
 
 	// -------------------------------------------------------------------------
 
-	handler := mux.WebAPI(mux.Config{
-		Log:        dbTest.Log,
+	mux := mux.WebAPI(mux.Config{
+		Log:        db.Log,
 		AuthClient: authClient,
-		DB:         dbTest.DB,
+		DB:         db.DB,
 	}, salesbuild.Routes())
 
-	return apitest.New(dbTest, auth, handler)
+	return apitest.New(db, auth, mux)
 }

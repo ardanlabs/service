@@ -20,12 +20,12 @@ func productUpdate200(sd apitest.SeedData) []apitest.Table {
 			Token:      sd.Users[0].Token,
 			Method:     http.MethodPut,
 			StatusCode: http.StatusOK,
-			Model: &productapp.UpdateProduct{
+			Input: &productapp.UpdateProduct{
 				Name:     dbtest.StringPointer("Guitar"),
 				Cost:     dbtest.FloatPointer(10.34),
 				Quantity: dbtest.IntPointer(10),
 			},
-			Resp: &productapp.Product{},
+			GotResp: &productapp.Product{},
 			ExpResp: &productapp.Product{
 				ID:          sd.Users[0].Products[0].ID.String(),
 				UserID:      sd.Users[0].ID.String(),
@@ -60,11 +60,11 @@ func productUpdate400(sd apitest.SeedData) []apitest.Table {
 			Token:      sd.Users[0].Token,
 			Method:     http.MethodPut,
 			StatusCode: http.StatusBadRequest,
-			Model: &productapp.UpdateProduct{
+			Input: &productapp.UpdateProduct{
 				Cost:     dbtest.FloatPointer(-1.0),
 				Quantity: dbtest.IntPointer(0),
 			},
-			Resp:    &errs.Error{},
+			GotResp: &errs.Error{},
 			ExpResp: toErrorPtr(errs.Newf(errs.FailedPrecondition, "validate: [{\"field\":\"cost\",\"error\":\"cost must be 0 or greater\"},{\"field\":\"quantity\",\"error\":\"quantity must be 1 or greater\"}]")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
@@ -83,7 +83,7 @@ func productUpdate401(sd apitest.SeedData) []apitest.Table {
 			Token:      "&nbsp;",
 			Method:     http.MethodPut,
 			StatusCode: http.StatusUnauthorized,
-			Resp:       &errs.Error{},
+			GotResp:    &errs.Error{},
 			ExpResp:    toErrorPtr(errs.Newf(errs.Unauthenticated, "error parsing token: token contains an invalid number of segments")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
@@ -95,7 +95,7 @@ func productUpdate401(sd apitest.SeedData) []apitest.Table {
 			Token:      sd.Users[0].Token + "A",
 			Method:     http.MethodPut,
 			StatusCode: http.StatusUnauthorized,
-			Resp:       &errs.Error{},
+			GotResp:    &errs.Error{},
 			ExpResp:    toErrorPtr(errs.Newf(errs.Unauthenticated, "authentication failed : bindings results[[{[true] map[x:false]}]] ok[true]")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
@@ -107,12 +107,12 @@ func productUpdate401(sd apitest.SeedData) []apitest.Table {
 			Token:      sd.Users[0].Token,
 			Method:     http.MethodPut,
 			StatusCode: http.StatusUnauthorized,
-			Model: &productapp.UpdateProduct{
+			Input: &productapp.UpdateProduct{
 				Name:     dbtest.StringPointer("Guitar"),
 				Cost:     dbtest.FloatPointer(10.34),
 				Quantity: dbtest.IntPointer(10),
 			},
-			Resp:    &errs.Error{},
+			GotResp: &errs.Error{},
 			ExpResp: toErrorPtr(errs.Newf(errs.Unauthenticated, "authorize: you are not authorized for that action, claims[[{USER}]] rule[rule_admin_or_subject]: rego evaluation failed : bindings results[[{[true] map[x:false]}]] ok[true]")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)

@@ -20,14 +20,14 @@ func userUpdate200(sd apitest.SeedData) []apitest.Table {
 			Token:      sd.Users[0].Token,
 			Method:     http.MethodPut,
 			StatusCode: http.StatusOK,
-			Model: &userapp.UpdateUser{
+			Input: &userapp.UpdateUser{
 				Name:            dbtest.StringPointer("Jack Kennedy"),
 				Email:           dbtest.StringPointer("jack@ardanlabs.com"),
 				Department:      dbtest.StringPointer("IT"),
 				Password:        dbtest.StringPointer("123"),
 				PasswordConfirm: dbtest.StringPointer("123"),
 			},
-			Resp: &userapp.User{},
+			GotResp: &userapp.User{},
 			ExpResp: &userapp.User{
 				ID:          sd.Users[0].ID.String(),
 				Name:        "Jack Kennedy",
@@ -56,10 +56,10 @@ func userUpdate200(sd apitest.SeedData) []apitest.Table {
 			Token:      sd.Admins[0].Token,
 			Method:     http.MethodPut,
 			StatusCode: http.StatusOK,
-			Model: &userapp.UpdateUserRole{
+			Input: &userapp.UpdateUserRole{
 				Roles: []string{"USER"},
 			},
-			Resp: &userapp.User{},
+			GotResp: &userapp.User{},
 			ExpResp: &userapp.User{
 				ID:          sd.Admins[0].ID.String(),
 				Name:        sd.Admins[0].Name,
@@ -95,11 +95,11 @@ func userUpdate400(sd apitest.SeedData) []apitest.Table {
 			Token:      sd.Users[0].Token,
 			Method:     http.MethodPut,
 			StatusCode: http.StatusBadRequest,
-			Model: &userapp.UpdateUser{
+			Input: &userapp.UpdateUser{
 				Email:           dbtest.StringPointer("bill@"),
 				PasswordConfirm: dbtest.StringPointer("jack"),
 			},
-			Resp:    &errs.Error{},
+			GotResp: &errs.Error{},
 			ExpResp: toErrorPtr(errs.Newf(errs.FailedPrecondition, "validate: [{\"field\":\"email\",\"error\":\"email must be a valid email address\"},{\"field\":\"passwordConfirm\",\"error\":\"passwordConfirm must be equal to Password\"}]")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
@@ -111,10 +111,10 @@ func userUpdate400(sd apitest.SeedData) []apitest.Table {
 			Token:      sd.Admins[0].Token,
 			Method:     http.MethodPut,
 			StatusCode: http.StatusBadRequest,
-			Model: &userapp.UpdateUserRole{
+			Input: &userapp.UpdateUserRole{
 				Roles: []string{"BAD ROLE"},
 			},
-			Resp:    &errs.Error{},
+			GotResp: &errs.Error{},
 			ExpResp: toErrorPtr(errs.Newf(errs.FailedPrecondition, "parse: invalid role \"BAD ROLE\"")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
@@ -133,7 +133,7 @@ func userUpdate401(sd apitest.SeedData) []apitest.Table {
 			Token:      "&nbsp;",
 			Method:     http.MethodPut,
 			StatusCode: http.StatusUnauthorized,
-			Resp:       &errs.Error{},
+			GotResp:    &errs.Error{},
 			ExpResp:    toErrorPtr(errs.Newf(errs.Unauthenticated, "error parsing token: token contains an invalid number of segments")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
@@ -145,7 +145,7 @@ func userUpdate401(sd apitest.SeedData) []apitest.Table {
 			Token:      sd.Users[0].Token + "A",
 			Method:     http.MethodPut,
 			StatusCode: http.StatusUnauthorized,
-			Resp:       &errs.Error{},
+			GotResp:    &errs.Error{},
 			ExpResp:    toErrorPtr(errs.Newf(errs.Unauthenticated, "authentication failed : bindings results[[{[true] map[x:false]}]] ok[true]")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
@@ -157,14 +157,14 @@ func userUpdate401(sd apitest.SeedData) []apitest.Table {
 			Token:      sd.Users[0].Token,
 			Method:     http.MethodPut,
 			StatusCode: http.StatusUnauthorized,
-			Model: &userapp.UpdateUser{
+			Input: &userapp.UpdateUser{
 				Name:            dbtest.StringPointer("Bill Kennedy"),
 				Email:           dbtest.StringPointer("bill@ardanlabs.com"),
 				Department:      dbtest.StringPointer("IT"),
 				Password:        dbtest.StringPointer("123"),
 				PasswordConfirm: dbtest.StringPointer("123"),
 			},
-			Resp:    &errs.Error{},
+			GotResp: &errs.Error{},
 			ExpResp: toErrorPtr(errs.Newf(errs.Unauthenticated, "authorize: you are not authorized for that action, claims[[{USER}]] rule[rule_admin_or_subject]: rego evaluation failed : bindings results[[{[true] map[x:false]}]] ok[true]")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
@@ -176,10 +176,10 @@ func userUpdate401(sd apitest.SeedData) []apitest.Table {
 			Token:      sd.Users[0].Token,
 			Method:     http.MethodPut,
 			StatusCode: http.StatusUnauthorized,
-			Model: &userapp.UpdateUserRole{
+			Input: &userapp.UpdateUserRole{
 				Roles: []string{"ADMIN"},
 			},
-			Resp:    &errs.Error{},
+			GotResp: &errs.Error{},
 			ExpResp: toErrorPtr(errs.Newf(errs.Unauthenticated, "authorize: you are not authorized for that action, claims[[{USER}]] rule[rule_admin_only]: rego evaluation failed : bindings results[[{[true] map[x:false]}]] ok[true]")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)

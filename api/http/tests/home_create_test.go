@@ -17,7 +17,7 @@ func homeCreate200(sd apitest.SeedData) []apitest.Table {
 			Token:      sd.Users[0].Token,
 			Method:     http.MethodPost,
 			StatusCode: http.StatusCreated,
-			Model: &homeapp.NewHome{
+			Input: &homeapp.NewHome{
 				Type: "SINGLE FAMILY",
 				Address: homeapp.NewAddress{
 					Address1: "123 Mocking Bird Lane",
@@ -27,7 +27,7 @@ func homeCreate200(sd apitest.SeedData) []apitest.Table {
 					Country:  "US",
 				},
 			},
-			Resp: &homeapp.Home{},
+			GotResp: &homeapp.Home{},
 			ExpResp: &homeapp.Home{
 				UserID: sd.Users[0].ID.String(),
 				Type:   "SINGLE FAMILY",
@@ -67,8 +67,8 @@ func homeCreate400(sd apitest.SeedData) []apitest.Table {
 			Token:      sd.Users[0].Token,
 			Method:     http.MethodPost,
 			StatusCode: http.StatusBadRequest,
-			Model:      &homeapp.NewHome{},
-			Resp:       &errs.Error{},
+			Input:      &homeapp.NewHome{},
+			GotResp:    &errs.Error{},
 			ExpResp:    toErrorPtr(errs.Newf(errs.FailedPrecondition, "validate: [{\"field\":\"type\",\"error\":\"type is a required field\"},{\"field\":\"address1\",\"error\":\"address1 is a required field\"},{\"field\":\"zipCode\",\"error\":\"zipCode is a required field\"},{\"field\":\"city\",\"error\":\"city is a required field\"},{\"field\":\"state\",\"error\":\"state is a required field\"},{\"field\":\"country\",\"error\":\"country is a required field\"}]")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
@@ -80,7 +80,7 @@ func homeCreate400(sd apitest.SeedData) []apitest.Table {
 			Token:      sd.Users[0].Token,
 			Method:     http.MethodPost,
 			StatusCode: http.StatusBadRequest,
-			Model: &homeapp.NewHome{
+			Input: &homeapp.NewHome{
 				Type: "BAD TYPE",
 				Address: homeapp.NewAddress{
 					Address1: "123 Mocking Bird Lane",
@@ -90,7 +90,7 @@ func homeCreate400(sd apitest.SeedData) []apitest.Table {
 					Country:  "US",
 				},
 			},
-			Resp:    &errs.Error{},
+			GotResp: &errs.Error{},
 			ExpResp: toErrorPtr(errs.Newf(errs.FailedPrecondition, "parse: invalid type \"BAD TYPE\"")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
@@ -109,7 +109,7 @@ func homeCreate401(sd apitest.SeedData) []apitest.Table {
 			Token:      "&nbsp;",
 			Method:     http.MethodPost,
 			StatusCode: http.StatusUnauthorized,
-			Resp:       &errs.Error{},
+			GotResp:    &errs.Error{},
 			ExpResp:    toErrorPtr(errs.Newf(errs.Unauthenticated, "error parsing token: token contains an invalid number of segments")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
@@ -121,7 +121,7 @@ func homeCreate401(sd apitest.SeedData) []apitest.Table {
 			Token:      sd.Admins[0].Token[:10],
 			Method:     http.MethodPost,
 			StatusCode: http.StatusUnauthorized,
-			Resp:       &errs.Error{},
+			GotResp:    &errs.Error{},
 			ExpResp:    toErrorPtr(errs.Newf(errs.Unauthenticated, "error parsing token: token contains an invalid number of segments")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
@@ -133,7 +133,7 @@ func homeCreate401(sd apitest.SeedData) []apitest.Table {
 			Token:      sd.Admins[0].Token + "A",
 			Method:     http.MethodPost,
 			StatusCode: http.StatusUnauthorized,
-			Resp:       &errs.Error{},
+			GotResp:    &errs.Error{},
 			ExpResp:    toErrorPtr(errs.Newf(errs.Unauthenticated, "authentication failed : bindings results[[{[true] map[x:false]}]] ok[true]")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
@@ -145,7 +145,7 @@ func homeCreate401(sd apitest.SeedData) []apitest.Table {
 			Token:      sd.Admins[0].Token,
 			Method:     http.MethodPost,
 			StatusCode: http.StatusUnauthorized,
-			Resp:       &errs.Error{},
+			GotResp:    &errs.Error{},
 			ExpResp:    toErrorPtr(errs.Newf(errs.Unauthenticated, "authorize: you are not authorized for that action, claims[[{ADMIN}]] rule[rule_user_only]: rego evaluation failed : bindings results[[{[true] map[x:false]}]] ok[true]")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)

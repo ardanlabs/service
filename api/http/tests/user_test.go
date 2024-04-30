@@ -21,7 +21,7 @@ func Test_User(t *testing.T) {
 
 	// -------------------------------------------------------------------------
 
-	sd, err := insertUserSeed(apiTest.DB, apiTest.Auth)
+	sd, err := userSeedData(apiTest.DB, apiTest.Auth)
 	if err != nil {
 		t.Fatalf("Seeding error: %s", err)
 	}

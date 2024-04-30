@@ -31,11 +31,11 @@ func Run(t *testing.T, table []Table, testName string) {
 			ctx := context.Background()
 
 			t.Log("Calling excFunc")
-			got := tt.ExcFunc(ctx)
+			gotResp := tt.ExcFunc(ctx)
 
-			diff := tt.CmpFunc(got, tt.ExpResp)
+			diff := tt.CmpFunc(gotResp, tt.ExpResp)
 			if diff != "" {
-				log(diff, got, tt.ExpResp)
+				log(diff, gotResp, tt.ExpResp)
 			}
 		}
 

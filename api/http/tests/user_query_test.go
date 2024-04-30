@@ -34,7 +34,7 @@ func userQuery200(sd apitest.SeedData) []apitest.Table {
 			Token:      sd.Admins[0].Token,
 			StatusCode: http.StatusOK,
 			Method:     http.MethodGet,
-			Resp:       &page.Document[userapp.User]{},
+			GotResp:    &page.Document[userapp.User]{},
 			ExpResp: &page.Document[userapp.User]{
 				Page:        1,
 				RowsPerPage: 10,
@@ -58,7 +58,7 @@ func userQueryByID200(sd apitest.SeedData) []apitest.Table {
 			Token:      sd.Users[0].Token,
 			StatusCode: http.StatusOK,
 			Method:     http.MethodGet,
-			Resp:       &userapp.User{},
+			GotResp:    &userapp.User{},
 			ExpResp:    toAppUserPtr(sd.Users[0].User.User),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)

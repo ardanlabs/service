@@ -19,35 +19,35 @@ import (
 func Test_User(t *testing.T) {
 	t.Parallel()
 
-	dbTest := dbtest.NewDatabase(t, c, "Test_User")
+	db := dbtest.NewDatabase(t, c, "Test_User")
 	defer func() {
 		if r := recover(); r != nil {
 			t.Log(r)
 			t.Error(string(debug.Stack()))
 		}
-		dbTest.Teardown()
+		db.Teardown()
 	}()
 
-	sd, err := insertUserSeedData(dbTest)
+	sd, err := userSeedData(db)
 	if err != nil {
 		t.Fatalf("Seeding error: %s", err)
 	}
 
 	// -------------------------------------------------------------------------
 
-	unittest.Run(t, userQuery(dbTest, sd), "user-query")
-	unittest.Run(t, userCreate(dbTest), "user-create")
-	unittest.Run(t, userUpdate(dbTest, sd), "user-update")
-	unittest.Run(t, userDelete(dbTest, sd), "user-delete")
+	unittest.Run(t, userQuery(db, sd), "user-query")
+	unittest.Run(t, userCreate(db), "user-create")
+	unittest.Run(t, userUpdate(db, sd), "user-update")
+	unittest.Run(t, userDelete(db, sd), "user-delete")
 }
 
 // =============================================================================
 
-func insertUserSeedData(db *dbtest.Database) (dbtest.SeedData, error) {
+func userSeedData(db *dbtest.Database) (dbtest.SeedData, error) {
 	ctx := context.Background()
 	busDomain := db.BusDomain
 
-	usrs, err := userbus.TestGenerateSeedUsers(ctx, 2, userbus.RoleAdmin, busDomain.User)
+	usrs, err := userbus.TestSeedUsers(ctx, 2, userbus.RoleAdmin, busDomain.User)
 	if err != nil {
 		return dbtest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}
@@ -62,7 +62,7 @@ func insertUserSeedData(db *dbtest.Database) (dbtest.SeedData, error) {
 
 	// -------------------------------------------------------------------------
 
-	usrs, err = userbus.TestGenerateSeedUsers(ctx, 2, userbus.RoleUser, busDomain.User)
+	usrs, err = userbus.TestSeedUsers(ctx, 2, userbus.RoleUser, busDomain.User)
 	if err != nil {
 		return dbtest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}

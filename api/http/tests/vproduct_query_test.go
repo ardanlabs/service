@@ -25,7 +25,7 @@ func vproductQuery200(sd apitest.SeedData) []apitest.Table {
 			Token:      sd.Admins[0].Token,
 			StatusCode: http.StatusOK,
 			Method:     http.MethodGet,
-			Resp:       &page.Document[vproductapp.Product]{},
+			GotResp:    &page.Document[vproductapp.Product]{},
 			ExpResp: &page.Document[vproductapp.Product]{
 				Page:        1,
 				RowsPerPage: 10,

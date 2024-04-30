@@ -21,8 +21,8 @@ type Table struct {
 	Token      string
 	Method     string
 	StatusCode int
-	Model      any
-	Resp       any
+	Input      any
+	GotResp    any
 	ExpResp    any
 	CmpFunc    func(got any, exp any) string
 }

@@ -19,30 +19,40 @@ import (
 
 // Test contains functions for executing an api test.
 type Test struct {
-	DB      *dbtest.Database
-	Auth    *auth.Auth
-	handler http.Handler
+	DB   *dbtest.Database
+	Auth *auth.Auth
+	mux  http.Handler
 }
 
 // New constructs a Test value for running api tests.
-func New(db *dbtest.Database, ath *auth.Auth, handler http.Handler) *Test {
+func New(db *dbtest.Database, ath *auth.Auth, mux http.Handler) *Test {
 	return &Test{
-		DB:      db,
-		Auth:    ath,
-		handler: handler,
+		DB:   db,
+		Auth: ath,
+		mux:  mux,
 	}
 }
 
 // Run performs the actual test logic based on the table data.
 func (at *Test) Run(t *testing.T, table []Table, testName string) {
+	log := func(diff string, got any, exp any) {
+		t.Log("DIFF")
+		t.Logf("%s", diff)
+		t.Log("GOT")
+		t.Logf("%#v", got)
+		t.Log("EXP")
+		t.Logf("%#v", exp)
+		t.Fatalf("Should get the expected response")
+	}
+
 	for _, tt := range table {
 		f := func(t *testing.T) {
 			r := httptest.NewRequest(tt.Method, tt.URL, nil)
 			w := httptest.NewRecorder()
 
-			if tt.Model != nil {
+			if tt.Input != nil {
 				var b bytes.Buffer
-				if err := json.MarshalWrite(&b, tt.Model, json.FormatNilSliceAsNull(true)); err != nil {
+				if err := json.MarshalWrite(&b, tt.Input, json.FormatNilSliceAsNull(true)); err != nil {
 					t.Fatalf("Should be able to marshal the model : %s", err)
 				}
 
@@ -50,7 +60,7 @@ func (at *Test) Run(t *testing.T, table []Table, testName string) {
 			}
 
 			r.Header.Set("Authorization", "Bearer "+tt.Token)
-			at.handler.ServeHTTP(w, r)
+			at.mux.ServeHTTP(w, r)
 
 			if w.Code != tt.StatusCode {
 				t.Fatalf("%s: Should receive a status code of %d for the response : %d", tt.Name, tt.StatusCode, w.Code)
@@ -60,19 +70,13 @@ func (at *Test) Run(t *testing.T, table []Table, testName string) {
 				return
 			}
 
-			if err := json.Unmarshal(w.Body.Bytes(), tt.Resp); err != nil {
+			if err := json.Unmarshal(w.Body.Bytes(), tt.GotResp); err != nil {
 				t.Fatalf("Should be able to unmarshal the response : %s", err)
 			}
 
-			diff := tt.CmpFunc(tt.Resp, tt.ExpResp)
+			diff := tt.CmpFunc(tt.GotResp, tt.ExpResp)
 			if diff != "" {
-				t.Log("DIFF")
-				t.Logf("%s", diff)
-				t.Log("GOT")
-				t.Logf("%#v", tt.Resp)
-				t.Log("EXP")
-				t.Logf("%#v", tt.ExpResp)
-				t.Fatalf("Should get the expected response")
+				log(diff, tt.GotResp, tt.ExpResp)
 			}
 		}
 

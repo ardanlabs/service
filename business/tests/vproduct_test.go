@@ -19,23 +19,23 @@ import (
 func Test_VProduct(t *testing.T) {
 	t.Parallel()
 
-	dbTest := dbtest.NewDatabase(t, c, "Test_Product")
+	db := dbtest.NewDatabase(t, c, "Test_Product")
 	defer func() {
 		if r := recover(); r != nil {
 			t.Log(r)
 			t.Error(string(debug.Stack()))
 		}
-		dbTest.Teardown()
+		db.Teardown()
 	}()
 
-	sd, err := insertVProductSeedData(dbTest)
+	sd, err := insertVProductSeedData(db)
 	if err != nil {
 		t.Fatalf("Seeding error: %s", err)
 	}
 
 	// -------------------------------------------------------------------------
 
-	unittest.Run(t, vproductQuery(dbTest, sd), "vproduct-query")
+	unittest.Run(t, vproductQuery(db, sd), "vproduct-query")
 }
 
 // =============================================================================
@@ -44,7 +44,7 @@ func insertVProductSeedData(db *dbtest.Database) (dbtest.SeedData, error) {
 	ctx := context.Background()
 	busDomain := db.BusDomain
 
-	usrs, err := userbus.TestGenerateSeedUsers(ctx, 1, userbus.RoleUser, busDomain.User)
+	usrs, err := userbus.TestSeedUsers(ctx, 1, userbus.RoleUser, busDomain.User)
 	if err != nil {
 		return dbtest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}
@@ -61,7 +61,7 @@ func insertVProductSeedData(db *dbtest.Database) (dbtest.SeedData, error) {
 
 	// -------------------------------------------------------------------------
 
-	usrs, err = userbus.TestGenerateSeedUsers(ctx, 1, userbus.RoleAdmin, busDomain.User)
+	usrs, err = userbus.TestSeedUsers(ctx, 1, userbus.RoleAdmin, busDomain.User)
 	if err != nil {
 		return dbtest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}
