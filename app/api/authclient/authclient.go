@@ -9,10 +9,14 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"net/url"
+	"path"
 	"time"
 
 	"github.com/ardanlabs/service/app/api/errs"
 	"github.com/ardanlabs/service/foundation/logger"
+	"github.com/ardanlabs/service/foundation/tracer"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 // This provides a default client configuration, but it's recommended
@@ -96,11 +100,27 @@ func (cln *Client) Authorize(ctx context.Context, auth Authorize) error {
 	return nil
 }
 
-func (cln *Client) rawRequest(ctx context.Context, method string, url string, headers map[string]string, r io.Reader, v any) error {
-	cln.log.Info(ctx, "authclient: rawRequest: started", "method", method, "url", url)
-	defer cln.log.Info(ctx, "authclient: rawRequest: completed")
+func (cln *Client) rawRequest(ctx context.Context, method string, endpoint string, headers map[string]string, r io.Reader, v any) error {
+	var statusCode int
 
-	req, err := http.NewRequestWithContext(ctx, method, url, r)
+	u, err := url.Parse(endpoint)
+	if err != nil {
+		return fmt.Errorf("parsing endpoint: %w", err)
+	}
+	base := path.Base(u.Path)
+
+	cln.log.Info(ctx, "authclient: rawRequest: started", "method", method, "call", base, "endpoint", endpoint)
+	defer func() {
+		cln.log.Info(ctx, "authclient: rawRequest: completed", "status", statusCode)
+	}()
+
+	ctx, span := tracer.AddSpan(ctx, fmt.Sprintf("app.api.authclient.%s", base), attribute.String("endpoint", endpoint))
+	defer func() {
+		span.SetAttributes(attribute.Int("status", statusCode))
+		span.End()
+	}()
+
+	req, err := http.NewRequestWithContext(ctx, method, endpoint, r)
 	if err != nil {
 		return fmt.Errorf("create request error: %w", err)
 	}
@@ -119,9 +139,9 @@ func (cln *Client) rawRequest(ctx context.Context, method string, url string, he
 	}
 	defer resp.Body.Close()
 
-	cln.log.Info(ctx, "authclient: rawRequest", "statuscode", resp.StatusCode)
+	statusCode = resp.StatusCode
 
-	if resp.StatusCode == http.StatusNoContent {
+	if statusCode == http.StatusNoContent {
 		return nil
 	}
 
@@ -130,7 +150,7 @@ func (cln *Client) rawRequest(ctx context.Context, method string, url string, he
 		return fmt.Errorf("copy error: %w", err)
 	}
 
-	switch resp.StatusCode {
+	switch statusCode {
 	case http.StatusNoContent:
 		return nil
 

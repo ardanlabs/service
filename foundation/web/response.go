@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/ardanlabs/service/foundation/tracer"
 	"github.com/go-json-experiment/json"
 	"go.opentelemetry.io/otel/attribute"
 )
 
 // Respond converts a Go value to JSON and sends it to the client.
 func Respond(ctx context.Context, w http.ResponseWriter, data any, statusCode int) error {
-	ctx, span := AddSpan(ctx, "foundation.web.response", attribute.Int("status", statusCode))
+	ctx, span := tracer.AddSpan(ctx, "foundation.web.response", attribute.Int("status", statusCode))
 	defer span.End()
 
 	setStatusCode(ctx, statusCode)

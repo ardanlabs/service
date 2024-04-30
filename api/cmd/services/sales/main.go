@@ -21,14 +21,8 @@ import (
 	"github.com/ardanlabs/service/app/api/authclient"
 	"github.com/ardanlabs/service/business/api/sqldb"
 	"github.com/ardanlabs/service/foundation/logger"
+	"github.com/ardanlabs/service/foundation/tracer"
 	"github.com/ardanlabs/service/foundation/web"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
-	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
-	"go.opentelemetry.io/otel/propagation"
-	"go.opentelemetry.io/otel/sdk/resource"
-	"go.opentelemetry.io/otel/sdk/trace"
-	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 )
 
 /*
@@ -90,14 +84,14 @@ func run(ctx context.Context, log *logger.Logger) error {
 		DB struct {
 			User         string `conf:"default:postgres"`
 			Password     string `conf:"default:postgres,mask"`
-			HostPort     string `conf:"default:database-service.sales-system.svc.cluster.local"`
+			Host         string `conf:"default:database-service.sales-system.svc.cluster.local"`
 			Name         string `conf:"default:postgres"`
 			MaxIdleConns int    `conf:"default:0"`
 			MaxOpenConns int    `conf:"default:0"`
 			DisableTLS   bool   `conf:"default:true"`
 		}
 		Tempo struct {
-			ReporterURI string  `conf:"default:tempo.sales-system.svc.cluster.local:4317"`
+			Host        string  `conf:"default:tempo.sales-system.svc.cluster.local:4317"`
 			ServiceName string  `conf:"default:sales"`
 			Probability float64 `conf:"default:0.05"`
 			// Shouldn't use a high Probability value in non-developer systems.
@@ -138,12 +132,12 @@ func run(ctx context.Context, log *logger.Logger) error {
 	// -------------------------------------------------------------------------
 	// Database Support
 
-	log.Info(ctx, "startup", "status", "initializing database support", "hostport", cfg.DB.HostPort)
+	log.Info(ctx, "startup", "status", "initializing database support", "hostport", cfg.DB.Host)
 
 	db, err := sqldb.Open(sqldb.Config{
 		User:         cfg.DB.User,
 		Password:     cfg.DB.Password,
-		HostPort:     cfg.DB.HostPort,
+		Host:         cfg.DB.Host,
 		Name:         cfg.DB.Name,
 		MaxIdleConns: cfg.DB.MaxIdleConns,
 		MaxOpenConns: cfg.DB.MaxOpenConns,
@@ -167,11 +161,16 @@ func run(ctx context.Context, log *logger.Logger) error {
 
 	log.Info(ctx, "startup", "status", "initializing tracing support")
 
-	traceProvider, err := startTracing(
-		cfg.Tempo.ServiceName,
-		cfg.Tempo.ReporterURI,
-		cfg.Tempo.Probability,
-	)
+	traceProvider, err := tracer.InitTracing(tracer.Config{
+		Log:         log,
+		ServiceName: cfg.Tempo.ServiceName,
+		Host:        cfg.Tempo.Host,
+		ExcludedRoutes: map[string]struct{}{
+			"/v1/liveness":  {},
+			"/v1/readiness": {},
+		},
+		Probability: cfg.Tempo.Probability,
+	})
 	if err != nil {
 		return fmt.Errorf("starting tracing: %w", err)
 	}
@@ -269,52 +268,4 @@ func buildRoutes() mux.RouteAdder {
 	}
 
 	return all.Routes()
-}
-
-// startTracing configure open telemetry to be used with Grafana Tempo.
-func startTracing(serviceName string, reporterURI string, probability float64) (*trace.TracerProvider, error) {
-
-	// WARNING: The current settings are using defaults which may not be
-	// compatible with your project. Please review the documentation for
-	// opentelemetry.
-
-	exporter, err := otlptrace.New(
-		context.Background(),
-		otlptracegrpc.NewClient(
-			otlptracegrpc.WithInsecure(), // This should be configurable
-			otlptracegrpc.WithEndpoint(reporterURI),
-		),
-	)
-	if err != nil {
-		return nil, fmt.Errorf("creating new exporter: %w", err)
-	}
-
-	traceProvider := trace.NewTracerProvider(
-		trace.WithSampler(trace.TraceIDRatioBased(probability)),
-		trace.WithBatcher(exporter,
-			trace.WithMaxExportBatchSize(trace.DefaultMaxExportBatchSize),
-			trace.WithBatchTimeout(trace.DefaultScheduleDelay*time.Millisecond),
-			trace.WithMaxExportBatchSize(trace.DefaultMaxExportBatchSize),
-		),
-		trace.WithResource(
-			resource.NewWithAttributes(
-				semconv.SchemaURL,
-				semconv.ServiceNameKey.String(serviceName),
-			),
-		),
-	)
-
-	// We must set this provider as the global provider for things to work,
-	// but we pass this provider around the program where needed to collect
-	// our traces.
-	otel.SetTracerProvider(traceProvider)
-
-	// Chooses the HTTP header formats we extract incoming trace contexts from,
-	// and the headers we set in outgoing requests.
-	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(
-		propagation.TraceContext{},
-		propagation.Baggage{},
-	))
-
-	return traceProvider, nil
 }

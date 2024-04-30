@@ -5,7 +5,7 @@ import (
 
 	"github.com/ardanlabs/service/app/api/errs"
 	"github.com/ardanlabs/service/foundation/logger"
-	"github.com/ardanlabs/service/foundation/web"
+	"github.com/ardanlabs/service/foundation/tracer"
 )
 
 // Errors handles errors coming out of the call chain. It detects normal
@@ -19,7 +19,7 @@ func Errors(ctx context.Context, log *logger.Logger, handler Handler) error {
 
 	log.Error(ctx, "message", "ERROR", err.Error())
 
-	_, span := web.AddSpan(ctx, "app.api.mid.http.error")
+	_, span := tracer.AddSpan(ctx, "app.api.mid.error")
 	span.RecordError(err)
 	defer span.End()
 

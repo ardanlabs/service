@@ -7,11 +7,9 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ardanlabs/service/foundation/tracer"
 	"github.com/google/uuid"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -88,7 +86,6 @@ func (a *App) HandleNoMiddleware(method string, group string, path string, handl
 	h := func(w http.ResponseWriter, r *http.Request) {
 		v := Values{
 			TraceID: uuid.NewString(),
-			Tracer:  nil,
 			Now:     time.Now().UTC(),
 		}
 		ctx := setValues(r.Context(), &v)
@@ -115,12 +112,11 @@ func (a *App) Handle(method string, group string, path string, handler Handler, 
 	handler = wrapMiddleware(a.mw, handler)
 
 	h := func(w http.ResponseWriter, r *http.Request) {
-		ctx, span := a.startSpan(w, r)
+		ctx, span := tracer.StartTrace(r.Context(), a.tracer, "pkg.web.handle", r.RequestURI, w)
 		defer span.End()
 
 		v := Values{
 			TraceID: span.SpanContext().TraceID().String(),
-			Tracer:  a.tracer,
 			Now:     time.Now().UTC(),
 		}
 		ctx = setValues(ctx, &v)
@@ -138,26 +134,4 @@ func (a *App) Handle(method string, group string, path string, handler Handler, 
 	finalPath = fmt.Sprintf("%s %s", method, finalPath)
 
 	a.mux.HandleFunc(finalPath, h)
-}
-
-// startSpan initializes the request by adding a span and writing otel
-// related information into the response writer for the trusted.
-func (a *App) startSpan(w http.ResponseWriter, r *http.Request) (context.Context, trace.Span) {
-	ctx := r.Context()
-
-	// There are times when the handler is called without a tracer, such
-	// as with tests. We need a span for the trace id.
-	span := trace.SpanFromContext(ctx)
-
-	// If a tracer exists, then replace the span for the one currently
-	// found in the context. This may have come from over the wire.
-	if a.tracer != nil {
-		ctx, span = a.tracer.Start(ctx, "pkg.web.handle")
-		span.SetAttributes(attribute.String("endpoint", r.RequestURI))
-	}
-
-	// Inject the trace information into the trusted.
-	otel.GetTextMapPropagator().Inject(ctx, propagation.HeaderCarrier(w.Header()))
-
-	return ctx, span
 }

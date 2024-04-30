@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/foundation/logger"
-	"github.com/ardanlabs/service/foundation/web"
+	"github.com/ardanlabs/service/foundation/tracer"
 	"github.com/jackc/pgx/v5/pgconn"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
@@ -36,7 +36,7 @@ var (
 type Config struct {
 	User         string
 	Password     string
-	HostPort     string
+	Host         string
 	Name         string
 	Schema       string
 	MaxIdleConns int
@@ -61,7 +61,7 @@ func Open(cfg Config) (*sqlx.DB, error) {
 	u := url.URL{
 		Scheme:   "postgres",
 		User:     url.UserPassword(cfg.User, cfg.Password),
-		Host:     cfg.HostPort,
+		Host:     cfg.Host,
 		Path:     cfg.Name,
 		RawQuery: q.Encode(),
 	}
@@ -131,7 +131,7 @@ func NamedExecContext(ctx context.Context, log *logger.Logger, db sqlx.ExtContex
 		}
 	}()
 
-	ctx, span := web.AddSpan(ctx, "business.data.sqldb.exec", attribute.String("query", q))
+	ctx, span := tracer.AddSpan(ctx, "business.api.sqldb.exec", attribute.String("query", q))
 	defer span.End()
 
 	if _, err := sqlx.NamedExecContext(ctx, db, query, data); err != nil {
@@ -178,7 +178,7 @@ func namedQuerySlice[T any](ctx context.Context, log *logger.Logger, db sqlx.Ext
 		}
 	}()
 
-	ctx, span := web.AddSpan(ctx, "business.data.sqldb.queryslice", attribute.String("query", q))
+	ctx, span := tracer.AddSpan(ctx, "business.api.sqldb.queryslice", attribute.String("query", q))
 	defer span.End()
 
 	var rows *sqlx.Rows
@@ -253,7 +253,7 @@ func namedQueryStruct(ctx context.Context, log *logger.Logger, db sqlx.ExtContex
 		}
 	}()
 
-	ctx, span := web.AddSpan(ctx, "business.data.sqldb.query", attribute.String("query", q))
+	ctx, span := tracer.AddSpan(ctx, "business.api.sqldb.query", attribute.String("query", q))
 	defer span.End()
 
 	var rows *sqlx.Rows

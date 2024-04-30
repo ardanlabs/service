@@ -98,7 +98,7 @@ func NewDatabase(t *testing.T, c *docker.Container, testName string) *Database {
 	dbM, err := sqldb.Open(sqldb.Config{
 		User:       "postgres",
 		Password:   "postgres",
-		HostPort:   c.HostPort,
+		Host:       c.HostPort,
 		Name:       "postgres",
 		DisableTLS: true,
 	})
@@ -129,7 +129,7 @@ func NewDatabase(t *testing.T, c *docker.Container, testName string) *Database {
 	db, err := sqldb.Open(sqldb.Config{
 		User:       "postgres",
 		Password:   "postgres",
-		HostPort:   c.HostPort,
+		Host:       c.HostPort,
 		Name:       dbName,
 		DisableTLS: true,
 	})
