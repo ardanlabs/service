@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/api/dbtest"
-	"github.com/ardanlabs/service/business/api/unittest"
+	"github.com/ardanlabs/service/business/api/unitest"
 	"github.com/ardanlabs/service/business/domain/productbus"
 	"github.com/ardanlabs/service/business/domain/userbus"
 	"github.com/google/go-cmp/cmp"
@@ -34,28 +34,28 @@ func Test_Product(t *testing.T) {
 
 	// -------------------------------------------------------------------------
 
-	unittest.Run(t, productQuery(db.BusDomain, sd), "product-query")
-	unittest.Run(t, productCreate(db.BusDomain, sd), "product-create")
-	unittest.Run(t, productUpdate(db.BusDomain, sd), "product-update")
-	unittest.Run(t, productDelete(db.BusDomain, sd), "product-delete")
+	unitest.Run(t, productQuery(db.BusDomain, sd), "product-query")
+	unitest.Run(t, productCreate(db.BusDomain, sd), "product-create")
+	unitest.Run(t, productUpdate(db.BusDomain, sd), "product-update")
+	unitest.Run(t, productDelete(db.BusDomain, sd), "product-delete")
 }
 
 // =============================================================================
 
-func insertProductSeedData(busDomain dbtest.BusDomain) (unittest.SeedData, error) {
+func insertProductSeedData(busDomain dbtest.BusDomain) (unitest.SeedData, error) {
 	ctx := context.Background()
 
 	usrs, err := userbus.TestSeedUsers(ctx, 1, userbus.RoleUser, busDomain.User)
 	if err != nil {
-		return unittest.SeedData{}, fmt.Errorf("seeding users : %w", err)
+		return unitest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}
 
 	prds, err := productbus.TestGenerateSeedProducts(ctx, 2, busDomain.Product, usrs[0].ID)
 	if err != nil {
-		return unittest.SeedData{}, fmt.Errorf("seeding products : %w", err)
+		return unitest.SeedData{}, fmt.Errorf("seeding products : %w", err)
 	}
 
-	tu1 := unittest.User{
+	tu1 := unitest.User{
 		User:     usrs[0],
 		Products: prds,
 	}
@@ -64,24 +64,24 @@ func insertProductSeedData(busDomain dbtest.BusDomain) (unittest.SeedData, error
 
 	usrs, err = userbus.TestSeedUsers(ctx, 1, userbus.RoleAdmin, busDomain.User)
 	if err != nil {
-		return unittest.SeedData{}, fmt.Errorf("seeding users : %w", err)
+		return unitest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}
 
 	prds, err = productbus.TestGenerateSeedProducts(ctx, 2, busDomain.Product, usrs[0].ID)
 	if err != nil {
-		return unittest.SeedData{}, fmt.Errorf("seeding products : %w", err)
+		return unitest.SeedData{}, fmt.Errorf("seeding products : %w", err)
 	}
 
-	tu2 := unittest.User{
+	tu2 := unitest.User{
 		User:     usrs[0],
 		Products: prds,
 	}
 
 	// -------------------------------------------------------------------------
 
-	sd := unittest.SeedData{
-		Admins: []unittest.User{tu2},
-		Users:  []unittest.User{tu1},
+	sd := unitest.SeedData{
+		Admins: []unitest.User{tu2},
+		Users:  []unitest.User{tu1},
 	}
 
 	return sd, nil
@@ -89,7 +89,7 @@ func insertProductSeedData(busDomain dbtest.BusDomain) (unittest.SeedData, error
 
 // =============================================================================
 
-func productQuery(busDomain dbtest.BusDomain, sd unittest.SeedData) []unittest.Table {
+func productQuery(busDomain dbtest.BusDomain, sd unitest.SeedData) []unitest.Table {
 	prds := make([]productbus.Product, 0, len(sd.Admins[0].Products)+len(sd.Users[0].Products))
 	prds = append(prds, sd.Admins[0].Products...)
 	prds = append(prds, sd.Users[0].Products...)
@@ -98,7 +98,7 @@ func productQuery(busDomain dbtest.BusDomain, sd unittest.SeedData) []unittest.T
 		return prds[i].ID.String() <= prds[j].ID.String()
 	})
 
-	table := []unittest.Table{
+	table := []unitest.Table{
 		{
 			Name:    "all",
 			ExpResp: prds,
@@ -170,8 +170,8 @@ func productQuery(busDomain dbtest.BusDomain, sd unittest.SeedData) []unittest.T
 	return table
 }
 
-func productCreate(busDomain dbtest.BusDomain, sd unittest.SeedData) []unittest.Table {
-	table := []unittest.Table{
+func productCreate(busDomain dbtest.BusDomain, sd unitest.SeedData) []unitest.Table {
+	table := []unitest.Table{
 		{
 			Name: "basic",
 			ExpResp: productbus.Product{
@@ -215,8 +215,8 @@ func productCreate(busDomain dbtest.BusDomain, sd unittest.SeedData) []unittest.
 	return table
 }
 
-func productUpdate(busDomain dbtest.BusDomain, sd unittest.SeedData) []unittest.Table {
-	table := []unittest.Table{
+func productUpdate(busDomain dbtest.BusDomain, sd unitest.SeedData) []unitest.Table {
+	table := []unitest.Table{
 		{
 			Name: "basic",
 			ExpResp: productbus.Product{
@@ -260,8 +260,8 @@ func productUpdate(busDomain dbtest.BusDomain, sd unittest.SeedData) []unittest.
 	return table
 }
 
-func productDelete(busDomain dbtest.BusDomain, sd unittest.SeedData) []unittest.Table {
-	table := []unittest.Table{
+func productDelete(busDomain dbtest.BusDomain, sd unitest.SeedData) []unitest.Table {
+	table := []unitest.Table{
 		{
 			Name:    "user",
 			ExpResp: nil,

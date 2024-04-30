@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/api/dbtest"
-	"github.com/ardanlabs/service/business/api/unittest"
+	"github.com/ardanlabs/service/business/api/unitest"
 	"github.com/ardanlabs/service/business/domain/homebus"
 	"github.com/ardanlabs/service/business/domain/userbus"
 	"github.com/google/go-cmp/cmp"
@@ -34,28 +34,28 @@ func Test_Home(t *testing.T) {
 
 	// -------------------------------------------------------------------------
 
-	unittest.Run(t, homeQuery(db.BusDomain, sd), "home-query")
-	unittest.Run(t, homeCreate(db.BusDomain, sd), "home-create")
-	unittest.Run(t, homeUpdate(db.BusDomain, sd), "home-update")
-	unittest.Run(t, homeDelete(db.BusDomain, sd), "home-delete")
+	unitest.Run(t, homeQuery(db.BusDomain, sd), "home-query")
+	unitest.Run(t, homeCreate(db.BusDomain, sd), "home-create")
+	unitest.Run(t, homeUpdate(db.BusDomain, sd), "home-update")
+	unitest.Run(t, homeDelete(db.BusDomain, sd), "home-delete")
 }
 
 // =============================================================================
 
-func insertHomeSeedData(busDomain dbtest.BusDomain) (unittest.SeedData, error) {
+func insertHomeSeedData(busDomain dbtest.BusDomain) (unitest.SeedData, error) {
 	ctx := context.Background()
 
 	usrs, err := userbus.TestSeedUsers(ctx, 1, userbus.RoleUser, busDomain.User)
 	if err != nil {
-		return unittest.SeedData{}, fmt.Errorf("seeding users : %w", err)
+		return unitest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}
 
 	hmes, err := homebus.TestGenerateSeedHomes(ctx, 2, busDomain.Home, usrs[0].ID)
 	if err != nil {
-		return unittest.SeedData{}, fmt.Errorf("seeding homes : %w", err)
+		return unitest.SeedData{}, fmt.Errorf("seeding homes : %w", err)
 	}
 
-	tu1 := unittest.User{
+	tu1 := unitest.User{
 		User:  usrs[0],
 		Homes: hmes,
 	}
@@ -64,10 +64,10 @@ func insertHomeSeedData(busDomain dbtest.BusDomain) (unittest.SeedData, error) {
 
 	usrs, err = userbus.TestSeedUsers(ctx, 1, userbus.RoleUser, busDomain.User)
 	if err != nil {
-		return unittest.SeedData{}, fmt.Errorf("seeding users : %w", err)
+		return unitest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}
 
-	tu2 := unittest.User{
+	tu2 := unitest.User{
 		User: usrs[0],
 	}
 
@@ -75,15 +75,15 @@ func insertHomeSeedData(busDomain dbtest.BusDomain) (unittest.SeedData, error) {
 
 	usrs, err = userbus.TestSeedUsers(ctx, 1, userbus.RoleAdmin, busDomain.User)
 	if err != nil {
-		return unittest.SeedData{}, fmt.Errorf("seeding users : %w", err)
+		return unitest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}
 
 	hmes, err = homebus.TestGenerateSeedHomes(ctx, 2, busDomain.Home, usrs[0].ID)
 	if err != nil {
-		return unittest.SeedData{}, fmt.Errorf("seeding homes : %w", err)
+		return unitest.SeedData{}, fmt.Errorf("seeding homes : %w", err)
 	}
 
-	tu3 := unittest.User{
+	tu3 := unitest.User{
 		User:  usrs[0],
 		Homes: hmes,
 	}
@@ -92,18 +92,18 @@ func insertHomeSeedData(busDomain dbtest.BusDomain) (unittest.SeedData, error) {
 
 	usrs, err = userbus.TestSeedUsers(ctx, 1, userbus.RoleAdmin, busDomain.User)
 	if err != nil {
-		return unittest.SeedData{}, fmt.Errorf("seeding users : %w", err)
+		return unitest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}
 
-	tu4 := unittest.User{
+	tu4 := unitest.User{
 		User: usrs[0],
 	}
 
 	// -------------------------------------------------------------------------
 
-	sd := unittest.SeedData{
-		Users:  []unittest.User{tu1, tu2},
-		Admins: []unittest.User{tu3, tu4},
+	sd := unitest.SeedData{
+		Users:  []unitest.User{tu1, tu2},
+		Admins: []unitest.User{tu3, tu4},
 	}
 
 	return sd, nil
@@ -111,7 +111,7 @@ func insertHomeSeedData(busDomain dbtest.BusDomain) (unittest.SeedData, error) {
 
 // =============================================================================
 
-func homeQuery(busDomain dbtest.BusDomain, sd unittest.SeedData) []unittest.Table {
+func homeQuery(busDomain dbtest.BusDomain, sd unitest.SeedData) []unitest.Table {
 	hmes := make([]homebus.Home, 0, len(sd.Admins[0].Homes)+len(sd.Users[0].Homes))
 	hmes = append(hmes, sd.Admins[0].Homes...)
 	hmes = append(hmes, sd.Users[0].Homes...)
@@ -120,7 +120,7 @@ func homeQuery(busDomain dbtest.BusDomain, sd unittest.SeedData) []unittest.Tabl
 		return hmes[i].ID.String() <= hmes[j].ID.String()
 	})
 
-	table := []unittest.Table{
+	table := []unitest.Table{
 		{
 			Name:    "all",
 			ExpResp: hmes,
@@ -188,8 +188,8 @@ func homeQuery(busDomain dbtest.BusDomain, sd unittest.SeedData) []unittest.Tabl
 	return table
 }
 
-func homeCreate(busDomain dbtest.BusDomain, sd unittest.SeedData) []unittest.Table {
-	table := []unittest.Table{
+func homeCreate(busDomain dbtest.BusDomain, sd unitest.SeedData) []unitest.Table {
+	table := []unitest.Table{
 		{
 			Name: "basic",
 			ExpResp: homebus.Home{
@@ -243,8 +243,8 @@ func homeCreate(busDomain dbtest.BusDomain, sd unittest.SeedData) []unittest.Tab
 	return table
 }
 
-func homeUpdate(busDomain dbtest.BusDomain, sd unittest.SeedData) []unittest.Table {
-	table := []unittest.Table{
+func homeUpdate(busDomain dbtest.BusDomain, sd unitest.SeedData) []unitest.Table {
+	table := []unitest.Table{
 		{
 			Name: "basic",
 			ExpResp: homebus.Home{
@@ -302,8 +302,8 @@ func homeUpdate(busDomain dbtest.BusDomain, sd unittest.SeedData) []unittest.Tab
 	return table
 }
 
-func homeDelete(busDomain dbtest.BusDomain, sd unittest.SeedData) []unittest.Table {
-	table := []unittest.Table{
+func homeDelete(busDomain dbtest.BusDomain, sd unitest.SeedData) []unitest.Table {
+	table := []unitest.Table{
 		{
 			Name:    "user",
 			ExpResp: nil,
