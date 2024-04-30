@@ -11,8 +11,8 @@ import (
 	"github.com/ardanlabs/service/foundation/web"
 )
 
-// ExecuteInTransaction executes the transaction middleware functionality.
-func ExecuteInTransaction(log *logger.Logger, bgn transaction.Beginner) web.MidHandler {
+// BeginCommitRollback executes the transaction middleware functionality.
+func BeginCommitRollback(log *logger.Logger, bgn transaction.Beginner) web.MidHandler {
 	m := func(handler web.Handler) web.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 			hdl := func(ctx context.Context) error {
@@ -22,7 +22,7 @@ func ExecuteInTransaction(log *logger.Logger, bgn transaction.Beginner) web.MidH
 				return nil
 			}
 
-			return mid.ExecuteInTransaction(ctx, log, bgn, hdl)
+			return mid.BeginCommitRollback(ctx, log, bgn, hdl)
 		}
 
 		return h

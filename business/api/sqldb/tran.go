@@ -7,28 +7,27 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-// dbBeginner implements the domain transaction interface,
-type dbBeginner struct {
+// DBBeginner implements the Beginner interface,
+type DBBeginner struct {
 	sqlxDB *sqlx.DB
 }
 
-// NewBeginner constructs a value that implements the database
-// beginner interface.
-func NewBeginner(sqlxDB *sqlx.DB) transaction.Beginner {
-	return &dbBeginner{
+// NewBeginner constructs a value that implements the beginner interface.
+func NewBeginner(sqlxDB *sqlx.DB) *DBBeginner {
+	return &DBBeginner{
 		sqlxDB: sqlxDB,
 	}
 }
 
-// Begin start a transaction and returns a value that implements
-// the domain transactor interface.
-func (db *dbBeginner) Begin() (transaction.Transaction, error) {
+// Begin implements the Beginner interface and returns a concrete value that
+// implements the CommitRollbacker interface.
+func (db *DBBeginner) Begin() (transaction.CommitRollbacker, error) {
 	return db.sqlxDB.Beginx()
 }
 
 // GetExtContext is a helper function that extracts the sqlx value
 // from the domain transactor interface for transactional use.
-func GetExtContext(tx transaction.Transaction) (sqlx.ExtContext, error) {
+func GetExtContext(tx transaction.CommitRollbacker) (sqlx.ExtContext, error) {
 	ec, ok := tx.(sqlx.ExtContext)
 	if !ok {
 		return nil, fmt.Errorf("Transactor(%T) not of a type *sql.Tx", tx)

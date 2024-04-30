@@ -25,7 +25,7 @@ var (
 // Storer interface declares the behavior this package needs to perists and
 // retrieve data.
 type Storer interface {
-	ExecuteUnderTransaction(tx transaction.Transaction) (Storer, error)
+	NewWithTx(tx transaction.CommitRollbacker) (Storer, error)
 	Create(ctx context.Context, prd Product) error
 	Update(ctx context.Context, prd Product) error
 	Delete(ctx context.Context, prd Product) error
@@ -57,15 +57,15 @@ func NewBusiness(log *logger.Logger, userBus *userbus.Business, delegate *delega
 	return &b
 }
 
-// ExecuteUnderTransaction constructs a new business value that will use the
+// NewWithTx constructs a new business value that will use the
 // specified transaction in any store related calls.
-func (b *Business) ExecuteUnderTransaction(tx transaction.Transaction) (*Business, error) {
-	storer, err := b.storer.ExecuteUnderTransaction(tx)
+func (b *Business) NewWithTx(tx transaction.CommitRollbacker) (*Business, error) {
+	storer, err := b.storer.NewWithTx(tx)
 	if err != nil {
 		return nil, err
 	}
 
-	userBus, err := b.userBus.ExecuteUnderTransaction(tx)
+	userBus, err := b.userBus.NewWithTx(tx)
 	if err != nil {
 		return nil, err
 	}

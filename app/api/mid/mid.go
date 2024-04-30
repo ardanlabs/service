@@ -6,6 +6,7 @@ import (
 	"errors"
 
 	"github.com/ardanlabs/service/app/api/auth"
+	"github.com/ardanlabs/service/business/api/transaction"
 	"github.com/ardanlabs/service/business/domain/homebus"
 	"github.com/ardanlabs/service/business/domain/productbus"
 	"github.com/ardanlabs/service/business/domain/userbus"
@@ -23,6 +24,7 @@ const (
 	userKey
 	productKey
 	homeKey
+	trKey
 )
 
 func setClaims(ctx context.Context, claims auth.Claims) context.Context {
@@ -92,4 +94,14 @@ func GetHome(ctx context.Context) (homebus.Home, error) {
 	}
 
 	return v, nil
+}
+
+func setTran(ctx context.Context, tx transaction.CommitRollbacker) context.Context {
+	return context.WithValue(ctx, trKey, tx)
+}
+
+// GetTran retrieves the value that can manage a transaction.
+func GetTran(ctx context.Context) (transaction.CommitRollbacker, bool) {
+	v, ok := ctx.Value(trKey).(transaction.CommitRollbacker)
+	return v, ok
 }

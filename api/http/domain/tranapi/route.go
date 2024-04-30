@@ -28,8 +28,8 @@ func Routes(app *web.App, cfg Config) {
 	const version = "v1"
 
 	authen := mid.Authenticate(cfg.Log, cfg.AuthClient)
-	tran := mid.ExecuteInTransaction(cfg.Log, sqldb.NewBeginner(cfg.DB))
+	transaction := mid.BeginCommitRollback(cfg.Log, sqldb.NewBeginner(cfg.DB))
 
 	api := newAPI(tranapp.NewApp(cfg.UserBus, cfg.ProductBus))
-	app.Handle(http.MethodPost, version, "/tranexample", api.create, authen, tran)
+	app.Handle(http.MethodPost, version, "/tranexample", api.create, authen, transaction)
 }

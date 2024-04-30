@@ -6,6 +6,7 @@ import (
 	"errors"
 
 	"github.com/ardanlabs/service/app/api/errs"
+	"github.com/ardanlabs/service/app/api/mid"
 	"github.com/ardanlabs/service/business/domain/productbus"
 	"github.com/ardanlabs/service/business/domain/userbus"
 )
@@ -24,24 +25,50 @@ func NewApp(userBus *userbus.Business, productBus *productbus.Business) *App {
 	}
 }
 
+// newWithTx constructs a new Handlers value with the domain apis
+// using a store transaction that was created via middleware.
+func (a *App) newWithTx(ctx context.Context) (*App, error) {
+	tx, exists := mid.GetTran(ctx)
+	if !exists {
+		return nil, errors.New("transaction not created")
+	}
+
+	userBus, err := a.userBus.NewWithTx(tx)
+	if err != nil {
+		return nil, err
+	}
+
+	productBus, err := a.productBus.NewWithTx(tx)
+	if err != nil {
+		return nil, err
+	}
+
+	app := App{
+		userBus:    userBus,
+		productBus: productBus,
+	}
+
+	return &app, nil
+}
+
 // Create adds a new user and product at the same time under a single transaction.
-func (a *App) Create(ctx context.Context, app NewTran) (Product, error) {
-	api, err := a.executeUnderTransaction(ctx)
+func (a *App) Create(ctx context.Context, nt NewTran) (Product, error) {
+	a, err := a.newWithTx(ctx)
 	if err != nil {
 		return Product{}, errs.New(errs.Internal, err)
 	}
 
-	np, err := toBusNewProduct(app.Product)
+	np, err := toBusNewProduct(nt.Product)
 	if err != nil {
 		return Product{}, errs.New(errs.FailedPrecondition, err)
 	}
 
-	nu, err := toBusNewUser(app.User)
+	nu, err := toBusNewUser(nt.User)
 	if err != nil {
 		return Product{}, errs.New(errs.FailedPrecondition, err)
 	}
 
-	usr, err := api.userBus.Create(ctx, nu)
+	usr, err := a.userBus.Create(ctx, nu)
 	if err != nil {
 		if errors.Is(err, userbus.ErrUniqueEmail) {
 			return Product{}, errs.New(errs.Aborted, userbus.ErrUniqueEmail)
@@ -51,7 +78,7 @@ func (a *App) Create(ctx context.Context, app NewTran) (Product, error) {
 
 	np.UserID = usr.ID
 
-	prd, err := api.productBus.Create(ctx, np)
+	prd, err := a.productBus.Create(ctx, np)
 	if err != nil {
 		return Product{}, errs.Newf(errs.Internal, "create: prd[%+v]: %s", prd, err)
 	}

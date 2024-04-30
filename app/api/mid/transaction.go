@@ -10,9 +10,9 @@ import (
 	"github.com/ardanlabs/service/foundation/logger"
 )
 
-// ExecuteInTransaction starts a transaction around all the storage calls within
-// the scope of the handler function.
-func ExecuteInTransaction(ctx context.Context, log *logger.Logger, bgn transaction.Beginner, handler Handler) error {
+// BeginCommitRollback starts a transaction around all the calls within the
+// scope of the handler function.
+func BeginCommitRollback(ctx context.Context, log *logger.Logger, bgn transaction.Beginner, handler Handler) error {
 	hasCommitted := false
 
 	log.Info(ctx, "BEGIN TRANSACTION")
@@ -34,7 +34,7 @@ func ExecuteInTransaction(ctx context.Context, log *logger.Logger, bgn transacti
 		}
 	}()
 
-	ctx = transaction.Set(ctx, tx)
+	ctx = setTran(ctx, tx)
 
 	if err := handler(ctx); err != nil {
 		return fmt.Errorf("EXECUTE TRANSACTION: %w", err)

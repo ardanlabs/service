@@ -32,9 +32,9 @@ func NewStore(log *logger.Logger, db *sqlx.DB) *Store {
 	}
 }
 
-// ExecuteUnderTransaction constructs a new Store value replacing the sqlx DB
+// NewWithTx constructs a new Store value replacing the sqlx DB
 // value with a sqlx DB value that is currently inside a transaction.
-func (s *Store) ExecuteUnderTransaction(tx transaction.Transaction) (userbus.Storer, error) {
+func (s *Store) NewWithTx(tx transaction.CommitRollbacker) (userbus.Storer, error) {
 	ec, err := sqldb.GetExtContext(tx)
 	if err != nil {
 		return nil, err
