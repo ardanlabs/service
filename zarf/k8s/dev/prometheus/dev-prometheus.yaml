@@ -16,12 +16,12 @@ data:
       scrape_timeout: 10s # is set to the global default (10s).
     alerting:
     scrape_configs:
-      - job_name: "sales-api"
+      - job_name: "sales"
         metrics_path: '/metrics'
         scrape_interval: 5s
         scrape_timeout: 2s
         static_configs:
-          - targets: [ "sales-api.sales-system.svc:4020" ]
+          - targets: [ "sales-service.sales-system.svc:4020" ]
 ---
 apiVersion: apps/v1
 kind: Deployment
