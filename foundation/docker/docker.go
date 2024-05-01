@@ -38,19 +38,7 @@ func StartContainer(image string, name string, port string, dockerArgs []string,
 	cmd := exec.Command("docker", arg...)
 	cmd.Stdout = &out
 	if err := cmd.Run(); err != nil {
-
-		// CircleCI might fail here, try again without naming the container.
-		arg = []string{"run", "-P", "-d"}
-		arg = append(arg, dockerArgs...)
-		arg = append(arg, image)
-		arg = append(arg, appArgs...)
-
-		out.Reset()
-		cmd := exec.Command("docker", arg...)
-		cmd.Stdout = &out
-		if err := cmd.Run(); err != nil {
-			return nil, fmt.Errorf("could not start container %s: %w", image, err)
-		}
+		return nil, fmt.Errorf("could not start container %s: %w", image, err)
 	}
 
 	id := out.String()[:12]
