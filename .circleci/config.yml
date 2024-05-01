@@ -21,8 +21,8 @@ jobs:
       - run:
           name: Stop Test Database
           command: |
-              docker stop service-test
-              docker rm service-test -v
+              docker stop srvtest
+              docker rm srvtest -v
       - run:
           name: Run vet
           command: |
