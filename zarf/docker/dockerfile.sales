@@ -1,0 +1,43 @@
+# Build the Go Binary.
+FROM golang:1.22 as build_sales
+ENV CGO_ENABLED 0
+ARG BUILD_REF
+
+# Create the service directory and the copy the module files first and then
+# download the dependencies. If this doesn't change, we won't need to do this
+# again in future builds.
+# RUN mkdir /service
+# COPY go.* /service/
+# WORKDIR /service
+# RUN go mod download
+
+# Copy the source code into the container.
+COPY . /service
+
+# Build the admin binary.
+WORKDIR /service/api/cmd/tooling/admin
+RUN go build -ldflags "-X main.build=${BUILD_REF}"
+
+# Build the service binary.
+WORKDIR /service/api/cmd/services/sales
+RUN go build -ldflags "-X main.build=${BUILD_REF}"
+
+
+# Run the Go Binary in Alpine.
+FROM alpine:3.19
+ARG BUILD_DATE
+ARG BUILD_REF
+RUN addgroup -g 1000 -S sales && \
+    adduser -u 1000 -h /service -G sales -S sales
+COPY --from=build_sales --chown=sales:sales /service/api/cmd/tooling/admin/admin /service/admin
+COPY --from=build_sales --chown=sales:sales /service/api/cmd/services/sales/sales /service/sales
+WORKDIR /service
+USER sales
+CMD ["./sales"]
+
+LABEL org.opencontainers.image.created="${BUILD_DATE}" \
+      org.opencontainers.image.title="sales-api" \
+      org.opencontainers.image.authors="William Kennedy <bill@ardanlabs.com>" \
+      org.opencontainers.image.source="https://github.com/ardanlabs/service/tree/master/a/services/sales" \
+      org.opencontainers.image.revision="${BUILD_REF}" \
+      org.opencontainers.image.vendor="Ardan Labs"

@@ -166,7 +166,7 @@ func (a *typedArshalers[Coder]) lookup(fnc func(*Coder, addressableValue, *jsono
 // The value of T must not be retained outside the function call.
 // It may not return [SkipFunc].
 func MarshalFuncV1[T any](fn func(T) ([]byte, error)) *Marshalers {
-	t := reflect.TypeOf((*T)(nil)).Elem()
+	t := reflect.TypeFor[T]()
 	assertCastableTo(t, true)
 	typFnc := typedMarshaler{
 		typ: t,
@@ -200,7 +200,7 @@ func MarshalFuncV1[T any](fn func(T) ([]byte, error)) *Marshalers {
 // The pointer to [jsontext.Encoder], the value of T, and the [Options] value
 // must not be retained outside the function call.
 func MarshalFuncV2[T any](fn func(*jsontext.Encoder, T, Options) error) *Marshalers {
-	t := reflect.TypeOf((*T)(nil)).Elem()
+	t := reflect.TypeFor[T]()
 	assertCastableTo(t, true)
 	typFnc := typedMarshaler{
 		typ: t,
@@ -241,7 +241,7 @@ func MarshalFuncV2[T any](fn func(*jsontext.Encoder, T, Options) error) *Marshal
 // The input []byte and value T must not be retained outside the function call.
 // It may not return [SkipFunc].
 func UnmarshalFuncV1[T any](fn func([]byte, T) error) *Unmarshalers {
-	t := reflect.TypeOf((*T)(nil)).Elem()
+	t := reflect.TypeFor[T]()
 	assertCastableTo(t, false)
 	typFnc := typedUnmarshaler{
 		typ: t,
@@ -274,7 +274,7 @@ func UnmarshalFuncV1[T any](fn func([]byte, T) error) *Unmarshalers {
 // The pointer to [jsontext.Decoder], the value of T, and [Options] value
 // must not be retained outside the function call.
 func UnmarshalFuncV2[T any](fn func(*jsontext.Decoder, T, Options) error) *Unmarshalers {
-	t := reflect.TypeOf((*T)(nil)).Elem()
+	t := reflect.TypeFor[T]()
 	assertCastableTo(t, false)
 	typFnc := typedUnmarshaler{
 		typ: t,

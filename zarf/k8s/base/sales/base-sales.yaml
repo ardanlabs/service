@@ -26,8 +26,8 @@ spec:
 
       initContainers:
       - name: init-migrate-seed
-        image: service-image
-        command: ['./sales-admin', 'migrate-seed']
+        image: sales-image
+        command: ['./admin', 'migrate-seed']
         env:
         - name: SALES_DB_USER
           valueFrom:
@@ -55,14 +55,14 @@ spec:
               optional: true
 
       containers:
-      - name: sales-api
-        image: service-image
+      - name: sales
+        image: sales-image
 
         ports:
-        - name: sales-api
+        - name: sales
           containerPort: 3000
-        - name: sales-api-debug
-          containerPort: 4000
+        - name: sales-debug
+          containerPort: 3010
 
         readinessProbe: # readiness probes mark the service available to accept traffic.
           httpGet:
@@ -145,9 +145,11 @@ spec:
 
         ports:
         - name: metrics
-          containerPort: 3001
-        - name: prometheus
-          containerPort: 3002
+          containerPort: 4000
+        - name: metrics-debug
+          containerPort: 4010
+        - name: metrics-prom
+          containerPort: 4020
 
         env:
         - name: GOMAXPROCS
@@ -160,7 +162,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: sales-api
+  name: sales-service
   namespace: sales-system
 
 spec:

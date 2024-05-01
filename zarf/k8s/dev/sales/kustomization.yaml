@@ -7,9 +7,9 @@ patches:
   - path: ./dev-sales-patch-deploy.yaml
   - path: ./dev-sales-patch-service.yaml
 images:
-  - name: service-image
-    newName: localhost/ardanlabs/service/sales-api
+  - name: sales-image
+    newName: localhost/ardanlabs/sales
     newTag: 0.0.1
   - name: metrics-image
-    newName: localhost/ardanlabs/service/sales-api-metrics
+    newName: localhost/ardanlabs/metrics
     newTag: 0.0.1

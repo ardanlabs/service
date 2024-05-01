@@ -17,18 +17,18 @@ import (
 
 // Interfaces for custom serialization.
 var (
-	jsonMarshalerV1Type   = reflect.TypeOf((*MarshalerV1)(nil)).Elem()
-	jsonMarshalerV2Type   = reflect.TypeOf((*MarshalerV2)(nil)).Elem()
-	jsonUnmarshalerV1Type = reflect.TypeOf((*UnmarshalerV1)(nil)).Elem()
-	jsonUnmarshalerV2Type = reflect.TypeOf((*UnmarshalerV2)(nil)).Elem()
-	textAppenderType      = reflect.TypeOf((*encodingTextAppender)(nil)).Elem()
-	textMarshalerType     = reflect.TypeOf((*encoding.TextMarshaler)(nil)).Elem()
-	textUnmarshalerType   = reflect.TypeOf((*encoding.TextUnmarshaler)(nil)).Elem()
+	jsonMarshalerV1Type   = reflect.TypeFor[MarshalerV1]()
+	jsonMarshalerV2Type   = reflect.TypeFor[MarshalerV2]()
+	jsonUnmarshalerV1Type = reflect.TypeFor[UnmarshalerV1]()
+	jsonUnmarshalerV2Type = reflect.TypeFor[UnmarshalerV2]()
+	textAppenderType      = reflect.TypeFor[encodingTextAppender]()
+	textMarshalerType     = reflect.TypeFor[encoding.TextMarshaler]()
+	textUnmarshalerType   = reflect.TypeFor[encoding.TextUnmarshaler]()
 
 	// TODO(https://go.dev/issue/62384): Use encoding.TextAppender instead of this hack.
 	// This exists for now to provide performance benefits to netip types.
 	// There is no semantic difference with this change.
-	appenderToType = reflect.TypeOf((*interface{ AppendTo([]byte) []byte })(nil)).Elem()
+	appenderToType = reflect.TypeFor[interface{ AppendTo([]byte) []byte }]()
 )
 
 // TODO(https://go.dev/issue/62384): Use encoding.TextAppender instead

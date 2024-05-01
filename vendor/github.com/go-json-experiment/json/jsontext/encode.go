@@ -116,8 +116,17 @@ func (e *encoderState) reset(b []byte, w io.Writer, opts ...Options) {
 	}
 	e.Struct = jsonopts.Struct{}
 	e.Struct.Join(opts...)
-	if e.Flags.Get(jsonflags.Expand) && !e.Flags.Has(jsonflags.Indent) {
-		e.Indent = "\t"
+	if e.Flags.Get(jsonflags.Multiline) {
+		if !e.Flags.Has(jsonflags.SpaceAfterColon) {
+			e.Flags.Set(jsonflags.SpaceAfterColon | 1)
+		}
+		if !e.Flags.Has(jsonflags.SpaceAfterComma) {
+			e.Flags.Set(jsonflags.SpaceAfterComma | 0)
+		}
+		if !e.Flags.Has(jsonflags.Indent) {
+			e.Flags.Set(jsonflags.Indent | 1)
+			e.Indent = "\t"
+		}
 	}
 }
 
@@ -337,7 +346,7 @@ func (e *encoderState) WriteToken(t Token) error {
 
 	// Append any delimiters or optional whitespace.
 	b = e.Tokens.MayAppendDelim(b, k)
-	if e.Flags.Get(jsonflags.Expand) {
+	if e.Flags.Get(jsonflags.AnyWhitespace) {
 		b = e.appendWhitespace(b, k)
 	}
 	pos := len(b) // offset before the token
@@ -428,7 +437,7 @@ func (e *encoderState) AppendRaw(k Kind, safeASCII bool, appendFn func([]byte) (
 
 	// Append any delimiters or optional whitespace.
 	b = e.Tokens.MayAppendDelim(b, k)
-	if e.Flags.Get(jsonflags.Expand) {
+	if e.Flags.Get(jsonflags.AnyWhitespace) {
 		b = e.appendWhitespace(b, k)
 	}
 	pos := len(b) // offset before the token
@@ -513,7 +522,7 @@ func (e *encoderState) WriteValue(v Value) error {
 
 	// Append any delimiters or optional whitespace.
 	b = e.Tokens.MayAppendDelim(b, k)
-	if e.Flags.Get(jsonflags.Expand) {
+	if e.Flags.Get(jsonflags.AnyWhitespace) {
 		b = e.appendWhitespace(b, k)
 	}
 	pos := len(b) // offset before the value
@@ -580,11 +589,19 @@ func (e *encoderState) WriteValue(v Value) error {
 
 // appendWhitespace appends whitespace that immediately precedes the next token.
 func (e *encoderState) appendWhitespace(b []byte, next Kind) []byte {
-	if e.Tokens.needDelim(next) == ':' {
-		return append(b, ' ')
+	if delim := e.Tokens.needDelim(next); delim == ':' {
+		if e.Flags.Get(jsonflags.SpaceAfterColon) {
+			b = append(b, ' ')
+		}
 	} else {
-		return e.AppendIndent(b, e.Tokens.NeedIndent(next))
+		if delim == ',' && e.Flags.Get(jsonflags.SpaceAfterComma) {
+			b = append(b, ' ')
+		}
+		if e.Flags.Get(jsonflags.Multiline) {
+			b = e.AppendIndent(b, e.Tokens.NeedIndent(next))
+		}
 	}
+	return b
 }
 
 // AppendIndent appends the appropriate number of indentation characters
@@ -630,13 +647,13 @@ func (e *encoderState) reformatValue(dst []byte, src Value, depth int) ([]byte, 
 		return append(dst, "true"...), len("true"), nil
 	case '"':
 		if n := jsonwire.ConsumeSimpleString(src); n > 0 {
-			dst, src = append(dst, src[:n]...), src[n:] // copy simple strings verbatim
+			dst = append(dst, src[:n]...) // copy simple strings verbatim
 			return dst, n, nil
 		}
 		return jsonwire.ReformatString(dst, src, &e.Flags)
 	case '0':
 		if n := jsonwire.ConsumeSimpleNumber(src); n > 0 && !e.Flags.Get(jsonflags.CanonicalizeNumbers) {
-			dst, src = append(dst, src[:n]...), src[n:] // copy simple numbers verbatim
+			dst = append(dst, src[:n]...) // copy simple numbers verbatim
 			return dst, n, nil
 		}
 		return jsonwire.ReformatNumber(dst, src, e.Flags.Get(jsonflags.CanonicalizeNumbers))
@@ -683,7 +700,7 @@ func (e *encoderState) reformatObject(dst []byte, src Value, depth int) ([]byte,
 	depth++
 	for {
 		// Append optional newline and indentation.
-		if e.Flags.Get(jsonflags.Expand) {
+		if e.Flags.Get(jsonflags.Multiline) {
 			dst = e.AppendIndent(dst, depth)
 		}
 
@@ -717,7 +734,7 @@ func (e *encoderState) reformatObject(dst []byte, src Value, depth int) ([]byte,
 		}
 		dst = append(dst, ':')
 		n += len(":")
-		if e.Flags.Get(jsonflags.Expand) {
+		if e.Flags.Get(jsonflags.SpaceAfterColon) {
 			dst = append(dst, ' ')
 		}
 
@@ -740,10 +757,13 @@ func (e *encoderState) reformatObject(dst []byte, src Value, depth int) ([]byte,
 		switch src[n] {
 		case ',':
 			dst = append(dst, ',')
+			if e.Flags.Get(jsonflags.SpaceAfterComma) {
+				dst = append(dst, ' ')
+			}
 			n += len(",")
 			continue
 		case '}':
-			if e.Flags.Get(jsonflags.Expand) {
+			if e.Flags.Get(jsonflags.Multiline) {
 				dst = e.AppendIndent(dst, depth-1)
 			}
 			dst = append(dst, '}')
@@ -783,7 +803,7 @@ func (e *encoderState) reformatArray(dst []byte, src Value, depth int) ([]byte, 
 	depth++
 	for {
 		// Append optional newline and indentation.
-		if e.Flags.Get(jsonflags.Expand) {
+		if e.Flags.Get(jsonflags.Multiline) {
 			dst = e.AppendIndent(dst, depth)
 		}
 
@@ -807,10 +827,13 @@ func (e *encoderState) reformatArray(dst []byte, src Value, depth int) ([]byte, 
 		switch src[n] {
 		case ',':
 			dst = append(dst, ',')
+			if e.Flags.Get(jsonflags.SpaceAfterComma) {
+				dst = append(dst, ' ')
+			}
 			n += len(",")
 			continue
 		case ']':
-			if e.Flags.Get(jsonflags.Expand) {
+			if e.Flags.Get(jsonflags.Multiline) {
 				dst = e.AppendIndent(dst, depth-1)
 			}
 			dst = append(dst, ']')
@@ -879,7 +902,7 @@ func (e *Encoder) StackDepth() int {
 // Each name and value in a JSON object is counted separately,
 // so the effective number of members would be half the length.
 // A complete JSON object must have an even length.
-func (e *Encoder) StackIndex(i int) (Kind, int) {
+func (e *Encoder) StackIndex(i int) (Kind, int64) {
 	// NOTE: Keep in sync with Decoder.StackIndex.
 	switch s := e.s.Tokens.index(i); {
 	case i > 0 && s.isObject():
@@ -894,7 +917,7 @@ func (e *Encoder) StackIndex(i int) (Kind, int) {
 // StackPointer returns a JSON Pointer (RFC 6901) to the most recently written value.
 // Object names are only present if [AllowDuplicateNames] is false, otherwise
 // object members are represented using their index within the object.
-func (e *Encoder) StackPointer() string {
+func (e *Encoder) StackPointer() Pointer {
 	e.s.Names.copyQuotedBuffer(e.s.Buf)
-	return string(e.s.appendStackPointer(nil))
+	return Pointer(e.s.appendStackPointer(nil))
 }

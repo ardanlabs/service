@@ -94,7 +94,7 @@ spec:
         app: tempo
     spec:
       containers:
-        - image: grafana/tempo:2.3.0
+        - image: grafana/tempo:2.4.0
           name: tempo
           ports:
             - containerPort: 14268
@@ -116,7 +116,7 @@ spec:
             requests:
               cpu: 100m
             limits:
-              cpu: 3750m
+              cpu: 3400m
       volumes:
         - name: config-volume
           configMap:

@@ -9,6 +9,14 @@
 Copyright 2018, 2019, 2020, 2021, 2022, 2023, 2024 Ardan Labs  
 hello@ardanlabs.com
 
+## My Information
+
+Name:    Bill Kennedy
+Company: Ardan Labs
+Title:   Managing Partner
+Email:   bill@ardanlabs.com
+Twitter: goinggodotnet
+
 ## Description
 
 _"As a program evolves and acquires more features, it becomes complicated, with subtle dependencies between components. Over time, complexity accumulates, and it becomes harder and harder for programmers to keep all the relevant factors in their minds as they modify the system. This slows down development and leads to bugs, which slow development even more and add to its cost. Complexity increases inevitably over the life of any program. The larger the program, and the more people that work on it, the more difficult it is to manage complexity."_ - John Ousterhout  
@@ -46,15 +54,14 @@ hello@ardanlabs.com
 
 ## Index
 
-* [Installation](https://github.com/ardanlabs/service#installation)
-* [Create Your Own Version](https://github.com/ardanlabs/service#create-your-own-version)
-* [Purchase Video](https://github.com/ardanlabs/service#purchase-video)
-* [Experience](https://github.com/ardanlabs/service#our-experience)
-* [Teacher](https://github.com/ardanlabs/service#our-teacher)
-* [More About Go](https://github.com/ardanlabs/service#more-about-go)
-* [Minimal Qualified Student](https://github.com/ardanlabs/service#minimal-qualified-student)
-* [Important Reading](https://github.com/ardanlabs/service#important-reading)
-* [Joining the Go Slack Community](https://github.com/ardanlabs/service#joining-the-go-slack-community)
+* [Installation](https://github.com/ardanlabs/service?tab=readme-ov-file#installation)
+* [Create Your Own Version](https://github.com/ardanlabs/service?tab=readme-ov-file#create-your-own-version)
+* [Purchase Video](https://github.com/ardanlabs/service?tab=readme-ov-file#purchase-video)
+* [Experience](https://github.com/ardanlabs/service?tab=readme-ov-file#our-experience)
+* [Teacher](https://github.com/ardanlabs/service?tab=readme-ov-file#our-teacher)
+* [More About Go](https://github.com/ardanlabs/service?tab=readme-ov-file#more-about-go)
+* [Minimal Qualified Student](https://github.com/ardanlabs/service?tab=readme-ov-file#minimal-qualified-student)
+* [Joining the Go Slack Community](https://github.com/ardanlabs/service?tab=readme-ov-file#joining-the-go-slack-community)
 
 ## Installation
 
@@ -73,7 +80,7 @@ $ cd service
 If you want to create a version of the project for your own use, use the new gonew command.
 
 ```
-$ go install golang.org/x/tools/cmd/gonew@latest
+$ go install golang.org/x/tools/programs/gonew@latest
 
 $ cd $HOME
 $ mkdir code
@@ -157,6 +164,7 @@ _**Video**_
 
 _**Podcasts**_  
 [Ardan Labs Podcast: On Going Series](https://ardanlabs.buzzsprout.com/)  
+[Encore, domain design in Go with Bill Kennedy](https://gopodcast.dev/episodes/034-encore-domain-design-in-go-with-bill-kennedy)  
 [Mangtas Nation: A Golang Deep Dive with Bill Kennedy](https://anchor.fm/mangtasnation/episodes/A-Golang-Deep-Dive-with-Bill-Kennedy--S2-EP3-e1ij9c3)  
 [Coding with Holger: Go with Bill Kennedy](https://anchor.fm/coding-with-holger/episodes/Go-with-Bill-Kennedy-e1c9h2q)  
 [Craft of Code: From Programming to Teaching Code with Bill Kennedy](https://podcasts.apple.com/us/podcast/from-programming-to-teaching-code-with-bill-kennedy/id1537136353?i=1000545230339)  
@@ -193,10 +201,6 @@ The material has been designed to be taught in a classroom environment. The code
 	* Has worked with a command shell.
 	* Knows how to maneuver around the file system.
 	* Understands what environment variables are.
-
-## Important Reading
-
-Please check out this page of [important reading](.reading/README.md). You will find articles and videos around topics related to this repo.
 
 ## Joining the Go Slack Community
 

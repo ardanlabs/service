@@ -96,10 +96,9 @@ func GetOption[T any](opts Options, setter func(T) Options) (T, bool) {
 }
 
 // DefaultOptionsV2 is the full set of all options that define v2 semantics.
-// It is equivalent to all boolean options under [Options],
-// [encoding/json.Options], and [encoding/json/jsontext.Options]
-// being set to false. All non-boolean options are set to the zero value,
-// except for [jsontext.WithIndent], which defaults to "\t".
+// It is equivalent to all options under [Options], [encoding/json.Options],
+// and [encoding/json/jsontext.Options] being set to false or the zero value,
+// except for the options related to whitespace formatting.
 func DefaultOptionsV2() Options {
 	return &jsonopts.DefaultOptionsV2
 }

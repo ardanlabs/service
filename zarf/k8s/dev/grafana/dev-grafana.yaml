@@ -88,7 +88,7 @@ metadata:
   name: grafana-dashboards
   namespace: sales-system
 data:
-  sales-api.json: |
+  sales.json: |
     {
       "annotations": {
         "list": [
@@ -197,7 +197,7 @@ data:
                 "uid": "PBFA97CFB590B2093"
               },
               "editorMode": "builder",
-              "expr": "requests{job=\"sales-api\"}",
+              "expr": "requests{job=\"sales\"}",
               "hide": false,
               "legendFormat": "__auto",
               "range": true,
@@ -209,7 +209,7 @@ data:
                 "uid": "PBFA97CFB590B2093"
               },
               "editorMode": "builder",
-              "expr": "errors{job=\"sales-api\"}",
+              "expr": "errors{job=\"sales\"}",
               "hide": false,
               "legendFormat": "__auto",
               "range": true,
@@ -221,7 +221,7 @@ data:
                 "uid": "PBFA97CFB590B2093"
               },
               "editorMode": "builder",
-              "expr": "goroutines{job=\"sales-api\"}",
+              "expr": "goroutines{job=\"sales\"}",
               "hide": false,
               "legendFormat": "__auto",
               "range": true,
@@ -233,7 +233,7 @@ data:
                 "uid": "PBFA97CFB590B2093"
               },
               "editorMode": "builder",
-              "expr": "panics{job=\"sales-api\"}",
+              "expr": "panics{job=\"sales\"}",
               "hide": false,
               "legendFormat": "__auto",
               "range": true,
@@ -304,7 +304,7 @@ data:
               "limit": 20,
               "queryType": "nativeSearch",
               "refId": "A",
-              "serviceName": "sales-api"
+              "serviceName": "sales"
             }
           ],
           "title": "Sales API - Traces",
@@ -339,7 +339,7 @@ data:
                 "uid": "P8E80F9AEF21F6940"
               },
               "editorMode": "builder",
-              "expr": "{app=\"sales\", container=\"sales-api\"} | json",
+              "expr": "{app=\"sales\", container=\"sales\"} | json",
               "key": "Q-844e3db6-67df-45db-8abb-dc8d357d6ce2-0",
               "queryType": "range",
               "refId": "A"
@@ -394,7 +394,7 @@ spec:
       terminationGracePeriodSeconds: 60
       containers:
         - name: grafana
-          image: grafana/grafana:10.3.0
+          image: grafana/grafana:10.4.0
           imagePullPolicy: IfNotPresent
           env:
             - name: GF_ANALYTICS_REPORTING_ENABLED
@@ -414,7 +414,7 @@ spec:
             - name: GF_AUTH_ANONYMOUS_ORG_ROLE
               value: 'Admin'
             - name: GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH
-              value: "/etc/dashboards/sales-api.json"
+              value: "/etc/dashboards/sales.json"
           ports:
             - containerPort: 3100
               name: http-grafana
@@ -440,7 +440,7 @@ spec:
             requests:
               cpu: 100m
             limits:
-              cpu: 3750m
+              cpu: 3400m
           volumeMounts:
             - name: config-datasources
               mountPath: /etc/grafana/provisioning/datasources

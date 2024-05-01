@@ -129,7 +129,7 @@ spec:
 #   Requests/sec: 29.2980          Requests/sec: 35.8689
 
       containers:
-      - name: sales-api
+      - name: sales
         resources:
           requests:
             cpu: "250m"     # I need access to 25ms/100ms on one core
