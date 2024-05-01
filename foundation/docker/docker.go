@@ -9,6 +9,7 @@ import (
 	"net"
 	"os/exec"
 	"strings"
+	"time"
 
 	"github.com/go-json-experiment/json"
 )
@@ -21,6 +22,49 @@ type Container struct {
 
 // StartContainer starts the specified container for running tests.
 func StartContainer(image string, name string, port string, dockerArgs []string, appArgs []string) (*Container, error) {
+
+	// When this code is used in tests, each test could be running in it's own
+	// process, so there is no way to serialize the call. The idea is to wait
+	// for the container to exist if the code fails to start it.
+	for i := range 2 {
+		c, err := startContainer(image, name, port, dockerArgs, appArgs)
+		if err != nil {
+			time.Sleep(time.Duration(i+1) * 100 * time.Millisecond)
+			continue
+		}
+
+		return c, nil
+	}
+
+	return startContainer(image, name, port, dockerArgs, appArgs)
+}
+
+// StopContainer stops and removes the specified container.
+func StopContainer(id string) error {
+	if err := exec.Command("docker", "stop", id).Run(); err != nil {
+		return fmt.Errorf("could not stop container: %w", err)
+	}
+
+	if err := exec.Command("docker", "rm", id, "-v").Run(); err != nil {
+		return fmt.Errorf("could not remove container: %w", err)
+	}
+
+	return nil
+}
+
+// DumpContainerLogs outputs logs from the running docker container.
+func DumpContainerLogs(id string) []byte {
+	out, err := exec.Command("docker", "logs", id).CombinedOutput()
+	if err != nil {
+		return nil
+	}
+
+	return out
+}
+
+// =============================================================================
+
+func startContainer(image string, name string, port string, dockerArgs []string, appArgs []string) (*Container, error) {
 	if name == "" || port == "" {
 		return nil, errors.New("image name and port is required")
 	}
@@ -54,29 +98,6 @@ func StartContainer(image string, name string, port string, dockerArgs []string,
 	}
 
 	return &c, nil
-}
-
-// StopContainer stops and removes the specified container.
-func StopContainer(id string) error {
-	if err := exec.Command("docker", "stop", id).Run(); err != nil {
-		return fmt.Errorf("could not stop container: %w", err)
-	}
-
-	if err := exec.Command("docker", "rm", id, "-v").Run(); err != nil {
-		return fmt.Errorf("could not remove container: %w", err)
-	}
-
-	return nil
-}
-
-// DumpContainerLogs outputs logs from the running docker container.
-func DumpContainerLogs(id string) []byte {
-	out, err := exec.Command("docker", "logs", id).CombinedOutput()
-	if err != nil {
-		return nil
-	}
-
-	return out
 }
 
 func exists(name string, port string) (*Container, error) {

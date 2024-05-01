@@ -283,6 +283,8 @@ func newUnit(t *testing.T) (*logger.Logger, *sqlx.DB, func()) {
 	return log, nil, teardown
 }
 
+// =============================================================================
+
 type keyStore struct{}
 
 func (ks *keyStore) PrivateKey(kid string) (string, error) {

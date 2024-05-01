@@ -11,11 +11,13 @@ hello@ardanlabs.com
 
 ## My Information
 
-Name:    Bill Kennedy
-Company: Ardan Labs
-Title:   Managing Partner
-Email:   bill@ardanlabs.com
-Twitter: goinggodotnet
+```
+Name:    Bill Kennedy  
+Company: Ardan Labs  
+Title:   Managing Partner  
+Email:   bill@ardanlabs.com  
+Twitter: goinggodotnet  
+```
 
 ## Description
 
@@ -56,6 +58,7 @@ hello@ardanlabs.com
 
 * [Installation](https://github.com/ardanlabs/service?tab=readme-ov-file#installation)
 * [Create Your Own Version](https://github.com/ardanlabs/service?tab=readme-ov-file#create-your-own-version)
+* [Running The Project](https://github.com/ardanlabs/service?tab=readme-ov-file#running-the-project)
 * [Purchase Video](https://github.com/ardanlabs/service?tab=readme-ov-file#purchase-video)
 * [Experience](https://github.com/ardanlabs/service?tab=readme-ov-file#our-experience)
 * [Teacher](https://github.com/ardanlabs/service?tab=readme-ov-file#our-teacher)
@@ -91,6 +94,37 @@ $ go mod vendor
 ```
 
 Now you have a copy with your own module name. Now all you need to do is initialize the project for git.
+
+## Running The Project
+
+To run the project use the following commands.
+
+```
+# Install Tooling
+$ make dev-gotooling
+$ make dev-brew
+$ make dev-docker
+
+# Run Tests
+$ make test
+
+# Run Project
+$ make dev-up
+$ make dev-udpate-apply
+$ make token
+$ export TOKEN=<COPY TOKEN>
+$ make users
+
+# Run Load
+$ make load
+
+# Run Tooling
+$ make grafana
+$ make statsviz
+
+# Shut everything down
+$ make dev-down
+```
 
 ## Purchase Video
 
