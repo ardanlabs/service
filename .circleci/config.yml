@@ -15,6 +15,10 @@ jobs:
               which go
               go version
       - run:
+          name: Start Test Database
+          command: |
+              docker run -P -d --name srvtest -e POSTGRES_PASSWORD=postgres postgres:16.2
+      - run:
           name: Run tests
           command: |
               CGO_ENABLED=0 go test ./...
