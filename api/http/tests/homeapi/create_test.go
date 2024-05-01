@@ -5,37 +5,47 @@ import (
 
 	"github.com/ardanlabs/service/api/http/api/apitest"
 	"github.com/ardanlabs/service/app/api/errs"
-	"github.com/ardanlabs/service/app/domain/productapp"
+	"github.com/ardanlabs/service/app/domain/homeapp"
 	"github.com/google/go-cmp/cmp"
 )
 
-func productCreate200(sd apitest.SeedData) []apitest.Table {
+func create200(sd apitest.SeedData) []apitest.Table {
 	table := []apitest.Table{
 		{
 			Name:       "basic",
-			URL:        "/v1/products",
+			URL:        "/v1/homes",
 			Token:      sd.Users[0].Token,
 			Method:     http.MethodPost,
 			StatusCode: http.StatusCreated,
-			Input: &productapp.NewProduct{
-				Name:     "Guitar",
-				Cost:     10.34,
-				Quantity: 10,
+			Input: &homeapp.NewHome{
+				Type: "SINGLE FAMILY",
+				Address: homeapp.NewAddress{
+					Address1: "123 Mocking Bird Lane",
+					ZipCode:  "35810",
+					City:     "Huntsville",
+					State:    "AL",
+					Country:  "US",
+				},
 			},
-			GotResp: &productapp.Product{},
-			ExpResp: &productapp.Product{
-				Name:     "Guitar",
-				UserID:   sd.Users[0].ID.String(),
-				Cost:     10.34,
-				Quantity: 10,
+			GotResp: &homeapp.Home{},
+			ExpResp: &homeapp.Home{
+				UserID: sd.Users[0].ID.String(),
+				Type:   "SINGLE FAMILY",
+				Address: homeapp.Address{
+					Address1: "123 Mocking Bird Lane",
+					ZipCode:  "35810",
+					City:     "Huntsville",
+					State:    "AL",
+					Country:  "US",
+				},
 			},
 			CmpFunc: func(got any, exp any) string {
-				gotResp, exists := got.(*productapp.Product)
+				gotResp, exists := got.(*homeapp.Home)
 				if !exists {
 					return "error occurred"
 				}
 
-				expResp := exp.(*productapp.Product)
+				expResp := exp.(*homeapp.Home)
 
 				expResp.ID = gotResp.ID
 				expResp.DateCreated = gotResp.DateCreated
@@ -49,17 +59,39 @@ func productCreate200(sd apitest.SeedData) []apitest.Table {
 	return table
 }
 
-func productCreate400(sd apitest.SeedData) []apitest.Table {
+func create400(sd apitest.SeedData) []apitest.Table {
 	table := []apitest.Table{
 		{
 			Name:       "missing-input",
-			URL:        "/v1/products",
+			URL:        "/v1/homes",
 			Token:      sd.Users[0].Token,
 			Method:     http.MethodPost,
 			StatusCode: http.StatusBadRequest,
-			Input:      &productapp.NewProduct{},
+			Input:      &homeapp.NewHome{},
 			GotResp:    &errs.Error{},
-			ExpResp:    toErrorPtr(errs.Newf(errs.FailedPrecondition, "validate: [{\"field\":\"name\",\"error\":\"name is a required field\"},{\"field\":\"cost\",\"error\":\"cost is a required field\"},{\"field\":\"quantity\",\"error\":\"quantity is a required field\"}]")),
+			ExpResp:    toErrorPtr(errs.Newf(errs.FailedPrecondition, "validate: [{\"field\":\"type\",\"error\":\"type is a required field\"},{\"field\":\"address1\",\"error\":\"address1 is a required field\"},{\"field\":\"zipCode\",\"error\":\"zipCode is a required field\"},{\"field\":\"city\",\"error\":\"city is a required field\"},{\"field\":\"state\",\"error\":\"state is a required field\"},{\"field\":\"country\",\"error\":\"country is a required field\"}]")),
+			CmpFunc: func(got any, exp any) string {
+				return cmp.Diff(got, exp)
+			},
+		},
+		{
+			Name:       "bad-type",
+			URL:        "/v1/homes",
+			Token:      sd.Users[0].Token,
+			Method:     http.MethodPost,
+			StatusCode: http.StatusBadRequest,
+			Input: &homeapp.NewHome{
+				Type: "BAD TYPE",
+				Address: homeapp.NewAddress{
+					Address1: "123 Mocking Bird Lane",
+					ZipCode:  "35810",
+					City:     "Huntsville",
+					State:    "AL",
+					Country:  "US",
+				},
+			},
+			GotResp: &errs.Error{},
+			ExpResp: toErrorPtr(errs.Newf(errs.FailedPrecondition, "parse: invalid type \"BAD TYPE\"")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -69,11 +101,11 @@ func productCreate400(sd apitest.SeedData) []apitest.Table {
 	return table
 }
 
-func productCreate401(sd apitest.SeedData) []apitest.Table {
+func create401(sd apitest.SeedData) []apitest.Table {
 	table := []apitest.Table{
 		{
 			Name:       "emptytoken",
-			URL:        "/v1/products",
+			URL:        "/v1/homes",
 			Token:      "&nbsp;",
 			Method:     http.MethodPost,
 			StatusCode: http.StatusUnauthorized,
@@ -85,7 +117,7 @@ func productCreate401(sd apitest.SeedData) []apitest.Table {
 		},
 		{
 			Name:       "badtoken",
-			URL:        "/v1/products",
+			URL:        "/v1/homes",
 			Token:      sd.Admins[0].Token[:10],
 			Method:     http.MethodPost,
 			StatusCode: http.StatusUnauthorized,
@@ -97,7 +129,7 @@ func productCreate401(sd apitest.SeedData) []apitest.Table {
 		},
 		{
 			Name:       "badsig",
-			URL:        "/v1/products",
+			URL:        "/v1/homes",
 			Token:      sd.Admins[0].Token + "A",
 			Method:     http.MethodPost,
 			StatusCode: http.StatusUnauthorized,
@@ -109,7 +141,7 @@ func productCreate401(sd apitest.SeedData) []apitest.Table {
 		},
 		{
 			Name:       "wronguser",
-			URL:        "/v1/products",
+			URL:        "/v1/homes",
 			Token:      sd.Admins[0].Token,
 			Method:     http.MethodPost,
 			StatusCode: http.StatusUnauthorized,

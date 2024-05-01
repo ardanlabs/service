@@ -361,6 +361,10 @@ statsviz:
 # ==============================================================================
 # Running tests within the local computer
 
+test-down:
+	docker stop service-test
+	docker rm service-test -v
+
 test-r:
 	CGO_ENABLED=1 go test -race -count=1 ./...
 

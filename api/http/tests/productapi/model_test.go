@@ -1,0 +1,39 @@
+package tests
+
+import (
+	"time"
+
+	"github.com/ardanlabs/service/app/api/errs"
+	"github.com/ardanlabs/service/app/domain/productapp"
+	"github.com/ardanlabs/service/business/domain/productbus"
+)
+
+func toErrorPtr(err errs.Error) *errs.Error {
+	return &err
+}
+
+func toAppProduct(prd productbus.Product) productapp.Product {
+	return productapp.Product{
+		ID:          prd.ID.String(),
+		UserID:      prd.UserID.String(),
+		Name:        prd.Name,
+		Cost:        prd.Cost,
+		Quantity:    prd.Quantity,
+		DateCreated: prd.DateCreated.Format(time.RFC3339),
+		DateUpdated: prd.DateUpdated.Format(time.RFC3339),
+	}
+}
+
+func toAppProductPtr(prd productbus.Product) *productapp.Product {
+	appPrd := toAppProduct(prd)
+	return &appPrd
+}
+
+func toAppProducts(prds []productbus.Product) []productapp.Product {
+	items := make([]productapp.Product, len(prds))
+	for i, prd := range prds {
+		items[i] = toAppProduct(prd)
+	}
+
+	return items
+}

@@ -5,47 +5,41 @@ import (
 
 	"github.com/ardanlabs/service/api/http/api/apitest"
 	"github.com/ardanlabs/service/app/api/errs"
-	"github.com/ardanlabs/service/app/domain/homeapp"
+	"github.com/ardanlabs/service/app/domain/userapp"
 	"github.com/google/go-cmp/cmp"
 )
 
-func homeCreate200(sd apitest.SeedData) []apitest.Table {
+func create200(sd apitest.SeedData) []apitest.Table {
 	table := []apitest.Table{
 		{
 			Name:       "basic",
-			URL:        "/v1/homes",
-			Token:      sd.Users[0].Token,
+			URL:        "/v1/users",
+			Token:      sd.Admins[0].Token,
 			Method:     http.MethodPost,
 			StatusCode: http.StatusCreated,
-			Input: &homeapp.NewHome{
-				Type: "SINGLE FAMILY",
-				Address: homeapp.NewAddress{
-					Address1: "123 Mocking Bird Lane",
-					ZipCode:  "35810",
-					City:     "Huntsville",
-					State:    "AL",
-					Country:  "US",
-				},
+			Input: &userapp.NewUser{
+				Name:            "Bill Kennedy",
+				Email:           "bill@ardanlabs.com",
+				Roles:           []string{"ADMIN"},
+				Department:      "IT",
+				Password:        "123",
+				PasswordConfirm: "123",
 			},
-			GotResp: &homeapp.Home{},
-			ExpResp: &homeapp.Home{
-				UserID: sd.Users[0].ID.String(),
-				Type:   "SINGLE FAMILY",
-				Address: homeapp.Address{
-					Address1: "123 Mocking Bird Lane",
-					ZipCode:  "35810",
-					City:     "Huntsville",
-					State:    "AL",
-					Country:  "US",
-				},
+			GotResp: &userapp.User{},
+			ExpResp: &userapp.User{
+				Name:       "Bill Kennedy",
+				Email:      "bill@ardanlabs.com",
+				Roles:      []string{"ADMIN"},
+				Department: "IT",
+				Enabled:    true,
 			},
 			CmpFunc: func(got any, exp any) string {
-				gotResp, exists := got.(*homeapp.Home)
+				gotResp, exists := got.(*userapp.User)
 				if !exists {
 					return "error occurred"
 				}
 
-				expResp := exp.(*homeapp.Home)
+				expResp := exp.(*userapp.User)
 
 				expResp.ID = gotResp.ID
 				expResp.DateCreated = gotResp.DateCreated
@@ -59,39 +53,37 @@ func homeCreate200(sd apitest.SeedData) []apitest.Table {
 	return table
 }
 
-func homeCreate400(sd apitest.SeedData) []apitest.Table {
+func create400(sd apitest.SeedData) []apitest.Table {
 	table := []apitest.Table{
 		{
 			Name:       "missing-input",
-			URL:        "/v1/homes",
-			Token:      sd.Users[0].Token,
+			URL:        "/v1/users",
+			Token:      sd.Admins[0].Token,
 			Method:     http.MethodPost,
 			StatusCode: http.StatusBadRequest,
-			Input:      &homeapp.NewHome{},
+			Input:      &userapp.NewUser{},
 			GotResp:    &errs.Error{},
-			ExpResp:    toErrorPtr(errs.Newf(errs.FailedPrecondition, "validate: [{\"field\":\"type\",\"error\":\"type is a required field\"},{\"field\":\"address1\",\"error\":\"address1 is a required field\"},{\"field\":\"zipCode\",\"error\":\"zipCode is a required field\"},{\"field\":\"city\",\"error\":\"city is a required field\"},{\"field\":\"state\",\"error\":\"state is a required field\"},{\"field\":\"country\",\"error\":\"country is a required field\"}]")),
+			ExpResp:    toErrorPtr(errs.Newf(errs.FailedPrecondition, "validate: [{\"field\":\"name\",\"error\":\"name is a required field\"},{\"field\":\"email\",\"error\":\"email is a required field\"},{\"field\":\"roles\",\"error\":\"roles is a required field\"},{\"field\":\"password\",\"error\":\"password is a required field\"}]")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
 		},
 		{
-			Name:       "bad-type",
-			URL:        "/v1/homes",
-			Token:      sd.Users[0].Token,
+			Name:       "bad-role",
+			URL:        "/v1/users",
+			Token:      sd.Admins[0].Token,
 			Method:     http.MethodPost,
 			StatusCode: http.StatusBadRequest,
-			Input: &homeapp.NewHome{
-				Type: "BAD TYPE",
-				Address: homeapp.NewAddress{
-					Address1: "123 Mocking Bird Lane",
-					ZipCode:  "35810",
-					City:     "Huntsville",
-					State:    "AL",
-					Country:  "US",
-				},
+			Input: &userapp.NewUser{
+				Name:            "Bill Kennedy",
+				Email:           "bill@ardanlabs.com",
+				Roles:           []string{"BAD ROLE"},
+				Department:      "IT",
+				Password:        "123",
+				PasswordConfirm: "123",
 			},
 			GotResp: &errs.Error{},
-			ExpResp: toErrorPtr(errs.Newf(errs.FailedPrecondition, "parse: invalid type \"BAD TYPE\"")),
+			ExpResp: toErrorPtr(errs.Newf(errs.FailedPrecondition, "parse: invalid role \"BAD ROLE\"")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -101,11 +93,11 @@ func homeCreate400(sd apitest.SeedData) []apitest.Table {
 	return table
 }
 
-func homeCreate401(sd apitest.SeedData) []apitest.Table {
+func create401(sd apitest.SeedData) []apitest.Table {
 	table := []apitest.Table{
 		{
 			Name:       "emptytoken",
-			URL:        "/v1/homes",
+			URL:        "/v1/users",
 			Token:      "&nbsp;",
 			Method:     http.MethodPost,
 			StatusCode: http.StatusUnauthorized,
@@ -117,7 +109,7 @@ func homeCreate401(sd apitest.SeedData) []apitest.Table {
 		},
 		{
 			Name:       "badtoken",
-			URL:        "/v1/homes",
+			URL:        "/v1/users",
 			Token:      sd.Admins[0].Token[:10],
 			Method:     http.MethodPost,
 			StatusCode: http.StatusUnauthorized,
@@ -129,7 +121,7 @@ func homeCreate401(sd apitest.SeedData) []apitest.Table {
 		},
 		{
 			Name:       "badsig",
-			URL:        "/v1/homes",
+			URL:        "/v1/users",
 			Token:      sd.Admins[0].Token + "A",
 			Method:     http.MethodPost,
 			StatusCode: http.StatusUnauthorized,
@@ -141,12 +133,12 @@ func homeCreate401(sd apitest.SeedData) []apitest.Table {
 		},
 		{
 			Name:       "wronguser",
-			URL:        "/v1/homes",
-			Token:      sd.Admins[0].Token,
+			URL:        "/v1/users",
+			Token:      sd.Users[0].Token,
 			Method:     http.MethodPost,
 			StatusCode: http.StatusUnauthorized,
 			GotResp:    &errs.Error{},
-			ExpResp:    toErrorPtr(errs.Newf(errs.Unauthenticated, "authorize: you are not authorized for that action, claims[[{ADMIN}]] rule[rule_user_only]: rego evaluation failed : bindings results[[{[true] map[x:false]}]] ok[true]")),
+			ExpResp:    toErrorPtr(errs.Newf(errs.Unauthenticated, "authorize: you are not authorized for that action, claims[[{USER}]] rule[rule_admin_only]: rego evaluation failed : bindings results[[{[true] map[x:false]}]] ok[true]")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},

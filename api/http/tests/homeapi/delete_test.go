@@ -9,18 +9,18 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func productDelete200(sd apitest.SeedData) []apitest.Table {
+func delete200(sd apitest.SeedData) []apitest.Table {
 	table := []apitest.Table{
 		{
 			Name:       "asuser",
-			URL:        fmt.Sprintf("/v1/products/%s", sd.Users[0].Products[0].ID),
+			URL:        fmt.Sprintf("/v1/homes/%s", sd.Users[0].Homes[0].ID),
 			Token:      sd.Users[0].Token,
 			Method:     http.MethodDelete,
 			StatusCode: http.StatusNoContent,
 		},
 		{
 			Name:       "asadmin",
-			URL:        fmt.Sprintf("/v1/products/%s", sd.Admins[0].Products[0].ID),
+			URL:        fmt.Sprintf("/v1/homes/%s", sd.Admins[0].Homes[0].ID),
 			Token:      sd.Admins[0].Token,
 			Method:     http.MethodDelete,
 			StatusCode: http.StatusNoContent,
@@ -30,11 +30,11 @@ func productDelete200(sd apitest.SeedData) []apitest.Table {
 	return table
 }
 
-func productDelete401(sd apitest.SeedData) []apitest.Table {
+func delete401(sd apitest.SeedData) []apitest.Table {
 	table := []apitest.Table{
 		{
 			Name:       "emptytoken",
-			URL:        fmt.Sprintf("/v1/products/%s", sd.Users[0].Products[1].ID),
+			URL:        fmt.Sprintf("/v1/homes/%s", sd.Users[0].Homes[1].ID),
 			Token:      "&nbsp;",
 			Method:     http.MethodDelete,
 			StatusCode: http.StatusUnauthorized,
@@ -46,7 +46,7 @@ func productDelete401(sd apitest.SeedData) []apitest.Table {
 		},
 		{
 			Name:       "badsig",
-			URL:        fmt.Sprintf("/v1/products/%s", sd.Users[0].Products[1].ID),
+			URL:        fmt.Sprintf("/v1/homes/%s", sd.Users[0].Homes[1].ID),
 			Token:      sd.Users[0].Token + "A",
 			Method:     http.MethodDelete,
 			StatusCode: http.StatusUnauthorized,
@@ -58,8 +58,8 @@ func productDelete401(sd apitest.SeedData) []apitest.Table {
 		},
 		{
 			Name:       "wronguser",
-			URL:        fmt.Sprintf("/v1/products/%s", sd.Admins[0].Products[1].ID),
-			Token:      sd.Users[0].Token,
+			URL:        fmt.Sprintf("/v1/homes/%s", sd.Users[0].Homes[1].ID),
+			Token:      sd.Users[1].Token,
 			Method:     http.MethodDelete,
 			StatusCode: http.StatusUnauthorized,
 			GotResp:    &errs.Error{},

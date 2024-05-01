@@ -11,7 +11,7 @@ import (
 	"github.com/ardanlabs/service/business/domain/userbus"
 )
 
-func insertVProductSeedData(db *dbtest.Database, ath *auth.Auth) (apitest.SeedData, error) {
+func insertSeedData(db *dbtest.Database, ath *auth.Auth) (apitest.SeedData, error) {
 	ctx := context.Background()
 	busDomain := db.BusDomain
 
@@ -28,7 +28,8 @@ func insertVProductSeedData(db *dbtest.Database, ath *auth.Auth) (apitest.SeedDa
 	tu1 := apitest.User{
 		User:     usrs[0],
 		Products: prds,
-		Token:    apitest.Token(db, ath, usrs[0].Email.Address),
+
+		Token: apitest.Token(db, ath, usrs[0].Email.Address),
 	}
 
 	// -------------------------------------------------------------------------

@@ -1,9 +1,10 @@
-package tests
+package userbus_test
 
 import (
 	"context"
 	"fmt"
 	"net/mail"
+	"os"
 	"runtime/debug"
 	"sort"
 	"testing"
@@ -12,9 +13,34 @@ import (
 	"github.com/ardanlabs/service/business/api/dbtest"
 	"github.com/ardanlabs/service/business/api/unitest"
 	"github.com/ardanlabs/service/business/domain/userbus"
+	"github.com/ardanlabs/service/foundation/docker"
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/crypto/bcrypt"
 )
+
+var c *docker.Container
+
+func TestMain(m *testing.M) {
+	code, err := run(m)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	os.Exit(code)
+}
+
+func run(m *testing.M) (int, error) {
+	var err error
+
+	c, err = dbtest.StartDB()
+	if err != nil {
+		return 1, err
+	}
+
+	return m.Run(), nil
+}
+
+// =============================================================================
 
 func Test_User(t *testing.T) {
 	t.Parallel()
@@ -28,22 +54,22 @@ func Test_User(t *testing.T) {
 		db.Teardown()
 	}()
 
-	sd, err := insertUserSeedData(db.BusDomain)
+	sd, err := insertSeedData(db.BusDomain)
 	if err != nil {
 		t.Fatalf("Seeding error: %s", err)
 	}
 
 	// -------------------------------------------------------------------------
 
-	unitest.Run(t, userQuery(db.BusDomain, sd), "user-query")
-	unitest.Run(t, userCreate(db.BusDomain), "user-create")
-	unitest.Run(t, userUpdate(db.BusDomain, sd), "user-update")
-	unitest.Run(t, userDelete(db.BusDomain, sd), "user-delete")
+	unitest.Run(t, query(db.BusDomain, sd), "query")
+	unitest.Run(t, create(db.BusDomain), "create")
+	unitest.Run(t, update(db.BusDomain, sd), "update")
+	unitest.Run(t, delete(db.BusDomain, sd), "delete")
 }
 
 // =============================================================================
 
-func insertUserSeedData(busDomain dbtest.BusDomain) (unitest.SeedData, error) {
+func insertSeedData(busDomain dbtest.BusDomain) (unitest.SeedData, error) {
 	ctx := context.Background()
 
 	usrs, err := userbus.TestSeedUsers(ctx, 2, userbus.RoleAdmin, busDomain.User)
@@ -86,7 +112,7 @@ func insertUserSeedData(busDomain dbtest.BusDomain) (unitest.SeedData, error) {
 
 // =============================================================================
 
-func userQuery(busDomain dbtest.BusDomain, sd unitest.SeedData) []unitest.Table {
+func query(busDomain dbtest.BusDomain, sd unitest.SeedData) []unitest.Table {
 	usrs := make([]userbus.User, 0, len(sd.Admins)+len(sd.Users))
 
 	for _, adm := range sd.Admins {
@@ -173,7 +199,7 @@ func userQuery(busDomain dbtest.BusDomain, sd unitest.SeedData) []unitest.Table 
 	return table
 }
 
-func userCreate(busDomain dbtest.BusDomain) []unitest.Table {
+func create(busDomain dbtest.BusDomain) []unitest.Table {
 	email, _ := mail.ParseAddress("bill@ardanlabs.com")
 
 	table := []unitest.Table{
@@ -227,7 +253,7 @@ func userCreate(busDomain dbtest.BusDomain) []unitest.Table {
 	return table
 }
 
-func userUpdate(busDomain dbtest.BusDomain, sd unitest.SeedData) []unitest.Table {
+func update(busDomain dbtest.BusDomain, sd unitest.SeedData) []unitest.Table {
 	email, _ := mail.ParseAddress("jack@ardanlabs.com")
 
 	table := []unitest.Table{
@@ -281,7 +307,7 @@ func userUpdate(busDomain dbtest.BusDomain, sd unitest.SeedData) []unitest.Table
 	return table
 }
 
-func userDelete(busDomain dbtest.BusDomain, sd unitest.SeedData) []unitest.Table {
+func delete(busDomain dbtest.BusDomain, sd unitest.SeedData) []unitest.Table {
 	table := []unitest.Table{
 		{
 			Name:    "user",

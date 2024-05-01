@@ -12,7 +12,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func homeUpdate200(sd apitest.SeedData) []apitest.Table {
+func update200(sd apitest.SeedData) []apitest.Table {
 	table := []apitest.Table{
 		{
 			Name:       "basic",
@@ -64,7 +64,7 @@ func homeUpdate200(sd apitest.SeedData) []apitest.Table {
 	return table
 }
 
-func homeUpdate400(sd apitest.SeedData) []apitest.Table {
+func update400(sd apitest.SeedData) []apitest.Table {
 	table := []apitest.Table{
 		{
 			Name:       "bad-input",
@@ -109,7 +109,7 @@ func homeUpdate400(sd apitest.SeedData) []apitest.Table {
 	return table
 }
 
-func homeUpdate401(sd apitest.SeedData) []apitest.Table {
+func update401(sd apitest.SeedData) []apitest.Table {
 	table := []apitest.Table{
 		{
 			Name:       "emptytoken",

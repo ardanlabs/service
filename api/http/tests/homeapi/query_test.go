@@ -12,7 +12,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func homeQuery200(sd apitest.SeedData) []apitest.Table {
+func query200(sd apitest.SeedData) []apitest.Table {
 	hmes := make([]homebus.Home, 0, len(sd.Admins[0].Homes)+len(sd.Users[0].Homes))
 	hmes = append(hmes, sd.Admins[0].Homes...)
 	hmes = append(hmes, sd.Users[0].Homes...)
@@ -44,7 +44,7 @@ func homeQuery200(sd apitest.SeedData) []apitest.Table {
 	return table
 }
 
-func homeQueryByID200(sd apitest.SeedData) []apitest.Table {
+func queryByID200(sd apitest.SeedData) []apitest.Table {
 	table := []apitest.Table{
 		{
 			Name:       "basic",

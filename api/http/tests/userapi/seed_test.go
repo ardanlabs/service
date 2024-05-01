@@ -10,7 +10,7 @@ import (
 	"github.com/ardanlabs/service/business/domain/userbus"
 )
 
-func insertUserSeedData(db *dbtest.Database, ath *auth.Auth) (apitest.SeedData, error) {
+func insertSeedData(db *dbtest.Database, ath *auth.Auth) (apitest.SeedData, error) {
 	ctx := context.Background()
 	busDomain := db.BusDomain
 

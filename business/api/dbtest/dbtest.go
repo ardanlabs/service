@@ -29,26 +29,27 @@ import (
 // StartDB starts a database instance.
 func StartDB() (*docker.Container, error) {
 	image := "postgres:16.2"
+	name := "service-test"
 	port := "5432"
 	dockerArgs := []string{"-e", "POSTGRES_PASSWORD=postgres"}
 	appArgs := []string{"-c", "log_statement=all"}
 
-	c, err := docker.StartContainer(image, port, dockerArgs, appArgs)
+	c, err := docker.StartContainer(image, name, port, dockerArgs, appArgs)
 	if err != nil {
 		return nil, fmt.Errorf("starting container: %w", err)
 	}
 
-	fmt.Printf("Image:       %s\n", image)
-	fmt.Printf("ContainerID: %s\n", c.ID)
-	fmt.Printf("HostPort:    %s\n", c.HostPort)
+	fmt.Printf("Image:    %s\n", image)
+	fmt.Printf("Name:     %s\n", c.Name)
+	fmt.Printf("HostPort: %s\n", c.HostPort)
 
 	return c, nil
 }
 
 // StopDB stops a running database instance.
 func StopDB(c *docker.Container) {
-	docker.StopContainer(c.ID)
-	fmt.Println("Stopped:", c.ID)
+	docker.StopContainer(c.Name)
+	fmt.Println("Stopped:", c.Name)
 }
 
 // =============================================================================
@@ -119,10 +120,10 @@ func NewDatabase(t *testing.T, c *docker.Container, testName string) *Database {
 	}
 	dbName := string(b)
 
+	t.Logf("Creating Database: %s", dbName)
 	if _, err := dbM.ExecContext(context.Background(), "CREATE DATABASE "+dbName); err != nil {
 		t.Fatalf("creating database %s: %v", dbName, err)
 	}
-	dbM.Close()
 
 	// -------------------------------------------------------------------------
 
@@ -138,7 +139,7 @@ func NewDatabase(t *testing.T, c *docker.Container, testName string) *Database {
 	}
 
 	if err := migrate.Migrate(ctx, db); err != nil {
-		t.Logf("Logs for %s\n%s:", c.ID, docker.DumpContainerLogs(c.ID))
+		t.Logf("Logs for %s\n%s:", c.Name, docker.DumpContainerLogs(c.Name))
 		t.Fatalf("Migrating error: %s", err)
 	}
 
@@ -155,6 +156,13 @@ func NewDatabase(t *testing.T, c *docker.Container, testName string) *Database {
 		t.Helper()
 
 		db.Close()
+
+		t.Logf("Dropping Database: %s", dbName)
+		if _, err := dbM.ExecContext(context.Background(), "DROP DATABASE "+dbName); err != nil {
+			t.Fatalf("dropping database %s: %v", dbName, err)
+		}
+
+		dbM.Close()
 
 		fmt.Printf("******************** LOGS (%s) ********************\n", testName)
 		fmt.Print(buf.String())

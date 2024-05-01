@@ -1,8 +1,9 @@
-package tests
+package homebus_test
 
 import (
 	"context"
 	"fmt"
+	"os"
 	"runtime/debug"
 	"sort"
 	"testing"
@@ -12,8 +13,33 @@ import (
 	"github.com/ardanlabs/service/business/api/unitest"
 	"github.com/ardanlabs/service/business/domain/homebus"
 	"github.com/ardanlabs/service/business/domain/userbus"
+	"github.com/ardanlabs/service/foundation/docker"
 	"github.com/google/go-cmp/cmp"
 )
+
+var c *docker.Container
+
+func TestMain(m *testing.M) {
+	code, err := run(m)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	os.Exit(code)
+}
+
+func run(m *testing.M) (int, error) {
+	var err error
+
+	c, err = dbtest.StartDB()
+	if err != nil {
+		return 1, err
+	}
+
+	return m.Run(), nil
+}
+
+// =============================================================================
 
 func Test_Home(t *testing.T) {
 	t.Parallel()
@@ -27,22 +53,22 @@ func Test_Home(t *testing.T) {
 		db.Teardown()
 	}()
 
-	sd, err := insertHomeSeedData(db.BusDomain)
+	sd, err := insertSeedData(db.BusDomain)
 	if err != nil {
 		t.Fatalf("Seeding error: %s", err)
 	}
 
 	// -------------------------------------------------------------------------
 
-	unitest.Run(t, homeQuery(db.BusDomain, sd), "home-query")
-	unitest.Run(t, homeCreate(db.BusDomain, sd), "home-create")
-	unitest.Run(t, homeUpdate(db.BusDomain, sd), "home-update")
-	unitest.Run(t, homeDelete(db.BusDomain, sd), "home-delete")
+	unitest.Run(t, query(db.BusDomain, sd), "query")
+	unitest.Run(t, create(db.BusDomain, sd), "create")
+	unitest.Run(t, update(db.BusDomain, sd), "update")
+	unitest.Run(t, delete(db.BusDomain, sd), "delete")
 }
 
 // =============================================================================
 
-func insertHomeSeedData(busDomain dbtest.BusDomain) (unitest.SeedData, error) {
+func insertSeedData(busDomain dbtest.BusDomain) (unitest.SeedData, error) {
 	ctx := context.Background()
 
 	usrs, err := userbus.TestSeedUsers(ctx, 1, userbus.RoleUser, busDomain.User)
@@ -111,7 +137,7 @@ func insertHomeSeedData(busDomain dbtest.BusDomain) (unitest.SeedData, error) {
 
 // =============================================================================
 
-func homeQuery(busDomain dbtest.BusDomain, sd unitest.SeedData) []unitest.Table {
+func query(busDomain dbtest.BusDomain, sd unitest.SeedData) []unitest.Table {
 	hmes := make([]homebus.Home, 0, len(sd.Admins[0].Homes)+len(sd.Users[0].Homes))
 	hmes = append(hmes, sd.Admins[0].Homes...)
 	hmes = append(hmes, sd.Users[0].Homes...)
@@ -188,7 +214,7 @@ func homeQuery(busDomain dbtest.BusDomain, sd unitest.SeedData) []unitest.Table 
 	return table
 }
 
-func homeCreate(busDomain dbtest.BusDomain, sd unitest.SeedData) []unitest.Table {
+func create(busDomain dbtest.BusDomain, sd unitest.SeedData) []unitest.Table {
 	table := []unitest.Table{
 		{
 			Name: "basic",
@@ -243,7 +269,7 @@ func homeCreate(busDomain dbtest.BusDomain, sd unitest.SeedData) []unitest.Table
 	return table
 }
 
-func homeUpdate(busDomain dbtest.BusDomain, sd unitest.SeedData) []unitest.Table {
+func update(busDomain dbtest.BusDomain, sd unitest.SeedData) []unitest.Table {
 	table := []unitest.Table{
 		{
 			Name: "basic",
@@ -302,7 +328,7 @@ func homeUpdate(busDomain dbtest.BusDomain, sd unitest.SeedData) []unitest.Table
 	return table
 }
 
-func homeDelete(busDomain dbtest.BusDomain, sd unitest.SeedData) []unitest.Table {
+func delete(busDomain dbtest.BusDomain, sd unitest.SeedData) []unitest.Table {
 	table := []unitest.Table{
 		{
 			Name:    "user",

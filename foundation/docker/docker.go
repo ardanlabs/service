@@ -4,6 +4,7 @@ package docker
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"net"
 	"os/exec"
@@ -14,13 +15,21 @@ import (
 
 // Container tracks information about the docker container started for tests.
 type Container struct {
-	ID       string
+	Name     string
 	HostPort string
 }
 
 // StartContainer starts the specified container for running tests.
-func StartContainer(image string, port string, dockerArgs []string, appArgs []string) (*Container, error) {
-	arg := []string{"run", "-P", "-d"}
+func StartContainer(image string, name string, port string, dockerArgs []string, appArgs []string) (*Container, error) {
+	if name == "" || port == "" {
+		return nil, errors.New("image name and port is required")
+	}
+
+	if c, err := exists(name, port); err == nil {
+		return c, nil
+	}
+
+	arg := []string{"run", "-P", "-d", "--name", name}
 	arg = append(arg, dockerArgs...)
 	arg = append(arg, image)
 	arg = append(arg, appArgs...)
@@ -40,7 +49,7 @@ func StartContainer(image string, port string, dockerArgs []string, appArgs []st
 	}
 
 	c := Container{
-		ID:       id,
+		Name:     name,
 		HostPort: net.JoinHostPort(hostIP, hostPort),
 	}
 
@@ -70,14 +79,28 @@ func DumpContainerLogs(id string) []byte {
 	return out
 }
 
-func extractIPPort(id string, port string) (hostIP string, hostPort string, err error) {
+func exists(name string, port string) (*Container, error) {
+	hostIP, hostPort, err := extractIPPort(name, port)
+	if err != nil {
+		return nil, errors.New("container not running")
+	}
+
+	c := Container{
+		Name:     name,
+		HostPort: net.JoinHostPort(hostIP, hostPort),
+	}
+
+	return &c, nil
+}
+
+func extractIPPort(name string, port string) (hostIP string, hostPort string, err error) {
 	tmpl := fmt.Sprintf("[{{range $k,$v := (index .NetworkSettings.Ports \"%s/tcp\")}}{{json $v}}{{end}}]", port)
 
 	var out bytes.Buffer
-	cmd := exec.Command("docker", "inspect", "-f", tmpl, id)
+	cmd := exec.Command("docker", "inspect", "-f", tmpl, name)
 	cmd.Stdout = &out
 	if err := cmd.Run(); err != nil {
-		return "", "", fmt.Errorf("could not inspect container %s: %w", id, err)
+		return "", "", fmt.Errorf("could not inspect container %s: %w", name, err)
 	}
 
 	// When IPv6 is turned on with Docker.

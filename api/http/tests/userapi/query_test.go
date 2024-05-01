@@ -12,7 +12,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func userQuery200(sd apitest.SeedData) []apitest.Table {
+func query200(sd apitest.SeedData) []apitest.Table {
 	usrs := make([]userbus.User, 0, len(sd.Admins)+len(sd.Users))
 
 	for _, adm := range sd.Admins {
@@ -50,7 +50,7 @@ func userQuery200(sd apitest.SeedData) []apitest.Table {
 	return table
 }
 
-func userQueryByID200(sd apitest.SeedData) []apitest.Table {
+func queryByID200(sd apitest.SeedData) []apitest.Table {
 	table := []apitest.Table{
 		{
 			Name:       "basic",

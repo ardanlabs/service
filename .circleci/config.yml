@@ -19,6 +19,11 @@ jobs:
           command: |
               CGO_ENABLED=0 go test ./...
       - run:
+          name: Stop Test Database
+          command: |
+              docker stop service-test
+              docker rm service-test -v
+      - run:
           name: Run vet
           command: |
               CGO_ENABLED=0 go vet ./...

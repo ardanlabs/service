@@ -5,41 +5,37 @@ import (
 
 	"github.com/ardanlabs/service/api/http/api/apitest"
 	"github.com/ardanlabs/service/app/api/errs"
-	"github.com/ardanlabs/service/app/domain/userapp"
+	"github.com/ardanlabs/service/app/domain/productapp"
 	"github.com/google/go-cmp/cmp"
 )
 
-func userCreate200(sd apitest.SeedData) []apitest.Table {
+func create200(sd apitest.SeedData) []apitest.Table {
 	table := []apitest.Table{
 		{
 			Name:       "basic",
-			URL:        "/v1/users",
-			Token:      sd.Admins[0].Token,
+			URL:        "/v1/products",
+			Token:      sd.Users[0].Token,
 			Method:     http.MethodPost,
 			StatusCode: http.StatusCreated,
-			Input: &userapp.NewUser{
-				Name:            "Bill Kennedy",
-				Email:           "bill@ardanlabs.com",
-				Roles:           []string{"ADMIN"},
-				Department:      "IT",
-				Password:        "123",
-				PasswordConfirm: "123",
+			Input: &productapp.NewProduct{
+				Name:     "Guitar",
+				Cost:     10.34,
+				Quantity: 10,
 			},
-			GotResp: &userapp.User{},
-			ExpResp: &userapp.User{
-				Name:       "Bill Kennedy",
-				Email:      "bill@ardanlabs.com",
-				Roles:      []string{"ADMIN"},
-				Department: "IT",
-				Enabled:    true,
+			GotResp: &productapp.Product{},
+			ExpResp: &productapp.Product{
+				Name:     "Guitar",
+				UserID:   sd.Users[0].ID.String(),
+				Cost:     10.34,
+				Quantity: 10,
 			},
 			CmpFunc: func(got any, exp any) string {
-				gotResp, exists := got.(*userapp.User)
+				gotResp, exists := got.(*productapp.Product)
 				if !exists {
 					return "error occurred"
 				}
 
-				expResp := exp.(*userapp.User)
+				expResp := exp.(*productapp.Product)
 
 				expResp.ID = gotResp.ID
 				expResp.DateCreated = gotResp.DateCreated
@@ -53,37 +49,17 @@ func userCreate200(sd apitest.SeedData) []apitest.Table {
 	return table
 }
 
-func userCreate400(sd apitest.SeedData) []apitest.Table {
+func create400(sd apitest.SeedData) []apitest.Table {
 	table := []apitest.Table{
 		{
 			Name:       "missing-input",
-			URL:        "/v1/users",
-			Token:      sd.Admins[0].Token,
+			URL:        "/v1/products",
+			Token:      sd.Users[0].Token,
 			Method:     http.MethodPost,
 			StatusCode: http.StatusBadRequest,
-			Input:      &userapp.NewUser{},
+			Input:      &productapp.NewProduct{},
 			GotResp:    &errs.Error{},
-			ExpResp:    toErrorPtr(errs.Newf(errs.FailedPrecondition, "validate: [{\"field\":\"name\",\"error\":\"name is a required field\"},{\"field\":\"email\",\"error\":\"email is a required field\"},{\"field\":\"roles\",\"error\":\"roles is a required field\"},{\"field\":\"password\",\"error\":\"password is a required field\"}]")),
-			CmpFunc: func(got any, exp any) string {
-				return cmp.Diff(got, exp)
-			},
-		},
-		{
-			Name:       "bad-role",
-			URL:        "/v1/users",
-			Token:      sd.Admins[0].Token,
-			Method:     http.MethodPost,
-			StatusCode: http.StatusBadRequest,
-			Input: &userapp.NewUser{
-				Name:            "Bill Kennedy",
-				Email:           "bill@ardanlabs.com",
-				Roles:           []string{"BAD ROLE"},
-				Department:      "IT",
-				Password:        "123",
-				PasswordConfirm: "123",
-			},
-			GotResp: &errs.Error{},
-			ExpResp: toErrorPtr(errs.Newf(errs.FailedPrecondition, "parse: invalid role \"BAD ROLE\"")),
+			ExpResp:    toErrorPtr(errs.Newf(errs.FailedPrecondition, "validate: [{\"field\":\"name\",\"error\":\"name is a required field\"},{\"field\":\"cost\",\"error\":\"cost is a required field\"},{\"field\":\"quantity\",\"error\":\"quantity is a required field\"}]")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -93,11 +69,11 @@ func userCreate400(sd apitest.SeedData) []apitest.Table {
 	return table
 }
 
-func userCreate401(sd apitest.SeedData) []apitest.Table {
+func create401(sd apitest.SeedData) []apitest.Table {
 	table := []apitest.Table{
 		{
 			Name:       "emptytoken",
-			URL:        "/v1/users",
+			URL:        "/v1/products",
 			Token:      "&nbsp;",
 			Method:     http.MethodPost,
 			StatusCode: http.StatusUnauthorized,
@@ -109,7 +85,7 @@ func userCreate401(sd apitest.SeedData) []apitest.Table {
 		},
 		{
 			Name:       "badtoken",
-			URL:        "/v1/users",
+			URL:        "/v1/products",
 			Token:      sd.Admins[0].Token[:10],
 			Method:     http.MethodPost,
 			StatusCode: http.StatusUnauthorized,
@@ -121,7 +97,7 @@ func userCreate401(sd apitest.SeedData) []apitest.Table {
 		},
 		{
 			Name:       "badsig",
-			URL:        "/v1/users",
+			URL:        "/v1/products",
 			Token:      sd.Admins[0].Token + "A",
 			Method:     http.MethodPost,
 			StatusCode: http.StatusUnauthorized,
@@ -133,12 +109,12 @@ func userCreate401(sd apitest.SeedData) []apitest.Table {
 		},
 		{
 			Name:       "wronguser",
-			URL:        "/v1/users",
-			Token:      sd.Users[0].Token,
+			URL:        "/v1/products",
+			Token:      sd.Admins[0].Token,
 			Method:     http.MethodPost,
 			StatusCode: http.StatusUnauthorized,
 			GotResp:    &errs.Error{},
-			ExpResp:    toErrorPtr(errs.Newf(errs.Unauthenticated, "authorize: you are not authorized for that action, claims[[{USER}]] rule[rule_admin_only]: rego evaluation failed : bindings results[[{[true] map[x:false]}]] ok[true]")),
+			ExpResp:    toErrorPtr(errs.Newf(errs.Unauthenticated, "authorize: you are not authorized for that action, claims[[{ADMIN}]] rule[rule_user_only]: rego evaluation failed : bindings results[[{[true] map[x:false]}]] ok[true]")),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},

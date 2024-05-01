@@ -1,8 +1,9 @@
-package tests
+package vproductbus_test
 
 import (
 	"context"
 	"fmt"
+	"os"
 	"runtime/debug"
 	"sort"
 	"testing"
@@ -13,8 +14,33 @@ import (
 	"github.com/ardanlabs/service/business/domain/productbus"
 	"github.com/ardanlabs/service/business/domain/userbus"
 	"github.com/ardanlabs/service/business/domain/vproductbus"
+	"github.com/ardanlabs/service/foundation/docker"
 	"github.com/google/go-cmp/cmp"
 )
+
+var c *docker.Container
+
+func TestMain(m *testing.M) {
+	code, err := run(m)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	os.Exit(code)
+}
+
+func run(m *testing.M) (int, error) {
+	var err error
+
+	c, err = dbtest.StartDB()
+	if err != nil {
+		return 1, err
+	}
+
+	return m.Run(), nil
+}
+
+// =============================================================================
 
 func Test_VProduct(t *testing.T) {
 	t.Parallel()
@@ -28,19 +54,19 @@ func Test_VProduct(t *testing.T) {
 		db.Teardown()
 	}()
 
-	sd, err := insertVProductSeedData(db.BusDomain)
+	sd, err := insertSeedData(db.BusDomain)
 	if err != nil {
 		t.Fatalf("Seeding error: %s", err)
 	}
 
 	// -------------------------------------------------------------------------
 
-	unitest.Run(t, vproductQuery(db.BusDomain, sd), "vproduct-query")
+	unitest.Run(t, query(db.BusDomain, sd), "query")
 }
 
 // =============================================================================
 
-func insertVProductSeedData(busDomain dbtest.BusDomain) (unitest.SeedData, error) {
+func insertSeedData(busDomain dbtest.BusDomain) (unitest.SeedData, error) {
 	ctx := context.Background()
 
 	usrs, err := userbus.TestSeedUsers(ctx, 1, userbus.RoleUser, busDomain.User)
@@ -111,7 +137,7 @@ func toVProducts(usr userbus.User, prds []productbus.Product) []vproductbus.Prod
 
 // =============================================================================
 
-func vproductQuery(busDomain dbtest.BusDomain, sd unitest.SeedData) []unitest.Table {
+func query(busDomain dbtest.BusDomain, sd unitest.SeedData) []unitest.Table {
 	prds := toVProducts(sd.Admins[0].User, sd.Admins[0].Products)
 	prds = append(prds, toVProducts(sd.Users[0].User, sd.Users[0].Products)...)
 
