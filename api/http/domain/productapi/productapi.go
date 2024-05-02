@@ -29,7 +29,7 @@ func (api *api) create(ctx context.Context, w http.ResponseWriter, r *http.Reque
 
 	prd, err := api.productApp.Create(ctx, app)
 	if err != nil {
-		return response.AppError(errs.Internal, err)
+		return response.AppAPIError(err)
 	}
 
 	return response.Response(prd, http.StatusCreated)
@@ -43,7 +43,7 @@ func (api *api) update(ctx context.Context, w http.ResponseWriter, r *http.Reque
 
 	prd, err := api.productApp.Update(ctx, app)
 	if err != nil {
-		return response.AppError(errs.Internal, err)
+		return response.AppAPIError(err)
 	}
 
 	return response.Response(prd, http.StatusOK)
@@ -51,7 +51,7 @@ func (api *api) update(ctx context.Context, w http.ResponseWriter, r *http.Reque
 
 func (api *api) delete(ctx context.Context, w http.ResponseWriter, r *http.Request) web.Response {
 	if err := api.productApp.Delete(ctx); err != nil {
-		return response.AppError(errs.Internal, err)
+		return response.AppAPIError(err)
 	}
 
 	return response.Response(nil, http.StatusNoContent)
@@ -60,12 +60,12 @@ func (api *api) delete(ctx context.Context, w http.ResponseWriter, r *http.Reque
 func (api *api) query(ctx context.Context, w http.ResponseWriter, r *http.Request) web.Response {
 	qp, err := parseQueryParams(r)
 	if err != nil {
-		return response.AppError(errs.Internal, err)
+		return response.AppError(errs.FailedPrecondition, err)
 	}
 
 	hme, err := api.productApp.Query(ctx, qp)
 	if err != nil {
-		return response.AppError(errs.Internal, err)
+		return response.AppAPIError(err)
 	}
 
 	return response.Response(hme, http.StatusOK)
@@ -74,7 +74,7 @@ func (api *api) query(ctx context.Context, w http.ResponseWriter, r *http.Reques
 func (api *api) queryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) web.Response {
 	hme, err := api.productApp.QueryByID(ctx)
 	if err != nil {
-		return response.AppError(errs.Internal, err)
+		return response.AppAPIError(err)
 	}
 
 	return response.Response(hme, http.StatusOK)

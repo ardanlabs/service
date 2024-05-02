@@ -22,7 +22,7 @@ func Logger(ctx context.Context, log *logger.Logger, path string, rawQuery strin
 	resp := handler(ctx)
 
 	log.Info(ctx, "request completed", "method", method, "path", path, "remoteaddr", remoteAddr,
-		"statuscode", v.StatusCode, "since", time.Since(v.Now).String())
+		"statuscode", resp.StatusCode, "since", time.Since(v.Now).String())
 
 	return resp
 }

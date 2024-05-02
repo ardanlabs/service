@@ -15,6 +15,8 @@ var errsStatus = make(map[int]errs.ErrCode)
 // init maps out the error codes to http status codes.
 func init() {
 	httpStatus[errs.OK] = http.StatusOK
+	httpStatus[errs.NoContent] = http.StatusNoContent
+	httpStatus[errs.StatusCreated] = http.StatusCreated
 	httpStatus[errs.Canceled] = http.StatusGatewayTimeout
 	httpStatus[errs.Unknown] = http.StatusInternalServerError
 	httpStatus[errs.InvalidArgument] = http.StatusBadRequest
@@ -33,21 +35,17 @@ func init() {
 	httpStatus[errs.Unauthenticated] = http.StatusUnauthorized
 
 	errsStatus[http.StatusOK] = errs.OK
-	errsStatus[http.StatusGatewayTimeout] = errs.Canceled
-	errsStatus[http.StatusInternalServerError] = errs.Unknown
-	errsStatus[http.StatusBadRequest] = errs.InvalidArgument
+	errsStatus[http.StatusNoContent] = errs.NoContent
+	errsStatus[http.StatusCreated] = errs.StatusCreated
 	errsStatus[http.StatusGatewayTimeout] = errs.DeadlineExceeded
 	errsStatus[http.StatusNotFound] = errs.NotFound
-	errsStatus[http.StatusConflict] = errs.AlreadyExists
 	errsStatus[http.StatusForbidden] = errs.PermissionDenied
 	errsStatus[http.StatusTooManyRequests] = errs.ResourceExhausted
 	errsStatus[http.StatusBadRequest] = errs.FailedPrecondition
 	errsStatus[http.StatusConflict] = errs.Aborted
-	errsStatus[http.StatusBadRequest] = errs.OutOfRange
 	errsStatus[http.StatusNotImplemented] = errs.Unimplemented
 	errsStatus[http.StatusInternalServerError] = errs.Internal
 	errsStatus[http.StatusServiceUnavailable] = errs.Unavailable
-	errsStatus[http.StatusInternalServerError] = errs.DataLoss
 	errsStatus[http.StatusUnauthorized] = errs.Unauthenticated
 }
 
@@ -59,6 +57,19 @@ func ToMid(resp web.Response) mid.Response {
 		Errs:       err,
 		Data:       resp.Data,
 		StatusCode: errsStatus[resp.StatusCode],
+	}
+}
+
+func ToWebX(name string, resp mid.Response) web.Response {
+	var err error
+	if resp.Errs != nil {
+		err = resp.Errs
+	}
+
+	return web.Response{
+		Err:        err,
+		Data:       resp.Data,
+		StatusCode: httpStatus[resp.StatusCode],
 	}
 }
 
@@ -89,6 +100,15 @@ func AppErrs(err *errs.Error) web.Response {
 
 func AppError(code errs.ErrCode, err error) web.Response {
 	return web.RespondError(errs.New(code, err), httpStatus[code])
+}
+
+func AppAPIError(err error) web.Response {
+	var ers *errs.Error
+	if !errors.As(err, &ers) {
+		ers = errs.New(errs.Internal, err)
+	}
+
+	return web.RespondError(ers, httpStatus[ers.Code])
 }
 
 func AppErrorf(code errs.ErrCode, format string, v ...any) web.Response {

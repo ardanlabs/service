@@ -22,7 +22,7 @@ func Authorize(log *logger.Logger, client *authclient.Client, rule string) web.M
 				return response.ToMid(handler(ctx, w, r))
 			}
 
-			return response.ToWeb(mid.Authorize(ctx, log, client, rule, hdl))
+			return response.ToWebX("Authorize", mid.Authorize(ctx, log, client, rule, hdl))
 		}
 
 		return h

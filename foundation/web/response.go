@@ -36,10 +36,8 @@ func RespondError(err error, statusCode int) Response {
 }
 
 func (r Response) send(ctx context.Context, w http.ResponseWriter) error {
-	ctx, span := tracer.AddSpan(ctx, "foundation.web.response", attribute.Int("status", r.StatusCode))
+	_, span := tracer.AddSpan(ctx, "foundation.web.response", attribute.Int("status", r.StatusCode))
 	defer span.End()
-
-	setStatusCode(ctx, r.StatusCode)
 
 	if r.StatusCode == http.StatusNoContent {
 		w.WriteHeader(r.StatusCode)

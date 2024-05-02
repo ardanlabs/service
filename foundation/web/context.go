@@ -11,9 +11,12 @@ const key ctxKey = 1
 
 // Values represent state for each request.
 type Values struct {
-	TraceID    string
-	Now        time.Time
-	StatusCode int
+	TraceID string
+	Now     time.Time
+}
+
+func setValues(ctx context.Context, v *Values) context.Context {
+	return context.WithValue(ctx, key, v)
 }
 
 // GetValues returns the values from the context.
@@ -47,17 +50,4 @@ func GetTime(ctx context.Context) time.Time {
 	}
 
 	return v.Now
-}
-
-func setStatusCode(ctx context.Context, statusCode int) {
-	v, ok := ctx.Value(key).(*Values)
-	if !ok {
-		return
-	}
-
-	v.StatusCode = statusCode
-}
-
-func setValues(ctx context.Context, v *Values) context.Context {
-	return context.WithValue(ctx, key, v)
 }

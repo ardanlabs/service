@@ -24,12 +24,12 @@ func newAPI(vproductApp *vproductapp.App) *api {
 func (api *api) query(ctx context.Context, w http.ResponseWriter, r *http.Request) web.Response {
 	qp, err := parseQueryParams(r)
 	if err != nil {
-		return response.AppError(errs.Internal, err)
+		return response.AppError(errs.FailedPrecondition, err)
 	}
 
 	hme, err := api.vproductApp.Query(ctx, qp)
 	if err != nil {
-		return response.AppError(errs.Internal, err)
+		return response.AppAPIError(err)
 	}
 
 	return response.Response(hme, http.StatusOK)

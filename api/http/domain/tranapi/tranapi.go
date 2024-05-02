@@ -29,7 +29,7 @@ func (api *api) create(ctx context.Context, w http.ResponseWriter, r *http.Reque
 
 	prd, err := api.tranApp.Create(ctx, app)
 	if err != nil {
-		return response.AppError(errs.Internal, err)
+		return response.AppAPIError(err)
 	}
 
 	return response.Response(prd, http.StatusCreated)

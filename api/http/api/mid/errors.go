@@ -18,7 +18,7 @@ func Errors(log *logger.Logger) web.MidHandler {
 				return response.ToMid(handler(ctx, w, r))
 			}
 
-			return response.ToWeb(mid.Errors(ctx, log, hdl))
+			return response.ToWebX("ERROR", mid.Errors(ctx, log, hdl))
 		}
 
 		return h
