@@ -39,17 +39,12 @@ func StartDB() (*docker.Container, error) {
 		return nil, fmt.Errorf("starting container: %w", err)
 	}
 
-	fmt.Printf("Image:    %s\n", image)
-	fmt.Printf("Name:     %s\n", c.Name)
-	fmt.Printf("HostPort: %s\n", c.HostPort)
-
 	return c, nil
 }
 
 // StopDB stops a running database instance.
 func StopDB(c *docker.Container) {
 	docker.StopContainer(c.Name)
-	fmt.Println("Stopped:", c.Name)
 }
 
 // =============================================================================
@@ -96,6 +91,9 @@ func NewDatabase(t *testing.T, c *docker.Container, testName string) *Database {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
+	t.Logf("Name    : %s\n", c.Name)
+	t.Logf("HostPort: %s\n", c.HostPort)
+
 	dbM, err := sqldb.Open(sqldb.Config{
 		User:       "postgres",
 		Password:   "postgres",
@@ -120,7 +118,7 @@ func NewDatabase(t *testing.T, c *docker.Container, testName string) *Database {
 	}
 	dbName := string(b)
 
-	t.Logf("Creating Database: %s", dbName)
+	t.Logf("Create Database: %s\n", dbName)
 	if _, err := dbM.ExecContext(context.Background(), "CREATE DATABASE "+dbName); err != nil {
 		t.Fatalf("creating database %s: %v", dbName, err)
 	}
@@ -138,6 +136,7 @@ func NewDatabase(t *testing.T, c *docker.Container, testName string) *Database {
 		t.Fatalf("Opening database connection: %v", err)
 	}
 
+	t.Logf("Migrate Database: %s\n", dbName)
 	if err := migrate.Migrate(ctx, db); err != nil {
 		t.Logf("Logs for %s\n%s:", c.Name, docker.DumpContainerLogs(c.Name))
 		t.Fatalf("Migrating error: %s", err)
@@ -157,16 +156,16 @@ func NewDatabase(t *testing.T, c *docker.Container, testName string) *Database {
 
 		db.Close()
 
-		t.Logf("Dropping Database: %s", dbName)
+		t.Logf("Drop Database: %s\n", dbName)
 		if _, err := dbM.ExecContext(context.Background(), "DROP DATABASE "+dbName); err != nil {
 			t.Fatalf("dropping database %s: %v", dbName, err)
 		}
 
 		dbM.Close()
 
-		fmt.Printf("******************** LOGS (%s) ********************\n", testName)
-		fmt.Print(buf.String())
-		fmt.Printf("******************** LOGS (%s) ********************\n", testName)
+		t.Logf("******************** LOGS (%s) ********************\n\n", testName)
+		t.Log(buf.String())
+		t.Logf("******************** LOGS (%s) ********************\n", testName)
 	}
 
 	return &Database{

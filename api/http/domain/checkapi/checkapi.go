@@ -5,6 +5,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/ardanlabs/service/api/http/api/response"
 	"github.com/ardanlabs/service/app/domain/checkapp"
 	"github.com/ardanlabs/service/foundation/web"
 )
@@ -22,7 +23,7 @@ func newAPI(checkApp *checkapp.App) *api {
 // readiness checks if the database is ready and if not will return a 500 status.
 // Do not respond by just returning an error because further up in the call
 // stack it will interpret that as a non-trusted error.
-func (api *api) readiness(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (api *api) readiness(ctx context.Context, w http.ResponseWriter, r *http.Request) web.Response {
 	status := "ok"
 	statusCode := http.StatusOK
 
@@ -37,15 +38,15 @@ func (api *api) readiness(ctx context.Context, w http.ResponseWriter, r *http.Re
 		Status: status,
 	}
 
-	return web.Respond(ctx, w, data, statusCode)
+	return response.Response(data, statusCode)
 }
 
 // liveness returns simple status info if the service is alive. If the
 // app is deployed to a Kubernetes cluster, it will also return pod, node, and
 // namespace details via the Downward API. The Kubernetes environment variables
 // need to be set within your Pod/Deployment manifest.
-func (api *api) liveness(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (api *api) liveness(ctx context.Context, w http.ResponseWriter, r *http.Request) web.Response {
 	info := api.checkApp.Liveness()
 
-	return web.Respond(ctx, w, info, http.StatusOK)
+	return response.Response(info, http.StatusOK)
 }

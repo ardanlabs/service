@@ -3,14 +3,9 @@ package tests
 import (
 	"time"
 
-	"github.com/ardanlabs/service/app/api/errs"
 	"github.com/ardanlabs/service/app/domain/homeapp"
 	"github.com/ardanlabs/service/business/domain/homebus"
 )
-
-func toErrorPtr(err errs.Error) *errs.Error {
-	return &err
-}
 
 func toAppHome(hme homebus.Home) homeapp.Home {
 	return homeapp.Home{

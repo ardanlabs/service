@@ -5,6 +5,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/ardanlabs/service/api/http/api/response"
 	"github.com/ardanlabs/service/app/api/errs"
 	"github.com/ardanlabs/service/app/domain/tranapp"
 	"github.com/ardanlabs/service/foundation/web"
@@ -20,16 +21,16 @@ func newAPI(tranApp *tranapp.App) *api {
 	}
 }
 
-func (api *api) create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (api *api) create(ctx context.Context, w http.ResponseWriter, r *http.Request) web.Response {
 	var app tranapp.NewTran
 	if err := web.Decode(r, &app); err != nil {
-		return errs.New(errs.FailedPrecondition, err)
+		return response.AppError(errs.FailedPrecondition, err)
 	}
 
 	prd, err := api.tranApp.Create(ctx, app)
 	if err != nil {
-		return err
+		return response.AppError(errs.Internal, err)
 	}
 
-	return web.Respond(ctx, w, prd, http.StatusCreated)
+	return response.Response(prd, http.StatusCreated)
 }
