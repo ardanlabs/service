@@ -434,10 +434,10 @@ list:
 # Class Stuff
 
 run:
-	go run apis/services/sales/main.go | go run apis/tooling/logfmt/main.go
+	go run api/cmd/services/sales/main.go | go run api/cmd/tooling/logfmt/main.go
 
 run-help:
-	go run apis/services/sales/main.go --help | go run apis/tooling/logfmt/main.go
+	go run api/cmd/services/sales/main.go --help | go run api/cmd/tooling/logfmt/main.go
 
 curl:
 	curl -il http://localhost:3000/v1/hack
@@ -449,7 +449,7 @@ load-hack:
 	hey -m GET -c 100 -n 100000 "http://localhost:3000/v1/hack"
 
 admin:
-	go run apis/tooling/admin/main.go
+	go run api/cmd/tooling/admin/main.go
 
 ready:
 	curl -il http://localhost:3000/v1/readiness
