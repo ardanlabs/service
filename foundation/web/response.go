@@ -14,7 +14,7 @@ type httpStatus interface {
 	HTTPStatus() int
 }
 
-func send(ctx context.Context, w http.ResponseWriter, data any) error {
+func respond(ctx context.Context, w http.ResponseWriter, data any) error {
 	var statusCode = http.StatusOK
 	if _, ok := data.(error); ok {
 		if v, ok := data.(httpStatus); ok {
