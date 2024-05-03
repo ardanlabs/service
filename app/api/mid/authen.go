@@ -17,7 +17,7 @@ import (
 )
 
 // Authenticate validates authentication via the auth service.
-func Authenticate(ctx context.Context, log *logger.Logger, client *authclient.Client, authorization string, handler Handler) (any, error) {
+func Authenticate(ctx context.Context, log *logger.Logger, client *authclient.Client, authorization string, next Handler) (any, error) {
 	resp, err := client.Authenticate(ctx, authorization)
 	if err != nil {
 		return nil, errs.New(errs.Unauthenticated, err)
@@ -26,11 +26,11 @@ func Authenticate(ctx context.Context, log *logger.Logger, client *authclient.Cl
 	ctx = setUserID(ctx, resp.UserID)
 	ctx = setClaims(ctx, resp.Claims)
 
-	return handler(ctx)
+	return next(ctx)
 }
 
 // Bearer processes JWT authentication logic.
-func Bearer(ctx context.Context, ath *auth.Auth, authorization string, handler Handler) (any, error) {
+func Bearer(ctx context.Context, ath *auth.Auth, authorization string, next Handler) (any, error) {
 	claims, err := ath.Authenticate(ctx, authorization)
 	if err != nil {
 		return nil, errs.New(errs.Unauthenticated, err)
@@ -48,11 +48,11 @@ func Bearer(ctx context.Context, ath *auth.Auth, authorization string, handler H
 	ctx = setUserID(ctx, subjectID)
 	ctx = setClaims(ctx, claims)
 
-	return handler(ctx)
+	return next(ctx)
 }
 
 // Basic processes basic authentication logic.
-func Basic(ctx context.Context, ath *auth.Auth, userBus *userbus.Business, authorization string, handler Handler) (any, error) {
+func Basic(ctx context.Context, ath *auth.Auth, userBus *userbus.Business, authorization string, next Handler) (any, error) {
 	email, pass, ok := parseBasicAuth(authorization)
 	if !ok {
 		return nil, errs.Newf(errs.Unauthenticated, "invalid Basic auth")
@@ -86,7 +86,7 @@ func Basic(ctx context.Context, ath *auth.Auth, userBus *userbus.Business, autho
 	ctx = setUserID(ctx, subjectID)
 	ctx = setClaims(ctx, claims)
 
-	return handler(ctx)
+	return next(ctx)
 }
 
 func parseBasicAuth(auth string) (string, string, bool) {

@@ -10,9 +10,9 @@ import (
 )
 
 // Errors executes the errors middleware functionality.
-func Errors(log *logger.Logger) web.MidHandler {
-	midFunc := func(ctx context.Context, w http.ResponseWriter, r *http.Request, hdl mid.Handler) (any, error) {
-		return mid.Errors(ctx, log, hdl)
+func Errors(log *logger.Logger) web.Middleware {
+	midFunc := func(ctx context.Context, r *http.Request, next mid.Handler) (any, error) {
+		return mid.Errors(ctx, log, next)
 	}
 
 	return addMiddleware(midFunc)

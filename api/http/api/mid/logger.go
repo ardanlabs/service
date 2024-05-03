@@ -10,9 +10,9 @@ import (
 )
 
 // Logger executes the logger middleware functionality.
-func Logger(log *logger.Logger) web.MidHandler {
-	midFunc := func(ctx context.Context, w http.ResponseWriter, r *http.Request, hdl mid.Handler) (any, error) {
-		return mid.Logger(ctx, log, r.URL.Path, r.URL.RawQuery, r.Method, r.RemoteAddr, hdl)
+func Logger(log *logger.Logger) web.Middleware {
+	midFunc := func(ctx context.Context, r *http.Request, next mid.Handler) (any, error) {
+		return mid.Logger(ctx, log, r.URL.Path, r.URL.RawQuery, r.Method, r.RemoteAddr, next)
 	}
 
 	return addMiddleware(midFunc)

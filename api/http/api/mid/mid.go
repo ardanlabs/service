@@ -10,16 +10,16 @@ import (
 	"github.com/ardanlabs/service/foundation/web"
 )
 
-type midFunc func(ctx context.Context, w http.ResponseWriter, r *http.Request, hdl mid.Handler) (any, error)
+type midFunc func(context.Context, *http.Request, mid.Handler) (any, error)
 
-func addMiddleware(midFunc midFunc) web.MidHandler {
-	m := func(handler web.Handler) web.Handler {
+func addMiddleware(midFunc midFunc) web.Middleware {
+	m := func(webHandler web.Handler) web.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) (any, error) {
-			hdl := func(ctx context.Context) (any, error) {
-				return handler(ctx, w, r)
+			next := func(ctx context.Context) (any, error) {
+				return webHandler(ctx, w, r)
 			}
 
-			return midFunc(ctx, w, r, hdl)
+			return midFunc(ctx, r, next)
 		}
 
 		return h

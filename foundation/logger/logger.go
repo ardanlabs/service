@@ -15,7 +15,7 @@ import (
 
 // TraceIDFn represents a function that can return the trace id from
 // the specified context.
-type TraceIDFn func(ctx context.Context) string
+type TraceIDFn func(context.Context) string
 
 // Logger represents a logger for logging information.
 type Logger struct {

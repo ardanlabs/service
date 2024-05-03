@@ -10,9 +10,8 @@ import (
 	"github.com/ardanlabs/service/foundation/logger"
 )
 
-// BeginCommitRollback starts a transaction around all the calls within the
-// scope of the handler function.
-func BeginCommitRollback(ctx context.Context, log *logger.Logger, bgn transaction.Beginner, handler Handler) (any, error) {
+// BeginCommitRollback starts a transaction for the domain call.
+func BeginCommitRollback(ctx context.Context, log *logger.Logger, bgn transaction.Beginner, next Handler) (any, error) {
 	hasCommitted := false
 
 	log.Info(ctx, "BEGIN TRANSACTION")
@@ -36,7 +35,7 @@ func BeginCommitRollback(ctx context.Context, log *logger.Logger, bgn transactio
 
 	ctx = setTran(ctx, tx)
 
-	resp, err := handler(ctx)
+	resp, err := next(ctx)
 	if err != nil {
 		return nil, errs.Newf(errs.Internal, "EXECUTE TRANSACTION: %s", err)
 	}

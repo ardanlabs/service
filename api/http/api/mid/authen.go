@@ -13,27 +13,27 @@ import (
 )
 
 // Authenticate validates authentication via the auth service.
-func Authenticate(log *logger.Logger, client *authclient.Client) web.MidHandler {
-	midFunc := func(ctx context.Context, w http.ResponseWriter, r *http.Request, hdl mid.Handler) (any, error) {
-		return mid.Authenticate(ctx, log, client, r.Header.Get("authorization"), hdl)
+func Authenticate(log *logger.Logger, client *authclient.Client) web.Middleware {
+	midFunc := func(ctx context.Context, r *http.Request, next mid.Handler) (any, error) {
+		return mid.Authenticate(ctx, log, client, r.Header.Get("authorization"), next)
 	}
 
 	return addMiddleware(midFunc)
 }
 
 // Bearer processes JWT authentication logic.
-func Bearer(ath *auth.Auth) web.MidHandler {
-	midFunc := func(ctx context.Context, w http.ResponseWriter, r *http.Request, hdl mid.Handler) (any, error) {
-		return mid.Bearer(ctx, ath, r.Header.Get("authorization"), hdl)
+func Bearer(ath *auth.Auth) web.Middleware {
+	midFunc := func(ctx context.Context, r *http.Request, next mid.Handler) (any, error) {
+		return mid.Bearer(ctx, ath, r.Header.Get("authorization"), next)
 	}
 
 	return addMiddleware(midFunc)
 }
 
 // Basic processes basic authentication logic.
-func Basic(userBus *userbus.Business, ath *auth.Auth) web.MidHandler {
-	midFunc := func(ctx context.Context, w http.ResponseWriter, r *http.Request, hdl mid.Handler) (any, error) {
-		return mid.Basic(ctx, ath, userBus, r.Header.Get("authorization"), hdl)
+func Basic(userBus *userbus.Business, ath *auth.Auth) web.Middleware {
+	midFunc := func(ctx context.Context, r *http.Request, next mid.Handler) (any, error) {
+		return mid.Basic(ctx, ath, userBus, r.Header.Get("authorization"), next)
 	}
 
 	return addMiddleware(midFunc)

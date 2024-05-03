@@ -14,9 +14,9 @@ import (
 )
 
 // Authorize validates authorization via the auth service.
-func Authorize(log *logger.Logger, client *authclient.Client, rule string) web.MidHandler {
-	midFunc := func(ctx context.Context, w http.ResponseWriter, r *http.Request, hdl mid.Handler) (any, error) {
-		return mid.Authorize(ctx, log, client, rule, hdl)
+func Authorize(log *logger.Logger, client *authclient.Client, rule string) web.Middleware {
+	midFunc := func(ctx context.Context, r *http.Request, next mid.Handler) (any, error) {
+		return mid.Authorize(ctx, log, client, rule, next)
 	}
 
 	return addMiddleware(midFunc)
@@ -26,9 +26,9 @@ func Authorize(log *logger.Logger, client *authclient.Client, rule string) web.M
 // user from the DB if a user id is specified in the call. Depending on the rule
 // specified, the userid from the claims may be compared with the specified
 // user id.
-func AuthorizeUser(log *logger.Logger, client *authclient.Client, userBus *userbus.Business, rule string) web.MidHandler {
-	midFunc := func(ctx context.Context, w http.ResponseWriter, r *http.Request, hdl mid.Handler) (any, error) {
-		return mid.AuthorizeUser(ctx, log, client, userBus, rule, web.Param(r, "user_id"), hdl)
+func AuthorizeUser(log *logger.Logger, client *authclient.Client, userBus *userbus.Business, rule string) web.Middleware {
+	midFunc := func(ctx context.Context, r *http.Request, next mid.Handler) (any, error) {
+		return mid.AuthorizeUser(ctx, log, client, userBus, rule, web.Param(r, "user_id"), next)
 	}
 
 	return addMiddleware(midFunc)
@@ -38,9 +38,9 @@ func AuthorizeUser(log *logger.Logger, client *authclient.Client, userBus *userb
 // product from the DB if a product id is specified in the call. Depending on
 // the rule specified, the userid from the claims may be compared with the
 // specified user id from the product.
-func AuthorizeProduct(log *logger.Logger, client *authclient.Client, productBus *productbus.Business) web.MidHandler {
-	midFunc := func(ctx context.Context, w http.ResponseWriter, r *http.Request, hdl mid.Handler) (any, error) {
-		return mid.AuthorizeProduct(ctx, log, client, productBus, web.Param(r, "product_id"), hdl)
+func AuthorizeProduct(log *logger.Logger, client *authclient.Client, productBus *productbus.Business) web.Middleware {
+	midFunc := func(ctx context.Context, r *http.Request, next mid.Handler) (any, error) {
+		return mid.AuthorizeProduct(ctx, log, client, productBus, web.Param(r, "product_id"), next)
 	}
 
 	return addMiddleware(midFunc)
@@ -50,9 +50,9 @@ func AuthorizeProduct(log *logger.Logger, client *authclient.Client, productBus 
 // home from the DB if a home id is specified in the call. Depending on
 // the rule specified, the userid from the claims may be compared with the
 // specified user id from the home.
-func AuthorizeHome(log *logger.Logger, client *authclient.Client, homeBus *homebus.Business) web.MidHandler {
-	midFunc := func(ctx context.Context, w http.ResponseWriter, r *http.Request, hdl mid.Handler) (any, error) {
-		return mid.AuthorizeHome(ctx, log, client, homeBus, web.Param(r, "home_id"), hdl)
+func AuthorizeHome(log *logger.Logger, client *authclient.Client, homeBus *homebus.Business) web.Middleware {
+	midFunc := func(ctx context.Context, r *http.Request, next mid.Handler) (any, error) {
+		return mid.AuthorizeHome(ctx, log, client, homeBus, web.Param(r, "home_id"), next)
 	}
 
 	return addMiddleware(midFunc)

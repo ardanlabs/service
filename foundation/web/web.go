@@ -14,11 +14,11 @@ import (
 
 // Handler represents a function that handles a http request within our own
 // little mini framework.
-type Handler func(ctx context.Context, w http.ResponseWriter, r *http.Request) (any, error)
+type Handler func(context.Context, http.ResponseWriter, *http.Request) (any, error)
 
 // Logger represents a function that will be called to add information
 // to the logs.
-type Logger func(ctx context.Context, msg string, v ...any)
+type Logger func(context.Context, string, ...any)
 
 // App is the entrypoint into our application and what configures our context
 // object for each of our http handlers. Feel free to add any configuration
@@ -28,11 +28,11 @@ type App struct {
 	tracer trace.Tracer
 	mux    *http.ServeMux
 	otmux  http.Handler
-	mw     []MidHandler
+	mw     []Middleware
 }
 
 // NewApp creates an App value that handle a set of routes for the application.
-func NewApp(log Logger, tracer trace.Tracer, mw ...MidHandler) *App {
+func NewApp(log Logger, tracer trace.Tracer, mw ...Middleware) *App {
 
 	// Create an OpenTelemetry HTTP Handler which wraps our router. This will start
 	// the initial span and annotate it with information about the request/trusted.
@@ -63,11 +63,11 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // EnableCORS enables CORS preflight requests to work in the middleware. It
 // prevents the MethodNotAllowedHandler from being called. This must be enabled
 // for the CORS middleware to work.
-func (a *App) EnableCORS(mw MidHandler) {
+func (a *App) EnableCORS(mw Middleware) {
 	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request) (any, error) {
 		return struct{ Status string }{Status: "OK"}, nil
 	}
-	handler = wrapMiddleware([]MidHandler{mw}, handler)
+	handler = wrapMiddleware([]Middleware{mw}, handler)
 
 	h := func(w http.ResponseWriter, r *http.Request) {
 		handler(r.Context(), w, r)
@@ -103,7 +103,7 @@ func (a *App) HandleNoMiddleware(method string, group string, path string, handl
 
 // Handle sets a handler function for a given HTTP method and path pair
 // to the application server mux.
-func (a *App) Handle(method string, group string, path string, handler Handler, mw ...MidHandler) {
+func (a *App) Handle(method string, group string, path string, handler Handler, mw ...Middleware) {
 	handler = wrapMiddleware(mw, handler)
 	handler = wrapMiddleware(a.mw, handler)
 
