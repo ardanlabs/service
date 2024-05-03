@@ -20,61 +20,61 @@ func newAPI(productApp *productapp.App) *api {
 	}
 }
 
-func (api *api) create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (api *api) create(ctx context.Context, w http.ResponseWriter, r *http.Request) (any, error) {
 	var app productapp.NewProduct
 	if err := web.Decode(r, &app); err != nil {
-		return errs.New(errs.FailedPrecondition, err)
+		return nil, errs.New(errs.FailedPrecondition, err)
 	}
 
 	prd, err := api.productApp.Create(ctx, app)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return web.Respond(ctx, w, prd, http.StatusCreated)
+	return prd, nil
 }
 
-func (api *api) update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (api *api) update(ctx context.Context, w http.ResponseWriter, r *http.Request) (any, error) {
 	var app productapp.UpdateProduct
 	if err := web.Decode(r, &app); err != nil {
-		return errs.New(errs.FailedPrecondition, err)
+		return nil, errs.New(errs.FailedPrecondition, err)
 	}
 
 	prd, err := api.productApp.Update(ctx, app)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return web.Respond(ctx, w, prd, http.StatusOK)
+	return prd, nil
 }
 
-func (api *api) delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (api *api) delete(ctx context.Context, w http.ResponseWriter, r *http.Request) (any, error) {
 	if err := api.productApp.Delete(ctx); err != nil {
-		return err
+		return nil, err
 	}
 
-	return web.Respond(ctx, w, nil, http.StatusNoContent)
+	return nil, nil
 }
 
-func (api *api) query(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (api *api) query(ctx context.Context, w http.ResponseWriter, r *http.Request) (any, error) {
 	qp, err := parseQueryParams(r)
 	if err != nil {
-		return err
+		return nil, errs.New(errs.FailedPrecondition, err)
 	}
 
-	hme, err := api.productApp.Query(ctx, qp)
+	prd, err := api.productApp.Query(ctx, qp)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return web.Respond(ctx, w, hme, http.StatusOK)
+	return prd, nil
 }
 
-func (api *api) queryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	hme, err := api.productApp.QueryByID(ctx)
+func (api *api) queryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) (any, error) {
+	prd, err := api.productApp.QueryByID(ctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return web.Respond(ctx, w, hme, http.StatusOK)
+	return prd, nil
 }

@@ -15,19 +15,11 @@ import (
 
 // Authorize validates authorization via the auth service.
 func Authorize(log *logger.Logger, client *authclient.Client, rule string) web.MidHandler {
-	m := func(handler web.Handler) web.Handler {
-		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-			hdl := func(ctx context.Context) error {
-				return handler(ctx, w, r)
-			}
-
-			return mid.Authorize(ctx, log, client, rule, hdl)
-		}
-
-		return h
+	midFunc := func(ctx context.Context, w http.ResponseWriter, r *http.Request, hdl mid.Handler) (any, error) {
+		return mid.Authorize(ctx, log, client, rule, hdl)
 	}
 
-	return m
+	return addMiddleware(midFunc)
 }
 
 // AuthorizeUser executes the specified role and extracts the specified
@@ -35,19 +27,11 @@ func Authorize(log *logger.Logger, client *authclient.Client, rule string) web.M
 // specified, the userid from the claims may be compared with the specified
 // user id.
 func AuthorizeUser(log *logger.Logger, client *authclient.Client, userBus *userbus.Business, rule string) web.MidHandler {
-	m := func(handler web.Handler) web.Handler {
-		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-			hdl := func(ctx context.Context) error {
-				return handler(ctx, w, r)
-			}
-
-			return mid.AuthorizeUser(ctx, log, client, userBus, rule, web.Param(r, "user_id"), hdl)
-		}
-
-		return h
+	midFunc := func(ctx context.Context, w http.ResponseWriter, r *http.Request, hdl mid.Handler) (any, error) {
+		return mid.AuthorizeUser(ctx, log, client, userBus, rule, web.Param(r, "user_id"), hdl)
 	}
 
-	return m
+	return addMiddleware(midFunc)
 }
 
 // AuthorizeProduct executes the specified role and extracts the specified
@@ -55,19 +39,11 @@ func AuthorizeUser(log *logger.Logger, client *authclient.Client, userBus *userb
 // the rule specified, the userid from the claims may be compared with the
 // specified user id from the product.
 func AuthorizeProduct(log *logger.Logger, client *authclient.Client, productBus *productbus.Business) web.MidHandler {
-	m := func(handler web.Handler) web.Handler {
-		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-			hdl := func(ctx context.Context) error {
-				return handler(ctx, w, r)
-			}
-
-			return mid.AuthorizeProduct(ctx, log, client, productBus, web.Param(r, "product_id"), hdl)
-		}
-
-		return h
+	midFunc := func(ctx context.Context, w http.ResponseWriter, r *http.Request, hdl mid.Handler) (any, error) {
+		return mid.AuthorizeProduct(ctx, log, client, productBus, web.Param(r, "product_id"), hdl)
 	}
 
-	return m
+	return addMiddleware(midFunc)
 }
 
 // AuthorizeHome executes the specified role and extracts the specified
@@ -75,17 +51,9 @@ func AuthorizeProduct(log *logger.Logger, client *authclient.Client, productBus 
 // the rule specified, the userid from the claims may be compared with the
 // specified user id from the home.
 func AuthorizeHome(log *logger.Logger, client *authclient.Client, homeBus *homebus.Business) web.MidHandler {
-	m := func(handler web.Handler) web.Handler {
-		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-			hdl := func(ctx context.Context) error {
-				return handler(ctx, w, r)
-			}
-
-			return mid.AuthorizeHome(ctx, log, client, homeBus, web.Param(r, "home_id"), hdl)
-		}
-
-		return h
+	midFunc := func(ctx context.Context, w http.ResponseWriter, r *http.Request, hdl mid.Handler) (any, error) {
+		return mid.AuthorizeHome(ctx, log, client, homeBus, web.Param(r, "home_id"), hdl)
 	}
 
-	return m
+	return addMiddleware(midFunc)
 }

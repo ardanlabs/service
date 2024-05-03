@@ -4,21 +4,21 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
 
+	"github.com/ardanlabs/service/app/api/errs"
 	"github.com/ardanlabs/service/business/api/transaction"
 	"github.com/ardanlabs/service/foundation/logger"
 )
 
 // BeginCommitRollback starts a transaction around all the calls within the
 // scope of the handler function.
-func BeginCommitRollback(ctx context.Context, log *logger.Logger, bgn transaction.Beginner, handler Handler) error {
+func BeginCommitRollback(ctx context.Context, log *logger.Logger, bgn transaction.Beginner, handler Handler) (any, error) {
 	hasCommitted := false
 
 	log.Info(ctx, "BEGIN TRANSACTION")
 	tx, err := bgn.Begin()
 	if err != nil {
-		return fmt.Errorf("BEGIN TRANSACTION: %w", err)
+		return nil, errs.Newf(errs.Internal, "BEGIN TRANSACTION: %s", err)
 	}
 
 	defer func() {
@@ -36,16 +36,17 @@ func BeginCommitRollback(ctx context.Context, log *logger.Logger, bgn transactio
 
 	ctx = setTran(ctx, tx)
 
-	if err := handler(ctx); err != nil {
-		return fmt.Errorf("EXECUTE TRANSACTION: %w", err)
+	resp, err := handler(ctx)
+	if err != nil {
+		return nil, errs.Newf(errs.Internal, "EXECUTE TRANSACTION: %s", err)
 	}
 
 	log.Info(ctx, "COMMIT TRANSACTION")
 	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("COMMIT TRANSACTION: %w", err)
+		return nil, errs.Newf(errs.Internal, "COMMIT TRANSACTION: %s", err)
 	}
 
 	hasCommitted = true
 
-	return nil
+	return resp, err
 }

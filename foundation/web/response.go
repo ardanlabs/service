@@ -10,12 +10,26 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 )
 
-// Respond converts a Go value to JSON and sends it to the client.
-func Respond(ctx context.Context, w http.ResponseWriter, data any, statusCode int) error {
-	ctx, span := tracer.AddSpan(ctx, "foundation.web.response", attribute.Int("status", statusCode))
+type httpStatus interface {
+	HTTPStatus() int
+}
+
+func send(ctx context.Context, w http.ResponseWriter, data any) error {
+	var statusCode = http.StatusOK
+	if _, ok := data.(error); ok {
+		if v, ok := data.(httpStatus); ok {
+			statusCode = v.HTTPStatus()
+		} else {
+			statusCode = http.StatusInternalServerError
+		}
+	}
+
+	_, span := tracer.AddSpan(ctx, "foundation.web.response", attribute.Int("status", statusCode))
 	defer span.End()
 
-	setStatusCode(ctx, statusCode)
+	if data == nil {
+		statusCode = http.StatusNoContent
+	}
 
 	if statusCode == http.StatusNoContent {
 		w.WriteHeader(statusCode)

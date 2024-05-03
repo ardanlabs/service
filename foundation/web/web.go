@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/ardanlabs/service/foundation/tracer"
 	"github.com/google/uuid"
@@ -15,7 +14,7 @@ import (
 
 // Handler represents a function that handles a http request within our own
 // little mini framework.
-type Handler func(ctx context.Context, w http.ResponseWriter, r *http.Request) error
+type Handler func(ctx context.Context, w http.ResponseWriter, r *http.Request) (any, error)
 
 // Logger represents a function that will be called to add information
 // to the logs.
@@ -65,8 +64,8 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // prevents the MethodNotAllowedHandler from being called. This must be enabled
 // for the CORS middleware to work.
 func (a *App) EnableCORS(mw MidHandler) {
-	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-		return Respond(ctx, w, "OK", http.StatusOK)
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request) (any, error) {
+		return struct{ Status string }{Status: "OK"}, nil
 	}
 	handler = wrapMiddleware([]MidHandler{mw}, handler)
 
@@ -84,16 +83,13 @@ func (a *App) EnableCORS(mw MidHandler) {
 // OTEL tracing.
 func (a *App) HandleNoMiddleware(method string, group string, path string, handler Handler) {
 	h := func(w http.ResponseWriter, r *http.Request) {
-		v := Values{
-			TraceID: uuid.NewString(),
-			Now:     time.Now().UTC(),
-		}
-		ctx := setValues(r.Context(), &v)
+		ctx := setTraceID(r.Context(), uuid.NewString())
 
-		if err := handler(ctx, w, r); err != nil {
-			a.log(ctx, "web", "ERROR", err)
-			return
+		resp, err := handler(ctx, w, r)
+		if err != nil {
+			send(ctx, w, err)
 		}
+		send(ctx, w, resp)
 	}
 
 	finalPath := path
@@ -115,16 +111,13 @@ func (a *App) Handle(method string, group string, path string, handler Handler, 
 		ctx, span := tracer.StartTrace(r.Context(), a.tracer, "pkg.web.handle", r.RequestURI, w)
 		defer span.End()
 
-		v := Values{
-			TraceID: span.SpanContext().TraceID().String(),
-			Now:     time.Now().UTC(),
-		}
-		ctx = setValues(ctx, &v)
+		ctx = setTraceID(ctx, span.SpanContext().TraceID().String())
 
-		if err := handler(ctx, w, r); err != nil {
-			a.log(ctx, "web", "ERROR", err)
-			return
+		resp, err := handler(ctx, w, r)
+		if err != nil {
+			send(ctx, w, err)
 		}
+		send(ctx, w, resp)
 	}
 
 	finalPath := path

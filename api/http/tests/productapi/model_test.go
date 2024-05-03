@@ -1,16 +1,11 @@
-package tests
+package product_test
 
 import (
 	"time"
 
-	"github.com/ardanlabs/service/app/api/errs"
 	"github.com/ardanlabs/service/app/domain/productapp"
 	"github.com/ardanlabs/service/business/domain/productbus"
 )
-
-func toErrorPtr(err errs.Error) *errs.Error {
-	return &err
-}
 
 func toAppProduct(prd productbus.Product) productapp.Product {
 	return productapp.Product{

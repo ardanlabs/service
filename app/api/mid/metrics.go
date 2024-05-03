@@ -7,10 +7,10 @@ import (
 )
 
 // Metrics updates program counters.
-func Metrics(ctx context.Context, handler Handler) error {
+func Metrics(ctx context.Context, handler Handler) (any, error) {
 	ctx = metrics.Set(ctx)
 
-	err := handler(ctx)
+	resp, err := handler(ctx)
 
 	n := metrics.AddRequests(ctx)
 
@@ -22,5 +22,5 @@ func Metrics(ctx context.Context, handler Handler) error {
 		metrics.AddErrors(ctx)
 	}
 
-	return err
+	return resp, err
 }

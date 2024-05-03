@@ -3,7 +3,6 @@ package mid
 import (
 	"context"
 	"encoding/base64"
-	"fmt"
 	"net/mail"
 	"strings"
 	"time"
@@ -18,10 +17,10 @@ import (
 )
 
 // Authenticate validates authentication via the auth service.
-func Authenticate(ctx context.Context, log *logger.Logger, client *authclient.Client, authorization string, handler Handler) error {
+func Authenticate(ctx context.Context, log *logger.Logger, client *authclient.Client, authorization string, handler Handler) (any, error) {
 	resp, err := client.Authenticate(ctx, authorization)
 	if err != nil {
-		return errs.New(errs.Unauthenticated, err)
+		return nil, errs.New(errs.Unauthenticated, err)
 	}
 
 	ctx = setUserID(ctx, resp.UserID)
@@ -31,19 +30,19 @@ func Authenticate(ctx context.Context, log *logger.Logger, client *authclient.Cl
 }
 
 // Bearer processes JWT authentication logic.
-func Bearer(ctx context.Context, ath *auth.Auth, authorization string, handler Handler) error {
+func Bearer(ctx context.Context, ath *auth.Auth, authorization string, handler Handler) (any, error) {
 	claims, err := ath.Authenticate(ctx, authorization)
 	if err != nil {
-		return errs.New(errs.Unauthenticated, err)
+		return nil, errs.New(errs.Unauthenticated, err)
 	}
 
 	if claims.Subject == "" {
-		return errs.Newf(errs.Unauthenticated, "authorize: you are not authorized for that action, no claims")
+		return nil, errs.Newf(errs.Unauthenticated, "authorize: you are not authorized for that action, no claims")
 	}
 
 	subjectID, err := uuid.Parse(claims.Subject)
 	if err != nil {
-		return errs.New(errs.Unauthenticated, fmt.Errorf("parsing subject: %w", err))
+		return nil, errs.Newf(errs.Unauthenticated, "parsing subject: %s", err)
 	}
 
 	ctx = setUserID(ctx, subjectID)
@@ -53,20 +52,20 @@ func Bearer(ctx context.Context, ath *auth.Auth, authorization string, handler H
 }
 
 // Basic processes basic authentication logic.
-func Basic(ctx context.Context, ath *auth.Auth, userBus *userbus.Business, authorization string, handler Handler) error {
+func Basic(ctx context.Context, ath *auth.Auth, userBus *userbus.Business, authorization string, handler Handler) (any, error) {
 	email, pass, ok := parseBasicAuth(authorization)
 	if !ok {
-		return errs.Newf(errs.Unauthenticated, "invalid Basic auth")
+		return nil, errs.Newf(errs.Unauthenticated, "invalid Basic auth")
 	}
 
 	addr, err := mail.ParseAddress(email)
 	if err != nil {
-		return errs.New(errs.Unauthenticated, err)
+		return nil, errs.New(errs.Unauthenticated, err)
 	}
 
 	usr, err := userBus.Authenticate(ctx, *addr, pass)
 	if err != nil {
-		return errs.New(errs.Unauthenticated, err)
+		return nil, errs.New(errs.Unauthenticated, err)
 	}
 
 	claims := auth.Claims{
@@ -81,7 +80,7 @@ func Basic(ctx context.Context, ath *auth.Auth, userBus *userbus.Business, autho
 
 	subjectID, err := uuid.Parse(claims.Subject)
 	if err != nil {
-		return errs.Newf(errs.Unauthenticated, "parsing subject: %s", err)
+		return nil, errs.Newf(errs.Unauthenticated, "parsing subject: %s", err)
 	}
 
 	ctx = setUserID(ctx, subjectID)

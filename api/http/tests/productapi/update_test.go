@@ -1,4 +1,4 @@
-package tests
+package product_test
 
 import (
 	"fmt"
@@ -65,7 +65,7 @@ func update400(sd apitest.SeedData) []apitest.Table {
 				Quantity: dbtest.IntPointer(0),
 			},
 			GotResp: &errs.Error{},
-			ExpResp: toErrorPtr(errs.Newf(errs.FailedPrecondition, "validate: [{\"field\":\"cost\",\"error\":\"cost must be 0 or greater\"},{\"field\":\"quantity\",\"error\":\"quantity must be 1 or greater\"}]")),
+			ExpResp: errs.Newf(errs.FailedPrecondition, "validate: [{\"field\":\"cost\",\"error\":\"cost must be 0 or greater\"},{\"field\":\"quantity\",\"error\":\"quantity must be 1 or greater\"}]"),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -84,7 +84,7 @@ func update401(sd apitest.SeedData) []apitest.Table {
 			Method:     http.MethodPut,
 			StatusCode: http.StatusUnauthorized,
 			GotResp:    &errs.Error{},
-			ExpResp:    toErrorPtr(errs.Newf(errs.Unauthenticated, "error parsing token: token contains an invalid number of segments")),
+			ExpResp:    errs.Newf(errs.Unauthenticated, "error parsing token: token contains an invalid number of segments"),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -96,7 +96,7 @@ func update401(sd apitest.SeedData) []apitest.Table {
 			Method:     http.MethodPut,
 			StatusCode: http.StatusUnauthorized,
 			GotResp:    &errs.Error{},
-			ExpResp:    toErrorPtr(errs.Newf(errs.Unauthenticated, "authentication failed : bindings results[[{[true] map[x:false]}]] ok[true]")),
+			ExpResp:    errs.Newf(errs.Unauthenticated, "authentication failed : bindings results[[{[true] map[x:false]}]] ok[true]"),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -113,7 +113,7 @@ func update401(sd apitest.SeedData) []apitest.Table {
 				Quantity: dbtest.IntPointer(10),
 			},
 			GotResp: &errs.Error{},
-			ExpResp: toErrorPtr(errs.Newf(errs.Unauthenticated, "authorize: you are not authorized for that action, claims[[{USER}]] rule[rule_admin_or_subject]: rego evaluation failed : bindings results[[{[true] map[x:false]}]] ok[true]")),
+			ExpResp: errs.Newf(errs.Unauthenticated, "authorize: you are not authorized for that action, claims[[{USER}]] rule[rule_admin_or_subject]: rego evaluation failed : bindings results[[{[true] map[x:false]}]] ok[true]"),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},

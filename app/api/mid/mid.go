@@ -14,7 +14,7 @@ import (
 )
 
 // Handler represents the handler function that needs to be called.
-type Handler func(context.Context) error
+type Handler func(context.Context) (any, error)
 
 type ctxKey int
 

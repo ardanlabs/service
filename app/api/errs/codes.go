@@ -1,43 +1,46 @@
 package errs
 
 import (
-	"fmt"
+	"net/http"
 )
 
 var (
 	// OK indicates the operation was successful.
 	OK = ErrCode{value: 0}
 
+	// NoContent indicates the operation was successful with no content.
+	NoContent = ErrCode{value: 1}
+
 	// Canceled indicates the operation was canceled (typically by the caller).
-	Canceled = ErrCode{value: 1}
+	Canceled = ErrCode{value: 2}
 
 	// Unknown error. An example of where this error may be returned is
 	// if a Status value received from another address space belongs to
 	// an error-space that is not known in this address space. Also
 	// errors raised by APIs that do not return enough error information
 	// may be converted to this error.
-	Unknown = ErrCode{value: 2}
+	Unknown = ErrCode{value: 3}
 
 	// InvalidArgument indicates client specified an invalid argument.
 	// Note that this differs from FailedPrecondition. It indicates arguments
 	// that are problematic regardless of the state of the system
 	// (e.g., a malformed file name).
-	InvalidArgument = ErrCode{value: 3}
+	InvalidArgument = ErrCode{value: 4}
 
 	// DeadlineExceeded means operation expired before completion.
 	// For operations that change the state of the system, this error may be
 	// returned even if the operation has completed successfully. For
 	// example, a successful response from a server could have been delayed
 	// long enough for the deadline to expire.
-	DeadlineExceeded = ErrCode{value: 4}
+	DeadlineExceeded = ErrCode{value: 5}
 
 	// NotFound means some requested entity (e.g., file or directory) was
 	// not found.
-	NotFound = ErrCode{value: 5}
+	NotFound = ErrCode{value: 6}
 
 	// AlreadyExists means an attempt to create an entity failed because one
 	// already exists.
-	AlreadyExists = ErrCode{value: 6}
+	AlreadyExists = ErrCode{value: 7}
 
 	// PermissionDenied indicates the caller does not have permission to
 	// execute the specified operation. It must not be used for rejections
@@ -45,22 +48,22 @@ var (
 	// instead for those errors). It must not be
 	// used if the caller cannot be identified (use Unauthenticated
 	// instead for those errors).
-	PermissionDenied = ErrCode{value: 7}
+	PermissionDenied = ErrCode{value: 8}
 
 	// ResourceExhausted indicates some resource has been exhausted, perhaps
 	// a per-user quota, or perhaps the entire file system is out of space.
-	ResourceExhausted = ErrCode{value: 8}
+	ResourceExhausted = ErrCode{value: 9}
 
 	// FailedPrecondition indicates operation was rejected because the
 	// system is not in a state required for the operation's execution.
 	// For example, directory to be deleted may be non-empty, an rmdir
 	// operation is applied to a non-directory, etc.
-	FailedPrecondition = ErrCode{value: 9}
+	FailedPrecondition = ErrCode{value: 10}
 
 	// Aborted indicates the operation was aborted, typically due to a
 	// concurrency issue like sequencer check failures, transaction aborts,
 	// etc.
-	Aborted = ErrCode{value: 10}
+	Aborted = ErrCode{value: 11}
 
 	// OutOfRange means operation was attempted past the valid range.
 	// E.g., seeking or reading past end of file.
@@ -77,16 +80,16 @@ var (
 	// error) when it applies so that callers who are iterating through
 	// a space can easily look for an OutOfRange error to detect when
 	// they are done.
-	OutOfRange = ErrCode{value: 11}
+	OutOfRange = ErrCode{value: 12}
 
 	// Unimplemented indicates operation is not implemented or not
 	// supported/enabled in this service.
-	Unimplemented = ErrCode{value: 12}
+	Unimplemented = ErrCode{value: 13}
 
 	// Internal errors. Means some invariants expected by underlying
 	// system has been broken. If you see one of these errors,
 	// something is very broken.
-	Internal = ErrCode{value: 13}
+	Internal = ErrCode{value: 14}
 
 	// Unavailable indicates the service is currently unavailable.
 	// This is a most likely a transient condition and may be corrected
@@ -95,57 +98,19 @@ var (
 	//
 	// See litmus test above for deciding between FailedPrecondition,
 	// Aborted, and Unavailable.
-	Unavailable = ErrCode{value: 14}
+	Unavailable = ErrCode{value: 15}
 
 	// DataLoss indicates unrecoverable data loss or corruption.
-	DataLoss = ErrCode{value: 15}
+	DataLoss = ErrCode{value: 16}
 
 	// Unauthenticated indicates the request does not have valid
 	// authentication credentials for the operation.
-	Unauthenticated = ErrCode{value: 16}
+	Unauthenticated = ErrCode{value: 17}
 )
-
-// ErrCode represents an error code in the system.
-type ErrCode struct {
-	value int
-}
-
-// Value returns the integer value of the error code.
-func (ec ErrCode) Value() int {
-	return ec.value
-}
-
-// String returns the string representation of the error code.
-func (ec ErrCode) String() string {
-	return codeNames[ec.value]
-}
-
-// UnmarshalText implement the unmarshal interface for JSON conversions.
-func (ec *ErrCode) UnmarshalText(data []byte) error {
-	errName := string(data)
-
-	v, exists := codeNumbers[errName]
-	if !exists {
-		return fmt.Errorf("err code %q does not exist", errName)
-	}
-
-	*ec = v
-
-	return nil
-}
-
-// MarshalText implement the marshal interface for JSON conversions.
-func (ec ErrCode) MarshalText() ([]byte, error) {
-	return []byte(ec.String()), nil
-}
-
-// Equal provides support for the go-cmp package and testing.
-func (ec ErrCode) Equal(ec2 ErrCode) bool {
-	return ec.value == ec2.value
-}
 
 var codeNumbers = map[string]ErrCode{
 	"ok":                  OK,
+	"no_content":          NoContent,
 	"canceled":            Canceled,
 	"unknown":             Unknown,
 	"invalid_argument":    InvalidArgument,
@@ -164,24 +129,44 @@ var codeNumbers = map[string]ErrCode{
 	"unauthenticated":     Unauthenticated,
 }
 
-var codeNames [17]string
+var codeNames = map[ErrCode]string{
+	OK:                 "ok",
+	NoContent:          "ok_no_content",
+	Canceled:           "canceled",
+	Unknown:            "unknown",
+	InvalidArgument:    "invalid_argument",
+	DeadlineExceeded:   "deadline_exceeded",
+	NotFound:           "not_found",
+	AlreadyExists:      "already_exists",
+	PermissionDenied:   "permission_denied",
+	ResourceExhausted:  "resource_exhausted",
+	FailedPrecondition: "failed_precondition",
+	Aborted:            "aborted",
+	OutOfRange:         "out_of_range",
+	Unimplemented:      "unimplemented",
+	Internal:           "internal",
+	Unavailable:        "unavailable",
+	DataLoss:           "data_loss",
+	Unauthenticated:    "unauthenticated",
+}
 
-func init() {
-	codeNames[OK.value] = "ok"
-	codeNames[Canceled.value] = "canceled"
-	codeNames[Unknown.value] = "unknown"
-	codeNames[InvalidArgument.value] = "invalid_argument"
-	codeNames[DeadlineExceeded.value] = "deadline_exceeded"
-	codeNames[NotFound.value] = "not_found"
-	codeNames[AlreadyExists.value] = "already_exists"
-	codeNames[PermissionDenied.value] = "permission_denied"
-	codeNames[ResourceExhausted.value] = "resource_exhausted"
-	codeNames[FailedPrecondition.value] = "failed_precondition"
-	codeNames[Aborted.value] = "aborted"
-	codeNames[OutOfRange.value] = "out_of_range"
-	codeNames[Unimplemented.value] = "unimplemented"
-	codeNames[Internal.value] = "internal"
-	codeNames[Unavailable.value] = "unavailable"
-	codeNames[DataLoss.value] = "data_loss"
-	codeNames[Unauthenticated.value] = "unauthenticated"
+var httpStatus = map[ErrCode]int{
+	OK:                 http.StatusOK,
+	NoContent:          http.StatusNoContent,
+	Canceled:           http.StatusGatewayTimeout,
+	Unknown:            http.StatusInternalServerError,
+	InvalidArgument:    http.StatusBadRequest,
+	DeadlineExceeded:   http.StatusGatewayTimeout,
+	NotFound:           http.StatusNotFound,
+	AlreadyExists:      http.StatusConflict,
+	PermissionDenied:   http.StatusForbidden,
+	ResourceExhausted:  http.StatusTooManyRequests,
+	FailedPrecondition: http.StatusBadRequest,
+	Aborted:            http.StatusConflict,
+	OutOfRange:         http.StatusBadRequest,
+	Unimplemented:      http.StatusNotImplemented,
+	Internal:           http.StatusInternalServerError,
+	Unavailable:        http.StatusServiceUnavailable,
+	DataLoss:           http.StatusInternalServerError,
+	Unauthenticated:    http.StatusUnauthorized,
 }

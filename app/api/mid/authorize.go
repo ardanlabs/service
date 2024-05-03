@@ -18,10 +18,10 @@ import (
 var ErrInvalidID = errors.New("ID is not in its proper form")
 
 // Authorize validates authorization via the auth service.
-func Authorize(ctx context.Context, log *logger.Logger, client *authclient.Client, rule string, handler Handler) error {
+func Authorize(ctx context.Context, log *logger.Logger, client *authclient.Client, rule string, handler Handler) (any, error) {
 	userID, err := GetUserID(ctx)
 	if err != nil {
-		return errs.New(errs.Unauthenticated, err)
+		return nil, errs.New(errs.Unauthenticated, err)
 	}
 
 	auth := authclient.Authorize{
@@ -31,7 +31,7 @@ func Authorize(ctx context.Context, log *logger.Logger, client *authclient.Clien
 	}
 
 	if err := client.Authorize(ctx, auth); err != nil {
-		return errs.New(errs.Unauthenticated, err)
+		return nil, errs.New(errs.Unauthenticated, err)
 	}
 
 	return handler(ctx)
@@ -41,23 +41,23 @@ func Authorize(ctx context.Context, log *logger.Logger, client *authclient.Clien
 // user from the DB if a user id is specified in the call. Depending on the rule
 // specified, the userid from the claims may be compared with the specified
 // user id.
-func AuthorizeUser(ctx context.Context, log *logger.Logger, client *authclient.Client, userBus *userbus.Business, rule string, id string, handler Handler) error {
+func AuthorizeUser(ctx context.Context, log *logger.Logger, client *authclient.Client, userBus *userbus.Business, rule string, id string, handler Handler) (any, error) {
 	var userID uuid.UUID
 
 	if id != "" {
 		var err error
 		userID, err = uuid.Parse(id)
 		if err != nil {
-			return errs.New(errs.Unauthenticated, ErrInvalidID)
+			return nil, errs.New(errs.Unauthenticated, ErrInvalidID)
 		}
 
 		usr, err := userBus.QueryByID(ctx, userID)
 		if err != nil {
 			switch {
 			case errors.Is(err, userbus.ErrNotFound):
-				return errs.New(errs.Unauthenticated, err)
+				return nil, errs.New(errs.Unauthenticated, err)
 			default:
-				return errs.Newf(errs.Unauthenticated, "querybyid: userID[%s]: %s", userID, err)
+				return nil, errs.Newf(errs.Unauthenticated, "querybyid: userID[%s]: %s", userID, err)
 			}
 		}
 
@@ -71,7 +71,7 @@ func AuthorizeUser(ctx context.Context, log *logger.Logger, client *authclient.C
 	}
 
 	if err := client.Authorize(ctx, auth); err != nil {
-		return errs.New(errs.Unauthenticated, err)
+		return nil, errs.New(errs.Unauthenticated, err)
 	}
 
 	return handler(ctx)
@@ -81,23 +81,23 @@ func AuthorizeUser(ctx context.Context, log *logger.Logger, client *authclient.C
 // product from the DB if a product id is specified in the call. Depending on
 // the rule specified, the userid from the claims may be compared with the
 // specified user id from the product.
-func AuthorizeProduct(ctx context.Context, log *logger.Logger, client *authclient.Client, productBus *productbus.Business, id string, handler Handler) error {
+func AuthorizeProduct(ctx context.Context, log *logger.Logger, client *authclient.Client, productBus *productbus.Business, id string, handler Handler) (any, error) {
 	var userID uuid.UUID
 
 	if id != "" {
 		var err error
 		productID, err := uuid.Parse(id)
 		if err != nil {
-			return errs.New(errs.Unauthenticated, ErrInvalidID)
+			return nil, errs.New(errs.Unauthenticated, ErrInvalidID)
 		}
 
 		prd, err := productBus.QueryByID(ctx, productID)
 		if err != nil {
 			switch {
 			case errors.Is(err, productbus.ErrNotFound):
-				return errs.New(errs.Unauthenticated, err)
+				return nil, errs.New(errs.Unauthenticated, err)
 			default:
-				return errs.Newf(errs.Internal, "querybyid: productID[%s]: %s", productID, err)
+				return nil, errs.Newf(errs.Internal, "querybyid: productID[%s]: %s", productID, err)
 			}
 		}
 
@@ -112,7 +112,7 @@ func AuthorizeProduct(ctx context.Context, log *logger.Logger, client *authclien
 	}
 
 	if err := client.Authorize(ctx, auth); err != nil {
-		return errs.New(errs.Unauthenticated, err)
+		return nil, errs.New(errs.Unauthenticated, err)
 	}
 
 	return handler(ctx)
@@ -122,23 +122,23 @@ func AuthorizeProduct(ctx context.Context, log *logger.Logger, client *authclien
 // home from the DB if a home id is specified in the call. Depending on
 // the rule specified, the userid from the claims may be compared with the
 // specified user id from the home.
-func AuthorizeHome(ctx context.Context, log *logger.Logger, client *authclient.Client, homeBus *homebus.Business, id string, handler Handler) error {
+func AuthorizeHome(ctx context.Context, log *logger.Logger, client *authclient.Client, homeBus *homebus.Business, id string, handler Handler) (any, error) {
 	var userID uuid.UUID
 
 	if id != "" {
 		var err error
 		homeID, err := uuid.Parse(id)
 		if err != nil {
-			return errs.New(errs.Unauthenticated, ErrInvalidID)
+			return nil, errs.New(errs.Unauthenticated, ErrInvalidID)
 		}
 
 		hme, err := homeBus.QueryByID(ctx, homeID)
 		if err != nil {
 			switch {
 			case errors.Is(err, homebus.ErrNotFound):
-				return errs.New(errs.Unauthenticated, err)
+				return nil, errs.New(errs.Unauthenticated, err)
 			default:
-				return errs.Newf(errs.Unauthenticated, "querybyid: homeID[%s]: %s", homeID, err)
+				return nil, errs.Newf(errs.Unauthenticated, "querybyid: homeID[%s]: %s", homeID, err)
 			}
 		}
 
@@ -153,7 +153,7 @@ func AuthorizeHome(ctx context.Context, log *logger.Logger, client *authclient.C
 	}
 
 	if err := client.Authorize(ctx, auth); err != nil {
-		return errs.New(errs.Unauthenticated, err)
+		return nil, errs.New(errs.Unauthenticated, err)
 	}
 
 	return handler(ctx)
