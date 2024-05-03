@@ -83,10 +83,7 @@ func (a *App) EnableCORS(mw MidHandler) {
 // OTEL tracing.
 func (a *App) HandleNoMiddleware(method string, group string, path string, handler Handler) {
 	h := func(w http.ResponseWriter, r *http.Request) {
-		v := Values{
-			TraceID: uuid.NewString(),
-		}
-		ctx := setValues(r.Context(), &v)
+		ctx := setTraceID(r.Context(), uuid.NewString())
 
 		resp, err := handler(ctx, w, r)
 		if err != nil {
@@ -114,10 +111,7 @@ func (a *App) Handle(method string, group string, path string, handler Handler, 
 		ctx, span := tracer.StartTrace(r.Context(), a.tracer, "pkg.web.handle", r.RequestURI, w)
 		defer span.End()
 
-		v := Values{
-			TraceID: span.SpanContext().TraceID().String(),
-		}
-		ctx = setValues(ctx, &v)
+		ctx = setTraceID(ctx, span.SpanContext().TraceID().String())
 
 		resp, err := handler(ctx, w, r)
 		if err != nil {

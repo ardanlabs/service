@@ -1,4 +1,4 @@
-package tests
+package home_test
 
 import (
 	"fmt"

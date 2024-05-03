@@ -22,7 +22,8 @@ func Errors(ctx context.Context, log *logger.Logger, handler Handler) (any, erro
 	span.RecordError(err)
 	defer span.End()
 
-	// Send the error so the protocol code can send it.
+	// Send the error so the web package so the error can be
+	// used as the response.
 
 	return nil, err
 }

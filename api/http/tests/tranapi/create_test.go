@@ -1,4 +1,4 @@
-package tests
+package tran_test
 
 import (
 	"net/http"

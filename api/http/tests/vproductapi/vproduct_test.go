@@ -1,4 +1,4 @@
-package tests
+package vproduct_test
 
 import (
 	"fmt"
