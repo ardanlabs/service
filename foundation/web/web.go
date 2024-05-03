@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/ardanlabs/service/foundation/tracer"
 	"github.com/google/uuid"
@@ -15,7 +14,7 @@ import (
 
 // Handler represents a function that handles a http request within our own
 // little mini framework.
-type Handler func(ctx context.Context, w http.ResponseWriter, r *http.Request) Response
+type Handler func(ctx context.Context, w http.ResponseWriter, r *http.Request) (any, error)
 
 // Logger represents a function that will be called to add information
 // to the logs.
@@ -65,8 +64,8 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // prevents the MethodNotAllowedHandler from being called. This must be enabled
 // for the CORS middleware to work.
 func (a *App) EnableCORS(mw MidHandler) {
-	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request) Response {
-		return Respond("OK", http.StatusOK)
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request) (any, error) {
+		return struct{ Status string }{Status: "OK"}, nil
 	}
 	handler = wrapMiddleware([]MidHandler{mw}, handler)
 
@@ -86,12 +85,14 @@ func (a *App) HandleNoMiddleware(method string, group string, path string, handl
 	h := func(w http.ResponseWriter, r *http.Request) {
 		v := Values{
 			TraceID: uuid.NewString(),
-			Now:     time.Now().UTC(),
 		}
 		ctx := setValues(r.Context(), &v)
 
-		resp := handler(ctx, w, r)
-		resp.send(ctx, w)
+		resp, err := handler(ctx, w, r)
+		if err != nil {
+			send(ctx, w, err)
+		}
+		send(ctx, w, resp)
 	}
 
 	finalPath := path
@@ -115,13 +116,14 @@ func (a *App) Handle(method string, group string, path string, handler Handler, 
 
 		v := Values{
 			TraceID: span.SpanContext().TraceID().String(),
-			Now:     time.Now().UTC(),
 		}
 		ctx = setValues(ctx, &v)
 
-		resp := handler(ctx, w, r)
-
-		resp.send(ctx, w)
+		resp, err := handler(ctx, w, r)
+		if err != nil {
+			send(ctx, w, err)
+		}
+		send(ctx, w, resp)
 	}
 
 	finalPath := path

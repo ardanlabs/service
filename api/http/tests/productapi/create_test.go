@@ -16,7 +16,7 @@ func create200(sd apitest.SeedData) []apitest.Table {
 			URL:        "/v1/products",
 			Token:      sd.Users[0].Token,
 			Method:     http.MethodPost,
-			StatusCode: http.StatusCreated,
+			StatusCode: http.StatusOK,
 			Input: &productapp.NewProduct{
 				Name:     "Guitar",
 				Cost:     10.34,

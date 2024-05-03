@@ -2,9 +2,49 @@
 package errs
 
 import (
-	"errors"
 	"fmt"
 )
+
+// ErrCode represents an error code in the system.
+type ErrCode struct {
+	value int
+}
+
+// Value returns the integer value of the error code.
+func (ec ErrCode) Value() int {
+	return ec.value
+}
+
+// String returns the string representation of the error code.
+func (ec ErrCode) String() string {
+	return codeNames[ec]
+}
+
+// UnmarshalText implement the unmarshal interface for JSON conversions.
+func (ec *ErrCode) UnmarshalText(data []byte) error {
+	errName := string(data)
+
+	v, exists := codeNumbers[errName]
+	if !exists {
+		return fmt.Errorf("err code %q does not exist", errName)
+	}
+
+	*ec = v
+
+	return nil
+}
+
+// MarshalText implement the marshal interface for JSON conversions.
+func (ec ErrCode) MarshalText() ([]byte, error) {
+	return []byte(ec.String()), nil
+}
+
+// Equal provides support for the go-cmp package and testing.
+func (ec ErrCode) Equal(ec2 ErrCode) bool {
+	return ec.value == ec2.value
+}
+
+// =============================================================================
 
 // Error represents an error in the system.
 type Error struct {
@@ -29,21 +69,12 @@ func Newf(code ErrCode, format string, v ...any) *Error {
 }
 
 // Error implements the error interface.
-func (err Error) Error() string {
+func (err *Error) Error() string {
 	return err.Message
 }
 
-// AsError tests the concrete error is of the Error type.
-func AsError(err error) bool {
-	var er Error
-	return errors.As(err, &er)
-}
-
-// GetError returns a copy of the Error.
-func GetError(err error) *Error {
-	var er Error
-	if !errors.As(err, &er) {
-		return nil
-	}
-	return &er
+// HTTPStatus implements the web package httpStatus interface so the
+// web framework can use the correct http status.
+func (err *Error) HTTPStatus() int {
+	return httpStatus[err.Code]
 }

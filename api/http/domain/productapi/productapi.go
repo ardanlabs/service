@@ -5,7 +5,6 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/ardanlabs/service/api/http/api/response"
 	"github.com/ardanlabs/service/app/api/errs"
 	"github.com/ardanlabs/service/app/domain/productapp"
 	"github.com/ardanlabs/service/foundation/web"
@@ -21,61 +20,61 @@ func newAPI(productApp *productapp.App) *api {
 	}
 }
 
-func (api *api) create(ctx context.Context, w http.ResponseWriter, r *http.Request) web.Response {
+func (api *api) create(ctx context.Context, w http.ResponseWriter, r *http.Request) (any, error) {
 	var app productapp.NewProduct
 	if err := web.Decode(r, &app); err != nil {
-		return response.AppError(errs.FailedPrecondition, err)
+		return nil, errs.New(errs.FailedPrecondition, err)
 	}
 
 	prd, err := api.productApp.Create(ctx, app)
 	if err != nil {
-		return response.AppAPIError(err)
+		return nil, err
 	}
 
-	return response.Response(prd, http.StatusCreated)
+	return prd, nil
 }
 
-func (api *api) update(ctx context.Context, w http.ResponseWriter, r *http.Request) web.Response {
+func (api *api) update(ctx context.Context, w http.ResponseWriter, r *http.Request) (any, error) {
 	var app productapp.UpdateProduct
 	if err := web.Decode(r, &app); err != nil {
-		return response.AppError(errs.FailedPrecondition, err)
+		return nil, errs.New(errs.FailedPrecondition, err)
 	}
 
 	prd, err := api.productApp.Update(ctx, app)
 	if err != nil {
-		return response.AppAPIError(err)
+		return nil, err
 	}
 
-	return response.Response(prd, http.StatusOK)
+	return prd, nil
 }
 
-func (api *api) delete(ctx context.Context, w http.ResponseWriter, r *http.Request) web.Response {
+func (api *api) delete(ctx context.Context, w http.ResponseWriter, r *http.Request) (any, error) {
 	if err := api.productApp.Delete(ctx); err != nil {
-		return response.AppAPIError(err)
+		return nil, err
 	}
 
-	return response.Response(nil, http.StatusNoContent)
+	return nil, nil
 }
 
-func (api *api) query(ctx context.Context, w http.ResponseWriter, r *http.Request) web.Response {
+func (api *api) query(ctx context.Context, w http.ResponseWriter, r *http.Request) (any, error) {
 	qp, err := parseQueryParams(r)
 	if err != nil {
-		return response.AppError(errs.FailedPrecondition, err)
+		return nil, errs.New(errs.FailedPrecondition, err)
 	}
 
-	hme, err := api.productApp.Query(ctx, qp)
+	prd, err := api.productApp.Query(ctx, qp)
 	if err != nil {
-		return response.AppAPIError(err)
+		return nil, err
 	}
 
-	return response.Response(hme, http.StatusOK)
+	return prd, nil
 }
 
-func (api *api) queryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) web.Response {
-	hme, err := api.productApp.QueryByID(ctx)
+func (api *api) queryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) (any, error) {
+	prd, err := api.productApp.QueryByID(ctx)
 	if err != nil {
-		return response.AppAPIError(err)
+		return nil, err
 	}
 
-	return response.Response(hme, http.StatusOK)
+	return prd, nil
 }

@@ -3,14 +3,9 @@ package tests
 import (
 	"time"
 
-	"github.com/ardanlabs/service/app/api/errs"
 	"github.com/ardanlabs/service/app/domain/userapp"
 	"github.com/ardanlabs/service/business/domain/userbus"
 )
-
-func toErrorPtr(err errs.Error) *errs.Error {
-	return &err
-}
 
 func toAppUser(usr userbus.User) userapp.User {
 	roles := make([]string, len(usr.Roles))

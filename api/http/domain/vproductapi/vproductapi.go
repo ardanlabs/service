@@ -5,10 +5,8 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/ardanlabs/service/api/http/api/response"
 	"github.com/ardanlabs/service/app/api/errs"
 	"github.com/ardanlabs/service/app/domain/vproductapp"
-	"github.com/ardanlabs/service/foundation/web"
 )
 
 type api struct {
@@ -21,16 +19,16 @@ func newAPI(vproductApp *vproductapp.App) *api {
 	}
 }
 
-func (api *api) query(ctx context.Context, w http.ResponseWriter, r *http.Request) web.Response {
+func (api *api) query(ctx context.Context, w http.ResponseWriter, r *http.Request) (any, error) {
 	qp, err := parseQueryParams(r)
 	if err != nil {
-		return response.AppError(errs.FailedPrecondition, err)
+		return nil, errs.New(errs.FailedPrecondition, err)
 	}
 
-	hme, err := api.vproductApp.Query(ctx, qp)
+	prd, err := api.vproductApp.Query(ctx, qp)
 	if err != nil {
-		return response.AppAPIError(err)
+		return nil, err
 	}
 
-	return response.Response(hme, http.StatusOK)
+	return prd, nil
 }

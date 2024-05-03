@@ -15,7 +15,7 @@ func create200(sd apitest.SeedData) []apitest.Table {
 			URL:        "/v1/tranexample",
 			Token:      sd.Admins[0].Token,
 			Method:     http.MethodPost,
-			StatusCode: http.StatusCreated,
+			StatusCode: http.StatusOK,
 			Input: &tranapp.NewTran{
 				Product: tranapp.NewProduct{
 					Name:     "Guitar",

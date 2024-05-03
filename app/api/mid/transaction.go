@@ -12,13 +12,13 @@ import (
 
 // BeginCommitRollback starts a transaction around all the calls within the
 // scope of the handler function.
-func BeginCommitRollback(ctx context.Context, log *logger.Logger, bgn transaction.Beginner, handler Handler) Response {
+func BeginCommitRollback(ctx context.Context, log *logger.Logger, bgn transaction.Beginner, handler Handler) (any, error) {
 	hasCommitted := false
 
 	log.Info(ctx, "BEGIN TRANSACTION")
 	tx, err := bgn.Begin()
 	if err != nil {
-		return appErrorf(errs.Internal, "BEGIN TRANSACTION: %s", err)
+		return nil, errs.Newf(errs.Internal, "BEGIN TRANSACTION: %s", err)
 	}
 
 	defer func() {
@@ -36,17 +36,17 @@ func BeginCommitRollback(ctx context.Context, log *logger.Logger, bgn transactio
 
 	ctx = setTran(ctx, tx)
 
-	resp := handler(ctx)
-	if resp.Errs != nil {
-		return appErrorf(errs.Internal, "EXECUTE TRANSACTION: %s", resp.Errs)
+	resp, err := handler(ctx)
+	if err != nil {
+		return nil, errs.Newf(errs.Internal, "EXECUTE TRANSACTION: %s", err)
 	}
 
 	log.Info(ctx, "COMMIT TRANSACTION")
 	if err := tx.Commit(); err != nil {
-		return appErrorf(errs.Internal, "COMMIT TRANSACTION: %s", resp.Errs)
+		return nil, errs.Newf(errs.Internal, "COMMIT TRANSACTION: %s", err)
 	}
 
 	hasCommitted = true
 
-	return resp
+	return resp, err
 }

@@ -4,7 +4,6 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/ardanlabs/service/api/http/api/response"
 	"github.com/ardanlabs/service/app/api/authclient"
 	"github.com/ardanlabs/service/app/api/mid"
 	"github.com/ardanlabs/service/business/domain/homebus"
@@ -17,12 +16,12 @@ import (
 // Authorize validates authorization via the auth service.
 func Authorize(log *logger.Logger, client *authclient.Client, rule string) web.MidHandler {
 	m := func(handler web.Handler) web.Handler {
-		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) web.Response {
-			hdl := func(ctx context.Context) mid.Response {
-				return response.ToMid(handler(ctx, w, r))
+		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) (any, error) {
+			hdl := func(ctx context.Context) (any, error) {
+				return handler(ctx, w, r)
 			}
 
-			return response.ToWebX("Authorize", mid.Authorize(ctx, log, client, rule, hdl))
+			return mid.Authorize(ctx, log, client, rule, hdl)
 		}
 
 		return h
@@ -37,12 +36,12 @@ func Authorize(log *logger.Logger, client *authclient.Client, rule string) web.M
 // user id.
 func AuthorizeUser(log *logger.Logger, client *authclient.Client, userBus *userbus.Business, rule string) web.MidHandler {
 	m := func(handler web.Handler) web.Handler {
-		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) web.Response {
-			hdl := func(ctx context.Context) mid.Response {
-				return response.ToMid(handler(ctx, w, r))
+		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) (any, error) {
+			hdl := func(ctx context.Context) (any, error) {
+				return handler(ctx, w, r)
 			}
 
-			return response.ToWeb(mid.AuthorizeUser(ctx, log, client, userBus, rule, web.Param(r, "user_id"), hdl))
+			return mid.AuthorizeUser(ctx, log, client, userBus, rule, web.Param(r, "user_id"), hdl)
 		}
 
 		return h
@@ -57,12 +56,12 @@ func AuthorizeUser(log *logger.Logger, client *authclient.Client, userBus *userb
 // specified user id from the product.
 func AuthorizeProduct(log *logger.Logger, client *authclient.Client, productBus *productbus.Business) web.MidHandler {
 	m := func(handler web.Handler) web.Handler {
-		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) web.Response {
-			hdl := func(ctx context.Context) mid.Response {
-				return response.ToMid(handler(ctx, w, r))
+		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) (any, error) {
+			hdl := func(ctx context.Context) (any, error) {
+				return handler(ctx, w, r)
 			}
 
-			return response.ToWeb(mid.AuthorizeProduct(ctx, log, client, productBus, web.Param(r, "product_id"), hdl))
+			return mid.AuthorizeProduct(ctx, log, client, productBus, web.Param(r, "product_id"), hdl)
 		}
 
 		return h
@@ -77,12 +76,12 @@ func AuthorizeProduct(log *logger.Logger, client *authclient.Client, productBus 
 // specified user id from the home.
 func AuthorizeHome(log *logger.Logger, client *authclient.Client, homeBus *homebus.Business) web.MidHandler {
 	m := func(handler web.Handler) web.Handler {
-		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) web.Response {
-			hdl := func(ctx context.Context) mid.Response {
-				return response.ToMid(handler(ctx, w, r))
+		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) (any, error) {
+			hdl := func(ctx context.Context) (any, error) {
+				return handler(ctx, w, r)
 			}
 
-			return response.ToWeb(mid.AuthorizeHome(ctx, log, client, homeBus, web.Param(r, "home_id"), hdl))
+			return mid.AuthorizeHome(ctx, log, client, homeBus, web.Param(r, "home_id"), hdl)
 		}
 
 		return h

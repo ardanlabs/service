@@ -7,10 +7,10 @@ import (
 )
 
 // Metrics updates program counters.
-func Metrics(ctx context.Context, handler Handler) Response {
+func Metrics(ctx context.Context, handler Handler) (any, error) {
 	ctx = metrics.Set(ctx)
 
-	resp := handler(ctx)
+	resp, err := handler(ctx)
 
 	n := metrics.AddRequests(ctx)
 
@@ -18,9 +18,9 @@ func Metrics(ctx context.Context, handler Handler) Response {
 		metrics.AddGoroutines(ctx)
 	}
 
-	if resp.Errs != nil {
+	if err != nil {
 		metrics.AddErrors(ctx)
 	}
 
-	return resp
+	return resp, err
 }

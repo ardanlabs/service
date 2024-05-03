@@ -6,7 +6,6 @@ import (
 	"errors"
 
 	"github.com/ardanlabs/service/app/api/auth"
-	"github.com/ardanlabs/service/app/api/errs"
 	"github.com/ardanlabs/service/business/api/transaction"
 	"github.com/ardanlabs/service/business/domain/homebus"
 	"github.com/ardanlabs/service/business/domain/productbus"
@@ -14,37 +13,8 @@ import (
 	"github.com/google/uuid"
 )
 
-type Response struct {
-	Errs       *errs.Error
-	Data       any
-	StatusCode errs.ErrCode
-}
-
-func appErrs(errs *errs.Error) Response {
-	return Response{
-		Errs:       errs,
-		StatusCode: errs.Code,
-	}
-}
-
-func appError(code errs.ErrCode, err error) Response {
-	return Response{
-		Errs:       errs.New(code, err),
-		StatusCode: code,
-	}
-}
-
-func appErrorf(code errs.ErrCode, format string, v ...any) Response {
-	return Response{
-		Errs:       errs.Newf(code, format, v...),
-		StatusCode: code,
-	}
-}
-
-// =============================================================================
-
 // Handler represents the handler function that needs to be called.
-type Handler func(context.Context) Response
+type Handler func(context.Context) (any, error)
 
 type ctxKey int
 
