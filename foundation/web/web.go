@@ -88,7 +88,9 @@ func (a *App) HandleNoMiddleware(method string, group string, path string, handl
 		resp, err := handler(ctx, w, r)
 		if err != nil {
 			respond(ctx, w, err)
+			return
 		}
+
 		respond(ctx, w, resp)
 	}
 
@@ -116,7 +118,9 @@ func (a *App) Handle(method string, group string, path string, handler Handler, 
 		resp, err := handler(ctx, w, r)
 		if err != nil {
 			respond(ctx, w, err)
+			return
 		}
+
 		respond(ctx, w, resp)
 	}
 
