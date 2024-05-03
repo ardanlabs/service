@@ -9,10 +9,6 @@ import (
 	"github.com/ardanlabs/service/foundation/logger"
 )
 
-type httpStatus interface {
-	HTTPStatus() int
-}
-
 // Logger writes information about the request to the logs.
 func Logger(ctx context.Context, log *logger.Logger, path string, rawQuery string, method string, remoteAddr string, handler Handler) (any, error) {
 	now := time.Now()
