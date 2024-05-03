@@ -3,9 +3,9 @@ package mid
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"time"
 
+	"github.com/ardanlabs/service/app/api/errs"
 	"github.com/ardanlabs/service/foundation/logger"
 )
 
@@ -25,10 +25,14 @@ func Logger(ctx context.Context, log *logger.Logger, path string, rawQuery strin
 
 	resp, err := handler(ctx)
 
-	var statusCode = http.StatusOK
-	v, ok := err.(httpStatus)
-	if ok {
-		statusCode = v.HTTPStatus()
+	var statusCode = errs.OK
+	if err != nil {
+		v, ok := err.(*errs.Error)
+		if ok {
+			statusCode = v.Code
+		} else {
+			statusCode = errs.Internal
+		}
 	}
 
 	log.Info(ctx, "request completed", "method", method, "path", path, "remoteaddr", remoteAddr,
