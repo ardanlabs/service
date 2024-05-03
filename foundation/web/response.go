@@ -16,12 +16,11 @@ type httpStatus interface {
 
 func respond(ctx context.Context, w http.ResponseWriter, data any) error {
 	var statusCode = http.StatusOK
-	if _, ok := data.(error); ok {
-		if v, ok := data.(httpStatus); ok {
-			statusCode = v.HTTPStatus()
-		} else {
-			statusCode = http.StatusInternalServerError
-		}
+	switch v := data.(type) {
+	case httpStatus:
+		statusCode = v.HTTPStatus()
+	case error:
+		statusCode = http.StatusInternalServerError
 	}
 
 	_, span := tracer.AddSpan(ctx, "foundation.web.response", attribute.Int("status", statusCode))

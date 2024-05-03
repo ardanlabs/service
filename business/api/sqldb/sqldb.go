@@ -123,9 +123,10 @@ func NamedExecContext(ctx context.Context, log *logger.Logger, db sqlx.ExtContex
 
 	defer func() {
 		if err != nil {
-			if _, ok := data.(struct{}); ok {
+			switch data.(type) {
+			case struct{}:
 				log.Infoc(ctx, 6, "database.NamedExecContext", "query", q, "ERROR", err)
-			} else {
+			default:
 				log.Infoc(ctx, 5, "database.NamedExecContext", "query", q, "ERROR", err)
 			}
 		}

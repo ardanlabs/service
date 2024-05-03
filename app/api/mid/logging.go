@@ -23,10 +23,10 @@ func Logger(ctx context.Context, log *logger.Logger, path string, rawQuery strin
 
 	var statusCode = errs.OK
 	if err != nil {
-		v, ok := err.(*errs.Error)
-		if ok {
+		switch v := err.(type) {
+		case *errs.Error:
 			statusCode = v.Code
-		} else {
+		default:
 			statusCode = errs.Internal
 		}
 	}
