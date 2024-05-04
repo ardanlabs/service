@@ -3,14 +3,13 @@ package datadog
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"net"
 	"net/http"
 	"time"
-
-	"github.com/go-json-experiment/json"
 )
 
 // Datadog provides the ability to publish metrics to Datadog.

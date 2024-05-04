@@ -3,11 +3,11 @@ package publisher
 
 import (
 	"context"
+	"encoding/json"
 	"sync"
 	"time"
 
 	"github.com/ardanlabs/service/foundation/logger"
-	"github.com/go-json-experiment/json"
 )
 
 // Set of possible publisher types.

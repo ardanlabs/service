@@ -2,7 +2,9 @@ package mid
 
 import (
 	"context"
+	"path"
 
+	"github.com/ardanlabs/service/app/api/errs"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/tracer"
 )
@@ -16,7 +18,13 @@ func Errors(ctx context.Context, log *logger.Logger, next Handler) (any, error) 
 		return resp, nil
 	}
 
-	log.Error(ctx, "message", "ERROR", err)
+	switch v := err.(type) {
+	case *errs.Error:
+		log.Error(ctx, "message", "ERROR", err, "FileName", path.Base(v.FileName), "FuncName", path.Base(v.FuncName))
+
+	default:
+		log.Error(ctx, "message", "ERROR", err)
+	}
 
 	_, span := tracer.AddSpan(ctx, "app.api.mid.error")
 	span.RecordError(err)

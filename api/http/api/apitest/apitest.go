@@ -4,6 +4,7 @@ package apitest
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"net/mail"
@@ -13,7 +14,6 @@ import (
 	"github.com/ardanlabs/service/app/api/auth"
 	"github.com/ardanlabs/service/business/api/dbtest"
 	"github.com/ardanlabs/service/business/domain/userbus/stores/userdb"
-	"github.com/go-json-experiment/json"
 	"github.com/golang-jwt/jwt/v4"
 )
 
@@ -51,12 +51,12 @@ func (at *Test) Run(t *testing.T, table []Table, testName string) {
 			w := httptest.NewRecorder()
 
 			if tt.Input != nil {
-				var b bytes.Buffer
-				if err := json.MarshalWrite(&b, tt.Input, json.FormatNilSliceAsNull(true)); err != nil {
+				d, err := json.Marshal(tt.Input)
+				if err != nil {
 					t.Fatalf("Should be able to marshal the model : %s", err)
 				}
 
-				r = httptest.NewRequest(tt.Method, tt.URL, &b)
+				r = httptest.NewRequest(tt.Method, tt.URL, bytes.NewBuffer(d))
 			}
 
 			r.Header.Set("Authorization", "Bearer "+tt.Token)

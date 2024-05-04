@@ -2,11 +2,11 @@ package productbus
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/ardanlabs/service/business/api/delegate"
 	"github.com/ardanlabs/service/business/domain/userbus"
-	"github.com/go-json-experiment/json"
 )
 
 // registerDelegateFunctions will register action functions with the delegate

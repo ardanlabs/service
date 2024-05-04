@@ -1,9 +1,8 @@
 package validate
 
 import (
+	"encoding/json"
 	"errors"
-
-	"github.com/go-json-experiment/json"
 )
 
 // FieldError is used to indicate an error with a specific request field.

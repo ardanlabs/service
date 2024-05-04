@@ -2,11 +2,11 @@ package web
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 
 	"github.com/ardanlabs/service/foundation/tracer"
-	"github.com/go-json-experiment/json"
 	"go.opentelemetry.io/otel/attribute"
 )
 

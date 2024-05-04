@@ -2,6 +2,7 @@ package commands
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"strconv"
@@ -11,7 +12,6 @@ import (
 	"github.com/ardanlabs/service/business/domain/userbus"
 	"github.com/ardanlabs/service/business/domain/userbus/stores/userdb"
 	"github.com/ardanlabs/service/foundation/logger"
-	"github.com/go-json-experiment/json"
 )
 
 // Users retrieves all users from the database.
@@ -42,5 +42,5 @@ func Users(log *logger.Logger, cfg sqldb.Config, pageNumber string, rowsPerPage 
 		return fmt.Errorf("retrieve users: %w", err)
 	}
 
-	return json.MarshalWrite(os.Stdout, users, json.FormatNilSliceAsNull(true))
+	return json.NewEncoder(os.Stdout).Encode(users)
 }

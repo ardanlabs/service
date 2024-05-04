@@ -3,6 +3,7 @@ package errs
 
 import (
 	"fmt"
+	"runtime"
 )
 
 // ErrCode represents an error code in the system.
@@ -48,23 +49,33 @@ func (ec ErrCode) Equal(ec2 ErrCode) bool {
 
 // Error represents an error in the system.
 type Error struct {
-	Code    ErrCode `json:"code"`
-	Message string  `json:"message"`
+	Code     ErrCode `json:"code"`
+	Message  string  `json:"message"`
+	FuncName string  `json:"-"`
+	FileName string  `json:"-"`
 }
 
 // New constructs an error based on an app error.
 func New(code ErrCode, err error) *Error {
+	pc, filename, line, _ := runtime.Caller(1)
+
 	return &Error{
-		Code:    code,
-		Message: err.Error(),
+		Code:     code,
+		Message:  err.Error(),
+		FuncName: runtime.FuncForPC(pc).Name(),
+		FileName: fmt.Sprintf("%s:%d", filename, line),
 	}
 }
 
 // Newf constructs an error based on a error message.
 func Newf(code ErrCode, format string, v ...any) *Error {
+	pc, filename, line, _ := runtime.Caller(1)
+
 	return &Error{
-		Code:    code,
-		Message: fmt.Sprintf(format, v...),
+		Code:     code,
+		Message:  fmt.Sprintf(format, v...),
+		FuncName: runtime.FuncForPC(pc).Name(),
+		FileName: fmt.Sprintf("%s:%d", filename, line),
 	}
 }
 
@@ -77,4 +88,9 @@ func (err *Error) Error() string {
 // web framework can use the correct http status.
 func (err *Error) HTTPStatus() int {
 	return httpStatus[err.Code]
+}
+
+// Equal provides support for the go-cmp package and testing.
+func (err *Error) Equal(err2 *Error) bool {
+	return err.Code == err2.Code && err.Message == err2.Message
 }

@@ -1,10 +1,10 @@
 package userbus
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/ardanlabs/service/business/api/delegate"
-	"github.com/go-json-experiment/json"
 	"github.com/google/uuid"
 )
 
