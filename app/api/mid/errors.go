@@ -30,7 +30,7 @@ func Errors(ctx context.Context, log *logger.Logger, next Handler) (any, error) 
 	span.RecordError(err)
 	defer span.End()
 
-	// Send the error so the web package so the error can be
+	// Send the error to the web package so the error can be
 	// used as the response.
 
 	return nil, err
