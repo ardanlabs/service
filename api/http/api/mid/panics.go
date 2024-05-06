@@ -10,7 +10,7 @@ import (
 
 // Panics executes the panic middleware functionality.
 func Panics() web.Middleware {
-	midFunc := func(ctx context.Context, r *http.Request, next mid.APIHandler) (mid.Encoder, error) {
+	midFunc := func(ctx context.Context, r *http.Request, next mid.Handler) (mid.Encoder, error) {
 		return mid.Panics(ctx, next)
 	}
 

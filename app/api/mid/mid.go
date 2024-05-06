@@ -18,8 +18,8 @@ type Encoder interface {
 	Encode() ([]byte, error)
 }
 
-// APIHandler represents an api layer handler function that needs to be called.
-type APIHandler func(context.Context) (Encoder, error)
+// Handler represents an api layer handler function that needs to be called.
+type Handler func(context.Context) (Encoder, error)
 
 // =============================================================================
 

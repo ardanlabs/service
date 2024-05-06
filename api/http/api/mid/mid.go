@@ -10,7 +10,7 @@ import (
 	"github.com/ardanlabs/service/foundation/web"
 )
 
-type midFunc func(context.Context, *http.Request, mid.APIHandler) (mid.Encoder, error)
+type midFunc func(context.Context, *http.Request, mid.Handler) (mid.Encoder, error)
 
 func addMiddleware(midFunc midFunc) web.Middleware {
 	m := func(webHandler web.Handler) web.Handler {
