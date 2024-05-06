@@ -12,6 +12,11 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
+// Encoder represents data that can be encoded.
+type Encoder interface {
+	Encode() ([]byte, error)
+}
+
 // Handler represents a function that handles a http request within our own
 // little mini framework.
 type Handler func(context.Context, http.ResponseWriter, *http.Request) (Encoder, error)

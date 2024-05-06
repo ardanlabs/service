@@ -14,11 +14,6 @@ type httpStatus interface {
 	HTTPStatus() int
 }
 
-// Encoder represents data that can be encoded.
-type Encoder interface {
-	Encode() ([]byte, error)
-}
-
 func respondError(ctx context.Context, w http.ResponseWriter, err error) error {
 	data, ok := err.(Encoder)
 	if !ok {
