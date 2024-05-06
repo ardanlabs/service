@@ -2,6 +2,7 @@
 package page
 
 import (
+	"encoding/json"
 	"strconv"
 
 	"github.com/ardanlabs/service/foundation/validate"
@@ -58,4 +59,9 @@ func NewDocument[T any](items []T, total int, page int, rowsPerPage int) Documen
 		Page:        page,
 		RowsPerPage: rowsPerPage,
 	}
+}
+
+// Encode implments the web package encoder interface.
+func (d Document[T]) Encode() ([]byte, error) {
+	return json.Marshal(d)
 }

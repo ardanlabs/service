@@ -1,6 +1,7 @@
 package tranapp
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/mail"
 	"time"
@@ -21,6 +22,11 @@ type Product struct {
 	DateUpdated string  `json:"dateUpdated"`
 }
 
+// Encode implments the web package encoder interface.
+func (app Product) Encode() ([]byte, error) {
+	return json.Marshal(app)
+}
+
 func toAppProduct(prd productbus.Product) Product {
 	return Product{
 		ID:          prd.ID.String(),
@@ -33,12 +39,21 @@ func toAppProduct(prd productbus.Product) Product {
 	}
 }
 
+// =============================================================================
+
 // NewTran represents an example of cross domain transaction at the
 // application layer.
 type NewTran struct {
 	Product NewProduct `json:"product"`
 	User    NewUser    `json:"user"`
 }
+
+// Decode implments the web package decoder interface.
+func (app *NewTran) Decode(data []byte) error {
+	return json.Unmarshal(data, &app)
+}
+
+// =============================================================================
 
 // NewUser contains information needed to create a new user.
 type NewUser struct {
@@ -48,6 +63,15 @@ type NewUser struct {
 	Department      string   `json:"department"`
 	Password        string   `json:"password" validate:"required"`
 	PasswordConfirm string   `json:"passwordConfirm" validate:"eqfield=Password"`
+}
+
+// Validate checks the data in the model is considered clean.
+func (app NewUser) Validate() error {
+	if err := validate.Check(app); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func toBusNewUser(app NewUser) (userbus.NewUser, error) {
@@ -76,20 +100,22 @@ func toBusNewUser(app NewUser) (userbus.NewUser, error) {
 	return bus, nil
 }
 
-// Validate checks the data in the model is considered clean.
-func (app NewUser) Validate() error {
-	if err := validate.Check(app); err != nil {
-		return err
-	}
-
-	return nil
-}
+// =============================================================================
 
 // NewProduct is what we require from clients when adding a Product.
 type NewProduct struct {
 	Name     string  `json:"name" validate:"required"`
 	Cost     float64 `json:"cost" validate:"required,gte=0"`
 	Quantity int     `json:"quantity" validate:"required,gte=1"`
+}
+
+// Validate checks the data in the model is considered clean.
+func (app NewProduct) Validate() error {
+	if err := validate.Check(app); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func toBusNewProduct(app NewProduct) (productbus.NewProduct, error) {
@@ -100,13 +126,4 @@ func toBusNewProduct(app NewProduct) (productbus.NewProduct, error) {
 	}
 
 	return bus, nil
-}
-
-// Validate checks the data in the model is considered clean.
-func (app NewProduct) Validate() error {
-	if err := validate.Check(app); err != nil {
-		return err
-	}
-
-	return nil
 }

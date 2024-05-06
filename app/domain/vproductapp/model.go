@@ -1,6 +1,7 @@
 package vproductapp
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/ardanlabs/service/business/domain/vproductbus"
@@ -18,6 +19,8 @@ type QueryParams struct {
 	UserName string
 }
 
+// =============================================================================
+
 // Product represents information about an individual product with
 // extended information.
 type Product struct {
@@ -29,6 +32,11 @@ type Product struct {
 	DateCreated string  `json:"dateCreated"`
 	DateUpdated string  `json:"dateUpdated"`
 	UserName    string  `json:"userName"`
+}
+
+// Encode implments the web package encoder interface.
+func (app Product) Encode() ([]byte, error) {
+	return json.Marshal(app)
 }
 
 func toAppProduct(prd vproductbus.Product) Product {

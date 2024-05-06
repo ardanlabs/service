@@ -1,8 +1,8 @@
 package web
 
 import (
-	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 )
 
@@ -11,20 +11,30 @@ func Param(r *http.Request, key string) string {
 	return r.PathValue(key)
 }
 
+type decoder interface {
+	Decode(data []byte) error
+}
+
 type validator interface {
 	Validate() error
 }
 
-// Decode reads the body of an HTTP request looking for a JSON document. The
-// body is decoded into the provided value.
-// If the provided value is a struct then it is checked for validation tags.
-// If the value implements a validate function, it is executed.
+// Decode reads the body of an HTTP request. If the data model provided
+// implements the decoder interface, that implemementation is used to decode
+// the body. If the interface is not implemented, an error is returned.
 func Decode(r *http.Request, val any) error {
-	d := json.NewDecoder(r.Body)
-	d.DisallowUnknownFields()
+	data, err := io.ReadAll(r.Body)
+	if err != nil {
+		return fmt.Errorf("web.request: unable to read payload: %w", err)
+	}
 
-	if err := d.Decode(val); err != nil {
-		return fmt.Errorf("unable to decode payload: %w", err)
+	dec, ok := val.(decoder)
+	if !ok {
+		return fmt.Errorf("web.request: encoder not implemented")
+	}
+
+	if err := dec.Decode(data); err != nil {
+		return fmt.Errorf("web.request: encode: %w", err)
 	}
 
 	if v, ok := val.(validator); ok {

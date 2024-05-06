@@ -2,6 +2,7 @@
 package errs
 
 import (
+	"encoding/json"
 	"fmt"
 	"runtime"
 )
@@ -82,6 +83,11 @@ func Newf(code ErrCode, format string, v ...any) *Error {
 // Error implements the error interface.
 func (err *Error) Error() string {
 	return err.Message
+}
+
+// Encode implments the web package encoder interface.
+func (err *Error) Encode() ([]byte, error) {
+	return json.Marshal(err)
 }
 
 // HTTPStatus implements the web package httpStatus interface so the

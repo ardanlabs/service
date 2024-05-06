@@ -1,6 +1,7 @@
 package userapp
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/mail"
 	"time"
@@ -22,6 +23,8 @@ type QueryParams struct {
 	EndCreatedDate   string
 }
 
+// =============================================================================
+
 // User represents information about an individual user.
 type User struct {
 	ID           string   `json:"id"`
@@ -33,6 +36,11 @@ type User struct {
 	Enabled      bool     `json:"enabled"`
 	DateCreated  string   `json:"dateCreated"`
 	DateUpdated  string   `json:"dateUpdated"`
+}
+
+// Encode implments the web package encoder interface.
+func (app User) Encode() ([]byte, error) {
+	return json.Marshal(app)
 }
 
 func toAppUser(usr userbus.User) User {
@@ -63,6 +71,8 @@ func toAppUsers(users []userbus.User) []User {
 	return app
 }
 
+// =============================================================================
+
 // NewUser defines the data needed to add a new user.
 type NewUser struct {
 	Name            string   `json:"name" validate:"required"`
@@ -71,6 +81,20 @@ type NewUser struct {
 	Department      string   `json:"department"`
 	Password        string   `json:"password" validate:"required"`
 	PasswordConfirm string   `json:"passwordConfirm" validate:"eqfield=Password"`
+}
+
+// Decode implments the web package decoder interface.
+func (app *NewUser) Decode(data []byte) error {
+	return json.Unmarshal(data, &app)
+}
+
+// Validate checks the data in the model is considered clean.
+func (app NewUser) Validate() error {
+	if err := validate.Check(app); err != nil {
+		return errs.Newf(errs.FailedPrecondition, "validate: %s", err)
+	}
+
+	return nil
 }
 
 func toBusNewUser(app NewUser) (userbus.NewUser, error) {
@@ -99,18 +123,25 @@ func toBusNewUser(app NewUser) (userbus.NewUser, error) {
 	return bus, nil
 }
 
+// =============================================================================
+
+// UpdateUserRole defines the data needed to update a user role.
+type UpdateUserRole struct {
+	Roles []string `json:"roles" validate:"required"`
+}
+
+// Decode implments the web package decoder interface.
+func (app *UpdateUserRole) Decode(data []byte) error {
+	return json.Unmarshal(data, &app)
+}
+
 // Validate checks the data in the model is considered clean.
-func (app NewUser) Validate() error {
+func (app UpdateUserRole) Validate() error {
 	if err := validate.Check(app); err != nil {
 		return errs.Newf(errs.FailedPrecondition, "validate: %s", err)
 	}
 
 	return nil
-}
-
-// UpdateUserRole defines the data needed to update a user role.
-type UpdateUserRole struct {
-	Roles []string `json:"roles"`
 }
 
 func toBusUpdateUserRole(app UpdateUserRole) (userbus.UpdateUser, error) {
@@ -133,6 +164,8 @@ func toBusUpdateUserRole(app UpdateUserRole) (userbus.UpdateUser, error) {
 	return bus, nil
 }
 
+// =============================================================================
+
 // UpdateUser defines the data needed to update a user.
 type UpdateUser struct {
 	Name            *string `json:"name"`
@@ -141,6 +174,20 @@ type UpdateUser struct {
 	Password        *string `json:"password"`
 	PasswordConfirm *string `json:"passwordConfirm" validate:"omitempty,eqfield=Password"`
 	Enabled         *bool   `json:"enabled"`
+}
+
+// Decode implments the web package decoder interface.
+func (app *UpdateUser) Decode(data []byte) error {
+	return json.Unmarshal(data, &app)
+}
+
+// Validate checks the data in the model is considered clean.
+func (app UpdateUser) Validate() error {
+	if err := validate.Check(app); err != nil {
+		return errs.Newf(errs.FailedPrecondition, "validate: %s", err)
+	}
+
+	return nil
 }
 
 func toBusUpdateUser(app UpdateUser) (userbus.UpdateUser, error) {
@@ -162,13 +209,4 @@ func toBusUpdateUser(app UpdateUser) (userbus.UpdateUser, error) {
 	}
 
 	return bus, nil
-}
-
-// Validate checks the data in the model is considered clean.
-func (app UpdateUser) Validate() error {
-	if err := validate.Check(app); err != nil {
-		return errs.Newf(errs.FailedPrecondition, "validate: %s", err)
-	}
-
-	return nil
 }
