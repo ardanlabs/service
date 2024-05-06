@@ -24,7 +24,7 @@ func newAPI(ath *auth.Auth) *api {
 	}
 }
 
-func (api *api) token(ctx context.Context, w http.ResponseWriter, r *http.Request) (any, error) {
+func (api *api) token(ctx context.Context, w http.ResponseWriter, r *http.Request) (web.Encoder, error) {
 	kid := web.Param(r, "kid")
 	if kid == "" {
 		return nil, errs.New(errs.FailedPrecondition, validate.NewFieldsError("kid", errors.New("missing kid")))
@@ -38,16 +38,10 @@ func (api *api) token(ctx context.Context, w http.ResponseWriter, r *http.Reques
 		return nil, errs.New(errs.Internal, err)
 	}
 
-	token := struct {
-		Token string `json:"token"`
-	}{
-		Token: tkn,
-	}
-
-	return token, nil
+	return token{Token: tkn}, nil
 }
 
-func (api *api) authenticate(ctx context.Context, w http.ResponseWriter, r *http.Request) (any, error) {
+func (api *api) authenticate(ctx context.Context, w http.ResponseWriter, r *http.Request) (web.Encoder, error) {
 	// The middleware is actually handling the authentication. So if the code
 	// gets to this handler, authentication passed.
 
@@ -64,7 +58,7 @@ func (api *api) authenticate(ctx context.Context, w http.ResponseWriter, r *http
 	return resp, nil
 }
 
-func (api *api) authorize(ctx context.Context, w http.ResponseWriter, r *http.Request) (any, error) {
+func (api *api) authorize(ctx context.Context, w http.ResponseWriter, r *http.Request) (web.Encoder, error) {
 	var auth authclient.Authorize
 	if err := web.Decode(r, &auth); err != nil {
 		return nil, errs.New(errs.FailedPrecondition, err)

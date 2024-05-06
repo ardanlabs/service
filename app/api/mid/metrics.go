@@ -7,7 +7,7 @@ import (
 )
 
 // Metrics updates program counters.
-func Metrics(ctx context.Context, next Handler) (any, error) {
+func Metrics(ctx context.Context, next Handler) (Encoder, error) {
 	ctx = metrics.Set(ctx)
 
 	resp, err := next(ctx)

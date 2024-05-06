@@ -14,7 +14,7 @@ import (
 
 // Handler represents a function that handles a http request within our own
 // little mini framework.
-type Handler func(context.Context, http.ResponseWriter, *http.Request) (any, error)
+type Handler func(context.Context, http.ResponseWriter, *http.Request) (Encoder, error)
 
 // Logger represents a function that will be called to add information
 // to the logs.
@@ -64,8 +64,8 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // prevents the MethodNotAllowedHandler from being called. This must be enabled
 // for the CORS middleware to work.
 func (a *App) EnableCORS(mw Middleware) {
-	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request) (any, error) {
-		return struct{ Status string }{Status: "OK"}, nil
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request) (Encoder, error) {
+		return cors{Status: "OK"}, nil
 	}
 	handler = wrapMiddleware([]Middleware{mw}, handler)
 
@@ -87,11 +87,15 @@ func (a *App) HandleNoMiddleware(method string, group string, path string, handl
 
 		resp, err := handler(ctx, w, r)
 		if err != nil {
-			respond(ctx, w, err)
+			if err := respondError(ctx, w, err); err != nil {
+				a.log(ctx, "web", "ERROR", err)
+			}
 			return
 		}
 
-		respond(ctx, w, resp)
+		if err := respond(ctx, w, resp); err != nil {
+			a.log(ctx, "web", "ERROR", err)
+		}
 	}
 
 	finalPath := path
@@ -117,11 +121,15 @@ func (a *App) Handle(method string, group string, path string, handler Handler, 
 
 		resp, err := handler(ctx, w, r)
 		if err != nil {
-			respond(ctx, w, err)
+			if err := respondError(ctx, w, err); err != nil {
+				a.log(ctx, "web", "ERROR", err)
+			}
 			return
 		}
 
-		respond(ctx, w, resp)
+		if err := respond(ctx, w, resp); err != nil {
+			a.log(ctx, "web", "ERROR", err)
+		}
 	}
 
 	finalPath := path

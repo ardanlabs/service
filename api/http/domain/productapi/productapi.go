@@ -20,7 +20,7 @@ func newAPI(productApp *productapp.App) *api {
 	}
 }
 
-func (api *api) create(ctx context.Context, w http.ResponseWriter, r *http.Request) (any, error) {
+func (api *api) create(ctx context.Context, w http.ResponseWriter, r *http.Request) (web.Encoder, error) {
 	var app productapp.NewProduct
 	if err := web.Decode(r, &app); err != nil {
 		return nil, errs.New(errs.FailedPrecondition, err)
@@ -34,7 +34,7 @@ func (api *api) create(ctx context.Context, w http.ResponseWriter, r *http.Reque
 	return prd, nil
 }
 
-func (api *api) update(ctx context.Context, w http.ResponseWriter, r *http.Request) (any, error) {
+func (api *api) update(ctx context.Context, w http.ResponseWriter, r *http.Request) (web.Encoder, error) {
 	var app productapp.UpdateProduct
 	if err := web.Decode(r, &app); err != nil {
 		return nil, errs.New(errs.FailedPrecondition, err)
@@ -48,7 +48,7 @@ func (api *api) update(ctx context.Context, w http.ResponseWriter, r *http.Reque
 	return prd, nil
 }
 
-func (api *api) delete(ctx context.Context, w http.ResponseWriter, r *http.Request) (any, error) {
+func (api *api) delete(ctx context.Context, w http.ResponseWriter, r *http.Request) (web.Encoder, error) {
 	if err := api.productApp.Delete(ctx); err != nil {
 		return nil, err
 	}
@@ -56,7 +56,7 @@ func (api *api) delete(ctx context.Context, w http.ResponseWriter, r *http.Reque
 	return nil, nil
 }
 
-func (api *api) query(ctx context.Context, w http.ResponseWriter, r *http.Request) (any, error) {
+func (api *api) query(ctx context.Context, w http.ResponseWriter, r *http.Request) (web.Encoder, error) {
 	qp, err := parseQueryParams(r)
 	if err != nil {
 		return nil, errs.New(errs.FailedPrecondition, err)
@@ -70,7 +70,7 @@ func (api *api) query(ctx context.Context, w http.ResponseWriter, r *http.Reques
 	return prd, nil
 }
 
-func (api *api) queryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) (any, error) {
+func (api *api) queryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) (web.Encoder, error) {
 	prd, err := api.productApp.QueryByID(ctx)
 	if err != nil {
 		return nil, err

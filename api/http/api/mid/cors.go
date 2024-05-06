@@ -10,7 +10,7 @@ import (
 // Cors sets the response headers needed for Cross-Origin Resource Sharing
 func Cors(origins []string) web.Middleware {
 	m := func(handler web.Handler) web.Handler {
-		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) (any, error) {
+		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) (web.Encoder, error) {
 			for _, origin := range origins {
 				w.Header().Set("Access-Control-Allow-Origin", origin)
 			}

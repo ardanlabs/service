@@ -34,7 +34,7 @@ type Product struct {
 	UserName    string  `json:"userName"`
 }
 
-// Encode implments the web package encoder interface.
+// Encode implments the encoder interface.
 func (app Product) Encode() ([]byte, error) {
 	return json.Marshal(app)
 }

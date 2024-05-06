@@ -10,7 +10,7 @@ import (
 
 // Metrics updates program counters using the middleware functionality.
 func Metrics() web.Middleware {
-	midFunc := func(ctx context.Context, r *http.Request, next mid.Handler) (any, error) {
+	midFunc := func(ctx context.Context, r *http.Request, next mid.Handler) (mid.Encoder, error) {
 		return mid.Metrics(ctx, next)
 	}
 

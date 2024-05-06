@@ -20,7 +20,7 @@ func newAPI(tranApp *tranapp.App) *api {
 	}
 }
 
-func (api *api) create(ctx context.Context, w http.ResponseWriter, r *http.Request) (any, error) {
+func (api *api) create(ctx context.Context, w http.ResponseWriter, r *http.Request) (web.Encoder, error) {
 	var app tranapp.NewTran
 	if err := web.Decode(r, &app); err != nil {
 		return nil, errs.New(errs.FailedPrecondition, err)

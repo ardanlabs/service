@@ -13,8 +13,13 @@ import (
 	"github.com/google/uuid"
 )
 
+// Encoder represents data that can be encoded.
+type Encoder interface {
+	Encode() ([]byte, error)
+}
+
 // Handler represents a handler function that needs to be called.
-type Handler func(context.Context) (any, error)
+type Handler func(context.Context) (Encoder, error)
 
 // =============================================================================
 

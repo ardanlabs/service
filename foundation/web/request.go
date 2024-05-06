@@ -11,7 +11,8 @@ func Param(r *http.Request, key string) string {
 	return r.PathValue(key)
 }
 
-type decoder interface {
+// Decoder represents data that can be decoded.
+type Decoder interface {
 	Decode(data []byte) error
 }
 
@@ -19,25 +20,20 @@ type validator interface {
 	Validate() error
 }
 
-// Decode reads the body of an HTTP request. If the data model provided
-// implements the decoder interface, that implemementation is used to decode
-// the body. If the interface is not implemented, an error is returned.
-func Decode(r *http.Request, val any) error {
+// Decode reads the body of an HTTP request and decodes the body into the
+// specified data model. If the data model implements the validator interface,
+// the method will be called.
+func Decode(r *http.Request, v Decoder) error {
 	data, err := io.ReadAll(r.Body)
 	if err != nil {
-		return fmt.Errorf("web.request: unable to read payload: %w", err)
+		return fmt.Errorf("request: unable to read payload: %w", err)
 	}
 
-	dec, ok := val.(decoder)
-	if !ok {
-		return fmt.Errorf("web.request: encoder not implemented")
+	if err := v.Decode(data); err != nil {
+		return fmt.Errorf("request: encode: %w", err)
 	}
 
-	if err := dec.Decode(data); err != nil {
-		return fmt.Errorf("web.request: encode: %w", err)
-	}
-
-	if v, ok := val.(validator); ok {
+	if v, ok := v.(validator); ok {
 		if err := v.Validate(); err != nil {
 			return err
 		}

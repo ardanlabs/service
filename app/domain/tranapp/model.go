@@ -22,7 +22,7 @@ type Product struct {
 	DateUpdated string  `json:"dateUpdated"`
 }
 
-// Encode implments the web package encoder interface.
+// Encode implments the encoder interface.
 func (app Product) Encode() ([]byte, error) {
 	return json.Marshal(app)
 }
@@ -48,7 +48,7 @@ type NewTran struct {
 	User    NewUser    `json:"user"`
 }
 
-// Decode implments the web package decoder interface.
+// Decode implments the decoder interface.
 func (app *NewTran) Decode(data []byte) error {
 	return json.Unmarshal(data, &app)
 }

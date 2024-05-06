@@ -7,6 +7,7 @@ import (
 
 	"github.com/ardanlabs/service/app/api/errs"
 	"github.com/ardanlabs/service/app/domain/vproductapp"
+	"github.com/ardanlabs/service/foundation/web"
 )
 
 type api struct {
@@ -19,7 +20,7 @@ func newAPI(vproductApp *vproductapp.App) *api {
 	}
 }
 
-func (api *api) query(ctx context.Context, w http.ResponseWriter, r *http.Request) (any, error) {
+func (api *api) query(ctx context.Context, w http.ResponseWriter, r *http.Request) (web.Encoder, error) {
 	qp, err := parseQueryParams(r)
 	if err != nil {
 		return nil, errs.New(errs.FailedPrecondition, err)

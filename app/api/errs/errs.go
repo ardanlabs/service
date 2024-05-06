@@ -85,7 +85,7 @@ func (err *Error) Error() string {
 	return err.Message
 }
 
-// Encode implments the web package encoder interface.
+// Encode implments the encoder interface.
 func (err *Error) Encode() ([]byte, error) {
 	return json.Marshal(err)
 }

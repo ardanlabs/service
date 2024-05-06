@@ -36,7 +36,7 @@ type Product struct {
 	DateUpdated string  `json:"dateUpdated"`
 }
 
-// Encode implments the web package encoder interface.
+// Encode implments the encoder interface.
 func (app Product) Encode() ([]byte, error) {
 	return json.Marshal(app)
 }
@@ -71,7 +71,7 @@ type NewProduct struct {
 	Quantity int     `json:"quantity" validate:"required,gte=1"`
 }
 
-// Decode implments the web package decoder interface.
+// Decode implments the decoder interface.
 func (app *NewProduct) Decode(data []byte) error {
 	return json.Unmarshal(data, &app)
 }
@@ -110,7 +110,7 @@ type UpdateProduct struct {
 	Quantity *int     `json:"quantity" validate:"omitempty,gte=1"`
 }
 
-// Decode implments the web package decoder interface.
+// Decode implments the decoder interface.
 func (app *UpdateProduct) Decode(data []byte) error {
 	return json.Unmarshal(data, &app)
 }

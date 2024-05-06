@@ -61,7 +61,7 @@ func NewDocument[T any](items []T, total int, page int, rowsPerPage int) Documen
 	}
 }
 
-// Encode implments the web package encoder interface.
+// Encode implments the encoder interface.
 func (d Document[T]) Encode() ([]byte, error) {
 	return json.Marshal(d)
 }
