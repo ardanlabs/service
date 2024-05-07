@@ -27,8 +27,10 @@ func respond(ctx context.Context, w http.ResponseWriter, data Encoder) error {
 
 	// If the context has been canceled, it means the client is no longer
 	// waiting for a response.
-	if ctx.Err() != nil {
-		return errors.New("client disconnected, do not send response")
+	if err := ctx.Err(); err != nil {
+		if errors.Is(err, context.Canceled) {
+			return errors.New("client disconnected, do not send response")
+		}
 	}
 
 	var statusCode = http.StatusOK
