@@ -2,8 +2,6 @@ module github.com/ardanlabs/service
 
 go 1.22.1
 
-toolchain go1.22.3
-
 require (
 	github.com/ardanlabs/conf/v3 v3.1.7
 	github.com/ardanlabs/darwin/v3 v3.3.1
