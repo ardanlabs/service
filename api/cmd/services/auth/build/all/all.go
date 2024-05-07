@@ -2,11 +2,14 @@
 package all
 
 import (
+	"time"
+
 	"github.com/ardanlabs/service/api/http/api/mux"
 	"github.com/ardanlabs/service/api/http/domain/authapi"
 	"github.com/ardanlabs/service/api/http/domain/checkapi"
 	"github.com/ardanlabs/service/business/api/delegate"
 	"github.com/ardanlabs/service/business/domain/userbus"
+	"github.com/ardanlabs/service/business/domain/userbus/stores/usercache"
 	"github.com/ardanlabs/service/business/domain/userbus/stores/userdb"
 	"github.com/ardanlabs/service/foundation/web"
 )
@@ -25,7 +28,7 @@ func (add) Add(app *web.App, cfg mux.Config) {
 	// Construct the business domain packages we need here so we are using the
 	// sames instances for the different set of domain apis.
 	delegate := delegate.New(cfg.Log)
-	userBus := userbus.NewBusiness(cfg.Log, delegate, userdb.NewStore(cfg.Log, cfg.DB))
+	userBus := userbus.NewBusiness(cfg.Log, delegate, usercache.NewStore(cfg.Log, userdb.NewStore(cfg.Log, cfg.DB), time.Hour))
 
 	checkapi.Routes(app, checkapi.Config{
 		Build: cfg.Build,

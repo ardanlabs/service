@@ -8,8 +8,10 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/ardanlabs/service/business/domain/userbus"
+	"github.com/ardanlabs/service/business/domain/userbus/stores/usercache"
 	"github.com/ardanlabs/service/business/domain/userbus/stores/userdb"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/golang-jwt/jwt/v4"
@@ -70,7 +72,7 @@ func New(cfg Config) (*Auth, error) {
 	// user enabled check.
 	var userBus *userbus.Business
 	if cfg.DB != nil {
-		userBus = userbus.NewBusiness(cfg.Log, nil, userdb.NewStore(cfg.Log, cfg.DB))
+		userBus = userbus.NewBusiness(cfg.Log, nil, usercache.NewStore(cfg.Log, userdb.NewStore(cfg.Log, cfg.DB), 10*time.Minute))
 	}
 
 	a := Auth{

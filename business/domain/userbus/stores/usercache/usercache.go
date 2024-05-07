@@ -5,11 +5,13 @@ import (
 	"context"
 	"net/mail"
 	"sync"
+	"time"
 
 	"github.com/ardanlabs/service/business/api/order"
 	"github.com/ardanlabs/service/business/api/transaction"
 	"github.com/ardanlabs/service/business/domain/userbus"
 	"github.com/ardanlabs/service/foundation/logger"
+	"github.com/creativecreature/sturdyc"
 	"github.com/google/uuid"
 )
 
@@ -17,16 +19,20 @@ import (
 type Store struct {
 	log    *logger.Logger
 	storer userbus.Storer
-	cache  map[string]userbus.User
+	cache  *sturdyc.Client[userbus.User]
 	mu     sync.RWMutex
 }
 
 // NewStore constructs the api for data and caching access.
-func NewStore(log *logger.Logger, storer userbus.Storer) *Store {
+func NewStore(log *logger.Logger, storer userbus.Storer, ttl time.Duration) *Store {
+	const capacity = 10000
+	const numShards = 10
+	const evictionPercentage = 10
+
 	return &Store{
 		log:    log,
 		storer: storer,
-		cache:  map[string]userbus.User{},
+		cache:  sturdyc.New[userbus.User](capacity, numShards, ttl, evictionPercentage),
 	}
 }
 
@@ -128,7 +134,7 @@ func (s *Store) readCache(key string) (userbus.User, bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	usr, exists := s.cache[key]
+	usr, exists := s.cache.Get(key)
 	if !exists {
 		return userbus.User{}, false
 	}
@@ -141,8 +147,8 @@ func (s *Store) writeCache(usr userbus.User) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	s.cache[usr.ID.String()] = usr
-	s.cache[usr.Email.Address] = usr
+	s.cache.Set(usr.ID.String(), usr)
+	s.cache.Set(usr.Email.Address, usr)
 }
 
 // deleteCache performs a safe removal from the cache for the specified userbus.
@@ -150,6 +156,6 @@ func (s *Store) deleteCache(usr userbus.User) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	delete(s.cache, usr.ID.String())
-	delete(s.cache, usr.Email.Address)
+	s.cache.Delete(usr.ID.String())
+	s.cache.Delete(usr.Email.Address)
 }

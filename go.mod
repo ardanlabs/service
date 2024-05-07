@@ -8,6 +8,7 @@ require (
 	github.com/ardanlabs/conf/v3 v3.1.7
 	github.com/ardanlabs/darwin/v3 v3.3.1
 	github.com/arl/statsviz v0.6.0
+	github.com/creativecreature/sturdyc v0.3.2
 	github.com/go-json-experiment/json v0.0.0-20240418180308-af2d5061e6c2
 	github.com/go-playground/locales v0.14.1
 	github.com/go-playground/universal-translator v0.18.1
@@ -32,6 +33,7 @@ require (
 	github.com/agnivade/levenshtein v1.1.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
+	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect

@@ -28,7 +28,7 @@ func insertSeedData(db *dbtest.Database, ath *auth.Auth) (apitest.SeedData, erro
 	tu1 := apitest.User{
 		User:  usrs[0],
 		Homes: hmes,
-		Token: apitest.Token(db, ath, usrs[0].Email.Address),
+		Token: apitest.Token(db.BusDomain.User, ath, usrs[0].Email.Address),
 	}
 
 	// -------------------------------------------------------------------------
@@ -40,7 +40,7 @@ func insertSeedData(db *dbtest.Database, ath *auth.Auth) (apitest.SeedData, erro
 
 	tu2 := apitest.User{
 		User:  usrs[0],
-		Token: apitest.Token(db, ath, usrs[0].Email.Address),
+		Token: apitest.Token(db.BusDomain.User, ath, usrs[0].Email.Address),
 	}
 
 	// -------------------------------------------------------------------------
@@ -58,7 +58,7 @@ func insertSeedData(db *dbtest.Database, ath *auth.Auth) (apitest.SeedData, erro
 	tu3 := apitest.User{
 		User:  usrs[0],
 		Homes: hmes,
-		Token: apitest.Token(db, ath, usrs[0].Email.Address),
+		Token: apitest.Token(db.BusDomain.User, ath, usrs[0].Email.Address),
 	}
 
 	// -------------------------------------------------------------------------
@@ -70,7 +70,7 @@ func insertSeedData(db *dbtest.Database, ath *auth.Auth) (apitest.SeedData, erro
 
 	tu4 := apitest.User{
 		User:  usrs[0],
-		Token: apitest.Token(db, ath, usrs[0].Email.Address),
+		Token: apitest.Token(db.BusDomain.User, ath, usrs[0].Email.Address),
 	}
 
 	// -------------------------------------------------------------------------

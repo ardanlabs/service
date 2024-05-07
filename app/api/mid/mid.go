@@ -108,7 +108,11 @@ func setTran(ctx context.Context, tx transaction.CommitRollbacker) context.Conte
 }
 
 // GetTran retrieves the value that can manage a transaction.
-func GetTran(ctx context.Context) (transaction.CommitRollbacker, bool) {
+func GetTran(ctx context.Context) (transaction.CommitRollbacker, error) {
 	v, ok := ctx.Value(trKey).(transaction.CommitRollbacker)
-	return v, ok
+	if !ok {
+		return nil, errors.New("transaction not found in context")
+	}
+
+	return v, nil
 }

@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/ardanlabs/service/api/http/api/mid"
+	"github.com/ardanlabs/service/app/api/auth"
 	"github.com/ardanlabs/service/app/api/authclient"
 	"github.com/ardanlabs/service/app/domain/tranapp"
 	"github.com/ardanlabs/service/business/api/sqldb"
@@ -29,7 +30,8 @@ func Routes(app *web.App, cfg Config) {
 
 	authen := mid.Authenticate(cfg.Log, cfg.AuthClient)
 	transaction := mid.BeginCommitRollback(cfg.Log, sqldb.NewBeginner(cfg.DB))
+	ruleAdmin := mid.Authorize(cfg.Log, cfg.AuthClient, auth.RuleAdminOnly)
 
 	api := newAPI(tranapp.NewApp(cfg.UserBus, cfg.ProductBus))
-	app.Handle(http.MethodPost, version, "/tranexample", api.create, authen, transaction)
+	app.Handle(http.MethodPost, version, "/tranexample", api.create, authen, ruleAdmin, transaction)
 }

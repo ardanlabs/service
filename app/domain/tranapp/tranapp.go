@@ -28,9 +28,9 @@ func NewApp(userBus *userbus.Business, productBus *productbus.Business) *App {
 // newWithTx constructs a new Handlers value with the domain apis
 // using a store transaction that was created via middleware.
 func (a *App) newWithTx(ctx context.Context) (*App, error) {
-	tx, exists := mid.GetTran(ctx)
-	if !exists {
-		return nil, errors.New("transaction not created")
+	tx, err := mid.GetTran(ctx)
+	if err != nil {
+		return nil, err
 	}
 
 	userBus, err := a.userBus.NewWithTx(tx)

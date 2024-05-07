@@ -23,9 +23,15 @@ github.com/beorn7/perks/quantile
 # github.com/cenkalti/backoff/v4 v4.3.0
 ## explicit; go 1.18
 github.com/cenkalti/backoff/v4
+# github.com/cespare/xxhash v1.1.0
+## explicit
+github.com/cespare/xxhash
 # github.com/cespare/xxhash/v2 v2.3.0
 ## explicit; go 1.11
 github.com/cespare/xxhash/v2
+# github.com/creativecreature/sturdyc v0.3.2
+## explicit; go 1.22.1
+github.com/creativecreature/sturdyc
 # github.com/felixge/httpsnoop v1.0.4
 ## explicit; go 1.13
 github.com/felixge/httpsnoop

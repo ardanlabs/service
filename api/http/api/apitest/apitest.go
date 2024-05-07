@@ -13,7 +13,7 @@ import (
 
 	"github.com/ardanlabs/service/app/api/auth"
 	"github.com/ardanlabs/service/business/api/dbtest"
-	"github.com/ardanlabs/service/business/domain/userbus/stores/userdb"
+	"github.com/ardanlabs/service/business/domain/userbus"
 	"github.com/golang-jwt/jwt/v4"
 )
 
@@ -87,11 +87,10 @@ func (at *Test) Run(t *testing.T, table []Table, testName string) {
 // =============================================================================
 
 // Token generates an authenticated token for a user.
-func Token(db *dbtest.Database, ath *auth.Auth, email string) string {
+func Token(userBus *userbus.Business, ath *auth.Auth, email string) string {
 	addr, _ := mail.ParseAddress(email)
 
-	store := userdb.NewStore(db.Log, db.DB)
-	dbUsr, err := store.QueryByEmail(context.Background(), *addr)
+	dbUsr, err := userBus.QueryByEmail(context.Background(), *addr)
 	if err != nil {
 		return ""
 	}

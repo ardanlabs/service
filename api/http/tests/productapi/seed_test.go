@@ -29,7 +29,7 @@ func insertSeedData(db *dbtest.Database, ath *auth.Auth) (apitest.SeedData, erro
 		User:     usrs[0],
 		Products: prds,
 
-		Token: apitest.Token(db, ath, usrs[0].Email.Address),
+		Token: apitest.Token(db.BusDomain.User, ath, usrs[0].Email.Address),
 	}
 
 	// -------------------------------------------------------------------------
@@ -47,7 +47,7 @@ func insertSeedData(db *dbtest.Database, ath *auth.Auth) (apitest.SeedData, erro
 	tu2 := apitest.User{
 		User:     usrs[0],
 		Products: prds,
-		Token:    apitest.Token(db, ath, usrs[0].Email.Address),
+		Token:    apitest.Token(db.BusDomain.User, ath, usrs[0].Email.Address),
 	}
 
 	// -------------------------------------------------------------------------
