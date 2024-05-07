@@ -3,6 +3,7 @@ package mid
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/ardanlabs/service/app/api/auth"
 	"github.com/ardanlabs/service/app/api/authclient"
@@ -29,6 +30,9 @@ func Authorize(ctx context.Context, log *logger.Logger, client *authclient.Clien
 		UserID: userID,
 		Rule:   rule,
 	}
+
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
 
 	if err := client.Authorize(ctx, auth); err != nil {
 		return nil, errs.New(errs.Unauthenticated, err)
@@ -63,6 +67,9 @@ func AuthorizeUser(ctx context.Context, log *logger.Logger, client *authclient.C
 
 		ctx = setUser(ctx, usr)
 	}
+
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
 
 	auth := authclient.Authorize{
 		Claims: GetClaims(ctx),
@@ -105,6 +112,9 @@ func AuthorizeProduct(ctx context.Context, log *logger.Logger, client *authclien
 		ctx = setProduct(ctx, prd)
 	}
 
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
 	auth := authclient.Authorize{
 		UserID: userID,
 		Claims: GetClaims(ctx),
@@ -145,6 +155,9 @@ func AuthorizeHome(ctx context.Context, log *logger.Logger, client *authclient.C
 		userID = hme.UserID
 		ctx = setHome(ctx, hme)
 	}
+
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
 
 	auth := authclient.Authorize{
 		Claims: GetClaims(ctx),

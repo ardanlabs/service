@@ -18,6 +18,9 @@ import (
 
 // Authenticate validates authentication via the auth service.
 func Authenticate(ctx context.Context, log *logger.Logger, client *authclient.Client, authorization string, next Handler) (Encoder, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
 	resp, err := client.Authenticate(ctx, authorization)
 	if err != nil {
 		return nil, errs.New(errs.Unauthenticated, err)
