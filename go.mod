@@ -1,6 +1,6 @@
 module github.com/ardanlabs/service
 
-go 1.22.0
+go 1.22.1
 
 toolchain go1.22.3
 
@@ -8,7 +8,7 @@ require (
 	github.com/ardanlabs/conf/v3 v3.1.7
 	github.com/ardanlabs/darwin/v3 v3.3.1
 	github.com/arl/statsviz v0.6.0
-	github.com/creativecreature/sturdyc v0.3.2
+	github.com/creativecreature/sturdyc v0.3.4
 	github.com/go-json-experiment/json v0.0.0-20240418180308-af2d5061e6c2
 	github.com/go-playground/locales v0.14.1
 	github.com/go-playground/universal-translator v0.18.1

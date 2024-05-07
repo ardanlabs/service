@@ -11,6 +11,9 @@ func (c *Client[T]) refresh(key string, fetchFn FetchFn[T]) {
 		if c.storeMisses && errors.Is(err, ErrStoreMissingRecord) {
 			c.SetMissing(key, response, true)
 		}
+		if errors.Is(err, ErrDeleteRecord) {
+			c.Delete(key)
+		}
 		return
 	}
 	c.SetMissing(key, response, false)

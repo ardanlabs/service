@@ -99,6 +99,10 @@ func validateConfig(capacity, numShards int, ttl time.Duration, evictionPercenta
 		panic("evictionPercentage must be between 0 and 100")
 	}
 
+	if !cfg.refreshesEnabled && cfg.bufferRefreshes {
+		panic("refresh buffering requires stampede protection to be enabled")
+	}
+
 	if cfg.bufferRefreshes && cfg.batchSize < 1 {
 		panic("batchSize must be greater than 0")
 	}
@@ -119,7 +123,7 @@ func validateConfig(capacity, numShards int, ttl time.Duration, evictionPercenta
 		panic("retryBaseDelay must be greater than or equal to 0")
 	}
 
-	if cfg.passthroughPercentage < 0 || cfg.passthroughPercentage > 100 {
-		panic("passthroughPercentage must be between 0 and 100")
+	if cfg.passthroughPercentage < 1 || cfg.passthroughPercentage > 100 {
+		panic("passthroughPercentage must be between 1 and 100")
 	}
 }

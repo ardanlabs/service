@@ -106,21 +106,6 @@ func New[T any](capacity, numShards int, ttl time.Duration, evictionPercentage i
 	return client
 }
 
-// Size returns the number of entries in the cache.
-func (c *Client[T]) Size() int {
-	var sum int
-	for _, shard := range c.shards {
-		sum += shard.size()
-	}
-	return sum
-}
-
-// Delete removes a single entry from the cache.
-func (c *Client[T]) Delete(key string) {
-	shard := c.getShard(key)
-	shard.delete(key)
-}
-
 // startEvictions is going to be running in a separate goroutine that we're going to prevent from ever exiting.
 func (c *Client[T]) startEvictions() {
 	go func() {
@@ -156,4 +141,56 @@ func (c *Client[T]) reportCacheHits(cacheHit bool) {
 		return
 	}
 	c.metricsRecorder.CacheHit()
+}
+
+func (c *Client[T]) get(key string) (value T, exists, ignore, refresh bool) {
+	shard := c.getShard(key)
+	val, exists, ignore, refresh := shard.get(key)
+	c.reportCacheHits(exists)
+	return val, exists, ignore, refresh
+}
+
+func (c *Client[T]) Get(key string) (T, bool) {
+	shard := c.getShard(key)
+	val, ok, ignore, _ := shard.get(key)
+	c.reportCacheHits(ok)
+	return val, ok && !ignore
+}
+
+// SetMissing writes a single value to the cache. Returns true if it triggered an eviction.
+func (c *Client[T]) SetMissing(key string, value T, isMissingRecord bool) bool {
+	shard := c.getShard(key)
+	return shard.set(key, value, isMissingRecord)
+}
+
+// Set writes a single value to the cache. Returns true if it triggered an eviction.
+func (c *Client[T]) Set(key string, value T) bool {
+	return c.SetMissing(key, value, false)
+}
+
+// SetMany writes multiple values to the cache. Returns true if it triggered an eviction.
+func (c *Client[T]) SetMany(records map[string]T, cacheKeyFn KeyFn) bool {
+	var triggeredEviction bool
+	for id, value := range records {
+		evicted := c.SetMissing(cacheKeyFn(id), value, false)
+		if evicted {
+			triggeredEviction = true
+		}
+	}
+	return triggeredEviction
+}
+
+// Size returns the number of entries in the cache.
+func (c *Client[T]) Size() int {
+	var sum int
+	for _, shard := range c.shards {
+		sum += shard.size()
+	}
+	return sum
+}
+
+// Delete removes a single entry from the cache.
+func (c *Client[T]) Delete(key string) {
+	shard := c.getShard(key)
+	shard.delete(key)
 }

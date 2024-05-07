@@ -73,14 +73,6 @@ func (c *Client[T]) handleTime(v reflect.Value) string {
 		}
 	}
 
-	if timestamp, ok := v.Interface().(*time.Time); ok {
-		if !timestamp.IsZero() {
-			if c.useRelativeTimeKeyFormat {
-				return c.relativeTime(*timestamp)
-			}
-			return strconv.FormatInt(timestamp.Unix(), 10)
-		}
-	}
 	return "empty-time"
 }
 
