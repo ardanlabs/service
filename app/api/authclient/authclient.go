@@ -100,7 +100,7 @@ func (cln *Client) Authorize(ctx context.Context, auth Authorize) error {
 	return nil
 }
 
-func (cln *Client) rawRequest(ctx context.Context, method string, endpoint string, headers map[string]string, r io.Reader, v any) error {
+func (cln *Client) rawRequest(ctx context.Context, method string, endpoint string, headers map[string]string, body io.Reader, v any) error {
 	var statusCode int
 
 	u, err := url.Parse(endpoint)
@@ -120,7 +120,7 @@ func (cln *Client) rawRequest(ctx context.Context, method string, endpoint strin
 		span.End()
 	}()
 
-	req, err := http.NewRequestWithContext(ctx, method, endpoint, r)
+	req, err := http.NewRequestWithContext(ctx, method, endpoint, body)
 	if err != nil {
 		return fmt.Errorf("create request error: %w", err)
 	}
