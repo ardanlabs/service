@@ -139,7 +139,10 @@ func (cln *Client) rawRequest(ctx context.Context, method string, endpoint strin
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode == http.StatusNoContent {
+	// Assign for logging the status code at the end of the function call.
+	statusCode = resp.StatusCode
+
+	if statusCode == http.StatusNoContent {
 		return nil
 	}
 
@@ -148,7 +151,7 @@ func (cln *Client) rawRequest(ctx context.Context, method string, endpoint strin
 		return fmt.Errorf("copy error: %w", err)
 	}
 
-	switch resp.StatusCode {
+	switch statusCode {
 	case http.StatusOK:
 		if err := json.Unmarshal(data, v); err != nil {
 			return fmt.Errorf("failed: response: %s, decoding error: %w ", string(data), err)
