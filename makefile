@@ -151,15 +151,16 @@ dev-brew:
 	brew list watch || brew instal watch
 
 dev-docker:
-	docker pull $(GOLANG)
-	docker pull $(ALPINE)
-	docker pull $(KIND)
-	docker pull $(POSTGRES)
-	docker pull $(GRAFANA)
-	docker pull $(PROMETHEUS)
-	docker pull $(TEMPO)
-	docker pull $(LOKI)
-	docker pull $(PROMTAIL)
+	docker pull $(GOLANG) & \
+	docker pull $(ALPINE) & \
+	docker pull $(KIND) & \
+	docker pull $(POSTGRES) & \
+	docker pull $(GRAFANA) & \
+	docker pull $(PROMETHEUS) & \
+	docker pull $(TEMPO) & \
+	docker pull $(LOKI) & \
+	docker pull $(PROMTAIL) & \
+	wait;
 
 # ==============================================================================
 # Building containers
@@ -201,12 +202,13 @@ dev-up:
 
 	kubectl wait --timeout=120s --namespace=local-path-storage --for=condition=Available deployment/local-path-provisioner
 
-	kind load docker-image $(POSTGRES) --name $(KIND_CLUSTER)
-	kind load docker-image $(GRAFANA) --name $(KIND_CLUSTER)
-	kind load docker-image $(PROMETHEUS) --name $(KIND_CLUSTER)
-	kind load docker-image $(TEMPO) --name $(KIND_CLUSTER)
-	kind load docker-image $(LOKI) --name $(KIND_CLUSTER)
-	kind load docker-image $(PROMTAIL) --name $(KIND_CLUSTER)
+	kind load docker-image $(POSTGRES) --name $(KIND_CLUSTER) & \
+	kind load docker-image $(GRAFANA) --name $(KIND_CLUSTER) & \
+	kind load docker-image $(PROMETHEUS) --name $(KIND_CLUSTER) & \
+	kind load docker-image $(TEMPO) --name $(KIND_CLUSTER) & \
+	kind load docker-image $(LOKI) --name $(KIND_CLUSTER) & \
+	kind load docker-image $(PROMTAIL) --name $(KIND_CLUSTER) & \
+	wait;
 
 dev-down:
 	kind delete cluster --name $(KIND_CLUSTER)
@@ -222,9 +224,10 @@ dev-status:
 # ------------------------------------------------------------------------------
 
 dev-load:
-	kind load docker-image $(SALES_IMAGE) --name $(KIND_CLUSTER)
-	kind load docker-image $(METRICS_IMAGE) --name $(KIND_CLUSTER)
-	kind load docker-image $(AUTH_IMAGE) --name $(KIND_CLUSTER)
+	kind load docker-image $(SALES_IMAGE) --name $(KIND_CLUSTER) & \
+	kind load docker-image $(METRICS_IMAGE) --name $(KIND_CLUSTER) & \
+	kind load docker-image $(AUTH_IMAGE) --name $(KIND_CLUSTER) & \
+	wait;
 
 dev-apply:
 	kustomize build zarf/k8s/dev/grafana | kubectl apply -f -
@@ -480,7 +483,7 @@ talk-up:
 
 	kubectl wait --timeout=120s --namespace=local-path-storage --for=condition=Available deployment/local-path-provisioner
 
-	kind load docker-image $(POSTGRES) --name $(KIND_CLUSTER)	
+	kind load docker-image $(POSTGRES) --name $(KIND_CLUSTER)
 
 talk-apply:
 	kustomize build zarf/k8s/dev/database | kubectl apply -f -
@@ -519,15 +522,15 @@ write-token-to-env:
 	make token | grep -o '"ey.*"' | awk '{print "VITE_SERVICE_TOKEN="$$1}' >> ${ADMIN_FRONTEND_PREFIX}/.env
 
 admin-gui-install:
-	pnpm -C ${ADMIN_FRONTEND_PREFIX} install 
+	pnpm -C ${ADMIN_FRONTEND_PREFIX} install
 
 admin-gui-dev: admin-gui-install
-	pnpm -C ${ADMIN_FRONTEND_PREFIX} run dev 
+	pnpm -C ${ADMIN_FRONTEND_PREFIX} run dev
 
 admin-gui-build: admin-gui-install
-	pnpm -C ${ADMIN_FRONTEND_PREFIX} run build 
+	pnpm -C ${ADMIN_FRONTEND_PREFIX} run build
 
 admin-gui-start-build: admin-gui-build
-	pnpm -C ${ADMIN_FRONTEND_PREFIX} run preview 
+	pnpm -C ${ADMIN_FRONTEND_PREFIX} run preview
 
 admin-gui-run: write-token-to-env admin-gui-start-build
