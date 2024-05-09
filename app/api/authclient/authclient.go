@@ -77,7 +77,7 @@ func (cln *Client) Authenticate(ctx context.Context, authorization string) (Auth
 	}
 
 	var resp AuthenticateResp
-	if err := cln.rawRequest(ctx, http.MethodGet, endpoint, headers, nil, &resp); err != nil {
+	if err := cln.do(ctx, http.MethodGet, endpoint, headers, nil, &resp); err != nil {
 		return AuthenticateResp{}, err
 	}
 
@@ -88,14 +88,14 @@ func (cln *Client) Authenticate(ctx context.Context, authorization string) (Auth
 func (cln *Client) Authorize(ctx context.Context, auth Authorize) error {
 	endpoint := fmt.Sprintf("%s/v1/auth/authorize", cln.url)
 
-	if err := cln.rawRequest(ctx, http.MethodPost, endpoint, nil, auth, nil); err != nil {
+	if err := cln.do(ctx, http.MethodPost, endpoint, nil, auth, nil); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (cln *Client) rawRequest(ctx context.Context, method string, endpoint string, headers map[string]string, body any, v any) error {
+func (cln *Client) do(ctx context.Context, method string, endpoint string, headers map[string]string, body any, v any) error {
 	var statusCode int
 
 	u, err := url.Parse(endpoint)
