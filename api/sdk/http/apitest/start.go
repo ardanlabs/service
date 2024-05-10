@@ -10,12 +10,11 @@ import (
 	"github.com/ardanlabs/service/app/sdk/auth"
 	"github.com/ardanlabs/service/app/sdk/authclient"
 	"github.com/ardanlabs/service/business/sdk/dbtest"
-	"github.com/ardanlabs/service/foundation/docker"
 )
 
 // StartTest initialized the system to run a test.
-func StartTest(t *testing.T, c *docker.Container, testName string) *Test {
-	db := dbtest.NewDatabase(t, c, testName)
+func StartTest(t *testing.T, testName string) *Test {
+	db := dbtest.NewDatabase(t, testName)
 
 	// -------------------------------------------------------------------------
 

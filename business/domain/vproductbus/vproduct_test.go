@@ -3,7 +3,6 @@ package vproductbus_test
 import (
 	"context"
 	"fmt"
-	"os"
 	"runtime/debug"
 	"sort"
 	"testing"
@@ -14,38 +13,13 @@ import (
 	"github.com/ardanlabs/service/business/domain/vproductbus"
 	"github.com/ardanlabs/service/business/sdk/dbtest"
 	"github.com/ardanlabs/service/business/sdk/unitest"
-	"github.com/ardanlabs/service/foundation/docker"
 	"github.com/google/go-cmp/cmp"
 )
-
-var c *docker.Container
-
-func TestMain(m *testing.M) {
-	code, err := run(m)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	os.Exit(code)
-}
-
-func run(m *testing.M) (int, error) {
-	var err error
-
-	c, err = dbtest.StartDB()
-	if err != nil {
-		return 1, err
-	}
-
-	return m.Run(), nil
-}
-
-// =============================================================================
 
 func Test_VProduct(t *testing.T) {
 	t.Parallel()
 
-	db := dbtest.NewDatabase(t, c, "Test_Product")
+	db := dbtest.NewDatabase(t, "Test_Product")
 	defer func() {
 		if r := recover(); r != nil {
 			t.Log(r)

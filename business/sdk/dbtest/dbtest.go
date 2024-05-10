@@ -4,7 +4,6 @@ package dbtest
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"math/rand"
 	"testing"
 	"time"
@@ -26,29 +25,6 @@ import (
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/jmoiron/sqlx"
 )
-
-// StartDB starts a database instance.
-func StartDB() (*docker.Container, error) {
-	image := "postgres:16.2"
-	name := "servicetest"
-	port := "5432"
-	dockerArgs := []string{"-e", "POSTGRES_PASSWORD=postgres"}
-	appArgs := []string{"-c", "log_statement=all"}
-
-	c, err := docker.StartContainer(image, name, port, dockerArgs, appArgs)
-	if err != nil {
-		return nil, fmt.Errorf("starting container: %w", err)
-	}
-
-	return c, nil
-}
-
-// StopDB stops a running database instance.
-func StopDB(c *docker.Container) {
-	docker.StopContainer(c.Name)
-}
-
-// =============================================================================
 
 // BusDomain represents all the business domain apis needed for testing.
 type BusDomain struct {
@@ -88,9 +64,17 @@ type Database struct {
 // NewDatabase creates a new test database inside the database that was started
 // to handle testing. The database is migrated to the current version and
 // a connection pool is provided with business domain packages.
-func NewDatabase(t *testing.T, c *docker.Container, testName string) *Database {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
+func NewDatabase(t *testing.T, testName string) *Database {
+	image := "postgres:16.2"
+	name := "servicetest"
+	port := "5432"
+	dockerArgs := []string{"-e", "POSTGRES_PASSWORD=postgres"}
+	appArgs := []string{"-c", "log_statement=all"}
+
+	c, err := docker.StartContainer(image, name, port, dockerArgs, appArgs)
+	if err != nil {
+		t.Fatalf("Starting database: %v", err)
+	}
 
 	t.Logf("Name    : %s\n", c.Name)
 	t.Logf("HostPort: %s\n", c.HostPort)
@@ -105,6 +89,9 @@ func NewDatabase(t *testing.T, c *docker.Container, testName string) *Database {
 	if err != nil {
 		t.Fatalf("Opening database connection: %v", err)
 	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 
 	if err := sqldb.StatusCheck(ctx, dbM); err != nil {
 		t.Fatalf("status check database: %v", err)
