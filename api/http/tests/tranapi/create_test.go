@@ -3,7 +3,7 @@ package tran_test
 import (
 	"net/http"
 
-	"github.com/ardanlabs/service/api/http/api/apitest"
+	"github.com/ardanlabs/service/api/http/sdk/apitest"
 	"github.com/ardanlabs/service/app/domain/tranapp"
 	"github.com/google/go-cmp/cmp"
 )

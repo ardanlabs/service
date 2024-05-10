@@ -6,8 +6,8 @@ import (
 	"runtime/debug"
 	"testing"
 
-	"github.com/ardanlabs/service/api/http/api/apitest"
-	"github.com/ardanlabs/service/business/api/dbtest"
+	"github.com/ardanlabs/service/api/http/sdk/apitest"
+	"github.com/ardanlabs/service/business/sdk/dbtest"
 	"github.com/ardanlabs/service/foundation/docker"
 )
 

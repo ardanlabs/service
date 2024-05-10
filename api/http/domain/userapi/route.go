@@ -3,10 +3,10 @@ package userapi
 import (
 	"net/http"
 
-	"github.com/ardanlabs/service/api/http/api/mid"
-	"github.com/ardanlabs/service/app/api/auth"
-	"github.com/ardanlabs/service/app/api/authclient"
+	"github.com/ardanlabs/service/api/http/sdk/mid"
 	"github.com/ardanlabs/service/app/domain/userapp"
+	"github.com/ardanlabs/service/app/sdk/auth"
+	"github.com/ardanlabs/service/app/sdk/authclient"
 	"github.com/ardanlabs/service/business/domain/userbus"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/web"

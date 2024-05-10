@@ -6,9 +6,9 @@ import (
 	"net/mail"
 	"time"
 
-	"github.com/ardanlabs/service/business/api/sqldb"
 	"github.com/ardanlabs/service/business/domain/userbus"
 	"github.com/ardanlabs/service/business/domain/userbus/stores/userdb"
+	"github.com/ardanlabs/service/business/sdk/sqldb"
 	"github.com/ardanlabs/service/foundation/logger"
 )
 

@@ -6,10 +6,10 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/ardanlabs/service/app/api/auth"
-	"github.com/ardanlabs/service/app/api/authclient"
-	"github.com/ardanlabs/service/app/api/errs"
-	"github.com/ardanlabs/service/app/api/mid"
+	"github.com/ardanlabs/service/app/sdk/auth"
+	"github.com/ardanlabs/service/app/sdk/authclient"
+	"github.com/ardanlabs/service/app/sdk/errs"
+	"github.com/ardanlabs/service/app/sdk/mid"
 	"github.com/ardanlabs/service/foundation/validate"
 	"github.com/ardanlabs/service/foundation/web"
 )

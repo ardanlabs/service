@@ -1,8 +1,8 @@
 package userapp
 
 import (
-	"github.com/ardanlabs/service/business/api/order"
 	"github.com/ardanlabs/service/business/domain/userbus"
+	"github.com/ardanlabs/service/business/sdk/order"
 )
 
 var defaultOrderBy = order.NewBy("user_id", order.ASC)

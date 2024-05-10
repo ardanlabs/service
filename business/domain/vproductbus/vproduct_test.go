@@ -9,11 +9,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ardanlabs/service/business/api/dbtest"
-	"github.com/ardanlabs/service/business/api/unitest"
 	"github.com/ardanlabs/service/business/domain/productbus"
 	"github.com/ardanlabs/service/business/domain/userbus"
 	"github.com/ardanlabs/service/business/domain/vproductbus"
+	"github.com/ardanlabs/service/business/sdk/dbtest"
+	"github.com/ardanlabs/service/business/sdk/unitest"
 	"github.com/ardanlabs/service/foundation/docker"
 	"github.com/google/go-cmp/cmp"
 )

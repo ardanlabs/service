@@ -3,8 +3,8 @@ package productdb
 import (
 	"fmt"
 
-	"github.com/ardanlabs/service/business/api/order"
 	"github.com/ardanlabs/service/business/domain/productbus"
+	"github.com/ardanlabs/service/business/sdk/order"
 )
 
 var orderByFields = map[string]string{

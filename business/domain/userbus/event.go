@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/ardanlabs/service/business/api/delegate"
+	"github.com/ardanlabs/service/business/sdk/delegate"
 	"github.com/google/uuid"
 )
 

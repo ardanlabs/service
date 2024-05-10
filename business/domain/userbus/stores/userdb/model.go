@@ -6,8 +6,8 @@ import (
 	"net/mail"
 	"time"
 
-	"github.com/ardanlabs/service/business/api/sqldb/dbarray"
 	"github.com/ardanlabs/service/business/domain/userbus"
+	"github.com/ardanlabs/service/business/sdk/sqldb/dbarray"
 	"github.com/google/uuid"
 )
 

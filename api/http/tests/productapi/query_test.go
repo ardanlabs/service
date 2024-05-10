@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"sort"
 
-	"github.com/ardanlabs/service/api/http/api/apitest"
-	"github.com/ardanlabs/service/app/api/page"
+	"github.com/ardanlabs/service/api/http/sdk/apitest"
 	"github.com/ardanlabs/service/app/domain/productapp"
+	"github.com/ardanlabs/service/app/sdk/page"
 	"github.com/ardanlabs/service/business/domain/productbus"
 	"github.com/google/go-cmp/cmp"
 )

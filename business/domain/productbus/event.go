@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/ardanlabs/service/business/api/delegate"
 	"github.com/ardanlabs/service/business/domain/userbus"
+	"github.com/ardanlabs/service/business/sdk/delegate"
 )
 
 // registerDelegateFunctions will register action functions with the delegate

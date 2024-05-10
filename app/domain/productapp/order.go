@@ -1,8 +1,8 @@
 package productapp
 
 import (
-	"github.com/ardanlabs/service/business/api/order"
 	"github.com/ardanlabs/service/business/domain/productbus"
+	"github.com/ardanlabs/service/business/sdk/order"
 )
 
 var defaultOrderBy = order.NewBy("product_id", order.ASC)

@@ -6,10 +6,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/ardanlabs/service/app/api/auth"
-	"github.com/ardanlabs/service/business/api/sqldb"
+	"github.com/ardanlabs/service/app/sdk/auth"
 	"github.com/ardanlabs/service/business/domain/userbus"
 	"github.com/ardanlabs/service/business/domain/userbus/stores/userdb"
+	"github.com/ardanlabs/service/business/sdk/sqldb"
 	"github.com/ardanlabs/service/foundation/keystore"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/golang-jwt/jwt/v4"

@@ -5,8 +5,8 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/ardanlabs/service/app/api/errs"
 	"github.com/ardanlabs/service/app/domain/userapp"
+	"github.com/ardanlabs/service/app/sdk/errs"
 	"github.com/ardanlabs/service/foundation/web"
 )
 

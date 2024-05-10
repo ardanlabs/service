@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ardanlabs/service/api/http/api/apitest"
-	"github.com/ardanlabs/service/app/api/errs"
+	"github.com/ardanlabs/service/api/http/sdk/apitest"
 	"github.com/ardanlabs/service/app/domain/userapp"
-	"github.com/ardanlabs/service/business/api/dbtest"
+	"github.com/ardanlabs/service/app/sdk/errs"
+	"github.com/ardanlabs/service/business/sdk/dbtest"
 	"github.com/google/go-cmp/cmp"
 )
 
