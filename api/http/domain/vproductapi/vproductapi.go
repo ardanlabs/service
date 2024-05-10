@@ -20,7 +20,7 @@ func newAPI(vproductApp *vproductapp.App) *api {
 	}
 }
 
-func (api *api) query(ctx context.Context, w http.ResponseWriter, r *http.Request) (web.Encoder, error) {
+func (api *api) query(ctx context.Context, r *http.Request) (web.Encoder, error) {
 	qp, err := parseQueryParams(r)
 	if err != nil {
 		return nil, errs.New(errs.FailedPrecondition, err)

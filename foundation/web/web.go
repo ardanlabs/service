@@ -19,7 +19,7 @@ type Encoder interface {
 
 // Handler represents a function that handles a http request within our own
 // little mini framework.
-type Handler func(context.Context, http.ResponseWriter, *http.Request) (Encoder, error)
+type Handler func(context.Context, *http.Request) (Encoder, error)
 
 // Logger represents a function that will be called to add information
 // to the logs.
@@ -29,11 +29,12 @@ type Logger func(context.Context, string, ...any)
 // object for each of our http handlers. Feel free to add any configuration
 // data/logic on this App struct.
 type App struct {
-	log    Logger
-	tracer trace.Tracer
-	mux    *http.ServeMux
-	otmux  http.Handler
-	mw     []Middleware
+	log     Logger
+	tracer  trace.Tracer
+	mux     *http.ServeMux
+	otmux   http.Handler
+	mw      []Middleware
+	origins []string
 }
 
 // NewApp creates an App value that handle a set of routes for the application.
@@ -68,19 +69,37 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // EnableCORS enables CORS preflight requests to work in the middleware. It
 // prevents the MethodNotAllowedHandler from being called. This must be enabled
 // for the CORS middleware to work.
-func (a *App) EnableCORS(mw Middleware) {
-	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request) (Encoder, error) {
+func (a *App) EnableCORS(origins []string) {
+	a.origins = origins
+
+	handler := func(ctx context.Context, r *http.Request) (Encoder, error) {
 		return cors{Status: "OK"}, nil
 	}
-	handler = wrapMiddleware([]Middleware{mw}, handler)
+	handler = wrapMiddleware([]Middleware{a.corsHandler}, handler)
 
 	h := func(w http.ResponseWriter, r *http.Request) {
-		handler(r.Context(), w, r)
+		handler(r.Context(), r)
 	}
 
 	finalPath := fmt.Sprintf("%s %s", http.MethodOptions, "/")
 
 	a.mux.HandleFunc(finalPath, h)
+}
+
+func (a *App) corsHandler(webHandler Handler) Handler {
+	h := func(ctx context.Context, r *http.Request) (Encoder, error) {
+		for _, origin := range a.origins {
+			r.Header.Set("Access-Control-Allow-Origin", origin)
+		}
+
+		r.Header.Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+		r.Header.Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+		r.Header.Set("Access-Control-Max-Age", "86400")
+
+		return webHandler(ctx, r)
+	}
+
+	return h
 }
 
 // HandleNoMiddleware sets a handler function for a given HTTP method and path pair
@@ -90,7 +109,7 @@ func (a *App) HandleNoMiddleware(method string, group string, path string, handl
 	h := func(w http.ResponseWriter, r *http.Request) {
 		ctx := setTraceID(r.Context(), uuid.NewString())
 
-		resp, err := handler(ctx, w, r)
+		resp, err := handler(ctx, r)
 		if err != nil {
 			if err := respondError(ctx, w, err); err != nil {
 				a.log(ctx, "web", "ERROR", err)
@@ -118,13 +137,17 @@ func (a *App) Handle(method string, group string, path string, handler Handler, 
 	handler = wrapMiddleware(mw, handler)
 	handler = wrapMiddleware(a.mw, handler)
 
+	if a.origins != nil {
+		handler = wrapMiddleware([]Middleware{a.corsHandler}, handler)
+	}
+
 	h := func(w http.ResponseWriter, r *http.Request) {
 		ctx, span := tracer.StartTrace(r.Context(), a.tracer, "pkg.web.handle", r.RequestURI, w)
 		defer span.End()
 
 		ctx = setTraceID(ctx, span.SpanContext().TraceID().String())
 
-		resp, err := handler(ctx, w, r)
+		resp, err := handler(ctx, r)
 		if err != nil {
 			if err := respondError(ctx, w, err); err != nil {
 				a.log(ctx, "web", "ERROR", err)

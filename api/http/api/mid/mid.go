@@ -14,9 +14,9 @@ type midFunc func(context.Context, *http.Request, mid.Handler) (mid.Encoder, err
 
 func addMiddleware(midFunc midFunc) web.Middleware {
 	m := func(webHandler web.Handler) web.Handler {
-		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) (web.Encoder, error) {
+		h := func(ctx context.Context, r *http.Request) (web.Encoder, error) {
 			next := func(ctx context.Context) (mid.Encoder, error) {
-				return webHandler(ctx, w, r)
+				return webHandler(ctx, r)
 			}
 
 			return midFunc(ctx, r, next)

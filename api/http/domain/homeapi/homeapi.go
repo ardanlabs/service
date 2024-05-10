@@ -20,7 +20,7 @@ func newAPI(homeApp *homeapp.App) *api {
 	}
 }
 
-func (api *api) create(ctx context.Context, w http.ResponseWriter, r *http.Request) (web.Encoder, error) {
+func (api *api) create(ctx context.Context, r *http.Request) (web.Encoder, error) {
 	var app homeapp.NewHome
 	if err := web.Decode(r, &app); err != nil {
 		return nil, errs.New(errs.FailedPrecondition, err)
@@ -34,7 +34,7 @@ func (api *api) create(ctx context.Context, w http.ResponseWriter, r *http.Reque
 	return hme, nil
 }
 
-func (api *api) update(ctx context.Context, w http.ResponseWriter, r *http.Request) (web.Encoder, error) {
+func (api *api) update(ctx context.Context, r *http.Request) (web.Encoder, error) {
 	var app homeapp.UpdateHome
 	if err := web.Decode(r, &app); err != nil {
 		return nil, errs.New(errs.FailedPrecondition, err)
@@ -48,7 +48,7 @@ func (api *api) update(ctx context.Context, w http.ResponseWriter, r *http.Reque
 	return hme, nil
 }
 
-func (api *api) delete(ctx context.Context, w http.ResponseWriter, r *http.Request) (web.Encoder, error) {
+func (api *api) delete(ctx context.Context, r *http.Request) (web.Encoder, error) {
 	if err := api.homeApp.Delete(ctx); err != nil {
 		return nil, err
 	}
@@ -56,7 +56,7 @@ func (api *api) delete(ctx context.Context, w http.ResponseWriter, r *http.Reque
 	return nil, nil
 }
 
-func (api *api) query(ctx context.Context, w http.ResponseWriter, r *http.Request) (web.Encoder, error) {
+func (api *api) query(ctx context.Context, r *http.Request) (web.Encoder, error) {
 	qp, err := parseQueryParams(r)
 	if err != nil {
 		return nil, errs.New(errs.FailedPrecondition, err)
@@ -70,7 +70,7 @@ func (api *api) query(ctx context.Context, w http.ResponseWriter, r *http.Reques
 	return hme, nil
 }
 
-func (api *api) queryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) (web.Encoder, error) {
+func (api *api) queryByID(ctx context.Context, r *http.Request) (web.Encoder, error) {
 	hme, err := api.homeApp.QueryByID(ctx)
 	if err != nil {
 		return nil, err

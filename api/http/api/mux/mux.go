@@ -64,7 +64,7 @@ func WebAPI(cfg Config, routeAdder RouteAdder, options ...func(opts *Options)) h
 	}
 
 	if len(opts.corsOrigin) > 0 {
-		app.EnableCORS(mid.Cors(opts.corsOrigin))
+		app.EnableCORS(opts.corsOrigin)
 	}
 
 	routeAdder.Add(app, cfg)
