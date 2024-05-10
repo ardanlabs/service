@@ -4,12 +4,12 @@ package crud
 import (
 	"time"
 
-	"github.com/ardanlabs/service/api/http/domain/checkapi"
-	"github.com/ardanlabs/service/api/http/domain/homeapi"
-	"github.com/ardanlabs/service/api/http/domain/productapi"
-	"github.com/ardanlabs/service/api/http/domain/tranapi"
-	"github.com/ardanlabs/service/api/http/domain/userapi"
-	"github.com/ardanlabs/service/api/http/sdk/mux"
+	"github.com/ardanlabs/service/api/domain/http/checkapi"
+	"github.com/ardanlabs/service/api/domain/http/homeapi"
+	"github.com/ardanlabs/service/api/domain/http/productapi"
+	"github.com/ardanlabs/service/api/domain/http/tranapi"
+	"github.com/ardanlabs/service/api/domain/http/userapi"
+	"github.com/ardanlabs/service/api/sdk/http/mux"
 	"github.com/ardanlabs/service/business/domain/homebus"
 	"github.com/ardanlabs/service/business/domain/homebus/stores/homedb"
 	"github.com/ardanlabs/service/business/domain/productbus"

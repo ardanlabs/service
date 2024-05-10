@@ -4,9 +4,9 @@ package all
 import (
 	"time"
 
-	"github.com/ardanlabs/service/api/http/domain/authapi"
-	"github.com/ardanlabs/service/api/http/domain/checkapi"
-	"github.com/ardanlabs/service/api/http/sdk/mux"
+	"github.com/ardanlabs/service/api/domain/http/authapi"
+	"github.com/ardanlabs/service/api/domain/http/checkapi"
+	"github.com/ardanlabs/service/api/sdk/http/mux"
 	"github.com/ardanlabs/service/business/domain/userbus"
 	"github.com/ardanlabs/service/business/domain/userbus/stores/usercache"
 	"github.com/ardanlabs/service/business/domain/userbus/stores/userdb"

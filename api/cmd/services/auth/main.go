@@ -14,8 +14,8 @@ import (
 
 	"github.com/ardanlabs/conf/v3"
 	"github.com/ardanlabs/service/api/cmd/services/auth/build/all"
-	"github.com/ardanlabs/service/api/http/sdk/debug"
-	"github.com/ardanlabs/service/api/http/sdk/mux"
+	"github.com/ardanlabs/service/api/sdk/http/debug"
+	"github.com/ardanlabs/service/api/sdk/http/mux"
 	"github.com/ardanlabs/service/app/sdk/auth"
 	"github.com/ardanlabs/service/business/sdk/sqldb"
 	"github.com/ardanlabs/service/foundation/keystore"
