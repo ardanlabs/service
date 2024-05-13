@@ -14,7 +14,7 @@ var Types = typeSet{
 }
 
 // Parse parses the string value and returns a type if one exists.
-func (t typeSet) Parse(value string) (Type, error) {
+func (typeSet) Parse(value string) (Type, error) {
 	typ, exists := types[value]
 	if !exists {
 		return Type{}, fmt.Errorf("invalid type %q", value)
@@ -25,7 +25,7 @@ func (t typeSet) Parse(value string) (Type, error) {
 
 // MustParse parses the string value and returns a type if one exists. If
 // an error occurs the function panics.
-func (t typeSet) MustParse(value string) Type {
+func (typeSet) MustParse(value string) Type {
 	typ, err := Types.Parse(value)
 	if err != nil {
 		panic(err)

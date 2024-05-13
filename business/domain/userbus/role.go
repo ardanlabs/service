@@ -14,7 +14,7 @@ var Roles = roleSet{
 }
 
 // Parse parses the string value and returns a role if one exists.
-func (r roleSet) Parse(value string) (Role, error) {
+func (roleSet) Parse(value string) (Role, error) {
 	role, exists := roles[value]
 	if !exists {
 		return Role{}, fmt.Errorf("invalid role %q", value)
@@ -25,7 +25,7 @@ func (r roleSet) Parse(value string) (Role, error) {
 
 // MustParse parses the string value and returns a role if one exists. If
 // an error occurs the function panics.
-func (r roleSet) MustParse(value string) Role {
+func (roleSet) MustParse(value string) Role {
 	role, err := Roles.Parse(value)
 	if err != nil {
 		panic(err)
