@@ -2,14 +2,39 @@ package homebus
 
 import "fmt"
 
-// Types represents the set of types that can be used.
-var Types = struct {
+type typeSet struct {
 	Single Type
 	Condo  Type
-}{
+}
+
+// Types represents the set of types that can be used.
+var Types = typeSet{
 	Single: newType("SINGLE FAMILY"),
 	Condo:  newType("CONDO"),
 }
+
+// Parse parses the string value and returns a type if one exists.
+func (t typeSet) Parse(value string) (Type, error) {
+	typ, exists := types[value]
+	if !exists {
+		return Type{}, fmt.Errorf("invalid type %q", value)
+	}
+
+	return typ, nil
+}
+
+// MustParse parses the string value and returns a type if one exists. If
+// an error occurs the function panics.
+func (t typeSet) MustParse(value string) Type {
+	typ, err := Types.Parse(value)
+	if err != nil {
+		panic(err)
+	}
+
+	return typ
+}
+
+// =============================================================================
 
 // Set of known housing types.
 var types = make(map[string]Type)
@@ -25,27 +50,6 @@ func newType(typ string) Type {
 	return t
 }
 
-// ParseType parses the string value and returns a type if one exists.
-func ParseType(value string) (Type, error) {
-	typ, exists := types[value]
-	if !exists {
-		return Type{}, fmt.Errorf("invalid type %q", value)
-	}
-
-	return typ, nil
-}
-
-// MustParseType parses the string value and returns a type if one exists. If
-// an error occurs the function panics.
-func MustParseType(value string) Type {
-	typ, err := ParseType(value)
-	if err != nil {
-		panic(err)
-	}
-
-	return typ
-}
-
 // Name returns the name of the type.
 func (t Type) Name() string {
 	return t.name
@@ -53,7 +57,7 @@ func (t Type) Name() string {
 
 // UnmarshalText implement the unmarshal interface for JSON conversions.
 func (t *Type) UnmarshalText(data []byte) error {
-	typ, err := ParseType(string(data))
+	typ, err := Types.Parse(string(data))
 	if err != nil {
 		return err
 	}

@@ -53,7 +53,7 @@ func toBusUser(dbUsr user) (userbus.User, error) {
 	roles := make([]userbus.Role, len(dbUsr.Roles))
 	for i, value := range dbUsr.Roles {
 		var err error
-		roles[i], err = userbus.ParseRole(value)
+		roles[i], err = userbus.Roles.Parse(value)
 		if err != nil {
 			return userbus.User{}, fmt.Errorf("parse role: %w", err)
 		}

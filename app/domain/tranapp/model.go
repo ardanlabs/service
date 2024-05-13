@@ -77,7 +77,7 @@ func (app NewUser) Validate() error {
 func toBusNewUser(app NewUser) (userbus.NewUser, error) {
 	roles := make([]userbus.Role, len(app.Roles))
 	for i, roleStr := range app.Roles {
-		role, err := userbus.ParseRole(roleStr)
+		role, err := userbus.Roles.Parse(roleStr)
 		if err != nil {
 			return userbus.NewUser{}, fmt.Errorf("parsing role: %w", err)
 		}
