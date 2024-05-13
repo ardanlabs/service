@@ -16,9 +16,9 @@ func TestGenerateNewHomes(n int, userID uuid.UUID) []NewHome {
 	for i := 0; i < n; i++ {
 		idx++
 
-		typ := TypeSingle
+		typ := Types.Single
 		if v := (idx + i) % 2; v == 0 {
-			typ = TypeCondo
+			typ = Types.Condo
 		}
 
 		nh := NewHome{

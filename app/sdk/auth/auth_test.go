@@ -53,7 +53,7 @@ func test1(ath *auth.Auth) func(t *testing.T) {
 				ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(time.Hour)),
 				IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
 			},
-			Roles: []userbus.Role{userbus.RoleAdmin},
+			Roles: []userbus.Role{userbus.Roles.Admin},
 		}
 
 		token, err := ath.GenerateToken(kid, claims)
@@ -70,17 +70,17 @@ func test1(ath *auth.Auth) func(t *testing.T) {
 
 		err = ath.Authorize(context.Background(), parsedClaims, userID, auth.RuleAdminOnly)
 		if err != nil {
-			t.Errorf("Should be able to authorize the RoleAdmin claims : %s", err)
+			t.Errorf("Should be able to authorize the Roles.Admin claims : %s", err)
 		}
 
 		err = ath.Authorize(context.Background(), parsedClaims, userID, auth.RuleUserOnly)
 		if err == nil {
-			t.Error("Should NOT be able to authorize the RoleUser claim")
+			t.Error("Should NOT be able to authorize the Roles.User claim")
 		}
 
 		err = ath.Authorize(context.Background(), parsedClaims, userID, auth.RuleAdminOrSubject)
 		if err != nil {
-			t.Errorf("Should be able to authorize the RuleAdminOrSubject claim with RoleAdmin only : %s", err)
+			t.Errorf("Should be able to authorize the RuleAdminOrSubject claim with Roles.Admin only : %s", err)
 		}
 	}
 
@@ -96,7 +96,7 @@ func test2(ath *auth.Auth) func(t *testing.T) {
 				ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(time.Hour)),
 				IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
 			},
-			Roles: []userbus.Role{userbus.RoleUser},
+			Roles: []userbus.Role{userbus.Roles.User},
 		}
 
 		token, err := ath.GenerateToken(kid, claims)
@@ -113,22 +113,22 @@ func test2(ath *auth.Auth) func(t *testing.T) {
 
 		err = ath.Authorize(context.Background(), parsedClaims, userID, auth.RuleUserOnly)
 		if err != nil {
-			t.Errorf("Should be able to authorize the RuleUserOnly claim with RoleUser only : %s", err)
+			t.Errorf("Should be able to authorize the RuleUserOnly claim with Roles.User only : %s", err)
 		}
 
 		err = ath.Authorize(context.Background(), parsedClaims, userID, auth.RuleAdminOnly)
 		if err == nil {
-			t.Error("Should NOT be able to authorize the RuleAdminOnly claim with RoleUser only")
+			t.Error("Should NOT be able to authorize the RuleAdminOnly claim with Roles.User only")
 		}
 
 		err = ath.Authorize(context.Background(), parsedClaims, userID, auth.RuleAdminOrSubject)
 		if err != nil {
-			t.Errorf("Should be able to authorize the RuleAdminOrSubject claim with RoleUser only : %s", err)
+			t.Errorf("Should be able to authorize the RuleAdminOrSubject claim with Roles.User only : %s", err)
 		}
 
 		err = ath.Authorize(context.Background(), parsedClaims, userID, auth.RuleAny)
 		if err != nil {
-			t.Errorf("Should be able to authorize the RuleAny any claim with RoleUser only : %s", err)
+			t.Errorf("Should be able to authorize the RuleAny any claim with Roles.User only : %s", err)
 		}
 	}
 
@@ -144,7 +144,7 @@ func test3(ath *auth.Auth) func(t *testing.T) {
 				ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(time.Hour)),
 				IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
 			},
-			Roles: []userbus.Role{userbus.RoleUser},
+			Roles: []userbus.Role{userbus.Roles.User},
 		}
 
 		token, err := ath.GenerateToken(kid, claims)
@@ -161,7 +161,7 @@ func test3(ath *auth.Auth) func(t *testing.T) {
 
 		err = ath.Authorize(context.Background(), parsedClaims, userID, auth.RuleAdminOrSubject)
 		if err == nil {
-			t.Error("Should NOT be able to authorize the RuleAdminOrSubject claim with RoleUser only and different userID")
+			t.Error("Should NOT be able to authorize the RuleAdminOrSubject claim with Roles.User only and different userID")
 		}
 	}
 
@@ -177,7 +177,7 @@ func test4(ath *auth.Auth) func(t *testing.T) {
 				ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(time.Hour)),
 				IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
 			},
-			Roles: []userbus.Role{userbus.RoleUser, userbus.RoleAdmin},
+			Roles: []userbus.Role{userbus.Roles.User, userbus.Roles.Admin},
 		}
 		userID := uuid.MustParse("9e979baa-61c9-4b50-81f2-f216d53f5c15")
 
@@ -193,7 +193,7 @@ func test4(ath *auth.Auth) func(t *testing.T) {
 
 		err = ath.Authorize(context.Background(), parsedClaims, userID, auth.RuleAny)
 		if err != nil {
-			t.Errorf("Should be able to authorize the RuleAny any claim with RoleUser and RoleAdmin : %s", err)
+			t.Errorf("Should be able to authorize the RuleAny any claim with Roles.User and Roles.Admin : %s", err)
 		}
 	}
 
@@ -209,7 +209,7 @@ func test5(ath *auth.Auth) func(t *testing.T) {
 				ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(time.Hour)),
 				IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
 			},
-			Roles: []userbus.Role{userbus.RoleUser},
+			Roles: []userbus.Role{userbus.Roles.User},
 		}
 		userID := uuid.MustParse("9e979baa-61c9-4b50-81f2-f216d53f5c15")
 
@@ -225,7 +225,7 @@ func test5(ath *auth.Auth) func(t *testing.T) {
 
 		err = ath.Authorize(context.Background(), parsedClaims, userID, auth.RuleAny)
 		if err != nil {
-			t.Errorf("Should be able to authorize the RuleAny any claim with RoleUser only : %s", err)
+			t.Errorf("Should be able to authorize the RuleAny any claim with Roles.User only : %s", err)
 		}
 	}
 
@@ -241,7 +241,7 @@ func test6(ath *auth.Auth) func(t *testing.T) {
 				ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(time.Hour)),
 				IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
 			},
-			Roles: []userbus.Role{userbus.RoleAdmin},
+			Roles: []userbus.Role{userbus.Roles.Admin},
 		}
 		userID := uuid.MustParse("9e979baa-61c9-4b50-81f2-f216d53f5c15")
 
@@ -257,7 +257,7 @@ func test6(ath *auth.Auth) func(t *testing.T) {
 
 		err = ath.Authorize(context.Background(), parsedClaims, userID, auth.RuleAny)
 		if err != nil {
-			t.Errorf("Should be able to authorize the RuleAny any claim with RoleAdmin only : %s", err)
+			t.Errorf("Should be able to authorize the RuleAny any claim with Roles.Admin only : %s", err)
 		}
 	}
 

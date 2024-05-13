@@ -2,14 +2,17 @@ package homebus
 
 import "fmt"
 
+// Types represents the set of types that can be used.
+var Types = struct {
+	Single Type
+	Condo  Type
+}{
+	Single: newType("SINGLE FAMILY"),
+	Condo:  newType("CONDO"),
+}
+
 // Set of known housing types.
 var types = make(map[string]Type)
-
-// Set of possible roles for a housing type.
-var (
-	TypeSingle = newType("SINGLE FAMILY")
-	TypeCondo  = newType("CONDO")
-)
 
 // Type represents a type in the system.
 type Type struct {
