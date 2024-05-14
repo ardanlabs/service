@@ -112,7 +112,7 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 
 GOLANG          := golang:1.22
 ALPINE          := alpine:3.19
-KIND            := kindest/node:v1.29.2
+KIND            := kindest/node:v1.30.0
 POSTGRES        := postgres:16.2
 GRAFANA         := grafana/grafana:10.4.0
 PROMETHEUS      := prom/prometheus:v2.51.0
