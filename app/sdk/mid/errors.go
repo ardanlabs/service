@@ -18,17 +18,17 @@ func Errors(ctx context.Context, log *logger.Logger, next Handler) (Encoder, err
 		return resp, nil
 	}
 
-	switch v := err.(type) {
-	case *errs.Error:
-		log.Error(ctx, "message", "ERROR", err, "FileName", path.Base(v.FileName), "FuncName", path.Base(v.FuncName))
-
-	default:
-		log.Error(ctx, "message", "ERROR", err)
-	}
-
 	_, span := tracer.AddSpan(ctx, "app.api.mid.error")
 	span.RecordError(err)
 	defer span.End()
+
+	v, ok := err.(*errs.Error)
+	if !ok {
+		v = errs.New(errs.Internal, err)
+		err = v
+	}
+
+	log.Error(ctx, "message", "ERROR", err, "FileName", path.Base(v.FileName), "FuncName", path.Base(v.FuncName))
 
 	// Send the error to the web package so the error can be
 	// used as the response.

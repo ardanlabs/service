@@ -41,12 +41,12 @@ func respond(ctx context.Context, w http.ResponseWriter, data Encoder) error {
 		statusCode = http.StatusInternalServerError
 	}
 
-	_, span := tracer.AddSpan(ctx, "foundation.response", attribute.Int("status", statusCode))
-	defer span.End()
-
 	if data == nil {
 		statusCode = http.StatusNoContent
 	}
+
+	_, span := tracer.AddSpan(ctx, "foundation.response", attribute.Int("status", statusCode))
+	defer span.End()
 
 	if statusCode == http.StatusNoContent {
 		w.WriteHeader(statusCode)
