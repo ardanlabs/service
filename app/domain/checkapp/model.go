@@ -15,6 +15,7 @@ type Info struct {
 }
 
 // Encode implments the encoder interface.
-func (app Info) Encode() ([]byte, error) {
-	return json.Marshal(app)
+func (app Info) Encode() ([]byte, string, error) {
+	b, err := json.Marshal(app)
+	return b, "application/json", err
 }

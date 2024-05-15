@@ -47,8 +47,9 @@ type Home struct {
 }
 
 // Encode implments the encoder interface.
-func (app Home) Encode() ([]byte, error) {
-	return json.Marshal(app)
+func (app Home) Encode() ([]byte, string, error) {
+	b, err := json.Marshal(app)
+	return b, "application/json", err
 }
 
 func toAppHome(hme homebus.Home) Home {

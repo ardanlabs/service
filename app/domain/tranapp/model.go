@@ -23,8 +23,9 @@ type Product struct {
 }
 
 // Encode implments the encoder interface.
-func (app Product) Encode() ([]byte, error) {
-	return json.Marshal(app)
+func (app Product) Encode() ([]byte, string, error) {
+	b, err := json.Marshal(app)
+	return b, "application/json", err
 }
 
 func toAppProduct(prd productbus.Product) Product {

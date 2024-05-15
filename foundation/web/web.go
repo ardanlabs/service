@@ -14,16 +14,16 @@ import (
 
 // Encoder represents data that can be encoded.
 type Encoder interface {
-	Encode() ([]byte, error)
+	Encode() ([]byte, string, error)
 }
 
 // Handler represents a function that handles a http request within our own
 // little mini framework.
-type Handler func(context.Context, *http.Request) (Encoder, error)
+type Handler func(ctx context.Context, r *http.Request) (Encoder, error)
 
 // Logger represents a function that will be called to add information
 // to the logs.
-type Logger func(context.Context, string, ...any)
+type Logger func(ctx context.Context, format string, args ...any)
 
 // App is the entrypoint into our application and what configures our context
 // object for each of our http handlers. Feel free to add any configuration

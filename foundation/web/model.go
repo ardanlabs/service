@@ -6,6 +6,7 @@ type cors struct {
 	Status string
 }
 
-func (c cors) Encode() ([]byte, error) {
-	return json.Marshal(c)
+func (c cors) Encode() ([]byte, string, error) {
+	b, err := json.Marshal(c)
+	return b, "application/json", err
 }

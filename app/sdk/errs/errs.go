@@ -86,8 +86,9 @@ func (err *Error) Error() string {
 }
 
 // Encode implments the encoder interface.
-func (err *Error) Encode() ([]byte, error) {
-	return json.Marshal(err)
+func (err *Error) Encode() ([]byte, string, error) {
+	b, er := json.Marshal(err)
+	return b, "application/json", er
 }
 
 // HTTPStatus implements the web package httpStatus interface so the

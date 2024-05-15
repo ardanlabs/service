@@ -7,6 +7,7 @@ type token struct {
 }
 
 // Encode implments the encoder interface.
-func (t token) Encode() ([]byte, error) {
-	return json.Marshal(t)
+func (t token) Encode() ([]byte, string, error) {
+	b, err := json.Marshal(t)
+	return b, "application/json", err
 }

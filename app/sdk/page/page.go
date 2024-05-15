@@ -62,6 +62,7 @@ func NewDocument[T any](items []T, total int, page int, rowsPerPage int) Documen
 }
 
 // Encode implments the encoder interface.
-func (d Document[T]) Encode() ([]byte, error) {
-	return json.Marshal(d)
+func (d Document[T]) Encode() ([]byte, string, error) {
+	b, err := json.Marshal(d)
+	return b, "application/json", err
 }

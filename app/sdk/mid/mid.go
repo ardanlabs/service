@@ -15,11 +15,11 @@ import (
 
 // Encoder represents data that can be encoded.
 type Encoder interface {
-	Encode() ([]byte, error)
+	Encode() ([]byte, string, error)
 }
 
 // Handler represents an api layer handler function that needs to be called.
-type Handler func(context.Context) (Encoder, error)
+type Handler func(ctx context.Context) (Encoder, error)
 
 // =============================================================================
 

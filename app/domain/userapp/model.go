@@ -39,8 +39,9 @@ type User struct {
 }
 
 // Encode implments the encoder interface.
-func (app User) Encode() ([]byte, error) {
-	return json.Marshal(app)
+func (app User) Encode() ([]byte, string, error) {
+	b, err := json.Marshal(app)
+	return b, "application/json", err
 }
 
 func toAppUser(usr userbus.User) User {

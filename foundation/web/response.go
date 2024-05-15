@@ -17,7 +17,7 @@ type httpStatus interface {
 func respondError(ctx context.Context, w http.ResponseWriter, err error) error {
 	data, ok := err.(Encoder)
 	if !ok {
-		return errors.New("error value does not implement the encoder interface")
+		return fmt.Errorf("error value does not implement the encoder interface: %T", err)
 	}
 
 	return respond(ctx, w, data)
@@ -53,12 +53,12 @@ func respond(ctx context.Context, w http.ResponseWriter, data Encoder) error {
 		return nil
 	}
 
-	b, err := data.Encode()
+	b, contentType, err := data.Encode()
 	if err != nil {
 		return fmt.Errorf("respond: encode: %w", err)
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", contentType)
 	w.WriteHeader(statusCode)
 
 	if _, err := w.Write(b); err != nil {
