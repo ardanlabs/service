@@ -14,7 +14,7 @@ import (
 // delegate provided.
 func (b *Business) registerDelegateFunctions() {
 	if b.delegate != nil {
-		b.delegate.Register(userbus.Name, userbus.ActionUpdated, b.actionUserUpdated)
+		b.delegate.Register(userbus.DomainName, userbus.ActionUpdated, b.actionUserUpdated)
 	}
 }
 

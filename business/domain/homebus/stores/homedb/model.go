@@ -26,7 +26,7 @@ func toDBHome(bus homebus.Home) home {
 	db := home{
 		ID:          bus.ID,
 		UserID:      bus.UserID,
-		Type:        bus.Type.Name(),
+		Type:        bus.Type.String(),
 		Address1:    bus.Address.Address1,
 		Address2:    bus.Address.Address2,
 		ZipCode:     bus.Address.ZipCode,

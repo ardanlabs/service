@@ -32,7 +32,7 @@ func toAppProduct(prd productbus.Product) Product {
 	return Product{
 		ID:          prd.ID.String(),
 		UserID:      prd.UserID.String(),
-		Name:        prd.Name,
+		Name:        prd.Name.String(),
 		Cost:        prd.Cost,
 		Quantity:    prd.Quantity,
 		DateCreated: prd.DateCreated.Format(time.RFC3339),
@@ -80,18 +80,23 @@ func toBusNewUser(app NewUser) (userbus.NewUser, error) {
 	for i, roleStr := range app.Roles {
 		role, err := userbus.Roles.Parse(roleStr)
 		if err != nil {
-			return userbus.NewUser{}, fmt.Errorf("parsing role: %w", err)
+			return userbus.NewUser{}, fmt.Errorf("parse: %w", err)
 		}
 		roles[i] = role
 	}
 
 	addr, err := mail.ParseAddress(app.Email)
 	if err != nil {
-		return userbus.NewUser{}, fmt.Errorf("parsing email: %w", err)
+		return userbus.NewUser{}, fmt.Errorf("parse: %w", err)
+	}
+
+	name, err := userbus.Names.Parse(app.Name)
+	if err != nil {
+		return userbus.NewUser{}, fmt.Errorf("parse: %w", err)
 	}
 
 	bus := userbus.NewUser{
-		Name:       app.Name,
+		Name:       name,
 		Email:      *addr,
 		Roles:      roles,
 		Department: app.Department,
@@ -120,8 +125,13 @@ func (app NewProduct) Validate() error {
 }
 
 func toBusNewProduct(app NewProduct) (productbus.NewProduct, error) {
+	name, err := productbus.Names.Parse(app.Name)
+	if err != nil {
+		return productbus.NewProduct{}, fmt.Errorf("parse: %w", err)
+	}
+
 	bus := productbus.NewProduct{
-		Name:     app.Name,
+		Name:     name,
 		Cost:     app.Cost,
 		Quantity: app.Quantity,
 	}

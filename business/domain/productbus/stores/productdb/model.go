@@ -1,6 +1,7 @@
 package productdb
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/ardanlabs/service/business/domain/productbus"
@@ -21,7 +22,7 @@ func toDBProduct(bus productbus.Product) product {
 	db := product{
 		ID:          bus.ID,
 		UserID:      bus.UserID,
-		Name:        bus.Name,
+		Name:        bus.Name.String(),
 		Cost:        bus.Cost,
 		Quantity:    bus.Quantity,
 		DateCreated: bus.DateCreated.UTC(),
@@ -31,26 +32,35 @@ func toDBProduct(bus productbus.Product) product {
 	return db
 }
 
-func toBusProduct(db product) productbus.Product {
+func toBusProduct(db product) (productbus.Product, error) {
+	name, err := productbus.Names.Parse(db.Name)
+	if err != nil {
+		return productbus.Product{}, fmt.Errorf("parse name: %w", err)
+	}
+
 	bus := productbus.Product{
 		ID:          db.ID,
 		UserID:      db.UserID,
-		Name:        db.Name,
+		Name:        name,
 		Cost:        db.Cost,
 		Quantity:    db.Quantity,
 		DateCreated: db.DateCreated.In(time.Local),
 		DateUpdated: db.DateUpdated.In(time.Local),
 	}
 
-	return bus
+	return bus, nil
 }
 
-func toBusProducts(dbs []product) []productbus.Product {
+func toBusProducts(dbs []product) ([]productbus.Product, error) {
 	bus := make([]productbus.Product, len(dbs))
 
 	for i, db := range dbs {
-		bus[i] = toBusProduct(db)
+		var err error
+		bus[i], err = toBusProduct(db)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	return bus
+	return bus, nil
 }

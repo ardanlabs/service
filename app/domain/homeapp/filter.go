@@ -16,7 +16,7 @@ func parseFilter(qp QueryParams) (homebus.QueryFilter, error) {
 		if err != nil {
 			return homebus.QueryFilter{}, validate.NewFieldsError("home_id", err)
 		}
-		filter.WithHomeID(id)
+		filter.ID = &id
 	}
 
 	if qp.UserID != "" {
@@ -24,7 +24,7 @@ func parseFilter(qp QueryParams) (homebus.QueryFilter, error) {
 		if err != nil {
 			return homebus.QueryFilter{}, validate.NewFieldsError("user_id", err)
 		}
-		filter.WithUserID(id)
+		filter.UserID = &id
 	}
 
 	if qp.Type != "" {
@@ -32,7 +32,7 @@ func parseFilter(qp QueryParams) (homebus.QueryFilter, error) {
 		if err != nil {
 			return homebus.QueryFilter{}, validate.NewFieldsError("type", err)
 		}
-		filter.WithHomeType(typ)
+		filter.Type = &typ
 	}
 
 	if qp.StartCreatedDate != "" {
@@ -40,7 +40,7 @@ func parseFilter(qp QueryParams) (homebus.QueryFilter, error) {
 		if err != nil {
 			return homebus.QueryFilter{}, validate.NewFieldsError("start_created_date", err)
 		}
-		filter.WithStartDateCreated(t)
+		filter.StartCreatedDate = &t
 	}
 
 	if qp.EndCreatedDate != "" {
@@ -48,7 +48,7 @@ func parseFilter(qp QueryParams) (homebus.QueryFilter, error) {
 		if err != nil {
 			return homebus.QueryFilter{}, validate.NewFieldsError("end_created_date", err)
 		}
-		filter.WithEndCreatedDate(t)
+		filter.EndCreatedDate = &t
 	}
 
 	return filter, nil

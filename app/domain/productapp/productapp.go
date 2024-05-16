@@ -40,12 +40,17 @@ func (a *App) Create(ctx context.Context, app NewProduct) (Product, error) {
 
 // Update updates an existing product.
 func (a *App) Update(ctx context.Context, app UpdateProduct) (Product, error) {
+	up, err := toBusUpdateProduct(app)
+	if err != nil {
+		return Product{}, errs.New(errs.FailedPrecondition, err)
+	}
+
 	prd, err := mid.GetProduct(ctx)
 	if err != nil {
 		return Product{}, errs.Newf(errs.Internal, "product missing in context: %s", err)
 	}
 
-	updPrd, err := a.productBus.Update(ctx, prd, toBusUpdateProduct(app))
+	updPrd, err := a.productBus.Update(ctx, prd, up)
 	if err != nil {
 		return Product{}, errs.Newf(errs.Internal, "update: productID[%s] up[%+v]: %s", prd.ID, app, err)
 	}

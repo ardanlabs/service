@@ -46,7 +46,7 @@ func toAppProduct(prd productbus.Product) Product {
 	return Product{
 		ID:          prd.ID.String(),
 		UserID:      prd.UserID.String(),
-		Name:        prd.Name,
+		Name:        prd.Name.String(),
 		Cost:        prd.Cost,
 		Quantity:    prd.Quantity,
 		DateCreated: prd.DateCreated.Format(time.RFC3339),
@@ -92,9 +92,14 @@ func toBusNewProduct(ctx context.Context, app NewProduct) (productbus.NewProduct
 		return productbus.NewProduct{}, fmt.Errorf("getuserid: %w", err)
 	}
 
+	name, err := productbus.Names.Parse(app.Name)
+	if err != nil {
+		return productbus.NewProduct{}, fmt.Errorf("parse name: %w", err)
+	}
+
 	bus := productbus.NewProduct{
 		UserID:   userID,
-		Name:     app.Name,
+		Name:     name,
 		Cost:     app.Cost,
 		Quantity: app.Quantity,
 	}
@@ -125,12 +130,21 @@ func (app UpdateProduct) Validate() error {
 	return nil
 }
 
-func toBusUpdateProduct(app UpdateProduct) productbus.UpdateProduct {
+func toBusUpdateProduct(app UpdateProduct) (productbus.UpdateProduct, error) {
+	var name *productbus.Name
+	if app.Name != nil {
+		nm, err := productbus.Names.Parse(*app.Name)
+		if err != nil {
+			return productbus.UpdateProduct{}, fmt.Errorf("parse: %w", err)
+		}
+		name = &nm
+	}
+
 	bus := productbus.UpdateProduct{
-		Name:     app.Name,
+		Name:     name,
 		Cost:     app.Cost,
 		Quantity: app.Quantity,
 	}
 
-	return bus
+	return bus, nil
 }

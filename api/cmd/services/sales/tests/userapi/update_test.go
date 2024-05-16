@@ -62,7 +62,7 @@ func update200(sd apitest.SeedData) []apitest.Table {
 			GotResp: &userapp.User{},
 			ExpResp: &userapp.User{
 				ID:          sd.Admins[0].ID.String(),
-				Name:        sd.Admins[0].Name,
+				Name:        sd.Admins[0].Name.String(),
 				Email:       sd.Admins[0].Email.Address,
 				Roles:       []string{"USER"},
 				Department:  sd.Admins[0].Department,
@@ -165,7 +165,7 @@ func update401(sd apitest.SeedData) []apitest.Table {
 				PasswordConfirm: dbtest.StringPointer("123"),
 			},
 			GotResp: &errs.Error{},
-			ExpResp: errs.Newf(errs.Unauthenticated, "authorize: you are not authorized for that action, claims[[{USER}]] rule[rule_admin_or_subject]: rego evaluation failed : bindings results[[{[true] map[x:false]}]] ok[true]"),
+			ExpResp: errs.Newf(errs.Unauthenticated, "authorize: you are not authorized for that action, claims[[USER]] rule[rule_admin_or_subject]: rego evaluation failed : bindings results[[{[true] map[x:false]}]] ok[true]"),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -180,7 +180,7 @@ func update401(sd apitest.SeedData) []apitest.Table {
 				Roles: []string{"ADMIN"},
 			},
 			GotResp: &errs.Error{},
-			ExpResp: errs.Newf(errs.Unauthenticated, "authorize: you are not authorized for that action, claims[[{USER}]] rule[rule_admin_only]: rego evaluation failed : bindings results[[{[true] map[x:false]}]] ok[true]"),
+			ExpResp: errs.Newf(errs.Unauthenticated, "authorize: you are not authorized for that action, claims[[USER]] rule[rule_admin_only]: rego evaluation failed : bindings results[[{[true] map[x:false]}]] ok[true]"),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},

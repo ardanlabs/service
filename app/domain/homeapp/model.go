@@ -56,7 +56,7 @@ func toAppHome(hme homebus.Home) Home {
 	return Home{
 		ID:     hme.ID.String(),
 		UserID: hme.UserID.String(),
-		Type:   hme.Type.Name(),
+		Type:   hme.Type.String(),
 		Address: Address{
 			Address1: hme.Address.Address1,
 			Address2: hme.Address.Address2,

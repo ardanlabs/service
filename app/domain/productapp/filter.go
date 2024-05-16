@@ -16,11 +16,15 @@ func parseFilter(qp QueryParams) (productbus.QueryFilter, error) {
 		if err != nil {
 			return productbus.QueryFilter{}, validate.NewFieldsError("product_id", err)
 		}
-		filter.WithProductID(id)
+		filter.ID = &id
 	}
 
 	if qp.Name != "" {
-		filter.WithName(qp.Name)
+		name, err := productbus.Names.Parse(qp.Name)
+		if err != nil {
+			return productbus.QueryFilter{}, validate.NewFieldsError("name", err)
+		}
+		filter.Name = &name
 	}
 
 	if qp.Cost != "" {
@@ -28,7 +32,7 @@ func parseFilter(qp QueryParams) (productbus.QueryFilter, error) {
 		if err != nil {
 			return productbus.QueryFilter{}, validate.NewFieldsError("cost", err)
 		}
-		filter.WithCost(cst)
+		filter.Cost = &cst
 	}
 
 	if qp.Quantity != "" {
@@ -36,7 +40,8 @@ func parseFilter(qp QueryParams) (productbus.QueryFilter, error) {
 		if err != nil {
 			return productbus.QueryFilter{}, validate.NewFieldsError("quantity", err)
 		}
-		filter.WithQuantity(int(qua))
+		i := int(qua)
+		filter.Quantity = &i
 	}
 
 	return filter, nil

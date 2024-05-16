@@ -50,8 +50,8 @@ func newType(typ string) Type {
 	return t
 }
 
-// Name returns the name of the type.
-func (t Type) Name() string {
+// String returns the name of the type.
+func (t Type) String() string {
 	return t.name
 }
 

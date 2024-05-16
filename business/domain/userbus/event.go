@@ -8,8 +8,8 @@ import (
 	"github.com/google/uuid"
 )
 
-// Name represents the name of this domain.
-const Name = "user"
+// DomainName represents the name of this domain.
+const DomainName = "user"
 
 // Set of delegate actions.
 const (
@@ -47,7 +47,7 @@ func ActionUpdatedData(uu UpdateUser, userID uuid.UUID) delegate.Data {
 	}
 
 	return delegate.Data{
-		Domain:    Name,
+		Domain:    DomainName,
 		Action:    ActionUpdated,
 		RawParams: rawParams,
 	}

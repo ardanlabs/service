@@ -26,12 +26,12 @@ type user struct {
 func toDBUser(usr userbus.User) user {
 	roles := make([]string, len(usr.Roles))
 	for i, role := range usr.Roles {
-		roles[i] = role.Name()
+		roles[i] = role.String()
 	}
 
 	return user{
 		ID:           usr.ID,
-		Name:         usr.Name,
+		Name:         usr.Name.String(),
 		Email:        usr.Email.Address,
 		Roles:        roles,
 		PasswordHash: usr.PasswordHash,
@@ -45,13 +45,13 @@ func toDBUser(usr userbus.User) user {
 	}
 }
 
-func toBusUser(dbUsr user) (userbus.User, error) {
+func toBusUser(db user) (userbus.User, error) {
 	addr := mail.Address{
-		Address: dbUsr.Email,
+		Address: db.Email,
 	}
 
-	roles := make([]userbus.Role, len(dbUsr.Roles))
-	for i, value := range dbUsr.Roles {
+	roles := make([]userbus.Role, len(db.Roles))
+	for i, value := range db.Roles {
 		var err error
 		roles[i], err = userbus.Roles.Parse(value)
 		if err != nil {
@@ -59,27 +59,32 @@ func toBusUser(dbUsr user) (userbus.User, error) {
 		}
 	}
 
+	name, err := userbus.Names.Parse(db.Name)
+	if err != nil {
+		return userbus.User{}, fmt.Errorf("parse name: %w", err)
+	}
+
 	bus := userbus.User{
-		ID:           dbUsr.ID,
-		Name:         dbUsr.Name,
+		ID:           db.ID,
+		Name:         name,
 		Email:        addr,
 		Roles:        roles,
-		PasswordHash: dbUsr.PasswordHash,
-		Enabled:      dbUsr.Enabled,
-		Department:   dbUsr.Department.String,
-		DateCreated:  dbUsr.DateCreated.In(time.Local),
-		DateUpdated:  dbUsr.DateUpdated.In(time.Local),
+		PasswordHash: db.PasswordHash,
+		Enabled:      db.Enabled,
+		Department:   db.Department.String,
+		DateCreated:  db.DateCreated.In(time.Local),
+		DateUpdated:  db.DateUpdated.In(time.Local),
 	}
 
 	return bus, nil
 }
 
-func toBusUsers(dbUsers []user) ([]userbus.User, error) {
-	bus := make([]userbus.User, len(dbUsers))
+func toBusUsers(dbs []user) ([]userbus.User, error) {
+	bus := make([]userbus.User, len(dbs))
 
-	for i, dbUsr := range dbUsers {
+	for i, db := range dbs {
 		var err error
-		bus[i], err = toBusUser(dbUsr)
+		bus[i], err = toBusUser(db)
 		if err != nil {
 			return nil, err
 		}

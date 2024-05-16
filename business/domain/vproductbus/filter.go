@@ -25,28 +25,3 @@ func (qf *QueryFilter) Validate() error {
 
 	return nil
 }
-
-// WithID sets the ID field of the QueryFilter value.
-func (qf *QueryFilter) WithID(productID uuid.UUID) {
-	qf.ID = &productID
-}
-
-// WithName sets the Name field of the QueryFilter value.
-func (qf *QueryFilter) WithName(name string) {
-	qf.Name = &name
-}
-
-// WithCost sets the Cost field of the QueryFilter value.
-func (qf *QueryFilter) WithCost(cost float64) {
-	qf.Cost = &cost
-}
-
-// WithQuantity sets the Quantity field of the QueryFilter value.
-func (qf *QueryFilter) WithQuantity(quantity int) {
-	qf.Quantity = &quantity
-}
-
-// WithUserName sets the UserName field of the QueryFilter value.
-func (qf *QueryFilter) WithUserName(userName string) {
-	qf.UserName = &userName
-}

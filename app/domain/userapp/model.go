@@ -47,12 +47,12 @@ func (app User) Encode() ([]byte, string, error) {
 func toAppUser(usr userbus.User) User {
 	roles := make([]string, len(usr.Roles))
 	for i, role := range usr.Roles {
-		roles[i] = role.Name()
+		roles[i] = role.String()
 	}
 
 	return User{
 		ID:           usr.ID.String(),
-		Name:         usr.Name,
+		Name:         usr.Name.String(),
 		Email:        usr.Email.Address,
 		Roles:        roles,
 		PasswordHash: usr.PasswordHash,
@@ -113,8 +113,13 @@ func toBusNewUser(app NewUser) (userbus.NewUser, error) {
 		return userbus.NewUser{}, fmt.Errorf("parse: %w", err)
 	}
 
+	name, err := userbus.Names.Parse(app.Name)
+	if err != nil {
+		return userbus.NewUser{}, fmt.Errorf("parse: %w", err)
+	}
+
 	bus := userbus.NewUser{
-		Name:       app.Name,
+		Name:       name,
 		Email:      *addr,
 		Roles:      roles,
 		Department: app.Department,
@@ -201,8 +206,17 @@ func toBusUpdateUser(app UpdateUser) (userbus.UpdateUser, error) {
 		}
 	}
 
+	var name *userbus.Name
+	if app.Name != nil {
+		nm, err := userbus.Names.Parse(*app.Name)
+		if err != nil {
+			return userbus.UpdateUser{}, fmt.Errorf("parse: %w", err)
+		}
+		name = &nm
+	}
+
 	bus := userbus.UpdateUser{
-		Name:       app.Name,
+		Name:       name,
 		Email:      addr,
 		Department: app.Department,
 		Password:   app.Password,

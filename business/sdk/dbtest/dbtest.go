@@ -193,3 +193,17 @@ func FloatPointer(f float64) *float64 {
 func BoolPointer(b bool) *bool {
 	return &b
 }
+
+// UserNamePointer is a helper to get a *Name from a Name. It is in the tests
+// package because we normally don't want to deal with pointers to basic types
+// but it's useful in some tests.
+func UserNamePointer(name userbus.Name) *userbus.Name {
+	return &name
+}
+
+// ProductNamePointer is a helper to get a *Name from a Name. It is in the tests
+// package because we normally don't want to deal with pointers to basic types
+// but it's useful in some tests.
+func ProductNamePointer(name productbus.Name) *productbus.Name {
+	return &name
+}

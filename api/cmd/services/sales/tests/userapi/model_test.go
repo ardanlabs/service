@@ -10,12 +10,12 @@ import (
 func toAppUser(usr userbus.User) userapp.User {
 	roles := make([]string, len(usr.Roles))
 	for i, role := range usr.Roles {
-		roles[i] = role.Name()
+		roles[i] = role.String()
 	}
 
 	return userapp.User{
 		ID:           usr.ID.String(),
-		Name:         usr.Name,
+		Name:         usr.Name.String(),
 		Email:        usr.Email.Address,
 		Roles:        roles,
 		PasswordHash: nil, // This field is not marshalled.

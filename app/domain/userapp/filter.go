@@ -17,11 +17,15 @@ func parseFilter(qp QueryParams) (userbus.QueryFilter, error) {
 		if err != nil {
 			return userbus.QueryFilter{}, validate.NewFieldsError("user_id", err)
 		}
-		filter.WithUserID(id)
+		filter.ID = &id
 	}
 
 	if qp.Name != "" {
-		filter.WithName(qp.Name)
+		name, err := userbus.Names.Parse(qp.Name)
+		if err != nil {
+			return userbus.QueryFilter{}, validate.NewFieldsError("name", err)
+		}
+		filter.Name = &name
 	}
 
 	if qp.Email != "" {
@@ -29,7 +33,7 @@ func parseFilter(qp QueryParams) (userbus.QueryFilter, error) {
 		if err != nil {
 			return userbus.QueryFilter{}, validate.NewFieldsError("email", err)
 		}
-		filter.WithEmail(*addr)
+		filter.Email = addr
 	}
 
 	if qp.StartCreatedDate != "" {
@@ -37,7 +41,7 @@ func parseFilter(qp QueryParams) (userbus.QueryFilter, error) {
 		if err != nil {
 			return userbus.QueryFilter{}, validate.NewFieldsError("start_created_date", err)
 		}
-		filter.WithStartDateCreated(t)
+		filter.StartCreatedDate = &t
 	}
 
 	if qp.EndCreatedDate != "" {
@@ -45,7 +49,7 @@ func parseFilter(qp QueryParams) (userbus.QueryFilter, error) {
 		if err != nil {
 			return userbus.QueryFilter{}, validate.NewFieldsError("end_created_date", err)
 		}
-		filter.WithEndCreatedDate(t)
+		filter.EndCreatedDate = &t
 	}
 
 	return filter, nil

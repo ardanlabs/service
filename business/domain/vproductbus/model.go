@@ -3,6 +3,8 @@ package vproductbus
 import (
 	"time"
 
+	"github.com/ardanlabs/service/business/domain/productbus"
+	"github.com/ardanlabs/service/business/domain/userbus"
 	"github.com/google/uuid"
 )
 
@@ -10,10 +12,10 @@ import (
 type Product struct {
 	ID          uuid.UUID
 	UserID      uuid.UUID
-	Name        string
+	Name        productbus.Name
 	Cost        float64
 	Quantity    int
 	DateCreated time.Time
 	DateUpdated time.Time
-	UserName    string
+	UserName    userbus.Name
 }

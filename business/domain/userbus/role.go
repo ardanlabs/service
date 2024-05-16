@@ -50,8 +50,8 @@ func newRole(role string) Role {
 	return r
 }
 
-// Name returns the name of the role.
-func (r Role) Name() string {
+// String returns the name of the role.
+func (r Role) String() string {
 	return r.name
 }
 

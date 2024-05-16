@@ -1,10 +1,8 @@
 package homebus
 
 import (
-	"fmt"
 	"time"
 
-	"github.com/ardanlabs/service/foundation/validate"
 	"github.com/google/uuid"
 )
 
@@ -16,40 +14,4 @@ type QueryFilter struct {
 	Type             *Type
 	StartCreatedDate *time.Time
 	EndCreatedDate   *time.Time
-}
-
-// Validate can perform a check of the data against the validate tags.
-func (qf *QueryFilter) Validate() error {
-	if err := validate.Check(qf); err != nil {
-		return fmt.Errorf("validate: %w", err)
-	}
-
-	return nil
-}
-
-// WithHomeID sets the ID field of the QueryFilter value.
-func (qf *QueryFilter) WithHomeID(homeID uuid.UUID) {
-	qf.ID = &homeID
-}
-
-// WithUserID sets the ID field of the QueryFilter value.
-func (qf *QueryFilter) WithUserID(userID uuid.UUID) {
-	qf.UserID = &userID
-}
-
-// WithHomeType sets the Type field of the QueryFilter value.
-func (qf *QueryFilter) WithHomeType(homeType Type) {
-	qf.Type = &homeType
-}
-
-// WithStartDateCreated sets the StartCreatedDate field of the QueryFilter value.
-func (qf *QueryFilter) WithStartDateCreated(startDate time.Time) {
-	d := startDate.UTC()
-	qf.StartCreatedDate = &d
-}
-
-// WithEndCreatedDate sets the EndCreatedDate field of the QueryFilter value.
-func (qf *QueryFilter) WithEndCreatedDate(endDate time.Time) {
-	d := endDate.UTC()
-	qf.EndCreatedDate = &d
 }

@@ -133,7 +133,7 @@ func (s *Store) Query(ctx context.Context, filter productbus.QueryFilter, orderB
 		return nil, fmt.Errorf("namedqueryslice: %w", err)
 	}
 
-	return toBusProducts(dbPrds), nil
+	return toBusProducts(dbPrds)
 }
 
 // Count returns the total number of users in the DB.
@@ -185,7 +185,7 @@ func (s *Store) QueryByID(ctx context.Context, productID uuid.UUID) (productbus.
 		return productbus.Product{}, fmt.Errorf("db: %w", err)
 	}
 
-	return toBusProduct(dbPrd), nil
+	return toBusProduct(dbPrd)
 }
 
 // QueryByUserID finds the product identified by a given User ID.
@@ -209,5 +209,5 @@ func (s *Store) QueryByUserID(ctx context.Context, userID uuid.UUID) ([]productb
 		return nil, fmt.Errorf("db: %w", err)
 	}
 
-	return toBusProducts(dbPrds), nil
+	return toBusProducts(dbPrds)
 }

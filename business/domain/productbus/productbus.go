@@ -148,10 +148,6 @@ func (b *Business) Delete(ctx context.Context, prd Product) error {
 
 // Query retrieves a list of existing products.
 func (b *Business) Query(ctx context.Context, filter QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]Product, error) {
-	if err := filter.Validate(); err != nil {
-		return nil, err
-	}
-
 	prds, err := b.storer.Query(ctx, filter, orderBy, pageNumber, rowsPerPage)
 	if err != nil {
 		return nil, fmt.Errorf("query: %w", err)
@@ -162,10 +158,6 @@ func (b *Business) Query(ctx context.Context, filter QueryFilter, orderBy order.
 
 // Count returns the total number of products.
 func (b *Business) Count(ctx context.Context, filter QueryFilter) (int, error) {
-	if err := filter.Validate(); err != nil {
-		return 0, err
-	}
-
 	return b.storer.Count(ctx, filter)
 }
 
