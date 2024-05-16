@@ -24,7 +24,7 @@ type Handler func(ctx context.Context, r *http.Request) (Encoder, error)
 
 // Logger represents a function that will be called to add information
 // to the logs.
-type Logger func(ctx context.Context, format string, args ...any)
+type Logger func(ctx context.Context, msg string, args ...any)
 
 // App is the entrypoint into our application and what configures our context
 // object for each of our http handlers. Feel free to add any configuration
@@ -113,13 +113,13 @@ func (a *App) HandleNoMiddleware(method string, group string, path string, handl
 		resp, err := handler(ctx, r)
 		if err != nil {
 			if err := respondError(ctx, w, err); err != nil {
-				a.log(ctx, "web", "ERROR", err)
+				a.log(ctx, "web-responderror", "ERROR", err)
 			}
 			return
 		}
 
 		if err := respond(ctx, w, resp); err != nil {
-			a.log(ctx, "web", "ERROR", err)
+			a.log(ctx, "web-respond", "ERROR", err)
 		}
 	}
 
@@ -151,13 +151,13 @@ func (a *App) Handle(method string, group string, path string, handler Handler, 
 		resp, err := handler(ctx, r)
 		if err != nil {
 			if err := respondError(ctx, w, err); err != nil {
-				a.log(ctx, "web", "ERROR", err)
+				a.log(ctx, "web-responderror", "ERROR", err)
 			}
 			return
 		}
 
 		if err := respond(ctx, w, resp); err != nil {
-			a.log(ctx, "web", "ERROR", err)
+			a.log(ctx, "web-respond", "ERROR", err)
 		}
 	}
 
