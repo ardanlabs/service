@@ -8,6 +8,6 @@ type ready struct {
 
 // Encode implments the encoder interface.
 func (r ready) Encode() ([]byte, string, error) {
-	b, err := json.Marshal(r)
-	return b, "application/json", err
+	data, err := json.Marshal(r)
+	return data, "application/json", err
 }

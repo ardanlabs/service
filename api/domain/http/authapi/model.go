@@ -8,6 +8,6 @@ type token struct {
 
 // Encode implments the encoder interface.
 func (t token) Encode() ([]byte, string, error) {
-	b, err := json.Marshal(t)
-	return b, "application/json", err
+	data, err := json.Marshal(t)
+	return data, "application/json", err
 }

@@ -26,7 +26,7 @@ type AuthenticateResp struct {
 }
 
 // Encode implments the encoder interface.
-func (a AuthenticateResp) Encode() ([]byte, string, error) {
-	b, err := json.Marshal(a)
-	return b, "application/json", err
+func (ar AuthenticateResp) Encode() ([]byte, string, error) {
+	data, err := json.Marshal(ar)
+	return data, "application/json", err
 }

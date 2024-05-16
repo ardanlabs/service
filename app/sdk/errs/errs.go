@@ -81,23 +81,23 @@ func Newf(code ErrCode, format string, v ...any) *Error {
 }
 
 // Error implements the error interface.
-func (err *Error) Error() string {
-	return err.Message
+func (e *Error) Error() string {
+	return e.Message
 }
 
 // Encode implments the encoder interface.
-func (err *Error) Encode() ([]byte, string, error) {
-	b, er := json.Marshal(err)
-	return b, "application/json", er
+func (e *Error) Encode() ([]byte, string, error) {
+	data, err := json.Marshal(e)
+	return data, "application/json", err
 }
 
 // HTTPStatus implements the web package httpStatus interface so the
 // web framework can use the correct http status.
-func (err *Error) HTTPStatus() int {
-	return httpStatus[err.Code]
+func (e *Error) HTTPStatus() int {
+	return httpStatus[e.Code]
 }
 
 // Equal provides support for the go-cmp package and testing.
-func (err *Error) Equal(err2 *Error) bool {
-	return err.Code == err2.Code && err.Message == err2.Message
+func (e *Error) Equal(e2 *Error) bool {
+	return e.Code == e2.Code && e.Message == e2.Message
 }

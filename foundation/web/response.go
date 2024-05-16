@@ -23,7 +23,7 @@ func respondError(ctx context.Context, w http.ResponseWriter, err error) error {
 	return respond(ctx, w, data)
 }
 
-func respond(ctx context.Context, w http.ResponseWriter, data Encoder) error {
+func respond(ctx context.Context, w http.ResponseWriter, dataModel Encoder) error {
 
 	// If the context has been canceled, it means the client is no longer
 	// waiting for a response.
@@ -34,15 +34,18 @@ func respond(ctx context.Context, w http.ResponseWriter, data Encoder) error {
 	}
 
 	var statusCode = http.StatusOK
-	switch v := data.(type) {
+
+	switch v := dataModel.(type) {
 	case httpStatus:
 		statusCode = v.HTTPStatus()
+
 	case error:
 		statusCode = http.StatusInternalServerError
-	}
 
-	if data == nil {
-		statusCode = http.StatusNoContent
+	default:
+		if dataModel == nil {
+			statusCode = http.StatusNoContent
+		}
 	}
 
 	_, span := tracer.AddSpan(ctx, "foundation.response", attribute.Int("status", statusCode))
@@ -53,7 +56,7 @@ func respond(ctx context.Context, w http.ResponseWriter, data Encoder) error {
 		return nil
 	}
 
-	b, contentType, err := data.Encode()
+	data, contentType, err := dataModel.Encode()
 	if err != nil {
 		return fmt.Errorf("respond: encode: %w", err)
 	}
@@ -61,7 +64,7 @@ func respond(ctx context.Context, w http.ResponseWriter, data Encoder) error {
 	w.Header().Set("Content-Type", contentType)
 	w.WriteHeader(statusCode)
 
-	if _, err := w.Write(b); err != nil {
+	if _, err := w.Write(data); err != nil {
 		return fmt.Errorf("respond: write: %w", err)
 	}
 

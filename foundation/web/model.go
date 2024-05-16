@@ -6,7 +6,8 @@ type cors struct {
 	Status string
 }
 
+// Encode implments the encoder interface.
 func (c cors) Encode() ([]byte, string, error) {
-	b, err := json.Marshal(c)
-	return b, "application/json", err
+	data, err := json.Marshal(c)
+	return data, "application/json", err
 }
