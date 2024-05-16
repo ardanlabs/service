@@ -1,9 +1,11 @@
 package productbus
 
 import (
-	"fmt"
-	"unicode/utf8"
+	"errors"
+	"regexp"
 )
+
+var r = regexp.MustCompile("^[a-zA-Z0-9' -]{3,20}$")
 
 type nameSet struct{}
 
@@ -12,9 +14,8 @@ var Names nameSet
 // Parse parses the string value and returns a name if the value complies
 // with the rules for a name.
 func (nameSet) Parse(value string) (Name, error) {
-	n := utf8.RuneCount([]byte(value))
-	if n < 3 {
-		return Name{}, fmt.Errorf("name too short: %d", n)
+	if !r.MatchString(value) {
+		return Name{}, errors.New("invalid name")
 	}
 
 	return Name{value}, nil
