@@ -9,6 +9,7 @@ import (
 
 	"github.com/ardanlabs/service/business/domain/homebus"
 	"github.com/ardanlabs/service/business/sdk/order"
+	"github.com/ardanlabs/service/business/sdk/page"
 	"github.com/ardanlabs/service/business/sdk/sqldb"
 	"github.com/ardanlabs/service/business/sdk/transaction"
 	"github.com/ardanlabs/service/foundation/logger"
@@ -107,10 +108,10 @@ func (s *Store) Update(ctx context.Context, hme homebus.Home) error {
 }
 
 // Query retrieves a list of existing homes from the database.
-func (s *Store) Query(ctx context.Context, filter homebus.QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]homebus.Home, error) {
+func (s *Store) Query(ctx context.Context, filter homebus.QueryFilter, orderBy order.By, page page.Page) ([]homebus.Home, error) {
 	data := map[string]any{
-		"offset":        (pageNumber - 1) * rowsPerPage,
-		"rows_per_page": rowsPerPage,
+		"offset":        (page.Number() - 1) * page.RowsPerPage(),
+		"rows_per_page": page.RowsPerPage(),
 	}
 
 	const q = `

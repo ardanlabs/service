@@ -8,9 +8,10 @@ import (
 	"github.com/ardanlabs/service/app/sdk/auth"
 	"github.com/ardanlabs/service/app/sdk/errs"
 	"github.com/ardanlabs/service/app/sdk/mid"
-	"github.com/ardanlabs/service/app/sdk/page"
+	"github.com/ardanlabs/service/app/sdk/query"
 	"github.com/ardanlabs/service/business/domain/userbus"
 	"github.com/ardanlabs/service/business/sdk/order"
+	"github.com/ardanlabs/service/business/sdk/page"
 )
 
 // App manages the set of app layer api functions for the user domain.
@@ -107,33 +108,33 @@ func (a *App) Delete(ctx context.Context) error {
 }
 
 // Query returns a list of users with paging.
-func (a *App) Query(ctx context.Context, qp QueryParams) (page.Document[User], error) {
-	pg, err := page.Parse(qp.Page, qp.Rows)
+func (a *App) Query(ctx context.Context, qp QueryParams) (query.Result[User], error) {
+	page, err := page.Parse(qp.Page, qp.Rows)
 	if err != nil {
-		return page.Document[User]{}, err
+		return query.Result[User]{}, err
 	}
 
 	filter, err := parseFilter(qp)
 	if err != nil {
-		return page.Document[User]{}, err
+		return query.Result[User]{}, err
 	}
 
 	orderBy, err := order.Parse(orderByFields, qp.OrderBy, defaultOrderBy)
 	if err != nil {
-		return page.Document[User]{}, err
+		return query.Result[User]{}, err
 	}
 
-	usrs, err := a.userBus.Query(ctx, filter, orderBy, pg.Number, pg.RowsPerPage)
+	usrs, err := a.userBus.Query(ctx, filter, orderBy, page)
 	if err != nil {
-		return page.Document[User]{}, errs.Newf(errs.Internal, "query: %s", err)
+		return query.Result[User]{}, errs.Newf(errs.Internal, "query: %s", err)
 	}
 
 	total, err := a.userBus.Count(ctx, filter)
 	if err != nil {
-		return page.Document[User]{}, errs.Newf(errs.Internal, "count: %s", err)
+		return query.Result[User]{}, errs.Newf(errs.Internal, "count: %s", err)
 	}
 
-	return page.NewDocument(toAppUsers(usrs), total, pg.Number, pg.RowsPerPage), nil
+	return query.NewResult(toAppUsers(usrs), total, page), nil
 }
 
 // QueryByID returns a user by its Ia.

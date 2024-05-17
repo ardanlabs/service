@@ -9,6 +9,7 @@ import (
 
 	"github.com/ardanlabs/service/business/domain/productbus"
 	"github.com/ardanlabs/service/business/sdk/order"
+	"github.com/ardanlabs/service/business/sdk/page"
 	"github.com/ardanlabs/service/business/sdk/sqldb"
 	"github.com/ardanlabs/service/business/sdk/transaction"
 	"github.com/ardanlabs/service/foundation/logger"
@@ -105,10 +106,10 @@ func (s *Store) Delete(ctx context.Context, prd productbus.Product) error {
 }
 
 // Query gets all Products from the database.
-func (s *Store) Query(ctx context.Context, filter productbus.QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]productbus.Product, error) {
+func (s *Store) Query(ctx context.Context, filter productbus.QueryFilter, orderBy order.By, page page.Page) ([]productbus.Product, error) {
 	data := map[string]any{
-		"offset":        (pageNumber - 1) * rowsPerPage,
-		"rows_per_page": rowsPerPage,
+		"offset":        (page.Number() - 1) * page.RowsPerPage(),
+		"rows_per_page": page.RowsPerPage(),
 	}
 
 	const q = `

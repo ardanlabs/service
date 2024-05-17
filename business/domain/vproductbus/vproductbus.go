@@ -6,12 +6,13 @@ import (
 	"fmt"
 
 	"github.com/ardanlabs/service/business/sdk/order"
+	"github.com/ardanlabs/service/business/sdk/page"
 )
 
 // Storer interface declares the behavior this package needs to perists and
 // retrieve data.
 type Storer interface {
-	Query(ctx context.Context, filter QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]Product, error)
+	Query(ctx context.Context, filter QueryFilter, orderBy order.By, page page.Page) ([]Product, error)
 	Count(ctx context.Context, filter QueryFilter) (int, error)
 }
 
@@ -28,12 +29,8 @@ func NewBusiness(storer Storer) *Business {
 }
 
 // Query retrieves a list of existing products.
-func (b *Business) Query(ctx context.Context, filter QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]Product, error) {
-	if err := filter.Validate(); err != nil {
-		return nil, err
-	}
-
-	users, err := b.storer.Query(ctx, filter, orderBy, pageNumber, rowsPerPage)
+func (b *Business) Query(ctx context.Context, filter QueryFilter, orderBy order.By, page page.Page) ([]Product, error) {
+	users, err := b.storer.Query(ctx, filter, orderBy, page)
 	if err != nil {
 		return nil, fmt.Errorf("query: %w", err)
 	}
@@ -43,9 +40,5 @@ func (b *Business) Query(ctx context.Context, filter QueryFilter, orderBy order.
 
 // Count returns the total number of products.
 func (b *Business) Count(ctx context.Context, filter QueryFilter) (int, error) {
-	if err := filter.Validate(); err != nil {
-		return 0, err
-	}
-
 	return b.storer.Count(ctx, filter)
 }

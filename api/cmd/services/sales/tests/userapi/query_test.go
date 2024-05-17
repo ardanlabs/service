@@ -7,7 +7,7 @@ import (
 
 	"github.com/ardanlabs/service/api/sdk/http/apitest"
 	"github.com/ardanlabs/service/app/domain/userapp"
-	"github.com/ardanlabs/service/app/sdk/page"
+	"github.com/ardanlabs/service/app/sdk/query"
 	"github.com/ardanlabs/service/business/domain/userbus"
 	"github.com/google/go-cmp/cmp"
 )
@@ -34,8 +34,8 @@ func query200(sd apitest.SeedData) []apitest.Table {
 			Token:      sd.Admins[0].Token,
 			StatusCode: http.StatusOK,
 			Method:     http.MethodGet,
-			GotResp:    &page.Document[userapp.User]{},
-			ExpResp: &page.Document[userapp.User]{
+			GotResp:    &query.Result[userapp.User]{},
+			ExpResp: &query.Result[userapp.User]{
 				Page:        1,
 				RowsPerPage: 10,
 				Total:       len(usrs),

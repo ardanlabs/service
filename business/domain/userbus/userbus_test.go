@@ -11,6 +11,7 @@ import (
 
 	"github.com/ardanlabs/service/business/domain/userbus"
 	"github.com/ardanlabs/service/business/sdk/dbtest"
+	"github.com/ardanlabs/service/business/sdk/page"
 	"github.com/ardanlabs/service/business/sdk/unitest"
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/crypto/bcrypt"
@@ -110,7 +111,7 @@ func query(busDomain dbtest.BusDomain, sd unitest.SeedData) []unitest.Table {
 					Name: dbtest.UserNamePointer(userbus.Names.MustParse("Name")),
 				}
 
-				resp, err := busDomain.User.Query(ctx, filter, userbus.DefaultOrderBy, 1, 10)
+				resp, err := busDomain.User.Query(ctx, filter, userbus.DefaultOrderBy, page.MustParse("1", "10"))
 				if err != nil {
 					return err
 				}

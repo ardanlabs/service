@@ -6,9 +6,10 @@ import (
 
 	"github.com/ardanlabs/service/app/sdk/errs"
 	"github.com/ardanlabs/service/app/sdk/mid"
-	"github.com/ardanlabs/service/app/sdk/page"
+	"github.com/ardanlabs/service/app/sdk/query"
 	"github.com/ardanlabs/service/business/domain/productbus"
 	"github.com/ardanlabs/service/business/sdk/order"
+	"github.com/ardanlabs/service/business/sdk/page"
 )
 
 // App manages the set of app layer api functions for the product domain.
@@ -73,33 +74,33 @@ func (a *App) Delete(ctx context.Context) error {
 }
 
 // Query returns a list of products with paging.
-func (a *App) Query(ctx context.Context, qp QueryParams) (page.Document[Product], error) {
-	pg, err := page.Parse(qp.Page, qp.Rows)
+func (a *App) Query(ctx context.Context, qp QueryParams) (query.Result[Product], error) {
+	page, err := page.Parse(qp.Page, qp.Rows)
 	if err != nil {
-		return page.Document[Product]{}, err
+		return query.Result[Product]{}, err
 	}
 
 	filter, err := parseFilter(qp)
 	if err != nil {
-		return page.Document[Product]{}, err
+		return query.Result[Product]{}, err
 	}
 
 	orderBy, err := order.Parse(orderByFields, qp.OrderBy, defaultOrderBy)
 	if err != nil {
-		return page.Document[Product]{}, err
+		return query.Result[Product]{}, err
 	}
 
-	prds, err := a.productBus.Query(ctx, filter, orderBy, pg.Number, pg.RowsPerPage)
+	prds, err := a.productBus.Query(ctx, filter, orderBy, page)
 	if err != nil {
-		return page.Document[Product]{}, errs.Newf(errs.Internal, "query: %s", err)
+		return query.Result[Product]{}, errs.Newf(errs.Internal, "query: %s", err)
 	}
 
 	total, err := a.productBus.Count(ctx, filter)
 	if err != nil {
-		return page.Document[Product]{}, errs.Newf(errs.Internal, "count: %s", err)
+		return query.Result[Product]{}, errs.Newf(errs.Internal, "count: %s", err)
 	}
 
-	return page.NewDocument(toAppProducts(prds), total, pg.Number, pg.RowsPerPage), nil
+	return query.NewResult(toAppProducts(prds), total, page), nil
 }
 
 // QueryByID returns a product by its Ia.

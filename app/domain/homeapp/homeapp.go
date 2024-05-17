@@ -6,9 +6,10 @@ import (
 
 	"github.com/ardanlabs/service/app/sdk/errs"
 	"github.com/ardanlabs/service/app/sdk/mid"
-	"github.com/ardanlabs/service/app/sdk/page"
+	"github.com/ardanlabs/service/app/sdk/query"
 	"github.com/ardanlabs/service/business/domain/homebus"
 	"github.com/ardanlabs/service/business/sdk/order"
+	"github.com/ardanlabs/service/business/sdk/page"
 )
 
 // App manages the set of app layer api functions for the home domain.
@@ -73,33 +74,33 @@ func (a *App) Delete(ctx context.Context) error {
 }
 
 // Query returns a list of homes with paging.
-func (a *App) Query(ctx context.Context, qp QueryParams) (page.Document[Home], error) {
-	pg, err := page.Parse(qp.Page, qp.Rows)
+func (a *App) Query(ctx context.Context, qp QueryParams) (query.Result[Home], error) {
+	page, err := page.Parse(qp.Page, qp.Rows)
 	if err != nil {
-		return page.Document[Home]{}, err
+		return query.Result[Home]{}, err
 	}
 
 	filter, err := parseFilter(qp)
 	if err != nil {
-		return page.Document[Home]{}, err
+		return query.Result[Home]{}, err
 	}
 
 	orderBy, err := order.Parse(orderByFields, qp.OrderBy, defaultOrderBy)
 	if err != nil {
-		return page.Document[Home]{}, err
+		return query.Result[Home]{}, err
 	}
 
-	hmes, err := a.homeBus.Query(ctx, filter, orderBy, pg.Number, pg.RowsPerPage)
+	hmes, err := a.homeBus.Query(ctx, filter, orderBy, page)
 	if err != nil {
-		return page.Document[Home]{}, errs.Newf(errs.Internal, "query: %s", err)
+		return query.Result[Home]{}, errs.Newf(errs.Internal, "query: %s", err)
 	}
 
 	total, err := a.homeBus.Count(ctx, filter)
 	if err != nil {
-		return page.Document[Home]{}, errs.Newf(errs.Internal, "count: %s", err)
+		return query.Result[Home]{}, errs.Newf(errs.Internal, "count: %s", err)
 	}
 
-	return page.NewDocument(toAppHomes(hmes), total, pg.Number, pg.RowsPerPage), nil
+	return query.NewResult(toAppHomes(hmes), total, page), nil
 }
 
 // QueryByID returns a home by its Ia.

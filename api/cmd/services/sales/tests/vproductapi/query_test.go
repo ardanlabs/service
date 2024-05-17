@@ -6,7 +6,7 @@ import (
 
 	"github.com/ardanlabs/service/api/sdk/http/apitest"
 	"github.com/ardanlabs/service/app/domain/vproductapp"
-	"github.com/ardanlabs/service/app/sdk/page"
+	"github.com/ardanlabs/service/app/sdk/query"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -25,8 +25,8 @@ func query200(sd apitest.SeedData) []apitest.Table {
 			Token:      sd.Admins[0].Token,
 			StatusCode: http.StatusOK,
 			Method:     http.MethodGet,
-			GotResp:    &page.Document[vproductapp.Product]{},
-			ExpResp: &page.Document[vproductapp.Product]{
+			GotResp:    &query.Result[vproductapp.Product]{},
+			ExpResp: &query.Result[vproductapp.Product]{
 				Page:        1,
 				RowsPerPage: 10,
 				Total:       len(prds),

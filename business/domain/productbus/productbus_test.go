@@ -11,6 +11,7 @@ import (
 	"github.com/ardanlabs/service/business/domain/productbus"
 	"github.com/ardanlabs/service/business/domain/userbus"
 	"github.com/ardanlabs/service/business/sdk/dbtest"
+	"github.com/ardanlabs/service/business/sdk/page"
 	"github.com/ardanlabs/service/business/sdk/unitest"
 	"github.com/google/go-cmp/cmp"
 )
@@ -107,7 +108,7 @@ func query(busDomain dbtest.BusDomain, sd unitest.SeedData) []unitest.Table {
 					Name: dbtest.ProductNamePointer(productbus.Names.MustParse("Name")),
 				}
 
-				resp, err := busDomain.Product.Query(ctx, filter, productbus.DefaultOrderBy, 1, 10)
+				resp, err := busDomain.Product.Query(ctx, filter, productbus.DefaultOrderBy, page.MustParse("1", "10"))
 				if err != nil {
 					return err
 				}
