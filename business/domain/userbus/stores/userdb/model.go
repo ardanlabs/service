@@ -23,25 +23,25 @@ type user struct {
 	DateUpdated  time.Time      `db:"date_updated"`
 }
 
-func toDBUser(usr userbus.User) user {
-	roles := make([]string, len(usr.Roles))
-	for i, role := range usr.Roles {
+func toDBUser(bus userbus.User) user {
+	roles := make([]string, len(bus.Roles))
+	for i, role := range bus.Roles {
 		roles[i] = role.String()
 	}
 
 	return user{
-		ID:           usr.ID,
-		Name:         usr.Name.String(),
-		Email:        usr.Email.Address,
+		ID:           bus.ID,
+		Name:         bus.Name.String(),
+		Email:        bus.Email.Address,
 		Roles:        roles,
-		PasswordHash: usr.PasswordHash,
+		PasswordHash: bus.PasswordHash,
 		Department: sql.NullString{
-			String: usr.Department,
-			Valid:  usr.Department != "",
+			String: bus.Department,
+			Valid:  bus.Department != "",
 		},
-		Enabled:     usr.Enabled,
-		DateCreated: usr.DateCreated.UTC(),
-		DateUpdated: usr.DateUpdated.UTC(),
+		Enabled:     bus.Enabled,
+		DateCreated: bus.DateCreated.UTC(),
+		DateUpdated: bus.DateUpdated.UTC(),
 	}
 }
 

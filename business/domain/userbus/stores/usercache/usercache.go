@@ -4,7 +4,6 @@ package usercache
 import (
 	"context"
 	"net/mail"
-	"sync"
 	"time"
 
 	"github.com/ardanlabs/service/business/domain/userbus"
@@ -20,7 +19,6 @@ type Store struct {
 	log    *logger.Logger
 	storer userbus.Storer
 	cache  *sturdyc.Client[userbus.User]
-	mu     sync.RWMutex
 }
 
 // NewStore constructs the api for data and caching access.
@@ -121,9 +119,6 @@ func (s *Store) QueryByEmail(ctx context.Context, email mail.Address) (userbus.U
 
 // readCache performs a safe search in the cache for the specified key.
 func (s *Store) readCache(key string) (userbus.User, bool) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-
 	usr, exists := s.cache.Get(key)
 	if !exists {
 		return userbus.User{}, false
@@ -133,19 +128,13 @@ func (s *Store) readCache(key string) (userbus.User, bool) {
 }
 
 // writeCache performs a safe write to the cache for the specified userbus.
-func (s *Store) writeCache(usr userbus.User) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	s.cache.Set(usr.ID.String(), usr)
-	s.cache.Set(usr.Email.Address, usr)
+func (s *Store) writeCache(bus userbus.User) {
+	s.cache.Set(bus.ID.String(), bus)
+	s.cache.Set(bus.Email.Address, bus)
 }
 
 // deleteCache performs a safe removal from the cache for the specified userbus.
-func (s *Store) deleteCache(usr userbus.User) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	s.cache.Delete(usr.ID.String())
-	s.cache.Delete(usr.Email.Address)
+func (s *Store) deleteCache(bus userbus.User) {
+	s.cache.Delete(bus.ID.String())
+	s.cache.Delete(bus.Email.Address)
 }

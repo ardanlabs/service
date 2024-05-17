@@ -7,22 +7,22 @@ import (
 	"github.com/ardanlabs/service/business/domain/userbus"
 )
 
-func toAppUser(usr userbus.User) userapp.User {
-	roles := make([]string, len(usr.Roles))
-	for i, role := range usr.Roles {
+func toAppUser(bus userbus.User) userapp.User {
+	roles := make([]string, len(bus.Roles))
+	for i, role := range bus.Roles {
 		roles[i] = role.String()
 	}
 
 	return userapp.User{
-		ID:           usr.ID.String(),
-		Name:         usr.Name.String(),
-		Email:        usr.Email.Address,
+		ID:           bus.ID.String(),
+		Name:         bus.Name.String(),
+		Email:        bus.Email.Address,
 		Roles:        roles,
 		PasswordHash: nil, // This field is not marshalled.
-		Department:   usr.Department,
-		Enabled:      usr.Enabled,
-		DateCreated:  usr.DateCreated.Format(time.RFC3339),
-		DateUpdated:  usr.DateUpdated.Format(time.RFC3339),
+		Department:   bus.Department,
+		Enabled:      bus.Enabled,
+		DateCreated:  bus.DateCreated.Format(time.RFC3339),
+		DateUpdated:  bus.DateUpdated.Format(time.RFC3339),
 	}
 }
 
@@ -35,7 +35,7 @@ func toAppUsers(users []userbus.User) []userapp.User {
 	return items
 }
 
-func toAppUserPtr(usr userbus.User) *userapp.User {
-	appUsr := toAppUser(usr)
+func toAppUserPtr(bus userbus.User) *userapp.User {
+	appUsr := toAppUser(bus)
 	return &appUsr
 }

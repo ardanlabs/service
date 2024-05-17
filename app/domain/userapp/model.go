@@ -44,22 +44,22 @@ func (app User) Encode() ([]byte, string, error) {
 	return data, "application/json", err
 }
 
-func toAppUser(usr userbus.User) User {
-	roles := make([]string, len(usr.Roles))
-	for i, role := range usr.Roles {
+func toAppUser(bus userbus.User) User {
+	roles := make([]string, len(bus.Roles))
+	for i, role := range bus.Roles {
 		roles[i] = role.String()
 	}
 
 	return User{
-		ID:           usr.ID.String(),
-		Name:         usr.Name.String(),
-		Email:        usr.Email.Address,
+		ID:           bus.ID.String(),
+		Name:         bus.Name.String(),
+		Email:        bus.Email.Address,
 		Roles:        roles,
-		PasswordHash: usr.PasswordHash,
-		Department:   usr.Department,
-		Enabled:      usr.Enabled,
-		DateCreated:  usr.DateCreated.Format(time.RFC3339),
-		DateUpdated:  usr.DateUpdated.Format(time.RFC3339),
+		PasswordHash: bus.PasswordHash,
+		Department:   bus.Department,
+		Enabled:      bus.Enabled,
+		DateCreated:  bus.DateCreated.Format(time.RFC3339),
+		DateUpdated:  bus.DateUpdated.Format(time.RFC3339),
 	}
 }
 
