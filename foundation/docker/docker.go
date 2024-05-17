@@ -20,7 +20,7 @@ type Container struct {
 }
 
 // StartContainer starts the specified container for running tests.
-func StartContainer(image string, name string, port string, dockerArgs []string, appArgs []string) (*Container, error) {
+func StartContainer(image string, name string, port string, dockerArgs []string, appArgs []string) (Container, error) {
 
 	// When this code is used in tests, each test could be running in it's own
 	// process, so there is no way to serialize the call. The idea is to wait
@@ -63,11 +63,7 @@ func DumpContainerLogs(id string) []byte {
 
 // =============================================================================
 
-func startContainer(image string, name string, port string, dockerArgs []string, appArgs []string) (*Container, error) {
-	if name == "" || port == "" {
-		return nil, errors.New("image name and port is required")
-	}
-
+func startContainer(image string, name string, port string, dockerArgs []string, appArgs []string) (Container, error) {
 	if c, err := exists(name, port); err == nil {
 		return c, nil
 	}
@@ -81,14 +77,14 @@ func startContainer(image string, name string, port string, dockerArgs []string,
 	cmd := exec.Command("docker", arg...)
 	cmd.Stdout = &out
 	if err := cmd.Run(); err != nil {
-		return nil, fmt.Errorf("could not start container %s: %w", image, err)
+		return Container{}, fmt.Errorf("could not start container %s: %w", image, err)
 	}
 
 	id := out.String()[:12]
 	hostIP, hostPort, err := extractIPPort(id, port)
 	if err != nil {
 		StopContainer(id)
-		return nil, fmt.Errorf("could not extract ip/port: %w", err)
+		return Container{}, fmt.Errorf("could not extract ip/port: %w", err)
 	}
 
 	c := Container{
@@ -96,13 +92,13 @@ func startContainer(image string, name string, port string, dockerArgs []string,
 		HostPort: net.JoinHostPort(hostIP, hostPort),
 	}
 
-	return &c, nil
+	return c, nil
 }
 
-func exists(name string, port string) (*Container, error) {
+func exists(name string, port string) (Container, error) {
 	hostIP, hostPort, err := extractIPPort(name, port)
 	if err != nil {
-		return nil, errors.New("container not running")
+		return Container{}, errors.New("container not running")
 	}
 
 	c := Container{
@@ -110,7 +106,7 @@ func exists(name string, port string) (*Container, error) {
 		HostPort: net.JoinHostPort(hostIP, hostPort),
 	}
 
-	return &c, nil
+	return c, nil
 }
 
 func extractIPPort(name string, port string) (hostIP string, hostPort string, err error) {
