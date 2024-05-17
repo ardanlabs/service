@@ -102,16 +102,6 @@ func (s *Store) QueryByID(ctx context.Context, userID uuid.UUID) (userbus.User, 
 	return usr, nil
 }
 
-// QueryByIDs gets the specified users from the database.
-func (s *Store) QueryByIDs(ctx context.Context, userIDs []uuid.UUID) ([]userbus.User, error) {
-	usr, err := s.storer.QueryByIDs(ctx, userIDs)
-	if err != nil {
-		return nil, err
-	}
-
-	return usr, nil
-}
-
 // QueryByEmail gets the specified user from the database by email.
 func (s *Store) QueryByEmail(ctx context.Context, email mail.Address) (userbus.User, error) {
 	cachedUsr, ok := s.readCache(email.Address)

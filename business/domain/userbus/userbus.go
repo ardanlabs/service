@@ -33,7 +33,6 @@ type Storer interface {
 	Query(ctx context.Context, filter QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]User, error)
 	Count(ctx context.Context, filter QueryFilter) (int, error)
 	QueryByID(ctx context.Context, userID uuid.UUID) (User, error)
-	QueryByIDs(ctx context.Context, userID []uuid.UUID) ([]User, error)
 	QueryByEmail(ctx context.Context, email mail.Address) (User, error)
 }
 
@@ -153,6 +152,8 @@ func (b *Business) Delete(ctx context.Context, usr User) error {
 
 // Query retrieves a list of existing users.
 func (b *Business) Query(ctx context.Context, filter QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]User, error) {
+	// TODO: DON'T ALLOW MORE THAN N RECORDS REGARDLESS
+
 	users, err := b.storer.Query(ctx, filter, orderBy, pageNumber, rowsPerPage)
 	if err != nil {
 		return nil, fmt.Errorf("query: %w", err)
@@ -171,16 +172,6 @@ func (b *Business) QueryByID(ctx context.Context, userID uuid.UUID) (User, error
 	user, err := b.storer.QueryByID(ctx, userID)
 	if err != nil {
 		return User{}, fmt.Errorf("query: userID[%s]: %w", userID, err)
-	}
-
-	return user, nil
-}
-
-// QueryByIDs finds the users by a specified User IDs.
-func (b *Business) QueryByIDs(ctx context.Context, userIDs []uuid.UUID) ([]User, error) {
-	user, err := b.storer.QueryByIDs(ctx, userIDs)
-	if err != nil {
-		return nil, fmt.Errorf("query: userIDs[%s]: %w", userIDs, err)
 	}
 
 	return user, nil
