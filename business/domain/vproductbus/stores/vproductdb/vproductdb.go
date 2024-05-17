@@ -29,7 +29,7 @@ func NewStore(log *logger.Logger, db *sqlx.DB) *Store {
 
 // Query retrieves a list of existing products from the database.
 func (s *Store) Query(ctx context.Context, filter vproductbus.QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]vproductbus.Product, error) {
-	data := map[string]interface{}{
+	data := map[string]any{
 		"offset":        (pageNumber - 1) * rowsPerPage,
 		"rows_per_page": rowsPerPage,
 	}
@@ -73,7 +73,7 @@ func (s *Store) Query(ctx context.Context, filter vproductbus.QueryFilter, order
 
 // Count returns the total number of products in the DB.
 func (s *Store) Count(ctx context.Context, filter vproductbus.QueryFilter) (int, error) {
-	data := map[string]interface{}{}
+	data := map[string]any{}
 
 	const q = `
 	SELECT

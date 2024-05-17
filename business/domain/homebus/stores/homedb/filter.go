@@ -7,7 +7,7 @@ import (
 	"github.com/ardanlabs/service/business/domain/homebus"
 )
 
-func (s *Store) applyFilter(filter homebus.QueryFilter, data map[string]interface{}, buf *bytes.Buffer) {
+func (s *Store) applyFilter(filter homebus.QueryFilter, data map[string]any, buf *bytes.Buffer) {
 	var wc []string
 
 	if filter.ID != nil {

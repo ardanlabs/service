@@ -77,7 +77,7 @@ func EnableInfinityTS(negative time.Time, positive time.Time) {
 	infinityTSPositive = positive
 }
 
-func encode(parameterStatus *parameterStatus, x interface{}, oid int) []byte {
+func encode(parameterStatus *parameterStatus, x any, oid int) []byte {
 	const oidBytea = 17
 
 	switch v := x.(type) {
@@ -158,7 +158,7 @@ func formatTimestamp(t time.Time) []byte {
 	return b
 }
 
-func errorf(s string, args ...interface{}) {
+func errorf(s string, args ...any) {
 	panic(fmt.Errorf("pq: %s", fmt.Sprintf(s, args...)))
 }
 

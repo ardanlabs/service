@@ -108,7 +108,7 @@ func (s *Store) Update(ctx context.Context, hme homebus.Home) error {
 
 // Query retrieves a list of existing homes from the database.
 func (s *Store) Query(ctx context.Context, filter homebus.QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]homebus.Home, error) {
-	data := map[string]interface{}{
+	data := map[string]any{
 		"offset":        (pageNumber - 1) * rowsPerPage,
 		"rows_per_page": rowsPerPage,
 	}
@@ -145,7 +145,7 @@ func (s *Store) Query(ctx context.Context, filter homebus.QueryFilter, orderBy o
 
 // Count returns the total number of homes in the DB.
 func (s *Store) Count(ctx context.Context, filter homebus.QueryFilter) (int, error) {
-	data := map[string]interface{}{}
+	data := map[string]any{}
 
 	const q = `
     SELECT

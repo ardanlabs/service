@@ -8,7 +8,7 @@ import (
 	"github.com/ardanlabs/service/business/domain/userbus"
 )
 
-func applyFilter(filter userbus.QueryFilter, data map[string]interface{}, buf *bytes.Buffer) {
+func applyFilter(filter userbus.QueryFilter, data map[string]any, buf *bytes.Buffer) {
 	var wc []string
 
 	if filter.ID != nil {

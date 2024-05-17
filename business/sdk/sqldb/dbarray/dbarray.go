@@ -51,7 +51,7 @@ var typeSQLScanner = reflect.TypeOf((*sql.Scanner)(nil)).Elem()
 //
 // Scanning multi-dimensional arrays is not supported.  Arrays where the lower
 // bound is not one (such as `[0:0]={1}') are not supported.
-func Array(a interface{}) interface {
+func Array(a any) interface {
 	driver.Valuer
 	sql.Scanner
 } {
@@ -101,7 +101,7 @@ type Delimiter interface {
 type Bool []bool
 
 // Scan implements the sql.Scanner interface.
-func (a *Bool) Scan(src interface{}) error {
+func (a *Bool) Scan(src any) error {
 	switch src := src.(type) {
 	case []byte:
 		return a.scanBytes(src)
@@ -175,7 +175,7 @@ func (a Bool) Value() (driver.Value, error) {
 type Bytea [][]byte
 
 // Scan implements the sql.Scanner interface.
-func (a *Bytea) Scan(src interface{}) error {
+func (a *Bytea) Scan(src any) error {
 	switch src := src.(type) {
 	case []byte:
 		return a.scanBytes(src)
@@ -247,7 +247,7 @@ func (a Bytea) Value() (driver.Value, error) {
 type Float64 []float64
 
 // Scan implements the sql.Scanner interface.
-func (a *Float64) Scan(src interface{}) error {
+func (a *Float64) Scan(src any) error {
 	switch src := src.(type) {
 	case []byte:
 		return a.scanBytes(src)
@@ -309,7 +309,7 @@ func (a Float64) Value() (driver.Value, error) {
 type Float32 []float32
 
 // Scan implements the sql.Scanner interface.
-func (a *Float32) Scan(src interface{}) error {
+func (a *Float32) Scan(src any) error {
 	switch src := src.(type) {
 	case []byte:
 		return a.scanBytes(src)
@@ -370,7 +370,7 @@ func (a Float32) Value() (driver.Value, error) {
 
 // Generic implements the driver.Valuer and sql.Scanner interfaces for
 // an array or slice of any dimension.
-type Generic struct{ A interface{} }
+type Generic struct{ A any }
 
 func (Generic) evaluateDestination(rt reflect.Type) (reflect.Type, func([]byte, reflect.Value) error, string) {
 	var assign func([]byte, reflect.Value) error
@@ -408,7 +408,7 @@ FoundType:
 }
 
 // Scan implements the sql.Scanner interface.
-func (a Generic) Scan(src interface{}) error {
+func (a Generic) Scan(src any) error {
 	dpv := reflect.ValueOf(a.A)
 	switch {
 	case dpv.Kind() != reflect.Ptr:
@@ -527,7 +527,7 @@ func (a Generic) Value() (driver.Value, error) {
 type Int64 []int64
 
 // Scan implements the sql.Scanner interface.
-func (a *Int64) Scan(src interface{}) error {
+func (a *Int64) Scan(src any) error {
 	switch src := src.(type) {
 	case []byte:
 		return a.scanBytes(src)
@@ -588,7 +588,7 @@ func (a Int64) Value() (driver.Value, error) {
 type Int32 []int32
 
 // Scan implements the sql.Scanner interface.
-func (a *Int32) Scan(src interface{}) error {
+func (a *Int32) Scan(src any) error {
 	switch src := src.(type) {
 	case []byte:
 		return a.scanBytes(src)
@@ -651,7 +651,7 @@ func (a Int32) Value() (driver.Value, error) {
 type String []string
 
 // Scan implements the sql.Scanner interface.
-func (a *String) Scan(src interface{}) error {
+func (a *String) Scan(src any) error {
 	switch src := src.(type) {
 	case []byte:
 		return a.scanBytes(src)

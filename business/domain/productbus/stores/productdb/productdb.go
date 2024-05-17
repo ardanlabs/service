@@ -106,7 +106,7 @@ func (s *Store) Delete(ctx context.Context, prd productbus.Product) error {
 
 // Query gets all Products from the database.
 func (s *Store) Query(ctx context.Context, filter productbus.QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]productbus.Product, error) {
-	data := map[string]interface{}{
+	data := map[string]any{
 		"offset":        (pageNumber - 1) * rowsPerPage,
 		"rows_per_page": rowsPerPage,
 	}
@@ -138,7 +138,7 @@ func (s *Store) Query(ctx context.Context, filter productbus.QueryFilter, orderB
 
 // Count returns the total number of users in the DB.
 func (s *Store) Count(ctx context.Context, filter productbus.QueryFilter) (int, error) {
-	data := map[string]interface{}{}
+	data := map[string]any{}
 
 	const q = `
 	SELECT

@@ -93,19 +93,13 @@ func (s *Store) Update(ctx context.Context, usr userbus.User) error {
 
 // Delete removes a user from the database.
 func (s *Store) Delete(ctx context.Context, usr userbus.User) error {
-	data := struct {
-		ID string `db:"user_id"`
-	}{
-		ID: usr.ID.String(),
-	}
-
 	const q = `
 	DELETE FROM
 		users
 	WHERE
 		user_id = :user_id`
 
-	if err := sqldb.NamedExecContext(ctx, s.log, s.db, q, data); err != nil {
+	if err := sqldb.NamedExecContext(ctx, s.log, s.db, q, toDBUser(usr)); err != nil {
 		return fmt.Errorf("namedexeccontext: %w", err)
 	}
 
@@ -114,7 +108,7 @@ func (s *Store) Delete(ctx context.Context, usr userbus.User) error {
 
 // Query retrieves a list of existing users from the database.
 func (s *Store) Query(ctx context.Context, filter userbus.QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]userbus.User, error) {
-	data := map[string]interface{}{
+	data := map[string]any{
 		"offset":        (pageNumber - 1) * rowsPerPage,
 		"rows_per_page": rowsPerPage,
 	}
@@ -146,7 +140,7 @@ func (s *Store) Query(ctx context.Context, filter userbus.QueryFilter, orderBy o
 
 // Count returns the total number of users in the DB.
 func (s *Store) Count(ctx context.Context, filter userbus.QueryFilter) (int, error) {
-	data := map[string]interface{}{}
+	data := map[string]any{}
 
 	const q = `
 	SELECT
