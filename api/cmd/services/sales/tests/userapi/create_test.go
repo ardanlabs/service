@@ -77,13 +77,33 @@ func create400(sd apitest.SeedData) []apitest.Table {
 			Input: &userapp.NewUser{
 				Name:            "Bill Kennedy",
 				Email:           "bill@ardanlabs.com",
-				Roles:           []string{"BAD ROLE"},
+				Roles:           []string{"SUPER"},
 				Department:      "IT",
 				Password:        "123",
 				PasswordConfirm: "123",
 			},
 			GotResp: &errs.Error{},
-			ExpResp: errs.Newf(errs.FailedPrecondition, "parse: invalid role \"BAD ROLE\""),
+			ExpResp: errs.Newf(errs.FailedPrecondition, "parse: invalid role \"SUPER\""),
+			CmpFunc: func(got any, exp any) string {
+				return cmp.Diff(got, exp)
+			},
+		},
+		{
+			Name:       "bad-name",
+			URL:        "/v1/users",
+			Token:      sd.Admins[0].Token,
+			Method:     http.MethodPost,
+			StatusCode: http.StatusBadRequest,
+			Input: &userapp.NewUser{
+				Name:            "Bi",
+				Email:           "bill@ardanlabs.com",
+				Roles:           []string{"USER"},
+				Department:      "IT",
+				Password:        "123",
+				PasswordConfirm: "123",
+			},
+			GotResp: &errs.Error{},
+			ExpResp: errs.Newf(errs.FailedPrecondition, "parse: invalid name \"Bi\""),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
