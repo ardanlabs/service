@@ -3,6 +3,8 @@ package vproductbus
 import (
 	"fmt"
 
+	"github.com/ardanlabs/service/business/domain/productbus"
+	"github.com/ardanlabs/service/business/domain/userbus"
 	"github.com/ardanlabs/service/foundation/validate"
 	"github.com/google/uuid"
 )
@@ -11,10 +13,10 @@ import (
 // We are using pointer semantics because the With API mutates the value.
 type QueryFilter struct {
 	ID       *uuid.UUID
-	Name     *string `validate:"omitempty,min=3"`
+	Name     *productbus.Name
 	Cost     *float64
 	Quantity *int
-	UserName *string
+	UserName *userbus.Name
 }
 
 // Validate can perform a check of the data against the validate tags.

@@ -126,7 +126,7 @@ func query(busDomain dbtest.BusDomain, sd unitest.SeedData) []unitest.Table {
 			ExpResp: prds,
 			ExcFunc: func(ctx context.Context) any {
 				filter := vproductbus.QueryFilter{
-					Name: dbtest.StringPointer("Name"),
+					Name: dbtest.ProductNamePointer("Name"),
 				}
 
 				resp, err := busDomain.VProduct.Query(ctx, filter, vproductbus.DefaultOrderBy, page.MustParse("1", "10"))

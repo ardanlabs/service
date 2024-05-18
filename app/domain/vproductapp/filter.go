@@ -3,6 +3,8 @@ package vproductapp
 import (
 	"strconv"
 
+	"github.com/ardanlabs/service/business/domain/productbus"
+	"github.com/ardanlabs/service/business/domain/userbus"
 	"github.com/ardanlabs/service/business/domain/vproductbus"
 	"github.com/ardanlabs/service/foundation/validate"
 	"github.com/google/uuid"
@@ -20,7 +22,11 @@ func parseFilter(qp QueryParams) (vproductbus.QueryFilter, error) {
 	}
 
 	if qp.Name != "" {
-		filter.Name = &qp.Name
+		name, err := productbus.Names.Parse(qp.Name)
+		if err != nil {
+			return vproductbus.QueryFilter{}, validate.NewFieldsError("name", err)
+		}
+		filter.Name = &name
 	}
 
 	if qp.Cost != "" {
@@ -40,8 +46,12 @@ func parseFilter(qp QueryParams) (vproductbus.QueryFilter, error) {
 		filter.Quantity = &i
 	}
 
-	if qp.UserName != "" {
-		filter.UserName = &qp.UserName
+	if qp.Name != "" {
+		name, err := userbus.Names.Parse(qp.Name)
+		if err != nil {
+			return vproductbus.QueryFilter{}, validate.NewFieldsError("name", err)
+		}
+		filter.UserName = &name
 	}
 
 	return filter, nil

@@ -108,7 +108,7 @@ func query(busDomain dbtest.BusDomain, sd unitest.SeedData) []unitest.Table {
 			ExpResp: usrs,
 			ExcFunc: func(ctx context.Context) any {
 				filter := userbus.QueryFilter{
-					Name: dbtest.UserNamePointer(userbus.Names.MustParse("Name")),
+					Name: dbtest.UserNamePointer("Name"),
 				}
 
 				resp, err := busDomain.User.Query(ctx, filter, userbus.DefaultOrderBy, page.MustParse("1", "10"))
@@ -245,7 +245,7 @@ func update(busDomain dbtest.BusDomain, sd unitest.SeedData) []unitest.Table {
 			},
 			ExcFunc: func(ctx context.Context) any {
 				uu := userbus.UpdateUser{
-					Name:       dbtest.UserNamePointer(userbus.Names.MustParse("Jack Kennedy")),
+					Name:       dbtest.UserNamePointer("Jack Kennedy"),
 					Email:      email,
 					Roles:      []userbus.Role{userbus.Roles.Admin},
 					Department: dbtest.StringPointer("IT"),
