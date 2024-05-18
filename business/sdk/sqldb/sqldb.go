@@ -10,12 +10,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ardanlabs/service/foundation/logger"
-	"github.com/ardanlabs/service/foundation/tracer"
 	"github.com/jackc/pgx/v5/pgconn"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
 	"go.opentelemetry.io/otel/attribute"
+
+	"github.com/ardanlabs/service/foundation/logger"
+	"github.com/ardanlabs/service/foundation/tracer"
 )
 
 // lib/pq errorCodeNames
@@ -105,7 +106,7 @@ func StatusCheck(ctx context.Context, db *sqlx.DB) error {
 
 	// Run a simple query to determine connectivity.
 	// Running this query forces a round trip through the database.
-	const q = `SELECT true`
+	const q = `SELECT TRUE`
 	var tmp bool
 	return db.QueryRowContext(ctx, q).Scan(&tmp)
 }
@@ -136,7 +137,8 @@ func NamedExecContext(ctx context.Context, log *logger.Logger, db sqlx.ExtContex
 	defer span.End()
 
 	if _, err := sqlx.NamedExecContext(ctx, db, query, data); err != nil {
-		if pqerr, ok := err.(*pgconn.PgError); ok {
+		var pqerr *pgconn.PgError
+		if errors.As(err, &pqerr) {
 			switch pqerr.Code {
 			case undefinedTable:
 				return ErrUndefinedTable
@@ -206,7 +208,8 @@ func namedQuerySlice[T any](ctx context.Context, log *logger.Logger, db sqlx.Ext
 	}
 
 	if err != nil {
-		if pqerr, ok := err.(*pgconn.PgError); ok && pqerr.Code == undefinedTable {
+		var pqerr *pgconn.PgError
+		if errors.As(err, &pqerr) && pqerr.Code == undefinedTable {
 			return ErrUndefinedTable
 		}
 		return err
@@ -281,7 +284,8 @@ func namedQueryStruct(ctx context.Context, log *logger.Logger, db sqlx.ExtContex
 	}
 
 	if err != nil {
-		if pqerr, ok := err.(*pgconn.PgError); ok && pqerr.Code == undefinedTable {
+		var pqerr *pgconn.PgError
+		if errors.As(err, &pqerr) && pqerr.Code == undefinedTable {
 			return ErrUndefinedTable
 		}
 		return err
