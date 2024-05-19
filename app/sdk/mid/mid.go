@@ -19,8 +19,8 @@ type Encoder interface {
 	Encode() (data []byte, contentType string, err error)
 }
 
-// Handler represents an api layer handler function that needs to be called.
-type Handler func(ctx context.Context) (Encoder, error)
+// HandlerFunc represents an api layer handler function that needs to be called.
+type HandlerFunc func(ctx context.Context) (Encoder, error)
 
 // =============================================================================
 

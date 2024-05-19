@@ -10,7 +10,7 @@ import (
 )
 
 // Errors handles errors coming out of the call chain.
-func Errors(ctx context.Context, log *logger.Logger, next Handler) (Encoder, error) {
+func Errors(ctx context.Context, log *logger.Logger, next HandlerFunc) (Encoder, error) {
 	resp, err := next(ctx)
 	if err == nil {
 		return resp, nil

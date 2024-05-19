@@ -29,5 +29,5 @@ func Routes(app *web.App, cfg Config) {
 	ruleAdmin := mid.Authorize(cfg.Log, cfg.AuthClient, auth.RuleAdminOnly)
 
 	api := newAPI(vproductapp.NewApp(cfg.VProductBus))
-	app.Handle(http.MethodGet, version, "/vproducts", api.query, authen, ruleAdmin)
+	app.HandlerFunc(http.MethodGet, version, "/vproducts", api.query, authen, ruleAdmin)
 }

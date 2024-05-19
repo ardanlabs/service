@@ -10,7 +10,7 @@ import (
 
 // Panics recovers from panics and converts the panic to an error so it is
 // reported in Metrics and handled in Errors.
-func Panics(ctx context.Context, next Handler) (resp Encoder, err error) {
+func Panics(ctx context.Context, next HandlerFunc) (resp Encoder, err error) {
 
 	// Defer a function to recover from a panic and set the err return
 	// variable after the fact.

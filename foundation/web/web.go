@@ -18,9 +18,9 @@ type Encoder interface {
 	Encode() (data []byte, contentType string, err error)
 }
 
-// Handler represents a function that handles a http request within our own
+// HandlerFunc represents a function that handles a http request within our own
 // little mini framework.
-type Handler func(ctx context.Context, r *http.Request) (Encoder, error)
+type HandlerFunc func(ctx context.Context, r *http.Request) (Encoder, error)
 
 // Logger represents a function that will be called to add information
 // to the logs.
@@ -34,12 +34,12 @@ type App struct {
 	tracer  trace.Tracer
 	mux     *http.ServeMux
 	otmux   http.Handler
-	mw      []Middleware
+	mw      []MidFunc
 	origins []string
 }
 
 // NewApp creates an App value that handle a set of routes for the application.
-func NewApp(log Logger, tracer trace.Tracer, mw ...Middleware) *App {
+func NewApp(log Logger, tracer trace.Tracer, mw ...MidFunc) *App {
 
 	// Create an OpenTelemetry HTTP Handler which wraps our router. This will start
 	// the initial span and annotate it with information about the request/trusted.
@@ -76,7 +76,7 @@ func (a *App) EnableCORS(origins []string) {
 	handler := func(ctx context.Context, r *http.Request) (Encoder, error) {
 		return cors{Status: "OK"}, nil
 	}
-	handler = wrapMiddleware([]Middleware{a.corsHandler}, handler)
+	handler = wrapMiddleware([]MidFunc{a.corsHandler}, handler)
 
 	h := func(w http.ResponseWriter, r *http.Request) {
 		handler(r.Context(), r)
@@ -87,7 +87,7 @@ func (a *App) EnableCORS(origins []string) {
 	a.mux.HandleFunc(finalPath, h)
 }
 
-func (a *App) corsHandler(webHandler Handler) Handler {
+func (a *App) corsHandler(webHandler HandlerFunc) HandlerFunc {
 	h := func(ctx context.Context, r *http.Request) (Encoder, error) {
 		for _, origin := range a.origins {
 			r.Header.Set("Access-Control-Allow-Origin", origin)
@@ -103,14 +103,14 @@ func (a *App) corsHandler(webHandler Handler) Handler {
 	return h
 }
 
-// HandleNoMiddleware sets a handler function for a given HTTP method and path pair
-// to the application server mux. Does not include the application middleware or
-// OTEL tracing.
-func (a *App) HandleNoMiddleware(method string, group string, path string, handler Handler) {
+// HandlerFuncNoMid sets a handler function for a given HTTP method and path
+// pair to the application server mux. Does not include the application
+// middleware or OTEL tracing.
+func (a *App) HandlerFuncNoMid(method string, group string, path string, handlerFunc HandlerFunc) {
 	h := func(w http.ResponseWriter, r *http.Request) {
 		ctx := setTraceID(r.Context(), uuid.NewString())
 
-		resp, err := handler(ctx, r)
+		resp, err := handlerFunc(ctx, r)
 		if err != nil {
 			if err := respondError(ctx, w, err); err != nil {
 				a.log(ctx, "web-responderror", "ERROR", err)
@@ -132,14 +132,14 @@ func (a *App) HandleNoMiddleware(method string, group string, path string, handl
 	a.mux.HandleFunc(finalPath, h)
 }
 
-// Handle sets a handler function for a given HTTP method and path pair
+// HandlerFunc sets a handler function for a given HTTP method and path pair
 // to the application server mux.
-func (a *App) Handle(method string, group string, path string, handler Handler, mw ...Middleware) {
-	handler = wrapMiddleware(mw, handler)
-	handler = wrapMiddleware(a.mw, handler)
+func (a *App) HandlerFunc(method string, group string, path string, handlerFunc HandlerFunc, mw ...MidFunc) {
+	handlerFunc = wrapMiddleware(mw, handlerFunc)
+	handlerFunc = wrapMiddleware(a.mw, handlerFunc)
 
 	if a.origins != nil {
-		handler = wrapMiddleware([]Middleware{a.corsHandler}, handler)
+		handlerFunc = wrapMiddleware([]MidFunc{a.corsHandler}, handlerFunc)
 	}
 
 	h := func(w http.ResponseWriter, r *http.Request) {
@@ -148,7 +148,7 @@ func (a *App) Handle(method string, group string, path string, handler Handler, 
 
 		ctx = setTraceID(ctx, span.SpanContext().TraceID().String())
 
-		resp, err := handler(ctx, r)
+		resp, err := handlerFunc(ctx, r)
 		if err != nil {
 			if err := respondError(ctx, w, err); err != nil {
 				a.log(ctx, "web-responderror", "ERROR", err)
@@ -159,6 +159,40 @@ func (a *App) Handle(method string, group string, path string, handler Handler, 
 		if err := respond(ctx, w, resp); err != nil {
 			a.log(ctx, "web-respond", "ERROR", err)
 		}
+	}
+
+	finalPath := path
+	if group != "" {
+		finalPath = "/" + group + path
+	}
+	finalPath = fmt.Sprintf("%s %s", method, finalPath)
+
+	a.mux.HandleFunc(finalPath, h)
+}
+
+// RawHandlerFunc sets a raw handler function for a given HTTP method and path
+// pair to the application server mux.
+func (a *App) RawHandlerFunc(method string, group string, path string, rawHandlerFunc http.HandlerFunc, mw ...MidFunc) {
+	handlerFunc := func(ctx context.Context, r *http.Request) (Encoder, error) {
+		rawHandlerFunc(getWriter(ctx), r)
+		return nil, nil
+	}
+
+	handlerFunc = wrapMiddleware(mw, handlerFunc)
+	handlerFunc = wrapMiddleware(a.mw, handlerFunc)
+
+	if a.origins != nil {
+		handlerFunc = wrapMiddleware([]MidFunc{a.corsHandler}, handlerFunc)
+	}
+
+	h := func(w http.ResponseWriter, r *http.Request) {
+		ctx, span := tracer.StartTrace(r.Context(), a.tracer, "pkg.web.rawhandle", r.RequestURI, w)
+		defer span.End()
+
+		ctx = setTraceID(ctx, span.SpanContext().TraceID().String())
+		ctx = setWriter(ctx, w)
+
+		handlerFunc(ctx, r)
 	}
 
 	finalPath := path

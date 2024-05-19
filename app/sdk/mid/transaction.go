@@ -11,7 +11,7 @@ import (
 )
 
 // BeginCommitRollback starts a transaction for the domain call.
-func BeginCommitRollback(ctx context.Context, log *logger.Logger, bgn transaction.Beginner, next Handler) (Encoder, error) {
+func BeginCommitRollback(ctx context.Context, log *logger.Logger, bgn transaction.Beginner, next HandlerFunc) (Encoder, error) {
 	hasCommitted := false
 
 	log.Info(ctx, "BEGIN TRANSACTION")

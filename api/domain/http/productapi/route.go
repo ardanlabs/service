@@ -31,9 +31,9 @@ func Routes(app *web.App, cfg Config) {
 	ruleAuthorizeProduct := mid.AuthorizeProduct(cfg.Log, cfg.AuthClient, cfg.ProductBus)
 
 	api := newAPI(productapp.NewApp(cfg.ProductBus))
-	app.Handle(http.MethodGet, version, "/products", api.query, authen, ruleAny)
-	app.Handle(http.MethodGet, version, "/products/{product_id}", api.queryByID, authen, ruleAuthorizeProduct)
-	app.Handle(http.MethodPost, version, "/products", api.create, authen, ruleUserOnly)
-	app.Handle(http.MethodPut, version, "/products/{product_id}", api.update, authen, ruleAuthorizeProduct)
-	app.Handle(http.MethodDelete, version, "/products/{product_id}", api.delete, authen, ruleAuthorizeProduct)
+	app.HandlerFunc(http.MethodGet, version, "/products", api.query, authen, ruleAny)
+	app.HandlerFunc(http.MethodGet, version, "/products/{product_id}", api.queryByID, authen, ruleAuthorizeProduct)
+	app.HandlerFunc(http.MethodPost, version, "/products", api.create, authen, ruleUserOnly)
+	app.HandlerFunc(http.MethodPut, version, "/products/{product_id}", api.update, authen, ruleAuthorizeProduct)
+	app.HandlerFunc(http.MethodDelete, version, "/products/{product_id}", api.delete, authen, ruleAuthorizeProduct)
 }

@@ -33,5 +33,5 @@ func Routes(app *web.App, cfg Config) {
 	ruleAdmin := mid.Authorize(cfg.Log, cfg.AuthClient, auth.RuleAdminOnly)
 
 	api := newAPI(tranapp.NewApp(cfg.UserBus, cfg.ProductBus))
-	app.Handle(http.MethodPost, version, "/tranexample", api.create, authen, ruleAdmin, transaction)
+	app.HandlerFunc(http.MethodPost, version, "/tranexample", api.create, authen, ruleAdmin, transaction)
 }

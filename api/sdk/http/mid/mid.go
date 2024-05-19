@@ -10,13 +10,13 @@ import (
 	"github.com/ardanlabs/service/foundation/web"
 )
 
-type midFunc func(ctx context.Context, r *http.Request, next mid.Handler) (mid.Encoder, error)
+type midFunc func(ctx context.Context, r *http.Request, next mid.HandlerFunc) (mid.Encoder, error)
 
-func addMiddleware(midFunc midFunc) web.Middleware {
-	m := func(webHandler web.Handler) web.Handler {
+func addMidFunc(midFunc midFunc) web.MidFunc {
+	m := func(webHandlerFunc web.HandlerFunc) web.HandlerFunc {
 		h := func(ctx context.Context, r *http.Request) (web.Encoder, error) {
 			next := func(ctx context.Context) (mid.Encoder, error) {
-				return webHandler(ctx, r)
+				return webHandlerFunc(ctx, r)
 			}
 
 			return midFunc(ctx, r, next)

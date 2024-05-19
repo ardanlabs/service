@@ -7,6 +7,7 @@ import (
 	"github.com/ardanlabs/service/api/domain/http/checkapi"
 	"github.com/ardanlabs/service/api/domain/http/homeapi"
 	"github.com/ardanlabs/service/api/domain/http/productapi"
+	"github.com/ardanlabs/service/api/domain/http/rawapi"
 	"github.com/ardanlabs/service/api/domain/http/tranapi"
 	"github.com/ardanlabs/service/api/domain/http/userapi"
 	"github.com/ardanlabs/service/api/domain/http/vproductapi"
@@ -62,6 +63,8 @@ func (add) Add(app *web.App, cfg mux.Config) {
 		ProductBus: productBus,
 		AuthClient: cfg.AuthClient,
 	})
+
+	rawapi.Routes(app)
 
 	tranapi.Routes(app, tranapi.Config{
 		Log:        cfg.Log,

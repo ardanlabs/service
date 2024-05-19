@@ -11,10 +11,10 @@ import (
 )
 
 // BeginCommitRollback executes the transaction middleware functionality.
-func BeginCommitRollback(log *logger.Logger, bgn transaction.Beginner) web.Middleware {
-	midFunc := func(ctx context.Context, r *http.Request, next mid.Handler) (mid.Encoder, error) {
+func BeginCommitRollback(log *logger.Logger, bgn transaction.Beginner) web.MidFunc {
+	midFunc := func(ctx context.Context, r *http.Request, next mid.HandlerFunc) (mid.Encoder, error) {
 		return mid.BeginCommitRollback(ctx, log, bgn, next)
 	}
 
-	return addMiddleware(midFunc)
+	return addMidFunc(midFunc)
 }

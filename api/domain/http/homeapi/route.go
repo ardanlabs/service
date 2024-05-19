@@ -31,9 +31,9 @@ func Routes(app *web.App, cfg Config) {
 	ruleAuthorizeHome := mid.AuthorizeHome(cfg.Log, cfg.AuthClient, cfg.HomeBus)
 
 	api := newAPI(homeapp.NewApp(cfg.HomeBus))
-	app.Handle(http.MethodGet, version, "/homes", api.query, authen, ruleAny)
-	app.Handle(http.MethodGet, version, "/homes/{home_id}", api.queryByID, authen, ruleAuthorizeHome)
-	app.Handle(http.MethodPost, version, "/homes", api.create, authen, ruleUserOnly)
-	app.Handle(http.MethodPut, version, "/homes/{home_id}", api.update, authen, ruleAuthorizeHome)
-	app.Handle(http.MethodDelete, version, "/homes/{home_id}", api.delete, authen, ruleAuthorizeHome)
+	app.HandlerFunc(http.MethodGet, version, "/homes", api.query, authen, ruleAny)
+	app.HandlerFunc(http.MethodGet, version, "/homes/{home_id}", api.queryByID, authen, ruleAuthorizeHome)
+	app.HandlerFunc(http.MethodPost, version, "/homes", api.create, authen, ruleUserOnly)
+	app.HandlerFunc(http.MethodPut, version, "/homes/{home_id}", api.update, authen, ruleAuthorizeHome)
+	app.HandlerFunc(http.MethodDelete, version, "/homes/{home_id}", api.delete, authen, ruleAuthorizeHome)
 }

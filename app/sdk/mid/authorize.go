@@ -19,7 +19,7 @@ import (
 var ErrInvalidID = errors.New("ID is not in its proper form")
 
 // Authorize validates authorization via the auth service.
-func Authorize(ctx context.Context, log *logger.Logger, client *authclient.Client, rule string, next Handler) (Encoder, error) {
+func Authorize(ctx context.Context, log *logger.Logger, client *authclient.Client, rule string, next HandlerFunc) (Encoder, error) {
 	userID, err := GetUserID(ctx)
 	if err != nil {
 		return nil, errs.New(errs.Unauthenticated, err)
@@ -45,7 +45,7 @@ func Authorize(ctx context.Context, log *logger.Logger, client *authclient.Clien
 // user from the DB if a user id is specified in the call. Depending on the rule
 // specified, the userid from the claims may be compared with the specified
 // user id.
-func AuthorizeUser(ctx context.Context, log *logger.Logger, client *authclient.Client, userBus *userbus.Business, rule string, id string, next Handler) (Encoder, error) {
+func AuthorizeUser(ctx context.Context, log *logger.Logger, client *authclient.Client, userBus *userbus.Business, rule string, id string, next HandlerFunc) (Encoder, error) {
 	var userID uuid.UUID
 
 	if id != "" {
@@ -88,7 +88,7 @@ func AuthorizeUser(ctx context.Context, log *logger.Logger, client *authclient.C
 // product from the DB if a product id is specified in the call. Depending on
 // the rule specified, the userid from the claims may be compared with the
 // specified user id from the product.
-func AuthorizeProduct(ctx context.Context, log *logger.Logger, client *authclient.Client, productBus *productbus.Business, id string, next Handler) (Encoder, error) {
+func AuthorizeProduct(ctx context.Context, log *logger.Logger, client *authclient.Client, productBus *productbus.Business, id string, next HandlerFunc) (Encoder, error) {
 	var userID uuid.UUID
 
 	if id != "" {
@@ -132,7 +132,7 @@ func AuthorizeProduct(ctx context.Context, log *logger.Logger, client *authclien
 // home from the DB if a home id is specified in the call. Depending on
 // the rule specified, the userid from the claims may be compared with the
 // specified user id from the home.
-func AuthorizeHome(ctx context.Context, log *logger.Logger, client *authclient.Client, homeBus *homebus.Business, id string, next Handler) (Encoder, error) {
+func AuthorizeHome(ctx context.Context, log *logger.Logger, client *authclient.Client, homeBus *homebus.Business, id string, next HandlerFunc) (Encoder, error) {
 	var userID uuid.UUID
 
 	if id != "" {
