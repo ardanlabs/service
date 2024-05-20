@@ -37,7 +37,7 @@ func BeginCommitRollback(ctx context.Context, log *logger.Logger, bgn transactio
 
 	resp, err := next(ctx)
 	if err != nil {
-		return nil, errs.Newf(errs.Internal, "EXECUTE TRANSACTION: %s", err)
+		return nil, err
 	}
 
 	log.Info(ctx, "COMMIT TRANSACTION")

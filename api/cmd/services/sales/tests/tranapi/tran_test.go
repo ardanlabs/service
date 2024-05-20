@@ -30,5 +30,6 @@ func Test_Tran(t *testing.T) {
 
 	// -------------------------------------------------------------------------
 
-	test.Run(t, create200(sd), "query-200")
+	test.Run(t, create200(sd), "create-200")
+	test.Run(t, create400(sd), "create-400")
 }

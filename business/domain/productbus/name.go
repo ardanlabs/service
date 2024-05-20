@@ -1,7 +1,7 @@
 package productbus
 
 import (
-	"errors"
+	"fmt"
 	"regexp"
 )
 
@@ -15,7 +15,7 @@ var Names nameSet
 // with the rules for a name.
 func (nameSet) Parse(value string) (Name, error) {
 	if !r.MatchString(value) {
-		return Name{}, errors.New("invalid name")
+		return Name{}, fmt.Errorf("invalid name %q", value)
 	}
 
 	return Name{value}, nil

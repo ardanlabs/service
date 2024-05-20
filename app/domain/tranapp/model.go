@@ -6,6 +6,7 @@ import (
 	"net/mail"
 	"time"
 
+	"github.com/ardanlabs/service/app/sdk/errs"
 	"github.com/ardanlabs/service/business/domain/productbus"
 	"github.com/ardanlabs/service/business/domain/userbus"
 	"github.com/ardanlabs/service/foundation/validate"
@@ -49,6 +50,15 @@ type NewTran struct {
 	User    NewUser    `json:"user"`
 }
 
+// Validate checks the data in the model is considered clean.
+func (app NewTran) Validate() error {
+	if err := validate.Check(app); err != nil {
+		return errs.Newf(errs.FailedPrecondition, "validate: %s", err)
+	}
+
+	return nil
+}
+
 // Decode implments the decoder interface.
 func (app *NewTran) Decode(data []byte) error {
 	return json.Unmarshal(data, &app)
@@ -69,7 +79,7 @@ type NewUser struct {
 // Validate checks the data in the model is considered clean.
 func (app NewUser) Validate() error {
 	if err := validate.Check(app); err != nil {
-		return err
+		return errs.Newf(errs.FailedPrecondition, "validate: %s", err)
 	}
 
 	return nil
@@ -118,7 +128,7 @@ type NewProduct struct {
 // Validate checks the data in the model is considered clean.
 func (app NewProduct) Validate() error {
 	if err := validate.Check(app); err != nil {
-		return err
+		return errs.Newf(errs.FailedPrecondition, "validate: %s", err)
 	}
 
 	return nil

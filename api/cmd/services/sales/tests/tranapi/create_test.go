@@ -5,6 +5,7 @@ import (
 
 	"github.com/ardanlabs/service/api/sdk/http/apitest"
 	"github.com/ardanlabs/service/app/domain/tranapp"
+	"github.com/ardanlabs/service/app/sdk/errs"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -51,6 +52,53 @@ func create200(sd apitest.SeedData) []apitest.Table {
 				expResp.DateUpdated = gotResp.DateUpdated
 
 				return cmp.Diff(gotResp, expResp)
+			},
+		},
+	}
+
+	return table
+}
+
+func create400(sd apitest.SeedData) []apitest.Table {
+	table := []apitest.Table{
+		{
+			Name:       "missing-input",
+			URL:        "/v1/tranexample",
+			Token:      sd.Admins[0].Token,
+			Method:     http.MethodPost,
+			StatusCode: http.StatusBadRequest,
+			Input:      &tranapp.NewTran{},
+			GotResp:    &errs.Error{},
+			ExpResp:    errs.Newf(errs.FailedPrecondition, "validate: [{\"field\":\"name\",\"error\":\"name is a required field\"},{\"field\":\"cost\",\"error\":\"cost is a required field\"},{\"field\":\"quantity\",\"error\":\"quantity is a required field\"},{\"field\":\"name\",\"error\":\"name is a required field\"},{\"field\":\"email\",\"error\":\"email is a required field\"},{\"field\":\"roles\",\"error\":\"roles is a required field\"},{\"field\":\"password\",\"error\":\"password is a required field\"}]"),
+			CmpFunc: func(got any, exp any) string {
+				return cmp.Diff(got, exp)
+			},
+		},
+		{
+			Name:       "bad-name",
+			URL:        "/v1/tranexample",
+			Token:      sd.Admins[0].Token,
+			Method:     http.MethodPost,
+			StatusCode: http.StatusBadRequest,
+			Input: &tranapp.NewTran{
+				Product: tranapp.NewProduct{
+					Name:     "Gu",
+					Cost:     10.34,
+					Quantity: 10,
+				},
+				User: tranapp.NewUser{
+					Name:            "Bill Kennedy",
+					Email:           "bill@ardanlabs.com",
+					Roles:           []string{"ADMIN"},
+					Department:      "IT",
+					Password:        "123",
+					PasswordConfirm: "123",
+				},
+			},
+			GotResp: &errs.Error{},
+			ExpResp: errs.Newf(errs.FailedPrecondition, "parse: invalid name \"Gu\""),
+			CmpFunc: func(got any, exp any) string {
+				return cmp.Diff(got, exp)
 			},
 		},
 	}
