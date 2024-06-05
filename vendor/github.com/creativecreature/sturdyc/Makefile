@@ -18,7 +18,7 @@ test:
 	@echo 'Removing test cache...'
 	go clean -testcache
 	@echo 'Running tests...'
-	go test -race -vet=off -timeout 30s ./...
+	go test -race -vet=off -timeout 15s ./...
 
 ## bench: run all benchmarks
 .PHONY: bench

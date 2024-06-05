@@ -76,9 +76,13 @@ func (c *Client[T]) handleTime(v reflect.Value) string {
 	return "empty-time"
 }
 
-// PermutatedKey is a helper function for creating a cache key from a struct of
-// options. Passing anything but a struct for "permutationStruct" will result
-// in a panic.
+// Permutated key takes a prefix, and a struct where the fields are
+// concatenated with in order to make a unique cache key. Passing
+// anything but a struct for "permutationStruct" will result in a panic.
+//
+// The cache will only use the EXPORTED fields of the struct to construct the key.
+// The permutation struct should be FLAT, with no nested structs. The fields can
+// be any of the basic types, as well as slices and time.Time values.
 func (c *Client[T]) PermutatedKey(prefix string, permutationStruct interface{}) string {
 	var sb strings.Builder
 	sb.WriteString(prefix)
@@ -98,9 +102,14 @@ func (c *Client[T]) PermutatedKey(prefix string, permutationStruct interface{}) 
 	for i := 0; i < v.NumField(); i++ {
 		field := v.Field(i)
 
-		// Check if the field is exported
+		// Check if the field is exported, and if so skip it.
 		if !field.CanInterface() {
-			continue // Skip unexported fields
+			message := fmt.Sprintf(
+				"sturdyc: permutationStruct contains unexported field: %s which won't be part of the cache key",
+				v.Type().Field(i).Name,
+			)
+			c.log.Warn(message)
+			continue
 		}
 
 		if i > 0 {
@@ -149,9 +158,12 @@ func (c *Client[T]) BatchKeyFn(prefix string) KeyFn {
 
 // PermutatedBatchKeyFn provides a function that can be used in conjunction
 // with GetFetchBatch. It takes a prefix, and a struct where the fields are
-// concatenated with the id in order to make a unique key. Passing anything but
-// a struct for "permutationStruct" will result in a panic. This function is useful
-// when the id isn't enough in itself to uniquely identify a record.
+// concatenated with the id in order to make a unique cache key. Passing
+// anything but a struct for "permutationStruct" will result in a panic.
+//
+// The cache will only use the EXPORTED fields of the struct to construct the key.
+// The permutation struct should be FLAT, with no nested structs. The fields can
+// be any of the basic types, as well as slices and time.Time values.
 func (c *Client[T]) PermutatedBatchKeyFn(prefix string, permutationStruct interface{}) KeyFn {
 	return func(id string) string {
 		key := c.PermutatedKey(prefix, permutationStruct)

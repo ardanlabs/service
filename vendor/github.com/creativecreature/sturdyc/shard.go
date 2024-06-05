@@ -1,7 +1,6 @@
 package sturdyc
 
 import (
-	"math"
 	"math/rand/v2"
 	"sync"
 	"time"
@@ -50,7 +49,7 @@ func (s *shard[T]) evictExpired() {
 }
 
 // forceEvict evicts a certain percentage of the entries in the shard
-// based on the expiration time. NOTE: Should be called with a lock.
+// based on the expiration time. Should be called with a lock.
 func (s *shard[T]) forceEvict() {
 	if s.metricsRecorder != nil {
 		s.metricsRecorder.ForcedEviction()
@@ -87,7 +86,7 @@ func (s *shard[T]) get(key string) (val T, exists, ignore, refresh bool) {
 		return val, false, false, false
 	}
 
-	shouldRefresh := s.refreshesEnabled && s.clock.Now().After(item.refreshAt)
+	shouldRefresh := s.refreshInBackground && s.clock.Now().After(item.refreshAt)
 	if shouldRefresh {
 		// Release the read lock, and switch to a write lock.
 		s.RUnlock()
@@ -102,8 +101,8 @@ func (s *shard[T]) get(key string) (val T, exists, ignore, refresh bool) {
 		}
 
 		// Update the "refreshAt" so no other goroutines attempts to refresh the same entry.
-		nextRefresh := math.Pow(2, float64(item.numOfRefreshRetries)) * float64(s.retryBaseDelay)
-		item.refreshAt = s.clock.Now().Add(time.Duration(nextRefresh))
+		nextRefresh := s.retryBaseDelay * (1 << item.numOfRefreshRetries)
+		item.refreshAt = s.clock.Now().Add(nextRefresh)
 		item.numOfRefreshRetries++
 
 		s.Unlock()
@@ -140,7 +139,7 @@ func (s *shard[T]) set(key string, value T, isMissingRecord bool) bool {
 		isMissingRecord: isMissingRecord,
 	}
 
-	if s.refreshesEnabled {
+	if s.refreshInBackground {
 		// If there is a difference between the min- and maxRefreshTime we'll use that to
 		// set a random padding so that the refreshes get spread out evenly over time.
 		var padding time.Duration
@@ -159,4 +158,17 @@ func (s *shard[T]) delete(key string) {
 	s.Lock()
 	defer s.Unlock()
 	delete(s.entries, key)
+}
+
+func (s *shard[T]) keys() []string {
+	s.RLock()
+	defer s.RUnlock()
+	keys := make([]string, 0, len(s.entries))
+	for k, v := range s.entries {
+		if s.clock.Now().After(v.expiresAt) {
+			continue
+		}
+		keys = append(keys, k)
+	}
+	return keys
 }

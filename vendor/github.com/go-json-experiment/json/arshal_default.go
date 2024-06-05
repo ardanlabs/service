@@ -1273,7 +1273,7 @@ func makeSliceArshaler(t reflect.Type) *arshaler {
 		if mo.Marshalers != nil {
 			marshal, _ = mo.Marshalers.(*Marshalers).lookup(marshal, t.Elem())
 		}
-		for i := 0; i < n; i++ {
+		for i := range n {
 			v := addressableValue{va.Index(i)} // indexed slice element is always addressable
 			if err := marshal(enc, v, mo); err != nil {
 				return err
@@ -1372,7 +1372,7 @@ func makeArrayArshaler(t reflect.Type) *arshaler {
 		if mo.Marshalers != nil {
 			marshal, _ = mo.Marshalers.(*Marshalers).lookup(marshal, t.Elem())
 		}
-		for i := 0; i < n; i++ {
+		for i := range n {
 			v := addressableValue{va.Index(i)} // indexed array element is addressable if array is addressable
 			if err := marshal(enc, v, mo); err != nil {
 				return err
