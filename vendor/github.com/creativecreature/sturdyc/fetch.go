@@ -2,59 +2,8 @@ package sturdyc
 
 import (
 	"context"
-	"errors"
 	"maps"
 )
-
-func fetchAndCache[V, T any](ctx context.Context, c *Client[T], key string, fetchFn FetchFn[V]) (V, error) {
-	response, err := fetchFn(ctx)
-
-	if err != nil && c.storeMisses && errors.Is(err, ErrStoreMissingRecord) {
-		var zero T
-		c.SetMissing(key, zero, true)
-		return response, ErrMissingRecord
-	}
-
-	if err != nil {
-		return response, err
-	}
-
-	res, ok := any(response).(T)
-	if !ok {
-		return response, ErrInvalidType
-	}
-
-	c.SetMissing(key, res, false)
-	return response, nil
-}
-
-func fetchAndCacheBatch[V, T any](ctx context.Context, c *Client[T], ids []string, keyFn KeyFn, fetchFn BatchFetchFn[V]) (map[string]V, error) {
-	response, err := fetchFn(ctx, ids)
-	if err != nil {
-		return response, err
-	}
-
-	// Check if we should store any of these IDs as a missing record.
-	if c.storeMisses && len(response) < len(ids) {
-		for _, id := range ids {
-			if _, ok := response[id]; !ok {
-				var zero T
-				c.SetMissing(keyFn(id), zero, true)
-			}
-		}
-	}
-
-	// Store the records in the cache.
-	for id, record := range response {
-		v, ok := any(record).(T)
-		if !ok {
-			continue
-		}
-		c.SetMissing(keyFn(id), v, false)
-	}
-
-	return response, nil
-}
 
 func (c *Client[T]) groupIDs(ids []string, keyFn KeyFn) (hits map[string]T, misses, refreshes []string) {
 	hits = make(map[string]T)
@@ -86,7 +35,7 @@ func (c *Client[T]) groupIDs(ids []string, keyFn KeyFn) (hits map[string]T, miss
 
 // GetFetch attempts to retrieve the specified key from the cache. If the value
 // is absent, it invokes the "fetchFn" function to obtain it and then stores
-// the result. Additionally, when stampede protection is enabled, GetFetch
+// the result. Additionally, when background refreshes is enabled, GetFetch
 // determines if the record needs refreshing and, if necessary, schedules this
 // task for background execution.
 func (c *Client[T]) GetFetch(ctx context.Context, key string, fetchFn FetchFn[T]) (T, error) {
@@ -94,7 +43,7 @@ func (c *Client[T]) GetFetch(ctx context.Context, key string, fetchFn FetchFn[T]
 	value, ok, shouldIgnore, shouldRefresh := c.get(key)
 
 	if shouldRefresh {
-		safeGo(func() {
+		c.safeGo(func() {
 			c.refresh(key, fetchFn)
 		})
 	}
@@ -107,7 +56,7 @@ func (c *Client[T]) GetFetch(ctx context.Context, key string, fetchFn FetchFn[T]
 		return value, nil
 	}
 
-	return fetchAndCache(ctx, c, key, fetchFn)
+	return callAndCache(ctx, c, key, fetchFn)
 }
 
 // GetFetch is a convenience function that performs type assertion on the result of client.GetFetch.
@@ -117,7 +66,7 @@ func GetFetch[V, T any](ctx context.Context, c *Client[T], key string, fetchFn F
 
 // GetFetchBatch attempts to retrieve the specified ids from the cache. If any
 // of the values are absent, it invokes the fetchFn function to obtain them and
-// then stores the result. Additionally, when stampede protection is enabled,
+// then stores the result. Additionally, when background refreshes is enabled,
 // GetFetch determines if any of the records needs refreshing and, if
 // necessary, schedules this to be performed in the background.
 func (c *Client[T]) GetFetchBatch(ctx context.Context, ids []string, keyFn KeyFn, fetchFn BatchFetchFn[T]) (map[string]T, error) {
@@ -125,7 +74,7 @@ func (c *Client[T]) GetFetchBatch(ctx context.Context, ids []string, keyFn KeyFn
 
 	// If any records need to be refreshed, we'll do so in the background.
 	if len(idsToRefresh) > 0 {
-		safeGo(func() {
+		c.safeGo(func() {
 			if c.bufferRefreshes {
 				bufferBatchRefresh(c, idsToRefresh, keyFn, fetchFn)
 				return
@@ -139,7 +88,8 @@ func (c *Client[T]) GetFetchBatch(ctx context.Context, ids []string, keyFn KeyFn
 		return cachedRecords, nil
 	}
 
-	response, err := fetchAndCacheBatch(ctx, c, cacheMisses, keyFn, fetchFn)
+	callBatchOpts := callBatchOpts[T, T]{ids: cacheMisses, keyFn: keyFn, fn: fetchFn}
+	response, err := callAndCacheBatch(ctx, c, callBatchOpts)
 	if err != nil {
 		if len(cachedRecords) > 0 {
 			return cachedRecords, ErrOnlyCachedRecords
@@ -153,5 +103,6 @@ func (c *Client[T]) GetFetchBatch(ctx context.Context, ids []string, keyFn KeyFn
 
 // GetFetchBatch is a convenience function that performs type assertion on the result of client.GetFetchBatch.
 func GetFetchBatch[V, T any](ctx context.Context, c *Client[T], ids []string, keyFn KeyFn, fetchFn BatchFetchFn[V]) (map[string]V, error) {
-	return unwrapBatch[V](c.GetFetchBatch(ctx, ids, keyFn, wrapBatch[T](fetchFn)))
+	res, err := c.GetFetchBatch(ctx, ids, keyFn, wrapBatch[T](fetchFn))
+	return unwrapBatch[V](res, err)
 }

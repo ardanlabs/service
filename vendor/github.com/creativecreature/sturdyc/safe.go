@@ -7,12 +7,11 @@ import (
 
 // safeGo is a helper that prevents panics in any of the goroutines
 // that are running in the background from crashing the process.
-func safeGo(fn func()) {
+func (c *Client[T]) safeGo(fn func()) {
 	go func() {
 		defer func() {
 			if err := recover(); err != nil {
-				//nolint:forbidigo // This should never panic, but we want to log it if it does.
-				fmt.Println(err)
+				c.log.Error(fmt.Sprintf("sturdyc: panic recovered: %v", err))
 			}
 		}()
 		fn()
@@ -26,11 +25,12 @@ func wrap[T, V any](fetchFn FetchFn[V]) FetchFn[T] {
 			var zero T
 			return zero, err
 		}
-		if val, ok := any(res).(T); ok {
-			return val, nil
+		val, ok := any(res).(T)
+		if !ok {
+			var zero T
+			return zero, ErrInvalidType
 		}
-		var zero T
-		return zero, ErrInvalidType
+		return val, nil
 	}
 }
 
@@ -57,9 +57,11 @@ func wrapBatch[T, V any](fetchFn BatchFetchFn[V]) BatchFetchFn[T] {
 
 		resT := make(map[string]T, len(resV))
 		for id, v := range resV {
-			if val, ok := any(v).(T); ok {
-				resT[id] = val
+			val, ok := any(v).(T)
+			if !ok {
+				return resT, ErrInvalidType
 			}
+			resT[id] = val
 		}
 
 		return resT, nil
@@ -69,9 +71,11 @@ func wrapBatch[T, V any](fetchFn BatchFetchFn[V]) BatchFetchFn[T] {
 func unwrapBatch[V, T any](values map[string]T, err error) (map[string]V, error) {
 	vals := make(map[string]V, len(values))
 	for id, v := range values {
-		if val, ok := any(v).(V); ok {
-			vals[id] = val
+		val, ok := any(v).(V)
+		if !ok {
+			return vals, ErrInvalidType
 		}
+		vals[id] = val
 	}
 	return vals, err
 }

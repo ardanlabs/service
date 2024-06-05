@@ -72,7 +72,7 @@ func makeStructFields(root reflect.Type) (structFields, *SemanticError) {
 		namesIndex := make(map[string]int) // index of each field with a given JSON object name in current struct
 		var hasAnyJSONTag bool             // whether any Go struct field has a `json` tag
 		var hasAnyJSONField bool           // whether any JSON serializable fields exist in current struct
-		for i := 0; i < t.NumField(); i++ {
+		for i := range t.NumField() {
 			sf := t.Field(i)
 			_, hasTag := sf.Tag.Lookup("json")
 			hasAnyJSONTag = hasAnyJSONTag || hasTag

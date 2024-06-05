@@ -26,49 +26,33 @@ func WithEvictionInterval(interval time.Duration) Option {
 	}
 }
 
-// WithStampedeProtection makes the cache shield the underlying data sources from
-// cache stampedes. Cache stampedes occur when many requests for a particular piece
-// of data (which has just expired or been evicted from the cache) come in at once.
-// This can cause all requests to fetch the data concurrently, which may result in
-// a significant burst of outgoing requests to the underlying data source.
-func WithStampedeProtection(minRefreshTime, maxRefreshTime, retryBaseDelay time.Duration, storeMisses bool) Option {
+// WithBackgroundRefreshes...
+func WithBackgroundRefreshes(minRefreshTime, maxRefreshTime, retryBaseDelay time.Duration) Option {
 	return func(c *Config) {
-		c.refreshesEnabled = true
+		c.refreshInBackground = true
 		c.minRefreshTime = minRefreshTime
 		c.maxRefreshTime = maxRefreshTime
 		c.retryBaseDelay = retryBaseDelay
-		c.storeMisses = storeMisses
+	}
+}
+
+// WithMissingRecordStorage allows the cache to mark keys as missing from the underlying data source.
+func WithMissingRecordStorage() Option {
+	return func(c *Config) {
+		c.storeMissingRecords = true
 	}
 }
 
 // WithRefreshBuffering will make the cache refresh data from batchable
 // endpoints more efficiently. It is going to create a buffer for each cache
-// key permutation, and gather IDs until the "batchSize" is reached, or the
-// "maxBufferTime" has passed.
-func WithRefreshBuffering(batchSize int, maxBufferTime time.Duration) Option {
+// key permutation, and gather IDs until the bufferSize is reached, or the
+// bufferDuration has passed.
+func WithRefreshBuffering(bufferSize int, bufferDuration time.Duration) Option {
 	return func(c *Config) {
 		c.bufferRefreshes = true
-		c.batchSize = batchSize
-		c.bufferTimeout = maxBufferTime
-		c.bufferPermutationIDs = make(map[string][]string)
-		c.bufferPermutationChan = make(map[string]chan<- []string)
-	}
-}
-
-// WithPassthroughPercentage controls the rate at which requests are allowed through
-// by the passthrough caching functions. For example, setting the percentage parameter
-// to 50 would allow half of the requests to through.
-func WithPassthroughPercentage(percentage int) Option {
-	return func(c *Config) {
-		c.passthroughPercentage = percentage
-	}
-}
-
-// WithPassthroughBuffering allows you to decide if the batchable passthrough
-// requests should be buffered and batched more efficiently.
-func WithPassthroughBuffering() Option {
-	return func(c *Config) {
-		c.passthroughBuffering = true
+		c.bufferSize = bufferSize
+		c.bufferTimeout = bufferDuration
+		c.permutationBufferMap = make(map[string]*buffer)
 	}
 }
 
@@ -78,6 +62,15 @@ func WithRelativeTimeKeyFormat(truncation time.Duration) Option {
 	return func(c *Config) {
 		c.useRelativeTimeKeyFormat = true
 		c.keyTruncation = truncation
+	}
+}
+
+// WithLog allows you to set a custom logger for the cache. The cache isn't chatty,
+// and will only log warnings and errors that would be a nightmare to debug. If you
+// absolutely don't want any logs, you can pass in the sturydc.NoopLogger.
+func WithLog(log Logger) Option {
+	return func(c *Config) {
+		c.log = log
 	}
 }
 
@@ -99,11 +92,11 @@ func validateConfig(capacity, numShards int, ttl time.Duration, evictionPercenta
 		panic("evictionPercentage must be between 0 and 100")
 	}
 
-	if !cfg.refreshesEnabled && cfg.bufferRefreshes {
-		panic("refresh buffering requires stampede protection to be enabled")
+	if !cfg.refreshInBackground && cfg.bufferRefreshes {
+		panic("refresh buffering requires background refreshes to be enabled")
 	}
 
-	if cfg.bufferRefreshes && cfg.batchSize < 1 {
+	if cfg.bufferRefreshes && cfg.bufferSize < 1 {
 		panic("batchSize must be greater than 0")
 	}
 
@@ -121,9 +114,5 @@ func validateConfig(capacity, numShards int, ttl time.Duration, evictionPercenta
 
 	if cfg.retryBaseDelay < 0 {
 		panic("retryBaseDelay must be greater than or equal to 0")
-	}
-
-	if cfg.passthroughPercentage < 1 || cfg.passthroughPercentage > 100 {
-		panic("passthroughPercentage must be between 1 and 100")
 	}
 }
