@@ -46,7 +46,7 @@ func main() {
 	ctx := context.Background()
 
 	if err := run(ctx, log); err != nil {
-		log.Error(ctx, "startup", "msg", err)
+		log.Error(ctx, "startup", "err", err)
 		os.Exit(1)
 	}
 }

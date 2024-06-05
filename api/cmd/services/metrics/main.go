@@ -41,7 +41,7 @@ func main() {
 	ctx := context.Background()
 
 	if err := run(ctx, log); err != nil {
-		log.Error(ctx, "startup", "msg", err)
+		log.Error(ctx, "startup", "err", err)
 		os.Exit(1)
 	}
 }
@@ -128,7 +128,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 
 	go func() {
 		if err := http.ListenAndServe(cfg.Web.DebugHost, mux); err != nil {
-			log.Error(ctx, "shutdown", "status", "debug router closed", "host", cfg.Web.DebugHost, "msg", err)
+			log.Error(ctx, "shutdown", "status", "debug router closed", "host", cfg.Web.DebugHost, "err", err)
 		}
 	}()
 
