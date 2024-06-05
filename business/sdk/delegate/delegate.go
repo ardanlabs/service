@@ -55,7 +55,7 @@ func (d *Delegate) Call(ctx context.Context, data Data) error {
 				d.log.Info(ctx, "delegate call", "status", "sending")
 
 				if err := fn(ctx, data); err != nil {
-					d.log.Error(ctx, "delegate call", "msg", err)
+					d.log.Error(ctx, "delegate call", "err", err)
 				}
 			}
 		}

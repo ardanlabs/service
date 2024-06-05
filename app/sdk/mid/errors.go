@@ -16,20 +16,19 @@ func Errors(ctx context.Context, log *logger.Logger, next HandlerFunc) (Encoder,
 		return resp, nil
 	}
 
-	_, span := tracer.AddSpan(ctx, "app.api.mid.error")
+	_, span := tracer.AddSpan(ctx, "app.sdk.mid.error")
 	span.RecordError(err)
 	defer span.End()
 
-	v, ok := err.(*errs.Error)
+	appErr, ok := err.(*errs.Error)
 	if !ok {
-		v = errs.New(errs.Internal, err)
-		err = v
+		appErr = errs.Newf(errs.Internal, "Internal Server Error")
 	}
 
-	log.Error(ctx, "message", "ERROR", err, "FileName", path.Base(v.FileName), "FuncName", path.Base(v.FuncName))
+	log.Info(ctx, "handled error during request", "err", err, "source_err_file", path.Base(appErr.FileName), "source_err_func", path.Base(appErr.FuncName))
 
 	// Send the error to the transport package so the error can be
 	// used as the response.
 
-	return nil, err
+	return nil, appErr
 }
