@@ -43,18 +43,13 @@ func (s *shard[T]) evictExpired() {
 			entriesEvicted++
 		}
 	}
-	if s.metricsRecorder != nil && entriesEvicted > 0 {
-		s.metricsRecorder.EntriesEvicted(entriesEvicted)
-	}
+	s.reportEntriesEvicted(entriesEvicted)
 }
 
 // forceEvict evicts a certain percentage of the entries in the shard
 // based on the expiration time. Should be called with a lock.
 func (s *shard[T]) forceEvict() {
-	if s.metricsRecorder != nil {
-		s.metricsRecorder.ForcedEviction()
-	}
-
+	s.reportForcedEviction()
 	expirationTimes := make([]time.Time, 0, len(s.entries))
 	for _, e := range s.entries {
 		expirationTimes = append(expirationTimes, e.expiresAt)
@@ -68,9 +63,7 @@ func (s *shard[T]) forceEvict() {
 			entriesEvicted++
 		}
 	}
-	if s.metricsRecorder != nil && entriesEvicted > 0 {
-		s.metricsRecorder.EntriesEvicted(entriesEvicted)
-	}
+	s.reportEntriesEvicted(entriesEvicted)
 }
 
 func (s *shard[T]) get(key string) (val T, exists, ignore, refresh bool) {

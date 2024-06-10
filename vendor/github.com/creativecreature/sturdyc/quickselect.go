@@ -30,7 +30,7 @@ func quickSelect(times []time.Time, low, high, k int) time.Time {
 	return times[low]
 }
 
-// FindCutoff returns the time that is the k-th smallest time in the given array.
+// FindCutoff returns the time that is the k-th smallest time in the slice.
 func FindCutoff(times []time.Time, percentile float64) time.Time {
 	if len(times) == 0 {
 		return time.Time{}
@@ -42,7 +42,7 @@ func FindCutoff(times []time.Time, percentile float64) time.Time {
 	n := len(times)
 	// Calculate the index for the given percentile
 	k := int(float64(n) * percentile)
-	// Adjust if k equals the length of the array
+	// Adjust if k equals the length of the slice
 	if k == n {
 		k--
 	}

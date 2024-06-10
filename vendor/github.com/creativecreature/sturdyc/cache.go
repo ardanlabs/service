@@ -9,17 +9,6 @@ import (
 	"github.com/cespare/xxhash"
 )
 
-type MetricsRecorder interface {
-	CacheHit()
-	CacheMiss()
-	Eviction()
-	ForcedEviction()
-	EntriesEvicted(int)
-	ShardIndex(int)
-	CacheBatchRefreshSize(size int)
-	ObserveCacheSize(callback func() int)
-}
-
 // FetchFn Fetch represents a function that can be used to fetch a single record from a data source.
 type FetchFn[T any] func(ctx context.Context) (T, error)
 
@@ -34,10 +23,11 @@ type KeyFn func(id string) string
 
 // Config represents the configuration that can be applied to the cache.
 type Config struct {
-	clock            Clock
-	evictionInterval time.Duration
-	metricsRecorder  MetricsRecorder
-	log              Logger
+	clock                      Clock
+	evictionInterval           time.Duration
+	disableContinuousEvictions bool
+	metricsRecorder            DistributedMetricsRecorder
+	log                        Logger
 
 	refreshInBackground bool
 	minRefreshTime      time.Duration
@@ -54,6 +44,10 @@ type Config struct {
 	useRelativeTimeKeyFormat bool
 	keyTruncation            time.Duration
 	getSize                  func() int
+
+	distributedStorage              DistributedStorageWithDeletions
+	distributedEarlyRefreshes       bool
+	distributedRefreshAfterDuration time.Duration
 }
 
 // Client represents a cache client that can be used to store and retrieve values.
@@ -103,20 +97,19 @@ func New[T any](capacity, numShards int, ttl time.Duration, evictionPercentage i
 	client.nextShard = 0
 
 	// Run evictions on the shards in a separate goroutine.
-	client.startEvictions()
+	if !cfg.disableContinuousEvictions {
+		client.performContinuousEvictions()
+	}
 
 	return client
 }
 
-// startEvictions is going to be running in a separate goroutine that we're going to prevent from ever exiting.
-func (c *Client[T]) startEvictions() {
+// performContinuousEvictions is going to be running in a separate goroutine that we're going to prevent from ever exiting.
+func (c *Client[T]) performContinuousEvictions() {
 	go func() {
 		ticker, stop := c.clock.NewTicker(c.evictionInterval)
 		defer stop()
 		for range ticker {
-			if c.metricsRecorder != nil {
-				c.metricsRecorder.Eviction()
-			}
 			c.shards[c.nextShard].evictExpired()
 			c.nextShard = (c.nextShard + 1) % len(c.shards)
 		}
@@ -127,22 +120,8 @@ func (c *Client[T]) startEvictions() {
 func (c *Client[T]) getShard(key string) *shard[T] {
 	hash := xxhash.Sum64String(key)
 	shardIndex := hash % uint64(len(c.shards))
-	if c.metricsRecorder != nil {
-		c.metricsRecorder.ShardIndex(int(shardIndex))
-	}
+	c.reportShardIndex(int(shardIndex))
 	return c.shards[shardIndex]
-}
-
-// reportCacheHits is used to report cache hits and misses to the metrics recorder.
-func (c *Client[T]) reportCacheHits(cacheHit bool) {
-	if c.metricsRecorder == nil {
-		return
-	}
-	if !cacheHit {
-		c.metricsRecorder.CacheMiss()
-		return
-	}
-	c.metricsRecorder.CacheHit()
 }
 
 func (c *Client[T]) get(key string) (value T, exists, ignore, refresh bool) {
@@ -171,7 +150,7 @@ func (c *Client[T]) GetMany(keys []string) map[string]T {
 	return records
 }
 
-// GetManyKeyFn follows the same API as GetFetchBatch and PassthroughBatch.
+// GetManyKeyFn follows the same API as GetOrFetchBatch and PassthroughBatch.
 // You provide it with a slice of IDs and a keyFn, which is applied to create
 // the cache key. The returned map uses the IDs as keys instead of the cache key.
 // If you've used ScanKeys to retrieve the actual keys, you can retrieve the records
@@ -211,7 +190,7 @@ func (c *Client[T]) SetMany(records map[string]T) bool {
 	return triggeredEviction
 }
 
-// SetManyKeyFn follows the same API as GetFetchBatch and PassThroughBatch. It
+// SetManyKeyFn follows the same API as GetOrFetchBatch and PassThroughBatch. It
 // takes a map of records where the keyFn is applied to each key in the map
 // before it's stored in the cache.
 func (c *Client[T]) SetManyKeyFn(records map[string]T, cacheKeyFn KeyFn) bool {

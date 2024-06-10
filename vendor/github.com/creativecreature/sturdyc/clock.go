@@ -10,6 +10,7 @@ type Clock interface {
 	Now() time.Time
 	NewTicker(d time.Duration) (<-chan time.Time, func())
 	NewTimer(d time.Duration) (<-chan time.Time, func() bool)
+	Since(t time.Time) time.Duration
 }
 
 type RealClock struct{}
@@ -30,6 +31,10 @@ func (c *RealClock) NewTicker(d time.Duration) (<-chan time.Time, func()) {
 func (c *RealClock) NewTimer(d time.Duration) (<-chan time.Time, func() bool) {
 	t := time.NewTimer(d)
 	return t.C, t.Stop
+}
+
+func (c *RealClock) Since(t time.Time) time.Duration {
+	return time.Since(t)
 }
 
 type testTimer struct {
@@ -138,4 +143,8 @@ func (c *TestClock) NewTimer(d time.Duration) (<-chan time.Time, func() bool) {
 	}
 
 	return ch, stop
+}
+
+func (c *TestClock) Since(t time.Time) time.Duration {
+	return c.Now().Sub(t)
 }

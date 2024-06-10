@@ -148,7 +148,7 @@ func (c *Client[T]) PermutatedKey(prefix string, permutationStruct interface{}) 
 	return sb.String()
 }
 
-// BatchKeyFn provides a function for that can be used in conjunction with "GetFetchBatch".
+// BatchKeyFn provides a function for that can be used in conjunction with "GetOrFetchBatch".
 // It takes in a prefix, and returns a function that will append an ID suffix for each item.
 func (c *Client[T]) BatchKeyFn(prefix string) KeyFn {
 	return func(id string) string {
@@ -157,7 +157,7 @@ func (c *Client[T]) BatchKeyFn(prefix string) KeyFn {
 }
 
 // PermutatedBatchKeyFn provides a function that can be used in conjunction
-// with GetFetchBatch. It takes a prefix, and a struct where the fields are
+// with GetOrFetchBatch. It takes a prefix, and a struct where the fields are
 // concatenated with the id in order to make a unique cache key. Passing
 // anything but a struct for "permutationStruct" will result in a panic.
 //
