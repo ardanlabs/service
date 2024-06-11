@@ -3,7 +3,6 @@ package vproductbus_test
 import (
 	"context"
 	"fmt"
-	"runtime/debug"
 	"sort"
 	"testing"
 	"time"
@@ -21,13 +20,6 @@ func Test_VProduct(t *testing.T) {
 	t.Parallel()
 
 	db := dbtest.NewDatabase(t, "Test_Product")
-	defer func() {
-		if r := recover(); r != nil {
-			t.Log(r)
-			t.Error(string(debug.Stack()))
-		}
-		db.Teardown()
-	}()
 
 	sd, err := insertSeedData(db.BusDomain)
 	if err != nil {

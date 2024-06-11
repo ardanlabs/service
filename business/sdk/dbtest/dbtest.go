@@ -58,7 +58,6 @@ type Database struct {
 	DB        *sqlx.DB
 	Log       *logger.Logger
 	BusDomain BusDomain
-	Teardown  func()
 }
 
 // NewDatabase creates a new test database inside the database that was started
@@ -156,11 +155,12 @@ func NewDatabase(t *testing.T, testName string) *Database {
 		t.Logf("******************** LOGS (%s) ********************\n", testName)
 	}
 
+	t.Cleanup(teardown)
+
 	return &Database{
 		DB:        db,
 		Log:       log,
 		BusDomain: newBusDomains(log, db),
-		Teardown:  teardown,
 	}
 }
 

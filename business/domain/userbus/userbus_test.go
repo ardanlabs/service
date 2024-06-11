@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/mail"
-	"runtime/debug"
 	"sort"
 	"testing"
 	"time"
@@ -21,13 +20,6 @@ func Test_User(t *testing.T) {
 	t.Parallel()
 
 	db := dbtest.NewDatabase(t, "Test_User")
-	defer func() {
-		if r := recover(); r != nil {
-			t.Log(r)
-			t.Error(string(debug.Stack()))
-		}
-		db.Teardown()
-	}()
 
 	sd, err := insertSeedData(db.BusDomain)
 	if err != nil {

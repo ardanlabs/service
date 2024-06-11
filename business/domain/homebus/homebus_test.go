@@ -3,7 +3,6 @@ package homebus_test
 import (
 	"context"
 	"fmt"
-	"runtime/debug"
 	"sort"
 	"testing"
 	"time"
@@ -20,13 +19,6 @@ func Test_Home(t *testing.T) {
 	t.Parallel()
 
 	db := dbtest.NewDatabase(t, "Test_Home")
-	defer func() {
-		if r := recover(); r != nil {
-			t.Log(r)
-			t.Error(string(debug.Stack()))
-		}
-		db.Teardown()
-	}()
 
 	sd, err := insertSeedData(db.BusDomain)
 	if err != nil {

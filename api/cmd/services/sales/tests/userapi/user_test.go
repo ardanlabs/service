@@ -1,7 +1,6 @@
 package user_test
 
 import (
-	"runtime/debug"
 	"testing"
 
 	"github.com/ardanlabs/service/api/sdk/http/apitest"
@@ -10,16 +9,7 @@ import (
 func Test_User(t *testing.T) {
 	t.Parallel()
 
-	// -------------------------------------------------------------------------
-
 	test := apitest.StartTest(t, "Test_User")
-	defer func() {
-		if r := recover(); r != nil {
-			t.Log(r)
-			t.Error(string(debug.Stack()))
-		}
-		test.DB.Teardown()
-	}()
 
 	// -------------------------------------------------------------------------
 
