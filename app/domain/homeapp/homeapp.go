@@ -28,7 +28,7 @@ func NewApp(homeBus *homebus.Business) *App {
 func (a *App) Create(ctx context.Context, app NewHome) (Home, error) {
 	nh, err := toBusNewHome(ctx, app)
 	if err != nil {
-		return Home{}, errs.New(errs.FailedPrecondition, err)
+		return Home{}, errs.New(errs.InvalidArgument, err)
 	}
 
 	hme, err := a.homeBus.Create(ctx, nh)
@@ -43,7 +43,7 @@ func (a *App) Create(ctx context.Context, app NewHome) (Home, error) {
 func (a *App) Update(ctx context.Context, app UpdateHome) (Home, error) {
 	uh, err := toBusUpdateHome(app)
 	if err != nil {
-		return Home{}, errs.New(errs.FailedPrecondition, err)
+		return Home{}, errs.New(errs.InvalidArgument, err)
 	}
 
 	hme, err := mid.GetHome(ctx)

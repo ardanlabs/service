@@ -100,7 +100,7 @@ func update400(sd apitest.SeedData) []apitest.Table {
 				PasswordConfirm: dbtest.StringPointer("jack"),
 			},
 			GotResp: &errs.Error{},
-			ExpResp: errs.Newf(errs.FailedPrecondition, "validate: [{\"field\":\"email\",\"error\":\"email must be a valid email address\"},{\"field\":\"passwordConfirm\",\"error\":\"passwordConfirm must be equal to Password\"}]"),
+			ExpResp: errs.Newf(errs.InvalidArgument, "validate: [{\"field\":\"email\",\"error\":\"email must be a valid email address\"},{\"field\":\"passwordConfirm\",\"error\":\"passwordConfirm must be equal to Password\"}]"),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -115,7 +115,7 @@ func update400(sd apitest.SeedData) []apitest.Table {
 				Roles: []string{"BAD ROLE"},
 			},
 			GotResp: &errs.Error{},
-			ExpResp: errs.Newf(errs.FailedPrecondition, "parse: invalid role \"BAD ROLE\""),
+			ExpResp: errs.Newf(errs.InvalidArgument, "parse: invalid role \"BAD ROLE\""),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},

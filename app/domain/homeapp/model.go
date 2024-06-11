@@ -105,7 +105,7 @@ func (app *NewHome) Decode(data []byte) error {
 // Validate checks if the data in the model is considered clean.
 func (app NewHome) Validate() error {
 	if err := validate.Check(app); err != nil {
-		return errs.Newf(errs.FailedPrecondition, "validate: %s", err)
+		return errs.Newf(errs.InvalidArgument, "validate: %s", err)
 	}
 
 	return nil
@@ -164,7 +164,7 @@ func (app *UpdateHome) Decode(data []byte) error {
 // Validate checks the data in the model is considered clean.
 func (app UpdateHome) Validate() error {
 	if err := validate.Check(app); err != nil {
-		return errs.Newf(errs.FailedPrecondition, "validate: %s", err)
+		return errs.Newf(errs.InvalidArgument, "validate: %s", err)
 	}
 
 	return nil

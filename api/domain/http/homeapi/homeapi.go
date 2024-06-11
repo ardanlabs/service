@@ -23,7 +23,7 @@ func newAPI(homeApp *homeapp.App) *api {
 func (api *api) create(ctx context.Context, r *http.Request) (web.Encoder, error) {
 	var app homeapp.NewHome
 	if err := web.Decode(r, &app); err != nil {
-		return nil, errs.New(errs.FailedPrecondition, err)
+		return nil, errs.New(errs.InvalidArgument, err)
 	}
 
 	hme, err := api.homeApp.Create(ctx, app)
@@ -37,7 +37,7 @@ func (api *api) create(ctx context.Context, r *http.Request) (web.Encoder, error
 func (api *api) update(ctx context.Context, r *http.Request) (web.Encoder, error) {
 	var app homeapp.UpdateHome
 	if err := web.Decode(r, &app); err != nil {
-		return nil, errs.New(errs.FailedPrecondition, err)
+		return nil, errs.New(errs.InvalidArgument, err)
 	}
 
 	hme, err := api.homeApp.Update(ctx, app)
@@ -59,7 +59,7 @@ func (api *api) delete(ctx context.Context, r *http.Request) (web.Encoder, error
 func (api *api) query(ctx context.Context, r *http.Request) (web.Encoder, error) {
 	qp, err := parseQueryParams(r)
 	if err != nil {
-		return nil, errs.New(errs.FailedPrecondition, err)
+		return nil, errs.New(errs.InvalidArgument, err)
 	}
 
 	hme, err := api.homeApp.Query(ctx, qp)

@@ -23,7 +23,7 @@ func newAPI(vproductApp *vproductapp.App) *api {
 func (api *api) query(ctx context.Context, r *http.Request) (web.Encoder, error) {
 	qp, err := parseQueryParams(r)
 	if err != nil {
-		return nil, errs.New(errs.FailedPrecondition, err)
+		return nil, errs.New(errs.InvalidArgument, err)
 	}
 
 	prd, err := api.vproductApp.Query(ctx, qp)

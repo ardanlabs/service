@@ -60,12 +60,12 @@ func (a *App) Create(ctx context.Context, nt NewTran) (Product, error) {
 
 	np, err := toBusNewProduct(nt.Product)
 	if err != nil {
-		return Product{}, errs.New(errs.FailedPrecondition, err)
+		return Product{}, errs.New(errs.InvalidArgument, err)
 	}
 
 	nu, err := toBusNewUser(nt.User)
 	if err != nil {
-		return Product{}, errs.New(errs.FailedPrecondition, err)
+		return Product{}, errs.New(errs.InvalidArgument, err)
 	}
 
 	usr, err := a.userBus.Create(ctx, nu)

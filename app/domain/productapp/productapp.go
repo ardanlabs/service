@@ -28,7 +28,7 @@ func NewApp(productBus *productbus.Business) *App {
 func (a *App) Create(ctx context.Context, app NewProduct) (Product, error) {
 	np, err := toBusNewProduct(ctx, app)
 	if err != nil {
-		return Product{}, errs.New(errs.FailedPrecondition, err)
+		return Product{}, errs.New(errs.InvalidArgument, err)
 	}
 
 	prd, err := a.productBus.Create(ctx, np)
@@ -43,7 +43,7 @@ func (a *App) Create(ctx context.Context, app NewProduct) (Product, error) {
 func (a *App) Update(ctx context.Context, app UpdateProduct) (Product, error) {
 	up, err := toBusUpdateProduct(app)
 	if err != nil {
-		return Product{}, errs.New(errs.FailedPrecondition, err)
+		return Product{}, errs.New(errs.InvalidArgument, err)
 	}
 
 	prd, err := mid.GetProduct(ctx)

@@ -23,7 +23,7 @@ func newAPI(productApp *productapp.App) *api {
 func (api *api) create(ctx context.Context, r *http.Request) (web.Encoder, error) {
 	var app productapp.NewProduct
 	if err := web.Decode(r, &app); err != nil {
-		return nil, errs.New(errs.FailedPrecondition, err)
+		return nil, errs.New(errs.InvalidArgument, err)
 	}
 
 	prd, err := api.productApp.Create(ctx, app)
@@ -37,7 +37,7 @@ func (api *api) create(ctx context.Context, r *http.Request) (web.Encoder, error
 func (api *api) update(ctx context.Context, r *http.Request) (web.Encoder, error) {
 	var app productapp.UpdateProduct
 	if err := web.Decode(r, &app); err != nil {
-		return nil, errs.New(errs.FailedPrecondition, err)
+		return nil, errs.New(errs.InvalidArgument, err)
 	}
 
 	prd, err := api.productApp.Update(ctx, app)
@@ -59,7 +59,7 @@ func (api *api) delete(ctx context.Context, r *http.Request) (web.Encoder, error
 func (api *api) query(ctx context.Context, r *http.Request) (web.Encoder, error) {
 	qp, err := parseQueryParams(r)
 	if err != nil {
-		return nil, errs.New(errs.FailedPrecondition, err)
+		return nil, errs.New(errs.InvalidArgument, err)
 	}
 
 	prd, err := api.productApp.Query(ctx, qp)

@@ -92,7 +92,7 @@ func (app *NewUser) Decode(data []byte) error {
 // Validate checks the data in the model is considered clean.
 func (app NewUser) Validate() error {
 	if err := validate.Check(app); err != nil {
-		return errs.Newf(errs.FailedPrecondition, "validate: %s", err)
+		return errs.Newf(errs.InvalidArgument, "validate: %s", err)
 	}
 
 	return nil
@@ -144,7 +144,7 @@ func (app *UpdateUserRole) Decode(data []byte) error {
 // Validate checks the data in the model is considered clean.
 func (app UpdateUserRole) Validate() error {
 	if err := validate.Check(app); err != nil {
-		return errs.Newf(errs.FailedPrecondition, "validate: %s", err)
+		return errs.Newf(errs.InvalidArgument, "validate: %s", err)
 	}
 
 	return nil
@@ -190,7 +190,7 @@ func (app *UpdateUser) Decode(data []byte) error {
 // Validate checks the data in the model is considered clean.
 func (app UpdateUser) Validate() error {
 	if err := validate.Check(app); err != nil {
-		return errs.Newf(errs.FailedPrecondition, "validate: %s", err)
+		return errs.Newf(errs.InvalidArgument, "validate: %s", err)
 	}
 
 	return nil

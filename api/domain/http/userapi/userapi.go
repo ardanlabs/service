@@ -23,7 +23,7 @@ func newAPI(userApp *userapp.App) *api {
 func (api *api) create(ctx context.Context, r *http.Request) (web.Encoder, error) {
 	var app userapp.NewUser
 	if err := web.Decode(r, &app); err != nil {
-		return nil, errs.New(errs.FailedPrecondition, err)
+		return nil, errs.New(errs.InvalidArgument, err)
 	}
 
 	usr, err := api.userApp.Create(ctx, app)
@@ -37,7 +37,7 @@ func (api *api) create(ctx context.Context, r *http.Request) (web.Encoder, error
 func (api *api) update(ctx context.Context, r *http.Request) (web.Encoder, error) {
 	var app userapp.UpdateUser
 	if err := web.Decode(r, &app); err != nil {
-		return nil, errs.New(errs.FailedPrecondition, err)
+		return nil, errs.New(errs.InvalidArgument, err)
 	}
 
 	usr, err := api.userApp.Update(ctx, app)
@@ -51,7 +51,7 @@ func (api *api) update(ctx context.Context, r *http.Request) (web.Encoder, error
 func (api *api) updateRole(ctx context.Context, r *http.Request) (web.Encoder, error) {
 	var app userapp.UpdateUserRole
 	if err := web.Decode(r, &app); err != nil {
-		return nil, errs.New(errs.FailedPrecondition, err)
+		return nil, errs.New(errs.InvalidArgument, err)
 	}
 
 	usr, err := api.userApp.UpdateRole(ctx, app)
@@ -73,7 +73,7 @@ func (api *api) delete(ctx context.Context, r *http.Request) (web.Encoder, error
 func (api *api) query(ctx context.Context, r *http.Request) (web.Encoder, error) {
 	qp, err := parseQueryParams(r)
 	if err != nil {
-		return nil, errs.New(errs.FailedPrecondition, err)
+		return nil, errs.New(errs.InvalidArgument, err)
 	}
 
 	usr, err := api.userApp.Query(ctx, qp)

@@ -39,7 +39,7 @@ func NewAppWithAuth(userBus *userbus.Business, ath *auth.Auth) *App {
 func (a *App) Create(ctx context.Context, app NewUser) (User, error) {
 	nc, err := toBusNewUser(app)
 	if err != nil {
-		return User{}, errs.New(errs.FailedPrecondition, err)
+		return User{}, errs.New(errs.InvalidArgument, err)
 	}
 
 	usr, err := a.userBus.Create(ctx, nc)
@@ -57,7 +57,7 @@ func (a *App) Create(ctx context.Context, app NewUser) (User, error) {
 func (a *App) Update(ctx context.Context, app UpdateUser) (User, error) {
 	uu, err := toBusUpdateUser(app)
 	if err != nil {
-		return User{}, errs.New(errs.FailedPrecondition, err)
+		return User{}, errs.New(errs.InvalidArgument, err)
 	}
 
 	usr, err := mid.GetUser(ctx)
@@ -77,7 +77,7 @@ func (a *App) Update(ctx context.Context, app UpdateUser) (User, error) {
 func (a *App) UpdateRole(ctx context.Context, app UpdateUserRole) (User, error) {
 	uu, err := toBusUpdateUserRole(app)
 	if err != nil {
-		return User{}, errs.New(errs.FailedPrecondition, err)
+		return User{}, errs.New(errs.InvalidArgument, err)
 	}
 
 	usr, err := mid.GetUser(ctx)

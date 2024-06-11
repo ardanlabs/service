@@ -27,7 +27,7 @@ func newAPI(ath *auth.Auth) *api {
 func (api *api) token(ctx context.Context, r *http.Request) (web.Encoder, error) {
 	kid := web.Param(r, "kid")
 	if kid == "" {
-		return nil, errs.New(errs.FailedPrecondition, validate.NewFieldsError("kid", errors.New("missing kid")))
+		return nil, errs.New(errs.InvalidArgument, validate.NewFieldsError("kid", errors.New("missing kid")))
 	}
 
 	// The BearerBasic middleware function generates the claims.
@@ -61,7 +61,7 @@ func (api *api) authenticate(ctx context.Context, r *http.Request) (web.Encoder,
 func (api *api) authorize(ctx context.Context, r *http.Request) (web.Encoder, error) {
 	var auth authclient.Authorize
 	if err := web.Decode(r, &auth); err != nil {
-		return nil, errs.New(errs.FailedPrecondition, err)
+		return nil, errs.New(errs.InvalidArgument, err)
 	}
 
 	if err := api.auth.Authorize(ctx, auth.Claims, auth.UserID, auth.Rule); err != nil {
