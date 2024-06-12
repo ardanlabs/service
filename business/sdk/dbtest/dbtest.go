@@ -141,13 +141,12 @@ func NewDatabase(t *testing.T, testName string) *Database {
 	teardown := func() {
 		t.Helper()
 
-		db.Close()
-
 		t.Logf("Drop Database: %s\n", dbName)
 		if _, err := dbM.ExecContext(context.Background(), "DROP DATABASE "+dbName); err != nil {
 			t.Fatalf("dropping database %s: %v", dbName, err)
 		}
 
+		db.Close()
 		dbM.Close()
 
 		t.Logf("******************** LOGS (%s) ********************\n\n", testName)
