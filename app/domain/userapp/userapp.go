@@ -111,7 +111,7 @@ func (a *App) Delete(ctx context.Context) error {
 func (a *App) Query(ctx context.Context, qp QueryParams) (query.Result[User], error) {
 	page, err := page.Parse(qp.Page, qp.Rows)
 	if err != nil {
-		return query.Result[User]{}, err
+		return query.Result[User]{}, errs.NewFieldsError("page", err)
 	}
 
 	filter, err := parseFilter(qp)
@@ -121,7 +121,7 @@ func (a *App) Query(ctx context.Context, qp QueryParams) (query.Result[User], er
 
 	orderBy, err := order.Parse(orderByFields, qp.OrderBy, defaultOrderBy)
 	if err != nil {
-		return query.Result[User]{}, err
+		return query.Result[User]{}, errs.NewFieldsError("order", err)
 	}
 
 	usrs, err := a.userBus.Query(ctx, filter, orderBy, page)

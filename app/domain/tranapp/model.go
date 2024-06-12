@@ -9,7 +9,6 @@ import (
 	"github.com/ardanlabs/service/app/sdk/errs"
 	"github.com/ardanlabs/service/business/domain/productbus"
 	"github.com/ardanlabs/service/business/domain/userbus"
-	"github.com/ardanlabs/service/foundation/validate"
 )
 
 // Product represents an individual product.
@@ -52,7 +51,7 @@ type NewTran struct {
 
 // Validate checks the data in the model is considered clean.
 func (app NewTran) Validate() error {
-	if err := validate.Check(app); err != nil {
+	if err := errs.Check(app); err != nil {
 		return errs.Newf(errs.InvalidArgument, "validate: %s", err)
 	}
 
@@ -78,7 +77,7 @@ type NewUser struct {
 
 // Validate checks the data in the model is considered clean.
 func (app NewUser) Validate() error {
-	if err := validate.Check(app); err != nil {
+	if err := errs.Check(app); err != nil {
 		return errs.Newf(errs.InvalidArgument, "validate: %s", err)
 	}
 
@@ -127,7 +126,7 @@ type NewProduct struct {
 
 // Validate checks the data in the model is considered clean.
 func (app NewProduct) Validate() error {
-	if err := validate.Check(app); err != nil {
+	if err := errs.Check(app); err != nil {
 		return errs.Newf(errs.InvalidArgument, "validate: %s", err)
 	}
 

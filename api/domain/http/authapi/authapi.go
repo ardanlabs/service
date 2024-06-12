@@ -10,7 +10,6 @@ import (
 	"github.com/ardanlabs/service/app/sdk/authclient"
 	"github.com/ardanlabs/service/app/sdk/errs"
 	"github.com/ardanlabs/service/app/sdk/mid"
-	"github.com/ardanlabs/service/foundation/validate"
 	"github.com/ardanlabs/service/foundation/web"
 )
 
@@ -27,7 +26,7 @@ func newAPI(ath *auth.Auth) *api {
 func (api *api) token(ctx context.Context, r *http.Request) (web.Encoder, error) {
 	kid := web.Param(r, "kid")
 	if kid == "" {
-		return nil, errs.New(errs.InvalidArgument, validate.NewFieldsError("kid", errors.New("missing kid")))
+		return nil, errs.New(errs.InvalidArgument, errs.NewFieldsError("kid", errors.New("missing kid")))
 	}
 
 	// The BearerBasic middleware function generates the claims.

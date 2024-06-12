@@ -2,11 +2,8 @@
 package order
 
 import (
-	"errors"
 	"fmt"
 	"strings"
-
-	"github.com/ardanlabs/service/foundation/validate"
 )
 
 // Set of directions for data ordering.
@@ -53,7 +50,7 @@ func Parse(fieldMappings map[string]string, orderBy string, defaultOrder By) (By
 	orgFieldName := strings.TrimSpace(orderParts[0])
 	fieldName, exists := fieldMappings[orgFieldName]
 	if !exists {
-		return By{}, validate.NewFieldsError(orgFieldName, errors.New("order field does not exist"))
+		return By{}, fmt.Errorf("unknown order: %s", orgFieldName)
 	}
 
 	switch len(orderParts) {
@@ -63,12 +60,12 @@ func Parse(fieldMappings map[string]string, orderBy string, defaultOrder By) (By
 	case 2:
 		direction := strings.TrimSpace(orderParts[1])
 		if _, exists := directions[direction]; !exists {
-			return By{}, validate.NewFieldsError(orderBy, fmt.Errorf("unknown direction: %s", direction))
+			return By{}, fmt.Errorf("unknown direction: %s", direction)
 		}
 
 		return NewBy(fieldName, direction), nil
 
 	default:
-		return By{}, validate.NewFieldsError(orderBy, errors.New("unknown order field"))
+		return By{}, fmt.Errorf("unknown order: %s", orderBy)
 	}
 }

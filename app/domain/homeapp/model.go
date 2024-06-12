@@ -9,7 +9,6 @@ import (
 	"github.com/ardanlabs/service/app/sdk/errs"
 	"github.com/ardanlabs/service/app/sdk/mid"
 	"github.com/ardanlabs/service/business/domain/homebus"
-	"github.com/ardanlabs/service/foundation/validate"
 )
 
 // QueryParams represents the set of possible query strings.
@@ -104,7 +103,7 @@ func (app *NewHome) Decode(data []byte) error {
 
 // Validate checks if the data in the model is considered clean.
 func (app NewHome) Validate() error {
-	if err := validate.Check(app); err != nil {
+	if err := errs.Check(app); err != nil {
 		return errs.Newf(errs.InvalidArgument, "validate: %s", err)
 	}
 
@@ -163,7 +162,7 @@ func (app *UpdateHome) Decode(data []byte) error {
 
 // Validate checks the data in the model is considered clean.
 func (app UpdateHome) Validate() error {
-	if err := validate.Check(app); err != nil {
+	if err := errs.Check(app); err != nil {
 		return errs.Newf(errs.InvalidArgument, "validate: %s", err)
 	}
 

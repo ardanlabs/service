@@ -8,7 +8,6 @@ import (
 
 	"github.com/ardanlabs/service/app/sdk/errs"
 	"github.com/ardanlabs/service/business/domain/userbus"
-	"github.com/ardanlabs/service/foundation/validate"
 )
 
 // QueryParams represents the set of possible query strings.
@@ -91,7 +90,7 @@ func (app *NewUser) Decode(data []byte) error {
 
 // Validate checks the data in the model is considered clean.
 func (app NewUser) Validate() error {
-	if err := validate.Check(app); err != nil {
+	if err := errs.Check(app); err != nil {
 		return errs.Newf(errs.InvalidArgument, "validate: %s", err)
 	}
 
@@ -143,7 +142,7 @@ func (app *UpdateUserRole) Decode(data []byte) error {
 
 // Validate checks the data in the model is considered clean.
 func (app UpdateUserRole) Validate() error {
-	if err := validate.Check(app); err != nil {
+	if err := errs.Check(app); err != nil {
 		return errs.Newf(errs.InvalidArgument, "validate: %s", err)
 	}
 
@@ -189,7 +188,7 @@ func (app *UpdateUser) Decode(data []byte) error {
 
 // Validate checks the data in the model is considered clean.
 func (app UpdateUser) Validate() error {
-	if err := validate.Check(app); err != nil {
+	if err := errs.Check(app); err != nil {
 		return errs.Newf(errs.InvalidArgument, "validate: %s", err)
 	}
 

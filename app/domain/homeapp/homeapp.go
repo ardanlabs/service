@@ -77,7 +77,7 @@ func (a *App) Delete(ctx context.Context) error {
 func (a *App) Query(ctx context.Context, qp QueryParams) (query.Result[Home], error) {
 	page, err := page.Parse(qp.Page, qp.Rows)
 	if err != nil {
-		return query.Result[Home]{}, err
+		return query.Result[Home]{}, errs.NewFieldsError("page", err)
 	}
 
 	filter, err := parseFilter(qp)
@@ -87,7 +87,7 @@ func (a *App) Query(ctx context.Context, qp QueryParams) (query.Result[Home], er
 
 	orderBy, err := order.Parse(orderByFields, qp.OrderBy, defaultOrderBy)
 	if err != nil {
-		return query.Result[Home]{}, err
+		return query.Result[Home]{}, errs.NewFieldsError("order", err)
 	}
 
 	hmes, err := a.homeBus.Query(ctx, filter, orderBy, page)

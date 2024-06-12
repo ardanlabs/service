@@ -27,7 +27,7 @@ func NewApp(vproductBus *vproductbus.Business) *App {
 func (a *App) Query(ctx context.Context, qp QueryParams) (query.Result[Product], error) {
 	page, err := page.Parse(qp.Page, qp.Rows)
 	if err != nil {
-		return query.Result[Product]{}, err
+		return query.Result[Product]{}, errs.NewFieldsError("page", err)
 	}
 
 	filter, err := parseFilter(qp)
@@ -37,7 +37,7 @@ func (a *App) Query(ctx context.Context, qp QueryParams) (query.Result[Product],
 
 	orderBy, err := order.Parse(orderByFields, qp.OrderBy, defaultOrderBy)
 	if err != nil {
-		return query.Result[Product]{}, err
+		return query.Result[Product]{}, errs.NewFieldsError("order", err)
 	}
 
 	prds, err := a.vproductBus.Query(ctx, filter, orderBy, page)

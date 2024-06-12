@@ -2,11 +2,8 @@
 package page
 
 import (
-	"errors"
 	"fmt"
 	"strconv"
-
-	"github.com/ardanlabs/service/foundation/validate"
 )
 
 // Page represents the requested page and rows per page.
@@ -22,7 +19,7 @@ func Parse(page string, rowsPerPage string) (Page, error) {
 		var err error
 		number, err = strconv.Atoi(page)
 		if err != nil {
-			return Page{}, validate.NewFieldsError("page", err)
+			return Page{}, fmt.Errorf("page conversion: %w", err)
 		}
 	}
 
@@ -31,20 +28,20 @@ func Parse(page string, rowsPerPage string) (Page, error) {
 		var err error
 		rows, err = strconv.Atoi(rowsPerPage)
 		if err != nil {
-			return Page{}, validate.NewFieldsError("rows", err)
+			return Page{}, fmt.Errorf("rows conversion: %w", err)
 		}
 	}
 
 	if number <= 0 {
-		return Page{}, validate.NewFieldsError("page", errors.New("page value too small, must be larger than 0"))
+		return Page{}, fmt.Errorf("page value too small, must be larger than 0")
 	}
 
 	if rows <= 0 {
-		return Page{}, validate.NewFieldsError("rows", errors.New("rows value too small, must be larger than 0"))
+		return Page{}, fmt.Errorf("rows value too small, must be larger than 0")
 	}
 
 	if rows > 100 {
-		return Page{}, validate.NewFieldsError("rows", errors.New("rows value too large, must be less than 100"))
+		return Page{}, fmt.Errorf("rows value too large, must be less than 100")
 	}
 
 	p := Page{

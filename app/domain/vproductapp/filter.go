@@ -3,10 +3,10 @@ package vproductapp
 import (
 	"strconv"
 
+	"github.com/ardanlabs/service/app/sdk/errs"
 	"github.com/ardanlabs/service/business/domain/productbus"
 	"github.com/ardanlabs/service/business/domain/userbus"
 	"github.com/ardanlabs/service/business/domain/vproductbus"
-	"github.com/ardanlabs/service/foundation/validate"
 	"github.com/google/uuid"
 )
 
@@ -16,7 +16,7 @@ func parseFilter(qp QueryParams) (vproductbus.QueryFilter, error) {
 	if qp.ID != "" {
 		id, err := uuid.Parse(qp.ID)
 		if err != nil {
-			return vproductbus.QueryFilter{}, validate.NewFieldsError("product_id", err)
+			return vproductbus.QueryFilter{}, errs.NewFieldsError("product_id", err)
 		}
 		filter.ID = &id
 	}
@@ -24,7 +24,7 @@ func parseFilter(qp QueryParams) (vproductbus.QueryFilter, error) {
 	if qp.Name != "" {
 		name, err := productbus.Names.Parse(qp.Name)
 		if err != nil {
-			return vproductbus.QueryFilter{}, validate.NewFieldsError("name", err)
+			return vproductbus.QueryFilter{}, errs.NewFieldsError("name", err)
 		}
 		filter.Name = &name
 	}
@@ -32,7 +32,7 @@ func parseFilter(qp QueryParams) (vproductbus.QueryFilter, error) {
 	if qp.Cost != "" {
 		cst, err := strconv.ParseFloat(qp.Cost, 64)
 		if err != nil {
-			return vproductbus.QueryFilter{}, validate.NewFieldsError("cost", err)
+			return vproductbus.QueryFilter{}, errs.NewFieldsError("cost", err)
 		}
 		filter.Cost = &cst
 	}
@@ -40,7 +40,7 @@ func parseFilter(qp QueryParams) (vproductbus.QueryFilter, error) {
 	if qp.Quantity != "" {
 		qua, err := strconv.ParseInt(qp.Quantity, 10, 64)
 		if err != nil {
-			return vproductbus.QueryFilter{}, validate.NewFieldsError("quantity", err)
+			return vproductbus.QueryFilter{}, errs.NewFieldsError("quantity", err)
 		}
 		i := int(qua)
 		filter.Quantity = &i
@@ -49,7 +49,7 @@ func parseFilter(qp QueryParams) (vproductbus.QueryFilter, error) {
 	if qp.Name != "" {
 		name, err := userbus.Names.Parse(qp.Name)
 		if err != nil {
-			return vproductbus.QueryFilter{}, validate.NewFieldsError("name", err)
+			return vproductbus.QueryFilter{}, errs.NewFieldsError("name", err)
 		}
 		filter.UserName = &name
 	}
