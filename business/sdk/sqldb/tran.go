@@ -3,9 +3,21 @@ package sqldb
 import (
 	"fmt"
 
-	"github.com/ardanlabs/service/business/sdk/transaction"
 	"github.com/jmoiron/sqlx"
 )
+
+// Beginner represents a value that can begin a transaction.
+type Beginner interface {
+	Begin() (CommitRollbacker, error)
+}
+
+// CommitRollbacker represents a value that can commit or rollback a transaction.
+type CommitRollbacker interface {
+	Commit() error
+	Rollback() error
+}
+
+// =============================================================================
 
 // DBBeginner implements the Beginner interface,
 type DBBeginner struct {
@@ -21,13 +33,13 @@ func NewBeginner(sqlxDB *sqlx.DB) *DBBeginner {
 
 // Begin implements the Beginner interface and returns a concrete value that
 // implements the CommitRollbacker interface.
-func (db *DBBeginner) Begin() (transaction.CommitRollbacker, error) {
+func (db *DBBeginner) Begin() (CommitRollbacker, error) {
 	return db.sqlxDB.Beginx()
 }
 
 // GetExtContext is a helper function that extracts the sqlx value
 // from the domain transactor interface for transactional use.
-func GetExtContext(tx transaction.CommitRollbacker) (sqlx.ExtContext, error) {
+func GetExtContext(tx CommitRollbacker) (sqlx.ExtContext, error) {
 	ec, ok := tx.(sqlx.ExtContext)
 	if !ok {
 		return nil, fmt.Errorf("Transactor(%T) not of a type *sql.Tx", tx)

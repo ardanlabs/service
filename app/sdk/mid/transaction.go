@@ -6,12 +6,12 @@ import (
 	"errors"
 
 	"github.com/ardanlabs/service/app/sdk/errs"
-	"github.com/ardanlabs/service/business/sdk/transaction"
+	"github.com/ardanlabs/service/business/sdk/sqldb"
 	"github.com/ardanlabs/service/foundation/logger"
 )
 
 // BeginCommitRollback starts a transaction for the domain call.
-func BeginCommitRollback(ctx context.Context, log *logger.Logger, bgn transaction.Beginner, next HandlerFunc) (Encoder, error) {
+func BeginCommitRollback(ctx context.Context, log *logger.Logger, bgn sqldb.Beginner, next HandlerFunc) (Encoder, error) {
 	hasCommitted := false
 
 	log.Info(ctx, "BEGIN TRANSACTION")

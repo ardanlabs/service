@@ -11,7 +11,7 @@ import (
 	"github.com/ardanlabs/service/business/sdk/delegate"
 	"github.com/ardanlabs/service/business/sdk/order"
 	"github.com/ardanlabs/service/business/sdk/page"
-	"github.com/ardanlabs/service/business/sdk/transaction"
+	"github.com/ardanlabs/service/business/sdk/sqldb"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/google/uuid"
 )
@@ -25,7 +25,7 @@ var (
 // Storer interface declares the behaviour this package needs to persist and
 // retrieve data.
 type Storer interface {
-	NewWithTx(tx transaction.CommitRollbacker) (Storer, error)
+	NewWithTx(tx sqldb.CommitRollbacker) (Storer, error)
 	Create(ctx context.Context, hme Home) error
 	Update(ctx context.Context, hme Home) error
 	Delete(ctx context.Context, hme Home) error
@@ -55,7 +55,7 @@ func NewBusiness(log *logger.Logger, userBus *userbus.Business, delegate *delega
 
 // NewWithTx constructs a new domain value that will use the
 // specified transaction in any store related calls.
-func (b *Business) NewWithTx(tx transaction.CommitRollbacker) (*Business, error) {
+func (b *Business) NewWithTx(tx sqldb.CommitRollbacker) (*Business, error) {
 	storer, err := b.storer.NewWithTx(tx)
 	if err != nil {
 		return nil, err
