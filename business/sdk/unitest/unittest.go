@@ -20,8 +20,6 @@ func Run(t *testing.T, table []Table, testName string) {
 
 	for _, tt := range table {
 		f := func(t *testing.T) {
-			t.Parallel()
-
 			gotResp := tt.ExcFunc(context.Background())
 
 			diff := tt.CmpFunc(gotResp, tt.ExpResp)
