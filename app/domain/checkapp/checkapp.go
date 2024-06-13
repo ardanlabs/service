@@ -7,6 +7,7 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/ardanlabs/service/app/sdk/errs"
 	"github.com/ardanlabs/service/business/sdk/sqldb"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/jmoiron/sqlx"
@@ -37,7 +38,7 @@ func (a *App) Readiness(ctx context.Context) error {
 
 	if err := sqldb.StatusCheck(ctx, a.db); err != nil {
 		a.log.Info(ctx, "readiness failure", "ERROR", err)
-		return err
+		return errs.New(errs.Internal, err)
 	}
 
 	return nil

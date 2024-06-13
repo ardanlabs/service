@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/ardanlabs/service/app/domain/checkapp"
-	"github.com/ardanlabs/service/app/sdk/errs"
 	"github.com/ardanlabs/service/foundation/web"
 )
 
@@ -25,7 +24,7 @@ func newAPI(checkApp *checkapp.App) *api {
 // stack it will interpret that as a non-trusted error.
 func (api *api) readiness(ctx context.Context, r *http.Request) (web.Encoder, error) {
 	if err := api.checkApp.Readiness(ctx); err != nil {
-		return nil, errs.Newf(errs.Internal, "database not ready")
+		return nil, err
 	}
 
 	return ready{Status: "OK"}, nil
