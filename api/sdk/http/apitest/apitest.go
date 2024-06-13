@@ -35,16 +35,6 @@ func New(db *dbtest.Database, ath *auth.Auth, mux http.Handler) *Test {
 
 // Run performs the actual test logic based on the table data.
 func (at *Test) Run(t *testing.T, table []Table, testName string) {
-	log := func(diff string, got any, exp any) {
-		t.Log("DIFF")
-		t.Logf("%s", diff)
-		t.Log("GOT")
-		t.Logf("%#v", got)
-		t.Log("EXP")
-		t.Logf("%#v", exp)
-		t.Fatalf("Should get the expected response")
-	}
-
 	for _, tt := range table {
 		f := func(t *testing.T) {
 			r := httptest.NewRequest(tt.Method, tt.URL, nil)
@@ -76,7 +66,13 @@ func (at *Test) Run(t *testing.T, table []Table, testName string) {
 
 			diff := tt.CmpFunc(tt.GotResp, tt.ExpResp)
 			if diff != "" {
-				log(diff, tt.GotResp, tt.ExpResp)
+				t.Log("DIFF")
+				t.Logf("%s", diff)
+				t.Log("GOT")
+				t.Logf("%#v", tt.GotResp)
+				t.Log("EXP")
+				t.Logf("%#v", tt.ExpResp)
+				t.Fatalf("Should get the expected response")
 			}
 		}
 
