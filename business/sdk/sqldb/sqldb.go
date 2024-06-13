@@ -87,13 +87,13 @@ func StatusCheck(ctx context.Context, db *sqlx.DB) error {
 		defer cancel()
 	}
 
-	var pingError error
 	for attempts := 1; ; attempts++ {
-		pingError = db.Ping()
-		if pingError == nil {
+		if err := db.Ping(); err == nil {
 			break
 		}
+
 		time.Sleep(time.Duration(attempts) * 100 * time.Millisecond)
+
 		if ctx.Err() != nil {
 			return ctx.Err()
 		}
