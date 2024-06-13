@@ -22,7 +22,7 @@ var (
 	Unknown = ErrCode{value: 3}
 
 	// InvalidArgument indicates client specified an invalid argument.
-	// Note that this differs from InvalidArgument. It indicates arguments
+	// Note that this differs from FailedPrecondition. It indicates arguments
 	// that are problematic regardless of the state of the system
 	// (e.g., a malformed file name).
 	InvalidArgument = ErrCode{value: 4}
@@ -75,7 +75,7 @@ var (
 	// OutOfRange if asked to read from an offset past the current
 	// file size.
 	//
-	// There is a fair bit of overlap between InvalidArgument and
+	// There is a fair bit of overlap between FailedPrecondition and
 	// OutOfRange. We recommend using OutOfRange (the more specific
 	// error) when it applies so that callers who are iterating through
 	// a space can easily look for an OutOfRange error to detect when
@@ -96,7 +96,7 @@ var (
 	// by retrying with a backoff. Note that it is not always safe to retry
 	// non-idempotent operations.
 	//
-	// See litmus test above for deciding between InvalidArgument,
+	// See litmus test above for deciding between FailedPrecondition,
 	// Aborted, and Unavailable.
 	Unavailable = ErrCode{value: 15}
 
@@ -106,6 +106,11 @@ var (
 	// Unauthenticated indicates the request does not have valid
 	// authentication credentials for the operation.
 	Unauthenticated = ErrCode{value: 17}
+
+	// TooManyRequest indicates that the client has made too many requests and
+	// exceeded their rate limit and/or quota and must wait before making
+	// futhur requests.
+	TooManyRequests = ErrCode{value: 18}
 )
 
 var codeNumbers = map[string]ErrCode{
@@ -119,7 +124,7 @@ var codeNumbers = map[string]ErrCode{
 	"already_exists":      AlreadyExists,
 	"permission_denied":   PermissionDenied,
 	"resource_exhausted":  ResourceExhausted,
-	"failed_precondition": InvalidArgument,
+	"failed_precondition": FailedPrecondition,
 	"aborted":             Aborted,
 	"out_of_range":        OutOfRange,
 	"unimplemented":       Unimplemented,
@@ -127,46 +132,49 @@ var codeNumbers = map[string]ErrCode{
 	"unavailable":         Unavailable,
 	"data_loss":           DataLoss,
 	"unauthenticated":     Unauthenticated,
+	"too_many_requests":   TooManyRequests,
 }
 
 var codeNames = map[ErrCode]string{
-	OK:                "ok",
-	NoContent:         "ok_no_content",
-	Canceled:          "canceled",
-	Unknown:           "unknown",
-	InvalidArgument:   "invalid_argument",
-	DeadlineExceeded:  "deadline_exceeded",
-	NotFound:          "not_found",
-	AlreadyExists:     "already_exists",
-	PermissionDenied:  "permission_denied",
-	ResourceExhausted: "resource_exhausted",
-	InvalidArgument:   "failed_precondition",
-	Aborted:           "aborted",
-	OutOfRange:        "out_of_range",
-	Unimplemented:     "unimplemented",
-	Internal:          "internal",
-	Unavailable:       "unavailable",
-	DataLoss:          "data_loss",
-	Unauthenticated:   "unauthenticated",
+	OK:                 "ok",
+	NoContent:          "ok_no_content",
+	Canceled:           "canceled",
+	Unknown:            "unknown",
+	InvalidArgument:    "invalid_argument",
+	DeadlineExceeded:   "deadline_exceeded",
+	NotFound:           "not_found",
+	AlreadyExists:      "already_exists",
+	PermissionDenied:   "permission_denied",
+	ResourceExhausted:  "resource_exhausted",
+	FailedPrecondition: "failed_precondition",
+	Aborted:            "aborted",
+	OutOfRange:         "out_of_range",
+	Unimplemented:      "unimplemented",
+	Internal:           "internal",
+	Unavailable:        "unavailable",
+	DataLoss:           "data_loss",
+	Unauthenticated:    "unauthenticated",
+	TooManyRequests:    "too_many_requests",
 }
 
 var httpStatus = map[ErrCode]int{
-	OK:                http.StatusOK,
-	NoContent:         http.StatusNoContent,
-	Canceled:          http.StatusGatewayTimeout,
-	Unknown:           http.StatusInternalServerError,
-	InvalidArgument:   http.StatusBadRequest,
-	DeadlineExceeded:  http.StatusGatewayTimeout,
-	NotFound:          http.StatusNotFound,
-	AlreadyExists:     http.StatusConflict,
-	PermissionDenied:  http.StatusForbidden,
-	ResourceExhausted: http.StatusTooManyRequests,
-	InvalidArgument:   http.StatusBadRequest,
-	Aborted:           http.StatusConflict,
-	OutOfRange:        http.StatusBadRequest,
-	Unimplemented:     http.StatusNotImplemented,
-	Internal:          http.StatusInternalServerError,
-	Unavailable:       http.StatusServiceUnavailable,
-	DataLoss:          http.StatusInternalServerError,
-	Unauthenticated:   http.StatusUnauthorized,
+	OK:                 http.StatusOK,
+	NoContent:          http.StatusNoContent,
+	Canceled:           http.StatusGatewayTimeout,
+	Unknown:            http.StatusInternalServerError,
+	InvalidArgument:    http.StatusBadRequest,
+	DeadlineExceeded:   http.StatusGatewayTimeout,
+	NotFound:           http.StatusNotFound,
+	AlreadyExists:      http.StatusConflict,
+	PermissionDenied:   http.StatusForbidden,
+	ResourceExhausted:  http.StatusTooManyRequests,
+	FailedPrecondition: http.StatusBadRequest,
+	Aborted:            http.StatusConflict,
+	OutOfRange:         http.StatusBadRequest,
+	Unimplemented:      http.StatusNotImplemented,
+	Internal:           http.StatusInternalServerError,
+	Unavailable:        http.StatusServiceUnavailable,
+	DataLoss:           http.StatusInternalServerError,
+	Unauthenticated:    http.StatusUnauthorized,
+	TooManyRequests:    http.StatusTooManyRequests,
 }
