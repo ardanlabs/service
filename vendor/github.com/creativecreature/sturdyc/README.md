@@ -14,21 +14,24 @@ The [xxhash](https://github.com/cespare/xxhash) algorithm is used for efficient
 key distribution.
 
 The cache performs continuous evictions of each shard. There are options to
-both disable this functionality and tweak the interval. When you instantiate a
-cache client, you're going to set the percentage of records to evict if the
-capacity is reached. All evictions are performed per shard based on recency,
-with an _O(N) time complexity_, using [quickselect](https://en.wikipedia.org/wiki/Quickselect).
+both disable this functionality and tweak the interval. When you create a
+cache client, you get to decide the percentage of records to evict if the
+capacity is reached.
+
+All evictions are performed per shard based on recency, with an _O(N) time
+complexity_, using [quickselect](https://en.wikipedia.org/wiki/Quickselect).
 
 It has all the functionality you would expect from a caching library, but what
 **sets it apart** are the features designed to make I/O heavy applications both
 _robust_ and _highly performant_.
 
 ### Adding `sturdyc` to your application:
-The API is easy to use, which makes it possible to integrate `sturdyc` into
-existing code bases without much effort. Let's use the following methods from
-an API client that retrieves order data as an example:
+
+To illustrate how to integrate this package with your application, we'll use
+the following two methods of an API client as example:
 
 ```go
+// Order retrieves a single order by ID.
 func (c *Client) Order(ctx context.Context, id string) (Order, error) {
 	timeoutCtx, cancel := context.WithTimeout(ctx, c.timeout)
 	defer cancel()
@@ -42,6 +45,7 @@ func (c *Client) Order(ctx context.Context, id string) (Order, error) {
 	return response, err
 }
 
+// Orders retrieves a batch of orders by their IDs.
 func (c *Client) Orders(ctx context.Context, ids []string) (map[string]Order, error) {
 	timeoutCtx, cancel := context.WithTimeout(ctx, c.timeout)
 	defer cancel()
@@ -57,8 +61,8 @@ func (c *Client) Orders(ctx context.Context, ids []string) (map[string]Order, er
 }
 ```
 
-All we have to do is wrap the fetching part in a function and give it to the
-cache:
+Now, all we have to do is wrap the fetching part in a function and then hand it
+over to the cache:
 
 ```go
 func (c *Client) Order(ctx context.Context, id string) (Order, error) {
@@ -97,51 +101,61 @@ func (c *Client) Orders(ctx context.Context, ids []string) (map[string]Order, er
 }
 ```
 
-In the example above, we're fetching the data over HTTP, but it's just as easy
-to wrap a database query, a remote procedure call, or a disk read.
+The example above retrieves the data from an HTTP API, but it's just as easy to
+wrap a database query, a remote procedure call, a disk read, or any other I/O
+operation
 
+These three extra lines of code will obviously grant us the ability to serve
+the data from memory, and then retrieve it again once the TTL expires, but the
+cache can do much more. Let's look at that next!
 
 ### Benefits:
 
 #### Deduplication
-By doing this, `sturdyc` is going to automatically perform _in-flight_ tracking
-for every key. This works for batch operations too where it's able to
-deduplicate a batch of cache misses, and then assemble the response by picking
-records from multiple in-flight requests.
+
+When we pass our functions for data retrieval to `sturdyc`, it will
+automatically perform _in-flight_ tracking for every key. This also works for
+batch operations, where it can deduplicate a batch of cache misses and then
+assemble the response by picking records from multiple in-flight requests.
 
 #### Early refreshes
-You can also enable _early refreshes_ which instructs the cache to refresh the
-keys which are in active rotation, thereby preventing them from ever expiring.
-This can have a huge impact on an applications latency as you're able to
-continiously serve the most frequently used data from memory:
+
+There is also a lot of extra functionality you can enable, one being _early
+refreshes_ which instructs the cache to refresh the keys which are in active
+rotation, thereby preventing them from ever expiring. This can have a huge
+impact on an applications latency as you're able to continiously serve the most
+frequently used data from memory:
 
 ```go
 sturdyc.WithEarlyRefreshes(minRefreshDelay, maxRefreshDelay, exponentialBackOff)
 ```
 
 #### Batching
-The cache disassembles the responses from batchable data sources, and caches
-each record individually based on the permutations of the options with which it
-was fetched.
 
-To **significantly reduce** your application's outgoing requests to these data
-sources, you can enable _refresh coalescing_, which creates a buffer for each
-option set and gathers IDs until the `idealBatchSize` is reached or the
-`batchBufferTimeout` expires:
+When the cache retrieves data from a batchable source, it will disassemble the
+response and then cache each record individually based on the permutations of
+the options with which it was fetched.
+
+We can leverage this fact to **significantly reduce** our application's
+outgoing requests to these data sources by enabling _refresh coalescing_.
+Internally, `sturdyc` creates a buffer for each option set and gathers IDs
+until the `idealBatchSize` is reached or the `batchBufferTimeout` expires:
 
 ```go
 sturdyc.WithRefreshCoalescing(idealBatchSize, batchBufferTimeout)
 ```
 
 #### Distributed key-value store
-You can also configure `sturdyc` to synchronize its cache with a **distributed
-key-value store** of your choosing:
+
+You can also configure `sturdyc` to synchronize its in-memory cache with a
+**distributed key-value store** of your choosing:
 
 ```go
 sturdyc.WithDistributedStorage(storage),
 ```
 
 #### Latency improvements
+
 Below is a screenshot showing the latency improvements we've observed after
 replacing our old cache with this package:
 
@@ -154,6 +168,7 @@ more than 90% while still serving data that is refreshed every second. This
 setting is configurable, and you can adjust it to a lower value if you like.
 
 ### Table of contents
+
 There are examples further down this file that covers the entire API, and I
 encourage you to **read these examples in the order they appear**. Most of them
 build on each other, and many share configurations. Here is a brief overview of
@@ -190,7 +205,7 @@ configuration:
 	// Time-to-live for cache entries.
 	ttl := 2 * time.Hour
 	// Percentage of entries to evict when the cache reaches its capacity. Setting this
-	// to 0 will make client.Set a no-op until an item has either expired or been deleted.
+	// to 0 will make writes a no-op until an item has either expired or been deleted.
 	evictionPercentage := 10
 
 	// Create a cache client with the specified configuration.
@@ -205,7 +220,7 @@ configuration:
 	log.Println(cacheClient.Get("key1"))
 ```
 
-Next, we'll look at some of the more _advanced features_.
+Next, we'll look at some of the more _advanced features_ in detail.
 
 # Stampede protection
 
@@ -215,7 +230,7 @@ cache, come in at once
 
 Preventing this has been one of the key objectives for this package. We do not
 want to cause a significant load on the underlying data source every time a key
-is missing or a record expires.
+expires.
 
 The `GetOrFetch` function takes a key and a function for retrieving the data if
 it's not in the cache. The cache is going to ensure that we never have more
@@ -352,8 +367,8 @@ to pick IDs from different batches:
 2024/05/21 09:14:23 fetchFn was called 3 times <---- NOTE: We only generated 3 outgoing requests.
 ```
 
-And on the last line, we can see that we only generated 3 outgoing requests. The
-entire example is available [here.](https://github.com/creativecreature/sturdyc/tree/main/examples/basic)
+And on the last line, we can see that the additional calls didn't generate any
+further outgoing requests. The entire example is available [here.](https://github.com/creativecreature/sturdyc/tree/main/examples/basic)
 
 ## Early refreshes
 
@@ -460,7 +475,7 @@ go run .
 ```
 
 This is going to reduce your response times significantly because none of your
-consumers will have to wait for the I/O operation that refreshes the data. It's
+users will have to wait for the I/O operation that refreshes the data. It's
 always performed in the background as long as the key is being continuously
 requested. Being afraid that the record might get too stale if users stop
 requesting it is an indication of a TTL that is set too high. Remember, even if
@@ -468,16 +483,14 @@ the TTL is exceeded and the key expires, you'll still get deduplication if it's
 suddenly requested in a burst again. The only difference is that the users will
 have to wait for the I/O operation that retrieves it.
 
-Additionally, you'll be able to set a high TTL if you want to provide a
-degraded experience by continuously serving the most recent data you have
-cached even when an upstream system encounters issues and the refreshes begin
-to fail. The values for `minRefreshDelay` and `maxRefreshDelay` that we pass to
-`sturdyc.WithEarlyRefreshes` should specify an optimal interval of how
-fresh we'd like the data to be. The `TTL` should be set to a duration where
-exceeding it would make the data too outdated to be useful.
+Additionally, to provide a degraded experience when an upstream system
+encounters issues, you can set a high TTL and a low refresh time. When
+everything is working as expected, the records will be refreshed continuously.
+However, if the upstream system encounters issues and stops responding, you can
+fall back to cached records for the duration of the TTL.
 
-Now what if the record was deleted? Our cache might use a 2-hour-long TTL, and
-we definitely don't want it to take that long for the deletion to propagate.
+What if the record was deleted? Our cache might use a 2-hour-long TTL, and we
+definitely don't want it to take that long for the deletion to propagate.
 
 However, if we were to modify our client so that it returns an error after the
 first request:
@@ -601,7 +614,7 @@ iteration:
 we're using `GetOrFetch`. For `GetOrFetchBatch`, we'll simply omit the key from the
 map we're returning. I think this inconsistency is a little unfortunate, but it
 was the best API I could come up with. Having to return an error like this if
-just a single id wasn't found:
+just a single ID wasn't found:
 
 ```go
 	batchFetchFn := func(_ context.Context, cacheMisses []string) (map[string]string, error) {
@@ -669,7 +682,7 @@ func (a *API) Get(ctx context.Context, key string) (string, error) {
 }
 ```
 
-Next, we'll just have to enable missing record storage which tell the cache
+Next, we'll just have to enable missing record storage which tells the cache
 that anytime it gets a `ErrNotFound` error it should mark the key as missing:
 
 ```go
@@ -700,7 +713,7 @@ func main() {
 ```
 
 Running this program, we'll see that the record is missing during the first 3
-refreshes and then transitions into having a value:
+refreshes, and then transitions into having a value:
 
 ```sh
 ❯ go run .
@@ -722,7 +735,8 @@ refreshes and then transitions into having a value:
 ...
 ```
 
-**Please note** that this functionality is _implicit_ for `GetOrFetchBatch`:
+**Please note** that this functionality is _implicit_ for `GetOrFetchBatch`.
+You simply just have to omit the key from the map:
 
 ```go
 	batchFetchFn := func(_ context.Context, cacheMisses []string) (map[string]string, error) {
@@ -760,8 +774,9 @@ and this is if we're sending perfect batches of 20. If we were to do 1 to 20
 IDs (not just exactly 20 each time) the total number of combinations would be
 the sum of combinations for each k from 1 to 20.
 
-We would essentially just be paying for extra RAM because the hit rate for each
-key would be so low that a cache-hit would feel like winning the lottery.
+At this point, we would essentially just be paying for extra RAM, as the hit
+rate for each key would be so low that we'd have better odds of winning the
+lottery.
 
 To prevent this, `sturdyc` pulls the response apart and caches each record
 individually. This effectively prevents super-polynomial growth in the number

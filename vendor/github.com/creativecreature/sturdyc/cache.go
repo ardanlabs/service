@@ -127,15 +127,15 @@ func (c *Client[T]) getShard(key string) *shard[T] {
 func (c *Client[T]) get(key string) (value T, exists, ignore, refresh bool) {
 	shard := c.getShard(key)
 	val, exists, ignore, refresh := shard.get(key)
-	c.reportCacheHits(exists)
+	c.reportCacheHits(exists, ignore, refresh)
 	return val, exists, ignore, refresh
 }
 
 // Get retrieves a single value from the cache.
 func (c *Client[T]) Get(key string) (T, bool) {
 	shard := c.getShard(key)
-	val, ok, ignore, _ := shard.get(key)
-	c.reportCacheHits(ok)
+	val, ok, ignore, refresh := shard.get(key)
+	c.reportCacheHits(ok, ignore, refresh)
 	return val, ok && !ignore
 }
 

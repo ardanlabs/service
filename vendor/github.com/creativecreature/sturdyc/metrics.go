@@ -5,6 +5,11 @@ type MetricsRecorder interface {
 	CacheHit()
 	// CacheMiss is called for every key that results in a cache miss.
 	CacheMiss()
+	// Refresh is called when a get operation results in a refresh.
+	Refresh()
+	// MissingRecord is called every time the cache is asked to
+	// lookup a key which has been marked as missing.
+	MissingRecord()
 	// ForcedEviction is called when the cache reaches its capacity, and has to
 	// evict keys in order to write a new one.
 	ForcedEviction()
@@ -24,6 +29,12 @@ type DistributedMetricsRecorder interface {
 	DistributedCacheHit()
 	// DistributedCacheHit is called for every key that results in a cache miss.
 	DistributedCacheMiss()
+	// DistributedRefresh is called when we retrieve a record from
+	// the distributed storage that should be refreshed.
+	DistributedRefresh()
+	// DistributetedMissingRecord is called when we retrieve a record from the
+	// distributed storage that has been marked as a missing record.
+	DistributedMissingRecord()
 	// DistributedFallback is called when you are using a distributed storage
 	// with early refreshes, and the call for a value was supposed to refresh it,
 	// but the call failed. When that happens, the cache fallbacks to the latest
@@ -38,6 +49,10 @@ type distributedMetricsRecorder struct {
 func (d *distributedMetricsRecorder) DistributedCacheHit() {}
 
 func (d *distributedMetricsRecorder) DistributedCacheMiss() {}
+
+func (d *distributedMetricsRecorder) DistributedRefresh() {}
+
+func (d *distributedMetricsRecorder) DistributedMissingRecord() {}
 
 func (d *distributedMetricsRecorder) DistributedFallback() {}
 
@@ -56,10 +71,19 @@ func (s *shard[T]) reportEntriesEvicted(n int) {
 }
 
 // reportCacheHits is used to report cache hits and misses to the metrics recorder.
-func (c *Client[T]) reportCacheHits(cacheHit bool) {
+func (c *Client[T]) reportCacheHits(cacheHit, missingRecord, refresh bool) {
 	if c.metricsRecorder == nil {
 		return
 	}
+
+	if missingRecord {
+		c.metricsRecorder.MissingRecord()
+	}
+
+	if refresh {
+		c.metricsRecorder.Refresh()
+	}
+
 	if !cacheHit {
 		c.metricsRecorder.CacheMiss()
 		return
@@ -90,6 +114,20 @@ func (c *Client[T]) reportDistributedCacheHit(cacheHit bool) {
 		return
 	}
 	c.metricsRecorder.DistributedCacheHit()
+}
+
+func (c *Client[T]) reportDistributedRefresh() {
+	if c.metricsRecorder == nil {
+		return
+	}
+	c.metricsRecorder.DistributedRefresh()
+}
+
+func (c *Client[T]) reportDistributedMissingRecord() {
+	if c.metricsRecorder == nil {
+		return
+	}
+	c.metricsRecorder.DistributedMissingRecord()
 }
 
 func (c *Client[T]) reportDistributedStaleFallback() {

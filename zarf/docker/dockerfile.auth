@@ -13,7 +13,7 @@ RUN go build -ldflags "-X main.build=${BUILD_REF}"
 
 
 # Run the Go Binary in Alpine.
-FROM alpine:3.19
+FROM alpine:3.20
 ARG BUILD_DATE
 ARG BUILD_REF
 RUN addgroup -g 1000 -S auth && \

@@ -93,10 +93,12 @@ func distributedFetch[V, T any](c *Client[T], key string, fetchFn FetchFn[V]) Fe
 			// Check if the record is fresh enough to not need a refresh.
 			if !c.distributedEarlyRefreshes || c.clock.Since(record.CreatedAt) < c.distributedRefreshAfterDuration {
 				if record.IsMissingRecord {
+					c.reportDistributedMissingRecord()
 					return record.Value, ErrNotFound
 				}
 				return record.Value, nil
 			}
+			c.reportDistributedRefresh()
 			stale, hasStale = record.Value, true
 		}
 
@@ -180,14 +182,20 @@ func distributedBatchFetch[V, T any](c *Client[T], keyFn KeyFn, fetchFn BatchFet
 				// We never wan't to return missing records.
 				if !record.IsMissingRecord {
 					fresh[id] = record.Value
+				} else {
+					c.reportDistributedMissingRecord()
 				}
 				continue
 			}
 
 			idsToRefresh = append(idsToRefresh, id)
+			c.reportDistributedRefresh()
+
 			// We never wan't to return missing records.
 			if !record.IsMissingRecord {
 				stale[id] = record.Value
+			} else {
+				c.reportDistributedMissingRecord()
 			}
 		}
 
@@ -198,7 +206,9 @@ func distributedBatchFetch[V, T any](c *Client[T], keyFn KeyFn, fetchFn BatchFet
 		dataSourceResponses, err := fetchFn(ctx, idsToRefresh)
 		// Incase of an error, we'll proceed with the ones we got from the distributed storage.
 		if err != nil {
-			c.reportDistributedStaleFallback()
+			for i := 0; i < len(stale); i++ {
+				c.reportDistributedStaleFallback()
+			}
 			c.log.Error(fmt.Sprintf("sturdyc: error fetching records from the underlying data source. %v", err))
 			maps.Copy(stale, fresh)
 			return stale, nil
