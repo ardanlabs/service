@@ -26,7 +26,7 @@ var ErrForbidden = errors.New("attempted action is not allowed")
 // Claims represents the authorization claims transmitted via a JWT.
 type Claims struct {
 	jwt.RegisteredClaims
-	Roles []userbus.Role `json:"roles"`
+	Roles []string `json:"roles"`
 }
 
 // KeyLookup declares a method set of behavior for looking up

@@ -55,22 +55,6 @@ func (r Role) String() string {
 	return r.name
 }
 
-// UnmarshalText implement the unmarshal interface for JSON conversions.
-func (r *Role) UnmarshalText(data []byte) error {
-	role, err := Roles.Parse(string(data))
-	if err != nil {
-		return err
-	}
-
-	r.name = role.name
-	return nil
-}
-
-// MarshalText implement the marshal interface for JSON conversions.
-func (r Role) MarshalText() ([]byte, error) {
-	return []byte(r.name), nil
-}
-
 // Equal provides support for the go-cmp package and testing.
 func (r Role) Equal(r2 Role) bool {
 	return r.name == r2.name

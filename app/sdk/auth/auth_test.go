@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/app/sdk/auth"
-	"github.com/ardanlabs/service/business/domain/userbus"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
@@ -53,7 +52,7 @@ func test1(ath *auth.Auth) func(t *testing.T) {
 				ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(time.Hour)),
 				IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
 			},
-			Roles: []userbus.Role{userbus.Roles.Admin},
+			Roles: []string{"ADMIN"},
 		}
 
 		token, err := ath.GenerateToken(kid, claims)
@@ -96,7 +95,7 @@ func test2(ath *auth.Auth) func(t *testing.T) {
 				ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(time.Hour)),
 				IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
 			},
-			Roles: []userbus.Role{userbus.Roles.User},
+			Roles: []string{"USER"},
 		}
 
 		token, err := ath.GenerateToken(kid, claims)
@@ -144,7 +143,7 @@ func test3(ath *auth.Auth) func(t *testing.T) {
 				ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(time.Hour)),
 				IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
 			},
-			Roles: []userbus.Role{userbus.Roles.User},
+			Roles: []string{"USER"},
 		}
 
 		token, err := ath.GenerateToken(kid, claims)
@@ -177,7 +176,7 @@ func test4(ath *auth.Auth) func(t *testing.T) {
 				ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(time.Hour)),
 				IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
 			},
-			Roles: []userbus.Role{userbus.Roles.User, userbus.Roles.Admin},
+			Roles: []string{"USER", "ADIMN"},
 		}
 		userID := uuid.MustParse("9e979baa-61c9-4b50-81f2-f216d53f5c15")
 
@@ -209,7 +208,7 @@ func test5(ath *auth.Auth) func(t *testing.T) {
 				ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(time.Hour)),
 				IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
 			},
-			Roles: []userbus.Role{userbus.Roles.User},
+			Roles: []string{"USER"},
 		}
 		userID := uuid.MustParse("9e979baa-61c9-4b50-81f2-f216d53f5c15")
 
@@ -241,7 +240,7 @@ func test6(ath *auth.Auth) func(t *testing.T) {
 				ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(time.Hour)),
 				IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
 			},
-			Roles: []userbus.Role{userbus.Roles.Admin},
+			Roles: []string{"ADMIN"},
 		}
 		userID := uuid.MustParse("9e979baa-61c9-4b50-81f2-f216d53f5c15")
 

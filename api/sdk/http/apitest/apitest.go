@@ -91,6 +91,11 @@ func Token(userBus *userbus.Business, ath *auth.Auth, email string) string {
 		return ""
 	}
 
+	roles := make([]string, len(dbUsr.Roles))
+	for i, role := range dbUsr.Roles {
+		roles[i] = role.String()
+	}
+
 	claims := auth.Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
 			Subject:   dbUsr.ID.String(),
@@ -98,7 +103,7 @@ func Token(userBus *userbus.Business, ath *auth.Auth, email string) string {
 			ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
 		},
-		Roles: dbUsr.Roles,
+		Roles: roles,
 	}
 
 	token, err := ath.GenerateToken(kid, claims)

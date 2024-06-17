@@ -55,22 +55,6 @@ func (t Type) String() string {
 	return t.name
 }
 
-// UnmarshalText implement the unmarshal interface for JSON conversions.
-func (t *Type) UnmarshalText(data []byte) error {
-	typ, err := Types.Parse(string(data))
-	if err != nil {
-		return err
-	}
-
-	t.name = typ.name
-	return nil
-}
-
-// MarshalText implement the marshal interface for JSON conversions.
-func (t Type) MarshalText() ([]byte, error) {
-	return []byte(t.name), nil
-}
-
 // Equal provides support for the go-cmp package and testing.
 func (t Type) Equal(t2 Type) bool {
 	return t.name == t2.name

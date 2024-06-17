@@ -56,6 +56,11 @@ func GenToken(log *logger.Logger, dbConfig sqldb.Config, keyPath string, userID 
 		return fmt.Errorf("constructing auth: %w", err)
 	}
 
+	roles := make([]string, len(usr.Roles))
+	for i, role := range usr.Roles {
+		roles[i] = role.String()
+	}
+
 	// Generating a token requires defining a set of claims. In this applications
 	// case, we only care about defining the subject and the user in question and
 	// the roles they have on the database. This token will expire in a year.
@@ -74,7 +79,7 @@ func GenToken(log *logger.Logger, dbConfig sqldb.Config, keyPath string, userID 
 			ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(8760 * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
 		},
-		Roles: usr.Roles,
+		Roles: roles,
 	}
 
 	// This will generate a JWT with the claims embedded in them. The database

@@ -44,22 +44,6 @@ func (n Name) String() string {
 	return n.name
 }
 
-// UnmarshalText implement the unmarshal interface for JSON conversions.
-func (n *Name) UnmarshalText(data []byte) error {
-	name, err := Names.Parse(string(data))
-	if err != nil {
-		return err
-	}
-
-	n.name = name.name
-	return nil
-}
-
-// MarshalText implement the marshal interface for JSON conversions.
-func (n Name) MarshalText() ([]byte, error) {
-	return []byte(n.name), nil
-}
-
 // Equal provides support for the go-cmp package and testing.
 func (n Name) Equal(n2 Name) bool {
 	return n.name == n2.name
