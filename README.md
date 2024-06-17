@@ -110,7 +110,7 @@ $ make test
 
 # Run Project
 $ make dev-up
-$ make dev-udpate-apply
+$ make dev-update-apply
 $ make token
 $ export TOKEN=<COPY TOKEN>
 $ make users
