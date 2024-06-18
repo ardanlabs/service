@@ -14,7 +14,7 @@ type Info struct {
 	GOMAXPROCS int    `json:"GOMAXPROCS,omitempty"`
 }
 
-// Encode implments the encoder interface.
+// Encode implements the encoder interface.
 func (app Info) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(app)
 	return data, "application/json", err

@@ -14,7 +14,7 @@ type Authorize struct {
 	Rule   string
 }
 
-// Decode implments the decoder interface.
+// Decode implements the decoder interface.
 func (a *Authorize) Decode(data []byte) error {
 	return json.Unmarshal(data, &a)
 }
@@ -25,7 +25,7 @@ type AuthenticateResp struct {
 	Claims auth.Claims
 }
 
-// Encode implments the encoder interface.
+// Encode implements the encoder interface.
 func (ar AuthenticateResp) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(ar)
 	return data, "application/json", err

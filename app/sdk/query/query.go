@@ -25,7 +25,7 @@ func NewResult[T any](items []T, total int, page page.Page) Result[T] {
 	}
 }
 
-// Encode implments the encoder interface.
+// Encode implements the encoder interface.
 func (r Result[T]) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(r)
 	return data, "application/json", err

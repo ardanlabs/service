@@ -22,7 +22,7 @@ type Product struct {
 	DateUpdated string  `json:"dateUpdated"`
 }
 
-// Encode implments the encoder interface.
+// Encode implements the encoder interface.
 func (app Product) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(app)
 	return data, "application/json", err
@@ -58,7 +58,7 @@ func (app NewTran) Validate() error {
 	return nil
 }
 
-// Decode implments the decoder interface.
+// Decode implements the decoder interface.
 func (app *NewTran) Decode(data []byte) error {
 	return json.Unmarshal(data, &app)
 }
