@@ -35,7 +35,7 @@ type Product struct {
 	DateUpdated string  `json:"dateUpdated"`
 }
 
-// Encode implments the encoder interface.
+// Encode implements the encoder interface.
 func (app Product) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(app)
 	return data, "application/json", err
@@ -71,7 +71,7 @@ type NewProduct struct {
 	Quantity int     `json:"quantity" validate:"required,gte=1"`
 }
 
-// Decode implments the decoder interface.
+// Decode implements the decoder interface.
 func (app *NewProduct) Decode(data []byte) error {
 	return json.Unmarshal(data, &app)
 }
@@ -115,7 +115,7 @@ type UpdateProduct struct {
 	Quantity *int     `json:"quantity" validate:"omitempty,gte=1"`
 }
 
-// Decode implments the decoder interface.
+// Decode implements the decoder interface.
 func (app *UpdateProduct) Decode(data []byte) error {
 	return json.Unmarshal(data, &app)
 }

@@ -34,7 +34,7 @@ type Product struct {
 	UserName    string  `json:"userName"`
 }
 
-// Encode implments the encoder interface.
+// Encode implements the encoder interface.
 func (app Product) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(app)
 	return data, "application/json", err

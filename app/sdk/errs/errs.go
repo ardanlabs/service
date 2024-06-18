@@ -86,7 +86,7 @@ func (e *Error) Error() string {
 	return e.Message
 }
 
-// Encode implments the encoder interface.
+// Encode implements the encoder interface.
 func (e *Error) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(e)
 	return data, "application/json", err

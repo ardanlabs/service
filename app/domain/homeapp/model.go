@@ -45,7 +45,7 @@ type Home struct {
 	DateUpdated string  `json:"dateUpdated"`
 }
 
-// Encode implments the encoder interface.
+// Encode implements the encoder interface.
 func (app Home) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(app)
 	return data, "application/json", err
@@ -96,7 +96,7 @@ type NewHome struct {
 	Address NewAddress `json:"address"`
 }
 
-// Decode implments the decoder interface.
+// Decode implements the decoder interface.
 func (app *NewHome) Decode(data []byte) error {
 	return json.Unmarshal(data, &app)
 }
@@ -155,7 +155,7 @@ type UpdateHome struct {
 	Address *UpdateAddress `json:"address"`
 }
 
-// Decode implments the decoder interface.
+// Decode implements the decoder interface.
 func (app *UpdateHome) Decode(data []byte) error {
 	return json.Unmarshal(data, &app)
 }

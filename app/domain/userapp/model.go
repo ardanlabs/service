@@ -37,7 +37,7 @@ type User struct {
 	DateUpdated  string   `json:"dateUpdated"`
 }
 
-// Encode implments the encoder interface.
+// Encode implements the encoder interface.
 func (app User) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(app)
 	return data, "application/json", err
@@ -78,7 +78,7 @@ type NewUser struct {
 	PasswordConfirm string   `json:"passwordConfirm" validate:"eqfield=Password"`
 }
 
-// Decode implments the decoder interface.
+// Decode implements the decoder interface.
 func (app *NewUser) Decode(data []byte) error {
 	return json.Unmarshal(data, &app)
 }
@@ -126,7 +126,7 @@ type UpdateUserRole struct {
 	Roles []string `json:"roles" validate:"required"`
 }
 
-// Decode implments the decoder interface.
+// Decode implements the decoder interface.
 func (app *UpdateUserRole) Decode(data []byte) error {
 	return json.Unmarshal(data, &app)
 }
@@ -169,7 +169,7 @@ type UpdateUser struct {
 	Enabled         *bool   `json:"enabled"`
 }
 
-// Decode implments the decoder interface.
+// Decode implements the decoder interface.
 func (app *UpdateUser) Decode(data []byte) error {
 	return json.Unmarshal(data, &app)
 }
