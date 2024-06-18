@@ -8,16 +8,11 @@ import (
 )
 
 func toAppUser(bus userbus.User) userapp.User {
-	roles := make([]string, len(bus.Roles))
-	for i, role := range bus.Roles {
-		roles[i] = role.String()
-	}
-
 	return userapp.User{
 		ID:           bus.ID.String(),
 		Name:         bus.Name.String(),
 		Email:        bus.Email.Address,
-		Roles:        roles,
+		Roles:        userbus.Roles.ToStringSlice(bus.Roles),
 		PasswordHash: nil, // This field is not marshalled.
 		Department:   bus.Department,
 		Enabled:      bus.Enabled,

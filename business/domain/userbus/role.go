@@ -34,6 +34,32 @@ func (roleSet) MustParse(value string) Role {
 	return role
 }
 
+// ToStringSlice takes a collection of user roles and converts them to a slice
+// of string.
+func (roleSet) ToStringSlice(usrRoles []Role) []string {
+	roles := make([]string, len(usrRoles))
+	for i, role := range usrRoles {
+		roles[i] = role.String()
+	}
+
+	return roles
+}
+
+// ToRoleSlice takes a collection of strings and converts them to a slice
+// of roles.
+func (roleSet) ToRoleSlice(roles []string) ([]Role, error) {
+	usrRoles := make([]Role, len(roles))
+	for i, roleStr := range roles {
+		role, err := Roles.Parse(roleStr)
+		if err != nil {
+			return nil, err
+		}
+		usrRoles[i] = role
+	}
+
+	return usrRoles, nil
+}
+
 // =============================================================================
 
 // Set of known roles.

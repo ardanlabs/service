@@ -71,11 +71,6 @@ func Basic(ctx context.Context, ath *auth.Auth, userBus *userbus.Business, autho
 		return nil, errs.New(errs.Unauthenticated, err)
 	}
 
-	roles := make([]string, len(usr.Roles))
-	for i, role := range usr.Roles {
-		roles[i] = role.String()
-	}
-
 	claims := auth.Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
 			Subject:   usr.ID.String(),
@@ -83,7 +78,7 @@ func Basic(ctx context.Context, ath *auth.Auth, userBus *userbus.Business, autho
 			ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(8760 * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
 		},
-		Roles: roles,
+		Roles: userbus.Roles.ToStringSlice(usr.Roles),
 	}
 
 	subjectID, err := uuid.Parse(claims.Subject)

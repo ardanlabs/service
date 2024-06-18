@@ -85,13 +85,9 @@ func (app NewUser) Validate() error {
 }
 
 func toBusNewUser(app NewUser) (userbus.NewUser, error) {
-	roles := make([]userbus.Role, len(app.Roles))
-	for i, roleStr := range app.Roles {
-		role, err := userbus.Roles.Parse(roleStr)
-		if err != nil {
-			return userbus.NewUser{}, fmt.Errorf("parse: %w", err)
-		}
-		roles[i] = role
+	roles, err := userbus.Roles.ToRoleSlice(app.Roles)
+	if err != nil {
+		return userbus.NewUser{}, fmt.Errorf("parse: %w", err)
 	}
 
 	addr, err := mail.ParseAddress(app.Email)

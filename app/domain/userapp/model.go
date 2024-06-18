@@ -44,16 +44,11 @@ func (app User) Encode() ([]byte, string, error) {
 }
 
 func toAppUser(bus userbus.User) User {
-	roles := make([]string, len(bus.Roles))
-	for i, role := range bus.Roles {
-		roles[i] = role.String()
-	}
-
 	return User{
 		ID:           bus.ID.String(),
 		Name:         bus.Name.String(),
 		Email:        bus.Email.Address,
-		Roles:        roles,
+		Roles:        userbus.Roles.ToStringSlice(bus.Roles),
 		PasswordHash: bus.PasswordHash,
 		Department:   bus.Department,
 		Enabled:      bus.Enabled,
@@ -98,13 +93,9 @@ func (app NewUser) Validate() error {
 }
 
 func toBusNewUser(app NewUser) (userbus.NewUser, error) {
-	roles := make([]userbus.Role, len(app.Roles))
-	for i, roleStr := range app.Roles {
-		role, err := userbus.Roles.Parse(roleStr)
-		if err != nil {
-			return userbus.NewUser{}, fmt.Errorf("parse: %w", err)
-		}
-		roles[i] = role
+	roles, err := userbus.Roles.ToRoleSlice(app.Roles)
+	if err != nil {
+		return userbus.NewUser{}, fmt.Errorf("parse: %w", err)
 	}
 
 	addr, err := mail.ParseAddress(app.Email)
@@ -152,13 +143,10 @@ func (app UpdateUserRole) Validate() error {
 func toBusUpdateUserRole(app UpdateUserRole) (userbus.UpdateUser, error) {
 	var roles []userbus.Role
 	if app.Roles != nil {
-		roles = make([]userbus.Role, len(app.Roles))
-		for i, roleStr := range app.Roles {
-			role, err := userbus.Roles.Parse(roleStr)
-			if err != nil {
-				return userbus.UpdateUser{}, fmt.Errorf("parse: %w", err)
-			}
-			roles[i] = role
+		var err error
+		roles, err = userbus.Roles.ToRoleSlice(app.Roles)
+		if err != nil {
+			return userbus.UpdateUser{}, fmt.Errorf("parse: %w", err)
 		}
 	}
 
