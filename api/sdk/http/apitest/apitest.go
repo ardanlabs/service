@@ -98,7 +98,7 @@ func Token(userBus *userbus.Business, ath *auth.Auth, email string) string {
 			ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
 		},
-		Roles: userbus.Roles.ToStringSlice(dbUsr.Roles),
+		Roles: userbus.ParseRolesToString(dbUsr.Roles),
 	}
 
 	token, err := ath.GenerateToken(kid, claims)

@@ -12,7 +12,7 @@ func toAppUser(bus userbus.User) userapp.User {
 		ID:           bus.ID.String(),
 		Name:         bus.Name.String(),
 		Email:        bus.Email.Address,
-		Roles:        userbus.Roles.ToStringSlice(bus.Roles),
+		Roles:        userbus.ParseRolesToString(bus.Roles),
 		PasswordHash: nil, // This field is not marshalled.
 		Department:   bus.Department,
 		Enabled:      bus.Enabled,

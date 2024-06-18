@@ -33,7 +33,7 @@ func toDBProduct(bus productbus.Product) product {
 }
 
 func toBusProduct(db product) (productbus.Product, error) {
-	name, err := productbus.Names.Parse(db.Name)
+	name, err := productbus.ParseName(db.Name)
 	if err != nil {
 		return productbus.Product{}, fmt.Errorf("parse name: %w", err)
 	}

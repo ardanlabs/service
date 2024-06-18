@@ -21,7 +21,7 @@ func parseFilter(qp QueryParams) (userbus.QueryFilter, error) {
 	}
 
 	if qp.Name != "" {
-		name, err := userbus.Names.Parse(qp.Name)
+		name, err := userbus.ParseName(qp.Name)
 		if err != nil {
 			return userbus.QueryFilter{}, errs.NewFieldsError("name", err)
 		}

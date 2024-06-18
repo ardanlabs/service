@@ -85,7 +85,7 @@ func (app NewUser) Validate() error {
 }
 
 func toBusNewUser(app NewUser) (userbus.NewUser, error) {
-	roles, err := userbus.Roles.ToRoleSlice(app.Roles)
+	roles, err := userbus.ParseRoles(app.Roles)
 	if err != nil {
 		return userbus.NewUser{}, fmt.Errorf("parse: %w", err)
 	}
@@ -95,7 +95,7 @@ func toBusNewUser(app NewUser) (userbus.NewUser, error) {
 		return userbus.NewUser{}, fmt.Errorf("parse: %w", err)
 	}
 
-	name, err := userbus.Names.Parse(app.Name)
+	name, err := userbus.ParseName(app.Name)
 	if err != nil {
 		return userbus.NewUser{}, fmt.Errorf("parse: %w", err)
 	}
@@ -130,7 +130,7 @@ func (app NewProduct) Validate() error {
 }
 
 func toBusNewProduct(app NewProduct) (productbus.NewProduct, error) {
-	name, err := productbus.Names.Parse(app.Name)
+	name, err := productbus.ParseName(app.Name)
 	if err != nil {
 		return productbus.NewProduct{}, fmt.Errorf("parse: %w", err)
 	}

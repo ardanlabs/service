@@ -48,7 +48,7 @@ func toAppUser(bus userbus.User) User {
 		ID:           bus.ID.String(),
 		Name:         bus.Name.String(),
 		Email:        bus.Email.Address,
-		Roles:        userbus.Roles.ToStringSlice(bus.Roles),
+		Roles:        userbus.ParseRolesToString(bus.Roles),
 		PasswordHash: bus.PasswordHash,
 		Department:   bus.Department,
 		Enabled:      bus.Enabled,
@@ -93,7 +93,7 @@ func (app NewUser) Validate() error {
 }
 
 func toBusNewUser(app NewUser) (userbus.NewUser, error) {
-	roles, err := userbus.Roles.ToRoleSlice(app.Roles)
+	roles, err := userbus.ParseRoles(app.Roles)
 	if err != nil {
 		return userbus.NewUser{}, fmt.Errorf("parse: %w", err)
 	}
@@ -103,7 +103,7 @@ func toBusNewUser(app NewUser) (userbus.NewUser, error) {
 		return userbus.NewUser{}, fmt.Errorf("parse: %w", err)
 	}
 
-	name, err := userbus.Names.Parse(app.Name)
+	name, err := userbus.ParseName(app.Name)
 	if err != nil {
 		return userbus.NewUser{}, fmt.Errorf("parse: %w", err)
 	}
@@ -144,7 +144,7 @@ func toBusUpdateUserRole(app UpdateUserRole) (userbus.UpdateUser, error) {
 	var roles []userbus.Role
 	if app.Roles != nil {
 		var err error
-		roles, err = userbus.Roles.ToRoleSlice(app.Roles)
+		roles, err = userbus.ParseRoles(app.Roles)
 		if err != nil {
 			return userbus.UpdateUser{}, fmt.Errorf("parse: %w", err)
 		}
@@ -195,7 +195,7 @@ func toBusUpdateUser(app UpdateUser) (userbus.UpdateUser, error) {
 
 	var name *userbus.Name
 	if app.Name != nil {
-		nm, err := userbus.Names.Parse(*app.Name)
+		nm, err := userbus.ParseName(*app.Name)
 		if err != nil {
 			return userbus.UpdateUser{}, fmt.Errorf("parse: %w", err)
 		}

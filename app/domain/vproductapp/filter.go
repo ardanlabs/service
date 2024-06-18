@@ -22,7 +22,7 @@ func parseFilter(qp QueryParams) (vproductbus.QueryFilter, error) {
 	}
 
 	if qp.Name != "" {
-		name, err := productbus.Names.Parse(qp.Name)
+		name, err := productbus.ParseName(qp.Name)
 		if err != nil {
 			return vproductbus.QueryFilter{}, errs.NewFieldsError("name", err)
 		}
@@ -47,7 +47,7 @@ func parseFilter(qp QueryParams) (vproductbus.QueryFilter, error) {
 	}
 
 	if qp.Name != "" {
-		name, err := userbus.Names.Parse(qp.Name)
+		name, err := userbus.ParseName(qp.Name)
 		if err != nil {
 			return vproductbus.QueryFilter{}, errs.NewFieldsError("name", err)
 		}

@@ -169,14 +169,14 @@ func create(busDomain dbtest.BusDomain, sd unitest.SeedData) []unitest.Table {
 			Name: "basic",
 			ExpResp: productbus.Product{
 				UserID:   sd.Users[0].ID,
-				Name:     productbus.Names.MustParse("Guitar"),
+				Name:     productbus.MustParseName("Guitar"),
 				Cost:     10.34,
 				Quantity: 10,
 			},
 			ExcFunc: func(ctx context.Context) any {
 				np := productbus.NewProduct{
 					UserID:   sd.Users[0].ID,
-					Name:     productbus.Names.MustParse("Guitar"),
+					Name:     productbus.MustParseName("Guitar"),
 					Cost:     10.34,
 					Quantity: 10,
 				}
@@ -215,7 +215,7 @@ func update(busDomain dbtest.BusDomain, sd unitest.SeedData) []unitest.Table {
 			ExpResp: productbus.Product{
 				ID:          sd.Users[0].Products[0].ID,
 				UserID:      sd.Users[0].ID,
-				Name:        productbus.Names.MustParse("Guitar"),
+				Name:        productbus.MustParseName("Guitar"),
 				Cost:        10.34,
 				Quantity:    10,
 				DateCreated: sd.Users[0].Products[0].DateCreated,

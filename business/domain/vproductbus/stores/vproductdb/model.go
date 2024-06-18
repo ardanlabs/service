@@ -22,12 +22,12 @@ type product struct {
 }
 
 func toBusProduct(db product) (vproductbus.Product, error) {
-	userName, err := userbus.Names.Parse(db.UserName)
+	userName, err := userbus.ParseName(db.UserName)
 	if err != nil {
 		return vproductbus.Product{}, fmt.Errorf("parse user name: %w", err)
 	}
 
-	name, err := productbus.Names.Parse(db.Name)
+	name, err := productbus.ParseName(db.Name)
 	if err != nil {
 		return vproductbus.Product{}, fmt.Errorf("parse name: %w", err)
 	}

@@ -41,7 +41,7 @@ func toDBHome(bus homebus.Home) home {
 }
 
 func toBusHome(db home) (homebus.Home, error) {
-	typ, err := homebus.Types.Parse(db.Type)
+	typ, err := homebus.ParseType(db.Type)
 	if err != nil {
 		return homebus.Home{}, fmt.Errorf("parse type: %w", err)
 	}

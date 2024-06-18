@@ -20,7 +20,7 @@ func parseFilter(qp QueryParams) (productbus.QueryFilter, error) {
 	}
 
 	if qp.Name != "" {
-		name, err := productbus.Names.Parse(qp.Name)
+		name, err := productbus.ParseName(qp.Name)
 		if err != nil {
 			return productbus.QueryFilter{}, errs.NewFieldsError("name", err)
 		}

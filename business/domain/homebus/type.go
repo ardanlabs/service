@@ -13,27 +13,6 @@ var Types = typeSet{
 	Condo:  newType("CONDO"),
 }
 
-// Parse parses the string value and returns a type if one exists.
-func (typeSet) Parse(value string) (Type, error) {
-	typ, exists := types[value]
-	if !exists {
-		return Type{}, fmt.Errorf("invalid type %q", value)
-	}
-
-	return typ, nil
-}
-
-// MustParse parses the string value and returns a type if one exists. If
-// an error occurs the function panics.
-func (typeSet) MustParse(value string) Type {
-	typ, err := Types.Parse(value)
-	if err != nil {
-		panic(err)
-	}
-
-	return typ
-}
-
 // =============================================================================
 
 // Set of known housing types.
@@ -58,4 +37,27 @@ func (t Type) String() string {
 // Equal provides support for the go-cmp package and testing.
 func (t Type) Equal(t2 Type) bool {
 	return t.name == t2.name
+}
+
+// =============================================================================
+
+// ParseType parses the string value and returns a type if one exists.
+func ParseType(value string) (Type, error) {
+	typ, exists := types[value]
+	if !exists {
+		return Type{}, fmt.Errorf("invalid type %q", value)
+	}
+
+	return typ, nil
+}
+
+// MustParseType parses the string value and returns a type if one exists. If
+// an error occurs the function panics.
+func MustParseType(value string) Type {
+	typ, err := ParseType(value)
+	if err != nil {
+		panic(err)
+	}
+
+	return typ
 }

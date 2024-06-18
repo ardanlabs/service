@@ -91,7 +91,7 @@ func toBusNewProduct(ctx context.Context, app NewProduct) (productbus.NewProduct
 		return productbus.NewProduct{}, fmt.Errorf("getuserid: %w", err)
 	}
 
-	name, err := productbus.Names.Parse(app.Name)
+	name, err := productbus.ParseName(app.Name)
 	if err != nil {
 		return productbus.NewProduct{}, fmt.Errorf("parse name: %w", err)
 	}
@@ -132,7 +132,7 @@ func (app UpdateProduct) Validate() error {
 func toBusUpdateProduct(app UpdateProduct) (productbus.UpdateProduct, error) {
 	var name *productbus.Name
 	if app.Name != nil {
-		nm, err := productbus.Names.Parse(*app.Name)
+		nm, err := productbus.ParseName(*app.Name)
 		if err != nil {
 			return productbus.UpdateProduct{}, fmt.Errorf("parse: %w", err)
 		}

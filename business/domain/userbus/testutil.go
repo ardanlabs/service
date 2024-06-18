@@ -16,7 +16,7 @@ func TestNewUsers(n int, role Role) []NewUser {
 		idx++
 
 		nu := NewUser{
-			Name:       Names.MustParse(fmt.Sprintf("Name%d", idx)),
+			Name:       MustParseName(fmt.Sprintf("Name%d", idx)),
 			Email:      mail.Address{Address: fmt.Sprintf("Email%d@gmail.com", idx)},
 			Roles:      []Role{role},
 			Department: fmt.Sprintf("Department%d", idx),

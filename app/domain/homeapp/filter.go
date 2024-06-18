@@ -28,7 +28,7 @@ func parseFilter(qp QueryParams) (homebus.QueryFilter, error) {
 	}
 
 	if qp.Type != "" {
-		typ, err := homebus.Types.Parse(qp.Type)
+		typ, err := homebus.ParseType(qp.Type)
 		if err != nil {
 			return homebus.QueryFilter{}, errs.NewFieldsError("type", err)
 		}

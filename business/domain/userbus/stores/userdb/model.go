@@ -28,7 +28,7 @@ func toDBUser(bus userbus.User) user {
 		ID:           bus.ID,
 		Name:         bus.Name.String(),
 		Email:        bus.Email.Address,
-		Roles:        userbus.Roles.ToStringSlice(bus.Roles),
+		Roles:        userbus.ParseRolesToString(bus.Roles),
 		PasswordHash: bus.PasswordHash,
 		Department: sql.NullString{
 			String: bus.Department,
@@ -45,12 +45,12 @@ func toBusUser(db user) (userbus.User, error) {
 		Address: db.Email,
 	}
 
-	roles, err := userbus.Roles.ToRoleSlice(db.Roles)
+	roles, err := userbus.ParseRoles(db.Roles)
 	if err != nil {
 		return userbus.User{}, fmt.Errorf("parse: %w", err)
 	}
 
-	name, err := userbus.Names.Parse(db.Name)
+	name, err := userbus.ParseName(db.Name)
 	if err != nil {
 		return userbus.User{}, fmt.Errorf("parse name: %w", err)
 	}
