@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"runtime/debug"
 	"testing"
 	"time"
 
@@ -13,22 +12,14 @@ import (
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
-	"github.com/jmoiron/sqlx"
 )
 
 func Test_Auth(t *testing.T) {
-	log, db, teardown := newUnit(t)
-	defer func() {
-		if r := recover(); r != nil {
-			t.Log(r)
-			t.Error(string(debug.Stack()))
-		}
-		teardown()
-	}()
+	log := newUnit(t)
 
 	ath, err := auth.New(auth.Config{
 		Log:       log,
-		DB:        db,
+		DB:        nil,
 		KeyLookup: &keyStore{},
 		Issuer:    "service project",
 	})
@@ -266,21 +257,19 @@ func test6(ath *auth.Auth) func(t *testing.T) {
 
 // =============================================================================
 
-func newUnit(t *testing.T) (*logger.Logger, *sqlx.DB, func()) {
+func newUnit(t *testing.T) *logger.Logger {
 	var buf bytes.Buffer
 	log := logger.New(&buf, logger.LevelInfo, "TEST", func(context.Context) string { return "00000000-0000-0000-0000-000000000000" })
 
-	// teardown is the function that should be invoked when the caller is done
-	// with the database.
-	teardown := func() {
+	t.Cleanup(func() {
 		t.Helper()
 
 		fmt.Println("******************** LOGS ********************")
 		fmt.Print(buf.String())
 		fmt.Println("******************** LOGS ********************")
-	}
+	})
 
-	return log, nil, teardown
+	return log
 }
 
 // =============================================================================

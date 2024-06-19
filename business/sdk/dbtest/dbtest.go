@@ -136,9 +136,7 @@ func NewDatabase(t *testing.T, testName string) *Database {
 
 	// -------------------------------------------------------------------------
 
-	// teardown is the function that should be invoked when the caller is done
-	// with the database.
-	teardown := func() {
+	t.Cleanup(func() {
 		t.Helper()
 
 		t.Logf("Drop Database: %s\n", dbName)
@@ -152,9 +150,7 @@ func NewDatabase(t *testing.T, testName string) *Database {
 		t.Logf("******************** LOGS (%s) ********************\n\n", testName)
 		t.Log(buf.String())
 		t.Logf("******************** LOGS (%s) ********************\n", testName)
-	}
-
-	t.Cleanup(teardown)
+	})
 
 	return &Database{
 		DB:        db,
