@@ -106,13 +106,14 @@ func (a *Auth) GenerateToken(kid string, claims Claims) (string, error) {
 
 // Authenticate processes the token to validate the sender's token is valid.
 func (a *Auth) Authenticate(ctx context.Context, bearerToken string) (Claims, error) {
-	parts := strings.Split(bearerToken, " ")
-	if len(parts) != 2 || parts[0] != "Bearer" {
+	if !strings.HasPrefix(bearerToken, "Bearer ") {
 		return Claims{}, errors.New("expected authorization header format: Bearer <token>")
 	}
 
+	jwt := bearerToken[7:]
+
 	var claims Claims
-	token, _, err := a.parser.ParseUnverified(parts[1], &claims)
+	token, _, err := a.parser.ParseUnverified(jwt, &claims)
 	if err != nil {
 		return Claims{}, fmt.Errorf("error parsing token: %w", err)
 	}
@@ -134,7 +135,7 @@ func (a *Auth) Authenticate(ctx context.Context, bearerToken string) (Claims, er
 
 	input := map[string]any{
 		"Key":   pem,
-		"Token": parts[1],
+		"Token": jwt,
 		"ISS":   a.issuer,
 	}
 
