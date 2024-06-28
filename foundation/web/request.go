@@ -30,7 +30,7 @@ func Decode(r *http.Request, v Decoder) error {
 	}
 
 	if err := v.Decode(data); err != nil {
-		return fmt.Errorf("request: encode: %w", err)
+		return fmt.Errorf("request: decode: %w", err)
 	}
 
 	if v, ok := v.(validator); ok {
