@@ -237,6 +237,10 @@ func (e *eval) traceWasm(x ast.Node, target *ast.Ref) {
 	e.traceEvent(WasmOp, x, "", target)
 }
 
+func (e *eval) traceUnify(a, b *ast.Term) {
+	e.traceEvent(UnifyOp, ast.Equality.Expr(a, b), "", nil)
+}
+
 func (e *eval) traceEvent(op Op, x ast.Node, msg string, target *ast.Ref) {
 
 	if !e.traceEnabled {
@@ -275,6 +279,7 @@ func (e *eval) traceEvent(op Op, x ast.Node, msg string, target *ast.Ref) {
 
 		evt.Locals = ast.NewValueMap()
 		evt.LocalMetadata = map[ast.Var]VarMetadata{}
+		evt.localVirtualCacheSnapshot = ast.NewValueMap()
 
 		_ = e.bindings.Iter(nil, func(k, v *ast.Term) error {
 			original := k.Value.(ast.Var)
@@ -290,14 +295,20 @@ func (e *eval) traceEvent(op Op, x ast.Node, msg string, target *ast.Ref) {
 		}) // cannot return error
 
 		ast.WalkTerms(x, func(term *ast.Term) bool {
-			if v, ok := term.Value.(ast.Var); ok {
-				if _, ok := evt.LocalMetadata[v]; !ok {
-					if rewritten, ok := e.rewrittenVar(v); ok {
-						evt.LocalMetadata[v] = VarMetadata{
+			switch x := term.Value.(type) {
+			case ast.Var:
+				if _, ok := evt.LocalMetadata[x]; !ok {
+					if rewritten, ok := e.rewrittenVar(x); ok {
+						evt.LocalMetadata[x] = VarMetadata{
 							Name:     rewritten,
 							Location: term.Loc(),
 						}
 					}
+				}
+			case ast.Ref:
+				groundRef := x.GroundPrefix()
+				if v, _ := e.virtualCache.Get(groundRef); v != nil {
+					evt.localVirtualCacheSnapshot.Put(groundRef, v.Value)
 				}
 			}
 			return false
@@ -858,7 +869,7 @@ func (e *eval) biunify(a, b *ast.Term, b1, b2 *bindings, iter unifyIterator) err
 	a, b1 = b1.apply(a)
 	b, b2 = b2.apply(b)
 	if e.traceEnabled {
-		e.traceEvent(UnifyOp, ast.Equality.Expr(a, b), "", nil)
+		e.traceUnify(a, b)
 	}
 	switch vA := a.Value.(type) {
 	case ast.Var, ast.Ref, *ast.ArrayComprehension, *ast.SetComprehension, *ast.ObjectComprehension:
@@ -1096,9 +1107,9 @@ func (e *eval) biunifyComprehension(a, b *ast.Term, b1, b2 *bindings, swap bool,
 		return err
 	} else if value != nil {
 		return e.biunify(value, b, b1, b2, iter)
-	} else {
-		e.instr.counterIncr(evalOpComprehensionCacheMiss)
 	}
+
+	e.instr.counterIncr(evalOpComprehensionCacheMiss)
 
 	switch a := a.Value.(type) {
 	case *ast.ArrayComprehension:
@@ -2560,7 +2571,7 @@ func (e evalVirtualPartial) evalOneRulePreUnify(iter unifyIterator, rule *ast.Ru
 	}
 
 	// Walk the dynamic portion of rule ref and key to unify vars
-	err := child.biunifyRuleHead(e.pos+1, e.ref, rule, e.bindings, child.bindings, func(pos int) error {
+	err := child.biunifyRuleHead(e.pos+1, e.ref, rule, e.bindings, child.bindings, func(_ int) error {
 		defined = true
 		return child.eval(func(child *eval) error {
 
@@ -2648,7 +2659,7 @@ func (e evalVirtualPartial) evalOneRulePostUnify(iter unifyIterator, rule *ast.R
 
 	err := child.eval(func(child *eval) error {
 		defined = true
-		return e.e.biunifyRuleHead(e.pos+1, e.ref, rule, e.bindings, child.bindings, func(pos int) error {
+		return e.e.biunifyRuleHead(e.pos+1, e.ref, rule, e.bindings, child.bindings, func(_ int) error {
 			return e.evalOneRuleContinue(iter, rule, child)
 		})
 	})
@@ -2724,7 +2735,7 @@ func (e evalVirtualPartial) partialEvalSupport(iter unifyIterator) error {
 	return e.e.saveUnify(term, e.rterm, e.bindings, e.rbindings, iter)
 }
 
-func (e evalVirtualPartial) partialEvalSupportRule(rule *ast.Rule, path ast.Ref) (bool, error) {
+func (e evalVirtualPartial) partialEvalSupportRule(rule *ast.Rule, _ ast.Ref) (bool, error) {
 
 	child := e.e.child(rule.Body)
 	child.traceEnter(rule)

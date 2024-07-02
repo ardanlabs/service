@@ -294,16 +294,13 @@ type oauth2Token struct {
 	ExpiresAt time.Time
 }
 
-func (ap *oauth2ClientCredentialsAuthPlugin) createAuthJWT(ctx context.Context, claims map[string]interface{}, signingKey interface{}) (*string, error) {
+func (ap *oauth2ClientCredentialsAuthPlugin) createAuthJWT(ctx context.Context, extClaims map[string]interface{}, signingKey interface{}) (*string, error) {
 	now := time.Now()
-	baseClaims := map[string]interface{}{
+	claims := map[string]interface{}{
 		"iat": now.Unix(),
 		"exp": now.Add(10 * time.Minute).Unix(),
 	}
-	if claims == nil {
-		claims = make(map[string]interface{})
-	}
-	for k, v := range baseClaims {
+	for k, v := range extClaims {
 		claims[k] = v
 	}
 
@@ -693,7 +690,7 @@ func (ap *clientTLSAuthPlugin) NewClient(c Config) (*http.Client, error) {
 	return client, nil
 }
 
-func (ap *clientTLSAuthPlugin) Prepare(req *http.Request) error {
+func (ap *clientTLSAuthPlugin) Prepare(_ *http.Request) error {
 	return nil
 }
 
