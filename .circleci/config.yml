@@ -10,7 +10,7 @@ jobs:
           name: Install Go 1.22
           command: |
               sudo rm -rf /usr/local/go
-              wget -O go.tgz https://go.dev/dl/go1.22.4.linux-amd64.tar.gz
+              wget -O go.tgz https://go.dev/dl/go1.22.5.linux-amd64.tar.gz
               sudo tar -C /usr/local -xzf go.tgz
               which go
               go version

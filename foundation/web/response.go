@@ -14,16 +14,18 @@ type httpStatus interface {
 	HTTPStatus() int
 }
 
-func respondError(ctx context.Context, w http.ResponseWriter, err error) error {
+// RespondError sends an error response to the client.
+func RespondError(ctx context.Context, w http.ResponseWriter, err error) error {
 	data, ok := err.(Encoder)
 	if !ok {
 		return fmt.Errorf("error value does not implement the encoder interface: %T", err)
 	}
 
-	return respond(ctx, w, data)
+	return Respond(ctx, w, data)
 }
 
-func respond(ctx context.Context, w http.ResponseWriter, dataModel Encoder) error {
+// Respond sends a response to the client.
+func Respond(ctx context.Context, w http.ResponseWriter, dataModel Encoder) error {
 
 	// If the context has been canceled, it means the client is no longer
 	// waiting for a response.
