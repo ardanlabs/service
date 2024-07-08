@@ -83,7 +83,7 @@ $ cd service
 If you want to create a version of the project for your own use, use the new gonew command.
 
 ```
-$ go install golang.org/x/tools/programs/gonew@latest
+$ go install golang.org/x/tools/cmd/gonew@latest
 
 $ cd $HOME
 $ mkdir code
