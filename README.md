@@ -108,6 +108,9 @@ $ make dev-docker
 # Run Tests
 $ make test
 
+# Shutdown Tests
+$ make test-down
+
 # Run Project
 $ make dev-up
 $ make dev-update-apply
@@ -122,7 +125,7 @@ $ make load
 $ make grafana
 $ make statsviz
 
-# Shut everything down
+# Shut Project
 $ make dev-down
 ```
 
