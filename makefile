@@ -147,7 +147,7 @@ dev-brew:
 	brew list kubectl || brew install kubectl
 	brew list kustomize || brew install kustomize
 	brew list pgcli || brew install pgcli
-	brew list watch || brew instal watch
+	brew list watch || brew install watch
 
 dev-docker:
 	docker pull $(GOLANG) & \
