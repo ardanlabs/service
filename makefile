@@ -7,18 +7,18 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 # ==============================================================================
 # Go Installation
 #
-#   You need to have Go version 1.22 to run this code.
+#	You need to have Go version 1.22 to run this code.
 #
-#   https://go.dev/dl/
+#	https://go.dev/dl/
 #
-#   If you are not allowed to update your Go frontend, you can install
-#   and use a 1.22 frontend.
+#	If you are not allowed to update your Go frontend, you can install
+#	and use a 1.22 frontend.
 #
-#   $ go install golang.org/dl/go1.22@latest
-#   $ go1.22 download
+#	$ go install golang.org/dl/go1.22@latest
+#	$ go1.22 download
 #
-#   This means you need to use `go1.22` instead of `go` for any command
-#   using the Go frontend tooling from the makefile.
+#	This means you need to use `go1.22` instead of `go` for any command
+#	using the Go frontend tooling from the makefile.
 
 # ==============================================================================
 # Brew Installation
@@ -47,11 +47,11 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 # ==============================================================================
 # Install Tooling and Dependencies
 #
-#   This project uses Docker and it is expected to be installed. Please provide
-#   Docker at least 4 CPUs. To use Podman instead please alias Docker CLI to
-#   Podman CLI or symlink the Docker socket to the Podman socket. More
-#   information on migrating from Docker to Podman can be found at
-#   https://podman-desktop.io/docs/migrating-from-docker.
+#	This project uses Docker and it is expected to be installed. Please provide
+#	Docker at least 4 CPUs. To use Podman instead please alias Docker CLI to
+#	Podman CLI or symlink the Docker socket to the Podman socket. More
+#	information on migrating from Docker to Podman can be found at
+#	https://podman-desktop.io/docs/migrating-from-docker.
 #
 #	Run these commands to install everything needed.
 #	$ make dev-brew
@@ -71,11 +71,11 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 #
 #	$ make dev-up
 #	$ make dev-update-apply
-#   $ make token
-#   $ export TOKEN=<token>
-#   $ make users
+#	$ make token
+#	$ export TOKEN=<token>
+#	$ make users
 #
-#   You can use `make dev-status` to look at the status of your KIND cluster.
+#	You can use `make dev-status` to look at the status of your KIND cluster.
 
 # ==============================================================================
 # CLASS NOTES
