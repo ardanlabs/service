@@ -10,7 +10,7 @@ import (
 )
 
 // Logger writes information about the request to the logs.
-func Logger(ctx context.Context, log *logger.Logger, path string, rawQuery string, method string, remoteAddr string, next HandlerFunc) (Encoder, error) {
+func Logger(ctx context.Context, log *logger.Logger, path string, rawQuery string, method string, remoteAddr string, next HandlerFunc) Encoder {
 	now := time.Now()
 
 	if rawQuery != "" {
@@ -19,7 +19,8 @@ func Logger(ctx context.Context, log *logger.Logger, path string, rawQuery strin
 
 	log.Info(ctx, "request started", "method", method, "path", path, "remoteaddr", remoteAddr)
 
-	resp, err := next(ctx)
+	resp := next(ctx)
+	err := isError(resp)
 
 	var statusCode = errs.OK
 	if err != nil {
@@ -34,5 +35,5 @@ func Logger(ctx context.Context, log *logger.Logger, path string, rawQuery strin
 	log.Info(ctx, "request completed", "method", method, "path", path, "remoteaddr", remoteAddr,
 		"statuscode", statusCode, "since", time.Since(now).String())
 
-	return resp, err
+	return resp
 }

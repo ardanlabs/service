@@ -20,7 +20,7 @@ type Encoder interface {
 
 // HandlerFunc represents a function that handles a http request within our own
 // little mini framework.
-type HandlerFunc func(ctx context.Context, r *http.Request) (Encoder, error)
+type HandlerFunc func(ctx context.Context, r *http.Request) Encoder
 
 // Logger represents a function that will be called to add information
 // to the logs.
@@ -73,8 +73,8 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (a *App) EnableCORS(origins []string) {
 	a.origins = origins
 
-	handler := func(ctx context.Context, r *http.Request) (Encoder, error) {
-		return cors{Status: "OK"}, nil
+	handler := func(ctx context.Context, r *http.Request) Encoder {
+		return cors{Status: "OK"}
 	}
 	handler = wrapMiddleware([]MidFunc{a.corsHandler}, handler)
 
@@ -88,7 +88,7 @@ func (a *App) EnableCORS(origins []string) {
 }
 
 func (a *App) corsHandler(webHandler HandlerFunc) HandlerFunc {
-	h := func(ctx context.Context, r *http.Request) (Encoder, error) {
+	h := func(ctx context.Context, r *http.Request) Encoder {
 		for _, origin := range a.origins {
 			r.Header.Set("Access-Control-Allow-Origin", origin)
 		}
@@ -109,16 +109,8 @@ func (a *App) corsHandler(webHandler HandlerFunc) HandlerFunc {
 func (a *App) HandlerFuncNoMid(method string, group string, path string, handlerFunc HandlerFunc) {
 	h := func(w http.ResponseWriter, r *http.Request) {
 		ctx := setTraceID(r.Context(), uuid.NewString())
-		ctx = setLogger(ctx, a.log)
 
-		resp, err := handlerFunc(ctx, r)
-		if err != nil {
-			if err := RespondError(ctx, w, err); err != nil {
-				a.log(ctx, "web-responderror", "ERROR", err)
-			}
-			return
-		}
-
+		resp := handlerFunc(ctx, r)
 		if err := Respond(ctx, w, resp); err != nil {
 			a.log(ctx, "web-respond", "ERROR", err)
 		}
@@ -148,16 +140,8 @@ func (a *App) HandlerFunc(method string, group string, path string, handlerFunc 
 		defer span.End()
 
 		ctx = setTraceID(ctx, span.SpanContext().TraceID().String())
-		ctx = setLogger(ctx, a.log)
 
-		resp, err := handlerFunc(ctx, r)
-		if err != nil {
-			if err := RespondError(ctx, w, err); err != nil {
-				a.log(ctx, "web-responderror", "ERROR", err)
-			}
-			return
-		}
-
+		resp := handlerFunc(ctx, r)
 		if err := Respond(ctx, w, resp); err != nil {
 			a.log(ctx, "web-respond", "ERROR", err)
 		}
@@ -175,9 +159,9 @@ func (a *App) HandlerFunc(method string, group string, path string, handlerFunc 
 // RawHandlerFunc sets a raw handler function for a given HTTP method and path
 // pair to the application server mux.
 func (a *App) RawHandlerFunc(method string, group string, path string, rawHandlerFunc http.HandlerFunc, mw ...MidFunc) {
-	handlerFunc := func(ctx context.Context, r *http.Request) (Encoder, error) {
+	handlerFunc := func(ctx context.Context, r *http.Request) Encoder {
 		rawHandlerFunc(getWriter(ctx), r)
-		return nil, nil
+		return nil
 	}
 
 	handlerFunc = wrapMiddleware(mw, handlerFunc)
@@ -193,7 +177,6 @@ func (a *App) RawHandlerFunc(method string, group string, path string, rawHandle
 
 		ctx = setTraceID(ctx, span.SpanContext().TraceID().String())
 		ctx = setWriter(ctx, w)
-		ctx = setLogger(ctx, a.log)
 
 		handlerFunc(ctx, r)
 	}

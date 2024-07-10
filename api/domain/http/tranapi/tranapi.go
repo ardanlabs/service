@@ -20,16 +20,16 @@ func newAPI(tranApp *tranapp.App) *api {
 	}
 }
 
-func (api *api) create(ctx context.Context, r *http.Request) (web.Encoder, error) {
+func (api *api) create(ctx context.Context, r *http.Request) web.Encoder {
 	var app tranapp.NewTran
 	if err := web.Decode(r, &app); err != nil {
-		return nil, errs.New(errs.InvalidArgument, err)
+		return errs.New(errs.InvalidArgument, err)
 	}
 
 	prd, err := api.tranApp.Create(ctx, app)
 	if err != nil {
-		return nil, err
+		return err.(*errs.Error)
 	}
 
-	return prd, nil
+	return prd
 }

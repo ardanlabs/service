@@ -11,13 +11,13 @@ import (
 )
 
 // BeginCommitRollback starts a transaction for the domain call.
-func BeginCommitRollback(ctx context.Context, log *logger.Logger, bgn sqldb.Beginner, next HandlerFunc) (Encoder, error) {
+func BeginCommitRollback(ctx context.Context, log *logger.Logger, bgn sqldb.Beginner, next HandlerFunc) Encoder {
 	hasCommitted := false
 
 	log.Info(ctx, "BEGIN TRANSACTION")
 	tx, err := bgn.Begin()
 	if err != nil {
-		return nil, errs.Newf(errs.Internal, "BEGIN TRANSACTION: %s", err)
+		return errs.Newf(errs.Internal, "BEGIN TRANSACTION: %s", err)
 	}
 
 	defer func() {
@@ -35,17 +35,18 @@ func BeginCommitRollback(ctx context.Context, log *logger.Logger, bgn sqldb.Begi
 
 	ctx = setTran(ctx, tx)
 
-	resp, err := next(ctx)
-	if err != nil {
-		return nil, err
+	resp := next(ctx)
+
+	if isError(resp) != nil {
+		return resp
 	}
 
 	log.Info(ctx, "COMMIT TRANSACTION")
 	if err := tx.Commit(); err != nil {
-		return nil, errs.Newf(errs.Internal, "COMMIT TRANSACTION: %s", err)
+		return errs.Newf(errs.Internal, "COMMIT TRANSACTION: %s", err)
 	}
 
 	hasCommitted = true
 
-	return resp, err
+	return resp
 }

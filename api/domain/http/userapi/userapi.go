@@ -20,75 +20,75 @@ func newAPI(userApp *userapp.App) *api {
 	}
 }
 
-func (api *api) create(ctx context.Context, r *http.Request) (web.Encoder, error) {
+func (api *api) create(ctx context.Context, r *http.Request) web.Encoder {
 	var app userapp.NewUser
 	if err := web.Decode(r, &app); err != nil {
-		return nil, errs.New(errs.InvalidArgument, err)
+		return errs.New(errs.InvalidArgument, err)
 	}
 
 	usr, err := api.userApp.Create(ctx, app)
 	if err != nil {
-		return nil, err
+		return err.(*errs.Error)
 	}
 
-	return usr, nil
+	return usr
 }
 
-func (api *api) update(ctx context.Context, r *http.Request) (web.Encoder, error) {
+func (api *api) update(ctx context.Context, r *http.Request) web.Encoder {
 	var app userapp.UpdateUser
 	if err := web.Decode(r, &app); err != nil {
-		return nil, errs.New(errs.InvalidArgument, err)
+		return errs.New(errs.InvalidArgument, err)
 	}
 
 	usr, err := api.userApp.Update(ctx, app)
 	if err != nil {
-		return nil, err
+		return err.(*errs.Error)
 	}
 
-	return usr, nil
+	return usr
 }
 
-func (api *api) updateRole(ctx context.Context, r *http.Request) (web.Encoder, error) {
+func (api *api) updateRole(ctx context.Context, r *http.Request) web.Encoder {
 	var app userapp.UpdateUserRole
 	if err := web.Decode(r, &app); err != nil {
-		return nil, errs.New(errs.InvalidArgument, err)
+		return errs.New(errs.InvalidArgument, err)
 	}
 
 	usr, err := api.userApp.UpdateRole(ctx, app)
 	if err != nil {
-		return nil, err
+		return err.(*errs.Error)
 	}
 
-	return usr, nil
+	return usr
 }
 
-func (api *api) delete(ctx context.Context, r *http.Request) (web.Encoder, error) {
+func (api *api) delete(ctx context.Context, r *http.Request) web.Encoder {
 	if err := api.userApp.Delete(ctx); err != nil {
-		return nil, err
+		return err.(*errs.Error)
 	}
 
-	return nil, nil
+	return nil
 }
 
-func (api *api) query(ctx context.Context, r *http.Request) (web.Encoder, error) {
+func (api *api) query(ctx context.Context, r *http.Request) web.Encoder {
 	qp, err := parseQueryParams(r)
 	if err != nil {
-		return nil, errs.New(errs.InvalidArgument, err)
+		return errs.New(errs.InvalidArgument, err)
 	}
 
 	usr, err := api.userApp.Query(ctx, qp)
 	if err != nil {
-		return nil, err
+		return err.(*errs.Error)
 	}
 
-	return usr, nil
+	return usr
 }
 
-func (api *api) queryByID(ctx context.Context, r *http.Request) (web.Encoder, error) {
+func (api *api) queryByID(ctx context.Context, r *http.Request) web.Encoder {
 	usr, err := api.userApp.QueryByID(ctx)
 	if err != nil {
-		return nil, err
+		return err.(*errs.Error)
 	}
 
-	return usr, nil
+	return usr
 }

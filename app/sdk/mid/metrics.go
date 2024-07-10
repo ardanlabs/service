@@ -7,10 +7,10 @@ import (
 )
 
 // Metrics updates program counters.
-func Metrics(ctx context.Context, next HandlerFunc) (Encoder, error) {
+func Metrics(ctx context.Context, next HandlerFunc) Encoder {
 	ctx = metrics.Set(ctx)
 
-	resp, err := next(ctx)
+	resp := next(ctx)
 
 	n := metrics.AddRequests(ctx)
 
@@ -18,9 +18,9 @@ func Metrics(ctx context.Context, next HandlerFunc) (Encoder, error) {
 		metrics.AddGoroutines(ctx)
 	}
 
-	if err != nil {
+	if isError(resp) != nil {
 		metrics.AddErrors(ctx)
 	}
 
-	return resp, err
+	return resp
 }

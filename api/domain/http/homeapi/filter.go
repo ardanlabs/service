@@ -6,7 +6,7 @@ import (
 	"github.com/ardanlabs/service/app/domain/homeapp"
 )
 
-func parseQueryParams(r *http.Request) (homeapp.QueryParams, error) {
+func parseQueryParams(r *http.Request) homeapp.QueryParams {
 	values := r.URL.Query()
 
 	filter := homeapp.QueryParams{
@@ -20,5 +20,5 @@ func parseQueryParams(r *http.Request) (homeapp.QueryParams, error) {
 		EndCreatedDate:   values.Get("end_created_date"),
 	}
 
-	return filter, nil
+	return filter
 }

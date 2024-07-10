@@ -23,10 +23,10 @@ func newAPI(ath *auth.Auth) *api {
 	}
 }
 
-func (api *api) token(ctx context.Context, r *http.Request) (web.Encoder, error) {
+func (api *api) token(ctx context.Context, r *http.Request) web.Encoder {
 	kid := web.Param(r, "kid")
 	if kid == "" {
-		return nil, errs.New(errs.InvalidArgument, errs.NewFieldsError("kid", errors.New("missing kid")))
+		return errs.New(errs.InvalidArgument, errs.NewFieldsError("kid", errors.New("missing kid")))
 	}
 
 	// The BearerBasic middleware function generates the claims.
@@ -34,19 +34,19 @@ func (api *api) token(ctx context.Context, r *http.Request) (web.Encoder, error)
 
 	tkn, err := api.auth.GenerateToken(kid, claims)
 	if err != nil {
-		return nil, errs.New(errs.Internal, err)
+		return errs.New(errs.Internal, err)
 	}
 
-	return token{Token: tkn}, nil
+	return token{Token: tkn}
 }
 
-func (api *api) authenticate(ctx context.Context, r *http.Request) (web.Encoder, error) {
+func (api *api) authenticate(ctx context.Context, r *http.Request) web.Encoder {
 	// The middleware is actually handling the authentication. So if the code
 	// gets to this handler, authentication passed.
 
 	userID, err := mid.GetUserID(ctx)
 	if err != nil {
-		return nil, errs.New(errs.Unauthenticated, err)
+		return errs.New(errs.Unauthenticated, err)
 	}
 
 	resp := authclient.AuthenticateResp{
@@ -54,18 +54,18 @@ func (api *api) authenticate(ctx context.Context, r *http.Request) (web.Encoder,
 		Claims: mid.GetClaims(ctx),
 	}
 
-	return resp, nil
+	return resp
 }
 
-func (api *api) authorize(ctx context.Context, r *http.Request) (web.Encoder, error) {
+func (api *api) authorize(ctx context.Context, r *http.Request) web.Encoder {
 	var auth authclient.Authorize
 	if err := web.Decode(r, &auth); err != nil {
-		return nil, errs.New(errs.InvalidArgument, err)
+		return errs.New(errs.InvalidArgument, err)
 	}
 
 	if err := api.auth.Authorize(ctx, auth.Claims, auth.UserID, auth.Rule); err != nil {
-		return nil, errs.Newf(errs.Unauthenticated, "authorize: you are not authorized for that action, claims[%v] rule[%v]: %s", auth.Claims.Roles, auth.Rule, err)
+		return errs.Newf(errs.Unauthenticated, "authorize: you are not authorized for that action, claims[%v] rule[%v]: %s", auth.Claims.Roles, auth.Rule, err)
 	}
 
-	return nil, nil
+	return nil
 }

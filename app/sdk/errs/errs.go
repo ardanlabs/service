@@ -115,7 +115,7 @@ type FieldError struct {
 type FieldErrors []FieldError
 
 // NewFieldsError creates an fields error.
-func NewFieldsError(field string, err error) error {
+func NewFieldsError(field string, err error) FieldErrors {
 	return FieldErrors{
 		{
 			Field: field,
@@ -131,6 +131,12 @@ func (fe FieldErrors) Error() string {
 		return err.Error()
 	}
 	return string(d)
+}
+
+// Encode implements the encoder interface.
+func (fe FieldErrors) Encode() ([]byte, string, error) {
+	d, err := json.Marshal(fe)
+	return d, "application/json", err
 }
 
 // Fields returns the fields that failed validation

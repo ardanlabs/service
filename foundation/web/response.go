@@ -14,28 +14,6 @@ type httpStatus interface {
 	HTTPStatus() int
 }
 
-// RespondError sends an error response to the client.
-func RespondError(ctx context.Context, w http.ResponseWriter, err error) error {
-	data, ok := err.(Encoder)
-	if !ok {
-		log := getLogger(ctx)
-
-		v := fmt.Sprintf("error value does not implement the encoder interface: %T", err)
-		log(ctx, "web-responderror", "ERROR", v)
-
-		w.Header().Set("Content-Type", "text/plain")
-		w.WriteHeader(http.StatusInternalServerError)
-
-		if _, err := w.Write([]byte(v)); err != nil {
-			return fmt.Errorf("respond: write: %w", err)
-		}
-
-		return nil
-	}
-
-	return Respond(ctx, w, data)
-}
-
 // Respond sends a response to the client.
 func Respond(ctx context.Context, w http.ResponseWriter, dataModel Encoder) error {
 
@@ -72,6 +50,7 @@ func Respond(ctx context.Context, w http.ResponseWriter, dataModel Encoder) erro
 
 	data, contentType, err := dataModel.Encode()
 	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
 		return fmt.Errorf("respond: encode: %w", err)
 	}
 

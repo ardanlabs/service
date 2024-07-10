@@ -39,16 +39,3 @@ func getWriter(ctx context.Context) http.ResponseWriter {
 
 	return v
 }
-
-func setLogger(ctx context.Context, log Logger) context.Context {
-	return context.WithValue(ctx, writer, log)
-}
-
-func getLogger(ctx context.Context) Logger {
-	v, ok := ctx.Value(logger).(Logger)
-	if !ok {
-		return func(ctx context.Context, msg string, args ...any) {}
-	}
-
-	return v
-}

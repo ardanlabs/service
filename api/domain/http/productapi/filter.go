@@ -6,7 +6,7 @@ import (
 	"github.com/ardanlabs/service/app/domain/productapp"
 )
 
-func parseQueryParams(r *http.Request) (productapp.QueryParams, error) {
+func parseQueryParams(r *http.Request) productapp.QueryParams {
 	values := r.URL.Query()
 
 	filter := productapp.QueryParams{
@@ -19,5 +19,5 @@ func parseQueryParams(r *http.Request) (productapp.QueryParams, error) {
 		Quantity: values.Get("quantity"),
 	}
 
-	return filter, nil
+	return filter
 }

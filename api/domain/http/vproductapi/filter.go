@@ -6,7 +6,7 @@ import (
 	"github.com/ardanlabs/service/app/domain/vproductapp"
 )
 
-func parseQueryParams(r *http.Request) (vproductapp.QueryParams, error) {
+func parseQueryParams(r *http.Request) vproductapp.QueryParams {
 	values := r.URL.Query()
 
 	filter := vproductapp.QueryParams{
@@ -20,5 +20,5 @@ func parseQueryParams(r *http.Request) (vproductapp.QueryParams, error) {
 		UserName: values.Get("user_name"),
 	}
 
-	return filter, nil
+	return filter
 }

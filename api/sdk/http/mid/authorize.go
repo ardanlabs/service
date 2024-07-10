@@ -15,7 +15,7 @@ import (
 
 // Authorize validates authorization via the auth service.
 func Authorize(log *logger.Logger, client *authclient.Client, rule string) web.MidFunc {
-	midFunc := func(ctx context.Context, r *http.Request, next mid.HandlerFunc) (mid.Encoder, error) {
+	midFunc := func(ctx context.Context, r *http.Request, next mid.HandlerFunc) mid.Encoder {
 		return mid.Authorize(ctx, log, client, rule, next)
 	}
 
@@ -27,7 +27,7 @@ func Authorize(log *logger.Logger, client *authclient.Client, rule string) web.M
 // specified, the userid from the claims may be compared with the specified
 // user id.
 func AuthorizeUser(log *logger.Logger, client *authclient.Client, userBus *userbus.Business, rule string) web.MidFunc {
-	midFunc := func(ctx context.Context, r *http.Request, next mid.HandlerFunc) (mid.Encoder, error) {
+	midFunc := func(ctx context.Context, r *http.Request, next mid.HandlerFunc) mid.Encoder {
 		return mid.AuthorizeUser(ctx, log, client, userBus, rule, web.Param(r, "user_id"), next)
 	}
 
@@ -39,7 +39,7 @@ func AuthorizeUser(log *logger.Logger, client *authclient.Client, userBus *userb
 // the rule specified, the userid from the claims may be compared with the
 // specified user id from the product.
 func AuthorizeProduct(log *logger.Logger, client *authclient.Client, productBus *productbus.Business) web.MidFunc {
-	midFunc := func(ctx context.Context, r *http.Request, next mid.HandlerFunc) (mid.Encoder, error) {
+	midFunc := func(ctx context.Context, r *http.Request, next mid.HandlerFunc) mid.Encoder {
 		return mid.AuthorizeProduct(ctx, log, client, productBus, web.Param(r, "product_id"), next)
 	}
 
@@ -51,7 +51,7 @@ func AuthorizeProduct(log *logger.Logger, client *authclient.Client, productBus 
 // the rule specified, the userid from the claims may be compared with the
 // specified user id from the home.
 func AuthorizeHome(log *logger.Logger, client *authclient.Client, homeBus *homebus.Business) web.MidFunc {
-	midFunc := func(ctx context.Context, r *http.Request, next mid.HandlerFunc) (mid.Encoder, error) {
+	midFunc := func(ctx context.Context, r *http.Request, next mid.HandlerFunc) mid.Encoder {
 		return mid.AuthorizeHome(ctx, log, client, homeBus, web.Param(r, "home_id"), next)
 	}
 
