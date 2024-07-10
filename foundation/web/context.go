@@ -10,6 +10,7 @@ type ctxKey int
 const (
 	traceKey ctxKey = iota + 1
 	writer
+	logger
 )
 
 func setTraceID(ctx context.Context, traceID string) context.Context {
@@ -34,6 +35,19 @@ func getWriter(ctx context.Context) http.ResponseWriter {
 	v, ok := ctx.Value(writer).(http.ResponseWriter)
 	if !ok {
 		return nil
+	}
+
+	return v
+}
+
+func setLogger(ctx context.Context, log Logger) context.Context {
+	return context.WithValue(ctx, writer, log)
+}
+
+func getLogger(ctx context.Context) Logger {
+	v, ok := ctx.Value(logger).(Logger)
+	if !ok {
+		return func(ctx context.Context, msg string, args ...any) {}
 	}
 
 	return v

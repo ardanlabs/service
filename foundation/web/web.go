@@ -109,6 +109,7 @@ func (a *App) corsHandler(webHandler HandlerFunc) HandlerFunc {
 func (a *App) HandlerFuncNoMid(method string, group string, path string, handlerFunc HandlerFunc) {
 	h := func(w http.ResponseWriter, r *http.Request) {
 		ctx := setTraceID(r.Context(), uuid.NewString())
+		ctx = setLogger(ctx, a.log)
 
 		resp, err := handlerFunc(ctx, r)
 		if err != nil {
@@ -147,6 +148,7 @@ func (a *App) HandlerFunc(method string, group string, path string, handlerFunc 
 		defer span.End()
 
 		ctx = setTraceID(ctx, span.SpanContext().TraceID().String())
+		ctx = setLogger(ctx, a.log)
 
 		resp, err := handlerFunc(ctx, r)
 		if err != nil {
@@ -191,6 +193,7 @@ func (a *App) RawHandlerFunc(method string, group string, path string, rawHandle
 
 		ctx = setTraceID(ctx, span.SpanContext().TraceID().String())
 		ctx = setWriter(ctx, w)
+		ctx = setLogger(ctx, a.log)
 
 		handlerFunc(ctx, r)
 	}

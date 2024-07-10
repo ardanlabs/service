@@ -18,7 +18,19 @@ type httpStatus interface {
 func RespondError(ctx context.Context, w http.ResponseWriter, err error) error {
 	data, ok := err.(Encoder)
 	if !ok {
-		return fmt.Errorf("error value does not implement the encoder interface: %T", err)
+		log := getLogger(ctx)
+
+		v := fmt.Sprintf("error value does not implement the encoder interface: %T", err)
+		log(ctx, "web-responderror", "ERROR", v)
+
+		w.Header().Set("Content-Type", "text/plain")
+		w.WriteHeader(http.StatusInternalServerError)
+
+		if _, err := w.Write([]byte(v)); err != nil {
+			return fmt.Errorf("respond: write: %w", err)
+		}
+
+		return nil
 	}
 
 	return Respond(ctx, w, data)
