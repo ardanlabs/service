@@ -81,6 +81,17 @@ func Newf(code ErrCode, format string, v ...any) *Error {
 	}
 }
 
+// Encode checks for an Error in the error interface value. If it doesn't
+// exist, will create one from the error.
+func Encode(err error) *Error {
+	var errsErr *Error
+	if errors.As(err, &errsErr) {
+		return errsErr
+	}
+
+	return New(Internal, err)
+}
+
 // Error implements the error interface.
 func (e *Error) Error() string {
 	return e.Message

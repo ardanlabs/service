@@ -25,7 +25,7 @@ func (api *api) query(ctx context.Context, r *http.Request) web.Encoder {
 
 	prd, err := api.vproductApp.Query(ctx, qp)
 	if err != nil {
-		return err.(*errs.Error)
+		return errs.Encode(err)
 	}
 
 	return prd
