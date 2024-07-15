@@ -81,9 +81,9 @@ func Newf(code ErrCode, format string, v ...any) *Error {
 	}
 }
 
-// Encode checks for an Error in the error interface value. If it doesn't
+// ToError checks for an Error in the error interface value. If it doesn't
 // exist, will create one from the error.
-func Encode(err error) *Error {
+func ToError(err error) *Error {
 	var errsErr *Error
 	if errors.As(err, &errsErr) {
 		return errsErr

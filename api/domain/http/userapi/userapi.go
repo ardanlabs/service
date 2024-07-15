@@ -28,7 +28,7 @@ func (api *api) create(ctx context.Context, r *http.Request) web.Encoder {
 
 	usr, err := api.userApp.Create(ctx, app)
 	if err != nil {
-		return errs.Encode(err)
+		return errs.ToError(err)
 	}
 
 	return usr
@@ -42,7 +42,7 @@ func (api *api) update(ctx context.Context, r *http.Request) web.Encoder {
 
 	usr, err := api.userApp.Update(ctx, app)
 	if err != nil {
-		return errs.Encode(err)
+		return errs.ToError(err)
 	}
 
 	return usr
@@ -56,7 +56,7 @@ func (api *api) updateRole(ctx context.Context, r *http.Request) web.Encoder {
 
 	usr, err := api.userApp.UpdateRole(ctx, app)
 	if err != nil {
-		return errs.Encode(err)
+		return errs.ToError(err)
 	}
 
 	return usr
@@ -64,7 +64,7 @@ func (api *api) updateRole(ctx context.Context, r *http.Request) web.Encoder {
 
 func (api *api) delete(ctx context.Context, r *http.Request) web.Encoder {
 	if err := api.userApp.Delete(ctx); err != nil {
-		return errs.Encode(err)
+		return errs.ToError(err)
 	}
 
 	return nil
@@ -78,7 +78,7 @@ func (api *api) query(ctx context.Context, r *http.Request) web.Encoder {
 
 	usr, err := api.userApp.Query(ctx, qp)
 	if err != nil {
-		return errs.Encode(err)
+		return errs.ToError(err)
 	}
 
 	return usr
@@ -87,7 +87,7 @@ func (api *api) query(ctx context.Context, r *http.Request) web.Encoder {
 func (api *api) queryByID(ctx context.Context, r *http.Request) web.Encoder {
 	usr, err := api.userApp.QueryByID(ctx)
 	if err != nil {
-		return errs.Encode(err)
+		return errs.ToError(err)
 	}
 
 	return usr

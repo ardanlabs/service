@@ -28,7 +28,7 @@ func (api *api) create(ctx context.Context, r *http.Request) web.Encoder {
 
 	prd, err := api.productApp.Create(ctx, app)
 	if err != nil {
-		return errs.Encode(err)
+		return errs.ToError(err)
 	}
 
 	return prd
@@ -42,7 +42,7 @@ func (api *api) update(ctx context.Context, r *http.Request) web.Encoder {
 
 	prd, err := api.productApp.Update(ctx, app)
 	if err != nil {
-		return errs.Encode(err)
+		return errs.ToError(err)
 	}
 
 	return prd
@@ -50,7 +50,7 @@ func (api *api) update(ctx context.Context, r *http.Request) web.Encoder {
 
 func (api *api) delete(ctx context.Context, r *http.Request) web.Encoder {
 	if err := api.productApp.Delete(ctx); err != nil {
-		return errs.Encode(err)
+		return errs.ToError(err)
 	}
 
 	return nil
@@ -61,7 +61,7 @@ func (api *api) query(ctx context.Context, r *http.Request) web.Encoder {
 
 	prd, err := api.productApp.Query(ctx, qp)
 	if err != nil {
-		return errs.Encode(err)
+		return errs.ToError(err)
 	}
 
 	return prd
@@ -70,7 +70,7 @@ func (api *api) query(ctx context.Context, r *http.Request) web.Encoder {
 func (api *api) queryByID(ctx context.Context, r *http.Request) web.Encoder {
 	prd, err := api.productApp.QueryByID(ctx)
 	if err != nil {
-		return errs.Encode(err)
+		return errs.ToError(err)
 	}
 
 	return prd

@@ -25,7 +25,7 @@ func newAPI(checkApp *checkapp.App) *api {
 // stack it will interpret that as a non-trusted error.
 func (api *api) readiness(ctx context.Context, r *http.Request) web.Encoder {
 	if err := api.checkApp.Readiness(ctx); err != nil {
-		return errs.Encode(err)
+		return errs.ToError(err)
 	}
 
 	return ready{Status: "OK"}
