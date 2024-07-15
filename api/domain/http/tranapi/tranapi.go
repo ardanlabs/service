@@ -28,7 +28,7 @@ func (api *api) create(ctx context.Context, r *http.Request) web.Encoder {
 
 	prd, err := api.tranApp.Create(ctx, app)
 	if err != nil {
-		return errs.ToError(err)
+		return errs.NewError(err)
 	}
 
 	return prd
