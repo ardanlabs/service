@@ -325,6 +325,17 @@ dev-database-restart:
 	kubectl rollout restart statefulset database --namespace=$(NAMESPACE)
 
 # ==============================================================================
+# Docker Compose
+
+compose-dev-up:
+	cd ./zarf/compose/ && docker compose -f docker_compose.yaml -p compose up -d
+
+compose-dev-update-apply: build compose-dev-up
+
+compose-dev-down:
+	cd ./zarf/compose/ && docker compose -f docker_compose.yaml down
+
+# ==============================================================================
 # Administration
 
 migrate:

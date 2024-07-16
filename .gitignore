@@ -44,3 +44,4 @@ _testmain.go
 *.exe
 //*.test
 .vscode/tasks.json
+zarf/compose/database-data/data
