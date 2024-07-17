@@ -1,6 +1,5 @@
 services:
   database:
-    user: "1000:1000"
     image: postgres:16.3
     container_name: database
     ports:
@@ -8,7 +7,7 @@ services:
     environment:
       - POSTGRES_PASSWORD=postgres
     volumes:
-      - database-data:/var/lib/postgresql/data
+      - ardan-service-database-data:/var/lib/postgresql/data
       - ./pg_hba.conf:/etc/pg_hba.conf
     command: [ '-c', 'hba_file=/etc/pg_hba.conf' ]
     healthcheck:
@@ -122,12 +121,7 @@ services:
       - sales
 
 volumes:
-  database-data:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ./database-data/
+  ardan-service-database-data:
 
 networks:
   sales-system-network:
