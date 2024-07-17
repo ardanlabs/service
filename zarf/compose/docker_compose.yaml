@@ -37,6 +37,7 @@ services:
       - GOMAXPROCS=2
       - AUTH_DB_USER=postgres
       - AUTH_DB_PASSWORD=postgres
+      - AUTH_DB_HOST=database
       - AUTH_DB_HOST_PORT=5432
       - AUTH_DB_DISABLE_TLS=true
       - KUBERNETES_NAMESPACE=compose
@@ -61,6 +62,7 @@ services:
     environment:
       - SALES_DB_USER=postgres
       - SALES_DB_PASSWORD=postgres
+      - SALES_DB_HOST=database
       - SALES_DB_HOST_PORT=5432
       - SALES_DB_DISABLE_TLS=true
     networks:
@@ -84,6 +86,7 @@ services:
       - GOMEMLIMIT
       - SALES_DB_USER=postgres
       - SALES_DB_PASSWORD=postgres
+      - SALES_DB_HOST=database
       - SALES_DB_HOST_PORT=5432
       - SALES_DB_DISABLE_TLS=true
       - KUBERNETES_NAMESPACE
