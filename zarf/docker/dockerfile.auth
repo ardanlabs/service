@@ -1,6 +1,6 @@
 # Build the Go Binary.
 FROM golang:1.22 AS build_auth
-ENV CGO_ENABLED 0
+ENV CGO_ENABLED=0
 ARG BUILD_REF
 
 # Copy the source code into the container.

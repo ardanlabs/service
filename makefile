@@ -327,22 +327,25 @@ dev-database-restart:
 # ==============================================================================
 # Docker Compose
 
-compose-dev-up:
+compose-up:
 	cd ./zarf/compose/ && docker compose -f docker_compose.yaml -p compose up -d
 
-compose-dev-update-apply: build compose-dev-up
+compose-build-up: build compose-up
 
-compose-dev-down:
+compose-down:
 	cd ./zarf/compose/ && docker compose -f docker_compose.yaml down
+
+compose-logs:
+	cd ./zarf/compose/ && docker compose -f docker_compose.yaml logs
 
 # ==============================================================================
 # Administration
 
 migrate:
-	export SALES_DB_HOST_PORT=localhost; go run apis/tooling/admin/main.go migrate
+	export SALES_DB_HOST=localhost; go run api/cmd/tooling/admin/main.go migrate
 
 seed: migrate
-	export SALES_DB_HOST_PORT=localhost; go run apis/tooling/admin/main.go seed
+	export SALES_DB_HOST=localhost; go run api/cmd/tooling/admin/main.go seed
 
 pgcli:
 	pgcli postgresql://postgres:postgres@localhost
@@ -354,7 +357,7 @@ readiness:
 	curl -il http://localhost:3000/v1/readiness
 
 token-gen:
-	export SALES_DB_HOST_PORT=localhost; go run apis/tooling/admin/main.go gentoken 5cf37266-3473-4006-984f-9325122678b7 54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
+	export SALES_DB_HOST=localhost; go run api/cmd/tooling/admin/main.go gentoken 5cf37266-3473-4006-984f-9325122678b7 54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
 
 # ==============================================================================
 # Metrics and Tracing
