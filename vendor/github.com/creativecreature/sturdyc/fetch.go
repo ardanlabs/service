@@ -12,14 +12,14 @@ func (c *Client[T]) groupIDs(ids []string, keyFn KeyFn) (hits map[string]T, miss
 
 	for _, id := range ids {
 		key := keyFn(id)
-		value, exists, shouldIgnore, shouldRefresh := c.get(key)
+		value, exists, markedAsMissing, shouldRefresh := c.getWithState(key)
 
 		// Check if the record should be refreshed in the background.
 		if shouldRefresh {
 			refreshes = append(refreshes, id)
 		}
 
-		if shouldIgnore {
+		if markedAsMissing {
 			continue
 		}
 
@@ -37,7 +37,7 @@ func getFetch[V, T any](ctx context.Context, c *Client[T], key string, fetchFn F
 	wrappedFetch := wrap[T](distributedFetch(c, key, fetchFn))
 
 	// Begin by checking if we have the item in our cache.
-	value, ok, shouldIgnore, shouldRefresh := c.get(key)
+	value, ok, markedAsMissing, shouldRefresh := c.getWithState(key)
 
 	if shouldRefresh {
 		c.safeGo(func() {
@@ -45,7 +45,7 @@ func getFetch[V, T any](ctx context.Context, c *Client[T], key string, fetchFn F
 		})
 	}
 
-	if shouldIgnore {
+	if markedAsMissing {
 		return value, ErrMissingRecord
 	}
 
@@ -57,15 +57,40 @@ func getFetch[V, T any](ctx context.Context, c *Client[T], key string, fetchFn F
 }
 
 // GetOrFetch attempts to retrieve the specified key from the cache. If the value
-// is absent, it invokes the "fetchFn" function to obtain it and then stores
-// the result. Additionally, when background refreshes is enabled, GetOrFetch
-// determines if the record needs refreshing and, if necessary, schedules this
-// task for background execution.
+// is absent, it invokes the fetchFn function to obtain it and then stores the result.
+// Additionally, when background refreshes are enabled, GetOrFetch determines if the record
+// needs refreshing and, if necessary, schedules this task for background execution.
+//
+// Parameters:
+//
+//	ctx - The context to be used for the request.
+//	key - The key to be fetched.
+//	fetchFn - Used to retrieve the data from the underlying data source if the key is not found in the cache.
+//
+// Returns:
+//
+//	The value corresponding to the key and an error if one occurred.
 func (c *Client[T]) GetOrFetch(ctx context.Context, key string, fetchFn FetchFn[T]) (T, error) {
 	return getFetch[T, T](ctx, c, key, fetchFn)
 }
 
 // GetOrFetch is a convenience function that performs type assertion on the result of client.GetOrFetch.
+//
+// Parameters:
+//
+//	ctx - The context to be used for the request.
+//	c - The cache client.
+//	key - The key to be fetched.
+//	fetchFn - Used to retrieve the data from the underlying data source if the key is not found in the cache.
+//
+// Returns:
+//
+//	The value corresponding to the key and an error if one occurred.
+//
+// Type Parameters:
+//
+//	V - The type returned by the fetchFn. Must be assignable to T.
+//	T - The type stored in the cache.
 func GetOrFetch[V, T any](ctx context.Context, c *Client[T], key string, fetchFn FetchFn[V]) (V, error) {
 	res, err := getFetch[V, T](ctx, c, key, fetchFn)
 	return unwrap[V](res, err)
@@ -104,16 +129,46 @@ func getFetchBatch[V, T any](ctx context.Context, c *Client[T], ids []string, ke
 	return cachedRecords, nil
 }
 
-// GetOrFetchBatch attempts to retrieve the specified ids from the cache. If any
-// of the values are absent, it invokes the fetchFn function to obtain them and
-// then stores the result. Additionally, when background refreshes is enabled,
-// GetOrFetch determines if any of the records needs refreshing and, if
+// GetOrFetchBatch attempts to retrieve the specified ids from the cache. If
+// any of the values are absent, it invokes the fetchFn function to obtain them
+// and then stores the result. Additionally, when background refreshes are
+// enabled, GetOrFetch determines if any of the records need refreshing and, if
 // necessary, schedules this to be performed in the background.
+//
+// Parameters:
+//
+//	ctx - The context to be used for the request.
+//	ids - The list of IDs to be fetched.
+//	keyFn - Used to generate the cache key for each ID.
+//	fetchFn - Used to retrieve the data from the underlying data source if any IDs are not found in the cache.
+//
+// Returns:
+//
+//	A map of IDs to their corresponding values and an error if one occurred.
 func (c *Client[T]) GetOrFetchBatch(ctx context.Context, ids []string, keyFn KeyFn, fetchFn BatchFetchFn[T]) (map[string]T, error) {
 	return getFetchBatch[T, T](ctx, c, ids, keyFn, fetchFn)
 }
 
-// GetOrFetchBatch is a convenience function that performs type assertion on the result of client.GetOrFetchBatch.
+// GetOrFetchBatch is a convenience function that performs type assertion on the
+// result of client.GetOrFetchBatch.
+//
+// Parameters:
+//
+//	ctx - The context to be used for the request.
+//	c - The cache client.
+//	ids - The list of IDs to be fetched.
+//	keyFn - Used to prefix each ID in order to create a unique cache key.
+//	fetchFn - Used to retrieve the data from the underlying data source.
+//
+// Returns:
+//
+//	A map of ids to their corresponding values and an error if one occurred.
+//
+// Type Parameters:
+//
+//	V - The type returned by the fetchFn. Must be assignable to T.
+//	T - The type stored in the cache.
+
 func GetOrFetchBatch[V, T any](ctx context.Context, c *Client[T], ids []string, keyFn KeyFn, fetchFn BatchFetchFn[V]) (map[string]V, error) {
 	res, err := getFetchBatch[V, T](ctx, c, ids, keyFn, fetchFn)
 	return unwrapBatch[V](res, err)

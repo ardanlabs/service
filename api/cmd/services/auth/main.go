@@ -80,14 +80,14 @@ func run(ctx context.Context, log *logger.Logger) error {
 		DB struct {
 			User         string `conf:"default:postgres"`
 			Password     string `conf:"default:postgres,mask"`
-			Host         string `conf:"default:database-service.sales-system.svc.cluster.local"`
+			Host         string `conf:"default:database-service"`
 			Name         string `conf:"default:postgres"`
 			MaxIdleConns int    `conf:"default:0"`
 			MaxOpenConns int    `conf:"default:0"`
 			DisableTLS   bool   `conf:"default:true"`
 		}
 		Tempo struct {
-			Host        string  `conf:"default:tempo.sales-system.svc.cluster.local:4317"`
+			Host        string  `conf:"default:tempo:4317"`
 			ServiceName string  `conf:"default:auth"`
 			Probability float64 `conf:"default:0.05"`
 		}

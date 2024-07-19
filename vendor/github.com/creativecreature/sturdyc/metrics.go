@@ -8,18 +8,18 @@ type MetricsRecorder interface {
 	// Refresh is called when a get operation results in a refresh.
 	Refresh()
 	// MissingRecord is called every time the cache is asked to
-	// lookup a key which has been marked as missing.
+	// look up a key which has been marked as missing.
 	MissingRecord()
 	// ForcedEviction is called when the cache reaches its capacity, and has to
 	// evict keys in order to write a new one.
 	ForcedEviction()
-	// EntiresEvicted is called when the cache evicts keys from a shard.
+	// EntriesEvicted is called when the cache evicts keys from a shard.
 	EntriesEvicted(int)
 	// ShardIndex is called to report which shard it was that performed an operation.
 	ShardIndex(int)
 	// CacheBatchRefreshSize is called to report the size of the batch refresh.
 	CacheBatchRefreshSize(size int)
-	// ObserveCacheSize is called to report the size of the cache.metri
+	// ObserveCacheSize is called to report the size of the cache.
 	ObserveCacheSize(callback func() int)
 }
 
@@ -27,12 +27,12 @@ type DistributedMetricsRecorder interface {
 	MetricsRecorder
 	// DistributedCacheHit is called for every key that results in a cache hit.
 	DistributedCacheHit()
-	// DistributedCacheHit is called for every key that results in a cache miss.
+	// DistributedCacheMiss is called for every key that results in a cache miss.
 	DistributedCacheMiss()
 	// DistributedRefresh is called when we retrieve a record from
 	// the distributed storage that should be refreshed.
 	DistributedRefresh()
-	// DistributetedMissingRecord is called when we retrieve a record from the
+	// DistributedMissingRecord is called when we retrieve a record from the
 	// distributed storage that has been marked as a missing record.
 	DistributedMissingRecord()
 	// DistributedFallback is called when you are using a distributed storage

@@ -171,8 +171,8 @@ func callAndCacheBatch[V, T any](ctx context.Context, c *Client[T], opts callBat
 			return response, call.err
 		}
 
-		// Remember: we need to iterate through the values we have for this call.
-		// We might just need one ID and the batch could contain a hundred.
+		// We need to iterate through the values that we want from this call. The
+		// batch could contain a hundred IDs, but we might only want a few of them.
 		for _, id := range callIDs {
 			v, ok := call.val[id]
 			if !ok {

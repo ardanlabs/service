@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+// shard is a thread-safe data structure that holds a subset of the cache entries.
 type shard[T any] struct {
 	sync.RWMutex
 	*Config
@@ -15,6 +16,7 @@ type shard[T any] struct {
 	evictionPercentage int
 }
 
+// newShard creates a new shard and returns a pointer to it.
 func newShard[T any](capacity int, ttl time.Duration, evictionPercentage int, cfg *Config) *shard[T] {
 	return &shard[T]{
 		Config:             cfg,
@@ -25,6 +27,7 @@ func newShard[T any](capacity int, ttl time.Duration, evictionPercentage int, cf
 	}
 }
 
+// size returns the number of entries in the shard.
 func (s *shard[T]) size() int {
 	s.RLock()
 	defer s.RUnlock()
@@ -66,7 +69,19 @@ func (s *shard[T]) forceEvict() {
 	s.reportEntriesEvicted(entriesEvicted)
 }
 
-func (s *shard[T]) get(key string) (val T, exists, ignore, refresh bool) {
+// get retrieves attempts to retrieve a value from the shard.
+//
+// Parameters:
+//
+//	key: The key for which the value is to be retrieved.
+//
+// Returns:
+//
+//	val: The value associated with the key, if it exists.
+//	exists: A boolean indicating if the value exists in the shard.
+//	markedAsMissing: A boolean indicating if the key has been marked as a missing record.
+//	refresh: A boolean indicating if the value should be refreshed in the background.
+func (s *shard[T]) get(key string) (val T, exists, markedAsMissing, refresh bool) {
 	s.RLock()
 	item, ok := s.entries[key]
 	if !ok {
@@ -106,7 +121,8 @@ func (s *shard[T]) get(key string) (val T, exists, ignore, refresh bool) {
 	return item.value, true, item.isMissingRecord, false
 }
 
-// set sets a key-value pair in the shard. Returns true if it triggered an eviction.
+// set writes a key-value pair to the shard and returns a
+// boolean indicating whether an eviction was performed.
 func (s *shard[T]) set(key string, value T, isMissingRecord bool) bool {
 	s.Lock()
 	defer s.Unlock()
@@ -147,12 +163,14 @@ func (s *shard[T]) set(key string, value T, isMissingRecord bool) bool {
 	return evict
 }
 
+// delete removes a key from the shard.
 func (s *shard[T]) delete(key string) {
 	s.Lock()
 	defer s.Unlock()
 	delete(s.entries, key)
 }
 
+// keys returns all non-expired keys in the shard.
 func (s *shard[T]) keys() []string {
 	s.RLock()
 	defer s.RUnlock()

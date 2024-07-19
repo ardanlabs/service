@@ -9,12 +9,16 @@ import (
 	"time"
 )
 
+// distributedRecord represents the records that we're writing to the distributed storage.
 type distributedRecord[V any] struct {
 	CreatedAt       time.Time `json:"created_at"`
 	Value           V         `json:"value"`
 	IsMissingRecord bool      `json:"is_missing_record"`
 }
 
+// DistributedStorage is an abstraction that the cache interacts with in order
+// to keep the distributed storage and in-memory cache in sync. Please note that
+// you are responsible for setting the TTL and eviction policy of this storage.
 type DistributedStorage interface {
 	Get(ctx context.Context, key string) ([]byte, bool)
 	Set(ctx context.Context, key string, value []byte)
@@ -22,19 +26,29 @@ type DistributedStorage interface {
 	SetBatch(ctx context.Context, records map[string][]byte)
 }
 
+// DistributedStorageWithDeletions is an abstraction that the cache interacts
+// with when you want to use a distributed storage with early refreshes. Please
+// note that you are responsible for setting the TTL and eviction policy of
+// this storage. The cache will only call the delete functions when it performs
+// a refresh and notices that the record has been deleted at the underlying
+// data source.
 type DistributedStorageWithDeletions interface {
 	DistributedStorage
 	Delete(ctx context.Context, key string)
 	DeleteBatch(ctx context.Context, keys []string)
 }
 
+// distributedStorage adds noop implementations for the delete functions so
+// that the cache doesn't have to deal with multiple storage types.
 type distributedStorage struct {
 	DistributedStorage
 }
 
+// Delete is a noop implementation of the delete function.
 func (d *distributedStorage) Delete(_ context.Context, _ string) {
 }
 
+// DeleteBatch is a noop implementation of the delete batch function.
 func (d *distributedStorage) DeleteBatch(_ context.Context, _ []string) {
 }
 
@@ -145,7 +159,7 @@ func distributedBatchFetch[V, T any](c *Client[T], keyFn KeyFn, fetchFn BatchFet
 	}
 
 	return func(ctx context.Context, ids []string) (map[string]V, error) {
-		// We need to be able to lookup the ID of the record based on the key.
+		// We need to be able to look up the ID of the record based on the key.
 		keyIDMap := make(map[string]string, len(ids))
 		keys := make([]string, 0, len(ids))
 		for _, id := range ids {
@@ -179,7 +193,7 @@ func distributedBatchFetch[V, T any](c *Client[T], keyFn KeyFn, fetchFn BatchFet
 
 			// If distributedStaleStorage isn't enabled it means all records are fresh, otherwise checked the CreatedAt time.
 			if !c.distributedEarlyRefreshes || c.clock.Since(record.CreatedAt) < c.distributedRefreshAfterDuration {
-				// We never wan't to return missing records.
+				// We never want to return missing records.
 				if !record.IsMissingRecord {
 					fresh[id] = record.Value
 				} else {
@@ -191,7 +205,7 @@ func distributedBatchFetch[V, T any](c *Client[T], keyFn KeyFn, fetchFn BatchFet
 			idsToRefresh = append(idsToRefresh, id)
 			c.reportDistributedRefresh()
 
-			// We never wan't to return missing records.
+			// We never want to return missing records.
 			if !record.IsMissingRecord {
 				stale[id] = record.Value
 			} else {
@@ -204,7 +218,7 @@ func distributedBatchFetch[V, T any](c *Client[T], keyFn KeyFn, fetchFn BatchFet
 		}
 
 		dataSourceResponses, err := fetchFn(ctx, idsToRefresh)
-		// Incase of an error, we'll proceed with the ones we got from the distributed storage.
+		// In case of an error, we'll proceed with the ones we got from the distributed storage.
 		if err != nil {
 			for i := 0; i < len(stale); i++ {
 				c.reportDistributedStaleFallback()

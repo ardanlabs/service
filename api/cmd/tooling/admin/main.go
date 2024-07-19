@@ -23,7 +23,7 @@ type config struct {
 	DB   struct {
 		User         string `conf:"default:postgres"`
 		Password     string `conf:"default:postgres,mask"`
-		Host         string `conf:"default:database-service.sales-system.svc.cluster.local"`
+		Host         string `conf:"default:database-service"`
 		Name         string `conf:"default:postgres"`
 		MaxIdleConns int    `conf:"default:0"`
 		MaxOpenConns int    `conf:"default:0"`

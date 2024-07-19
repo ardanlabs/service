@@ -36,18 +36,16 @@ linters:
     - asciicheck # checks that your code does not contain non-ASCII identifiers
     - bidichk # checks for dangerous unicode character sequences
     - bodyclose # checks whether HTTP response body is closed successfully
-    # - cyclop # checks function and package cyclomatic complexity
+    - cyclop # checks function and package cyclomatic complexity
     - dupl # tool for code clone detection
     - durationcheck # checks for two durations multiplied together
     - errname # checks that sentinel errors are prefixed with the Err and error types are suffixed with the Error
     - errorlint # finds code that will cause problems with the error wrapping scheme introduced in Go 1.13
-    - execinquery # checks query string in Query function which reads your Go src files and warning it finds
     - exhaustive # checks exhaustiveness of enum switch statements
     - exportloopref # checks for pointers to enclosing loop variables
     - forbidigo # forbids identifiers
     - funlen # tool for detection of long functions
     - gocheckcompilerdirectives # validates go compiler directive comments (//go:)
-    # - gochecknoglobals # checks that no global variables exist
     - gochecknoinits # checks that no init functions are present in Go code
     - gochecksumtype # checks exhaustiveness on Go "sum types"
     - gocognit # computes and checks the cognitive complexity of functions
@@ -98,36 +96,28 @@ linters:
     - decorder # checks declaration order and count of types, constants, variables and functions
     - dogsled # checks assignments with too many blank identifiers (e.g. x, _, _, _, := f())
     - paralleltest #  detects missing usage of t.Parallel() method in your Go test
+    - tagalign # checks that struct tags are well aligned
 
-    ## you may want to enable
+    ## may want to enable
+    # - wrapcheck # checks that errors returned from external packages are wrapped
     #- gci # controls golang package import order and makes it always deterministic
     #- ginkgolinter # [if you use ginkgo/gomega] enforces standards of using ginkgo and gomega
     #- godox # detects FIXME, TODO and other comment keywords
     #- goheader # checks is file header matches to pattern
     #- inamedparam # [great idea, but too strict, need to ignore a lot of cases by default] reports interfaces with unnamed method parameters
     #- interfacebloat # checks the number of methods inside an interface
-    #- ireturn # accept interfaces, return concrete types
-    #- tagalign # checks that struct tags are well aligned
-    #- varnamelen # [great idea, but too many false positives] checks that the length of a variable's name matches its scope
-    #- wrapcheck # checks that errors returned from external packages are wrapped
-    #- zerologlint # detects the wrong usage of zerolog that a user forgets to dispatch zerolog.Event
+    # - ireturn # accept interfaces, return concrete types
+    # - varnamelen # [great idea, but too many false positives] checks that the length of a variable's name matches its scope
     # - nlreturn # checks for a new line before return and branch statements to increase code clarity
 
     ## disabled
     # - lll # reports long lines
-    # - exhaustruct # [highly recommend to enable] checks if all structure fields are initialized
-    #- depguard # [replaced by gomodguard] checks if package imports are in a list of acceptable packages
-    #- dupword # [useless without config] checks for duplicate words in the source code
-    #- errchkjson # [don't see profit + I'm against of omitting errors like in the first example https://github.com/breml/errchkjson] checks types passed to the json encoding functions. Reports unsupported types and optionally reports occasions, where the check for the returned error can be omitted
-    #- forcetypeassert # [replaced by errcheck] finds forced type assertions
+    # - exhaustruct # checks if all structure fields are initialized
     #- goerr113 # [too strict] checks the errors handling expressions
-    #- gofmt # [replaced by goimports] checks whether code was gofmt-ed
-    #- gofumpt # [replaced by goimports, gofumports is not available yet] checks whether code was gofumpt-ed
     #- gosmopolitan # reports certain i18n/l10n anti-patterns in your Go codebase
     #- grouper # analyzes expression groups
     #- importas # enforces consistent import aliases
     #- maintidx # measures the maintainability index of each function
-    #- wsl # [too strict and mostly code is not more readable] whitespace linter forces you to use empty lines
     #- tagliatelle # checks the struct tags
     #- contextcheck # Check whether the function uses a non-inherited context.
 
@@ -163,33 +153,9 @@ linters-settings:
   nlreturn:
     block-size: 8
 
-  exhaustruct:
-    # Default: []
-    exclude:
-      - ".*_test.go$"
-      # std libs
-      - "^net/http.Client$"
-      - "^net/http.Cookie$"
-      - "^net/http.Request$"
-      - "^net/http.Response$"
-      - "^net/http.Server$"
-      - "^net/http.Transport$"
-      - "^net/url.URL$"
-      - "^os/exec.Cmd$"
-      - "^reflect.StructField$"
-      # public libs
-      - "^github.com/Shopify/sarama.Config$"
-      - "^github.com/Shopify/sarama.ProducerMessage$"
-      - "^github.com/mitchellh/mapstructure.DecoderConfig$"
-      - "^github.com/prometheus/client_golang/.+Opts$"
-      - "^github.com/spf13/cobra.Command$"
-      - "^github.com/spf13/cobra.CompletionOptions$"
-      - "^github.com/stretchr/testify/mock.Mock$"
-      - "^github.com/testcontainers/testcontainers-go.+Request$"
-      - "^github.com/testcontainers/testcontainers-go.FromDockerfile$"
-      - "^golang.org/x/tools/go/analysis.Analyzer$"
-      - "^google.golang.org/protobuf/.+Options$"
-      - "^gopkg.in/yaml.v3.Node$"
+  gosec:
+    excludes:
+      - G404 # Ignore insecure random number source.
 
   funlen:
     # Checks the number of lines in a function.

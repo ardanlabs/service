@@ -76,13 +76,22 @@ func (c *Client[T]) handleTime(v reflect.Value) string {
 	return "empty-time"
 }
 
-// Permutated key takes a prefix, and a struct where the fields are
-// concatenated with in order to make a unique cache key. Passing
-// anything but a struct for "permutationStruct" will result in a panic.
+// PermutatedKey takes a prefix and a struct where the fields are concatenated
+// in order to create a unique cache key. Passing anything but a struct for
+// "permutationStruct" will result in a panic. The cache will only use the
+// EXPORTED fields of the struct to construct the key. The permutation struct
+// should be FLAT, with no nested structs. The fields can be any of the basic
+// types, as well as slices and time.Time values.
 //
-// The cache will only use the EXPORTED fields of the struct to construct the key.
-// The permutation struct should be FLAT, with no nested structs. The fields can
-// be any of the basic types, as well as slices and time.Time values.
+// Parameters:
+//
+//	prefix - The prefix for the cache key.
+//	permutationStruct - A struct whose fields are concatenated to form a unique cache key.
+//	Only exported fields are used.
+//
+// Returns:
+//
+//	A string to be used as the cache key.
 func (c *Client[T]) PermutatedKey(prefix string, permutationStruct interface{}) string {
 	var sb strings.Builder
 	sb.WriteString(prefix)
@@ -148,8 +157,17 @@ func (c *Client[T]) PermutatedKey(prefix string, permutationStruct interface{}) 
 	return sb.String()
 }
 
-// BatchKeyFn provides a function for that can be used in conjunction with "GetOrFetchBatch".
-// It takes in a prefix, and returns a function that will append an ID suffix for each item.
+// BatchKeyFn provides a function that can be used in conjunction with
+// "GetOrFetchBatch". It takes in a prefix and returns a function that will
+// append the ID as a suffix for each item.
+//
+// Parameters:
+//
+//	prefix - The prefix to be used for each cache key.
+//
+// Returns:
+//
+//	A function that takes an ID and returns a cache key string with the given prefix and ID.
 func (c *Client[T]) BatchKeyFn(prefix string) KeyFn {
 	return func(id string) string {
 		return fmt.Sprintf("%s-ID-%s", prefix, id)
@@ -157,13 +175,21 @@ func (c *Client[T]) BatchKeyFn(prefix string) KeyFn {
 }
 
 // PermutatedBatchKeyFn provides a function that can be used in conjunction
-// with GetOrFetchBatch. It takes a prefix, and a struct where the fields are
-// concatenated with the id in order to make a unique cache key. Passing
-// anything but a struct for "permutationStruct" will result in a panic.
+// with GetOrFetchBatch. It takes a prefix and a struct where the fields are
+// concatenated with the ID in order to make a unique cache key. Passing
+// anything but a struct for "permutationStruct" will result in a panic. The
+// cache will only use the EXPORTED fields of the struct to construct the key.
+// The permutation struct should be FLAT, with no nested structs. The fields
+// can be any of the basic types, as well as slices and time.Time values.
 //
-// The cache will only use the EXPORTED fields of the struct to construct the key.
-// The permutation struct should be FLAT, with no nested structs. The fields can
-// be any of the basic types, as well as slices and time.Time values.
+// Parameters:
+//
+//	prefix - The prefix for the cache key.
+//	permutationStruct - A struct whose fields are concatenated to form a unique cache key. Only exported fields are used.
+//
+// Returns:
+//
+//	A function that takes an ID and returns a cache key string with the given prefix, permutation struct fields, and ID.
 func (c *Client[T]) PermutatedBatchKeyFn(prefix string, permutationStruct interface{}) KeyFn {
 	return func(id string) string {
 		key := c.PermutatedKey(prefix, permutationStruct)

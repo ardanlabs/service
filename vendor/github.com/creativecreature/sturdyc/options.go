@@ -91,7 +91,7 @@ func WithRelativeTimeKeyFormat(truncation time.Duration) Option {
 
 // WithLog allows you to set a custom logger for the cache. The cache isn't chatty,
 // and will only log warnings and errors that would be a nightmare to debug. If you
-// absolutely don't want any logs, you can pass in the sturydc.NoopLogger.
+// absolutely don't want any logs, you can pass in the sturdyc.NoopLogger.
 func WithLog(log Logger) Option {
 	return func(c *Config) {
 		c.log = log

@@ -4,11 +4,13 @@ import (
 	"time"
 )
 
+// buffer represents a buffer for a batch refresh.
 type buffer struct {
 	channel chan []string
 	ids     []string
 }
 
+// createBuffer should be called WITH a lock when a refresh buffer is created.
 func (c *Client[T]) createBuffer(permutation string, ids []string) {
 	bufferIDs := make([]string, 0, c.bufferSize)
 	bufferIDs = append(bufferIDs, ids...)
@@ -74,7 +76,6 @@ func bufferBatchRefresh[T any](c *Client[T], ids []string, keyFn KeyFn, fetchFn 
 			c.safeGo(func() {
 				bufferBatchRefresh(c, ids, keyFn, fetchFn)
 			})
-			return
 		}
 		return
 	}

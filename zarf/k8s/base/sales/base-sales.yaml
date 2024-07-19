@@ -1,3 +1,18 @@
+# Namespaces can help simplfy a few things with your configuration.
+#
+# If services are in the same namespace then the service name can be
+# configured as the host name to access those services.
+#
+# The way DNS works inside kubernetes is, the namespace and the rest of what
+# k8s needs is auto appended so you have the same configuration on all env
+# just the namespace differs.
+#
+# Another thing a namespace does is to bundle the resources used by an namespace.
+#
+# Another thing is network security if you implement network security with
+# network policies. It is very easy to restrict traffic between namespaces but
+# by default is allowed inside the same namespace.
+
 apiVersion: v1
 kind: Namespace
 metadata:

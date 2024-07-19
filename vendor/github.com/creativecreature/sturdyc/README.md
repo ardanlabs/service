@@ -1,5 +1,6 @@
 # `sturdyc`: a caching library for building sturdy systems
 
+[![Mentioned in Awesome Go](https://awesome.re/mentioned-badge.svg)](https://github.com/avelino/awesome-go)
 [![Go Reference](https://pkg.go.dev/badge/github.com/creativecreature/sturdyc.svg)](https://pkg.go.dev/github.com/creativecreature/sturdyc)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/creativecreature/sturdyc/blob/master/LICENSE)
 [![Go Report Card](https://goreportcard.com/badge/github.com/creativecreature/sturdyc)](https://goreportcard.com/report/github.com/creativecreature/sturdyc)
@@ -25,10 +26,67 @@ It has all the functionality you would expect from a caching library, but what
 **sets it apart** are the features designed to make I/O heavy applications both
 _robust_ and _highly performant_.
 
-### Adding `sturdyc` to your application:
+# At a glance
 
-To illustrate how to integrate this package with your application, we'll use
-the following two methods of an API client as example:
+### Deduplication
+
+`sturdyc` performs _in-flight_ tracking for every key. This also works for
+batch operations, where it can deduplicate a batch of cache misses and then
+assemble the response by picking records from multiple in-flight requests.
+
+### Early refreshes
+
+There is also a lot of extra functionality you can enable, one being _early
+refreshes_ which instructs the cache to refresh the keys which are in active
+rotation, thereby preventing them from ever expiring. This can have a huge
+impact on an applications latency as you're able to continiously serve the most
+frequently used data from memory:
+
+```go
+sturdyc.WithEarlyRefreshes(minRefreshDelay, maxRefreshDelay, exponentialBackOff)
+```
+
+### Batching
+
+When the cache retrieves data from a batchable source, it will disassemble the
+response and then cache each record individually based on the permutations of
+the options with which it was fetched.
+
+We can leverage this fact to **significantly reduce** our application's
+outgoing requests to these data sources by enabling _refresh coalescing_.
+Internally, `sturdyc` creates a buffer for each option set and gathers IDs
+until the `idealBatchSize` is reached or the `batchBufferTimeout` expires:
+
+```go
+sturdyc.WithRefreshCoalescing(idealBatchSize, batchBufferTimeout)
+```
+
+### Distributed key-value store
+
+You can also configure `sturdyc` to synchronize its in-memory cache with a
+**distributed key-value store** of your choosing:
+
+```go
+sturdyc.WithDistributedStorage(storage),
+```
+
+### Latency improvements
+
+Below is a screenshot showing the latency improvements we've observed after
+replacing our old cache with this package:
+
+&nbsp;
+<img width="1554" alt="Screenshot 2024-05-10 at 10 15 18" src="https://github.com/creativecreature/sturdyc/assets/12787673/adad1d4c-e966-4db1-969a-eda4fd75653a">
+&nbsp;
+
+In addition to this, we've seen our number of outgoing requests decrease by
+more than 90% while still serving data that is refreshed every second. This
+setting is configurable, and you can adjust it to a lower value if you like.
+
+# Adding `sturdyc` to your application:
+
+The API has been designed to make it effortless to add `sturdyc` to your
+application. We'll use the following two methods of an API client as examples:
 
 ```go
 // Order retrieves a single order by ID.
@@ -62,7 +120,7 @@ func (c *Client) Orders(ctx context.Context, ids []string) (map[string]Order, er
 ```
 
 Now, all we have to do is wrap the fetching part in a function and then hand it
-over to the cache:
+over to our cache client:
 
 ```go
 func (c *Client) Order(ctx context.Context, id string) (Order, error) {
@@ -103,76 +161,16 @@ func (c *Client) Orders(ctx context.Context, ids []string) (map[string]Order, er
 
 The example above retrieves the data from an HTTP API, but it's just as easy to
 wrap a database query, a remote procedure call, a disk read, or any other I/O
-operation
+operation.
 
-These three extra lines of code will obviously grant us the ability to serve
-the data from memory, and then retrieve it again once the TTL expires, but the
-cache can do much more. Let's look at that next!
+Next, we'll look at how to configure the cache in more detail.
 
-### Benefits:
+# Table of contents
 
-#### Deduplication
-
-When we pass our functions for data retrieval to `sturdyc`, it will
-automatically perform _in-flight_ tracking for every key. This also works for
-batch operations, where it can deduplicate a batch of cache misses and then
-assemble the response by picking records from multiple in-flight requests.
-
-#### Early refreshes
-
-There is also a lot of extra functionality you can enable, one being _early
-refreshes_ which instructs the cache to refresh the keys which are in active
-rotation, thereby preventing them from ever expiring. This can have a huge
-impact on an applications latency as you're able to continiously serve the most
-frequently used data from memory:
-
-```go
-sturdyc.WithEarlyRefreshes(minRefreshDelay, maxRefreshDelay, exponentialBackOff)
-```
-
-#### Batching
-
-When the cache retrieves data from a batchable source, it will disassemble the
-response and then cache each record individually based on the permutations of
-the options with which it was fetched.
-
-We can leverage this fact to **significantly reduce** our application's
-outgoing requests to these data sources by enabling _refresh coalescing_.
-Internally, `sturdyc` creates a buffer for each option set and gathers IDs
-until the `idealBatchSize` is reached or the `batchBufferTimeout` expires:
-
-```go
-sturdyc.WithRefreshCoalescing(idealBatchSize, batchBufferTimeout)
-```
-
-#### Distributed key-value store
-
-You can also configure `sturdyc` to synchronize its in-memory cache with a
-**distributed key-value store** of your choosing:
-
-```go
-sturdyc.WithDistributedStorage(storage),
-```
-
-#### Latency improvements
-
-Below is a screenshot showing the latency improvements we've observed after
-replacing our old cache with this package:
-
-&nbsp;
-<img width="1554" alt="Screenshot 2024-05-10 at 10 15 18" src="https://github.com/creativecreature/sturdyc/assets/12787673/adad1d4c-e966-4db1-969a-eda4fd75653a">
-&nbsp;
-
-In addition to this, we've seen our number of outgoing requests decrease by
-more than 90% while still serving data that is refreshed every second. This
-setting is configurable, and you can adjust it to a lower value if you like.
-
-### Table of contents
-
-There are examples further down this file that covers the entire API, and I
-encourage you to **read these examples in the order they appear**. Most of them
-build on each other, and many share configurations. Here is a brief overview of
-what the examples are going to cover:
+I've included examples that cover the entire API, and I encourage you to **read
+these examples in the order they appear**. Most of them build on each other,
+and many share configurations. Here is a brief overview of what the examples
+are going to cover:
 
 - [**stampede protection**](https://github.com/creativecreature/sturdyc?tab=readme-ov-file#stampede-protection)
 - [**early refreshes**](https://github.com/creativecreature/sturdyc?tab=readme-ov-file#early-refreshes)
@@ -220,7 +218,7 @@ configuration:
 	log.Println(cacheClient.Get("key1"))
 ```
 
-Next, we'll look at some of the more _advanced features_ in detail.
+Next, we'll look at some of the more _advanced features_.
 
 # Stampede protection
 
