@@ -89,13 +89,15 @@ func (a *App) EnableCORS(origins []string) {
 
 func (a *App) corsHandler(webHandler HandlerFunc) HandlerFunc {
 	h := func(ctx context.Context, r *http.Request) Encoder {
+		w := GetWriter(ctx)
+
 		for _, origin := range a.origins {
-			r.Header.Set("Access-Control-Allow-Origin", origin)
+			w.Header().Add("Access-Control-Allow-Origin", origin)
 		}
 
-		r.Header.Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-		r.Header.Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
-		r.Header.Set("Access-Control-Max-Age", "86400")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+		w.Header().Set("Access-Control-Max-Age", "86400")
 
 		return webHandler(ctx, r)
 	}
@@ -140,6 +142,7 @@ func (a *App) HandlerFunc(method string, group string, path string, handlerFunc 
 		defer span.End()
 
 		ctx = setTraceID(ctx, span.SpanContext().TraceID().String())
+		ctx = setWriter(ctx, w)
 
 		resp := handlerFunc(ctx, r)
 		if err := Respond(ctx, w, resp); err != nil {
@@ -160,7 +163,7 @@ func (a *App) HandlerFunc(method string, group string, path string, handlerFunc 
 // pair to the application server mux.
 func (a *App) RawHandlerFunc(method string, group string, path string, rawHandlerFunc http.HandlerFunc, mw ...MidFunc) {
 	handlerFunc := func(ctx context.Context, r *http.Request) Encoder {
-		rawHandlerFunc(getWriter(ctx), r)
+		rawHandlerFunc(GetWriter(ctx), r)
 		return nil
 	}
 

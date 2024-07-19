@@ -31,7 +31,8 @@ func setWriter(ctx context.Context, w http.ResponseWriter) context.Context {
 	return context.WithValue(ctx, writer, w)
 }
 
-func getWriter(ctx context.Context) http.ResponseWriter {
+// GetWriter returns the underlying writer for the request.
+func GetWriter(ctx context.Context) http.ResponseWriter {
 	v, ok := ctx.Value(writer).(http.ResponseWriter)
 	if !ok {
 		return nil
