@@ -166,7 +166,7 @@ func (b *Business) Count(ctx context.Context, filter QueryFilter) (int, error) {
 	return b.storer.Count(ctx, filter)
 }
 
-// QueryByID finds the user by the specified Ib.
+// QueryByID finds the user by the specified ID.
 func (b *Business) QueryByID(ctx context.Context, userID uuid.UUID) (User, error) {
 	user, err := b.storer.QueryByID(ctx, userID)
 	if err != nil {

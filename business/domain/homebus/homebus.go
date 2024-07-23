@@ -177,7 +177,7 @@ func (b *Business) Count(ctx context.Context, filter QueryFilter) (int, error) {
 	return b.storer.Count(ctx, filter)
 }
 
-// QueryByID finds the home by the specified Ib.
+// QueryByID finds the home by the specified ID.
 func (b *Business) QueryByID(ctx context.Context, homeID uuid.UUID) (Home, error) {
 	hme, err := b.storer.QueryByID(ctx, homeID)
 	if err != nil {
@@ -187,7 +187,7 @@ func (b *Business) QueryByID(ctx context.Context, homeID uuid.UUID) (Home, error
 	return hme, nil
 }
 
-// QueryByUserID finds the homes by a specified User Ib.
+// QueryByUserID finds the homes by a specified User ID.
 func (b *Business) QueryByUserID(ctx context.Context, userID uuid.UUID) ([]Home, error) {
 	hmes, err := b.storer.QueryByUserID(ctx, userID)
 	if err != nil {

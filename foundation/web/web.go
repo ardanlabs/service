@@ -40,7 +40,6 @@ type App struct {
 
 // NewApp creates an App value that handle a set of routes for the application.
 func NewApp(log Logger, tracer trace.Tracer, mw ...MidFunc) *App {
-
 	// Create an OpenTelemetry HTTP Handler which wraps our router. This will start
 	// the initial span and annotate it with information about the request/trusted.
 	//
@@ -62,7 +61,7 @@ func NewApp(log Logger, tracer trace.Tracer, mw ...MidFunc) *App {
 // ServeHTTP implements the http.Handler interface. It's the entry point for
 // all http traffic and allows the opentelemetry mux to run first to handle
 // tracing. The opentelemetry mux then calls the application mux to handle
-// application traffic. This was set up on line 44 in the NewApp function.
+// application traffic. This was set up in the NewApp function.
 func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	a.otmux.ServeHTTP(w, r)
 }
