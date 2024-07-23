@@ -162,7 +162,7 @@ func (b *Business) Count(ctx context.Context, filter QueryFilter) (int, error) {
 	return b.storer.Count(ctx, filter)
 }
 
-// QueryByID finds the product by the specified Ib.
+// QueryByID finds the product by the specified ID.
 func (b *Business) QueryByID(ctx context.Context, productID uuid.UUID) (Product, error) {
 	prd, err := b.storer.QueryByID(ctx, productID)
 	if err != nil {
@@ -172,7 +172,7 @@ func (b *Business) QueryByID(ctx context.Context, productID uuid.UUID) (Product,
 	return prd, nil
 }
 
-// QueryByUserID finds the products by a specified User Ib.
+// QueryByUserID finds the products by a specified User ID.
 func (b *Business) QueryByUserID(ctx context.Context, userID uuid.UUID) ([]Product, error) {
 	prds, err := b.storer.QueryByUserID(ctx, userID)
 	if err != nil {
