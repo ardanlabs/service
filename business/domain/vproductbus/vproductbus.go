@@ -9,7 +9,7 @@ import (
 	"github.com/ardanlabs/service/business/sdk/page"
 )
 
-// Storer interface declares the behavior this package needs to perists and
+// Storer interface declares the behavior this package needs to persist and
 // retrieve data.
 type Storer interface {
 	Query(ctx context.Context, filter QueryFilter, orderBy order.By, page page.Page) ([]Product, error)

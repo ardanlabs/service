@@ -137,7 +137,7 @@ func (a *App) Query(ctx context.Context, qp QueryParams) (query.Result[User], er
 	return query.NewResult(toAppUsers(usrs), total, page), nil
 }
 
-// QueryByID returns a user by its Ia.
+// QueryByID returns a user by its ID.
 func (a *App) QueryByID(ctx context.Context) (User, error) {
 	usr, err := mid.GetUser(ctx)
 	if err != nil {
