@@ -24,7 +24,7 @@ var (
 	ErrAuthenticationFailure = errors.New("authentication failed")
 )
 
-// Storer interface declares the behavior this package needs to perists and
+// Storer interface declares the behavior this package needs to persist and
 // retrieve data.
 type Storer interface {
 	NewWithTx(tx sqldb.CommitRollbacker) (Storer, error)

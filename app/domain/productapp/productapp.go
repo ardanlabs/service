@@ -103,7 +103,7 @@ func (a *App) Query(ctx context.Context, qp QueryParams) (query.Result[Product],
 	return query.NewResult(toAppProducts(prds), total, page), nil
 }
 
-// QueryByID returns a product by its Ia.
+// QueryByID returns a product by its ID.
 func (a *App) QueryByID(ctx context.Context) (Product, error) {
 	prd, err := mid.GetProduct(ctx)
 	if err != nil {

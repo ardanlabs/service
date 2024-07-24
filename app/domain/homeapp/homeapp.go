@@ -103,7 +103,7 @@ func (a *App) Query(ctx context.Context, qp QueryParams) (query.Result[Home], er
 	return query.NewResult(toAppHomes(hmes), total, page), nil
 }
 
-// QueryByID returns a home by its Ia.
+// QueryByID returns a home by its ID.
 func (a *App) QueryByID(ctx context.Context) (Home, error) {
 	hme, err := mid.GetHome(ctx)
 	if err != nil {
