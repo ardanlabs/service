@@ -35,7 +35,7 @@ github.com/creativecreature/sturdyc
 # github.com/felixge/httpsnoop v1.0.4
 ## explicit; go 1.13
 github.com/felixge/httpsnoop
-# github.com/gabriel-vasile/mimetype v1.4.4
+# github.com/gabriel-vasile/mimetype v1.4.5
 ## explicit; go 1.20
 github.com/gabriel-vasile/mimetype
 github.com/gabriel-vasile/mimetype/internal/charset
@@ -100,7 +100,7 @@ github.com/gorilla/mux
 # github.com/gorilla/websocket v1.5.3
 ## explicit; go 1.12
 github.com/gorilla/websocket
-# github.com/grpc-ecosystem/grpc-gateway/v2 v2.20.0
+# github.com/grpc-ecosystem/grpc-gateway/v2 v2.21.0
 ## explicit; go 1.20
 github.com/grpc-ecosystem/grpc-gateway/v2/internal/httprule
 github.com/grpc-ecosystem/grpc-gateway/v2/runtime
@@ -140,7 +140,7 @@ github.com/leodido/go-urn/scim/schema
 # github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822
 ## explicit
 github.com/munnerz/goautoneg
-# github.com/open-policy-agent/opa v0.66.0
+# github.com/open-policy-agent/opa v0.67.0
 ## explicit; go 1.21
 github.com/open-policy-agent/opa/ast
 github.com/open-policy-agent/opa/ast/internal/scanner
@@ -228,6 +228,7 @@ github.com/open-policy-agent/opa/topdown/print
 github.com/open-policy-agent/opa/tracing
 github.com/open-policy-agent/opa/types
 github.com/open-policy-agent/opa/util
+github.com/open-policy-agent/opa/util/decoding
 github.com/open-policy-agent/opa/version
 # github.com/prometheus/client_golang v1.19.1
 ## explicit; go 1.20
@@ -334,10 +335,10 @@ golang.org/x/net/http2/hpack
 golang.org/x/net/idna
 golang.org/x/net/internal/timeseries
 golang.org/x/net/trace
-# golang.org/x/sync v0.7.0
+# golang.org/x/sync v0.8.0
 ## explicit; go 1.18
 golang.org/x/sync/semaphore
-# golang.org/x/sys v0.22.0
+# golang.org/x/sys v0.23.0
 ## explicit; go 1.18
 golang.org/x/sys/cpu
 golang.org/x/sys/unix
@@ -358,10 +359,10 @@ golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
 golang.org/x/text/width
-# google.golang.org/genproto/googleapis/api v0.0.0-20240723171418-e6d459c13d2a
+# google.golang.org/genproto/googleapis/api v0.0.0-20240730163845-b1a4ccb954bf
 ## explicit; go 1.20
 google.golang.org/genproto/googleapis/api/httpbody
-# google.golang.org/genproto/googleapis/rpc v0.0.0-20240723171418-e6d459c13d2a
+# google.golang.org/genproto/googleapis/rpc v0.0.0-20240730163845-b1a4ccb954bf
 ## explicit; go 1.20
 google.golang.org/genproto/googleapis/rpc/errdetails
 google.golang.org/genproto/googleapis/rpc/status
