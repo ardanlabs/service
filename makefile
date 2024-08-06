@@ -567,7 +567,7 @@ talk-metrics:
 # ==============================================================================
 # Admin Frontend
 
-ADMIN_FRONTEND_PREFIX := ./apis/frontends/admin
+ADMIN_FRONTEND_PREFIX := ./api/cmd/frontends/admin
 
 write-token-to-env:
 	echo "VITE_SERVICE_API=http://localhost:3000/v1" > ${ADMIN_FRONTEND_PREFIX}/.env
