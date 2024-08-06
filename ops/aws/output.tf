@@ -11,3 +11,8 @@ output "cluster_endpoint" {
   description = "Endpoint for EKS control plane"
   value       = module.cluster.cluster_endpoint
 }
+
+output "repository_url" {
+  description = "ECR Repository URL"
+  value       = module.repository.repository_url
+}

@@ -25,3 +25,9 @@ After the infrastructure is built, you can use the following command to get the 
 aws eks --region $(terraform output -raw region) update-kubeconfig \
     --name eks-cluster
 ```
+
+To be able to push images to the ECR repository, you need to login to the repository:
+```bash
+aws ecr get-login-password --region $(terraform output -raw region) | \
+  docker login -u AWS --password-stdin REPOSITORY_URL
+```
