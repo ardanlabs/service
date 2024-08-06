@@ -131,6 +131,45 @@ AUTH_IMAGE      := $(BASE_IMAGE_NAME)/$(AUTH_APP):$(VERSION)
 
 # VERSION       := "0.0.1-$(shell git rev-parse --short HEAD)"
 
+
+# ==============================================================================
+# Help command
+help:
+	@echo "Usage: make <command>"
+	@echo ""
+	@echo "Commands:"
+	@echo "  dev-gotooling           Install Go tooling"
+	@echo "  dev-brew                Install brew dependencies"
+	@echo "  dev-docker              Pull Docker images"
+	@echo "  build                   Build all the containers"
+	@echo "  sales                   Build the sales container"
+	@echo "  metrics                 Build the metrics container"
+	@echo "  auth                    Build the auth container"
+	@echo "  dev-up                  Start the KIND cluster"
+	@echo "  dev-down                Stop the KIND cluster"
+	@echo "  dev-status-all          Show the status of the KIND cluster"
+	@echo "  dev-status              Show the status of the pods"
+	@echo "  dev-load                Load the containers into KIND"
+	@echo "  dev-apply               Apply the manifests to KIND"
+	@echo "  dev-restart             Restart the deployments"
+	@echo "  dev-update              Build, load, and restart the deployments"
+	@echo "  dev-update-apply        Build, load, and apply the deployments"
+	@echo "  dev-logs                Show the logs for the sales service"
+	@echo "  dev-logs-auth           Show the logs for the auth service"
+	@echo "  dev-logs-init           Show the logs for the init container"
+	@echo "  dev-describe-node       Show the node details"
+	@echo "  dev-describe-deployment Show the deployment details"
+	@echo "  dev-describe-sales      Show the sales pod details"
+	@echo "  dev-describe-auth       Show the auth pod details"
+	@echo "  dev-describe-database   Show the database pod details"
+	@echo "  dev-describe-grafana    Show the grafana pod details"
+	@echo "  dev-logs-db             Show the logs for the database service"
+	@echo "  dev-logs-grafana        Show the logs for the grafana service"
+	@echo "  dev-logs-tempo          Show the logs for the tempo service"
+	@echo "  dev-logs-loki           Show the logs for the loki service"
+	@echo "  dev-logs-promtail       Show the logs for the promtail service"
+	@echo "  dev-services-delete     Delete all"
+
 # ==============================================================================
 # Install dependencies
 
