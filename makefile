@@ -369,10 +369,10 @@ metrics-view:
 	expvarmon -ports="localhost:4020" -endpoint="/metrics" -vars="build,requests,goroutines,errors,panics,mem:memstats.HeapAlloc,mem:memstats.HeapSys,mem:memstats.Sys"
 
 grafana:
-	open -a "Google Chrome" http://localhost:3100/
+	open http://localhost:3100/
 
 statsviz:
-	open -a "Google Chrome" http://localhost:3010/debug/statsviz
+	open http://localhost:3010/debug/statsviz
 
 # ==============================================================================
 # Running tests within the local computer
