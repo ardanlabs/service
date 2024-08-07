@@ -26,7 +26,14 @@ func Errors(ctx context.Context, log *logger.Logger, next HandlerFunc) Encoder {
 		appErr = errs.Newf(errs.Internal, "Internal Server Error")
 	}
 
-	log.Error(ctx, "handled error during request", "err", err, "source_err_file", path.Base(appErr.FileName), "source_err_func", path.Base(appErr.FuncName))
+	log.Error(ctx, "handled error during request",
+		"err", err,
+		"source_err_file", path.Base(appErr.FileName),
+		"source_err_func", path.Base(appErr.FuncName))
+
+	if appErr.Code == errs.InternalOnlyLog {
+		appErr = errs.Newf(errs.Internal, "Internal Server Error")
+	}
 
 	// Send the error to the transport package so the error can be
 	// used as the response.
