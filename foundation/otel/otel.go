@@ -4,6 +4,7 @@ package otel
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/ardanlabs/service/foundation/logger"
@@ -74,27 +75,34 @@ func InitTracing(cfg Config) (*sdktrace.TracerProvider, error) {
 	return traceProvider, nil
 }
 
-// StartTrace initializes a trace by creating an initial span and writing otel
-// related information into the response. It also saves the tracer in the
+// InjectTracing initializes the request for tracing by writing otel related
+// information into the response and saving the tracer and trace id in the
 // context for later use.
-func StartTrace(ctx context.Context, tracer trace.Tracer, spanName string, endpoint string, headerCarrier propagation.HeaderCarrier) (context.Context, trace.Span) {
-	var span trace.Span
-
-	switch {
-	case tracer != nil:
-		ctx, span = tracer.Start(ctx, spanName)
-		span.SetAttributes(attribute.String("endpoint", endpoint))
-
-	default:
-		span = trace.SpanFromContext(ctx)
-	}
-
-	if headerCarrier != nil {
-		otel.GetTextMapPropagator().Inject(ctx, headerCarrier)
-	}
-
+func InjectTracing(ctx context.Context, tracer trace.Tracer) context.Context {
 	ctx = setTracer(ctx, tracer)
-	ctx = setTraceID(ctx, span.SpanContext().TraceID().String())
+	ctx = setTraceID(ctx, trace.SpanFromContext(ctx).SpanContext().TraceID().String())
+
+	return ctx
+}
+
+// AddSpan adds an otel span to the existing trace.
+func AddSpan(ctx context.Context, spanName string, keyValues ...attribute.KeyValue) (context.Context, trace.Span) {
+	v, ok := ctx.Value(tracerKey).(trace.Tracer)
+	if !ok || v == nil {
+		return ctx, trace.SpanFromContext(ctx)
+	}
+
+	ctx, span := v.Start(ctx, spanName)
+	for _, kv := range keyValues {
+		span.SetAttributes(kv)
+	}
 
 	return ctx, span
+}
+
+// AddTraceToRequest adds the current trace id to the request so it
+// can be delivered to the service being called.
+func AddTraceToRequest(ctx context.Context, r *http.Request) {
+	hc := propagation.HeaderCarrier(r.Header)
+	otel.GetTextMapPropagator().Inject(ctx, hc)
 }

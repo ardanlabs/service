@@ -7,6 +7,8 @@ import (
 	"net/http"
 
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -110,6 +112,7 @@ func (a *App) HandlerFuncNoMid(method string, group string, path string, handler
 		ctx := r.Context()
 
 		resp := handlerFunc(ctx, r)
+
 		if err := Respond(ctx, w, resp); err != nil {
 			a.log(ctx, "web-respond", "ERROR", err)
 		}
@@ -138,7 +141,10 @@ func (a *App) HandlerFunc(method string, group string, path string, handlerFunc 
 		ctx := setTracer(r.Context(), a.tracer)
 		ctx = setWriter(ctx, w)
 
+		otel.GetTextMapPropagator().Inject(ctx, propagation.HeaderCarrier(w.Header()))
+
 		resp := handlerFunc(ctx, r)
+
 		if err := Respond(ctx, w, resp); err != nil {
 			a.log(ctx, "web-respond", "ERROR", err)
 		}
@@ -171,6 +177,8 @@ func (a *App) RawHandlerFunc(method string, group string, path string, rawHandle
 	h := func(w http.ResponseWriter, r *http.Request) {
 		ctx := setTracer(r.Context(), a.tracer)
 		ctx = setWriter(ctx, w)
+
+		otel.GetTextMapPropagator().Inject(ctx, propagation.HeaderCarrier(w.Header()))
 
 		handlerFunc(ctx, r)
 	}

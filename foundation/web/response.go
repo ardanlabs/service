@@ -39,7 +39,7 @@ func Respond(ctx context.Context, w http.ResponseWriter, dataModel Encoder) erro
 		}
 	}
 
-	_, span := addSpan(ctx, "foundation.response", attribute.Int("status", statusCode))
+	_, span := addSpan(ctx, "web.send.response", attribute.Int("status", statusCode))
 	defer span.End()
 
 	if statusCode == http.StatusNoContent {

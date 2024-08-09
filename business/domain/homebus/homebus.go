@@ -13,6 +13,7 @@ import (
 	"github.com/ardanlabs/service/business/sdk/page"
 	"github.com/ardanlabs/service/business/sdk/sqldb"
 	"github.com/ardanlabs/service/foundation/logger"
+	"github.com/ardanlabs/service/foundation/otel"
 	"github.com/google/uuid"
 )
 
@@ -78,6 +79,9 @@ func (b *Business) NewWithTx(tx sqldb.CommitRollbacker) (*Business, error) {
 
 // Create adds a new home to the system.
 func (b *Business) Create(ctx context.Context, nh NewHome) (Home, error) {
+	ctx, span := otel.AddSpan(ctx, "business.homebus.delete")
+	defer span.End()
+
 	usr, err := b.userBus.QueryByID(ctx, nh.UserID)
 	if err != nil {
 		return Home{}, fmt.Errorf("user.querybyid: %s: %w", nh.UserID, err)
@@ -114,6 +118,9 @@ func (b *Business) Create(ctx context.Context, nh NewHome) (Home, error) {
 
 // Update modifies information about a home.
 func (b *Business) Update(ctx context.Context, hme Home, uh UpdateHome) (Home, error) {
+	ctx, span := otel.AddSpan(ctx, "business.homebus.update")
+	defer span.End()
+
 	if uh.Type != nil {
 		hme.Type = *uh.Type
 	}
@@ -155,6 +162,9 @@ func (b *Business) Update(ctx context.Context, hme Home, uh UpdateHome) (Home, e
 
 // Delete removes the specified home.
 func (b *Business) Delete(ctx context.Context, hme Home) error {
+	ctx, span := otel.AddSpan(ctx, "business.homebus.delete")
+	defer span.End()
+
 	if err := b.storer.Delete(ctx, hme); err != nil {
 		return fmt.Errorf("delete: %w", err)
 	}
@@ -164,6 +174,9 @@ func (b *Business) Delete(ctx context.Context, hme Home) error {
 
 // Query retrieves a list of existing homes.
 func (b *Business) Query(ctx context.Context, filter QueryFilter, orderBy order.By, page page.Page) ([]Home, error) {
+	ctx, span := otel.AddSpan(ctx, "business.homebus.query")
+	defer span.End()
+
 	hmes, err := b.storer.Query(ctx, filter, orderBy, page)
 	if err != nil {
 		return nil, fmt.Errorf("query: %w", err)
@@ -174,11 +187,17 @@ func (b *Business) Query(ctx context.Context, filter QueryFilter, orderBy order.
 
 // Count returns the total number of homes.
 func (b *Business) Count(ctx context.Context, filter QueryFilter) (int, error) {
+	ctx, span := otel.AddSpan(ctx, "business.homebus.count")
+	defer span.End()
+
 	return b.storer.Count(ctx, filter)
 }
 
 // QueryByID finds the home by the specified ID.
 func (b *Business) QueryByID(ctx context.Context, homeID uuid.UUID) (Home, error) {
+	ctx, span := otel.AddSpan(ctx, "business.homebus.querybyid")
+	defer span.End()
+
 	hme, err := b.storer.QueryByID(ctx, homeID)
 	if err != nil {
 		return Home{}, fmt.Errorf("query: homeID[%s]: %w", homeID, err)
@@ -189,6 +208,9 @@ func (b *Business) QueryByID(ctx context.Context, homeID uuid.UUID) (Home, error
 
 // QueryByUserID finds the homes by a specified User ID.
 func (b *Business) QueryByUserID(ctx context.Context, userID uuid.UUID) ([]Home, error) {
+	ctx, span := otel.AddSpan(ctx, "business.homebus.querybyuserid")
+	defer span.End()
+
 	hmes, err := b.storer.QueryByUserID(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("query: %w", err)

@@ -13,6 +13,7 @@ import (
 	"github.com/ardanlabs/service/business/sdk/page"
 	"github.com/ardanlabs/service/business/sdk/sqldb"
 	"github.com/ardanlabs/service/foundation/logger"
+	"github.com/ardanlabs/service/foundation/otel"
 	"github.com/google/uuid"
 )
 
@@ -83,6 +84,9 @@ func (b *Business) NewWithTx(tx sqldb.CommitRollbacker) (*Business, error) {
 
 // Create adds a new product to the system.
 func (b *Business) Create(ctx context.Context, np NewProduct) (Product, error) {
+	ctx, span := otel.AddSpan(ctx, "business.productbus.create")
+	defer span.End()
+
 	usr, err := b.userBus.QueryByID(ctx, np.UserID)
 	if err != nil {
 		return Product{}, fmt.Errorf("user.querybyid: %s: %w", np.UserID, err)
@@ -117,6 +121,9 @@ func (b *Business) Create(ctx context.Context, np NewProduct) (Product, error) {
 
 // Update modifies information about a product.
 func (b *Business) Update(ctx context.Context, prd Product, up UpdateProduct) (Product, error) {
+	ctx, span := otel.AddSpan(ctx, "business.productbus.update")
+	defer span.End()
+
 	if up.Name != nil {
 		prd.Name = *up.Name
 	}
@@ -140,6 +147,9 @@ func (b *Business) Update(ctx context.Context, prd Product, up UpdateProduct) (P
 
 // Delete removes the specified product.
 func (b *Business) Delete(ctx context.Context, prd Product) error {
+	ctx, span := otel.AddSpan(ctx, "business.productbus.delete")
+	defer span.End()
+
 	if err := b.storer.Delete(ctx, prd); err != nil {
 		return fmt.Errorf("delete: %w", err)
 	}
@@ -149,6 +159,9 @@ func (b *Business) Delete(ctx context.Context, prd Product) error {
 
 // Query retrieves a list of existing products.
 func (b *Business) Query(ctx context.Context, filter QueryFilter, orderBy order.By, page page.Page) ([]Product, error) {
+	ctx, span := otel.AddSpan(ctx, "business.productbus.query")
+	defer span.End()
+
 	prds, err := b.storer.Query(ctx, filter, orderBy, page)
 	if err != nil {
 		return nil, fmt.Errorf("query: %w", err)
@@ -159,11 +172,17 @@ func (b *Business) Query(ctx context.Context, filter QueryFilter, orderBy order.
 
 // Count returns the total number of products.
 func (b *Business) Count(ctx context.Context, filter QueryFilter) (int, error) {
+	ctx, span := otel.AddSpan(ctx, "business.productbus.count")
+	defer span.End()
+
 	return b.storer.Count(ctx, filter)
 }
 
 // QueryByID finds the product by the specified ID.
 func (b *Business) QueryByID(ctx context.Context, productID uuid.UUID) (Product, error) {
+	ctx, span := otel.AddSpan(ctx, "business.productbus.querybyid")
+	defer span.End()
+
 	prd, err := b.storer.QueryByID(ctx, productID)
 	if err != nil {
 		return Product{}, fmt.Errorf("query: productID[%s]: %w", productID, err)
@@ -174,6 +193,9 @@ func (b *Business) QueryByID(ctx context.Context, productID uuid.UUID) (Product,
 
 // QueryByUserID finds the products by a specified User ID.
 func (b *Business) QueryByUserID(ctx context.Context, userID uuid.UUID) ([]Product, error) {
+	ctx, span := otel.AddSpan(ctx, "business.productbus.querybyuserid")
+	defer span.End()
+
 	prds, err := b.storer.QueryByUserID(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("query: %w", err)

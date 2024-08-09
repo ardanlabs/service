@@ -109,7 +109,7 @@ func (cln *Client) do(ctx context.Context, method string, endpoint string, heade
 		cln.log.Info(ctx, "authclient: rawRequest: completed", "status", statusCode)
 	}()
 
-	ctx, span := otel.AddSpan(ctx, fmt.Sprintf("app.api.authclient.%s", base), attribute.String("endpoint", endpoint))
+	ctx, span := otel.AddSpan(ctx, fmt.Sprintf("app.sdk.authclient.%s", base), attribute.String("endpoint", endpoint))
 	defer func() {
 		span.SetAttributes(attribute.Int("status", statusCode))
 		span.End()
@@ -135,13 +135,15 @@ func (cln *Client) do(ctx context.Context, method string, endpoint string, heade
 		req.Header.Set(key, value)
 	}
 
+	otel.AddTraceToRequest(ctx, req)
+
 	resp, err := cln.http.Do(req)
 	if err != nil {
 		return fmt.Errorf("do: error: %w", err)
 	}
 	defer resp.Body.Close()
 
-	// Assign for logging the status code at the end of the function call.
+	// Assign so it can be logged in the defer above.
 	statusCode = resp.StatusCode
 
 	if statusCode == http.StatusNoContent {
