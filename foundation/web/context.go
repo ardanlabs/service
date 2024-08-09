@@ -3,37 +3,43 @@ package web
 import (
 	"context"
 	"net/http"
+
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type ctxKey int
 
 const (
-	traceKey ctxKey = iota + 1
-	writer
-	logger
+	tracerKey ctxKey = iota + 1
+	writerKey
 )
 
-func setTraceID(ctx context.Context, traceID string) context.Context {
-	return context.WithValue(ctx, traceKey, traceID)
+func setTracer(ctx context.Context, tracer trace.Tracer) context.Context {
+	return context.WithValue(ctx, tracerKey, tracer)
 }
 
-// GetTraceID returns the trace id from the context.
-func GetTraceID(ctx context.Context) string {
-	v, ok := ctx.Value(traceKey).(string)
-	if !ok {
-		return "00000000-0000-0000-0000-000000000000"
+func addSpan(ctx context.Context, spanName string, keyValues ...attribute.KeyValue) (context.Context, trace.Span) {
+	v, ok := ctx.Value(tracerKey).(trace.Tracer)
+	if !ok || v == nil {
+		return ctx, trace.SpanFromContext(ctx)
 	}
 
-	return v
+	ctx, span := v.Start(ctx, spanName)
+	for _, kv := range keyValues {
+		span.SetAttributes(kv)
+	}
+
+	return ctx, span
 }
 
 func setWriter(ctx context.Context, w http.ResponseWriter) context.Context {
-	return context.WithValue(ctx, writer, w)
+	return context.WithValue(ctx, writerKey, w)
 }
 
 // GetWriter returns the underlying writer for the request.
 func GetWriter(ctx context.Context) http.ResponseWriter {
-	v, ok := ctx.Value(writer).(http.ResponseWriter)
+	v, ok := ctx.Value(writerKey).(http.ResponseWriter)
 	if !ok {
 		return nil
 	}

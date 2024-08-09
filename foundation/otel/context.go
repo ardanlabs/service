@@ -1,4 +1,4 @@
-package tracer
+package otel
 
 import (
 	"context"
@@ -9,15 +9,18 @@ import (
 
 type ctxKey int
 
-const key ctxKey = 1
+const (
+	tracerKey ctxKey = iota + 1
+	traceIDKey
+)
 
 func setTracer(ctx context.Context, tracer trace.Tracer) context.Context {
-	return context.WithValue(ctx, key, tracer)
+	return context.WithValue(ctx, tracerKey, tracer)
 }
 
 // AddSpan adds an otel span to the existing trace.
 func AddSpan(ctx context.Context, spanName string, keyValues ...attribute.KeyValue) (context.Context, trace.Span) {
-	v, ok := ctx.Value(key).(trace.Tracer)
+	v, ok := ctx.Value(tracerKey).(trace.Tracer)
 	if !ok || v == nil {
 		return ctx, trace.SpanFromContext(ctx)
 	}
@@ -28,4 +31,18 @@ func AddSpan(ctx context.Context, spanName string, keyValues ...attribute.KeyVal
 	}
 
 	return ctx, span
+}
+
+func setTraceID(ctx context.Context, traceID string) context.Context {
+	return context.WithValue(ctx, traceIDKey, traceID)
+}
+
+// GetTraceID returns the trace id from the context.
+func GetTraceID(ctx context.Context) string {
+	v, ok := ctx.Value(traceIDKey).(string)
+	if !ok {
+		return "00000000-0000-0000-0000-000000000000"
+	}
+
+	return v
 }

@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/ardanlabs/service/foundation/tracer"
-	"github.com/google/uuid"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -109,7 +107,7 @@ func (a *App) corsHandler(webHandler HandlerFunc) HandlerFunc {
 // middleware or OTEL tracing.
 func (a *App) HandlerFuncNoMid(method string, group string, path string, handlerFunc HandlerFunc) {
 	h := func(w http.ResponseWriter, r *http.Request) {
-		ctx := setTraceID(r.Context(), uuid.NewString())
+		ctx := r.Context()
 
 		resp := handlerFunc(ctx, r)
 		if err := Respond(ctx, w, resp); err != nil {
@@ -137,10 +135,7 @@ func (a *App) HandlerFunc(method string, group string, path string, handlerFunc 
 	}
 
 	h := func(w http.ResponseWriter, r *http.Request) {
-		ctx, span := tracer.StartTrace(r.Context(), a.tracer, "pkg.web.handle", r.RequestURI, w)
-		defer span.End()
-
-		ctx = setTraceID(ctx, span.SpanContext().TraceID().String())
+		ctx := setTracer(r.Context(), a.tracer)
 		ctx = setWriter(ctx, w)
 
 		resp := handlerFunc(ctx, r)
@@ -174,10 +169,7 @@ func (a *App) RawHandlerFunc(method string, group string, path string, rawHandle
 	}
 
 	h := func(w http.ResponseWriter, r *http.Request) {
-		ctx, span := tracer.StartTrace(r.Context(), a.tracer, "pkg.web.rawhandle", r.RequestURI, w)
-		defer span.End()
-
-		ctx = setTraceID(ctx, span.SpanContext().TraceID().String())
+		ctx := setTracer(r.Context(), a.tracer)
 		ctx = setWriter(ctx, w)
 
 		handlerFunc(ctx, r)

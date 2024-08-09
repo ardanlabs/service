@@ -1,10 +1,9 @@
-// Package tracer provides otel support.
-package tracer
+// Package otel provides otel support.
+package otel
 
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/ardanlabs/service/foundation/logger"
@@ -66,8 +65,7 @@ func InitTracing(cfg Config) (*sdktrace.TracerProvider, error) {
 	// our traces.
 	otel.SetTracerProvider(traceProvider)
 
-	// Chooses the HTTP header formats we extract incoming trace contexts from,
-	// and the headers we set in outgoing requests.
+	// Extract incoming trace contexts and the headers we set in outgoing requests.
 	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(
 		propagation.TraceContext{},
 		propagation.Baggage{},
@@ -77,9 +75,9 @@ func InitTracing(cfg Config) (*sdktrace.TracerProvider, error) {
 }
 
 // StartTrace initializes a trace by creating an initial span and writing otel
-// related information into the response writer. It also saves the tracer
-// in the context for later use.
-func StartTrace(ctx context.Context, tracer trace.Tracer, spanName string, endpoint string, w http.ResponseWriter) (context.Context, trace.Span) {
+// related information into the response. It also saves the tracer in the
+// context for later use.
+func StartTrace(ctx context.Context, tracer trace.Tracer, spanName string, endpoint string, headerCarrier propagation.HeaderCarrier) (context.Context, trace.Span) {
 	var span trace.Span
 
 	switch {
@@ -91,10 +89,12 @@ func StartTrace(ctx context.Context, tracer trace.Tracer, spanName string, endpo
 		span = trace.SpanFromContext(ctx)
 	}
 
-	// Inject the trace information into the response.
-	otel.GetTextMapPropagator().Inject(ctx, propagation.HeaderCarrier(w.Header()))
+	if headerCarrier != nil {
+		otel.GetTextMapPropagator().Inject(ctx, headerCarrier)
+	}
 
 	ctx = setTracer(ctx, tracer)
+	ctx = setTraceID(ctx, span.SpanContext().TraceID().String())
 
 	return ctx, span
 }

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/ardanlabs/service/foundation/tracer"
 	"go.opentelemetry.io/otel/attribute"
 )
 
@@ -40,7 +39,7 @@ func Respond(ctx context.Context, w http.ResponseWriter, dataModel Encoder) erro
 		}
 	}
 
-	_, span := tracer.AddSpan(ctx, "foundation.response", attribute.Int("status", statusCode))
+	_, span := addSpan(ctx, "foundation.response", attribute.Int("status", statusCode))
 	defer span.End()
 
 	if statusCode == http.StatusNoContent {

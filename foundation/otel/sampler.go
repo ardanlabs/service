@@ -1,4 +1,4 @@
-package tracer
+package otel
 
 import (
 	"github.com/ardanlabs/service/foundation/logger"

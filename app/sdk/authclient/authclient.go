@@ -15,7 +15,7 @@ import (
 
 	"github.com/ardanlabs/service/app/sdk/errs"
 	"github.com/ardanlabs/service/foundation/logger"
-	"github.com/ardanlabs/service/foundation/tracer"
+	"github.com/ardanlabs/service/foundation/otel"
 	"go.opentelemetry.io/otel/attribute"
 )
 
@@ -109,7 +109,7 @@ func (cln *Client) do(ctx context.Context, method string, endpoint string, heade
 		cln.log.Info(ctx, "authclient: rawRequest: completed", "status", statusCode)
 	}()
 
-	ctx, span := tracer.AddSpan(ctx, fmt.Sprintf("app.api.authclient.%s", base), attribute.String("endpoint", endpoint))
+	ctx, span := otel.AddSpan(ctx, fmt.Sprintf("app.api.authclient.%s", base), attribute.String("endpoint", endpoint))
 	defer func() {
 		span.SetAttributes(attribute.Int("status", statusCode))
 		span.End()

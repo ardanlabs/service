@@ -6,7 +6,7 @@ import (
 
 	"github.com/ardanlabs/service/app/sdk/errs"
 	"github.com/ardanlabs/service/foundation/logger"
-	"github.com/ardanlabs/service/foundation/tracer"
+	"github.com/ardanlabs/service/foundation/otel"
 )
 
 // Errors handles errors coming out of the call chain.
@@ -17,7 +17,7 @@ func Errors(ctx context.Context, log *logger.Logger, next HandlerFunc) Encoder {
 		return resp
 	}
 
-	_, span := tracer.AddSpan(ctx, "app.sdk.mid.error")
+	_, span := otel.AddSpan(ctx, "app.sdk.mid.error")
 	span.RecordError(err)
 	defer span.End()
 
