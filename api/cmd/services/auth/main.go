@@ -171,7 +171,6 @@ func run(ctx context.Context, log *logger.Logger) error {
 	log.Info(ctx, "startup", "status", "initializing tracing support")
 
 	traceProvider, err := otel.InitTracing(otel.Config{
-		Log:         log,
 		ServiceName: cfg.Tempo.ServiceName,
 		Host:        cfg.Tempo.Host,
 		ExcludedRoutes: map[string]struct{}{
