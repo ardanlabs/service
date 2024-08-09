@@ -1,19 +1,16 @@
 package otel
 
 import (
-	"github.com/ardanlabs/service/foundation/logger"
 	"go.opentelemetry.io/otel/sdk/trace"
 )
 
 type endpointExcluder struct {
-	log         *logger.Logger
 	endpoints   map[string]struct{}
 	probability float64
 }
 
-func newEndpointExcluder(log *logger.Logger, endpoints map[string]struct{}, probability float64) endpointExcluder {
+func newEndpointExcluder(endpoints map[string]struct{}, probability float64) endpointExcluder {
 	return endpointExcluder{
-		log:         log,
 		endpoints:   endpoints,
 		probability: probability,
 	}

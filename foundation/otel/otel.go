@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ardanlabs/service/foundation/logger"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
@@ -21,7 +20,6 @@ import (
 
 // Config defines the information needed to init tracing.
 type Config struct {
-	Log            *logger.Logger
 	ServiceName    string
 	Host           string
 	ExcludedRoutes map[string]struct{}
@@ -47,7 +45,7 @@ func InitTracing(cfg Config) (*sdktrace.TracerProvider, error) {
 	}
 
 	traceProvider := sdktrace.NewTracerProvider(
-		sdktrace.WithSampler(newEndpointExcluder(cfg.Log, cfg.ExcludedRoutes, cfg.Probability)),
+		sdktrace.WithSampler(newEndpointExcluder(cfg.ExcludedRoutes, cfg.Probability)),
 		sdktrace.WithBatcher(exporter,
 			sdktrace.WithMaxExportBatchSize(sdktrace.DefaultMaxExportBatchSize),
 			sdktrace.WithBatchTimeout(sdktrace.DefaultScheduleDelay*time.Millisecond),
