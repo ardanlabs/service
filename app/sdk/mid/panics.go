@@ -17,7 +17,7 @@ func Panics(ctx context.Context, next HandlerFunc) (resp Encoder) {
 	defer func() {
 		if rec := recover(); rec != nil {
 			trace := debug.Stack()
-			resp = errs.Newf(errs.Internal, "PANIC [%v] TRACE[%s]", rec, string(trace))
+			resp = errs.Newf(errs.InternalOnlyLog, "PANIC [%v] TRACE[%s]", rec, string(trace))
 
 			metrics.AddPanics(ctx)
 		}
