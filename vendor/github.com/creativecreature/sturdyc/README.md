@@ -7,24 +7,21 @@
 [![Test](https://github.com/creativecreature/sturdyc/actions/workflows/main.yml/badge.svg)](https://github.com/creativecreature/sturdyc/actions/workflows/main.yml)
 [![codecov](https://codecov.io/gh/creativecreature/sturdyc/graph/badge.svg?token=CYSKW3Z7E6)](https://codecov.io/gh/creativecreature/sturdyc)
 
-`Sturdyc` is a highly concurrent cache that supports **non-blocking reads** and has
-a configurable number of shards that makes it possible to achieve writes
-**without any lock contention**.
-
-The [xxhash](https://github.com/cespare/xxhash) algorithm is used for efficient
-key distribution.
-
-The cache performs continuous evictions of each shard. There are options to
-both disable this functionality and tweak the interval. When you create a
-cache client, you get to decide the percentage of records to evict if the
-capacity is reached.
-
-All evictions are performed per shard based on recency, with an _O(N) time
-complexity_, using [quickselect](https://en.wikipedia.org/wiki/Quickselect).
+`Sturdyc` is an in-memory cache that supports **non-blocking reads** and has a
+configurable number of shards that makes it possible to achieve writes
+**without any lock contention**. The
+[xxhash](https://github.com/cespare/xxhash) algorithm is used for efficient key
+distribution.
 
 It has all the functionality you would expect from a caching library, but what
 **sets it apart** are the features designed to make I/O heavy applications both
 _robust_ and _highly performant_.
+
+# Installing
+
+```sh
+go get github.com/creativecreature/sturdyc
+```
 
 # At a glance
 
@@ -52,10 +49,10 @@ When the cache retrieves data from a batchable source, it will disassemble the
 response and then cache each record individually based on the permutations of
 the options with which it was fetched.
 
-We can leverage this fact to **significantly reduce** our application's
-outgoing requests to these data sources by enabling _refresh coalescing_.
-Internally, `sturdyc` creates a buffer for each option set and gathers IDs
-until the `idealBatchSize` is reached or the `batchBufferTimeout` expires:
+This can be used to **significantly reduce** the application's outgoing
+requests by also enabling _refresh coalescing_. Internally, `sturdyc`
+creates a buffer for each unique option set and gathers IDs until the
+`idealBatchSize` is reached or the `batchBufferTimeout` expires:
 
 ```go
 sturdyc.WithRefreshCoalescing(idealBatchSize, batchBufferTimeout)
@@ -70,6 +67,19 @@ You can also configure `sturdyc` to synchronize its in-memory cache with a
 sturdyc.WithDistributedStorage(storage),
 ```
 
+### Evictions
+The cache runs a background job which continuously evicts expired records from
+each shard. However, there are options to both tweak the interval and disable
+the functionality altogether. This is can give you a slight performance boost
+in situations where you're unlikely to exceed any memory limits.
+
+When the cache reaches its capacity, a fallback eviction is triggered. This
+process performs evictions on a per-shard basis, selecting records for removal
+based on recency. The eviction algorithm uses
+[quickselect](https://en.wikipedia.org/wiki/Quickselect), which has an O(N)
+time complexity without requiring write locks on reads to update a recency
+list.
+
 ### Latency improvements
 
 Below is a screenshot showing the latency improvements we've observed after
@@ -80,13 +90,13 @@ replacing our old cache with this package:
 &nbsp;
 
 In addition to this, we've seen our number of outgoing requests decrease by
-more than 90% while still serving data that is refreshed every second. This
-setting is configurable, and you can adjust it to a lower value if you like.
+more than 90%.
 
 # Adding `sturdyc` to your application:
 
-The API has been designed to make it effortless to add `sturdyc` to your
-application. We'll use the following two methods of an API client as examples:
+I have tried to design the API in a way that should make it effortless to add
+`sturdyc` to an existing application. We'll use the following two methods of an
+API client as examples:
 
 ```go
 // Order retrieves a single order by ID.
@@ -119,8 +129,8 @@ func (c *Client) Orders(ctx context.Context, ids []string) (map[string]Order, er
 }
 ```
 
-Now, all we have to do is wrap the fetching part in a function and then hand it
-over to our cache client:
+All we have to do is wrap the code that retrieves the data in a function, and
+then hand it over to our cache client:
 
 ```go
 func (c *Client) Order(ctx context.Context, id string) (Order, error) {
@@ -161,7 +171,8 @@ func (c *Client) Orders(ctx context.Context, ids []string) (map[string]Order, er
 
 The example above retrieves the data from an HTTP API, but it's just as easy to
 wrap a database query, a remote procedure call, a disk read, or any other I/O
-operation.
+operation. We can also use closures to make sure that the function that
+retrieves the data has all of the values it needs.
 
 Next, we'll look at how to configure the cache in more detail.
 
@@ -172,6 +183,7 @@ these examples in the order they appear**. Most of them build on each other,
 and many share configurations. Here is a brief overview of what the examples
 are going to cover:
 
+- [**creating a cache client**](https://github.com/creativecreature/sturdyc?tab=readme-ov-file#creating-a-cache-client)
 - [**stampede protection**](https://github.com/creativecreature/sturdyc?tab=readme-ov-file#stampede-protection)
 - [**early refreshes**](https://github.com/creativecreature/sturdyc?tab=readme-ov-file#early-refreshes)
 - [**caching non-existent records**](https://github.com/creativecreature/sturdyc?tab=readme-ov-file#non-existent-records)
@@ -183,13 +195,7 @@ are going to cover:
 - [**custom metrics**](https://github.com/creativecreature/sturdyc?tab=readme-ov-file#custom-metrics)
 - [**generics**](https://github.com/creativecreature/sturdyc?tab=readme-ov-file#generics)
 
-# Installing
-
-```sh
-go get github.com/creativecreature/sturdyc
-```
-
-# Getting started
+# Creating a cache client
 
 The first thing you will have to do is to create a cache client to hold your
 configuration:
@@ -224,11 +230,11 @@ Next, we'll look at some of the more _advanced features_.
 
 Cache stampedes (also known as thundering herd) occur when many requests for a
 particular piece of data, which has just expired or been evicted from the
-cache, come in at once
+cache, come in at once.
 
 Preventing this has been one of the key objectives for this package. We do not
-want to cause a significant load on the underlying data source every time a key
-expires.
+want to cause a significant load on an underlying data source every time one of
+our keys expires.
 
 The `GetOrFetch` function takes a key and a function for retrieving the data if
 it's not in the cache. The cache is going to ensure that we never have more
@@ -274,9 +280,10 @@ and that the fetchFn only got called once:
 2024/05/21 08:06:29 1337 true
 ```
 
-We can use the `GetOrFetchBatch` function for data sources that supports batching.
-To demonstrate this, I'll create a mock function that sleeps for `5` seconds,
-and then returns a map with a numerical value for every ID:
+For data sources that supports batching, we're able to use the
+`GetOrFetchBatch` function. To demonstrate this, I'll create a mock function
+that sleeps for `5` seconds, and then returns a map with a numerical value for
+every ID:
 
 ```go
 	var count atomic.Int32
@@ -314,7 +321,7 @@ simple version which adds a string prefix to every ID:
 	keyPrefixFn := cacheClient.BatchKeyFn("my-data-source")
 ```
 
-we can now request each batch in a separate goroutine:
+We can now request each batch in a separate goroutine:
 
 ```go
 	for _, batch := range batches {
@@ -373,15 +380,15 @@ further outgoing requests. The entire example is available [here.](https://githu
 Being able to prevent your most frequently used records from ever expiring can
 have a significant impact on your application's latency. Therefore, the package
 provides a `WithEarlyRefreshes` option, which instructs the cache to
-continuously refresh these records in the background.
+continuously refresh these records in the background before they expire.
 
 A refresh gets scheduled if a key is **requested again** after a configurable
 amount of time has passed. This is an important distinction because it means
 that the cache doesn't just naively refresh every key it's ever seen. Instead,
-it only refreshes the records that are actually in rotation, while allowing
-unused keys to be deleted once their TTL expires.
+it only refreshes the records that are actually in active rotation, while
+allowing unused keys to be deleted once their TTL expires.
 
-Below is an example configuration:
+Below is an example configuration that you can use to enable this functionality:
 
 ```go
 func main() {
@@ -407,8 +414,8 @@ func main() {
 }
 ```
 
-To get a feeling for how this works, we'll create a simple API client that
-embedds the cache:
+And to get a feeling for how this works, we'll use the configuration above and
+then create a simple API client which embedds the cache:
 
 ```go
 type API struct {
@@ -429,8 +436,8 @@ func (a *API) Get(ctx context.Context, key string) (string, error) {
 }
 ```
 
-return to our `main` function to create an instance of it, and then call the
-`Get` method in a loop:
+Now we can return to our `main` function to create an instance of it, and then
+call the `Get` method in a loop:
 
 ```go
 func main() {
@@ -674,7 +681,7 @@ func (a *API) Get(ctx context.Context, key string) (string, error) {
 			return "value", nil
 		}
 		// This error tells the cache that the data does not exist at the source.
-		return "", sturdyc.ErrStoreMissingRecord
+		return "", sturdyc.ErrNotFound
 	}
 	return a.GetOrFetch(ctx, key, fetchFn)
 }

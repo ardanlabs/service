@@ -6,6 +6,16 @@ import (
 	"time"
 )
 
+// entry represents a single cache entry.
+type entry[T any] struct {
+	key                 string
+	value               T
+	expiresAt           time.Time
+	refreshAt           time.Time
+	numOfRefreshRetries int
+	isMissingRecord     bool
+}
+
 // shard is a thread-safe data structure that holds a subset of the cache entries.
 type shard[T any] struct {
 	sync.RWMutex

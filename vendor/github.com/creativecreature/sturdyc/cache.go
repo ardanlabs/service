@@ -63,11 +63,11 @@ type Client[T any] struct {
 
 // New creates a new Client instance with the specified configuration.
 //
-// `capacity` defines the maximum number of entries that the cache can store.
-// `numShards` Is used to set the number of shards. Has to be greater than 0.
-// `ttl` Sets the time to live for each entry in the cache. Has to be greater than 0.
-// `evictionPercentage` Percentage of items to evict when the cache exceeds its capacity.
-// `opts` allows for additional configurations to be applied to the cache client.
+//	`capacity` defines the maximum number of entries that the cache can store.
+//	`numShards` Is used to set the number of shards. Has to be greater than 0.
+//	`ttl` Sets the time to live for each entry in the cache. Has to be greater than 0.
+//	`evictionPercentage` Percentage of items to evict when the cache exceeds its capacity.
+//	`opts` allows for additional configurations to be applied to the cache client.
 func New[T any](capacity, numShards int, ttl time.Duration, evictionPercentage int, opts ...Option) *Client[T] {
 	client := &Client[T]{
 		inFlightMap:      make(map[string]*inFlightCall[T]),

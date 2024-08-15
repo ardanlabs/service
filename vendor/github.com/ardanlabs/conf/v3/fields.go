@@ -48,6 +48,7 @@ type FieldOptions struct {
 	Noprint       bool
 	Required      bool
 	Mask          bool
+	NotZero       bool
 }
 
 // extractFields uses reflection to examine the struct and generate the keys.
@@ -172,6 +173,8 @@ func parseTag(tagStr string) (FieldOptions, error) {
 				f.Noprint = true
 			case "required":
 				f.Required = true
+			case "notzero":
+				f.NotZero = true
 			case "mask":
 				f.Mask = true
 			}

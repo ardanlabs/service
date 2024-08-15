@@ -121,7 +121,7 @@ spec:
         runAsGroup: 0
       containers:
         - name: promtail
-          image: grafana/promtail:3.0.0
+          image: grafana/promtail:3.1.0
           imagePullPolicy: IfNotPresent
           args:
             - -config.file=/etc/promtail/promtail.yaml

@@ -64,7 +64,7 @@ type Database struct {
 // to handle testing. The database is migrated to the current version and
 // a connection pool is provided with business domain packages.
 func NewDatabase(t *testing.T, testName string) *Database {
-	image := "postgres:16.3"
+	image := "postgres:16.4"
 	name := "servicetest"
 	port := "5432"
 	dockerArgs := []string{"-e", "POSTGRES_PASSWORD=postgres"}
