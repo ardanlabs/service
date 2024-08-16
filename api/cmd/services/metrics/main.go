@@ -18,6 +18,7 @@ import (
 	"github.com/ardanlabs/service/api/cmd/services/metrics/publisher"
 	expvarsrv "github.com/ardanlabs/service/api/cmd/services/metrics/publisher/expvar"
 	prometheussrv "github.com/ardanlabs/service/api/cmd/services/metrics/publisher/prometheus"
+	"github.com/ardanlabs/service/api/sdk/http/debug"
 	"github.com/ardanlabs/service/foundation/logger"
 )
 
@@ -112,6 +113,8 @@ func run(ctx context.Context, log *logger.Logger) error {
 		return fmt.Errorf("generating config for output: %w", err)
 	}
 	log.Info(ctx, "startup", "config", out)
+
+	debug.LogBuildInfo(ctx, log)
 
 	// -------------------------------------------------------------------------
 	// Start Debug Service

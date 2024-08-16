@@ -119,6 +119,8 @@ func run(ctx context.Context, log *logger.Logger) error {
 	}
 	log.Info(ctx, "startup", "config", out)
 
+	debug.LogBuildInfo(ctx, log)
+
 	expvar.NewString("build").Set(cfg.Build)
 
 	// -------------------------------------------------------------------------
