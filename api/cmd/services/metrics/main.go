@@ -18,7 +18,6 @@ import (
 	"github.com/ardanlabs/service/api/cmd/services/metrics/publisher"
 	expvarsrv "github.com/ardanlabs/service/api/cmd/services/metrics/publisher/expvar"
 	prometheussrv "github.com/ardanlabs/service/api/cmd/services/metrics/publisher/prometheus"
-	"github.com/ardanlabs/service/api/sdk/http/debug"
 	"github.com/ardanlabs/service/foundation/logger"
 )
 
@@ -114,7 +113,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 	}
 	log.Info(ctx, "startup", "config", out)
 
-	debug.LogBuildInfo(ctx, log)
+	log.BuildInfo(ctx)
 
 	// -------------------------------------------------------------------------
 	// Start Debug Service
