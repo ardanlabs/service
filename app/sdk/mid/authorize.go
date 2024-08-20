@@ -11,7 +11,6 @@ import (
 	"github.com/ardanlabs/service/business/domain/homebus"
 	"github.com/ardanlabs/service/business/domain/productbus"
 	"github.com/ardanlabs/service/business/domain/userbus"
-	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/google/uuid"
 )
 
@@ -19,7 +18,7 @@ import (
 var ErrInvalidID = errors.New("ID is not in its proper form")
 
 // Authorize validates authorization via the auth service.
-func Authorize(ctx context.Context, log *logger.Logger, client *authclient.Client, rule string, next HandlerFunc) Encoder {
+func Authorize(ctx context.Context, client *authclient.Client, rule string, next HandlerFunc) Encoder {
 	userID, err := GetUserID(ctx)
 	if err != nil {
 		return errs.New(errs.Unauthenticated, err)
@@ -45,7 +44,7 @@ func Authorize(ctx context.Context, log *logger.Logger, client *authclient.Clien
 // user from the DB if a user id is specified in the call. Depending on the rule
 // specified, the userid from the claims may be compared with the specified
 // user id.
-func AuthorizeUser(ctx context.Context, log *logger.Logger, client *authclient.Client, userBus *userbus.Business, rule string, id string, next HandlerFunc) Encoder {
+func AuthorizeUser(ctx context.Context, client *authclient.Client, userBus *userbus.Business, rule string, id string, next HandlerFunc) Encoder {
 	var userID uuid.UUID
 
 	if id != "" {
@@ -88,7 +87,7 @@ func AuthorizeUser(ctx context.Context, log *logger.Logger, client *authclient.C
 // product from the DB if a product id is specified in the call. Depending on
 // the rule specified, the userid from the claims may be compared with the
 // specified user id from the product.
-func AuthorizeProduct(ctx context.Context, log *logger.Logger, client *authclient.Client, productBus *productbus.Business, id string, next HandlerFunc) Encoder {
+func AuthorizeProduct(ctx context.Context, client *authclient.Client, productBus *productbus.Business, id string, next HandlerFunc) Encoder {
 	var userID uuid.UUID
 
 	if id != "" {
@@ -132,7 +131,7 @@ func AuthorizeProduct(ctx context.Context, log *logger.Logger, client *authclien
 // home from the DB if a home id is specified in the call. Depending on
 // the rule specified, the userid from the claims may be compared with the
 // specified user id from the home.
-func AuthorizeHome(ctx context.Context, log *logger.Logger, client *authclient.Client, homeBus *homebus.Business, id string, next HandlerFunc) Encoder {
+func AuthorizeHome(ctx context.Context, client *authclient.Client, homeBus *homebus.Business, id string, next HandlerFunc) Encoder {
 	var userID uuid.UUID
 
 	if id != "" {

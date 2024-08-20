@@ -9,14 +9,13 @@ import (
 	"github.com/ardanlabs/service/business/domain/homebus"
 	"github.com/ardanlabs/service/business/domain/productbus"
 	"github.com/ardanlabs/service/business/domain/userbus"
-	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/web"
 )
 
 // Authorize validates authorization via the auth service.
-func Authorize(log *logger.Logger, client *authclient.Client, rule string) web.MidFunc {
+func Authorize(client *authclient.Client, rule string) web.MidFunc {
 	midFunc := func(ctx context.Context, r *http.Request, next mid.HandlerFunc) mid.Encoder {
-		return mid.Authorize(ctx, log, client, rule, next)
+		return mid.Authorize(ctx, client, rule, next)
 	}
 
 	return addMidFunc(midFunc)
@@ -26,9 +25,9 @@ func Authorize(log *logger.Logger, client *authclient.Client, rule string) web.M
 // user from the DB if a user id is specified in the call. Depending on the rule
 // specified, the userid from the claims may be compared with the specified
 // user id.
-func AuthorizeUser(log *logger.Logger, client *authclient.Client, userBus *userbus.Business, rule string) web.MidFunc {
+func AuthorizeUser(client *authclient.Client, userBus *userbus.Business, rule string) web.MidFunc {
 	midFunc := func(ctx context.Context, r *http.Request, next mid.HandlerFunc) mid.Encoder {
-		return mid.AuthorizeUser(ctx, log, client, userBus, rule, web.Param(r, "user_id"), next)
+		return mid.AuthorizeUser(ctx, client, userBus, rule, web.Param(r, "user_id"), next)
 	}
 
 	return addMidFunc(midFunc)
@@ -38,9 +37,9 @@ func AuthorizeUser(log *logger.Logger, client *authclient.Client, userBus *userb
 // product from the DB if a product id is specified in the call. Depending on
 // the rule specified, the userid from the claims may be compared with the
 // specified user id from the product.
-func AuthorizeProduct(log *logger.Logger, client *authclient.Client, productBus *productbus.Business) web.MidFunc {
+func AuthorizeProduct(client *authclient.Client, productBus *productbus.Business) web.MidFunc {
 	midFunc := func(ctx context.Context, r *http.Request, next mid.HandlerFunc) mid.Encoder {
-		return mid.AuthorizeProduct(ctx, log, client, productBus, web.Param(r, "product_id"), next)
+		return mid.AuthorizeProduct(ctx, client, productBus, web.Param(r, "product_id"), next)
 	}
 
 	return addMidFunc(midFunc)
@@ -50,9 +49,9 @@ func AuthorizeProduct(log *logger.Logger, client *authclient.Client, productBus 
 // home from the DB if a home id is specified in the call. Depending on
 // the rule specified, the userid from the claims may be compared with the
 // specified user id from the home.
-func AuthorizeHome(log *logger.Logger, client *authclient.Client, homeBus *homebus.Business) web.MidFunc {
+func AuthorizeHome(client *authclient.Client, homeBus *homebus.Business) web.MidFunc {
 	midFunc := func(ctx context.Context, r *http.Request, next mid.HandlerFunc) mid.Encoder {
-		return mid.AuthorizeHome(ctx, log, client, homeBus, web.Param(r, "home_id"), next)
+		return mid.AuthorizeHome(ctx, client, homeBus, web.Param(r, "home_id"), next)
 	}
 
 	return addMidFunc(midFunc)

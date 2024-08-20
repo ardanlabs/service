@@ -25,10 +25,10 @@ type Config struct {
 func Routes(app *web.App, cfg Config) {
 	const version = "v1"
 
-	authen := mid.Authenticate(cfg.Log, cfg.AuthClient)
-	ruleAny := mid.Authorize(cfg.Log, cfg.AuthClient, auth.RuleAny)
-	ruleUserOnly := mid.Authorize(cfg.Log, cfg.AuthClient, auth.RuleUserOnly)
-	ruleAuthorizeHome := mid.AuthorizeHome(cfg.Log, cfg.AuthClient, cfg.HomeBus)
+	authen := mid.Authenticate(cfg.AuthClient)
+	ruleAny := mid.Authorize(cfg.AuthClient, auth.RuleAny)
+	ruleUserOnly := mid.Authorize(cfg.AuthClient, auth.RuleUserOnly)
+	ruleAuthorizeHome := mid.AuthorizeHome(cfg.AuthClient, cfg.HomeBus)
 
 	api := newAPI(homeapp.NewApp(cfg.HomeBus))
 	app.HandlerFunc(http.MethodGet, version, "/homes", api.query, authen, ruleAny)

@@ -25,8 +25,8 @@ type Config struct {
 func Routes(app *web.App, cfg Config) {
 	const version = "v1"
 
-	authen := mid.Authenticate(cfg.Log, cfg.AuthClient)
-	ruleAdmin := mid.Authorize(cfg.Log, cfg.AuthClient, auth.RuleAdminOnly)
+	authen := mid.Authenticate(cfg.AuthClient)
+	ruleAdmin := mid.Authorize(cfg.AuthClient, auth.RuleAdminOnly)
 
 	api := newAPI(vproductapp.NewApp(cfg.VProductBus))
 	app.HandlerFunc(http.MethodGet, version, "/vproducts", api.query, authen, ruleAdmin)

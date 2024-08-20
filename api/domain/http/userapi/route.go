@@ -23,10 +23,10 @@ type Config struct {
 func Routes(app *web.App, cfg Config) {
 	const version = "v1"
 
-	authen := mid.Authenticate(cfg.Log, cfg.AuthClient)
-	ruleAdmin := mid.Authorize(cfg.Log, cfg.AuthClient, auth.RuleAdminOnly)
-	ruleAuthorizeUser := mid.AuthorizeUser(cfg.Log, cfg.AuthClient, cfg.UserBus, auth.RuleAdminOrSubject)
-	ruleAuthorizeAdmin := mid.AuthorizeUser(cfg.Log, cfg.AuthClient, cfg.UserBus, auth.RuleAdminOnly)
+	authen := mid.Authenticate(cfg.AuthClient)
+	ruleAdmin := mid.Authorize(cfg.AuthClient, auth.RuleAdminOnly)
+	ruleAuthorizeUser := mid.AuthorizeUser(cfg.AuthClient, cfg.UserBus, auth.RuleAdminOrSubject)
+	ruleAuthorizeAdmin := mid.AuthorizeUser(cfg.AuthClient, cfg.UserBus, auth.RuleAdminOnly)
 
 	api := newAPI(userapp.NewApp(cfg.UserBus))
 	app.HandlerFunc(http.MethodGet, version, "/users", api.query, authen, ruleAdmin)

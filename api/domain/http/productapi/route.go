@@ -25,10 +25,10 @@ type Config struct {
 func Routes(app *web.App, cfg Config) {
 	const version = "v1"
 
-	authen := mid.Authenticate(cfg.Log, cfg.AuthClient)
-	ruleAny := mid.Authorize(cfg.Log, cfg.AuthClient, auth.RuleAny)
-	ruleUserOnly := mid.Authorize(cfg.Log, cfg.AuthClient, auth.RuleUserOnly)
-	ruleAuthorizeProduct := mid.AuthorizeProduct(cfg.Log, cfg.AuthClient, cfg.ProductBus)
+	authen := mid.Authenticate(cfg.AuthClient)
+	ruleAny := mid.Authorize(cfg.AuthClient, auth.RuleAny)
+	ruleUserOnly := mid.Authorize(cfg.AuthClient, auth.RuleUserOnly)
+	ruleAuthorizeProduct := mid.AuthorizeProduct(cfg.AuthClient, cfg.ProductBus)
 
 	api := newAPI(productapp.NewApp(cfg.ProductBus))
 	app.HandlerFunc(http.MethodGet, version, "/products", api.query, authen, ruleAny)

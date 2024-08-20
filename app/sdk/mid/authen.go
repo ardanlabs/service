@@ -11,13 +11,12 @@ import (
 	"github.com/ardanlabs/service/app/sdk/authclient"
 	"github.com/ardanlabs/service/app/sdk/errs"
 	"github.com/ardanlabs/service/business/domain/userbus"
-	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 )
 
 // Authenticate validates authentication via the auth service.
-func Authenticate(ctx context.Context, log *logger.Logger, client *authclient.Client, authorization string, next HandlerFunc) Encoder {
+func Authenticate(ctx context.Context, client *authclient.Client, authorization string, next HandlerFunc) Encoder {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
