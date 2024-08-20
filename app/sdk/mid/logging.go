@@ -2,6 +2,7 @@ package mid
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -24,11 +25,11 @@ func Logger(ctx context.Context, log *logger.Logger, path string, rawQuery strin
 
 	var statusCode = errs.OK
 	if err != nil {
-		switch v := err.(type) {
-		case *errs.Error:
+		statusCode = errs.Internal
+
+		var v *errs.Error
+		if errors.As(err, &v) {
 			statusCode = v.Code
-		default:
-			statusCode = errs.Internal
 		}
 	}
 

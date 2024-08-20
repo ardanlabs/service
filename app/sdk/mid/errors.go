@@ -2,6 +2,7 @@ package mid
 
 import (
 	"context"
+	"errors"
 	"path"
 
 	"github.com/ardanlabs/service/app/sdk/errs"
@@ -21,8 +22,8 @@ func Errors(ctx context.Context, log *logger.Logger, next HandlerFunc) Encoder {
 	span.RecordError(err)
 	defer span.End()
 
-	appErr, ok := err.(*errs.Error)
-	if !ok {
+	var appErr *errs.Error
+	if !errors.As(err, &appErr) {
 		appErr = errs.Newf(errs.Internal, "Internal Server Error")
 	}
 
