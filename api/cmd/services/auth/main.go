@@ -160,6 +160,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 		Log:       log,
 		DB:        db,
 		KeyLookup: ks,
+		Issuer:    cfg.Auth.Issuer,
 	}
 
 	ath, err := auth.New(authCfg)
