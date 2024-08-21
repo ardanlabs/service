@@ -77,13 +77,7 @@ func (a *App) EnableCORS(origins []string) {
 	}
 	handler = wrapMiddleware([]MidFunc{a.corsHandler}, handler)
 
-	h := func(w http.ResponseWriter, r *http.Request) {
-		handler(r.Context(), r)
-	}
-
-	finalPath := fmt.Sprintf("%s %s", http.MethodOptions, "/")
-
-	a.mux.HandleFunc(finalPath, h)
+	a.HandlerFuncNoMid(http.MethodOptions, "", "/", handler)
 }
 
 func (a *App) corsHandler(webHandler HandlerFunc) HandlerFunc {
@@ -109,7 +103,7 @@ func (a *App) corsHandler(webHandler HandlerFunc) HandlerFunc {
 // middleware or OTEL tracing.
 func (a *App) HandlerFuncNoMid(method string, group string, path string, handlerFunc HandlerFunc) {
 	h := func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
+		ctx := setWriter(r.Context(), w)
 
 		resp := handlerFunc(ctx, r)
 
