@@ -40,8 +40,19 @@ func GenToken(log *logger.Logger, dbConfig sqldb.Config, keyPath string, userID 
 	}
 
 	ks := keystore.New()
-	if err := ks.LoadRSAKeys(os.DirFS(keyPath)); err != nil {
-		return fmt.Errorf("reading keys: %w", err)
+
+	n1, err := ks.LoadByEnv("SALAES_PEM")
+	if err != nil {
+		return fmt.Errorf("loading keys by env: %w", err)
+	}
+
+	n2, err := ks.LoadByFileSystem(os.DirFS(keyPath))
+	if err != nil {
+		return fmt.Errorf("loading keys by fs: %w", err)
+	}
+
+	if n1+n2 == 0 {
+		return fmt.Errorf("no keys exist: %w", err)
 	}
 
 	authCfg := auth.Config{
