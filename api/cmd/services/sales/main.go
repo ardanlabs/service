@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"embed"
 	"errors"
 	"expvar"
 	"fmt"
@@ -27,6 +28,9 @@ import (
 /*
 	Need to figure out timeouts for http service.
 */
+
+//go:embed static
+var static embed.FS
 
 var build = "develop"
 var routes = "all" // go build -ldflags "-X main.routes=crud"
@@ -206,9 +210,15 @@ func run(ctx context.Context, log *logger.Logger) error {
 		Tracer:     tracer,
 	}
 
+	webAPI := mux.WebAPI(cfgMux,
+		buildRoutes(),
+		mux.WithCORS(cfg.Web.CORSAllowedOrigins),
+		mux.WithFileServer(static, "static"),
+	)
+
 	api := http.Server{
 		Addr:         cfg.Web.APIHost,
-		Handler:      mux.WebAPI(cfgMux, buildRoutes(), mux.WithCORS(cfg.Web.CORSAllowedOrigins)),
+		Handler:      webAPI,
 		ReadTimeout:  cfg.Web.ReadTimeout,
 		WriteTimeout: cfg.Web.WriteTimeout,
 		IdleTimeout:  cfg.Web.IdleTimeout,

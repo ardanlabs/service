@@ -3,8 +3,11 @@ package web
 
 import (
 	"context"
+	"embed"
 	"fmt"
+	"io/fs"
 	"net/http"
+	"regexp"
 
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
@@ -157,6 +160,7 @@ func (a *App) HandlerFunc(method string, group string, path string, handlerFunc 
 // pair to the application server mux.
 func (a *App) RawHandlerFunc(method string, group string, path string, rawHandlerFunc http.HandlerFunc, mw ...MidFunc) {
 	handlerFunc := func(ctx context.Context, r *http.Request) Encoder {
+		r = r.WithContext(ctx)
 		rawHandlerFunc(GetWriter(ctx), r)
 		return nil
 	}
@@ -184,4 +188,66 @@ func (a *App) RawHandlerFunc(method string, group string, path string, rawHandle
 	finalPath = fmt.Sprintf("%s %s", method, finalPath)
 
 	a.mux.HandleFunc(finalPath, h)
+}
+
+// FileServerReact starts a file server based on the specified file system and
+// directory inside that file system for a statically built react webapp.
+func (a *App) FileServerReact(static embed.FS, dir string) error {
+	fileMatcher := regexp.MustCompile(`\.[a-zA-Z]*$`)
+
+	fSys, err := fs.Sub(static, dir)
+	if err != nil {
+		return fmt.Errorf("switching to static folder: %w", err)
+	}
+
+	fileServer := http.FileServer(http.FS(fSys))
+
+	h := func(w http.ResponseWriter, r *http.Request) {
+		if !fileMatcher.MatchString(r.URL.Path) {
+			p, err := static.ReadFile(fmt.Sprintf("%s/index.html", dir))
+			if err != nil {
+				return
+			}
+
+			w.Write(p)
+			return
+		}
+
+		fileServer.ServeHTTP(w, r)
+	}
+
+	a.mux.HandleFunc("/", h)
+
+	return nil
+}
+
+// FileServer starts a file server based on the specified file system and
+// directory inside that file system.
+func (a *App) FileServer(static embed.FS, dir string, notFoundHandler http.HandlerFunc) error {
+	fSys, err := fs.Sub(static, dir)
+	if err != nil {
+		return fmt.Errorf("switching to static folder: %w", err)
+	}
+
+	fileServer := http.FileServer(http.FS(fSys))
+
+	h := func(w http.ResponseWriter, r *http.Request) {
+		path := r.URL.Path[1:]
+		if path == "" {
+			path = "index.html"
+		}
+
+		f, err := fSys.Open(path)
+		if err != nil {
+			notFoundHandler(w, r)
+			return
+		}
+		defer f.Close()
+
+		fileServer.ServeHTTP(w, r)
+	}
+
+	a.mux.HandleFunc("/", h)
+
+	return nil
 }

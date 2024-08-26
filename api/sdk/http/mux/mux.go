@@ -4,6 +4,7 @@ package mux
 
 import (
 	"context"
+	"embed"
 	"net/http"
 
 	"github.com/ardanlabs/service/api/sdk/http/mid"
@@ -18,12 +19,22 @@ import (
 // Options represent optional parameters.
 type Options struct {
 	corsOrigin []string
+	static     *embed.FS
+	staticDir  string
 }
 
 // WithCORS provides configuration options for CORS.
 func WithCORS(origins []string) func(opts *Options) {
 	return func(opts *Options) {
 		opts.corsOrigin = origins
+	}
+}
+
+// WithFileServer provides configuration options for file server.
+func WithFileServer(static embed.FS, dir string) func(opts *Options) {
+	return func(opts *Options) {
+		opts.static = &static
+		opts.staticDir = dir
 	}
 }
 
@@ -69,6 +80,10 @@ func WebAPI(cfg Config, routeAdder RouteAdder, options ...func(opts *Options)) h
 	}
 
 	routeAdder.Add(app, cfg)
+
+	if opts.static != nil {
+		app.FileServer(*opts.static, opts.staticDir, http.NotFound)
+	}
 
 	return app
 }
