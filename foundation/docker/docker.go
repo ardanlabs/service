@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"net"
 	"os/exec"
-	"strings"
 	"time"
 )
 
@@ -110,7 +109,12 @@ func exists(name string, port string) (Container, error) {
 }
 
 func extractIPPort(name string, port string) (hostIP string, hostPort string, err error) {
-	tmpl := fmt.Sprintf("[{{range $k,$v := (index .NetworkSettings.Ports \"%s/tcp\")}}{{json $v}}{{end}}]", port)
+
+	// When IPv6 is turned on with Docker.
+	// Got  [{"HostIp":"0.0.0.0","HostPort":"49190"}{"HostIp":"::","HostPort":"49190"}]
+	// Need [{"HostIp":"0.0.0.0","HostPort":"49190"},{"HostIp":"::","HostPort":"49190"}]
+
+	tmpl := fmt.Sprintf("[{{range $i,$v := (index .NetworkSettings.Ports \"%s/tcp\")}}{{if $i}},{{end}}{{json $v}}{{end}}]", port)
 
 	var out bytes.Buffer
 	cmd := exec.Command("docker", "inspect", "-f", tmpl, name)
@@ -119,16 +123,11 @@ func extractIPPort(name string, port string) (hostIP string, hostPort string, er
 		return "", "", fmt.Errorf("could not inspect container %s: %w", name, err)
 	}
 
-	// When IPv6 is turned on with Docker.
-	// Got  [{"HostIp":"0.0.0.0","HostPort":"49190"}{"HostIp":"::","HostPort":"49190"}]
-	// Need [{"HostIp":"0.0.0.0","HostPort":"49190"},{"HostIp":"::","HostPort":"49190"}]
-	data := strings.ReplaceAll(out.String(), "}{", "},{")
-
 	var docs []struct {
 		HostIP   string `json:"HostIp"`
 		HostPort string `json:"HostPort"`
 	}
-	if err := json.Unmarshal([]byte(data), &docs); err != nil {
+	if err := json.Unmarshal(out.Bytes(), &docs); err != nil {
 		return "", "", fmt.Errorf("could not decode json: %w", err)
 	}
 
