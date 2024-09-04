@@ -5,6 +5,7 @@
 package jsontext
 
 import (
+	"iter"
 	"math"
 	"strconv"
 	"strings"
@@ -51,20 +52,37 @@ func (s *state) reset() {
 
 // Pointer is a JSON Pointer (RFC 6901) that references a particular JSON value
 // relative to the root of the top-level JSON value.
+//
+// There is exactly one representation of a pointer to a particular value,
+// so comparability of Pointer values is equivalent to checking whether
+// they both point to the exact same value.
 type Pointer string
 
-// nextToken returns the next token in the pointer, reducing the length of p.
-func (p *Pointer) nextToken() (token string) {
-	*p = Pointer(strings.TrimPrefix(string(*p), "/"))
-	i := min(uint(strings.IndexByte(string(*p), '/')), uint(len(*p)))
-	token = string(*p)[:i]
-	*p = (*p)[i:]
-	if strings.Contains(token, "~") {
-		// Per RFC 6901, section 3, unescape '~' and '/' characters.
-		token = strings.ReplaceAll(token, "~1", "/")
-		token = strings.ReplaceAll(token, "~0", "~")
+// Tokens returns an iterator over the reference tokens in the JSON pointer,
+// starting from the first token until the last token (unless stopped early).
+//
+// A token is either a JSON object name or an index to a JSON array element
+// encoded as a base-10 integer value.
+// It is impossible to distinguish between an array index and an object name
+// (that happens to be an base-10 encoded integer) without also knowing
+// the structure of the top-level JSON value that the pointer refers to.
+func (p Pointer) Tokens() iter.Seq[string] {
+	return func(yield func(string) bool) {
+		for len(p) > 0 {
+			p = Pointer(strings.TrimPrefix(string(p), "/"))
+			i := min(uint(strings.IndexByte(string(p), '/')), uint(len(p)))
+			token := string(p)[:i]
+			p = p[i:]
+			if strings.Contains(token, "~") {
+				// Per RFC 6901, section 3, unescape '~' and '/' characters.
+				token = strings.ReplaceAll(token, "~1", "/")
+				token = strings.ReplaceAll(token, "~0", "~")
+			}
+			if !yield(token) {
+				return
+			}
+		}
 	}
-	return token
 }
 
 // appendStackPointer appends a JSON Pointer (RFC 6901) to the current value.

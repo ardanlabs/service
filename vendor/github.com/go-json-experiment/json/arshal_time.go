@@ -6,6 +6,7 @@ package json
 
 import (
 	"bytes"
+	"cmp"
 	"errors"
 	"fmt"
 	"math"
@@ -317,11 +318,7 @@ func (a *timeArshaler) hasCustomFormat() bool {
 func (a *timeArshaler) appendMarshal(b []byte) ([]byte, error) {
 	switch a.base {
 	case 0:
-		// TODO(https://go.dev/issue/60204): Use cmp.Or(a.format, time.RFC3339Nano).
-		format := a.format
-		if format == "" {
-			format = time.RFC3339Nano
-		}
+		format := cmp.Or(a.format, time.RFC3339Nano)
 		n0 := len(b)
 		b = a.tt.AppendFormat(b, format)
 		// Not all Go timestamps can be represented as valid RFC 3339.
