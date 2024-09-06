@@ -12,9 +12,9 @@ import (
 	"github.com/ardanlabs/service/business/sdk/dbtest"
 )
 
-// StartTest initialized the system to run a test.
-func StartTest(t *testing.T, testName string) *Test {
-	db := dbtest.NewDatabase(t, testName)
+// New initialized the system to run a test.
+func New(t *testing.T, testName string) *Test {
+	db := dbtest.New(t, testName)
 
 	// -------------------------------------------------------------------------
 
@@ -45,5 +45,9 @@ func StartTest(t *testing.T, testName string) *Test {
 		DB:         db.DB,
 	}, salesbuild.Routes())
 
-	return New(db, auth, mux)
+	return &Test{
+		DB:   db,
+		Auth: auth,
+		mux:  mux,
+	}
 }

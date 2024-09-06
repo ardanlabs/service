@@ -19,7 +19,7 @@ import (
 func Test_VProduct(t *testing.T) {
 	t.Parallel()
 
-	db := dbtest.NewDatabase(t, "Test_Product")
+	db := dbtest.New(t, "Test_Product")
 
 	sd, err := insertSeedData(db.BusDomain)
 	if err != nil {

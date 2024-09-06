@@ -9,7 +9,7 @@ import (
 func Test_Tran(t *testing.T) {
 	t.Parallel()
 
-	test := apitest.StartTest(t, "Test_VProduct")
+	test := apitest.New(t, "Test_VProduct")
 
 	// -------------------------------------------------------------------------
 

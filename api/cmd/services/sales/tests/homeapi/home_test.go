@@ -9,7 +9,7 @@ import (
 func Test_Home(t *testing.T) {
 	t.Parallel()
 
-	test := apitest.StartTest(t, "Test_Home")
+	test := apitest.New(t, "Test_Home")
 
 	// -------------------------------------------------------------------------
 

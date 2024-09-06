@@ -24,15 +24,6 @@ type Test struct {
 	mux  http.Handler
 }
 
-// New constructs a Test value for running api tests.
-func New(db *dbtest.Database, ath *auth.Auth, mux http.Handler) *Test {
-	return &Test{
-		DB:   db,
-		Auth: ath,
-		mux:  mux,
-	}
-}
-
 // Run performs the actual test logic based on the table data.
 func (at *Test) Run(t *testing.T, table []Table, testName string) {
 	for _, tt := range table {

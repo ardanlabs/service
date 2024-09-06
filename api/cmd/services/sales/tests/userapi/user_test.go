@@ -9,7 +9,7 @@ import (
 func Test_User(t *testing.T) {
 	t.Parallel()
 
-	test := apitest.StartTest(t, "Test_User")
+	test := apitest.New(t, "Test_User")
 
 	// -------------------------------------------------------------------------
 
