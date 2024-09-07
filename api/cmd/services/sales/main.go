@@ -260,7 +260,7 @@ func buildRoutes() mux.RouteAdder {
 
 	// The idea here is that we can build different versions of the binary
 	// with different sets of exposed web APIs. By default we build a single
-	// an instance with all the web APIs.
+	// instance with all the web APIs.
 	//
 	// Here is the scenario. It would be nice to build two binaries, one for the
 	// transactional APIs (CRUD) and one for the reporting APIs. This would allow
