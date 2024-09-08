@@ -3,10 +3,8 @@ package main
 import (
 	"context"
 	"errors"
-	"expvar"
 	"fmt"
 	"net/http"
-	"net/http/pprof"
 	"os"
 	"os/signal"
 	"runtime"
@@ -18,6 +16,7 @@ import (
 	"github.com/ardanlabs/service/api/cmd/services/metrics/publisher"
 	expvarsrv "github.com/ardanlabs/service/api/cmd/services/metrics/publisher/expvar"
 	prometheussrv "github.com/ardanlabs/service/api/cmd/services/metrics/publisher/prometheus"
+	"github.com/ardanlabs/service/api/sdk/http/debug"
 	"github.com/ardanlabs/service/foundation/logger"
 )
 
@@ -118,18 +117,10 @@ func run(ctx context.Context, log *logger.Logger) error {
 	// -------------------------------------------------------------------------
 	// Start Debug Service
 
-	log.Info(ctx, "startup", "status", "debug router started", "host", cfg.Web.DebugHost)
-
-	mux := http.NewServeMux()
-	mux.HandleFunc("/debug/pprof/", pprof.Index)
-	mux.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
-	mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
-	mux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
-	mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
-	mux.Handle("/debug/vars", expvar.Handler())
-
 	go func() {
-		if err := http.ListenAndServe(cfg.Web.DebugHost, mux); err != nil {
+		log.Info(ctx, "startup", "status", "debug router started", "host", cfg.Web.DebugHost)
+
+		if err := http.ListenAndServe(cfg.Web.DebugHost, debug.Mux()); err != nil {
 			log.Error(ctx, "shutdown", "status", "debug router closed", "host", cfg.Web.DebugHost, "err", err)
 		}
 	}()
