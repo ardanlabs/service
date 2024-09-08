@@ -4,7 +4,7 @@ import (
 	_ "embed"
 )
 
-// These the current set of rules we have for auth.
+// These are the current set of rules we have for auth.
 const (
 	RuleAuthenticate   = "auth"
 	RuleAny            = "rule_any"
