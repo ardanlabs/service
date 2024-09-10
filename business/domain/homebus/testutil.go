@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 
+	"github.com/ardanlabs/service/business/types/hometype"
 	"github.com/google/uuid"
 )
 
@@ -16,13 +17,13 @@ func TestGenerateNewHomes(n int, userID uuid.UUID) []NewHome {
 	for i := 0; i < n; i++ {
 		idx++
 
-		typ := Types.Single
+		t := hometype.Single
 		if v := (idx + i) % 2; v == 0 {
-			typ = Types.Condo
+			t = hometype.Condo
 		}
 
 		nh := NewHome{
-			Type: typ,
+			Type: t,
 			Address: Address{
 				Address1: fmt.Sprintf("Address%d", idx),
 				Address2: fmt.Sprintf("Address%d", idx),

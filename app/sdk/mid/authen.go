@@ -11,6 +11,7 @@ import (
 	"github.com/ardanlabs/service/app/sdk/authclient"
 	"github.com/ardanlabs/service/app/sdk/errs"
 	"github.com/ardanlabs/service/business/domain/userbus"
+	"github.com/ardanlabs/service/business/types/role"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 )
@@ -77,7 +78,7 @@ func Basic(ctx context.Context, ath *auth.Auth, userBus *userbus.Business, autho
 			ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(8760 * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
 		},
-		Roles: userbus.ParseRolesToString(usr.Roles),
+		Roles: role.ParseToString(usr.Roles),
 	}
 
 	subjectID, err := uuid.Parse(claims.Subject)

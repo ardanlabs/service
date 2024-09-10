@@ -4,9 +4,8 @@ import (
 	"strconv"
 
 	"github.com/ardanlabs/service/app/sdk/errs"
-	"github.com/ardanlabs/service/business/domain/productbus"
-	"github.com/ardanlabs/service/business/domain/userbus"
 	"github.com/ardanlabs/service/business/domain/vproductbus"
+	"github.com/ardanlabs/service/business/types/name"
 	"github.com/google/uuid"
 )
 
@@ -22,7 +21,7 @@ func parseFilter(qp QueryParams) (vproductbus.QueryFilter, error) {
 	}
 
 	if qp.Name != "" {
-		name, err := productbus.ParseName(qp.Name)
+		name, err := name.Parse(qp.Name)
 		if err != nil {
 			return vproductbus.QueryFilter{}, errs.NewFieldsError("name", err)
 		}
@@ -47,7 +46,7 @@ func parseFilter(qp QueryParams) (vproductbus.QueryFilter, error) {
 	}
 
 	if qp.Name != "" {
-		name, err := userbus.ParseName(qp.Name)
+		name, err := name.Parse(qp.Name)
 		if err != nil {
 			return vproductbus.QueryFilter{}, errs.NewFieldsError("name", err)
 		}

@@ -5,6 +5,7 @@ import (
 
 	"github.com/ardanlabs/service/app/sdk/errs"
 	"github.com/ardanlabs/service/business/domain/homebus"
+	"github.com/ardanlabs/service/business/types/hometype"
 	"github.com/google/uuid"
 )
 
@@ -28,7 +29,7 @@ func parseFilter(qp QueryParams) (homebus.QueryFilter, error) {
 	}
 
 	if qp.Type != "" {
-		typ, err := homebus.ParseType(qp.Type)
+		typ, err := hometype.Parse(qp.Type)
 		if err != nil {
 			return homebus.QueryFilter{}, errs.NewFieldsError("type", err)
 		}

@@ -1,8 +1,7 @@
 package vproductbus
 
 import (
-	"github.com/ardanlabs/service/business/domain/productbus"
-	"github.com/ardanlabs/service/business/domain/userbus"
+	"github.com/ardanlabs/service/business/types/name"
 	"github.com/google/uuid"
 )
 
@@ -10,8 +9,8 @@ import (
 // We are using pointer semantics because the With API mutates the value.
 type QueryFilter struct {
 	ID       *uuid.UUID
-	Name     *productbus.Name
+	Name     *name.Name
 	Cost     *float64
 	Quantity *int
-	UserName *userbus.Name
+	UserName *name.Name
 }

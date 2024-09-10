@@ -1,17 +1,13 @@
-package userbus
+// Package role represents the role type in the system.
+package role
 
 import "fmt"
 
-type roleSet struct {
-	Admin Role
-	User  Role
-}
-
-// Roles represents the set of roles that can be used.
-var Roles = roleSet{
-	Admin: newRole("ADMIN"),
-	User:  newRole("USER"),
-}
+// The set of roles that can be used.
+var (
+	Admin = newRole("ADMIN")
+	User  = newRole("USER")
+)
 
 // =============================================================================
 
@@ -41,8 +37,8 @@ func (r Role) Equal(r2 Role) bool {
 
 // =============================================================================
 
-// ParseRole parses the string value and returns a role if one exists.
-func ParseRole(value string) (Role, error) {
+// Parse parses the string value and returns a role if one exists.
+func Parse(value string) (Role, error) {
 	role, exists := roles[value]
 	if !exists {
 		return Role{}, fmt.Errorf("invalid role %q", value)
@@ -51,10 +47,10 @@ func ParseRole(value string) (Role, error) {
 	return role, nil
 }
 
-// MustParseRole parses the string value and returns a role if one exists. If
+// MustParse parses the string value and returns a role if one exists. If
 // an error occurs the function panics.
-func MustParseRole(value string) Role {
-	role, err := ParseRole(value)
+func MustParse(value string) Role {
+	role, err := Parse(value)
 	if err != nil {
 		panic(err)
 	}
@@ -62,9 +58,9 @@ func MustParseRole(value string) Role {
 	return role
 }
 
-// ParseRolesToString takes a collection of user roles and converts them to
+// ParseToString takes a collection of user roles and converts them to
 // a slice of string.
-func ParseRolesToString(usrRoles []Role) []string {
+func ParseToString(usrRoles []Role) []string {
 	roles := make([]string, len(usrRoles))
 	for i, role := range usrRoles {
 		roles[i] = role.String()
@@ -73,12 +69,12 @@ func ParseRolesToString(usrRoles []Role) []string {
 	return roles
 }
 
-// ParseRoles takes a collection of strings and converts them to a slice
+// ParseMany takes a collection of strings and converts them to a slice
 // of roles.
-func ParseRoles(roles []string) ([]Role, error) {
+func ParseMany(roles []string) ([]Role, error) {
 	usrRoles := make([]Role, len(roles))
 	for i, roleStr := range roles {
-		role, err := ParseRole(roleStr)
+		role, err := Parse(roleStr)
 		if err != nil {
 			return nil, err
 		}

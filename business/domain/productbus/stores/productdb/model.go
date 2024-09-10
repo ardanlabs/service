@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/domain/productbus"
+	"github.com/ardanlabs/service/business/types/name"
 	"github.com/google/uuid"
 )
 
@@ -33,7 +34,7 @@ func toDBProduct(bus productbus.Product) product {
 }
 
 func toBusProduct(db product) (productbus.Product, error) {
-	name, err := productbus.ParseName(db.Name)
+	name, err := name.Parse(db.Name)
 	if err != nil {
 		return productbus.Product{}, fmt.Errorf("parse name: %w", err)
 	}

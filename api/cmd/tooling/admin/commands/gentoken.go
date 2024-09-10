@@ -10,6 +10,7 @@ import (
 	"github.com/ardanlabs/service/business/domain/userbus"
 	"github.com/ardanlabs/service/business/domain/userbus/stores/userdb"
 	"github.com/ardanlabs/service/business/sdk/sqldb"
+	"github.com/ardanlabs/service/business/types/role"
 	"github.com/ardanlabs/service/foundation/keystore"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/golang-jwt/jwt/v4"
@@ -85,7 +86,7 @@ func GenToken(log *logger.Logger, dbConfig sqldb.Config, keyPath string, userID 
 			ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(8760 * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
 		},
-		Roles: userbus.ParseRolesToString(usr.Roles),
+		Roles: role.ParseToString(usr.Roles),
 	}
 
 	// This will generate a JWT with the claims embedded in them. The database

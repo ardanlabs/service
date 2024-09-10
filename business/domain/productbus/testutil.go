@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 
+	"github.com/ardanlabs/service/business/types/name"
 	"github.com/google/uuid"
 )
 
@@ -17,7 +18,7 @@ func TestGenerateNewProducts(n int, userID uuid.UUID) []NewProduct {
 		idx++
 
 		np := NewProduct{
-			Name:     MustParseName(fmt.Sprintf("Name%d", idx)),
+			Name:     name.MustParse(fmt.Sprintf("Name%d", idx)),
 			Cost:     float64(rand.Intn(500)),
 			Quantity: rand.Intn(50),
 			UserID:   userID,

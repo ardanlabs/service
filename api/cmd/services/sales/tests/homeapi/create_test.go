@@ -91,7 +91,7 @@ func create400(sd apitest.SeedData) []apitest.Table {
 				},
 			},
 			GotResp: &errs.Error{},
-			ExpResp: errs.Newf(errs.InvalidArgument, "parse: invalid type \"BAD TYPE\""),
+			ExpResp: errs.Newf(errs.InvalidArgument, "parse: invalid home type \"BAD TYPE\""),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},

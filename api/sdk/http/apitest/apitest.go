@@ -14,6 +14,7 @@ import (
 	"github.com/ardanlabs/service/app/sdk/auth"
 	"github.com/ardanlabs/service/business/domain/userbus"
 	"github.com/ardanlabs/service/business/sdk/dbtest"
+	"github.com/ardanlabs/service/business/types/role"
 	"github.com/golang-jwt/jwt/v4"
 )
 
@@ -89,7 +90,7 @@ func Token(userBus *userbus.Business, ath *auth.Auth, email string) string {
 			ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
 		},
-		Roles: userbus.ParseRolesToString(dbUsr.Roles),
+		Roles: role.ParseToString(dbUsr.Roles),
 	}
 
 	token, err := ath.GenerateToken(kid, claims)

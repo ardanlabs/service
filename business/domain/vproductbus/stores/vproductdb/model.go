@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ardanlabs/service/business/domain/productbus"
-	"github.com/ardanlabs/service/business/domain/userbus"
 	"github.com/ardanlabs/service/business/domain/vproductbus"
+	"github.com/ardanlabs/service/business/types/name"
 	"github.com/google/uuid"
 )
 
@@ -22,12 +21,12 @@ type product struct {
 }
 
 func toBusProduct(db product) (vproductbus.Product, error) {
-	userName, err := userbus.ParseName(db.UserName)
+	userName, err := name.Parse(db.UserName)
 	if err != nil {
 		return vproductbus.Product{}, fmt.Errorf("parse user name: %w", err)
 	}
 
-	name, err := productbus.ParseName(db.Name)
+	name, err := name.Parse(db.Name)
 	if err != nil {
 		return vproductbus.Product{}, fmt.Errorf("parse name: %w", err)
 	}

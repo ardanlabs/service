@@ -9,6 +9,7 @@ import (
 	"github.com/ardanlabs/service/app/sdk/errs"
 	"github.com/ardanlabs/service/app/sdk/mid"
 	"github.com/ardanlabs/service/business/domain/productbus"
+	"github.com/ardanlabs/service/business/types/name"
 )
 
 // QueryParams represents the set of possible query strings.
@@ -91,7 +92,7 @@ func toBusNewProduct(ctx context.Context, app NewProduct) (productbus.NewProduct
 		return productbus.NewProduct{}, fmt.Errorf("getuserid: %w", err)
 	}
 
-	name, err := productbus.ParseName(app.Name)
+	name, err := name.Parse(app.Name)
 	if err != nil {
 		return productbus.NewProduct{}, fmt.Errorf("parse name: %w", err)
 	}
@@ -130,17 +131,17 @@ func (app UpdateProduct) Validate() error {
 }
 
 func toBusUpdateProduct(app UpdateProduct) (productbus.UpdateProduct, error) {
-	var name *productbus.Name
+	var nme *name.Name
 	if app.Name != nil {
-		nm, err := productbus.ParseName(*app.Name)
+		nm, err := name.Parse(*app.Name)
 		if err != nil {
 			return productbus.UpdateProduct{}, fmt.Errorf("parse: %w", err)
 		}
-		name = &nm
+		nme = &nm
 	}
 
 	bus := productbus.UpdateProduct{
-		Name:     name,
+		Name:     nme,
 		Cost:     app.Cost,
 		Quantity: app.Quantity,
 	}

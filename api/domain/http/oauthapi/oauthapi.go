@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/app/sdk/auth"
-	"github.com/ardanlabs/service/business/domain/userbus"
+	"github.com/ardanlabs/service/business/types/role"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/gorilla/sessions"
@@ -81,7 +81,7 @@ func (a *api) authCallback(w http.ResponseWriter, r *http.Request) {
 			ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(20 * time.Minute)),
 			IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
 		},
-		Roles: []string{userbus.Roles.Admin.String()},
+		Roles: []string{role.Admin.String()},
 	}
 
 	token, err := a.auth.GenerateToken(a.tokenKey, claims)

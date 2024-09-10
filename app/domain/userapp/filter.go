@@ -6,6 +6,7 @@ import (
 
 	"github.com/ardanlabs/service/app/sdk/errs"
 	"github.com/ardanlabs/service/business/domain/userbus"
+	"github.com/ardanlabs/service/business/types/name"
 	"github.com/google/uuid"
 )
 
@@ -21,7 +22,7 @@ func parseFilter(qp QueryParams) (userbus.QueryFilter, error) {
 	}
 
 	if qp.Name != "" {
-		name, err := userbus.ParseName(qp.Name)
+		name, err := name.Parse(qp.Name)
 		if err != nil {
 			return userbus.QueryFilter{}, errs.NewFieldsError("name", err)
 		}

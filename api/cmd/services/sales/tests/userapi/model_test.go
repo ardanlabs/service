@@ -5,6 +5,7 @@ import (
 
 	"github.com/ardanlabs/service/app/domain/userapp"
 	"github.com/ardanlabs/service/business/domain/userbus"
+	"github.com/ardanlabs/service/business/types/role"
 )
 
 func toAppUser(bus userbus.User) userapp.User {
@@ -12,7 +13,7 @@ func toAppUser(bus userbus.User) userapp.User {
 		ID:           bus.ID.String(),
 		Name:         bus.Name.String(),
 		Email:        bus.Email.Address,
-		Roles:        userbus.ParseRolesToString(bus.Roles),
+		Roles:        role.ParseToString(bus.Roles),
 		PasswordHash: nil, // This field is not marshalled.
 		Department:   bus.Department,
 		Enabled:      bus.Enabled,

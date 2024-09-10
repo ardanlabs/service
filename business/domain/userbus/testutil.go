@@ -5,10 +5,13 @@ import (
 	"fmt"
 	"math/rand"
 	"net/mail"
+
+	"github.com/ardanlabs/service/business/types/name"
+	"github.com/ardanlabs/service/business/types/role"
 )
 
 // TestNewUsers is a helper method for testing.
-func TestNewUsers(n int, role Role) []NewUser {
+func TestNewUsers(n int, rle role.Role) []NewUser {
 	newUsrs := make([]NewUser, n)
 
 	idx := rand.Intn(10000)
@@ -16,9 +19,9 @@ func TestNewUsers(n int, role Role) []NewUser {
 		idx++
 
 		nu := NewUser{
-			Name:       MustParseName(fmt.Sprintf("Name%d", idx)),
+			Name:       name.MustParse(fmt.Sprintf("Name%d", idx)),
 			Email:      mail.Address{Address: fmt.Sprintf("Email%d@gmail.com", idx)},
-			Roles:      []Role{role},
+			Roles:      []role.Role{rle},
 			Department: fmt.Sprintf("Department%d", idx),
 			Password:   fmt.Sprintf("Password%d", idx),
 		}
@@ -30,7 +33,7 @@ func TestNewUsers(n int, role Role) []NewUser {
 }
 
 // TestSeedUsers is a helper method for testing.
-func TestSeedUsers(ctx context.Context, n int, role Role, api *Business) ([]User, error) {
+func TestSeedUsers(ctx context.Context, n int, role role.Role, api *Business) ([]User, error) {
 	newUsrs := TestNewUsers(n, role)
 
 	usrs := make([]User, len(newUsrs))

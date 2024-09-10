@@ -9,6 +9,8 @@ import (
 	"github.com/ardanlabs/service/app/sdk/errs"
 	"github.com/ardanlabs/service/business/domain/productbus"
 	"github.com/ardanlabs/service/business/domain/userbus"
+	"github.com/ardanlabs/service/business/types/name"
+	"github.com/ardanlabs/service/business/types/role"
 )
 
 // Product represents an individual product.
@@ -85,7 +87,7 @@ func (app NewUser) Validate() error {
 }
 
 func toBusNewUser(app NewUser) (userbus.NewUser, error) {
-	roles, err := userbus.ParseRoles(app.Roles)
+	roles, err := role.ParseMany(app.Roles)
 	if err != nil {
 		return userbus.NewUser{}, fmt.Errorf("parse: %w", err)
 	}
@@ -95,7 +97,7 @@ func toBusNewUser(app NewUser) (userbus.NewUser, error) {
 		return userbus.NewUser{}, fmt.Errorf("parse: %w", err)
 	}
 
-	name, err := userbus.ParseName(app.Name)
+	name, err := name.Parse(app.Name)
 	if err != nil {
 		return userbus.NewUser{}, fmt.Errorf("parse: %w", err)
 	}
@@ -130,7 +132,7 @@ func (app NewProduct) Validate() error {
 }
 
 func toBusNewProduct(app NewProduct) (productbus.NewProduct, error) {
-	name, err := productbus.ParseName(app.Name)
+	name, err := name.Parse(app.Name)
 	if err != nil {
 		return productbus.NewProduct{}, fmt.Errorf("parse: %w", err)
 	}

@@ -1,4 +1,5 @@
-package userbus
+// Package name represents a name in the system.
+package name
 
 import (
 	"fmt"
@@ -24,9 +25,9 @@ func (n Name) Equal(n2 Name) bool {
 
 var nameRegEx = regexp.MustCompile("^[a-zA-Z0-9' -]{3,20}$")
 
-// ParseName parses the string value and returns a name if the value complies
+// Parse parses the string value and returns a name if the value complies
 // with the rules for a name.
-func ParseName(value string) (Name, error) {
+func Parse(value string) (Name, error) {
 	if !nameRegEx.MatchString(value) {
 		return Name{}, fmt.Errorf("invalid name %q", value)
 	}
@@ -34,10 +35,10 @@ func ParseName(value string) (Name, error) {
 	return Name{value}, nil
 }
 
-// MustParseName parses the string value and returns a name if the value
+// MustParse parses the string value and returns a name if the value
 // complies with the rules for a name. If an error occurs the function panics.
-func MustParseName(value string) Name {
-	name, err := ParseName(value)
+func MustParse(value string) Name {
+	name, err := Parse(value)
 	if err != nil {
 		panic(err)
 	}

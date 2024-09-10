@@ -9,6 +9,7 @@ import (
 	"github.com/ardanlabs/service/app/sdk/errs"
 	"github.com/ardanlabs/service/app/sdk/mid"
 	"github.com/ardanlabs/service/business/domain/homebus"
+	"github.com/ardanlabs/service/business/types/hometype"
 )
 
 // QueryParams represents the set of possible query strings.
@@ -116,7 +117,7 @@ func toBusNewHome(ctx context.Context, app NewHome) (homebus.NewHome, error) {
 		return homebus.NewHome{}, fmt.Errorf("getuserid: %w", err)
 	}
 
-	typ, err := homebus.ParseType(app.Type)
+	typ, err := hometype.Parse(app.Type)
 	if err != nil {
 		return homebus.NewHome{}, fmt.Errorf("parse: %w", err)
 	}
@@ -170,17 +171,17 @@ func (app UpdateHome) Validate() error {
 }
 
 func toBusUpdateHome(app UpdateHome) (homebus.UpdateHome, error) {
-	var typ homebus.Type
+	var t hometype.HomeType
 	if app.Type != nil {
 		var err error
-		typ, err = homebus.ParseType(*app.Type)
+		t, err = hometype.Parse(*app.Type)
 		if err != nil {
 			return homebus.UpdateHome{}, fmt.Errorf("parse: %w", err)
 		}
 	}
 
 	bus := homebus.UpdateHome{
-		Type: &typ,
+		Type: &t,
 	}
 
 	if app.Address != nil {

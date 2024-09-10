@@ -9,12 +9,14 @@ import (
 	"github.com/ardanlabs/service/business/domain/userbus"
 	"github.com/ardanlabs/service/business/domain/userbus/stores/userdb"
 	"github.com/ardanlabs/service/business/sdk/sqldb"
+	"github.com/ardanlabs/service/business/types/name"
+	"github.com/ardanlabs/service/business/types/role"
 	"github.com/ardanlabs/service/foundation/logger"
 )
 
 // UserAdd adds new users into the database.
-func UserAdd(log *logger.Logger, cfg sqldb.Config, name, email, password string) error {
-	if name == "" || email == "" || password == "" {
+func UserAdd(log *logger.Logger, cfg sqldb.Config, nme string, email string, password string) error {
+	if nme == "" || email == "" || password == "" {
 		fmt.Println("help: useradd <name> <email> <password>")
 		return ErrHelp
 	}
@@ -36,10 +38,10 @@ func UserAdd(log *logger.Logger, cfg sqldb.Config, name, email, password string)
 	}
 
 	nu := userbus.NewUser{
-		Name:     userbus.MustParseName(name),
+		Name:     name.MustParse(nme),
 		Email:    *addr,
 		Password: password,
-		Roles:    []userbus.Role{userbus.Roles.Admin, userbus.Roles.User},
+		Roles:    []role.Role{role.Admin, role.User},
 	}
 
 	usr, err := userBus.Create(ctx, nu)

@@ -3,6 +3,7 @@ package homebus
 import (
 	"time"
 
+	"github.com/ardanlabs/service/business/types/hometype"
 	"github.com/google/uuid"
 )
 
@@ -20,7 +21,7 @@ type Address struct {
 type Home struct {
 	ID          uuid.UUID
 	UserID      uuid.UUID
-	Type        Type
+	Type        hometype.HomeType
 	Address     Address
 	DateCreated time.Time
 	DateUpdated time.Time
@@ -29,7 +30,7 @@ type Home struct {
 // NewHome is what we require from clients when adding a Home.
 type NewHome struct {
 	UserID  uuid.UUID
-	Type    Type
+	Type    hometype.HomeType
 	Address Address
 }
 
@@ -50,6 +51,6 @@ type UpdateAddress struct {
 // we do not want to use pointers to basic types but we make exepction around
 // marshalling/unmarshalling.
 type UpdateHome struct {
-	Type    *Type
+	Type    *hometype.HomeType
 	Address *UpdateAddress
 }

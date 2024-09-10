@@ -5,6 +5,7 @@ import (
 
 	"github.com/ardanlabs/service/app/sdk/errs"
 	"github.com/ardanlabs/service/business/domain/productbus"
+	"github.com/ardanlabs/service/business/types/name"
 	"github.com/google/uuid"
 )
 
@@ -20,7 +21,7 @@ func parseFilter(qp QueryParams) (productbus.QueryFilter, error) {
 	}
 
 	if qp.Name != "" {
-		name, err := productbus.ParseName(qp.Name)
+		name, err := name.Parse(qp.Name)
 		if err != nil {
 			return productbus.QueryFilter{}, errs.NewFieldsError("name", err)
 		}
