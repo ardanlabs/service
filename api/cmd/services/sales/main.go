@@ -203,11 +203,13 @@ func run(ctx context.Context, log *logger.Logger) error {
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
 
 	cfgMux := mux.Config{
-		Build:      build,
-		Log:        log,
-		AuthClient: authClient,
-		DB:         db,
-		Tracer:     tracer,
+		Build:  build,
+		Log:    log,
+		DB:     db,
+		Tracer: tracer,
+		SalesConfig: mux.SalesConfig{
+			AuthClient: authClient,
+		},
 	}
 
 	webAPI := mux.WebAPI(cfgMux,

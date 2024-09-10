@@ -38,14 +38,24 @@ func WithFileServer(static embed.FS, dir string) func(opts *Options) {
 	}
 }
 
+// SalesConfig contains sales service specific config.
+type SalesConfig struct {
+	AuthClient *authclient.Client
+}
+
+// AuthConfig contains auth service specific config.
+type AuthConfig struct {
+	Auth *auth.Auth
+}
+
 // Config contains all the mandatory systems required by handlers.
 type Config struct {
-	Build      string
-	Log        *logger.Logger
-	Auth       *auth.Auth
-	AuthClient *authclient.Client
-	DB         *sqlx.DB
-	Tracer     trace.Tracer
+	Build  string
+	Log    *logger.Logger
+	DB     *sqlx.DB
+	Tracer trace.Tracer
+	SalesConfig
+	AuthConfig
 }
 
 // RouteAdder defines behavior that sets the routes to bind for an instance

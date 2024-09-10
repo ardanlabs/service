@@ -30,9 +30,11 @@ func New(t *testing.T, testName string) *Test {
 	// -------------------------------------------------------------------------
 
 	server := httptest.NewServer(mux.WebAPI(mux.Config{
-		Log:  db.Log,
-		Auth: auth,
-		DB:   db.DB,
+		Log: db.Log,
+		DB:  db.DB,
+		AuthConfig: mux.AuthConfig{
+			Auth: auth,
+		},
 	}, authbuild.Routes()))
 
 	authClient := authclient.New(db.Log, server.URL)
@@ -40,9 +42,11 @@ func New(t *testing.T, testName string) *Test {
 	// -------------------------------------------------------------------------
 
 	mux := mux.WebAPI(mux.Config{
-		Log:        db.Log,
-		AuthClient: authClient,
-		DB:         db.DB,
+		Log: db.Log,
+		DB:  db.DB,
+		SalesConfig: mux.SalesConfig{
+			AuthClient: authClient,
+		},
 	}, salesbuild.Routes())
 
 	return &Test{
