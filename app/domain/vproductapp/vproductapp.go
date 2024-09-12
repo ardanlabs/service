@@ -35,7 +35,7 @@ func (a *App) Query(ctx context.Context, qp QueryParams) (query.Result[Product],
 		return query.Result[Product]{}, err
 	}
 
-	orderBy, err := order.Parse(orderByFields, qp.OrderBy, defaultOrderBy)
+	orderBy, err := order.Parse(orderByFields, qp.OrderBy, vproductbus.DefaultOrderBy)
 	if err != nil {
 		return query.Result[Product]{}, errs.NewFieldsError("order", err)
 	}

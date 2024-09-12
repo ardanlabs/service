@@ -119,7 +119,7 @@ func (a *App) Query(ctx context.Context, qp QueryParams) (query.Result[User], er
 		return query.Result[User]{}, err
 	}
 
-	orderBy, err := order.Parse(orderByFields, qp.OrderBy, defaultOrderBy)
+	orderBy, err := order.Parse(orderByFields, qp.OrderBy, userbus.DefaultOrderBy)
 	if err != nil {
 		return query.Result[User]{}, errs.NewFieldsError("order", err)
 	}
