@@ -153,6 +153,14 @@ func (a *App) HandlerFunc(method string, group string, path string, handlerFunc 
 
 		otel.GetTextMapPropagator().Inject(ctx, propagation.HeaderCarrier(w.Header()))
 
+		reqOrigin := r.Header.Get("Origin")
+		for _, origin := range a.origins {
+			if origin == "*" || origin == reqOrigin {
+				w.Header().Set("Access-Control-Allow-Origin", origin)
+				break
+			}
+		}
+
 		resp := handlerFunc(ctx, r)
 
 		if err := Respond(ctx, w, resp); err != nil {
