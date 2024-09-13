@@ -87,6 +87,15 @@ func (a *App) corsHandler(webHandler HandlerFunc) HandlerFunc {
 	h := func(ctx context.Context, r *http.Request) Encoder {
 		w := GetWriter(ctx)
 
+		// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin
+		// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Origin
+		//
+		// Limiting the possible Access-Control-Allow-Origin values to a set of
+		// allowed origins requires code on the server side to check the value of
+		// the Origin request header, compare that to a list of allowed origins, and
+		// then if the Origin value is in the list, set the
+		// Access-Control-Allow-Origin value to the same value as the Origin.
+
 		reqOrigin := r.Header.Get("Origin")
 		for _, origin := range a.origins {
 			if origin == "*" || origin == reqOrigin {
