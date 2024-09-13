@@ -87,8 +87,11 @@ func (a *App) corsHandler(webHandler HandlerFunc) HandlerFunc {
 	h := func(ctx context.Context, r *http.Request) Encoder {
 		w := GetWriter(ctx)
 
+		reqOrigin := r.Header.Get("Origin")
 		for _, origin := range a.origins {
-			w.Header().Add("Access-Control-Allow-Origin", origin)
+			if origin == "*" || origin == reqOrigin {
+				w.Header().Set("Access-Control-Allow-Origin", origin)
+			}
 		}
 
 		w.Header().Set("Access-Control-Allow-Methods", "POST, PATCH, GET, OPTIONS, PUT, DELETE")
