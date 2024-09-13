@@ -76,7 +76,7 @@ func (a *App) EnableCORS(origins []string) {
 	a.origins = origins
 
 	handler := func(ctx context.Context, r *http.Request) Encoder {
-		return cors{Status: "OK"}
+		return nil
 	}
 	handler = wrapMiddleware([]MidFunc{a.corsHandler}, handler)
 
@@ -100,6 +100,7 @@ func (a *App) corsHandler(webHandler HandlerFunc) HandlerFunc {
 		for _, origin := range a.origins {
 			if origin == "*" || origin == reqOrigin {
 				w.Header().Set("Access-Control-Allow-Origin", origin)
+				break
 			}
 		}
 
@@ -151,6 +152,14 @@ func (a *App) HandlerFunc(method string, group string, path string, handlerFunc 
 		ctx = setWriter(ctx, w)
 
 		otel.GetTextMapPropagator().Inject(ctx, propagation.HeaderCarrier(w.Header()))
+
+		reqOrigin := r.Header.Get("Origin")
+		for _, origin := range a.origins {
+			if origin == "*" || origin == reqOrigin {
+				w.Header().Set("Access-Control-Allow-Origin", origin)
+				break
+			}
+		}
 
 		resp := handlerFunc(ctx, r)
 
