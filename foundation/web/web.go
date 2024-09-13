@@ -76,7 +76,7 @@ func (a *App) EnableCORS(origins []string) {
 	a.origins = origins
 
 	handler := func(ctx context.Context, r *http.Request) Encoder {
-		return cors{Status: "OK"}
+		return nil
 	}
 	handler = wrapMiddleware([]MidFunc{a.corsHandler}, handler)
 
@@ -100,6 +100,7 @@ func (a *App) corsHandler(webHandler HandlerFunc) HandlerFunc {
 		for _, origin := range a.origins {
 			if origin == "*" || origin == reqOrigin {
 				w.Header().Set("Access-Control-Allow-Origin", origin)
+				break
 			}
 		}
 
