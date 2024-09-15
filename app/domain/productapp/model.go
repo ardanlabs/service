@@ -9,7 +9,9 @@ import (
 	"github.com/ardanlabs/service/app/sdk/errs"
 	"github.com/ardanlabs/service/app/sdk/mid"
 	"github.com/ardanlabs/service/business/domain/productbus"
+	"github.com/ardanlabs/service/business/types/money"
 	"github.com/ardanlabs/service/business/types/name"
+	"github.com/ardanlabs/service/business/types/quantity"
 )
 
 // QueryParams represents the set of possible query strings.
@@ -47,8 +49,8 @@ func toAppProduct(prd productbus.Product) Product {
 		ID:          prd.ID.String(),
 		UserID:      prd.UserID.String(),
 		Name:        prd.Name.String(),
-		Cost:        prd.Cost,
-		Quantity:    prd.Quantity,
+		Cost:        prd.Cost.Value(),
+		Quantity:    prd.Quantity.Value(),
 		DateCreated: prd.DateCreated.Format(time.RFC3339),
 		DateUpdated: prd.DateUpdated.Format(time.RFC3339),
 	}
@@ -97,11 +99,21 @@ func toBusNewProduct(ctx context.Context, app NewProduct) (productbus.NewProduct
 		return productbus.NewProduct{}, fmt.Errorf("parse name: %w", err)
 	}
 
+	cost, err := money.Parse(app.Cost)
+	if err != nil {
+		return productbus.NewProduct{}, fmt.Errorf("parse cost: %w", err)
+	}
+
+	quantity, err := quantity.Parse(app.Quantity)
+	if err != nil {
+		return productbus.NewProduct{}, fmt.Errorf("parse quantity: %w", err)
+	}
+
 	bus := productbus.NewProduct{
 		UserID:   userID,
 		Name:     name,
-		Cost:     app.Cost,
-		Quantity: app.Quantity,
+		Cost:     cost,
+		Quantity: quantity,
 	}
 
 	return bus, nil
@@ -140,10 +152,28 @@ func toBusUpdateProduct(app UpdateProduct) (productbus.UpdateProduct, error) {
 		nme = &nm
 	}
 
+	var cost *money.Money
+	if app.Cost != nil {
+		cst, err := money.Parse(*app.Cost)
+		if err != nil {
+			return productbus.UpdateProduct{}, fmt.Errorf("parse: %w", err)
+		}
+		cost = &cst
+	}
+
+	var qnt *quantity.Quantity
+	if app.Cost != nil {
+		qn, err := quantity.Parse(*app.Quantity)
+		if err != nil {
+			return productbus.UpdateProduct{}, fmt.Errorf("parse: %w", err)
+		}
+		qnt = &qn
+	}
+
 	bus := productbus.UpdateProduct{
 		Name:     nme,
-		Cost:     app.Cost,
-		Quantity: app.Quantity,
+		Cost:     cost,
+		Quantity: qnt,
 	}
 
 	return bus, nil

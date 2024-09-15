@@ -15,7 +15,7 @@ func toAppUser(bus userbus.User) userapp.User {
 		Email:        bus.Email.Address,
 		Roles:        role.ParseToString(bus.Roles),
 		PasswordHash: nil, // This field is not marshalled.
-		Department:   bus.Department,
+		Department:   bus.Department.String(),
 		Enabled:      bus.Enabled,
 		DateCreated:  bus.DateCreated.Format(time.RFC3339),
 		DateUpdated:  bus.DateUpdated.Format(time.RFC3339),

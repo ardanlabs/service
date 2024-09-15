@@ -22,7 +22,7 @@ func TestNewUsers(n int, rle role.Role) []NewUser {
 			Name:       name.MustParse(fmt.Sprintf("Name%d", idx)),
 			Email:      mail.Address{Address: fmt.Sprintf("Email%d@gmail.com", idx)},
 			Roles:      []role.Role{rle},
-			Department: fmt.Sprintf("Department%d", idx),
+			Department: name.MustParseNull(fmt.Sprintf("Department%d", idx)),
 			Password:   fmt.Sprintf("Password%d", idx),
 		}
 

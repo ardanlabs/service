@@ -16,7 +16,7 @@ type User struct {
 	Email        mail.Address
 	Roles        []role.Role
 	PasswordHash []byte
-	Department   string
+	Department   name.Null
 	Enabled      bool
 	DateCreated  time.Time
 	DateUpdated  time.Time
@@ -27,7 +27,7 @@ type NewUser struct {
 	Name       name.Name
 	Email      mail.Address
 	Roles      []role.Role
-	Department string
+	Department name.Null
 	Password   string
 }
 
@@ -36,7 +36,7 @@ type UpdateUser struct {
 	Name       *name.Name
 	Email      *mail.Address
 	Roles      []role.Role
-	Department *string
+	Department *name.Null
 	Password   *string
 	Enabled    *bool
 }

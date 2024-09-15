@@ -178,7 +178,7 @@ func create(busDomain dbtest.BusDomain) []unitest.Table {
 				Name:       name.MustParse("Bill Kennedy"),
 				Email:      *email,
 				Roles:      []role.Role{role.Admin},
-				Department: "IT",
+				Department: name.MustParseNull("ITO"),
 				Enabled:    true,
 			},
 			ExcFunc: func(ctx context.Context) any {
@@ -186,7 +186,7 @@ func create(busDomain dbtest.BusDomain) []unitest.Table {
 					Name:       name.MustParse("Bill Kennedy"),
 					Email:      *email,
 					Roles:      []role.Role{role.Admin},
-					Department: "IT",
+					Department: name.MustParseNull("ITO"),
 					Password:   "123",
 				}
 
@@ -233,7 +233,7 @@ func update(busDomain dbtest.BusDomain, sd unitest.SeedData) []unitest.Table {
 				Name:        name.MustParse("Jack Kennedy"),
 				Email:       *email,
 				Roles:       []role.Role{role.Admin},
-				Department:  "IT",
+				Department:  name.MustParseNull("ITO"),
 				Enabled:     true,
 				DateCreated: sd.Users[0].DateCreated,
 			},
@@ -242,7 +242,7 @@ func update(busDomain dbtest.BusDomain, sd unitest.SeedData) []unitest.Table {
 					Name:       dbtest.NamePointer("Jack Kennedy"),
 					Email:      email,
 					Roles:      []role.Role{role.Admin},
-					Department: dbtest.StringPointer("IT"),
+					Department: dbtest.NameNullPointer("ITO"),
 					Password:   dbtest.StringPointer("1234"),
 				}
 

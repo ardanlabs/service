@@ -16,7 +16,7 @@ var homeTypes = make(map[string]HomeType)
 
 // HomeType represents a type in the system.
 type HomeType struct {
-	name string
+	value string
 }
 
 func newType(homeType string) HomeType {
@@ -27,12 +27,12 @@ func newType(homeType string) HomeType {
 
 // String returns the name of the type.
 func (ht HomeType) String() string {
-	return ht.name
+	return ht.value
 }
 
 // Equal provides support for the go-cmp package and testing.
 func (ht HomeType) Equal(ht2 HomeType) bool {
-	return ht.name == ht2.name
+	return ht.value == ht2.value
 }
 
 // =============================================================================

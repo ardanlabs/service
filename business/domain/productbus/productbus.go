@@ -92,10 +92,6 @@ func (b *Business) Create(ctx context.Context, np NewProduct) (Product, error) {
 		return Product{}, fmt.Errorf("user.querybyid: %s: %w", np.UserID, err)
 	}
 
-	if np.Cost < 0 {
-		return Product{}, ErrInvalidCost
-	}
-
 	if !usr.Enabled {
 		return Product{}, ErrUserDisabled
 	}

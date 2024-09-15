@@ -3,7 +3,9 @@ package productbus
 import (
 	"time"
 
+	"github.com/ardanlabs/service/business/types/money"
 	"github.com/ardanlabs/service/business/types/name"
+	"github.com/ardanlabs/service/business/types/quantity"
 	"github.com/google/uuid"
 )
 
@@ -12,8 +14,8 @@ type Product struct {
 	ID          uuid.UUID
 	UserID      uuid.UUID
 	Name        name.Name
-	Cost        float64
-	Quantity    int
+	Cost        money.Money
+	Quantity    quantity.Quantity
 	DateCreated time.Time
 	DateUpdated time.Time
 }
@@ -22,8 +24,8 @@ type Product struct {
 type NewProduct struct {
 	UserID   uuid.UUID
 	Name     name.Name
-	Cost     float64
-	Quantity int
+	Cost     money.Money
+	Quantity quantity.Quantity
 }
 
 // UpdateProduct defines what information may be provided to modify an
@@ -34,6 +36,6 @@ type NewProduct struct {
 // we make exceptions around marshalling/unmarshalling.
 type UpdateProduct struct {
 	Name     *name.Name
-	Cost     *float64
-	Quantity *int
+	Cost     *money.Money
+	Quantity *quantity.Quantity
 }

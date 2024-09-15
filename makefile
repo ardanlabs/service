@@ -482,7 +482,7 @@ curl-create:
 	curl -il -X POST \
 	-H "Authorization: Bearer ${TOKEN}" \
 	-H 'Content-Type: application/json' \
-	-d '{"name":"bill","email":"b@gmail.com","roles":["ADMIN"],"department":"IT","password":"123","passwordConfirm":"123"}' \
+	-d '{"name":"bill","email":"b@gmail.com","roles":["ADMIN"],"department":"ITO","password":"123","passwordConfirm":"123"}' \
 	http://localhost:3000/v1/users
 
 # ==============================================================================

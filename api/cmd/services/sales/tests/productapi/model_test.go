@@ -12,8 +12,8 @@ func toAppProduct(prd productbus.Product) productapp.Product {
 		ID:          prd.ID.String(),
 		UserID:      prd.UserID.String(),
 		Name:        prd.Name.String(),
-		Cost:        prd.Cost,
-		Quantity:    prd.Quantity,
+		Cost:        prd.Cost.Value(),
+		Quantity:    prd.Quantity.Value(),
 		DateCreated: prd.DateCreated.Format(time.RFC3339),
 		DateUpdated: prd.DateUpdated.Format(time.RFC3339),
 	}

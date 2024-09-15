@@ -33,8 +33,8 @@ func toDBUser(bus userbus.User) user {
 		Roles:        role.ParseToString(bus.Roles),
 		PasswordHash: bus.PasswordHash,
 		Department: sql.NullString{
-			String: bus.Department,
-			Valid:  bus.Department != "",
+			String: bus.Department.String(),
+			Valid:  !bus.Department.IsNull(),
 		},
 		Enabled:     bus.Enabled,
 		DateCreated: bus.DateCreated.UTC(),
@@ -52,19 +52,24 @@ func toBusUser(db user) (userbus.User, error) {
 		return userbus.User{}, fmt.Errorf("parse: %w", err)
 	}
 
-	name, err := name.Parse(db.Name)
+	nme, err := name.Parse(db.Name)
 	if err != nil {
 		return userbus.User{}, fmt.Errorf("parse name: %w", err)
 	}
 
+	department, err := name.ParseNull(db.Department.String)
+	if err != nil {
+		return userbus.User{}, fmt.Errorf("parse department: %w", err)
+	}
+
 	bus := userbus.User{
 		ID:           db.ID,
-		Name:         name,
+		Name:         nme,
 		Email:        addr,
 		Roles:        roles,
 		PasswordHash: db.PasswordHash,
 		Enabled:      db.Enabled,
-		Department:   db.Department.String,
+		Department:   department,
 		DateCreated:  db.DateCreated.In(time.Local),
 		DateUpdated:  db.DateUpdated.In(time.Local),
 	}

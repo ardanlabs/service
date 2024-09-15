@@ -52,7 +52,7 @@ func toAppUser(bus userbus.User) User {
 		Email:        bus.Email.Address,
 		Roles:        role.ParseToString(bus.Roles),
 		PasswordHash: bus.PasswordHash,
-		Department:   bus.Department,
+		Department:   bus.Department.String(),
 		Enabled:      bus.Enabled,
 		DateCreated:  bus.DateCreated.Format(time.RFC3339),
 		DateUpdated:  bus.DateUpdated.Format(time.RFC3339),
@@ -105,16 +105,21 @@ func toBusNewUser(app NewUser) (userbus.NewUser, error) {
 		return userbus.NewUser{}, fmt.Errorf("parse: %w", err)
 	}
 
-	name, err := name.Parse(app.Name)
+	nme, err := name.Parse(app.Name)
+	if err != nil {
+		return userbus.NewUser{}, fmt.Errorf("parse: %w", err)
+	}
+
+	department, err := name.ParseNull(app.Department)
 	if err != nil {
 		return userbus.NewUser{}, fmt.Errorf("parse: %w", err)
 	}
 
 	bus := userbus.NewUser{
-		Name:       name,
+		Name:       nme,
 		Email:      *addr,
 		Roles:      roles,
-		Department: app.Department,
+		Department: department,
 		Password:   app.Password,
 	}
 
@@ -204,10 +209,19 @@ func toBusUpdateUser(app UpdateUser) (userbus.UpdateUser, error) {
 		nme = &nm
 	}
 
+	var department *name.Null
+	if app.Department != nil {
+		dep, err := name.ParseNull(*app.Department)
+		if err != nil {
+			return userbus.UpdateUser{}, fmt.Errorf("parse: %w", err)
+		}
+		department = &dep
+	}
+
 	bus := userbus.UpdateUser{
 		Name:       nme,
 		Email:      addr,
-		Department: app.Department,
+		Department: department,
 		Password:   app.Password,
 		Enabled:    app.Enabled,
 	}

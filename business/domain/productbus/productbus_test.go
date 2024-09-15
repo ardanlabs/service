@@ -12,7 +12,9 @@ import (
 	"github.com/ardanlabs/service/business/sdk/dbtest"
 	"github.com/ardanlabs/service/business/sdk/page"
 	"github.com/ardanlabs/service/business/sdk/unitest"
+	"github.com/ardanlabs/service/business/types/money"
 	"github.com/ardanlabs/service/business/types/name"
+	"github.com/ardanlabs/service/business/types/quantity"
 	"github.com/ardanlabs/service/business/types/role"
 	"github.com/google/go-cmp/cmp"
 )
@@ -172,15 +174,15 @@ func create(busDomain dbtest.BusDomain, sd unitest.SeedData) []unitest.Table {
 			ExpResp: productbus.Product{
 				UserID:   sd.Users[0].ID,
 				Name:     name.MustParse("Guitar"),
-				Cost:     10.34,
-				Quantity: 10,
+				Cost:     money.MustParse(10.34),
+				Quantity: quantity.MustParse(10),
 			},
 			ExcFunc: func(ctx context.Context) any {
 				np := productbus.NewProduct{
 					UserID:   sd.Users[0].ID,
 					Name:     name.MustParse("Guitar"),
-					Cost:     10.34,
-					Quantity: 10,
+					Cost:     money.MustParse(10.34),
+					Quantity: quantity.MustParse(10),
 				}
 
 				resp, err := busDomain.Product.Create(ctx, np)
@@ -218,16 +220,16 @@ func update(busDomain dbtest.BusDomain, sd unitest.SeedData) []unitest.Table {
 				ID:          sd.Users[0].Products[0].ID,
 				UserID:      sd.Users[0].ID,
 				Name:        name.MustParse("Guitar"),
-				Cost:        10.34,
-				Quantity:    10,
+				Cost:        money.MustParse(10.34),
+				Quantity:    quantity.MustParse(10),
 				DateCreated: sd.Users[0].Products[0].DateCreated,
 				DateUpdated: sd.Users[0].Products[0].DateCreated,
 			},
 			ExcFunc: func(ctx context.Context) any {
 				up := productbus.UpdateProduct{
 					Name:     dbtest.NamePointer("Guitar"),
-					Cost:     dbtest.FloatPointer(10.34),
-					Quantity: dbtest.IntPointer(10),
+					Cost:     dbtest.MoneyPointer(10.34),
+					Quantity: dbtest.QuantityPointer(10),
 				}
 
 				resp, err := busDomain.Product.Update(ctx, sd.Users[0].Products[0], up)

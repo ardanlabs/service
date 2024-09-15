@@ -16,7 +16,7 @@ var roles = make(map[string]Role)
 
 // Role represents a role in the system.
 type Role struct {
-	name string
+	value string
 }
 
 func newRole(role string) Role {
@@ -27,12 +27,12 @@ func newRole(role string) Role {
 
 // String returns the name of the role.
 func (r Role) String() string {
-	return r.name
+	return r.value
 }
 
 // Equal provides support for the go-cmp package and testing.
 func (r Role) Equal(r2 Role) bool {
-	return r.name == r2.name
+	return r.value == r2.value
 }
 
 // =============================================================================

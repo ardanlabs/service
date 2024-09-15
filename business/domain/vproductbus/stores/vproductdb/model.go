@@ -5,7 +5,9 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/domain/vproductbus"
+	"github.com/ardanlabs/service/business/types/money"
 	"github.com/ardanlabs/service/business/types/name"
+	"github.com/ardanlabs/service/business/types/quantity"
 	"github.com/google/uuid"
 )
 
@@ -31,12 +33,22 @@ func toBusProduct(db product) (vproductbus.Product, error) {
 		return vproductbus.Product{}, fmt.Errorf("parse name: %w", err)
 	}
 
+	cost, err := money.Parse(db.Cost)
+	if err != nil {
+		return vproductbus.Product{}, fmt.Errorf("parse cost: %w", err)
+	}
+
+	quantity, err := quantity.Parse(db.Quantity)
+	if err != nil {
+		return vproductbus.Product{}, fmt.Errorf("parse quantity: %w", err)
+	}
+
 	bus := vproductbus.Product{
 		ID:          db.ID,
 		UserID:      db.UserID,
 		Name:        name,
-		Cost:        db.Cost,
-		Quantity:    db.Quantity,
+		Cost:        cost,
+		Quantity:    quantity,
 		DateCreated: db.DateCreated.In(time.Local),
 		DateUpdated: db.DateUpdated.In(time.Local),
 		UserName:    userName,

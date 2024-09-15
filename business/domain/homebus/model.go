@@ -9,7 +9,7 @@ import (
 
 // Address represents an individual address.
 type Address struct {
-	Address1 string
+	Address1 string // We should create types for these fields.
 	Address2 string
 	ZipCode  string
 	City     string
