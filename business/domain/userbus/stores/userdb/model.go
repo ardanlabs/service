@@ -34,7 +34,7 @@ func toDBUser(bus userbus.User) user {
 		PasswordHash: bus.PasswordHash,
 		Department: sql.NullString{
 			String: bus.Department.String(),
-			Valid:  !bus.Department.IsNull(),
+			Valid:  bus.Department.Valid(),
 		},
 		Enabled:     bus.Enabled,
 		DateCreated: bus.DateCreated.UTC(),
