@@ -79,7 +79,7 @@ func (b *Business) NewWithTx(tx sqldb.CommitRollbacker) (*Business, error) {
 
 // Create adds a new home to the system.
 func (b *Business) Create(ctx context.Context, nh NewHome) (Home, error) {
-	ctx, span := otel.AddSpan(ctx, "business.homebus.delete")
+	ctx, span := otel.AddSpan(ctx, "business.homebus.create")
 	defer span.End()
 
 	usr, err := b.userBus.QueryByID(ctx, nh.UserID)
