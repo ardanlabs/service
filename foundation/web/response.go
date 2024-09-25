@@ -31,6 +31,9 @@ type httpStatus interface {
 
 // Respond sends a response to the client.
 func Respond(ctx context.Context, w http.ResponseWriter, dataModel Encoder) error {
+	if _, ok := dataModel.(NoResponse); ok {
+		return nil
+	}
 
 	// If the context has been canceled, it means the client is no longer
 	// waiting for a response.
@@ -43,9 +46,6 @@ func Respond(ctx context.Context, w http.ResponseWriter, dataModel Encoder) erro
 	var statusCode = http.StatusOK
 
 	switch v := dataModel.(type) {
-	case NoResponse:
-		return nil
-
 	case httpStatus:
 		statusCode = v.HTTPStatus()
 
