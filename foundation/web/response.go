@@ -9,6 +9,22 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 )
 
+// NoResponse tells the Respond function to not respond to the request. In these
+// cases the app layer code has already done so.
+type NoResponse struct{}
+
+// NewNoResponse constructs a no reponse value.
+func NewNoResponse() NoResponse {
+	return NoResponse{}
+}
+
+// Encode implements the Encoder interface
+func (NoResponse) Encode() ([]byte, string, error) {
+	return nil, "", nil
+}
+
+// =============================================================================
+
 type httpStatus interface {
 	HTTPStatus() int
 }
@@ -27,6 +43,9 @@ func Respond(ctx context.Context, w http.ResponseWriter, dataModel Encoder) erro
 	var statusCode = http.StatusOK
 
 	switch v := dataModel.(type) {
+	case NoResponse:
+		return nil
+
 	case httpStatus:
 		statusCode = v.HTTPStatus()
 
