@@ -16,11 +16,18 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
+// StaticSite represents a static site to run.
+type StaticSite struct {
+	react      bool
+	static     embed.FS
+	staticDir  string
+	staticPath string
+}
+
 // Options represent optional parameters.
 type Options struct {
 	corsOrigin []string
-	static     *embed.FS
-	staticDir  string
+	sites      []StaticSite
 }
 
 // WithCORS provides configuration options for CORS.
@@ -31,10 +38,14 @@ func WithCORS(origins []string) func(opts *Options) {
 }
 
 // WithFileServer provides configuration options for file server.
-func WithFileServer(static embed.FS, dir string) func(opts *Options) {
+func WithFileServer(react bool, static embed.FS, dir string, path string) func(opts *Options) {
 	return func(opts *Options) {
-		opts.static = &static
-		opts.staticDir = dir
+		opts.sites = append(opts.sites, StaticSite{
+			react:      react,
+			static:     static,
+			staticDir:  dir,
+			staticPath: path,
+		})
 	}
 }
 
@@ -91,8 +102,12 @@ func WebAPI(cfg Config, routeAdder RouteAdder, options ...func(opts *Options)) h
 
 	routeAdder.Add(app, cfg)
 
-	if opts.static != nil {
-		app.FileServer(*opts.static, opts.staticDir, http.NotFound)
+	for _, site := range opts.sites {
+		if site.react {
+			app.FileServerReact(site.static, site.staticDir, site.staticPath)
+		} else {
+			app.FileServer(site.static, site.staticDir, site.staticPath)
+		}
 	}
 
 	return app

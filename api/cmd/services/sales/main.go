@@ -215,7 +215,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 	webAPI := mux.WebAPI(cfgMux,
 		buildRoutes(),
 		mux.WithCORS(cfg.Web.CORSAllowedOrigins),
-		mux.WithFileServer(static, "static"),
+		mux.WithFileServer(false, static, "static", "/"),
 	)
 
 	api := http.Server{

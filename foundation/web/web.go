@@ -213,7 +213,7 @@ func (a *App) RawHandlerFunc(method string, group string, path string, rawHandle
 
 // FileServerReact starts a file server based on the specified file system and
 // directory inside that file system for a statically built react webapp.
-func (a *App) FileServerReact(static embed.FS, dir string) error {
+func (a *App) FileServerReact(static embed.FS, dir string, path string) error {
 	fileMatcher := regexp.MustCompile(`\.[a-zA-Z]*$`)
 
 	fSys, err := fs.Sub(static, dir)
@@ -221,12 +221,13 @@ func (a *App) FileServerReact(static embed.FS, dir string) error {
 		return fmt.Errorf("switching to static folder: %w", err)
 	}
 
-	fileServer := http.FileServer(http.FS(fSys))
+	fileServer := http.StripPrefix(path, http.FileServer(http.FS(fSys)))
 
 	h := func(w http.ResponseWriter, r *http.Request) {
 		if !fileMatcher.MatchString(r.URL.Path) {
 			p, err := static.ReadFile(fmt.Sprintf("%s/index.html", dir))
 			if err != nil {
+				a.log(context.Background(), "FileServerReact", "ERROR", err)
 				return
 			}
 
@@ -237,38 +238,20 @@ func (a *App) FileServerReact(static embed.FS, dir string) error {
 		fileServer.ServeHTTP(w, r)
 	}
 
-	a.mux.HandleFunc("/", h)
+	a.mux.HandleFunc(fmt.Sprintf("GET %s", path), h)
 
 	return nil
 }
 
 // FileServer starts a file server based on the specified file system and
 // directory inside that file system.
-func (a *App) FileServer(static embed.FS, dir string, notFoundHandler http.HandlerFunc) error {
+func (a *App) FileServer(static embed.FS, dir string, path string) error {
 	fSys, err := fs.Sub(static, dir)
 	if err != nil {
 		return fmt.Errorf("switching to static folder: %w", err)
 	}
 
-	fileServer := http.FileServer(http.FS(fSys))
-
-	h := func(w http.ResponseWriter, r *http.Request) {
-		path := r.URL.Path[1:]
-		if path == "" {
-			path = "index.html"
-		}
-
-		f, err := fSys.Open(path)
-		if err != nil {
-			notFoundHandler(w, r)
-			return
-		}
-		defer f.Close()
-
-		fileServer.ServeHTTP(w, r)
-	}
-
-	a.mux.HandleFunc("/", h)
+	a.mux.Handle(fmt.Sprintf("GET %s", path), http.FileServer(http.FS(fSys)))
 
 	return nil
 }
