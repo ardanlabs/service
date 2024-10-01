@@ -44,11 +44,11 @@ type UpdateAddress struct {
 	Country  *string
 }
 
-// UpdateHome defines what informaton may be provided to modify an existing
+// UpdateHome defines what information may be provided to modify an existing
 // Home. All fields are optional so clients can send only the fields they want
 // changed. It uses pointer fields so we can differentiate between a field that
 // was not provided and a field that was provided as explicitly blank. Normally
-// we do not want to use pointers to basic types but we make exepction around
+// we do not want to use pointers to basic types but we make exception around
 // marshalling/unmarshalling.
 type UpdateHome struct {
 	Type    *hometype.HomeType
