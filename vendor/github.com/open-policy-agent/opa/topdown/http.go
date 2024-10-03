@@ -168,6 +168,7 @@ func generateRaiseErrorResult(err error) *ast.Term {
 func getHTTPResponse(bctx BuiltinContext, req ast.Object) (*ast.Term, error) {
 
 	bctx.Metrics.Timer(httpSendLatencyMetricKey).Start()
+	defer bctx.Metrics.Timer(httpSendLatencyMetricKey).Stop()
 
 	key, err := getKeyFromRequest(req)
 	if err != nil {
@@ -198,8 +199,6 @@ func getHTTPResponse(bctx BuiltinContext, req ast.Object) (*ast.Term, error) {
 			return nil, err
 		}
 	}
-
-	bctx.Metrics.Timer(httpSendLatencyMetricKey).Stop()
 
 	return ast.NewTerm(resp), nil
 }
@@ -474,7 +473,7 @@ func createHTTPRequest(bctx BuiltinContext, obj ast.Object) (*http.Request, *htt
 			}
 			body = bytes.NewBuffer(bodyValBytes)
 		case "raw_body":
-			rawBody = bytes.NewBuffer([]byte(strVal))
+			rawBody = bytes.NewBufferString(strVal)
 		case "tls_use_system_certs":
 			tempTLSUseSystemCerts, err := strconv.ParseBool(obj.Get(val).String())
 			if err != nil {

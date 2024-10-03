@@ -30,6 +30,8 @@ var RegoV1CompatibleRef = Ref{VarTerm("rego"), StringTerm("v1")}
 // RegoVersion defines the Rego syntax requirements for a module.
 type RegoVersion int
 
+const DefaultRegoVersion = RegoVersion(0)
+
 const (
 	// RegoV0 is the default, original Rego syntax.
 	RegoV0 RegoVersion = iota
@@ -316,6 +318,31 @@ func (p *Parser) Parse() ([]Statement, []*Comment, Errors) {
 		// RegoV1 includes all future keywords in the default language definition
 		for k, v := range futureKeywords {
 			allowedFutureKeywords[k] = v
+		}
+
+		// For sake of error reporting, we still need to check that keywords in capabilities are known,
+		for _, kw := range p.po.Capabilities.FutureKeywords {
+			if _, ok := futureKeywords[kw]; !ok {
+				return nil, nil, Errors{
+					&Error{
+						Code:     ParseErr,
+						Message:  fmt.Sprintf("illegal capabilities: unknown keyword: %v", kw),
+						Location: nil,
+					},
+				}
+			}
+		}
+		// and that explicitly requested future keywords are known.
+		for _, kw := range p.po.FutureKeywords {
+			if _, ok := allowedFutureKeywords[kw]; !ok {
+				return nil, nil, Errors{
+					&Error{
+						Code:     ParseErr,
+						Message:  fmt.Sprintf("unknown future keyword: %v", kw),
+						Location: nil,
+					},
+				}
+			}
 		}
 	} else {
 		for _, kw := range p.po.Capabilities.FutureKeywords {
@@ -686,6 +713,10 @@ func (p *Parser) parseRules() []*Rule {
 
 	// p[x] if ...  becomes a single-value rule p[x]
 	if hasIf && !usesContains && len(rule.Head.Ref()) == 2 {
+		if !rule.Head.Ref()[1].IsGround() && len(rule.Head.Args) == 0 {
+			rule.Head.Key = rule.Head.Ref()[1]
+		}
+
 		if rule.Head.Value == nil {
 			rule.Head.generatedValue = true
 			rule.Head.Value = BooleanTerm(true).SetLocation(rule.Head.Location)
@@ -2665,15 +2696,16 @@ func (p *Parser) regoV1Import(imp *Import) {
 		return
 	}
 
-	if p.po.RegoVersion == RegoV1 {
-		// We're parsing for Rego v1, where the 'rego.v1' import is a no-op.
+	path := imp.Path.Value.(Ref)
+
+	// v1 is only valid option
+	if len(path) == 1 || !path[1].Equal(RegoV1CompatibleRef[1]) || len(path) > 2 {
+		p.errorf(imp.Path.Location, "invalid import `%s`, must be `%s`", path, RegoV1CompatibleRef)
 		return
 	}
 
-	path := imp.Path.Value.(Ref)
-
-	if len(path) == 1 || !path[1].Equal(RegoV1CompatibleRef[1]) || len(path) > 2 {
-		p.errorf(imp.Path.Location, "invalid import `%s`, must be `%s`", path, RegoV1CompatibleRef)
+	if p.po.RegoVersion == RegoV1 {
+		// We're parsing for Rego v1, where the 'rego.v1' import is a no-op.
 		return
 	}
 
