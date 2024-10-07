@@ -12,7 +12,6 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"os"
 	"path"
 	"strings"
 )
@@ -40,12 +39,7 @@ func New() *KeyStore {
 // will be provided with two fields, key and pem (private key). If the env var
 // does not exist, the function does not fail and returns the total number of
 // keys in the store.
-func (ks *KeyStore) LoadByEnv(env string) (int, error) {
-	document := os.Getenv(env)
-	if document == "" {
-		return len(ks.store), nil
-	}
-
+func (ks *KeyStore) LoadByEnv(document string) (int, error) {
 	var d struct {
 		Key string `json:"key"`
 		PEM string `json:"pem"`
