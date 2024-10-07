@@ -2,48 +2,42 @@
 package oauthapi
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/ardanlabs/service/app/sdk/auth"
 	"github.com/ardanlabs/service/business/types/role"
 	"github.com/ardanlabs/service/foundation/logger"
+	"github.com/ardanlabs/service/foundation/web"
 	"github.com/golang-jwt/jwt/v4"
-	"github.com/gorilla/sessions"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
 	"github.com/markbates/goth/providers/google"
 )
 
 type api struct {
-	log             *logger.Logger
-	auth            *auth.Auth
-	store           sessions.Store
-	tokenKey        string
-	uiAdminRedirect string
-	uiLoginRedirect string
+	log      *logger.Logger
+	auth     *auth.Auth
+	tokenKey string
+	uiURL    string
+	apiHost  string
 }
 
 func newAPI(cfg Config) *api {
 	goth.UseProviders(
-		google.New(cfg.GoogleKey, cfg.GoogleSecret, cfg.Callback),
+		google.New(cfg.GoogleKey, cfg.GoogleSecret, fmt.Sprintf("%s/api/auth/google/callback", cfg.GoogleCallBackURL)),
 	)
 
 	gothic.GetProviderName = func(r *http.Request) (string, error) {
-		return "google", nil
-	}
-
-	store := sessions.NewCookieStore([]byte(cfg.StoreKey))
-	store.Options = &sessions.Options{
-		Path: "/",
+		return web.Param(r, "provider"), nil
 	}
 
 	return &api{
-		auth:            cfg.Auth,
-		store:           store,
-		tokenKey:        cfg.TokenKey,
-		uiAdminRedirect: cfg.UIAdminRedirect,
-		uiLoginRedirect: cfg.UILoginRedirect,
+		auth:    cfg.Auth,
+		log:     cfg.Log,
+		uiURL:   cfg.GoogleUIURL,
+		apiHost: cfg.APIHost,
 	}
 }
 
@@ -52,70 +46,46 @@ func (a *api) authenticate(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *api) authCallback(w http.ResponseWriter, r *http.Request) {
-	user, err := gothic.CompleteUserAuth(w, r)
+	var user goth.User
+
+	var err error
+	user, err = gothic.CompleteUserAuth(w, r)
 	if err != nil {
-		a.log.Error(r.Context(), "completing user auth: %s", err)
+		a.log.Error(r.Context(), "completing user auth", "msg", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	sess, err := a.store.Get(r, "user-metadata")
-	if err != nil {
-		a.log.Error(r.Context(), "get session: %s", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	sess.Values["user"] = user
-
-	if err := sess.Save(r, w); err != nil {
-		a.log.Error(r.Context(), "save session: %s", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	claims := auth.Claims{
+	clms := auth.Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
 			Subject:   user.UserID,
 			Issuer:    a.auth.Issuer(),
-			ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(20 * time.Minute)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(2 * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
 		},
 		Roles: []string{role.Admin.String()},
 	}
 
-	token, err := a.auth.GenerateToken(a.tokenKey, claims)
+	token, err := a.auth.GenerateToken(a.tokenKey, clms)
 	if err != nil {
-		a.log.Error(r.Context(), "generating token: %s", err)
+		a.log.Error(r.Context(), "generating token", "msg", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	http.Redirect(w, r, a.uiAdminRedirect+token, http.StatusFound)
+	redirect := fmt.Sprintf("%s/app/admin?token=%s", a.uiURL, token)
+	a.log.Info(r.Context(), "REDIRECT", "redirect", redirect)
+
+	http.Redirect(w, r, redirect, http.StatusFound)
 }
 
 func (a *api) logout(w http.ResponseWriter, r *http.Request) {
-	sess, err := a.store.Get(r, "user-metadata")
-	if err != nil {
-		a.log.Error(r.Context(), "get session: %s", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	// Logout user by invalidating their session data.
-	sess.Values["user"] = nil
-
-	if err := sess.Save(r, w); err != nil {
-		a.log.Error(r.Context(), "save session: %s", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
 	if err := gothic.Logout(w, r); err != nil {
-		a.log.Error(r.Context(), "gothic logout: %s", err)
+		a.log.Error(r.Context(), "gothic logout", "msg", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	http.Redirect(w, r, a.uiLoginRedirect, http.StatusFound)
+	redirect := "/app/login"
+	http.Redirect(w, r, redirect, http.StatusTemporaryRedirect)
 }

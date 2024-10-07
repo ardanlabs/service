@@ -10,15 +10,14 @@ import (
 
 // Config contains all the configuration for the auth app.
 type Config struct {
-	Auth            *auth.Auth
-	Log             *logger.Logger
-	TokenKey        string
-	GoogleKey       string
-	GoogleSecret    string
-	Callback        string
-	StoreKey        string
-	UIAdminRedirect string
-	UILoginRedirect string
+	Auth              *auth.Auth
+	Log               *logger.Logger
+	TokenKey          string
+	GoogleKey         string
+	GoogleSecret      string
+	GoogleUIURL       string
+	GoogleCallBackURL string
+	APIHost           string
 }
 
 // Routes adds the routes for the auth app.
