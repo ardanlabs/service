@@ -156,7 +156,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 
 	ks := keystore.New()
 
-	n1, err := ks.LoadByEnv(cfg.Auth.KeysEnvVar)
+	n1, err := ks.LoadByJSON(cfg.Auth.KeysEnvVar)
 	if err != nil {
 		return fmt.Errorf("loading keys by env: %w", err)
 	}
