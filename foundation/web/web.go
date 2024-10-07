@@ -251,7 +251,9 @@ func (a *App) FileServer(static embed.FS, dir string, path string) error {
 		return fmt.Errorf("switching to static folder: %w", err)
 	}
 
-	a.mux.Handle(fmt.Sprintf("GET %s", path), http.FileServer(http.FS(fSys)))
+	fileServer := http.StripPrefix(path, http.FileServer(http.FS(fSys)))
+
+	a.mux.Handle(fmt.Sprintf("GET %s", path), fileServer)
 
 	return nil
 }
