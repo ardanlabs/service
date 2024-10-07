@@ -38,6 +38,10 @@ func New() *KeyStore {
 // LoadByJSON is given a JSON document read with two fields, key and pem
 // (private key).
 func (ks *KeyStore) LoadByJSON(document string) (int, error) {
+	if document == "" {
+		return 0, nil
+	}
+
 	var d struct {
 		Key string `json:"key"`
 		PEM string `json:"pem"`
