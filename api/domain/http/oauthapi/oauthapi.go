@@ -51,18 +51,9 @@ func (a *api) authCallback(w http.ResponseWriter, r *http.Request) {
 	var err error
 	user, err = gothic.CompleteUserAuth(w, r)
 	if err != nil {
-		// When I am running the UI from Node, goth doesn't find the session
-		// so this complete fails. I can't figure it out.
-
-		if a.uiURL == a.apiHost {
-			a.log.Error(r.Context(), "completing user auth", "msg", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-
-		user = goth.User{
-			UserID: "testuser",
-		}
+		a.log.Error(r.Context(), "completing user auth", "msg", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
 	clms := auth.Claims{
