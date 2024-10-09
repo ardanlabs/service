@@ -6,10 +6,6 @@ import (
 	"regexp"
 )
 
-var nameRegEx = regexp.MustCompile("^[a-zA-Z0-9' -]{3,20}$")
-
-// =============================================================================
-
 // Name represents a name in the system.
 type Name struct {
 	value string
@@ -24,6 +20,15 @@ func (n Name) String() string {
 func (n Name) Equal(n2 Name) bool {
 	return n.value == n2.value
 }
+
+// MarshalText provides support for logging and any marshal needs.
+func (n Name) MarshalText() ([]byte, error) {
+	return []byte(n.value), nil
+}
+
+// =============================================================================
+
+var nameRegEx = regexp.MustCompile("^[a-zA-Z0-9' -]{3,20}$")
 
 // Parse parses the string value and returns a name if the value complies
 // with the rules for a name.

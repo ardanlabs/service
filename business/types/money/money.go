@@ -25,6 +25,11 @@ func (m Money) Equal(m2 Money) bool {
 	return m.value == m2.value
 }
 
+// MarshalText provides support for logging and any marshal needs.
+func (m Money) MarshalText() ([]byte, error) {
+	return []byte(m.String()), nil
+}
+
 // =============================================================================
 
 // Parse parses the float value and returns a money if the value complies

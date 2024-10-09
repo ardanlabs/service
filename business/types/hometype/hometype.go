@@ -35,6 +35,11 @@ func (ht HomeType) Equal(ht2 HomeType) bool {
 	return ht.value == ht2.value
 }
 
+// MarshalText provides support for logging and any marshal needs.
+func (ht HomeType) MarshalText() ([]byte, error) {
+	return []byte(ht.value), nil
+}
+
 // =============================================================================
 
 // Parse parses the string value and returns a home type if one exists.

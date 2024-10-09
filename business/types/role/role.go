@@ -35,6 +35,11 @@ func (r Role) Equal(r2 Role) bool {
 	return r.value == r2.value
 }
 
+// MarshalText provides support for logging and any marshal needs.
+func (r Role) MarshalText() ([]byte, error) {
+	return []byte(r.value), nil
+}
+
 // =============================================================================
 
 // Parse parses the string value and returns a role if one exists.

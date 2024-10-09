@@ -25,6 +25,11 @@ func (q Quantity) Equal(q2 Quantity) bool {
 	return q.value == q2.value
 }
 
+// MarshalText provides support for logging and any marshal needs.
+func (q Quantity) MarshalText() ([]byte, error) {
+	return []byte(q.String()), nil
+}
+
 // =============================================================================
 
 // Parse parses the float value and returns a quantity if the value complies
