@@ -6,7 +6,6 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/ardanlabs/service/app/sdk/auth"
 	"github.com/ardanlabs/service/app/sdk/errs"
 	"github.com/ardanlabs/service/app/sdk/mid"
 	"github.com/ardanlabs/service/app/sdk/query"
@@ -18,19 +17,10 @@ import (
 
 type app struct {
 	userBus *userbus.Business
-	auth    *auth.Auth
 }
 
 func newApp(userBus *userbus.Business) *app {
 	return &app{
-		userBus: userBus,
-	}
-}
-
-// NewAppWithAuth constructs a user app API for use with auth support.
-func NewAppWithAuth(userBus *userbus.Business, ath *auth.Auth) *app {
-	return &app{
-		auth:    ath,
 		userBus: userBus,
 	}
 }
