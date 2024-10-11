@@ -3,52 +3,53 @@ package vproductapp
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/ardanlabs/service/app/sdk/errs"
 	"github.com/ardanlabs/service/app/sdk/query"
 	"github.com/ardanlabs/service/business/domain/vproductbus"
 	"github.com/ardanlabs/service/business/sdk/order"
 	"github.com/ardanlabs/service/business/sdk/page"
+	"github.com/ardanlabs/service/foundation/web"
 )
 
-// App manages the set of app layer api functions for the view product domain.
-type App struct {
+type app struct {
 	vproductBus *vproductbus.Business
 }
 
-// NewApp constructs a view product app API for use.
-func NewApp(vproductBus *vproductbus.Business) *App {
-	return &App{
+func newApp(vproductBus *vproductbus.Business) *app {
+	return &app{
 		vproductBus: vproductBus,
 	}
 }
 
-// Query returns a list of products with paging.
-func (a *App) Query(ctx context.Context, qp QueryParams) (query.Result[Product], error) {
+func (a *app) query(ctx context.Context, r *http.Request) web.Encoder {
+	qp := parseQueryParams(r)
+
 	page, err := page.Parse(qp.Page, qp.Rows)
 	if err != nil {
-		return query.Result[Product]{}, errs.NewFieldsError("page", err)
+		return errs.NewFieldsError("page", err)
 	}
 
 	filter, err := parseFilter(qp)
 	if err != nil {
-		return query.Result[Product]{}, err
+		return err.(errs.FieldErrors)
 	}
 
 	orderBy, err := order.Parse(orderByFields, qp.OrderBy, vproductbus.DefaultOrderBy)
 	if err != nil {
-		return query.Result[Product]{}, errs.NewFieldsError("order", err)
+		return errs.NewFieldsError("order", err)
 	}
 
 	prds, err := a.vproductBus.Query(ctx, filter, orderBy, page)
 	if err != nil {
-		return query.Result[Product]{}, errs.Newf(errs.Internal, "query: %s", err)
+		return errs.Newf(errs.Internal, "query: %s", err)
 	}
 
 	total, err := a.vproductBus.Count(ctx, filter)
 	if err != nil {
-		return query.Result[Product]{}, errs.Newf(errs.Internal, "count: %s", err)
+		return errs.Newf(errs.Internal, "count: %s", err)
 	}
 
-	return query.NewResult(toAppProducts(prds), total, page), nil
+	return query.NewResult(toAppProducts(prds), total, page)
 }

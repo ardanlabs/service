@@ -1,6 +1,7 @@
 package homeapp
 
 import (
+	"net/http"
 	"time"
 
 	"github.com/ardanlabs/service/app/sdk/errs"
@@ -9,7 +10,24 @@ import (
 	"github.com/google/uuid"
 )
 
-func parseFilter(qp QueryParams) (homebus.QueryFilter, error) {
+func parseQueryParams(r *http.Request) queryParams {
+	values := r.URL.Query()
+
+	filter := queryParams{
+		Page:             values.Get("page"),
+		Rows:             values.Get("row"),
+		OrderBy:          values.Get("orderBy"),
+		ID:               values.Get("home_id"),
+		UserID:           values.Get("user_id"),
+		Type:             values.Get("type"),
+		StartCreatedDate: values.Get("start_created_date"),
+		EndCreatedDate:   values.Get("end_created_date"),
+	}
+
+	return filter
+}
+
+func parseFilter(qp queryParams) (homebus.QueryFilter, error) {
 	var filter homebus.QueryFilter
 
 	if qp.ID != "" {

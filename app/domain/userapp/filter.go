@@ -1,6 +1,7 @@
 package userapp
 
 import (
+	"net/http"
 	"net/mail"
 	"time"
 
@@ -10,7 +11,24 @@ import (
 	"github.com/google/uuid"
 )
 
-func parseFilter(qp QueryParams) (userbus.QueryFilter, error) {
+func parseQueryParams(r *http.Request) (queryParams, error) {
+	values := r.URL.Query()
+
+	filter := queryParams{
+		Page:             values.Get("page"),
+		Rows:             values.Get("row"),
+		OrderBy:          values.Get("orderBy"),
+		ID:               values.Get("user_id"),
+		Name:             values.Get("name"),
+		Email:            values.Get("email"),
+		StartCreatedDate: values.Get("start_created_date"),
+		EndCreatedDate:   values.Get("end_created_date"),
+	}
+
+	return filter, nil
+}
+
+func parseFilter(qp queryParams) (userbus.QueryFilter, error) {
 	var filter userbus.QueryFilter
 
 	if qp.ID != "" {

@@ -3,6 +3,7 @@ package checkapp
 
 import (
 	"context"
+	"net/http"
 	"os"
 	"runtime"
 	"time"
@@ -10,29 +11,28 @@ import (
 	"github.com/ardanlabs/service/app/sdk/errs"
 	"github.com/ardanlabs/service/business/sdk/sqldb"
 	"github.com/ardanlabs/service/foundation/logger"
+	"github.com/ardanlabs/service/foundation/web"
 	"github.com/jmoiron/sqlx"
 )
 
-// App manages the set of app layer api functions for the check domain.
-type App struct {
+type app struct {
 	build string
 	log   *logger.Logger
 	db    *sqlx.DB
 }
 
-// NewApp constructs a check app API for use.
-func NewApp(build string, log *logger.Logger, db *sqlx.DB) *App {
-	return &App{
+func newApp(build string, log *logger.Logger, db *sqlx.DB) *app {
+	return &app{
 		build: build,
 		log:   log,
 		db:    db,
 	}
 }
 
-// Readiness checks if the database is ready and if not will return a 500 status.
+// readiness checks if the database is ready and if not will return a 500 status.
 // Do not respond by just returning an error because further up in the call
 // stack it will interpret that as a non-trusted error.
-func (a *App) Readiness(ctx context.Context) error {
+func (a *app) readiness(ctx context.Context, r *http.Request) web.Encoder {
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 
@@ -44,11 +44,11 @@ func (a *App) Readiness(ctx context.Context) error {
 	return nil
 }
 
-// Liveness returns simple status info if the service is alive. If the
+// liveness returns simple status info if the service is alive. If the
 // app is deployed to a Kubernetes cluster, it will also return pod, node, and
 // namespace details via the Downward API. The Kubernetes environment variables
 // need to be set within your Pod/Deployment manifest.
-func (a *App) Liveness() Info {
+func (a *app) liveness(ctx context.Context, r *http.Request) web.Encoder {
 	host, err := os.Hostname()
 	if err != nil {
 		host = "unavailable"

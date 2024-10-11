@@ -15,11 +15,11 @@ ARG BUILD_REF
 COPY . /service
 
 # Build the admin binary.
-WORKDIR /service/api/cmd/tooling/admin
+WORKDIR /service/api/tooling/admin
 RUN go build -ldflags "-X main.build=${BUILD_REF}"
 
 # Build the service binary.
-WORKDIR /service/api/cmd/services/sales
+WORKDIR /service/api/services/sales
 RUN go build -ldflags "-X main.build=${BUILD_REF}"
 
 
@@ -29,8 +29,8 @@ ARG BUILD_DATE
 ARG BUILD_REF
 RUN addgroup -g 1000 -S sales && \
     adduser -u 1000 -h /service -G sales -S sales
-COPY --from=build_sales --chown=sales:sales /service/api/cmd/tooling/admin/admin /service/admin
-COPY --from=build_sales --chown=sales:sales /service/api/cmd/services/sales/sales /service/sales
+COPY --from=build_sales --chown=sales:sales /service/api/tooling/admin/admin /service/admin
+COPY --from=build_sales --chown=sales:sales /service/api/services/sales/sales /service/sales
 WORKDIR /service
 USER sales
 CMD ["./sales"]

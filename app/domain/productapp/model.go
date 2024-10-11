@@ -14,8 +14,7 @@ import (
 	"github.com/ardanlabs/service/business/types/quantity"
 )
 
-// QueryParams represents the set of possible query strings.
-type QueryParams struct {
+type queryParams struct {
 	Page     string
 	Rows     string
 	OrderBy  string

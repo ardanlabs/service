@@ -253,10 +253,10 @@ dev-update: build dev-load dev-restart
 dev-update-apply: build dev-load dev-apply
 
 dev-logs:
-	kubectl logs --namespace=$(NAMESPACE) -l app=$(SALES_APP) --all-containers=true -f --tail=100 --max-log-requests=6 | go run api/cmd/tooling/logfmt/main.go -service=$(SALES_APP)
+	kubectl logs --namespace=$(NAMESPACE) -l app=$(SALES_APP) --all-containers=true -f --tail=100 --max-log-requests=6 | go run api/tooling/logfmt/main.go -service=$(SALES_APP)
 
 dev-logs-auth:
-	kubectl logs --namespace=$(NAMESPACE) -l app=$(AUTH_APP) --all-containers=true -f --tail=100 | go run api/cmd/tooling/logfmt/main.go
+	kubectl logs --namespace=$(NAMESPACE) -l app=$(AUTH_APP) --all-containers=true -f --tail=100 | go run api/tooling/logfmt/main.go
 
 # ------------------------------------------------------------------------------
 
@@ -342,10 +342,10 @@ compose-logs:
 # Administration
 
 migrate:
-	export SALES_DB_HOST=localhost; go run api/cmd/tooling/admin/main.go migrate
+	export SALES_DB_HOST=localhost; go run api/tooling/admin/main.go migrate
 
 seed: migrate
-	export SALES_DB_HOST=localhost; go run api/cmd/tooling/admin/main.go seed
+	export SALES_DB_HOST=localhost; go run api/tooling/admin/main.go seed
 
 pgcli:
 	pgcli postgresql://postgres:postgres@localhost
@@ -357,7 +357,7 @@ readiness:
 	curl -il http://localhost:3000/v1/readiness
 
 token-gen:
-	export SALES_DB_HOST=localhost; go run api/cmd/tooling/admin/main.go gentoken 5cf37266-3473-4006-984f-9325122678b7 54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
+	export SALES_DB_HOST=localhost; go run api/tooling/admin/main.go gentoken 5cf37266-3473-4006-984f-9325122678b7 54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
 
 # ==============================================================================
 # Metrics and Tracing
@@ -455,10 +455,10 @@ list:
 # Class Stuff
 
 run:
-	go run api/cmd/services/sales/main.go | go run api/cmd/tooling/logfmt/main.go
+	go run api/services/sales/main.go | go run api/tooling/logfmt/main.go
 
 run-help:
-	go run api/cmd/services/sales/main.go --help | go run api/cmd/tooling/logfmt/main.go
+	go run api/services/sales/main.go --help | go run api/tooling/logfmt/main.go
 
 curl:
 	curl -il http://localhost:3000/v1/hack
@@ -470,7 +470,7 @@ load-hack:
 	hey -m GET -c 100 -n 100000 "http://localhost:3000/v1/hack"
 
 admin:
-	go run api/cmd/tooling/admin/main.go
+	go run api/tooling/admin/main.go
 
 ready:
 	curl -il http://localhost:3000/v1/readiness
@@ -528,7 +528,7 @@ talk-metrics:
 # ==============================================================================
 # Admin Frontend
 
-ADMIN_FRONTEND_PREFIX := ./api/cmd/frontends/admin
+ADMIN_FRONTEND_PREFIX := ./api/frontends/admin
 
 write-token-to-env:
 	echo "VITE_SERVICE_API=http://localhost:3000/v1" > ${ADMIN_FRONTEND_PREFIX}/.env

@@ -3,6 +3,7 @@ package homeapp
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/ardanlabs/service/app/sdk/errs"
 	"github.com/ardanlabs/service/app/sdk/mid"
@@ -10,57 +11,63 @@ import (
 	"github.com/ardanlabs/service/business/domain/homebus"
 	"github.com/ardanlabs/service/business/sdk/order"
 	"github.com/ardanlabs/service/business/sdk/page"
+	"github.com/ardanlabs/service/foundation/web"
 )
 
-// App manages the set of app layer api functions for the home domain.
-type App struct {
+type app struct {
 	homeBus *homebus.Business
 }
 
-// NewApp constructs a home domain API for use.
-func NewApp(homeBus *homebus.Business) *App {
-	return &App{
+func newApp(homeBus *homebus.Business) *app {
+	return &app{
 		homeBus: homeBus,
 	}
 }
 
-// Create adds a new home to the system.
-func (a *App) Create(ctx context.Context, app NewHome) (Home, error) {
+func (a *app) create(ctx context.Context, r *http.Request) web.Encoder {
+	var app NewHome
+	if err := web.Decode(r, &app); err != nil {
+		return errs.New(errs.InvalidArgument, err)
+	}
+
 	nh, err := toBusNewHome(ctx, app)
 	if err != nil {
-		return Home{}, errs.New(errs.InvalidArgument, err)
+		return errs.New(errs.InvalidArgument, err)
 	}
 
 	hme, err := a.homeBus.Create(ctx, nh)
 	if err != nil {
-		return Home{}, errs.Newf(errs.Internal, "create: hme[%+v]: %s", app, err)
+		return errs.Newf(errs.Internal, "create: hme[%+v]: %s", app, err)
 	}
 
-	return toAppHome(hme), nil
+	return toAppHome(hme)
 }
 
-// Update updates an existing home.
-func (a *App) Update(ctx context.Context, app UpdateHome) (Home, error) {
+func (a *app) update(ctx context.Context, r *http.Request) web.Encoder {
+	var app UpdateHome
+	if err := web.Decode(r, &app); err != nil {
+		return errs.New(errs.InvalidArgument, err)
+	}
+
 	uh, err := toBusUpdateHome(app)
 	if err != nil {
-		return Home{}, errs.New(errs.InvalidArgument, err)
+		return errs.New(errs.InvalidArgument, err)
 	}
 
 	hme, err := mid.GetHome(ctx)
 	if err != nil {
-		return Home{}, errs.Newf(errs.Internal, "home missing in context: %s", err)
+		return errs.Newf(errs.Internal, "home missing in context: %s", err)
 	}
 
 	updUsr, err := a.homeBus.Update(ctx, hme, uh)
 	if err != nil {
-		return Home{}, errs.Newf(errs.Internal, "update: homeID[%s] uh[%+v]: %s", hme.ID, uh, err)
+		return errs.Newf(errs.Internal, "update: homeID[%s] uh[%+v]: %s", hme.ID, uh, err)
 	}
 
-	return toAppHome(updUsr), nil
+	return toAppHome(updUsr)
 }
 
-// Delete removes a home from the system.
-func (a *App) Delete(ctx context.Context) error {
+func (a *app) delete(ctx context.Context, _ *http.Request) web.Encoder {
 	hme, err := mid.GetHome(ctx)
 	if err != nil {
 		return errs.Newf(errs.Internal, "homeID missing in context: %s", err)
@@ -73,42 +80,42 @@ func (a *App) Delete(ctx context.Context) error {
 	return nil
 }
 
-// Query returns a list of homes with paging.
-func (a *App) Query(ctx context.Context, qp QueryParams) (query.Result[Home], error) {
+func (a *app) query(ctx context.Context, r *http.Request) web.Encoder {
+	qp := parseQueryParams(r)
+
 	page, err := page.Parse(qp.Page, qp.Rows)
 	if err != nil {
-		return query.Result[Home]{}, errs.NewFieldsError("page", err)
+		return errs.NewFieldsError("page", err)
 	}
 
 	filter, err := parseFilter(qp)
 	if err != nil {
-		return query.Result[Home]{}, err
+		return err.(errs.FieldErrors)
 	}
 
 	orderBy, err := order.Parse(orderByFields, qp.OrderBy, homebus.DefaultOrderBy)
 	if err != nil {
-		return query.Result[Home]{}, errs.NewFieldsError("order", err)
+		return errs.NewFieldsError("order", err)
 	}
 
 	hmes, err := a.homeBus.Query(ctx, filter, orderBy, page)
 	if err != nil {
-		return query.Result[Home]{}, errs.Newf(errs.Internal, "query: %s", err)
+		return errs.Newf(errs.Internal, "query: %s", err)
 	}
 
 	total, err := a.homeBus.Count(ctx, filter)
 	if err != nil {
-		return query.Result[Home]{}, errs.Newf(errs.Internal, "count: %s", err)
+		return errs.Newf(errs.Internal, "count: %s", err)
 	}
 
-	return query.NewResult(toAppHomes(hmes), total, page), nil
+	return query.NewResult(toAppHomes(hmes), total, page)
 }
 
-// QueryByID returns a home by its ID.
-func (a *App) QueryByID(ctx context.Context) (Home, error) {
+func (a *app) queryByID(ctx context.Context, _ *http.Request) web.Encoder {
 	hme, err := mid.GetHome(ctx)
 	if err != nil {
-		return Home{}, errs.Newf(errs.Internal, "querybyid: %s", err)
+		return errs.Newf(errs.Internal, "querybyid: %s", err)
 	}
 
-	return toAppHome(hme), nil
+	return toAppHome(hme)
 }
