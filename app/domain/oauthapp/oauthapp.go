@@ -2,11 +2,13 @@
 package oauthapp
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/ardanlabs/service/app/sdk/auth"
+	"github.com/ardanlabs/service/app/sdk/errs"
 	"github.com/ardanlabs/service/business/types/role"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/web"
@@ -41,19 +43,18 @@ func newApp(cfg Config) *app {
 	}
 }
 
-func (a *app) authenticate(w http.ResponseWriter, r *http.Request) {
-	gothic.BeginAuthHandler(w, r)
+func (a *app) authenticate(ctx context.Context, r *http.Request) web.Encoder {
+	gothic.BeginAuthHandler(web.GetWriter(ctx), r)
+
+	return web.NewNoResponse()
 }
 
-func (a *app) authCallback(w http.ResponseWriter, r *http.Request) {
-	var user goth.User
+func (a *app) authCallback(ctx context.Context, r *http.Request) web.Encoder {
+	w := web.GetWriter(ctx)
 
-	var err error
-	user, err = gothic.CompleteUserAuth(w, r)
+	user, err := gothic.CompleteUserAuth(w, r)
 	if err != nil {
-		a.log.Error(r.Context(), "completing user auth", "msg", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		return errs.New(errs.Internal, err)
 	}
 
 	clms := auth.Claims{
@@ -68,24 +69,26 @@ func (a *app) authCallback(w http.ResponseWriter, r *http.Request) {
 
 	token, err := a.auth.GenerateToken(a.tokenKey, clms)
 	if err != nil {
-		a.log.Error(r.Context(), "generating token", "msg", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		return errs.New(errs.Internal, err)
 	}
 
 	redirect := fmt.Sprintf("%s/app/admin?token=%s", a.uiURL, token)
 	a.log.Info(r.Context(), "REDIRECT", "redirect", redirect)
 
 	http.Redirect(w, r, redirect, http.StatusFound)
+
+	return web.NewNoResponse()
 }
 
-func (a *app) logout(w http.ResponseWriter, r *http.Request) {
+func (a *app) logout(ctx context.Context, r *http.Request) web.Encoder {
+	w := web.GetWriter(ctx)
+
 	if err := gothic.Logout(w, r); err != nil {
-		a.log.Error(r.Context(), "gothic logout", "msg", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		return errs.New(errs.Internal, err)
 	}
 
 	redirect := "/app/login"
 	http.Redirect(w, r, redirect, http.StatusTemporaryRedirect)
+
+	return web.NewNoResponse()
 }

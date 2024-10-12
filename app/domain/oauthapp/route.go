@@ -24,7 +24,7 @@ type Config struct {
 func Routes(app *web.App, cfg Config) {
 	api := newApp(cfg)
 
-	app.RawHandlerFunc(http.MethodGet, "", "/api/auth/{provider}", api.authenticate)
-	app.RawHandlerFunc(http.MethodGet, "", "/api/logout/{provider}", api.logout)
-	app.RawHandlerFunc(http.MethodGet, "", "/api/auth/{provider}/callback", api.authCallback)
+	app.HandlerFunc(http.MethodGet, "", "/api/auth/{provider}", api.authenticate)
+	app.HandlerFunc(http.MethodGet, "", "/api/logout/{provider}", api.logout)
+	app.HandlerFunc(http.MethodGet, "", "/api/auth/{provider}/callback", api.authCallback)
 }
