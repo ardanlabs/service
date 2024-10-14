@@ -98,7 +98,7 @@ type NewHome struct {
 
 // Decode implements the decoder interface.
 func (app *NewHome) Decode(data []byte) error {
-	return json.Unmarshal(data, &app)
+	return json.Unmarshal(data, app)
 }
 
 // Validate checks if the data in the model is considered clean.
@@ -157,7 +157,7 @@ type UpdateHome struct {
 
 // Decode implements the decoder interface.
 func (app *UpdateHome) Decode(data []byte) error {
-	return json.Unmarshal(data, &app)
+	return json.Unmarshal(data, app)
 }
 
 // Validate checks the data in the model is considered clean.

@@ -64,7 +64,7 @@ func (app NewTran) Validate() error {
 
 // Decode implements the decoder interface.
 func (app *NewTran) Decode(data []byte) error {
-	return json.Unmarshal(data, &app)
+	return json.Unmarshal(data, app)
 }
 
 // =============================================================================

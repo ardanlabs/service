@@ -16,7 +16,7 @@ type Authorize struct {
 
 // Decode implements the decoder interface.
 func (a *Authorize) Decode(data []byte) error {
-	return json.Unmarshal(data, &a)
+	return json.Unmarshal(data, a)
 }
 
 // AuthenticateResp defines the information that will be received on authenticate.

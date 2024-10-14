@@ -75,7 +75,7 @@ type NewProduct struct {
 
 // Decode implements the decoder interface.
 func (app *NewProduct) Decode(data []byte) error {
-	return json.Unmarshal(data, &app)
+	return json.Unmarshal(data, app)
 }
 
 // Validate checks the data in the model is considered clean.
@@ -129,7 +129,7 @@ type UpdateProduct struct {
 
 // Decode implements the decoder interface.
 func (app *UpdateProduct) Decode(data []byte) error {
-	return json.Unmarshal(data, &app)
+	return json.Unmarshal(data, app)
 }
 
 // Validate checks the data in the model is considered clean.
