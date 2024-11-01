@@ -57,7 +57,7 @@ func newSourceEnv(namespace string) *env {
 	return &env{m: m}
 }
 
-// Source implements the confg.Sourcer interface. It returns the stringfied value
+// Source implements the conf.sourcer interface. It returns the stringfied value
 // stored at the specified key from the environment.
 func (e *env) Source(fld Field) (string, bool) {
 	k := strings.ToUpper(strings.Join(fld.EnvKey, `_`))
@@ -186,7 +186,7 @@ func (f *flag) source(key string, isBool bool) (string, bool) {
 	return "true", found
 }
 
-// Source implements the confg.Sourcer interface. Returns the stringfied value
+// Source implements the conf.sourcer interface. Returns the stringfied value
 // stored at the specified key from the flag source.
 func (f *flag) Source(fld Field) (string, bool) {
 	if fld.Options.ShortFlagChar != 0 {

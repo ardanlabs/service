@@ -28,7 +28,7 @@ bench:
 
 ## audit: tidy and vendor dependencies and format, vet and test all code
 .PHONY: audit
-audit: vendor
+audit: tidy
 	@echo 'Formatting code...'
 	go fmt ./...
 	@echo 'Linting code...'
@@ -36,12 +36,9 @@ audit: vendor
 	@echo 'Running tests...'
 	go test -race -vet=off ./...
 
-## vendor: tidy and vendor dependencies
-.PHONY: vendor
+## tidy: tidy and verify dependencies
+.PHONY: tidy
 vendor:
 	@echo 'Tidying and verifying module dependencies...'
 	go mod tidy
 	go mod verify
-	@echo 'Vendoring dependencies...'
-	go mod vendor
-

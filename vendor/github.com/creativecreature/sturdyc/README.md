@@ -1,3 +1,5 @@
+![sturdyC-fn-2](https://github.com/user-attachments/assets/2def120a-ad2b-4590-bef0-83c461af1b07)
+
 # `sturdyc`: a caching library for building sturdy systems
 
 [![Mentioned in Awesome Go](https://awesome.re/mentioned-badge.svg)](https://github.com/avelino/awesome-go)
@@ -90,7 +92,7 @@ replacing our old cache with this package:
 &nbsp;
 
 In addition to this, we've seen our number of outgoing requests decrease by
-more than 90%.
+more than 90% after enabling refresh coalescing.
 
 # Adding `sturdyc` to your application:
 

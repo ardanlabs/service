@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cespare/xxhash"
+	xxhash "github.com/cespare/xxhash/v2"
 )
 
 // FetchFn Fetch represents a function that can be used to fetch a single record from a data source.

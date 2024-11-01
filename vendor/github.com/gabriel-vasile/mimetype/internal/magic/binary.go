@@ -21,6 +21,8 @@ var (
 	SWF = prefix([]byte("CWS"), []byte("FWS"), []byte("ZWS"))
 	// Torrent has bencoded text in the beginning.
 	Torrent = prefix([]byte("d8:announce"))
+	// PAR1 matches a parquet file.
+	Par1 = prefix([]byte{0x50, 0x41, 0x52, 0x31})
 )
 
 // Java bytecode and Mach-O binaries share the same magic number.

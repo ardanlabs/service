@@ -103,6 +103,10 @@ func String(v interface{}) (string, error) {
 
 // maskVal masks an entire string or the user:password pair of a URL.
 func maskVal(v string) string {
+	if v == "" {
+		return ""
+	}
+
 	mask := "xxxxxx"
 	if u, err := url.Parse(v); err == nil {
 		userPass := u.User.String()
