@@ -125,6 +125,7 @@ func (a *App) HandlerFuncNoMid(method string, group string, path string, handler
 
 		if err := Respond(ctx, w, resp); err != nil {
 			a.log(ctx, "web-respond", "ERROR", err)
+			return
 		}
 	}
 
@@ -165,6 +166,7 @@ func (a *App) HandlerFunc(method string, group string, path string, handlerFunc 
 
 		if err := Respond(ctx, w, resp); err != nil {
 			a.log(ctx, "web-respond", "ERROR", err)
+			return
 		}
 	}
 
