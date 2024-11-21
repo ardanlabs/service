@@ -134,6 +134,7 @@ func (b *Business) Update(ctx context.Context, usr User, uu UpdateUser) (User, e
 	if uu.Enabled != nil {
 		usr.Enabled = *uu.Enabled
 	}
+
 	usr.DateUpdated = time.Now()
 
 	if err := b.storer.Update(ctx, usr); err != nil {
