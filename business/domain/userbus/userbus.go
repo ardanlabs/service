@@ -208,7 +208,7 @@ func (b *Business) QueryByEmail(ctx context.Context, email mail.Address) (User, 
 	return user, nil
 }
 
-// Authenticate finds a user by their email and verifies their passworb. On
+// Authenticate finds a user by their email and verifies their password. On
 // success it returns a Claims User representing this user. The claims can be
 // used to generate a token for future authentication.
 func (b *Business) Authenticate(ctx context.Context, email mail.Address, password string) (User, error) {
