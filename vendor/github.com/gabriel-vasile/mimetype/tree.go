@@ -21,7 +21,7 @@ var root = newMIME("application/octet-stream", "",
 	jpm, jxs, gif, webp, exe, elf, ar, tar, xar, bz2, fits, tiff, bmp, ico, mp3,
 	flac, midi, ape, musePack, amr, wav, aiff, au, mpeg, quickTime, mp4, webM,
 	avi, flv, mkv, asf, aac, voc, m3u, rmvb, gzip, class, swf, crx, ttf, woff,
-	woff2, otf, ttc, eot, wasm, shx, dbf, dcm, rar, djvu, mobi, lit, bpg,
+	woff2, otf, ttc, eot, wasm, shx, dbf, dcm, rar, djvu, mobi, lit, bpg, cbor,
 	sqlite3, dwg, nes, lnk, macho, qcp, icns, hdr, mrc, mdb, accdb, zstd, cab,
 	rpm, xz, lzip, torrent, cpio, tzif, xcf, pat, gbr, glb, cabIS, jxr, parquet,
 	// Keep text last because it is the slowest check.
@@ -87,8 +87,8 @@ var (
 	html    = newMIME("text/html", ".html", magic.HTML)
 	php     = newMIME("text/x-php", ".php", magic.Php)
 	rtf     = newMIME("text/rtf", ".rtf", magic.Rtf).alias("application/rtf")
-	js      = newMIME("application/javascript", ".js", magic.Js).
-		alias("application/x-javascript", "text/javascript")
+	js      = newMIME("text/javascript", ".js", magic.Js).
+		alias("application/x-javascript", "application/javascript")
 	srt = newMIME("application/x-subrip", ".srt", magic.Srt).
 		alias("application/x-srt", "text/x-srt")
 	vtt    = newMIME("text/vtt", ".vtt", magic.Vtt)
@@ -156,7 +156,7 @@ var (
 	aac  = newMIME("audio/aac", ".aac", magic.AAC)
 	voc  = newMIME("audio/x-unknown", ".voc", magic.Voc)
 	aMp4 = newMIME("audio/mp4", ".mp4", magic.AMp4).
-		alias("audio/x-m4a", "audio/x-mp4a")
+		alias("audio/x-mp4a")
 	m4a = newMIME("audio/x-m4a", ".m4a", magic.M4a)
 	m3u = newMIME("application/vnd.apple.mpegurl", ".m3u", magic.M3u).
 		alias("audio/mpegurl")
@@ -261,4 +261,5 @@ var (
 	jxr     = newMIME("image/jxr", ".jxr", magic.Jxr).alias("image/vnd.ms-photo")
 	parquet = newMIME("application/vnd.apache.parquet", ".parquet", magic.Par1).
 		alias("application/x-parquet")
+	cbor = newMIME("application/cbor", ".cbor", magic.CBOR)
 )

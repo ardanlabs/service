@@ -115,12 +115,3 @@ func (e *SemanticError) Error() string {
 func (e *SemanticError) Unwrap() error {
 	return e.Err
 }
-
-func firstError(errs ...error) error {
-	for _, err := range errs {
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}

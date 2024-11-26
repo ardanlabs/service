@@ -167,6 +167,22 @@ func FormatNilMapAsNull(v bool) Options {
 	}
 }
 
+// OmitZeroStructFields specifies that a Go struct should marshal in such a way
+// that all struct fields that are zero are omitted from the marshaled output
+// if the value is zero as determined by the "IsZero() bool" method if present,
+// otherwise based on whether the field is the zero Go value.
+// This is semantically equivalent to specifying the `omitzero` tag option
+// on every field in a Go struct.
+//
+// This only affects marshaling and is ignored when unmarshaling.
+func OmitZeroStructFields(v bool) Options {
+	if v {
+		return jsonflags.OmitZeroStructFields | 1
+	} else {
+		return jsonflags.OmitZeroStructFields | 0
+	}
+}
+
 // MatchCaseInsensitiveNames specifies that JSON object members are matched
 // against Go struct fields using a case-insensitive match of the name.
 // Go struct fields explicitly marked with `strictcase` or `nocase`
