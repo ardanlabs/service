@@ -12,19 +12,6 @@ import (
 	"github.com/ardanlabs/service/business/types/hometype"
 )
 
-type queryParams struct {
-	Page             string
-	Rows             string
-	OrderBy          string
-	ID               string
-	UserID           string
-	Type             string
-	StartCreatedDate string
-	EndCreatedDate   string
-}
-
-// =============================================================================
-
 // Address represents information about an individual address.
 type Address struct {
 	Address1 string `json:"address1"`

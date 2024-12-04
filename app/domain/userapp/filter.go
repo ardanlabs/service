@@ -11,6 +11,17 @@ import (
 	"github.com/google/uuid"
 )
 
+type queryParams struct {
+	Page             string
+	Rows             string
+	OrderBy          string
+	ID               string
+	Name             string
+	Email            string
+	StartCreatedDate string
+	EndCreatedDate   string
+}
+
 func parseQueryParams(r *http.Request) (queryParams, error) {
 	values := r.URL.Query()
 

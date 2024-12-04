@@ -14,18 +14,6 @@ import (
 	"github.com/ardanlabs/service/business/types/quantity"
 )
 
-type queryParams struct {
-	Page     string
-	Rows     string
-	OrderBy  string
-	ID       string
-	Name     string
-	Cost     string
-	Quantity string
-}
-
-// =============================================================================
-
 // Product represents information about an individual product.
 type Product struct {
 	ID          string  `json:"id"`

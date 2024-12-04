@@ -12,19 +12,6 @@ import (
 	"github.com/ardanlabs/service/business/types/role"
 )
 
-type queryParams struct {
-	Page             string
-	Rows             string
-	OrderBy          string
-	ID               string
-	Name             string
-	Email            string
-	StartCreatedDate string
-	EndCreatedDate   string
-}
-
-// =============================================================================
-
 // User represents information about an individual user.
 type User struct {
 	ID           string   `json:"id"`
