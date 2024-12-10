@@ -90,7 +90,7 @@ func (a *app) query(ctx context.Context, r *http.Request) web.Encoder {
 
 	filter, err := parseFilter(qp)
 	if err != nil {
-		return err.(errs.FieldErrors)
+		return err.(*errs.Error)
 	}
 
 	orderBy, err := order.Parse(orderByFields, qp.OrderBy, productbus.DefaultOrderBy)
