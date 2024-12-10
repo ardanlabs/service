@@ -116,17 +116,17 @@ func (a *app) query(ctx context.Context, r *http.Request) web.Encoder {
 
 	page, err := page.Parse(qp.Page, qp.Rows)
 	if err != nil {
-		return errs.NewFieldsError("page", err)
+		return errs.New(errs.InvalidArgument, errs.NewFieldsError("page", err))
 	}
 
 	filter, err := parseFilter(qp)
 	if err != nil {
-		return err.(errs.FieldErrors)
+		return errs.New(errs.InvalidArgument, err.(errs.FieldErrors))
 	}
 
 	orderBy, err := order.Parse(orderByFields, qp.OrderBy, userbus.DefaultOrderBy)
 	if err != nil {
-		return errs.NewFieldsError("order", err)
+		return errs.New(errs.InvalidArgument, errs.NewFieldsError("order", err))
 	}
 
 	usrs, err := a.userBus.Query(ctx, filter, orderBy, page)
