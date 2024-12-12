@@ -40,46 +40,61 @@ func parseQueryParams(r *http.Request) (queryParams, error) {
 }
 
 func parseFilter(qp queryParams) (userbus.QueryFilter, error) {
+	var fieldErrors errs.FieldErrors
 	var filter userbus.QueryFilter
 
 	if qp.ID != "" {
 		id, err := uuid.Parse(qp.ID)
-		if err != nil {
-			return userbus.QueryFilter{}, errs.NewFieldsError("user_id", err)
+		switch err {
+		case nil:
+			filter.ID = &id
+		default:
+			fieldErrors.Add("user_id", err)
 		}
-		filter.ID = &id
 	}
 
 	if qp.Name != "" {
 		name, err := name.Parse(qp.Name)
-		if err != nil {
-			return userbus.QueryFilter{}, errs.NewFieldsError("name", err)
+		switch err {
+		case nil:
+			filter.Name = &name
+		default:
+			fieldErrors.Add("name", err)
 		}
-		filter.Name = &name
 	}
 
 	if qp.Email != "" {
 		addr, err := mail.ParseAddress(qp.Email)
-		if err != nil {
-			return userbus.QueryFilter{}, errs.NewFieldsError("email", err)
+		switch err {
+		case nil:
+			filter.Email = addr
+		default:
+			fieldErrors.Add("email", err)
 		}
-		filter.Email = addr
 	}
 
 	if qp.StartCreatedDate != "" {
 		t, err := time.Parse(time.RFC3339, qp.StartCreatedDate)
-		if err != nil {
-			return userbus.QueryFilter{}, errs.NewFieldsError("start_created_date", err)
+		switch err {
+		case nil:
+			filter.StartCreatedDate = &t
+		default:
+			fieldErrors.Add("start_created_date", err)
 		}
-		filter.StartCreatedDate = &t
 	}
 
 	if qp.EndCreatedDate != "" {
 		t, err := time.Parse(time.RFC3339, qp.EndCreatedDate)
-		if err != nil {
-			return userbus.QueryFilter{}, errs.NewFieldsError("end_created_date", err)
+		switch err {
+		case nil:
+			filter.EndCreatedDate = &t
+		default:
+			fieldErrors.Add("end_created_date", err)
 		}
-		filter.EndCreatedDate = &t
+	}
+
+	if fieldErrors != nil {
+		return userbus.QueryFilter{}, fieldErrors
 	}
 
 	return filter, nil

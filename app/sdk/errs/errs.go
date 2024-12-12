@@ -135,6 +135,14 @@ func NewFieldsError(field string, err error) *Error {
 	})
 }
 
+// Add adds a field error to the collection.
+func (fe *FieldErrors) Add(field string, err error) {
+	*fe = append(*fe, FieldError{
+		Field: field,
+		Err:   err.Error(),
+	})
+}
+
 // Error implements the error interface.
 func (fe FieldErrors) Error() string {
 	d, err := json.Marshal(fe)

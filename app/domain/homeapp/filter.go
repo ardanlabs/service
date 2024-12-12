@@ -39,46 +39,61 @@ func parseQueryParams(r *http.Request) queryParams {
 }
 
 func parseFilter(qp queryParams) (homebus.QueryFilter, error) {
+	var fieldErrors errs.FieldErrors
 	var filter homebus.QueryFilter
 
 	if qp.ID != "" {
 		id, err := uuid.Parse(qp.ID)
-		if err != nil {
-			return homebus.QueryFilter{}, errs.NewFieldsError("home_id", err)
+		switch err {
+		case nil:
+			filter.ID = &id
+		default:
+			fieldErrors.Add("home_id", err)
 		}
-		filter.ID = &id
 	}
 
 	if qp.UserID != "" {
 		id, err := uuid.Parse(qp.UserID)
-		if err != nil {
-			return homebus.QueryFilter{}, errs.NewFieldsError("user_id", err)
+		switch err {
+		case nil:
+			filter.UserID = &id
+		default:
+			fieldErrors.Add("user_id", err)
 		}
-		filter.UserID = &id
 	}
 
 	if qp.Type != "" {
 		typ, err := hometype.Parse(qp.Type)
-		if err != nil {
-			return homebus.QueryFilter{}, errs.NewFieldsError("type", err)
+		switch err {
+		case nil:
+			filter.Type = &typ
+		default:
+			fieldErrors.Add("type", err)
 		}
-		filter.Type = &typ
 	}
 
 	if qp.StartCreatedDate != "" {
 		t, err := time.Parse(time.RFC3339, qp.StartCreatedDate)
-		if err != nil {
-			return homebus.QueryFilter{}, errs.NewFieldsError("start_created_date", err)
+		switch err {
+		case nil:
+			filter.StartCreatedDate = &t
+		default:
+			fieldErrors.Add("start_created_date", err)
 		}
-		filter.StartCreatedDate = &t
 	}
 
 	if qp.EndCreatedDate != "" {
 		t, err := time.Parse(time.RFC3339, qp.EndCreatedDate)
-		if err != nil {
-			return homebus.QueryFilter{}, errs.NewFieldsError("end_created_date", err)
+		switch err {
+		case nil:
+			filter.EndCreatedDate = &t
+		default:
+			fieldErrors.Add("end_created_date", err)
 		}
-		filter.EndCreatedDate = &t
+	}
+
+	if fieldErrors != nil {
+		return homebus.QueryFilter{}, fieldErrors
 	}
 
 	return filter, nil
