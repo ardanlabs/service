@@ -191,7 +191,7 @@ func distributedBatchFetch[V, T any](c *Client[T], keyFn KeyFn, fetchFn BatchFet
 				continue
 			}
 
-			// If distributedStaleStorage isn't enabled it means all records are fresh, otherwise checked the CreatedAt time.
+			// If early refreshes isn't enabled it means all records are fresh, otherwise we'll check the CreatedAt time.
 			if !c.distributedEarlyRefreshes || c.clock.Since(record.CreatedAt) < c.distributedRefreshAfterDuration {
 				// We never want to return missing records.
 				if !record.IsMissingRecord {
@@ -219,13 +219,16 @@ func distributedBatchFetch[V, T any](c *Client[T], keyFn KeyFn, fetchFn BatchFet
 
 		dataSourceResponses, err := fetchFn(ctx, idsToRefresh)
 		// In case of an error, we'll proceed with the ones we got from the distributed storage.
+		// NOTE: It's important that we return a specific error here, otherwise we'll potentially
+		// end up caching the IDs that we weren't able to retrieve from the underlying data source
+		// as missing records.
 		if err != nil {
 			for i := 0; i < len(stale); i++ {
 				c.reportDistributedStaleFallback()
 			}
 			c.log.Error(fmt.Sprintf("sturdyc: error fetching records from the underlying data source. %v", err))
 			maps.Copy(stale, fresh)
-			return stale, nil
+			return stale, errOnlyDistributedRecords
 		}
 
 		// Next, we'll want to check if we should change any of the records to be missing or perform deletions.

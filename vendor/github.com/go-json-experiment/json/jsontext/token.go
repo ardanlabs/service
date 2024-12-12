@@ -6,6 +6,7 @@ package jsontext
 
 import (
 	"bytes"
+	"errors"
 	"math"
 	"strconv"
 
@@ -23,6 +24,8 @@ const (
 
 	invalidTokenPanic = "invalid json.Token; it has been voided by a subsequent json.Decoder call"
 )
+
+var errInvalidToken = errors.New("invalid jsontext.Token")
 
 // Token represents a lexical JSON token, which may be one of the following:
 //   - a JSON literal (i.e., null, true, or false)

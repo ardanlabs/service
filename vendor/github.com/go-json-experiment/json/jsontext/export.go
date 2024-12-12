@@ -68,16 +68,3 @@ func (export) GetStreamingDecoder(r io.Reader, o ...Options) *Decoder {
 func (export) PutStreamingDecoder(d *Decoder) {
 	putStreamingDecoder(d)
 }
-
-func (export) NewDuplicateNameError(quoted []byte, pos int64) error {
-	return newDuplicateNameError(quoted).withOffset(pos)
-}
-func (export) NewInvalidCharacterError(prefix, where string, pos int64) error {
-	return newInvalidCharacterError(prefix, where).withOffset(pos)
-}
-func (export) NewMissingNameError(pos int64) error {
-	return errMissingName.withOffset(pos)
-}
-func (export) NewInvalidUTF8Error(pos int64) error {
-	return errInvalidUTF8.withOffset(pos)
-}

@@ -2,6 +2,7 @@ package sturdyc
 
 import (
 	"context"
+	"errors"
 	"maps"
 )
 
@@ -118,7 +119,7 @@ func getFetchBatch[V, T any](ctx context.Context, c *Client[T], ids []string, ke
 
 	callBatchOpts := callBatchOpts[T, T]{ids: cacheMisses, keyFn: keyFn, fn: wrappedFetch}
 	response, err := callAndCacheBatch(ctx, c, callBatchOpts)
-	if err != nil {
+	if err != nil && !errors.Is(err, ErrOnlyCachedRecords) {
 		if len(cachedRecords) > 0 {
 			return cachedRecords, ErrOnlyCachedRecords
 		}
@@ -126,7 +127,7 @@ func getFetchBatch[V, T any](ctx context.Context, c *Client[T], ids []string, ke
 	}
 
 	maps.Copy(cachedRecords, response)
-	return cachedRecords, nil
+	return cachedRecords, err
 }
 
 // GetOrFetchBatch attempts to retrieve the specified ids from the cache. If

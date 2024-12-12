@@ -141,16 +141,11 @@ func truncateMaxUTF8[Bytes ~[]byte | ~string](b Bytes) Bytes {
 	return b
 }
 
-// NewError and ErrInvalidUTF8 are injected by the "jsontext" package,
-// so that these error types use the jsontext.SyntacticError type.
-var (
-	NewError       = errors.New
-	ErrInvalidUTF8 = errors.New("invalid UTF-8 within string")
-)
+var ErrInvalidUTF8 = errors.New("invalid UTF-8")
 
 func NewInvalidCharacterError[Bytes ~[]byte | ~string](prefix Bytes, where string) error {
 	what := QuoteRune(prefix)
-	return NewError("invalid character " + what + " " + where)
+	return errors.New("invalid character " + what + " " + where)
 }
 
 func NewInvalidEscapeSequenceError[Bytes ~[]byte | ~string](what Bytes) error {
@@ -162,8 +157,8 @@ func NewInvalidEscapeSequenceError[Bytes ~[]byte | ~string](what Bytes) error {
 		return r == '`' || r == utf8.RuneError || unicode.IsSpace(r) || !unicode.IsPrint(r)
 	}) >= 0
 	if needEscape {
-		return NewError("invalid " + label + " " + strconv.Quote(string(what)) + " within string")
+		return errors.New("invalid " + label + " " + strconv.Quote(string(what)) + " within string")
 	} else {
-		return NewError("invalid " + label + " `" + string(what) + "` within string")
+		return errors.New("invalid " + label + " `" + string(what) + "` within string")
 	}
 }

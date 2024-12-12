@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/go-json-experiment/json/internal/jsonwire"
 	"github.com/go-json-experiment/json/jsontext"
 )
 
@@ -114,4 +115,16 @@ func (e *SemanticError) Error() string {
 }
 func (e *SemanticError) Unwrap() error {
 	return e.Err
+}
+
+func newDuplicateNameError(ptr jsontext.Pointer, quotedName []byte, offset int64) error {
+	if quotedName != nil {
+		name, _ := jsonwire.AppendUnquote(nil, quotedName)
+		ptr = ptr.AppendToken(string(name))
+	}
+	return &jsontext.SyntacticError{
+		ByteOffset:  offset,
+		JSONPointer: ptr,
+		Err:         jsontext.ErrDuplicateName,
+	}
 }

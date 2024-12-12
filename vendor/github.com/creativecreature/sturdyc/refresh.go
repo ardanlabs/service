@@ -22,7 +22,7 @@ func (c *Client[T]) refresh(key string, fetchFn FetchFn[T]) {
 func (c *Client[T]) refreshBatch(ids []string, keyFn KeyFn, fetchFn BatchFetchFn[T]) {
 	c.reportBatchRefreshSize(len(ids))
 	response, err := fetchFn(context.Background(), ids)
-	if err != nil {
+	if err != nil && !errors.Is(err, errOnlyDistributedRecords) {
 		return
 	}
 
@@ -39,7 +39,10 @@ func (c *Client[T]) refreshBatch(ids []string, keyFn KeyFn, fetchFn BatchFetchFn
 			c.Delete(keyFn(id))
 		}
 
-		if c.storeMissingRecords && !okResponse {
+		// If we're only getting records from the distributed storage, it means that we weren't able to get
+		// the remaining IDs for the batch from the underlying data source. We don't want to store these
+		// as missing records because we don't know if they're missing or not.
+		if c.storeMissingRecords && !okResponse && !errors.Is(err, errOnlyDistributedRecords) {
 			c.StoreMissingRecord(keyFn(id))
 		}
 	}

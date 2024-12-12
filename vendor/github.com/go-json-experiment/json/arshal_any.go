@@ -177,7 +177,7 @@ func unmarshalObjectAny(dec *jsontext.Decoder, uo *jsonopts.Struct) (map[string]
 			// Manually check for duplicate names.
 			if _, ok := obj[name]; ok {
 				name := xd.PreviousBuffer()
-				err := export.NewDuplicateNameError(name, dec.InputOffset()-len64(name))
+				err := newDuplicateNameError(dec.StackPointer(), nil, dec.InputOffset()-len64(name))
 				return obj, err
 			}
 

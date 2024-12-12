@@ -890,7 +890,7 @@ func makeMapArshaler(t reflect.Type) *arshaler {
 					if !xd.Flags.Get(jsonflags.AllowDuplicateNames) && (!seen.IsValid() || seen.MapIndex(k.Value).IsValid()) {
 						// TODO: Unread the object name.
 						name := xd.PreviousBuffer()
-						err := export.NewDuplicateNameError(name, dec.InputOffset()-len64(name))
+						err := newDuplicateNameError(dec.StackPointer(), nil, dec.InputOffset()-len64(name))
 						return err
 					}
 					v.Set(v2)
@@ -1037,9 +1037,7 @@ func makeStructArshaler(t reflect.Type) *arshaler {
 					b, _ = jsonwire.AppendQuote(b, f.name, &xe.Flags)
 				}
 				xe.Buf = b
-				if !xe.Flags.Get(jsonflags.AllowDuplicateNames) {
-					xe.Names.ReplaceLastQuotedOffset(n0)
-				}
+				xe.Names.ReplaceLastQuotedOffset(n0)
 				xe.Tokens.Last.Increment()
 			} else {
 				if err := enc.WriteToken(jsontext.String(f.name)); err != nil {
@@ -1162,7 +1160,7 @@ func makeStructArshaler(t reflect.Type) *arshaler {
 						}
 						if !xd.Flags.Get(jsonflags.AllowDuplicateNames) && !xd.Namespaces.Last().InsertUnquoted(name) {
 							// TODO: Unread the object name.
-							err := export.NewDuplicateNameError(val, dec.InputOffset()-len64(val))
+							err := newDuplicateNameError(dec.StackPointer(), nil, dec.InputOffset()-len64(val))
 							return err
 						}
 
@@ -1182,7 +1180,7 @@ func makeStructArshaler(t reflect.Type) *arshaler {
 				}
 				if !xd.Flags.Get(jsonflags.AllowDuplicateNames) && !seenIdxs.insert(uint(f.id)) {
 					// TODO: Unread the object name.
-					err := export.NewDuplicateNameError(val, dec.InputOffset()-len64(val))
+					err := newDuplicateNameError(dec.StackPointer(), nil, dec.InputOffset()-len64(val))
 					return err
 				}
 

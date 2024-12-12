@@ -3,6 +3,10 @@ package sturdyc
 import "errors"
 
 var (
+	// errOnlyDistributedRecords is an internal error that the cache uses to not
+	// store records as missing if it's unable to get part of the batch from the
+	// underlying data source.
+	errOnlyDistributedRecords = errors.New("sturdyc: we were only able to get records from the distributed storage")
 	// ErrNotFound should be returned from a FetchFn to indicate that a record is
 	// missing at the underlying data source. This helps the cache to determine
 	// if a record should be deleted or stored as a missing record if you have
