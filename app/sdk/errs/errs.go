@@ -127,12 +127,14 @@ type FieldErrors []FieldError
 
 // NewFieldsError creates an fields error.
 func NewFieldsError(field string, err error) *Error {
-	return New(InvalidArgument, FieldErrors{
+	fe := FieldErrors{
 		{
 			Field: field,
 			Err:   err.Error(),
 		},
-	})
+	}
+
+	return fe.ToError()
 }
 
 // Add adds a field error to the collection.
@@ -141,6 +143,11 @@ func (fe *FieldErrors) Add(field string, err error) {
 		Field: field,
 		Err:   err.Error(),
 	})
+}
+
+// ToError converts the fields error to an Error.
+func (fe FieldErrors) ToError() *Error {
+	return New(InvalidArgument, fe)
 }
 
 // Error implements the error interface.

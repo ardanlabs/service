@@ -94,7 +94,7 @@ func parseFilter(qp queryParams) (userbus.QueryFilter, error) {
 	}
 
 	if fieldErrors != nil {
-		return userbus.QueryFilter{}, fieldErrors
+		return userbus.QueryFilter{}, fieldErrors.ToError()
 	}
 
 	return filter, nil

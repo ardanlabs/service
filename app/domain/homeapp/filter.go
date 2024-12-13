@@ -93,7 +93,7 @@ func parseFilter(qp queryParams) (homebus.QueryFilter, error) {
 	}
 
 	if fieldErrors != nil {
-		return homebus.QueryFilter{}, fieldErrors
+		return homebus.QueryFilter{}, fieldErrors.ToError()
 	}
 
 	return filter, nil

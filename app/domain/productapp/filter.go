@@ -82,7 +82,7 @@ func parseFilter(qp queryParams) (productbus.QueryFilter, error) {
 	}
 
 	if fieldErrors != nil {
-		return productbus.QueryFilter{}, fieldErrors
+		return productbus.QueryFilter{}, fieldErrors.ToError()
 	}
 
 	return filter, nil

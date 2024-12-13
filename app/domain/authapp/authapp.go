@@ -26,7 +26,7 @@ func newApp(ath *auth.Auth) *app {
 func (a *app) token(ctx context.Context, r *http.Request) web.Encoder {
 	kid := web.Param(r, "kid")
 	if kid == "" {
-		return errs.New(errs.InvalidArgument, errs.NewFieldsError("kid", errors.New("missing kid")))
+		return errs.NewFieldsError("kid", errors.New("missing kid"))
 	}
 
 	// The BearerBasic middleware function generates the claims.
