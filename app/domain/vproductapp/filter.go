@@ -28,47 +28,62 @@ func parseQueryParams(r *http.Request) queryParams {
 }
 
 func parseFilter(qp queryParams) (vproductbus.QueryFilter, error) {
+	var fieldErrors errs.FieldErrors
 	var filter vproductbus.QueryFilter
 
 	if qp.ID != "" {
 		id, err := uuid.Parse(qp.ID)
-		if err != nil {
-			return vproductbus.QueryFilter{}, errs.NewFieldErrors("product_id", err)
+		switch err {
+		case nil:
+			filter.ID = &id
+		default:
+			fieldErrors.Add("product_id", err)
 		}
-		filter.ID = &id
 	}
 
 	if qp.Name != "" {
 		name, err := name.Parse(qp.Name)
-		if err != nil {
-			return vproductbus.QueryFilter{}, errs.NewFieldErrors("name", err)
+		switch err {
+		case nil:
+			filter.Name = &name
+		default:
+			fieldErrors.Add("name", err)
 		}
-		filter.Name = &name
 	}
 
 	if qp.Cost != "" {
 		cst, err := strconv.ParseFloat(qp.Cost, 64)
-		if err != nil {
-			return vproductbus.QueryFilter{}, errs.NewFieldErrors("cost", err)
+		switch err {
+		case nil:
+			filter.Cost = &cst
+		default:
+			fieldErrors.Add("cost", err)
 		}
-		filter.Cost = &cst
 	}
 
 	if qp.Quantity != "" {
 		qua, err := strconv.ParseInt(qp.Quantity, 10, 64)
-		if err != nil {
-			return vproductbus.QueryFilter{}, errs.NewFieldErrors("quantity", err)
+		switch err {
+		case nil:
+			i := int(qua)
+			filter.Quantity = &i
+		default:
+			fieldErrors.Add("quantity", err)
 		}
-		i := int(qua)
-		filter.Quantity = &i
 	}
 
-	if qp.Name != "" {
-		name, err := name.Parse(qp.Name)
-		if err != nil {
-			return vproductbus.QueryFilter{}, errs.NewFieldErrors("name", err)
+	if qp.UserName != "" {
+		userName, err := name.Parse(qp.UserName)
+		switch err {
+		case nil:
+			filter.UserName = &userName
+		default:
+			fieldErrors.Add("user_name", err)
 		}
-		filter.UserName = &name
+	}
+
+	if fieldErrors != nil {
+		return vproductbus.QueryFilter{}, fieldErrors.ToError()
 	}
 
 	return filter, nil
