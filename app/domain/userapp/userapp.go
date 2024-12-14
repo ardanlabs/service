@@ -116,7 +116,7 @@ func (a *app) query(ctx context.Context, r *http.Request) web.Encoder {
 
 	page, err := page.Parse(qp.Page, qp.Rows)
 	if err != nil {
-		return errs.NewFieldsError("page", err)
+		return errs.NewFieldErrors("page", err)
 	}
 
 	filter, err := parseFilter(qp)
@@ -126,7 +126,7 @@ func (a *app) query(ctx context.Context, r *http.Request) web.Encoder {
 
 	orderBy, err := order.Parse(orderByFields, qp.OrderBy, userbus.DefaultOrderBy)
 	if err != nil {
-		return errs.NewFieldsError("order", err)
+		return errs.NewFieldErrors("order", err)
 	}
 
 	usrs, err := a.userBus.Query(ctx, filter, orderBy, page)
