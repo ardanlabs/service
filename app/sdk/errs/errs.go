@@ -125,8 +125,8 @@ type FieldError struct {
 // FieldErrors represents a collection of field errors.
 type FieldErrors []FieldError
 
-// NewFieldsError creates an fields error.
-func NewFieldsError(field string, err error) *Error {
+// NewFieldErrors creates a field errors.
+func NewFieldErrors(field string, err error) *Error {
 	fe := FieldErrors{
 		{
 			Field: field,
@@ -145,7 +145,7 @@ func (fe *FieldErrors) Add(field string, err error) {
 	})
 }
 
-// ToError converts the fields error to an Error.
+// ToError converts the field errors to an Error.
 func (fe FieldErrors) ToError() *Error {
 	return New(InvalidArgument, fe)
 }

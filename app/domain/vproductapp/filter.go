@@ -33,7 +33,7 @@ func parseFilter(qp queryParams) (vproductbus.QueryFilter, error) {
 	if qp.ID != "" {
 		id, err := uuid.Parse(qp.ID)
 		if err != nil {
-			return vproductbus.QueryFilter{}, errs.NewFieldsError("product_id", err)
+			return vproductbus.QueryFilter{}, errs.NewFieldErrors("product_id", err)
 		}
 		filter.ID = &id
 	}
@@ -41,7 +41,7 @@ func parseFilter(qp queryParams) (vproductbus.QueryFilter, error) {
 	if qp.Name != "" {
 		name, err := name.Parse(qp.Name)
 		if err != nil {
-			return vproductbus.QueryFilter{}, errs.NewFieldsError("name", err)
+			return vproductbus.QueryFilter{}, errs.NewFieldErrors("name", err)
 		}
 		filter.Name = &name
 	}
@@ -49,7 +49,7 @@ func parseFilter(qp queryParams) (vproductbus.QueryFilter, error) {
 	if qp.Cost != "" {
 		cst, err := strconv.ParseFloat(qp.Cost, 64)
 		if err != nil {
-			return vproductbus.QueryFilter{}, errs.NewFieldsError("cost", err)
+			return vproductbus.QueryFilter{}, errs.NewFieldErrors("cost", err)
 		}
 		filter.Cost = &cst
 	}
@@ -57,7 +57,7 @@ func parseFilter(qp queryParams) (vproductbus.QueryFilter, error) {
 	if qp.Quantity != "" {
 		qua, err := strconv.ParseInt(qp.Quantity, 10, 64)
 		if err != nil {
-			return vproductbus.QueryFilter{}, errs.NewFieldsError("quantity", err)
+			return vproductbus.QueryFilter{}, errs.NewFieldErrors("quantity", err)
 		}
 		i := int(qua)
 		filter.Quantity = &i
@@ -66,7 +66,7 @@ func parseFilter(qp queryParams) (vproductbus.QueryFilter, error) {
 	if qp.Name != "" {
 		name, err := name.Parse(qp.Name)
 		if err != nil {
-			return vproductbus.QueryFilter{}, errs.NewFieldsError("name", err)
+			return vproductbus.QueryFilter{}, errs.NewFieldErrors("name", err)
 		}
 		filter.UserName = &name
 	}
