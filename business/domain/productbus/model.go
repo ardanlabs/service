@@ -3,6 +3,9 @@ package productbus
 import (
 	"time"
 
+	"github.com/ardanlabs/service/business/types/money"
+	"github.com/ardanlabs/service/business/types/name"
+	"github.com/ardanlabs/service/business/types/quantity"
 	"github.com/google/uuid"
 )
 
@@ -10,9 +13,9 @@ import (
 type Product struct {
 	ID          uuid.UUID
 	UserID      uuid.UUID
-	Name        string
-	Cost        float64
-	Quantity    int
+	Name        name.Name
+	Cost        money.Money
+	Quantity    quantity.Quantity
 	DateCreated time.Time
 	DateUpdated time.Time
 }
@@ -20,9 +23,9 @@ type Product struct {
 // NewProduct is what we require from clients when adding a Product.
 type NewProduct struct {
 	UserID   uuid.UUID
-	Name     string
-	Cost     float64
-	Quantity int
+	Name     name.Name
+	Cost     money.Money
+	Quantity quantity.Quantity
 }
 
 // UpdateProduct defines what information may be provided to modify an
@@ -32,7 +35,7 @@ type NewProduct struct {
 // explicitly blank. Normally we do not want to use pointers to basic types but
 // we make exceptions around marshalling/unmarshalling.
 type UpdateProduct struct {
-	Name     *string
-	Cost     *float64
-	Quantity *int
+	Name     *name.Name
+	Cost     *money.Money
+	Quantity *quantity.Quantity
 }

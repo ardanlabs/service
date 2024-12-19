@@ -6,8 +6,10 @@ import (
 	"net/mail"
 	"time"
 
-	"github.com/ardanlabs/service/business/api/sqldb/dbarray"
 	"github.com/ardanlabs/service/business/domain/userbus"
+	"github.com/ardanlabs/service/business/sdk/sqldb/dbarray"
+	"github.com/ardanlabs/service/business/types/name"
+	"github.com/ardanlabs/service/business/types/role"
 	"github.com/google/uuid"
 )
 
@@ -23,63 +25,64 @@ type user struct {
 	DateUpdated  time.Time      `db:"date_updated"`
 }
 
-func toDBUser(usr userbus.User) user {
-	roles := make([]string, len(usr.Roles))
-	for i, role := range usr.Roles {
-		roles[i] = role.Name()
-	}
-
+func toDBUser(bus userbus.User) user {
 	return user{
-		ID:           usr.ID,
-		Name:         usr.Name,
-		Email:        usr.Email.Address,
-		Roles:        roles,
-		PasswordHash: usr.PasswordHash,
+		ID:           bus.ID,
+		Name:         bus.Name.String(),
+		Email:        bus.Email.Address,
+		Roles:        role.ParseToString(bus.Roles),
+		PasswordHash: bus.PasswordHash,
 		Department: sql.NullString{
-			String: usr.Department,
-			Valid:  usr.Department != "",
+			String: bus.Department.String(),
+			Valid:  bus.Department.Valid(),
 		},
-		Enabled:     usr.Enabled,
-		DateCreated: usr.DateCreated.UTC(),
-		DateUpdated: usr.DateUpdated.UTC(),
+		Enabled:     bus.Enabled,
+		DateCreated: bus.DateCreated.UTC(),
+		DateUpdated: bus.DateUpdated.UTC(),
 	}
 }
 
-func toBusUser(dbUsr user) (userbus.User, error) {
+func toBusUser(db user) (userbus.User, error) {
 	addr := mail.Address{
-		Address: dbUsr.Email,
+		Address: db.Email,
 	}
 
-	roles := make([]userbus.Role, len(dbUsr.Roles))
-	for i, value := range dbUsr.Roles {
-		var err error
-		roles[i], err = userbus.ParseRole(value)
-		if err != nil {
-			return userbus.User{}, fmt.Errorf("parse role: %w", err)
-		}
+	roles, err := role.ParseMany(db.Roles)
+	if err != nil {
+		return userbus.User{}, fmt.Errorf("parse: %w", err)
+	}
+
+	nme, err := name.Parse(db.Name)
+	if err != nil {
+		return userbus.User{}, fmt.Errorf("parse name: %w", err)
+	}
+
+	department, err := name.ParseNull(db.Department.String)
+	if err != nil {
+		return userbus.User{}, fmt.Errorf("parse department: %w", err)
 	}
 
 	bus := userbus.User{
-		ID:           dbUsr.ID,
-		Name:         dbUsr.Name,
+		ID:           db.ID,
+		Name:         nme,
 		Email:        addr,
 		Roles:        roles,
-		PasswordHash: dbUsr.PasswordHash,
-		Enabled:      dbUsr.Enabled,
-		Department:   dbUsr.Department.String,
-		DateCreated:  dbUsr.DateCreated.In(time.Local),
-		DateUpdated:  dbUsr.DateUpdated.In(time.Local),
+		PasswordHash: db.PasswordHash,
+		Enabled:      db.Enabled,
+		Department:   department,
+		DateCreated:  db.DateCreated.In(time.Local),
+		DateUpdated:  db.DateUpdated.In(time.Local),
 	}
 
 	return bus, nil
 }
 
-func toBusUsers(dbUsers []user) ([]userbus.User, error) {
-	bus := make([]userbus.User, len(dbUsers))
+func toBusUsers(dbs []user) ([]userbus.User, error) {
+	bus := make([]userbus.User, len(dbs))
 
-	for i, dbUsr := range dbUsers {
+	for i, db := range dbs {
 		var err error
-		bus[i], err = toBusUser(dbUsr)
+		bus[i], err = toBusUser(db)
 		if err != nil {
 			return nil, err
 		}

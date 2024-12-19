@@ -8,11 +8,10 @@ import (
 	"fmt"
 	"net/mail"
 
-	"github.com/ardanlabs/service/business/api/order"
-	"github.com/ardanlabs/service/business/api/sqldb"
-	"github.com/ardanlabs/service/business/api/sqldb/dbarray"
-	"github.com/ardanlabs/service/business/api/transaction"
 	"github.com/ardanlabs/service/business/domain/userbus"
+	"github.com/ardanlabs/service/business/sdk/order"
+	"github.com/ardanlabs/service/business/sdk/page"
+	"github.com/ardanlabs/service/business/sdk/sqldb"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
@@ -34,7 +33,7 @@ func NewStore(log *logger.Logger, db *sqlx.DB) *Store {
 
 // NewWithTx constructs a new Store value replacing the sqlx DB
 // value with a sqlx DB value that is currently inside a transaction.
-func (s *Store) NewWithTx(tx transaction.CommitRollbacker) (userbus.Storer, error) {
+func (s *Store) NewWithTx(tx sqldb.CommitRollbacker) (userbus.Storer, error) {
 	ec, err := sqldb.GetExtContext(tx)
 	if err != nil {
 		return nil, err
@@ -94,19 +93,13 @@ func (s *Store) Update(ctx context.Context, usr userbus.User) error {
 
 // Delete removes a user from the database.
 func (s *Store) Delete(ctx context.Context, usr userbus.User) error {
-	data := struct {
-		ID string `db:"user_id"`
-	}{
-		ID: usr.ID.String(),
-	}
-
 	const q = `
 	DELETE FROM
 		users
 	WHERE
 		user_id = :user_id`
 
-	if err := sqldb.NamedExecContext(ctx, s.log, s.db, q, data); err != nil {
+	if err := sqldb.NamedExecContext(ctx, s.log, s.db, q, toDBUser(usr)); err != nil {
 		return fmt.Errorf("namedexeccontext: %w", err)
 	}
 
@@ -114,10 +107,10 @@ func (s *Store) Delete(ctx context.Context, usr userbus.User) error {
 }
 
 // Query retrieves a list of existing users from the database.
-func (s *Store) Query(ctx context.Context, filter userbus.QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]userbus.User, error) {
-	data := map[string]interface{}{
-		"offset":        (pageNumber - 1) * rowsPerPage,
-		"rows_per_page": rowsPerPage,
+func (s *Store) Query(ctx context.Context, filter userbus.QueryFilter, orderBy order.By, page page.Page) ([]userbus.User, error) {
+	data := map[string]any{
+		"offset":        (page.Number() - 1) * page.RowsPerPage(),
+		"rows_per_page": page.RowsPerPage(),
 	}
 
 	const q = `
@@ -147,7 +140,7 @@ func (s *Store) Query(ctx context.Context, filter userbus.QueryFilter, orderBy o
 
 // Count returns the total number of users in the DB.
 func (s *Store) Count(ctx context.Context, filter userbus.QueryFilter) (int, error) {
-	data := map[string]interface{}{}
+	data := map[string]any{}
 
 	const q = `
 	SELECT
@@ -193,38 +186,6 @@ func (s *Store) QueryByID(ctx context.Context, userID uuid.UUID) (userbus.User, 
 	}
 
 	return toBusUser(dbUsr)
-}
-
-// QueryByIDs gets the specified users from the database.
-func (s *Store) QueryByIDs(ctx context.Context, userIDs []uuid.UUID) ([]userbus.User, error) {
-	ids := make([]string, len(userIDs))
-	for i, userID := range userIDs {
-		ids[i] = userID.String()
-	}
-
-	data := struct {
-		ID any `db:"user_id"`
-	}{
-		ID: dbarray.Array(ids),
-	}
-
-	const q = `
-	SELECT
-        user_id, name, email, password_hash, roles, department, enabled, date_created, date_updated
-	FROM
-		users
-	WHERE
-		user_id = ANY(:user_id)`
-
-	var dbUsrs []user
-	if err := sqldb.NamedQuerySlice(ctx, s.log, s.db, q, data, &dbUsrs); err != nil {
-		if errors.Is(err, sqldb.ErrDBNotFound) {
-			return nil, userbus.ErrNotFound
-		}
-		return nil, fmt.Errorf("db: %w", err)
-	}
-
-	return toBusUsers(dbUsrs)
 }
 
 // QueryByEmail gets the specified user from the database by email.

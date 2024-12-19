@@ -106,6 +106,7 @@ const (
 	Deterministic             // marshal only
 	FormatNilMapAsNull        // marshal only
 	FormatNilSliceAsNull      // marshal only
+	OmitZeroStructFields      // marshal only
 	MatchCaseInsensitiveNames // marshal or unmarshal
 	DiscardUnknownMembers     // marshal only
 	RejectUnknownMembers      // unmarshal only
@@ -129,6 +130,7 @@ const (
 	ReportLegacyErrorValues        // marshal or unmarshal
 	SkipUnaddressableMethods       // marshal or unmarshal
 	StringifyWithLegacySemantics   // marshal or unmarshal
+	StringifyBoolsAndStrings       // marshal or unmarshal; for internal use by jsonv2.makeStructArshaler
 	UnmarshalAnyWithRawNumber      // unmarshal; for internal use by jsonv1.Decoder.UseNumber
 	UnmarshalArrayFromAnyLength    // unmarshal
 

@@ -4,22 +4,22 @@ package tranapp
 import (
 	"context"
 	"errors"
+	"net/http"
 
-	"github.com/ardanlabs/service/app/api/errs"
-	"github.com/ardanlabs/service/app/api/mid"
+	"github.com/ardanlabs/service/app/sdk/errs"
+	"github.com/ardanlabs/service/app/sdk/mid"
 	"github.com/ardanlabs/service/business/domain/productbus"
 	"github.com/ardanlabs/service/business/domain/userbus"
+	"github.com/ardanlabs/service/foundation/web"
 )
 
-// App manages the set of app layer api functions for the tran domain.
-type App struct {
+type app struct {
 	userBus    *userbus.Business
 	productBus *productbus.Business
 }
 
-// NewApp constructs a tran app API for use.
-func NewApp(userBus *userbus.Business, productBus *productbus.Business) *App {
-	return &App{
+func newApp(userBus *userbus.Business, productBus *productbus.Business) *app {
+	return &app{
 		userBus:    userBus,
 		productBus: productBus,
 	}
@@ -27,10 +27,10 @@ func NewApp(userBus *userbus.Business, productBus *productbus.Business) *App {
 
 // newWithTx constructs a new Handlers value with the domain apis
 // using a store transaction that was created via middleware.
-func (a *App) newWithTx(ctx context.Context) (*App, error) {
-	tx, exists := mid.GetTran(ctx)
-	if !exists {
-		return nil, errors.New("transaction not created")
+func (a *app) newWithTx(ctx context.Context) (*app, error) {
+	tx, err := mid.GetTran(ctx)
+	if err != nil {
+		return nil, err
 	}
 
 	userBus, err := a.userBus.NewWithTx(tx)
@@ -43,7 +43,7 @@ func (a *App) newWithTx(ctx context.Context) (*App, error) {
 		return nil, err
 	}
 
-	app := App{
+	app := app{
 		userBus:    userBus,
 		productBus: productBus,
 	}
@@ -51,37 +51,41 @@ func (a *App) newWithTx(ctx context.Context) (*App, error) {
 	return &app, nil
 }
 
-// Create adds a new user and product at the same time under a single transaction.
-func (a *App) Create(ctx context.Context, nt NewTran) (Product, error) {
+func (a *app) create(ctx context.Context, r *http.Request) web.Encoder {
+	var app NewTran
+	if err := web.Decode(r, &app); err != nil {
+		return errs.New(errs.InvalidArgument, err)
+	}
+
 	a, err := a.newWithTx(ctx)
 	if err != nil {
-		return Product{}, errs.New(errs.Internal, err)
+		return errs.New(errs.Internal, err)
 	}
 
-	np, err := toBusNewProduct(nt.Product)
+	np, err := toBusNewProduct(app.Product)
 	if err != nil {
-		return Product{}, errs.New(errs.FailedPrecondition, err)
+		return errs.New(errs.InvalidArgument, err)
 	}
 
-	nu, err := toBusNewUser(nt.User)
+	nu, err := toBusNewUser(app.User)
 	if err != nil {
-		return Product{}, errs.New(errs.FailedPrecondition, err)
+		return errs.New(errs.InvalidArgument, err)
 	}
 
 	usr, err := a.userBus.Create(ctx, nu)
 	if err != nil {
 		if errors.Is(err, userbus.ErrUniqueEmail) {
-			return Product{}, errs.New(errs.Aborted, userbus.ErrUniqueEmail)
+			return errs.New(errs.Aborted, userbus.ErrUniqueEmail)
 		}
-		return Product{}, errs.Newf(errs.Internal, "create: usr[%+v]: %s", usr, err)
+		return errs.Newf(errs.Internal, "create: usr[%+v]: %s", usr, err)
 	}
 
 	np.UserID = usr.ID
 
 	prd, err := a.productBus.Create(ctx, np)
 	if err != nil {
-		return Product{}, errs.Newf(errs.Internal, "create: prd[%+v]: %s", prd, err)
+		return errs.Newf(errs.Internal, "create: prd[%+v]: %s", prd, err)
 	}
 
-	return toAppProduct(prd), nil
+	return toAppProduct(prd)
 }

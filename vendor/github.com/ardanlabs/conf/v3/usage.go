@@ -171,6 +171,9 @@ func getOptString(fld Field) string {
 	if fld.Options.Required {
 		opts = append(opts, "required")
 	}
+	if fld.Options.NotZero {
+		opts = append(opts, "notzero")
+	}
 	if fld.Options.Noprint {
 		opts = append(opts, "noprint")
 	}

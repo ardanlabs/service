@@ -103,6 +103,10 @@ func String(v interface{}) (string, error) {
 
 // maskVal masks an entire string or the user:password pair of a URL.
 func maskVal(v string) string {
+	if v == "" {
+		return ""
+	}
+
 	mask := "xxxxxx"
 	if u, err := url.Parse(v); err == nil {
 		userPass := u.User.String()
@@ -152,6 +156,7 @@ func VersionInfo(namespace string, v interface{}) (string, error) {
 
 // parse parses configuration into the provided struct.
 func parse(args []string, namespace string, cfgStruct interface{}) error {
+
 	// Create the flag and env sources.
 	flag, err := newSourceFlag(args)
 	if err != nil {
@@ -193,8 +198,8 @@ func parse(args []string, namespace string, cfgStruct interface{}) error {
 			}
 		}
 
-		// Flag to check if any value is provided.
-		provided := false
+		// Flag to check if an override value is provided.
+		foundOverride := false
 
 		// Process each field against all sources.
 		for _, sourcer := range sources {
@@ -207,7 +212,7 @@ func parse(args []string, namespace string, cfgStruct interface{}) error {
 				continue
 			}
 
-			// A value was found so update the struct value with it.
+			// A override was found so update the struct value with it.
 			if err := processField(false, value, field.Field); err != nil {
 				return &FieldError{
 					fieldName: field.Name,
@@ -217,11 +222,15 @@ func parse(args []string, namespace string, cfgStruct interface{}) error {
 				}
 			}
 
-			provided = true
+			foundOverride = true
+		}
+
+		if field.Options.NotZero && field.Field.IsZero() {
+			return fmt.Errorf("field %s is set to zero value", field.Name)
 		}
 
 		// If the field is marked 'required', check if no value was provided.
-		if field.Options.Required && !provided {
+		if field.Options.Required && !foundOverride {
 			return fmt.Errorf("required field %s is missing value", field.Name)
 		}
 	}

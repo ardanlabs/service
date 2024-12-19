@@ -7,17 +7,26 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Install Go 1.22
+          name: Install Go 1.23
           command: |
               sudo rm -rf /usr/local/go
-              wget -O go.tgz https://go.dev/dl/go1.22.2.linux-amd64.tar.gz
+              wget -O go.tgz https://go.dev/dl/go1.23.1.linux-amd64.tar.gz
               sudo tar -C /usr/local -xzf go.tgz
               which go
               go version
       - run:
+          name: Start Test Database
+          command: |
+              docker run -P -d --name servicetest -e POSTGRES_PASSWORD=postgres postgres:17.2
+      - run:
           name: Run tests
           command: |
               CGO_ENABLED=0 go test ./...
+      - run:
+          name: Stop Test Database
+          command: |
+              docker stop servicetest
+              docker rm servicetest -v
       - run:
           name: Run vet
           command: |

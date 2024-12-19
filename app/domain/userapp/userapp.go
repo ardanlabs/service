@@ -4,96 +4,98 @@ package userapp
 import (
 	"context"
 	"errors"
+	"net/http"
 
-	"github.com/ardanlabs/service/app/api/auth"
-	"github.com/ardanlabs/service/app/api/errs"
-	"github.com/ardanlabs/service/app/api/mid"
-	"github.com/ardanlabs/service/app/api/page"
-	"github.com/ardanlabs/service/business/api/order"
+	"github.com/ardanlabs/service/app/sdk/errs"
+	"github.com/ardanlabs/service/app/sdk/mid"
+	"github.com/ardanlabs/service/app/sdk/query"
 	"github.com/ardanlabs/service/business/domain/userbus"
+	"github.com/ardanlabs/service/business/sdk/order"
+	"github.com/ardanlabs/service/business/sdk/page"
+	"github.com/ardanlabs/service/foundation/web"
 )
 
-// App manages the set of app layer api functions for the user domain.
-type App struct {
+type app struct {
 	userBus *userbus.Business
-	auth    *auth.Auth
 }
 
-// NewApp constructs a user app API for use.
-func NewApp(userBus *userbus.Business) *App {
-	return &App{
+func newApp(userBus *userbus.Business) *app {
+	return &app{
 		userBus: userBus,
 	}
 }
 
-// NewAppWithAuth constructs a user app API for use with auth support.
-func NewAppWithAuth(userBus *userbus.Business, ath *auth.Auth) *App {
-	return &App{
-		auth:    ath,
-		userBus: userBus,
+func (a *app) create(ctx context.Context, r *http.Request) web.Encoder {
+	var app NewUser
+	if err := web.Decode(r, &app); err != nil {
+		return errs.New(errs.InvalidArgument, err)
 	}
-}
 
-// Create adds a new user to the system.
-func (a *App) Create(ctx context.Context, app NewUser) (User, error) {
 	nc, err := toBusNewUser(app)
 	if err != nil {
-		return User{}, errs.New(errs.FailedPrecondition, err)
+		return errs.New(errs.InvalidArgument, err)
 	}
 
 	usr, err := a.userBus.Create(ctx, nc)
 	if err != nil {
 		if errors.Is(err, userbus.ErrUniqueEmail) {
-			return User{}, errs.New(errs.Aborted, userbus.ErrUniqueEmail)
+			return errs.New(errs.Aborted, userbus.ErrUniqueEmail)
 		}
-		return User{}, errs.Newf(errs.Internal, "create: usr[%+v]: %s", usr, err)
+		return errs.Newf(errs.Internal, "create: usr[%+v]: %s", usr, err)
 	}
 
-	return toAppUser(usr), nil
+	return toAppUser(usr)
 }
 
-// Update updates an existing user.
-func (a *App) Update(ctx context.Context, app UpdateUser) (User, error) {
+func (a *app) update(ctx context.Context, r *http.Request) web.Encoder {
+	var app UpdateUser
+	if err := web.Decode(r, &app); err != nil {
+		return errs.New(errs.InvalidArgument, err)
+	}
+
 	uu, err := toBusUpdateUser(app)
 	if err != nil {
-		return User{}, errs.New(errs.FailedPrecondition, err)
+		return errs.New(errs.InvalidArgument, err)
 	}
 
 	usr, err := mid.GetUser(ctx)
 	if err != nil {
-		return User{}, errs.Newf(errs.Internal, "user missing in context: %s", err)
+		return errs.Newf(errs.Internal, "user missing in context: %s", err)
 	}
 
 	updUsr, err := a.userBus.Update(ctx, usr, uu)
 	if err != nil {
-		return User{}, errs.Newf(errs.Internal, "update: userID[%s] uu[%+v]: %s", usr.ID, uu, err)
+		return errs.Newf(errs.Internal, "update: userID[%s] uu[%+v]: %s", usr.ID, uu, err)
 	}
 
-	return toAppUser(updUsr), nil
+	return toAppUser(updUsr)
 }
 
-// UpdateRole updates an existing user's role.
-func (a *App) UpdateRole(ctx context.Context, app UpdateUserRole) (User, error) {
+func (a *app) updateRole(ctx context.Context, r *http.Request) web.Encoder {
+	var app UpdateUserRole
+	if err := web.Decode(r, &app); err != nil {
+		return errs.New(errs.InvalidArgument, err)
+	}
+
 	uu, err := toBusUpdateUserRole(app)
 	if err != nil {
-		return User{}, errs.New(errs.FailedPrecondition, err)
+		return errs.New(errs.InvalidArgument, err)
 	}
 
 	usr, err := mid.GetUser(ctx)
 	if err != nil {
-		return User{}, errs.Newf(errs.Internal, "user missing in context: %s", err)
+		return errs.Newf(errs.Internal, "user missing in context: %s", err)
 	}
 
 	updUsr, err := a.userBus.Update(ctx, usr, uu)
 	if err != nil {
-		return User{}, errs.Newf(errs.Internal, "updaterole: userID[%s] uu[%+v]: %s", usr.ID, uu, err)
+		return errs.Newf(errs.Internal, "updaterole: userID[%s] uu[%+v]: %s", usr.ID, uu, err)
 	}
 
-	return toAppUser(updUsr), nil
+	return toAppUser(updUsr)
 }
 
-// Delete removes a user from the system.
-func (a *App) Delete(ctx context.Context) error {
+func (a *app) delete(ctx context.Context, _ *http.Request) web.Encoder {
 	usr, err := mid.GetUser(ctx)
 	if err != nil {
 		return errs.Newf(errs.Internal, "userID missing in context: %s", err)
@@ -106,42 +108,45 @@ func (a *App) Delete(ctx context.Context) error {
 	return nil
 }
 
-// Query returns a list of users with paging.
-func (a *App) Query(ctx context.Context, qp QueryParams) (page.Document[User], error) {
-	pg, err := page.Parse(qp.Page, qp.Rows)
+func (a *app) query(ctx context.Context, r *http.Request) web.Encoder {
+	qp, err := parseQueryParams(r)
 	if err != nil {
-		return page.Document[User]{}, err
+		return errs.New(errs.InvalidArgument, err)
+	}
+
+	page, err := page.Parse(qp.Page, qp.Rows)
+	if err != nil {
+		return errs.NewFieldErrors("page", err)
 	}
 
 	filter, err := parseFilter(qp)
 	if err != nil {
-		return page.Document[User]{}, err
+		return err.(*errs.Error)
 	}
 
-	orderBy, err := order.Parse(orderByFields, qp.OrderBy, defaultOrderBy)
+	orderBy, err := order.Parse(orderByFields, qp.OrderBy, userbus.DefaultOrderBy)
 	if err != nil {
-		return page.Document[User]{}, err
+		return errs.NewFieldErrors("order", err)
 	}
 
-	usrs, err := a.userBus.Query(ctx, filter, orderBy, pg.Number, pg.RowsPerPage)
+	usrs, err := a.userBus.Query(ctx, filter, orderBy, page)
 	if err != nil {
-		return page.Document[User]{}, errs.Newf(errs.Internal, "query: %s", err)
+		return errs.Newf(errs.Internal, "query: %s", err)
 	}
 
 	total, err := a.userBus.Count(ctx, filter)
 	if err != nil {
-		return page.Document[User]{}, errs.Newf(errs.Internal, "count: %s", err)
+		return errs.Newf(errs.Internal, "count: %s", err)
 	}
 
-	return page.NewDocument(toAppUsers(usrs), total, pg.Number, pg.RowsPerPage), nil
+	return query.NewResult(toAppUsers(usrs), total, page)
 }
 
-// QueryByID returns a user by its Ia.
-func (a *App) QueryByID(ctx context.Context) (User, error) {
+func (a *app) queryByID(ctx context.Context, _ *http.Request) web.Encoder {
 	usr, err := mid.GetUser(ctx)
 	if err != nil {
-		return User{}, errs.Newf(errs.Internal, "querybyid: %s", err)
+		return errs.Newf(errs.Internal, "querybyid: %s", err)
 	}
 
-	return toAppUser(usr), nil
+	return toAppUser(usr)
 }

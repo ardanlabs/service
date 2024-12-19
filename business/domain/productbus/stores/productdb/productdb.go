@@ -7,10 +7,10 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/ardanlabs/service/business/api/order"
-	"github.com/ardanlabs/service/business/api/sqldb"
-	"github.com/ardanlabs/service/business/api/transaction"
 	"github.com/ardanlabs/service/business/domain/productbus"
+	"github.com/ardanlabs/service/business/sdk/order"
+	"github.com/ardanlabs/service/business/sdk/page"
+	"github.com/ardanlabs/service/business/sdk/sqldb"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
@@ -32,7 +32,7 @@ func NewStore(log *logger.Logger, db *sqlx.DB) *Store {
 
 // NewWithTx constructs a new Store value replacing the sqlx DB
 // value with a sqlx DB value that is currently inside a transaction.
-func (s *Store) NewWithTx(tx transaction.CommitRollbacker) (productbus.Storer, error) {
+func (s *Store) NewWithTx(tx sqldb.CommitRollbacker) (productbus.Storer, error) {
 	ec, err := sqldb.GetExtContext(tx)
 	if err != nil {
 		return nil, err
@@ -105,10 +105,10 @@ func (s *Store) Delete(ctx context.Context, prd productbus.Product) error {
 }
 
 // Query gets all Products from the database.
-func (s *Store) Query(ctx context.Context, filter productbus.QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]productbus.Product, error) {
-	data := map[string]interface{}{
-		"offset":        (pageNumber - 1) * rowsPerPage,
-		"rows_per_page": rowsPerPage,
+func (s *Store) Query(ctx context.Context, filter productbus.QueryFilter, orderBy order.By, page page.Page) ([]productbus.Product, error) {
+	data := map[string]any{
+		"offset":        (page.Number() - 1) * page.RowsPerPage(),
+		"rows_per_page": page.RowsPerPage(),
 	}
 
 	const q = `
@@ -133,12 +133,12 @@ func (s *Store) Query(ctx context.Context, filter productbus.QueryFilter, orderB
 		return nil, fmt.Errorf("namedqueryslice: %w", err)
 	}
 
-	return toBusProducts(dbPrds), nil
+	return toBusProducts(dbPrds)
 }
 
 // Count returns the total number of users in the DB.
 func (s *Store) Count(ctx context.Context, filter productbus.QueryFilter) (int, error) {
-	data := map[string]interface{}{}
+	data := map[string]any{}
 
 	const q = `
 	SELECT
@@ -185,7 +185,7 @@ func (s *Store) QueryByID(ctx context.Context, productID uuid.UUID) (productbus.
 		return productbus.Product{}, fmt.Errorf("db: %w", err)
 	}
 
-	return toBusProduct(dbPrd), nil
+	return toBusProduct(dbPrd)
 }
 
 // QueryByUserID finds the product identified by a given User ID.
@@ -209,5 +209,5 @@ func (s *Store) QueryByUserID(ctx context.Context, userID uuid.UUID) ([]productb
 		return nil, fmt.Errorf("db: %w", err)
 	}
 
-	return toBusProducts(dbPrds), nil
+	return toBusProducts(dbPrds)
 }

@@ -8,7 +8,7 @@ import (
 	"github.com/ardanlabs/service/business/domain/vproductbus"
 )
 
-func (s *Store) applyFilter(filter vproductbus.QueryFilter, data map[string]interface{}, buf *bytes.Buffer) {
+func (s *Store) applyFilter(filter vproductbus.QueryFilter, data map[string]any, buf *bytes.Buffer) {
 	var wc []string
 
 	if filter.ID != nil {

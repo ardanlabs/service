@@ -1,51 +1,100 @@
 package userapp
 
 import (
+	"net/http"
 	"net/mail"
 	"time"
 
+	"github.com/ardanlabs/service/app/sdk/errs"
 	"github.com/ardanlabs/service/business/domain/userbus"
-	"github.com/ardanlabs/service/foundation/validate"
+	"github.com/ardanlabs/service/business/types/name"
 	"github.com/google/uuid"
 )
 
-func parseFilter(qp QueryParams) (userbus.QueryFilter, error) {
+type queryParams struct {
+	Page             string
+	Rows             string
+	OrderBy          string
+	ID               string
+	Name             string
+	Email            string
+	StartCreatedDate string
+	EndCreatedDate   string
+}
+
+func parseQueryParams(r *http.Request) (queryParams, error) {
+	values := r.URL.Query()
+
+	filter := queryParams{
+		Page:             values.Get("page"),
+		Rows:             values.Get("row"),
+		OrderBy:          values.Get("orderBy"),
+		ID:               values.Get("user_id"),
+		Name:             values.Get("name"),
+		Email:            values.Get("email"),
+		StartCreatedDate: values.Get("start_created_date"),
+		EndCreatedDate:   values.Get("end_created_date"),
+	}
+
+	return filter, nil
+}
+
+func parseFilter(qp queryParams) (userbus.QueryFilter, error) {
+	var fieldErrors errs.FieldErrors
 	var filter userbus.QueryFilter
 
 	if qp.ID != "" {
 		id, err := uuid.Parse(qp.ID)
-		if err != nil {
-			return userbus.QueryFilter{}, validate.NewFieldsError("user_id", err)
+		switch err {
+		case nil:
+			filter.ID = &id
+		default:
+			fieldErrors.Add("user_id", err)
 		}
-		filter.WithUserID(id)
 	}
 
 	if qp.Name != "" {
-		filter.WithName(qp.Name)
+		name, err := name.Parse(qp.Name)
+		switch err {
+		case nil:
+			filter.Name = &name
+		default:
+			fieldErrors.Add("name", err)
+		}
 	}
 
 	if qp.Email != "" {
 		addr, err := mail.ParseAddress(qp.Email)
-		if err != nil {
-			return userbus.QueryFilter{}, validate.NewFieldsError("email", err)
+		switch err {
+		case nil:
+			filter.Email = addr
+		default:
+			fieldErrors.Add("email", err)
 		}
-		filter.WithEmail(*addr)
 	}
 
 	if qp.StartCreatedDate != "" {
 		t, err := time.Parse(time.RFC3339, qp.StartCreatedDate)
-		if err != nil {
-			return userbus.QueryFilter{}, validate.NewFieldsError("start_created_date", err)
+		switch err {
+		case nil:
+			filter.StartCreatedDate = &t
+		default:
+			fieldErrors.Add("start_created_date", err)
 		}
-		filter.WithStartDateCreated(t)
 	}
 
 	if qp.EndCreatedDate != "" {
 		t, err := time.Parse(time.RFC3339, qp.EndCreatedDate)
-		if err != nil {
-			return userbus.QueryFilter{}, validate.NewFieldsError("end_created_date", err)
+		switch err {
+		case nil:
+			filter.EndCreatedDate = &t
+		default:
+			fieldErrors.Add("end_created_date", err)
 		}
-		filter.WithEndCreatedDate(t)
+	}
+
+	if fieldErrors != nil {
+		return userbus.QueryFilter{}, fieldErrors.ToError()
 	}
 
 	return filter, nil

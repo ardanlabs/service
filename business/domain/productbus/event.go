@@ -2,11 +2,11 @@ package productbus
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
-	"github.com/ardanlabs/service/business/api/delegate"
 	"github.com/ardanlabs/service/business/domain/userbus"
-	"github.com/go-json-experiment/json"
+	"github.com/ardanlabs/service/business/sdk/delegate"
 )
 
 // registerDelegateFunctions will register action functions with the delegate
@@ -14,7 +14,7 @@ import (
 // delegate provided.
 func (b *Business) registerDelegateFunctions() {
 	if b.delegate != nil {
-		b.delegate.Register(userbus.Name, userbus.ActionUpdated, b.actionUserUpdated)
+		b.delegate.Register(userbus.DomainName, userbus.ActionUpdated, b.actionUserUpdated)
 	}
 }
 

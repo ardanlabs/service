@@ -1,0 +1,138 @@
+services:
+  database:
+    image: postgres:17.2
+    container_name: database
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - ./database-data:/var/lib/postgresql/data
+      - ./pg_hba.conf:/etc/pg_hba.conf
+    command: [ '-c', 'hba_file=/etc/pg_hba.conf' ]
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -h localhost -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    cpu_count: 2
+    networks:
+      sales-system-network:
+        ipv4_address: 10.5.0.2
+
+  init-migrate-seed:
+    image: localhost/ardanlabs/sales:0.0.1
+    pull_policy: never
+    container_name: init-migrate-seed
+    restart: unless-stopped
+    entrypoint: ['./admin', 'migrate-seed']
+    environment:
+      - SALES_DB_USER=postgres
+      - SALES_DB_PASSWORD=postgres
+      - SALES_DB_HOST=database
+      - SALES_DB_DISABLE_TLS=true
+    networks:
+      sales-system-network:
+        ipv4_address: 10.5.0.10
+    deploy:
+      restart_policy:
+        condition: none
+    depends_on:
+      - database
+
+  auth:
+    image: localhost/ardanlabs/auth:0.0.1
+    pull_policy: never
+    container_name: auth
+    restart: unless-stopped
+    ports:
+      - "6000:6000"
+      - "6010:6010"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:6000/v1/liveness || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 2
+      start_period: 2s
+    cpu_count: 2
+    environment:
+      - GOMAXPROCS=2
+      - AUTH_DB_USER=postgres
+      - AUTH_DB_PASSWORD=postgres
+      - AUTH_DB_HOST=database
+      - AUTH_DB_DISABLE_TLS=true
+      - KUBERNETES_NAMESPACE=compose
+      - KUBERNETES_NAME=sales-system
+      - KUBERNETES_POD_IP=10.5.0.5
+      - KUBERNETES_NODE_NAME=auth
+    expose:
+      - "6000:6000"
+      - "6010:6010"
+    networks:
+      sales-system-network:
+        ipv4_address: 10.5.0.5
+    depends_on:
+      - database
+
+  sales:
+    image: localhost/ardanlabs/sales:0.0.1
+    pull_policy: never
+    container_name: sales
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+      - "3010:3010"
+    environment:
+      - GOMAXPROCS
+      - GOGC=off
+      - GOMEMLIMIT
+      - SALES_DB_USER=postgres
+      - SALES_DB_PASSWORD=postgres
+      - SALES_DB_HOST=database
+      - SALES_DB_DISABLE_TLS=true
+      - SALES_AUTH_HOST=http://auth:6000
+      - KUBERNETES_NAMESPACE
+      - KUBERNETES_NAME
+      - KUBERNETES_POD_IP
+      - KUBERNETES_NODE_NAME
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/v1/liveness || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 2
+      start_period: 2s
+    networks:
+      sales-system-network:
+        ipv4_address: 10.5.0.15
+    depends_on:
+      - init-migrate-seed
+
+  metrics:
+    image: localhost/ardanlabs/metrics:0.0.1
+    pull_policy: never
+    container_name: metrics
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+      - "4010:4010"
+      - "4020:4020"
+    cpus: 1
+    environment:
+      - GOMAXPROCS=1
+      - METRICS_COLLECT_FROM=http://sales:3010/debug/vars
+    networks:
+      sales-system-network:
+        ipv4_address: 10.5.0.20
+    depends_on:
+      - sales
+
+volumes:
+  database: {}
+
+networks:
+  sales-system-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.5.0.0/24

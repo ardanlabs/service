@@ -1,54 +1,99 @@
 package homeapp
 
 import (
+	"net/http"
 	"time"
 
+	"github.com/ardanlabs/service/app/sdk/errs"
 	"github.com/ardanlabs/service/business/domain/homebus"
-	"github.com/ardanlabs/service/foundation/validate"
+	"github.com/ardanlabs/service/business/types/hometype"
 	"github.com/google/uuid"
 )
 
-func parseFilter(qp QueryParams) (homebus.QueryFilter, error) {
+type queryParams struct {
+	Page             string
+	Rows             string
+	OrderBy          string
+	ID               string
+	UserID           string
+	Type             string
+	StartCreatedDate string
+	EndCreatedDate   string
+}
+
+func parseQueryParams(r *http.Request) queryParams {
+	values := r.URL.Query()
+
+	filter := queryParams{
+		Page:             values.Get("page"),
+		Rows:             values.Get("row"),
+		OrderBy:          values.Get("orderBy"),
+		ID:               values.Get("home_id"),
+		UserID:           values.Get("user_id"),
+		Type:             values.Get("type"),
+		StartCreatedDate: values.Get("start_created_date"),
+		EndCreatedDate:   values.Get("end_created_date"),
+	}
+
+	return filter
+}
+
+func parseFilter(qp queryParams) (homebus.QueryFilter, error) {
+	var fieldErrors errs.FieldErrors
 	var filter homebus.QueryFilter
 
 	if qp.ID != "" {
 		id, err := uuid.Parse(qp.ID)
-		if err != nil {
-			return homebus.QueryFilter{}, validate.NewFieldsError("home_id", err)
+		switch err {
+		case nil:
+			filter.ID = &id
+		default:
+			fieldErrors.Add("home_id", err)
 		}
-		filter.WithHomeID(id)
 	}
 
 	if qp.UserID != "" {
 		id, err := uuid.Parse(qp.UserID)
-		if err != nil {
-			return homebus.QueryFilter{}, validate.NewFieldsError("user_id", err)
+		switch err {
+		case nil:
+			filter.UserID = &id
+		default:
+			fieldErrors.Add("user_id", err)
 		}
-		filter.WithUserID(id)
 	}
 
 	if qp.Type != "" {
-		typ, err := homebus.ParseType(qp.Type)
-		if err != nil {
-			return homebus.QueryFilter{}, validate.NewFieldsError("type", err)
+		typ, err := hometype.Parse(qp.Type)
+		switch err {
+		case nil:
+			filter.Type = &typ
+		default:
+			fieldErrors.Add("type", err)
 		}
-		filter.WithHomeType(typ)
 	}
 
 	if qp.StartCreatedDate != "" {
 		t, err := time.Parse(time.RFC3339, qp.StartCreatedDate)
-		if err != nil {
-			return homebus.QueryFilter{}, validate.NewFieldsError("start_created_date", err)
+		switch err {
+		case nil:
+			filter.StartCreatedDate = &t
+		default:
+			fieldErrors.Add("start_created_date", err)
 		}
-		filter.WithStartDateCreated(t)
 	}
 
 	if qp.EndCreatedDate != "" {
 		t, err := time.Parse(time.RFC3339, qp.EndCreatedDate)
-		if err != nil {
-			return homebus.QueryFilter{}, validate.NewFieldsError("end_created_date", err)
+		switch err {
+		case nil:
+			filter.EndCreatedDate = &t
+		default:
+			fieldErrors.Add("end_created_date", err)
 		}
-		filter.WithEndCreatedDate(t)
+	}
+
+	if fieldErrors != nil {
+		return homebus.QueryFilter{}, fieldErrors.ToError()
 	}
 
 	return filter, nil

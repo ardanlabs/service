@@ -1,6 +1,6 @@
 package userbus
 
-import "github.com/ardanlabs/service/business/api/order"
+import "github.com/ardanlabs/service/business/sdk/order"
 
 // DefaultOrderBy represents the default way we sort.
 var DefaultOrderBy = order.NewBy(OrderByID, order.ASC)

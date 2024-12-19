@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/domain/homebus"
+	"github.com/ardanlabs/service/business/types/hometype"
 	"github.com/google/uuid"
 )
 
@@ -26,7 +27,7 @@ func toDBHome(bus homebus.Home) home {
 	db := home{
 		ID:          bus.ID,
 		UserID:      bus.UserID,
-		Type:        bus.Type.Name(),
+		Type:        bus.Type.String(),
 		Address1:    bus.Address.Address1,
 		Address2:    bus.Address.Address2,
 		ZipCode:     bus.Address.ZipCode,
@@ -41,7 +42,7 @@ func toDBHome(bus homebus.Home) home {
 }
 
 func toBusHome(db home) (homebus.Home, error) {
-	typ, err := homebus.ParseType(db.Type)
+	typ, err := hometype.Parse(db.Type)
 	if err != nil {
 		return homebus.Home{}, fmt.Errorf("parse type: %w", err)
 	}

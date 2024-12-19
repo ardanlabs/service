@@ -26,6 +26,8 @@ const (
 	XIDOID                 = 28
 	CIDOID                 = 29
 	JSONOID                = 114
+	XMLOID                 = 142
+	XMLArrayOID            = 143
 	JSONArrayOID           = 199
 	PointOID               = 600
 	LsegOID                = 601
@@ -41,6 +43,7 @@ const (
 	CircleOID              = 718
 	CircleArrayOID         = 719
 	UnknownOID             = 705
+	Macaddr8OID            = 774
 	MacaddrOID             = 829
 	InetOID                = 869
 	BoolArrayOID           = 1000
@@ -213,6 +216,15 @@ type Map struct {
 	TryWrapScanPlanFuncs []TryWrapScanPlanFunc
 }
 
+// Copy returns a new Map containing the same registered types.
+func (m *Map) Copy() *Map {
+	newMap := NewMap()
+	for _, type_ := range m.oidToType {
+		newMap.RegisterType(type_)
+	}
+	return newMap
+}
+
 func NewMap() *Map {
 	defaultMapInitOnce.Do(initDefaultMap)
 
@@ -244,6 +256,13 @@ func NewMap() *Map {
 			TryWrapPtrMultiDimSliceScanPlan,
 			TryWrapPtrArrayScanPlan,
 		},
+	}
+}
+
+// RegisterTypes registers multiple data types in the sequence they are provided.
+func (m *Map) RegisterTypes(types []*Type) {
+	for _, t := range types {
+		m.RegisterType(t)
 	}
 }
 
@@ -554,17 +573,24 @@ func TryFindUnderlyingTypeScanPlan(dst any) (plan WrappedScanPlanNextSetter, nex
 			elemValue = dstValue.Elem()
 		}
 		nextDstType := elemKindToPointerTypes[elemValue.Kind()]
-		if nextDstType == nil && elemValue.Kind() == reflect.Slice {
-			if elemValue.Type().Elem().Kind() == reflect.Uint8 {
-				var v *[]byte
-				nextDstType = reflect.TypeOf(v)
+		if nextDstType == nil {
+			if elemValue.Kind() == reflect.Slice {
+				if elemValue.Type().Elem().Kind() == reflect.Uint8 {
+					var v *[]byte
+					nextDstType = reflect.TypeOf(v)
+				}
+			}
+
+			// Get underlying type of any array.
+			// https://github.com/jackc/pgx/issues/2107
+			if elemValue.Kind() == reflect.Array {
+				nextDstType = reflect.PointerTo(reflect.ArrayOf(elemValue.Len(), elemValue.Type().Elem()))
 			}
 		}
 
 		if nextDstType != nil && dstValue.Type() != nextDstType && dstValue.CanConvert(nextDstType) {
 			return &underlyingTypeScanPlan{dstType: dstValue.Type(), nextDstType: nextDstType}, dstValue.Convert(nextDstType).Interface(), true
 		}
-
 	}
 
 	return nil, nil, false
@@ -1330,7 +1356,7 @@ func (plan *derefPointerEncodePlan) Encode(value any, buf []byte) (newBuf []byte
 }
 
 // TryWrapDerefPointerEncodePlan tries to dereference a pointer. e.g. If value was of type *string then a wrapper plan
-// would be returned that derefences the value.
+// would be returned that dereferences the value.
 func TryWrapDerefPointerEncodePlan(value any) (plan WrappedEncodePlanNextSetter, nextValue any, ok bool) {
 	if _, ok := value.(driver.Valuer); ok {
 		return nil, nil, false
@@ -1402,6 +1428,15 @@ func TryWrapFindUnderlyingTypeEncodePlan(value any) (plan WrappedEncodePlanNextS
 	// https://github.com/jackc/pgx/issues/1763
 	if refValue.Type() != byteSliceType && refValue.Type().AssignableTo(byteSliceType) {
 		return &underlyingTypeEncodePlan{nextValueType: byteSliceType}, refValue.Convert(byteSliceType).Interface(), true
+	}
+
+	// Get underlying type of any array.
+	// https://github.com/jackc/pgx/issues/2107
+	if refValue.Kind() == reflect.Array {
+		underlyingArrayType := reflect.ArrayOf(refValue.Len(), refValue.Type().Elem())
+		if refValue.Type() != underlyingArrayType {
+			return &underlyingTypeEncodePlan{nextValueType: underlyingArrayType}, refValue.Convert(underlyingArrayType).Interface(), true
+		}
 	}
 
 	return nil, nil, false
@@ -1911,8 +1946,17 @@ func newEncodeError(value any, m *Map, oid uint32, formatCode int16, err error) 
 // (nil, nil). The caller of Encode is responsible for writing the correct NULL value or the length of the data
 // written.
 func (m *Map) Encode(oid uint32, formatCode int16, value any, buf []byte) (newBuf []byte, err error) {
-	if value == nil {
-		return nil, nil
+	if isNil, callNilDriverValuer := isNilDriverValuer(value); isNil {
+		if callNilDriverValuer {
+			newBuf, err = (&encodePlanDriverValuer{m: m, oid: oid, formatCode: formatCode}).Encode(value, buf)
+			if err != nil {
+				return nil, newEncodeError(value, m, oid, formatCode, err)
+			}
+
+			return newBuf, nil
+		} else {
+			return nil, nil
+		}
 	}
 
 	plan := m.PlanEncode(oid, formatCode, value)
@@ -1966,4 +2010,56 @@ func (w *sqlScannerWrapper) Scan(src any) error {
 	}
 
 	return w.m.Scan(t.OID, TextFormatCode, bufSrc, w.v)
+}
+
+// canBeNil returns true if value can be nil.
+func canBeNil(value any) bool {
+	refVal := reflect.ValueOf(value)
+	kind := refVal.Kind()
+	switch kind {
+	case reflect.Chan, reflect.Func, reflect.Map, reflect.Ptr, reflect.UnsafePointer, reflect.Interface, reflect.Slice:
+		return true
+	default:
+		return false
+	}
+}
+
+// valuerReflectType is a reflect.Type for driver.Valuer. It has confusing syntax because reflect.TypeOf returns nil
+// when it's argument is a nil interface value. So we use a pointer to the interface and call Elem to get the actual
+// type. Yuck.
+//
+// This can be simplified in Go 1.22 with reflect.TypeFor.
+//
+// var valuerReflectType = reflect.TypeFor[driver.Valuer]()
+var valuerReflectType = reflect.TypeOf((*driver.Valuer)(nil)).Elem()
+
+// isNilDriverValuer returns true if value is any type of nil unless it implements driver.Valuer. *T is not considered to implement
+// driver.Valuer if it is only implemented by T.
+func isNilDriverValuer(value any) (isNil bool, callNilDriverValuer bool) {
+	if value == nil {
+		return true, false
+	}
+
+	refVal := reflect.ValueOf(value)
+	kind := refVal.Kind()
+	switch kind {
+	case reflect.Chan, reflect.Func, reflect.Map, reflect.Ptr, reflect.UnsafePointer, reflect.Interface, reflect.Slice:
+		if !refVal.IsNil() {
+			return false, false
+		}
+
+		if _, ok := value.(driver.Valuer); ok {
+			if kind == reflect.Ptr {
+				// The type assertion will succeed if driver.Valuer is implemented on T or *T. Check if it is implemented on *T
+				// by checking if it is not implemented on *T.
+				return true, !refVal.Type().Elem().Implements(valuerReflectType)
+			} else {
+				return true, true
+			}
+		}
+
+		return true, false
+	default:
+		return false, false
+	}
 }

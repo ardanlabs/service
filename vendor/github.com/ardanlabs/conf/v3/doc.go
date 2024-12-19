@@ -6,7 +6,7 @@ It is compatible with the GNU extensions to the POSIX recommendations
 for command-line options. See
 http://www.gnu.org/software/libc/manual/html_node/Argument-Syntax.html
 
-Flags
+# Flags
 
 There are no hard bindings for this package. This package takes a struct
 value and parses it for both the environment and flags. It supports several tags
@@ -18,13 +18,14 @@ to customize the flag options.
 	short    - Denotes a shorthand option for the flag.
 	noprint  - Denotes to not include the field in any display string.
 	mask     - Includes the field in any display string but masks out the value.
-	required - Denotes a value must be provided.
+	required - Denotes a overriding value must be provided using a flag or env variable.
+	notzero  - Denotes a field can't be set to its zero value.
 	help     - Provides a description for the help.
 
 The field name and any parent struct name will be used for the long form of
 the command name unless the name is overridden.
 
-Example Usage
+# Example Usage
 
 As an example, using this config struct:
 
@@ -50,19 +51,20 @@ The following usage information would be output you can display.
 Usage: conf.test [options] [arguments]
 
 OPTIONS
-  --an-int/$CRUD_AN_INT         <int>       (default: 9)
-  --a-string/-s/$CRUD_A_STRING  <string>    (default: B)
-  --bool/$CRUD_BOOL             <bool>
-  --ip-name/$CRUD_IP_NAME_VAR   <string>    (default: localhost)
-  --ip-ip/$CRUD_IP_IP           <string>    (default: 127.0.0.0)
-  --name/$CRUD_NAME             <string>    (default: bill)
-  --e-dur/-d/$CRUD_DURATION     <duration>  (default: 1s)
-  --help/-h
-  display this help message
-  --version/-v
-  display version information
 
-Example Parsing
+	--an-int/$CRUD_AN_INT         <int>       (default: 9)
+	--a-string/-s/$CRUD_A_STRING  <string>    (default: B)
+	--bool/$CRUD_BOOL             <bool>
+	--ip-name/$CRUD_IP_NAME_VAR   <string>    (default: localhost)
+	--ip-ip/$CRUD_IP_IP           <string>    (default: 127.0.0.0)
+	--name/$CRUD_NAME             <string>    (default: bill)
+	--e-dur/-d/$CRUD_DURATION     <duration>  (default: 1s)
+	--help/-h
+	display this help message
+	--version/-v
+	display version information
+
+# Example Parsing
 
 There is an API called Parse that can process a config struct with environment
 variable and command line flag overrides.
@@ -111,7 +113,7 @@ this module.
 There is a WithParse function that takes a slice of bytes containing the YAML
 or WithParseReader that takes any concrete value that knows how to Read.
 
-Command Line Args
+# Command Line Args
 
 Additionally, if the config struct has a field of the slice type conf.Args
 then it will be populated with any remaining arguments from the command line
@@ -136,7 +138,7 @@ such as this:
 	arg1 := cfg.Args.Num(1) // "http"
 	arg2 := cfg.Args.Num(2) // "" empty string: not enough arguments
 
-Version Information
+# Version Information
 
 You can add a version with a description by adding the Version type to
 your config type and set these values at run time for display.

@@ -94,7 +94,7 @@ spec:
         app: tempo
     spec:
       containers:
-        - image: grafana/tempo:2.4.0
+        - image: grafana/tempo:2.6.0
           name: tempo
           ports:
             - containerPort: 14268

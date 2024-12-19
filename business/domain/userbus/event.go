@@ -1,15 +1,15 @@
 package userbus
 
 import (
+	"encoding/json"
 	"fmt"
 
-	"github.com/ardanlabs/service/business/api/delegate"
-	"github.com/go-json-experiment/json"
+	"github.com/ardanlabs/service/business/sdk/delegate"
 	"github.com/google/uuid"
 )
 
-// Name represents the name of this domain.
-const Name = "user"
+// DomainName represents the name of this domain.
+const DomainName = "user"
 
 // Set of delegate actions.
 const (
@@ -47,7 +47,7 @@ func ActionUpdatedData(uu UpdateUser, userID uuid.UUID) delegate.Data {
 	}
 
 	return delegate.Data{
-		Domain:    Name,
+		Domain:    DomainName,
 		Action:    ActionUpdated,
 		RawParams: rawParams,
 	}

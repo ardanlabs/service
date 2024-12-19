@@ -3,51 +3,53 @@ package vproductapp
 
 import (
 	"context"
+	"net/http"
 
-	"github.com/ardanlabs/service/app/api/errs"
-	"github.com/ardanlabs/service/app/api/page"
-	"github.com/ardanlabs/service/business/api/order"
+	"github.com/ardanlabs/service/app/sdk/errs"
+	"github.com/ardanlabs/service/app/sdk/query"
 	"github.com/ardanlabs/service/business/domain/vproductbus"
+	"github.com/ardanlabs/service/business/sdk/order"
+	"github.com/ardanlabs/service/business/sdk/page"
+	"github.com/ardanlabs/service/foundation/web"
 )
 
-// App manages the set of app layer api functions for the view product domain.
-type App struct {
+type app struct {
 	vproductBus *vproductbus.Business
 }
 
-// NewApp constructs a view product app API for use.
-func NewApp(vproductBus *vproductbus.Business) *App {
-	return &App{
+func newApp(vproductBus *vproductbus.Business) *app {
+	return &app{
 		vproductBus: vproductBus,
 	}
 }
 
-// Query returns a list of products with paging.
-func (a *App) Query(ctx context.Context, qp QueryParams) (page.Document[Product], error) {
-	pg, err := page.Parse(qp.Page, qp.Rows)
+func (a *app) query(ctx context.Context, r *http.Request) web.Encoder {
+	qp := parseQueryParams(r)
+
+	page, err := page.Parse(qp.Page, qp.Rows)
 	if err != nil {
-		return page.Document[Product]{}, err
+		return errs.NewFieldErrors("page", err)
 	}
 
 	filter, err := parseFilter(qp)
 	if err != nil {
-		return page.Document[Product]{}, err
+		return err.(*errs.Error)
 	}
 
-	orderBy, err := order.Parse(orderByFields, qp.OrderBy, defaultOrderBy)
+	orderBy, err := order.Parse(orderByFields, qp.OrderBy, vproductbus.DefaultOrderBy)
 	if err != nil {
-		return page.Document[Product]{}, err
+		return errs.NewFieldErrors("order", err)
 	}
 
-	prds, err := a.vproductBus.Query(ctx, filter, orderBy, pg.Number, pg.RowsPerPage)
+	prds, err := a.vproductBus.Query(ctx, filter, orderBy, page)
 	if err != nil {
-		return page.Document[Product]{}, errs.Newf(errs.Internal, "query: %s", err)
+		return errs.Newf(errs.Internal, "query: %s", err)
 	}
 
 	total, err := a.vproductBus.Count(ctx, filter)
 	if err != nil {
-		return page.Document[Product]{}, errs.Newf(errs.Internal, "count: %s", err)
+		return errs.Newf(errs.Internal, "count: %s", err)
 	}
 
-	return page.NewDocument(toAppProducts(prds), total, pg.Number, pg.RowsPerPage), nil
+	return query.NewResult(toAppProducts(prds), total, page)
 }

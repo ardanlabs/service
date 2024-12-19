@@ -53,7 +53,7 @@ data:
         - from: 2020-05-15
           store: boltdb-shipper
           object_store: filesystem
-          schema: v11
+          schema: v13
           index:
             prefix: index_
             period: 24h
@@ -64,9 +64,9 @@ data:
         cache_location: /tmp/index_cache
 
     limits_config:
-      enforce_metric_name: false
       reject_old_samples: true
       reject_old_samples_max_age: 168h
+      allow_structured_metadata: false
 
     compactor:
       working_directory: /tmp/compactor
@@ -92,7 +92,7 @@ spec:
     spec:
       restartPolicy: Always
       containers:
-        - image: grafana/loki:2.9.0
+        - image: grafana/loki:3.2.0
           name: loki
           ports:
             - name: "loki"

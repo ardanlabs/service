@@ -3,6 +3,7 @@ package pgx
 import (
 	"context"
 	"crypto/sha256"
+	"database/sql"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -10,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jackc/pgx/v5/internal/anynil"
 	"github.com/jackc/pgx/v5/internal/sanitize"
 	"github.com/jackc/pgx/v5/internal/stmtcache"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -103,13 +103,31 @@ func (ident Identifier) Sanitize() string {
 
 var (
 	// ErrNoRows occurs when rows are expected but none are returned.
-	ErrNoRows = errors.New("no rows in result set")
+	ErrNoRows = newProxyErr(sql.ErrNoRows, "no rows in result set")
 	// ErrTooManyRows occurs when more rows than expected are returned.
 	ErrTooManyRows = errors.New("too many rows in result set")
 )
 
-var errDisabledStatementCache = fmt.Errorf("cannot use QueryExecModeCacheStatement with disabled statement cache")
-var errDisabledDescriptionCache = fmt.Errorf("cannot use QueryExecModeCacheDescribe with disabled description cache")
+func newProxyErr(background error, msg string) error {
+	return &proxyError{
+		msg:        msg,
+		background: background,
+	}
+}
+
+type proxyError struct {
+	msg        string
+	background error
+}
+
+func (err *proxyError) Error() string { return err.msg }
+
+func (err *proxyError) Unwrap() error { return err.background }
+
+var (
+	errDisabledStatementCache   = fmt.Errorf("cannot use QueryExecModeCacheStatement with disabled statement cache")
+	errDisabledDescriptionCache = fmt.Errorf("cannot use QueryExecModeCacheDescribe with disabled description cache")
+)
 
 // Connect establishes a connection with a PostgreSQL server with a connection string. See
 // pgconn.Connect for details.
@@ -624,7 +642,7 @@ const (
 	// to execute. It does not use named prepared statements. But it does use the unnamed prepared statement to get the
 	// statement description on the first round trip and then uses it to execute the query on the second round trip. This
 	// may cause problems with connection poolers that switch the underlying connection between round trips. It is safe
-	// even when the the database schema is modified concurrently.
+	// even when the database schema is modified concurrently.
 	QueryExecModeDescribeExec
 
 	// Assume the PostgreSQL query parameter types based on the Go type of the arguments. This uses the extended protocol
@@ -755,7 +773,6 @@ optionLoop:
 	}
 
 	c.eqb.reset()
-	anynil.NormalizeSlice(args)
 	rows := c.getRows(ctx, sql, args)
 
 	var err error
@@ -845,7 +862,6 @@ func (c *Conn) getStatementDescription(
 	mode QueryExecMode,
 	sql string,
 ) (sd *pgconn.StatementDescription, err error) {
-
 	switch mode {
 	case QueryExecModeCacheStatement:
 		if c.statementCache == nil {

@@ -7,18 +7,18 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 # ==============================================================================
 # Go Installation
 #
-#   You need to have Go version 1.22 to run this code.
+#	You need to have Go version 1.22 to run this code.
 #
-#   https://go.dev/dl/
+#	https://go.dev/dl/
 #
-#   If you are not allowed to update your Go frontend, you can install
-#   and use a 1.22 frontend.
+#	If you are not allowed to update your Go frontend, you can install
+#	and use a 1.22 frontend.
 #
-#   $ go install golang.org/dl/go1.22@latest
-#   $ go1.22 download
+#	$ go install golang.org/dl/go1.22@latest
+#	$ go1.22 download
 #
-#   This means you need to use `go1.22` instead of `go` for any command
-#   using the Go frontend tooling from the makefile.
+#	This means you need to use `go1.22` instead of `go` for any command
+#	using the Go frontend tooling from the makefile.
 
 # ==============================================================================
 # Brew Installation
@@ -47,11 +47,11 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 # ==============================================================================
 # Install Tooling and Dependencies
 #
-#   This project uses Docker and it is expected to be installed. Please provide
-#   Docker at least 4 CPUs. To use Podman instead please alias Docker CLI to
-#   Podman CLI or symlink the Docker socket to the Podman socket. More
-#   information on migrating from Docker to Podman can be found at
-#   https://podman-desktop.io/docs/migrating-from-docker.
+#	This project uses Docker and it is expected to be installed. Please provide
+#	Docker at least 4 CPUs. To use Podman instead please alias Docker CLI to
+#	Podman CLI or symlink the Docker socket to the Podman socket. More
+#	information on migrating from Docker to Podman can be found at
+#	https://podman-desktop.io/docs/migrating-from-docker.
 #
 #	Run these commands to install everything needed.
 #	$ make dev-brew
@@ -65,24 +65,23 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 #	dependencies properly.
 #
 #	$ make test
-#
 
 # ==============================================================================
 # Running The Project
 #
 #	$ make dev-up
 #	$ make dev-update-apply
-#   $ make token
-#   $ export TOKEN=<token>
-#   $ make users
+#	$ make token
+#	$ export TOKEN=<token>
+#	$ make users
 #
-#   You can use `make dev-status` to look at the status of your KIND cluster.
+#	You can use `make dev-status` to look at the status of your KIND cluster.
 
 # ==============================================================================
 # CLASS NOTES
 #
 # Kind
-# 	For full Kind v0.22 release notes: https://github.com/kubernetes-sigs/kind/releases/tag/v0.22.0
+# 	For full Kind v0.24 release notes: https://github.com/kubernetes-sigs/kind/releases/tag/v0.25.0
 #
 # RSA Keys
 # 	To generate a private/public key PEM file.
@@ -110,15 +109,15 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 # ==============================================================================
 # Define dependencies
 
-GOLANG          := golang:1.22
-ALPINE          := alpine:3.19
-KIND            := kindest/node:v1.29.2
-POSTGRES        := postgres:16.2
-GRAFANA         := grafana/grafana:10.4.0
-PROMETHEUS      := prom/prometheus:v2.51.0
-TEMPO           := grafana/tempo:2.4.0
-LOKI            := grafana/loki:2.9.0
-PROMTAIL        := grafana/promtail:2.9.0
+GOLANG          := golang:1.23
+ALPINE          := alpine:3.20
+KIND            := kindest/node:v1.31.2
+POSTGRES        := postgres:17.2
+GRAFANA         := grafana/grafana:11.3.0
+PROMETHEUS      := prom/prometheus:v2.55.0
+TEMPO           := grafana/tempo:2.6.0
+LOKI            := grafana/loki:3.2.0
+PROMTAIL        := grafana/promtail:3.2.0
 
 KIND_CLUSTER    := ardan-starter-cluster
 NAMESPACE       := sales-system
@@ -148,18 +147,19 @@ dev-brew:
 	brew list kubectl || brew install kubectl
 	brew list kustomize || brew install kustomize
 	brew list pgcli || brew install pgcli
-	brew list watch || brew instal watch
+	brew list watch || brew install watch
 
 dev-docker:
-	docker pull $(GOLANG)
-	docker pull $(ALPINE)
-	docker pull $(KIND)
-	docker pull $(POSTGRES)
-	docker pull $(GRAFANA)
-	docker pull $(PROMETHEUS)
-	docker pull $(TEMPO)
-	docker pull $(LOKI)
-	docker pull $(PROMTAIL)
+	docker pull $(GOLANG) & \
+	docker pull $(ALPINE) & \
+	docker pull $(KIND) & \
+	docker pull $(POSTGRES) & \
+	docker pull $(GRAFANA) & \
+	docker pull $(PROMETHEUS) & \
+	docker pull $(TEMPO) & \
+	docker pull $(LOKI) & \
+	docker pull $(PROMTAIL) & \
+	wait;
 
 # ==============================================================================
 # Building containers
@@ -201,12 +201,13 @@ dev-up:
 
 	kubectl wait --timeout=120s --namespace=local-path-storage --for=condition=Available deployment/local-path-provisioner
 
-	kind load docker-image $(POSTGRES) --name $(KIND_CLUSTER)
-	kind load docker-image $(GRAFANA) --name $(KIND_CLUSTER)
-	kind load docker-image $(PROMETHEUS) --name $(KIND_CLUSTER)
-	kind load docker-image $(TEMPO) --name $(KIND_CLUSTER)
-	kind load docker-image $(LOKI) --name $(KIND_CLUSTER)
-	kind load docker-image $(PROMTAIL) --name $(KIND_CLUSTER)
+	kind load docker-image $(POSTGRES) --name $(KIND_CLUSTER) & \
+	kind load docker-image $(GRAFANA) --name $(KIND_CLUSTER) & \
+	kind load docker-image $(PROMETHEUS) --name $(KIND_CLUSTER) & \
+	kind load docker-image $(TEMPO) --name $(KIND_CLUSTER) & \
+	kind load docker-image $(LOKI) --name $(KIND_CLUSTER) & \
+	kind load docker-image $(PROMTAIL) --name $(KIND_CLUSTER) & \
+	wait;
 
 dev-down:
 	kind delete cluster --name $(KIND_CLUSTER)
@@ -222,9 +223,10 @@ dev-status:
 # ------------------------------------------------------------------------------
 
 dev-load:
-	kind load docker-image $(SALES_IMAGE) --name $(KIND_CLUSTER)
-	kind load docker-image $(METRICS_IMAGE) --name $(KIND_CLUSTER)
-	kind load docker-image $(AUTH_IMAGE) --name $(KIND_CLUSTER)
+	kind load docker-image $(SALES_IMAGE) --name $(KIND_CLUSTER) & \
+	kind load docker-image $(METRICS_IMAGE) --name $(KIND_CLUSTER) & \
+	kind load docker-image $(AUTH_IMAGE) --name $(KIND_CLUSTER) & \
+	wait;
 
 dev-apply:
 	kustomize build zarf/k8s/dev/grafana | kubectl apply -f -
@@ -251,10 +253,10 @@ dev-update: build dev-load dev-restart
 dev-update-apply: build dev-load dev-apply
 
 dev-logs:
-	kubectl logs --namespace=$(NAMESPACE) -l app=$(SALES_APP) --all-containers=true -f --tail=100 --max-log-requests=6 | go run api/cmd/tooling/logfmt/main.go -service=$(SALES_APP)
+	kubectl logs --namespace=$(NAMESPACE) -l app=$(SALES_APP) --all-containers=true -f --tail=100 --max-log-requests=6 | go run api/tooling/logfmt/main.go -service=$(SALES_APP)
 
 dev-logs-auth:
-	kubectl logs --namespace=$(NAMESPACE) -l app=$(AUTH_APP) --all-containers=true -f --tail=100 | go run api/cmd/tooling/logfmt/main.go
+	kubectl logs --namespace=$(NAMESPACE) -l app=$(AUTH_APP) --all-containers=true -f --tail=100 | go run api/tooling/logfmt/main.go
 
 # ------------------------------------------------------------------------------
 
@@ -323,13 +325,27 @@ dev-database-restart:
 	kubectl rollout restart statefulset database --namespace=$(NAMESPACE)
 
 # ==============================================================================
+# Docker Compose
+
+compose-up:
+	cd ./zarf/compose/ && docker compose -f docker_compose.yaml -p compose up -d
+
+compose-build-up: build compose-up
+
+compose-down:
+	cd ./zarf/compose/ && docker compose -f docker_compose.yaml down
+
+compose-logs:
+	cd ./zarf/compose/ && docker compose -f docker_compose.yaml logs
+
+# ==============================================================================
 # Administration
 
 migrate:
-	export SALES_DB_HOST_PORT=localhost; go run apis/tooling/admin/main.go migrate
+	export SALES_DB_HOST=localhost; go run api/tooling/admin/main.go migrate
 
 seed: migrate
-	export SALES_DB_HOST_PORT=localhost; go run apis/tooling/admin/main.go seed
+	export SALES_DB_HOST=localhost; go run api/tooling/admin/main.go seed
 
 pgcli:
 	pgcli postgresql://postgres:postgres@localhost
@@ -341,7 +357,7 @@ readiness:
 	curl -il http://localhost:3000/v1/readiness
 
 token-gen:
-	export SALES_DB_HOST_PORT=localhost; go run apis/tooling/admin/main.go gentoken 5cf37266-3473-4006-984f-9325122678b7 54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
+	export SALES_DB_HOST=localhost; go run api/tooling/admin/main.go gentoken 5cf37266-3473-4006-984f-9325122678b7 54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
 
 # ==============================================================================
 # Metrics and Tracing
@@ -353,13 +369,17 @@ metrics-view:
 	expvarmon -ports="localhost:4020" -endpoint="/metrics" -vars="build,requests,goroutines,errors,panics,mem:memstats.HeapAlloc,mem:memstats.HeapSys,mem:memstats.Sys"
 
 grafana:
-	open -a "Google Chrome" http://localhost:3100/
+	open http://localhost:3100/
 
 statsviz:
-	open -a "Google Chrome" http://localhost:3010/debug/statsviz
+	open http://localhost:3010/debug/statsviz
 
 # ==============================================================================
 # Running tests within the local computer
+
+test-down:
+	docker stop servicetest
+	docker rm servicetest -v
 
 test-r:
 	CGO_ENABLED=1 go test -race -count=1 ./...
@@ -391,6 +411,11 @@ users:
 	curl -il \
 	-H "Authorization: Bearer ${TOKEN}" "http://localhost:3000/v1/users?page=1&rows=2"
 
+users-timeout:
+	curl -il \
+	--max-time 1 \
+	-H "Authorization: Bearer ${TOKEN}" "http://localhost:3000/v1/users?page=1&rows=2"
+
 load:
 	hey -m GET -c 100 -n 1000 \
 	-H "Authorization: Bearer ${TOKEN}" "http://localhost:3000/v1/users?page=1&rows=2"
@@ -398,7 +423,7 @@ load:
 otel-test:
 	curl -il \
 	-H "Traceparent: 00-918dd5ecf264712262b68cf2ef8b5239-896d90f23f69f006-01" \
-	--user "admin@example.com:gophers" http://localhost:3000/v1/users/token/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
+	--user "admin@example.com:gophers" http://localhost:6000/v1/auth/token/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
 
 # ==============================================================================
 # Modules support
@@ -430,10 +455,10 @@ list:
 # Class Stuff
 
 run:
-	go run apis/services/sales/main.go | go run apis/tooling/logfmt/main.go
+	go run api/services/sales/main.go | go run api/tooling/logfmt/main.go
 
 run-help:
-	go run apis/services/sales/main.go --help | go run apis/tooling/logfmt/main.go
+	go run api/services/sales/main.go --help | go run api/tooling/logfmt/main.go
 
 curl:
 	curl -il http://localhost:3000/v1/hack
@@ -445,7 +470,7 @@ load-hack:
 	hey -m GET -c 100 -n 100000 "http://localhost:3000/v1/hack"
 
 admin:
-	go run apis/tooling/admin/main.go
+	go run api/tooling/admin/main.go
 
 ready:
 	curl -il http://localhost:3000/v1/readiness
@@ -457,7 +482,7 @@ curl-create:
 	curl -il -X POST \
 	-H "Authorization: Bearer ${TOKEN}" \
 	-H 'Content-Type: application/json' \
-	-d '{"name":"bill","email":"b@gmail.com","roles":["ADMIN"],"department":"IT","password":"123","passwordConfirm":"123"}' \
+	-d '{"name":"bill","email":"b@gmail.com","roles":["ADMIN"],"department":"ITO","password":"123","passwordConfirm":"123"}' \
 	http://localhost:3000/v1/users
 
 # ==============================================================================
@@ -471,7 +496,7 @@ talk-up:
 
 	kubectl wait --timeout=120s --namespace=local-path-storage --for=condition=Available deployment/local-path-provisioner
 
-	kind load docker-image $(POSTGRES) --name $(KIND_CLUSTER)	
+	kind load docker-image $(POSTGRES) --name $(KIND_CLUSTER)
 
 talk-apply:
 	kustomize build zarf/k8s/dev/database | kubectl apply -f -
@@ -503,22 +528,60 @@ talk-metrics:
 # ==============================================================================
 # Admin Frontend
 
-ADMIN_FRONTEND_PREFIX := ./apis/frontends/admin
+ADMIN_FRONTEND_PREFIX := ./api/frontends/admin
 
 write-token-to-env:
 	echo "VITE_SERVICE_API=http://localhost:3000/v1" > ${ADMIN_FRONTEND_PREFIX}/.env
 	make token | grep -o '"ey.*"' | awk '{print "VITE_SERVICE_TOKEN="$$1}' >> ${ADMIN_FRONTEND_PREFIX}/.env
 
 admin-gui-install:
-	pnpm -C ${ADMIN_FRONTEND_PREFIX} install 
+	pnpm -C ${ADMIN_FRONTEND_PREFIX} install
 
 admin-gui-dev: admin-gui-install
-	pnpm -C ${ADMIN_FRONTEND_PREFIX} run dev 
+	pnpm -C ${ADMIN_FRONTEND_PREFIX} run dev
 
 admin-gui-build: admin-gui-install
-	pnpm -C ${ADMIN_FRONTEND_PREFIX} run build 
+	pnpm -C ${ADMIN_FRONTEND_PREFIX} run build
 
 admin-gui-start-build: admin-gui-build
-	pnpm -C ${ADMIN_FRONTEND_PREFIX} run preview 
+	pnpm -C ${ADMIN_FRONTEND_PREFIX} run preview
 
 admin-gui-run: write-token-to-env admin-gui-start-build
+
+# ==============================================================================
+# Help command
+help:
+	@echo "Usage: make <command>"
+	@echo ""
+	@echo "Commands:"
+	@echo "  dev-gotooling           Install Go tooling"
+	@echo "  dev-brew                Install brew dependencies"
+	@echo "  dev-docker              Pull Docker images"
+	@echo "  build                   Build all the containers"
+	@echo "  sales                   Build the sales container"
+	@echo "  metrics                 Build the metrics container"
+	@echo "  auth                    Build the auth container"
+	@echo "  dev-up                  Start the KIND cluster"
+	@echo "  dev-down                Stop the KIND cluster"
+	@echo "  dev-status-all          Show the status of the KIND cluster"
+	@echo "  dev-status              Show the status of the pods"
+	@echo "  dev-load                Load the containers into KIND"
+	@echo "  dev-apply               Apply the manifests to KIND"
+	@echo "  dev-restart             Restart the deployments"
+	@echo "  dev-update              Build, load, and restart the deployments"
+	@echo "  dev-update-apply        Build, load, and apply the deployments"
+	@echo "  dev-logs                Show the logs for the sales service"
+	@echo "  dev-logs-auth           Show the logs for the auth service"
+	@echo "  dev-logs-init           Show the logs for the init container"
+	@echo "  dev-describe-node       Show the node details"
+	@echo "  dev-describe-deployment Show the deployment details"
+	@echo "  dev-describe-sales      Show the sales pod details"
+	@echo "  dev-describe-auth       Show the auth pod details"
+	@echo "  dev-describe-database   Show the database pod details"
+	@echo "  dev-describe-grafana    Show the grafana pod details"
+	@echo "  dev-logs-db             Show the logs for the database service"
+	@echo "  dev-logs-grafana        Show the logs for the grafana service"
+	@echo "  dev-logs-tempo          Show the logs for the tempo service"
+	@echo "  dev-logs-loki           Show the logs for the loki service"
+	@echo "  dev-logs-promtail       Show the logs for the promtail service"
+	@echo "  dev-services-delete     Delete all"

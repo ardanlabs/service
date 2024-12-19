@@ -5,9 +5,10 @@ app/tooling/sales-admin/sales-admin
 app/tooling/sales-admin/logfmt
 app/tooling/sales-admin/docs
 .excalidraw
+database-data/
 
 # Environment
-app/frontends/admin/.env
+api/cmd/frontends/admin/.env
 
 # Mac
 .DS_Store
@@ -44,3 +45,4 @@ _testmain.go
 *.exe
 //*.test
 .vscode/tasks.json
+zarf/compose/database-data/data

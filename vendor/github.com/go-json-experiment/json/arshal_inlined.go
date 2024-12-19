@@ -78,7 +78,7 @@ func marshalInlinedFallbackAll(enc *jsontext.Encoder, va addressableValue, mo *j
 			if insertUnquotedName != nil {
 				name := jsonwire.UnquoteMayCopy(val, flags.IsVerbatim())
 				if !insertUnquotedName(name) {
-					return export.NewDuplicateNameError(val, 0)
+					return newDuplicateNameError(enc.StackPointer().Parent(), val, enc.OutputOffset())
 				}
 			}
 			if err := enc.WriteValue(val); err != nil {
@@ -119,7 +119,7 @@ func marshalInlinedFallbackAll(enc *jsontext.Encoder, va addressableValue, mo *j
 				isVerbatim := bytes.IndexByte(b, '\\') < 0
 				name := jsonwire.UnquoteMayCopy(b, isVerbatim)
 				if !insertUnquotedName(name) {
-					return export.NewDuplicateNameError(b, 0)
+					return newDuplicateNameError(enc.StackPointer().Parent(), b, enc.OutputOffset())
 				}
 			}
 			return enc.WriteValue(b)

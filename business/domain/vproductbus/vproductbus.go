@@ -5,13 +5,15 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/ardanlabs/service/business/api/order"
+	"github.com/ardanlabs/service/business/sdk/order"
+	"github.com/ardanlabs/service/business/sdk/page"
+	"github.com/ardanlabs/service/foundation/otel"
 )
 
-// Storer interface declares the behavior this package needs to perists and
+// Storer interface declares the behavior this package needs to persist and
 // retrieve data.
 type Storer interface {
-	Query(ctx context.Context, filter QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]Product, error)
+	Query(ctx context.Context, filter QueryFilter, orderBy order.By, page page.Page) ([]Product, error)
 	Count(ctx context.Context, filter QueryFilter) (int, error)
 }
 
@@ -28,12 +30,11 @@ func NewBusiness(storer Storer) *Business {
 }
 
 // Query retrieves a list of existing products.
-func (b *Business) Query(ctx context.Context, filter QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]Product, error) {
-	if err := filter.Validate(); err != nil {
-		return nil, err
-	}
+func (b *Business) Query(ctx context.Context, filter QueryFilter, orderBy order.By, page page.Page) ([]Product, error) {
+	ctx, span := otel.AddSpan(ctx, "business.vproductbus.query")
+	defer span.End()
 
-	users, err := b.storer.Query(ctx, filter, orderBy, pageNumber, rowsPerPage)
+	users, err := b.storer.Query(ctx, filter, orderBy, page)
 	if err != nil {
 		return nil, fmt.Errorf("query: %w", err)
 	}
@@ -43,9 +44,8 @@ func (b *Business) Query(ctx context.Context, filter QueryFilter, orderBy order.
 
 // Count returns the total number of products.
 func (b *Business) Count(ctx context.Context, filter QueryFilter) (int, error) {
-	if err := filter.Validate(); err != nil {
-		return 0, err
-	}
+	ctx, span := otel.AddSpan(ctx, "business.vproductbus.count")
+	defer span.End()
 
 	return b.storer.Count(ctx, filter)
 }

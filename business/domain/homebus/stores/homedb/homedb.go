@@ -7,10 +7,10 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/ardanlabs/service/business/api/order"
-	"github.com/ardanlabs/service/business/api/sqldb"
-	"github.com/ardanlabs/service/business/api/transaction"
 	"github.com/ardanlabs/service/business/domain/homebus"
+	"github.com/ardanlabs/service/business/sdk/order"
+	"github.com/ardanlabs/service/business/sdk/page"
+	"github.com/ardanlabs/service/business/sdk/sqldb"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
@@ -32,7 +32,7 @@ func NewStore(log *logger.Logger, db *sqlx.DB) *Store {
 
 // NewWithTx constructs a new Store value replacing the sqlx DB
 // value with a sqlx DB value that is currently inside a transaction.
-func (s *Store) NewWithTx(tx transaction.CommitRollbacker) (homebus.Storer, error) {
+func (s *Store) NewWithTx(tx sqldb.CommitRollbacker) (homebus.Storer, error) {
 	ec, err := sqldb.GetExtContext(tx)
 	if err != nil {
 		return nil, err
@@ -107,10 +107,10 @@ func (s *Store) Update(ctx context.Context, hme homebus.Home) error {
 }
 
 // Query retrieves a list of existing homes from the database.
-func (s *Store) Query(ctx context.Context, filter homebus.QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]homebus.Home, error) {
-	data := map[string]interface{}{
-		"offset":        (pageNumber - 1) * rowsPerPage,
-		"rows_per_page": rowsPerPage,
+func (s *Store) Query(ctx context.Context, filter homebus.QueryFilter, orderBy order.By, page page.Page) ([]homebus.Home, error) {
+	data := map[string]any{
+		"offset":        (page.Number() - 1) * page.RowsPerPage(),
+		"rows_per_page": page.RowsPerPage(),
 	}
 
 	const q = `
@@ -145,7 +145,7 @@ func (s *Store) Query(ctx context.Context, filter homebus.QueryFilter, orderBy o
 
 // Count returns the total number of homes in the DB.
 func (s *Store) Count(ctx context.Context, filter homebus.QueryFilter) (int, error) {
-	data := map[string]interface{}{}
+	data := map[string]any{}
 
 	const q = `
     SELECT

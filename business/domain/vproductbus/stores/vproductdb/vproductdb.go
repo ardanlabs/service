@@ -6,9 +6,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/ardanlabs/service/business/api/order"
-	"github.com/ardanlabs/service/business/api/sqldb"
 	"github.com/ardanlabs/service/business/domain/vproductbus"
+	"github.com/ardanlabs/service/business/sdk/order"
+	"github.com/ardanlabs/service/business/sdk/page"
+	"github.com/ardanlabs/service/business/sdk/sqldb"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/jmoiron/sqlx"
 )
@@ -28,10 +29,10 @@ func NewStore(log *logger.Logger, db *sqlx.DB) *Store {
 }
 
 // Query retrieves a list of existing products from the database.
-func (s *Store) Query(ctx context.Context, filter vproductbus.QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]vproductbus.Product, error) {
-	data := map[string]interface{}{
-		"offset":        (pageNumber - 1) * rowsPerPage,
-		"rows_per_page": rowsPerPage,
+func (s *Store) Query(ctx context.Context, filter vproductbus.QueryFilter, orderBy order.By, page page.Page) ([]vproductbus.Product, error) {
+	data := map[string]any{
+		"offset":        (page.Number() - 1) * page.RowsPerPage(),
+		"rows_per_page": page.RowsPerPage(),
 	}
 
 	const q = `
@@ -58,17 +59,22 @@ func (s *Store) Query(ctx context.Context, filter vproductbus.QueryFilter, order
 	buf.WriteString(orderByClause)
 	buf.WriteString(" OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY")
 
-	var dnPrd []dbProduct
+	var dnPrd []product
 	if err := sqldb.NamedQuerySlice(ctx, s.log, s.db, buf.String(), data, &dnPrd); err != nil {
 		return nil, fmt.Errorf("namedqueryslice: %w", err)
 	}
 
-	return toBusProducts(dnPrd), nil
+	prd, err := toBusProducts(dnPrd)
+	if err != nil {
+		return nil, err
+	}
+
+	return prd, nil
 }
 
 // Count returns the total number of products in the DB.
 func (s *Store) Count(ctx context.Context, filter vproductbus.QueryFilter) (int, error) {
-	data := map[string]interface{}{}
+	data := map[string]any{}
 
 	const q = `
 	SELECT

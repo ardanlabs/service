@@ -8,7 +8,7 @@ import (
 	"github.com/ardanlabs/service/business/domain/userbus"
 )
 
-func applyFilter(filter userbus.QueryFilter, data map[string]interface{}, buf *bytes.Buffer) {
+func applyFilter(filter userbus.QueryFilter, data map[string]any, buf *bytes.Buffer) {
 	var wc []string
 
 	if filter.ID != nil {
@@ -27,12 +27,12 @@ func applyFilter(filter userbus.QueryFilter, data map[string]interface{}, buf *b
 	}
 
 	if filter.StartCreatedDate != nil {
-		data["start_date_created"] = *filter.StartCreatedDate
+		data["start_date_created"] = filter.StartCreatedDate.UTC()
 		wc = append(wc, "date_created >= :start_date_created")
 	}
 
 	if filter.EndCreatedDate != nil {
-		data["end_date_created"] = *filter.EndCreatedDate
+		data["end_date_created"] = filter.EndCreatedDate.UTC()
 		wc = append(wc, "date_created <= :end_date_created")
 	}
 
