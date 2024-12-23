@@ -69,7 +69,7 @@ func (app *NewProduct) Decode(data []byte) error {
 // Validate checks the data in the model is considered clean.
 func (app NewProduct) Validate() error {
 	if err := errs.Check(app); err != nil {
-		return errs.Newf(errs.InvalidArgument, "validate: %s", err)
+		return fmt.Errorf("validate: %w", err)
 	}
 
 	return nil
@@ -123,7 +123,7 @@ func (app *UpdateProduct) Decode(data []byte) error {
 // Validate checks the data in the model is considered clean.
 func (app UpdateProduct) Validate() error {
 	if err := errs.Check(app); err != nil {
-		return errs.Newf(errs.InvalidArgument, "validate: %s", err)
+		return fmt.Errorf("validate: %w", err)
 	}
 
 	return nil
