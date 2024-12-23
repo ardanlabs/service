@@ -7,19 +7,6 @@ import (
 	"github.com/ardanlabs/service/business/domain/vproductbus"
 )
 
-type queryParams struct {
-	Page     string
-	Rows     string
-	OrderBy  string
-	ID       string
-	Name     string
-	Cost     string
-	Quantity string
-	UserName string
-}
-
-// =============================================================================
-
 // Product represents information about an individual product with
 // extended information.
 type Product struct {
