@@ -570,6 +570,7 @@ help:
 	@echo "  dev-load                Load the containers into KIND"
 	@echo "  dev-apply               Apply the manifests to KIND"
 	@echo "  dev-restart             Restart the deployments"
+	@echo "  dev-run              	 Build, up, load, and apply the deployments"
 	@echo "  dev-update              Build, load, and restart the deployments"
 	@echo "  dev-update-apply        Build, load, and apply the deployments"
 	@echo "  dev-logs                Show the logs for the sales service"
