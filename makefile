@@ -248,6 +248,8 @@ dev-restart:
 	kubectl rollout restart deployment $(AUTH_APP) --namespace=$(NAMESPACE)
 	kubectl rollout restart deployment $(SALES_APP) --namespace=$(NAMESPACE)
 
+dev-run: build dev-up dev-load dev-apply
+
 dev-update: build dev-load dev-restart
 
 dev-update-apply: build dev-load dev-apply
@@ -319,7 +321,13 @@ dev-events-warn:
 	kubectl get ev --field-selector type=Warning --sort-by metadata.creationTimestamp
 
 dev-shell:
-	kubectl exec --namespace=$(NAMESPACE) -it $(shell kubectl get pods --namespace=$(NAMESPACE) | grep sales | cut -c1-26) --container sales-api -- /bin/sh
+	kubectl exec --namespace=$(NAMESPACE) -it $(shell kubectl get pods --namespace=$(NAMESPACE) | grep sales | cut -c1-26) --container $(SALES_APP) -- /bin/sh
+
+dev-auth-shell:
+	kubectl exec --namespace=$(NAMESPACE) -it $(shell kubectl get pods --namespace=$(NAMESPACE) | grep auth | cut -c1-26) --container $(AUTH_APP) -- /bin/sh
+
+dev-db-shell:
+	kubectl exec --namespace=$(NAMESPACE) -it $(shell kubectl get pods --namespace=$(NAMESPACE) | grep database | cut -c1-10) -- /bin/sh
 
 dev-database-restart:
 	kubectl rollout restart statefulset database --namespace=$(NAMESPACE)
@@ -568,6 +576,7 @@ help:
 	@echo "  dev-load                Load the containers into KIND"
 	@echo "  dev-apply               Apply the manifests to KIND"
 	@echo "  dev-restart             Restart the deployments"
+	@echo "  dev-run              	 Build, up, load, and apply the deployments"
 	@echo "  dev-update              Build, load, and restart the deployments"
 	@echo "  dev-update-apply        Build, load, and apply the deployments"
 	@echo "  dev-logs                Show the logs for the sales service"
