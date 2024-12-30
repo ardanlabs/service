@@ -63,7 +63,6 @@ func InitTracing(log *logger.Logger, cfg Config) (trace.TracerProvider, func(ctx
 			sdktrace.WithBatcher(exporter,
 				sdktrace.WithMaxExportBatchSize(sdktrace.DefaultMaxExportBatchSize),
 				sdktrace.WithBatchTimeout(sdktrace.DefaultScheduleDelay*time.Millisecond),
-				sdktrace.WithMaxExportBatchSize(sdktrace.DefaultMaxExportBatchSize),
 			),
 			sdktrace.WithResource(
 				resource.NewWithAttributes(
