@@ -116,9 +116,7 @@ func AddSpan(ctx context.Context, spanName string, keyValues ...attribute.KeyVal
 	}
 
 	ctx, span := v.Start(ctx, spanName)
-	for _, kv := range keyValues {
-		span.SetAttributes(kv)
-	}
+	span.SetAttributes(keyValues...)
 
 	return ctx, span
 }
