@@ -81,7 +81,7 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 # CLASS NOTES
 #
 # Kind
-# 	For full Kind v0.24 release notes: https://github.com/kubernetes-sigs/kind/releases/tag/v0.25.0
+# 	For full Kind v0.26 release notes: https://github.com/kubernetes-sigs/kind/releases/tag/v0.26.0
 #
 # RSA Keys
 # 	To generate a private/public key PEM file.
@@ -110,14 +110,14 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 # Define dependencies
 
 GOLANG          := golang:1.23
-ALPINE          := alpine:3.20
-KIND            := kindest/node:v1.31.2
+ALPINE          := alpine:3.21
+KIND            := kindest/node:v1.32.0
 POSTGRES        := postgres:17.2
-GRAFANA         := grafana/grafana:11.3.0
-PROMETHEUS      := prom/prometheus:v2.55.0
+GRAFANA         := grafana/grafana:11.4.0
+PROMETHEUS      := prom/prometheus:v3.0.0
 TEMPO           := grafana/tempo:2.6.0
-LOKI            := grafana/loki:3.2.0
-PROMTAIL        := grafana/promtail:3.2.0
+LOKI            := grafana/loki:3.3.0
+PROMTAIL        := grafana/promtail:3.3.0
 
 KIND_CLUSTER    := ardan-starter-cluster
 NAMESPACE       := sales-system
