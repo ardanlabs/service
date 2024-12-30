@@ -50,11 +50,14 @@ const (
 		AllowInvalidUTF8 |
 		EscapeForHTML |
 		EscapeForJS |
+		EscapeInvalidUTF8 |
+		PreserveRawStrings |
 		Deterministic |
 		FormatNilMapAsNull |
 		FormatNilSliceAsNull |
 		MatchCaseInsensitiveNames |
-		FormatByteArrayAsArray |
+		CallMethodsWithLegacySemantics |
+		FormatBytesWithLegacySemantics |
 		FormatTimeDurationAsNanosecond |
 		IgnoreStructErrors |
 		MatchCaseSensitiveDelimiter |
@@ -62,7 +65,6 @@ const (
 		OmitEmptyWithLegacyDefinition |
 		RejectFloatOverflow |
 		ReportLegacyErrorValues |
-		SkipUnaddressableMethods |
 		StringifyWithLegacySemantics |
 		UnmarshalArrayFromAnyLength
 
@@ -83,10 +85,11 @@ const (
 	AllowInvalidUTF8    // encode or decode
 	WithinArshalCall    // encode or decode; for internal use by json.Marshal and json.Unmarshal
 	OmitTopLevelNewline // encode only; for internal use by json.Marshal and json.MarshalWrite
-	PreserveRawStrings  // encode only; for internal use by jsontext.Value.Canonicalize
+	PreserveRawStrings  // encode only; exposed in v1 and also used by jsontext.Value.Canonicalize
 	CanonicalizeNumbers // encode only; for internal use by jsontext.Value.Canonicalize
 	EscapeForHTML       // encode only
 	EscapeForJS         // encode only
+	EscapeInvalidUTF8   // encode only; only exposed in v1
 	Multiline           // encode only
 	SpaceAfterColon     // encode only
 	SpaceAfterComma     // encode only
@@ -120,7 +123,8 @@ const (
 const (
 	_ Bools = (maxArshalV2Flag >> 1) << iota
 
-	FormatByteArrayAsArray         // marshal or unmarshal
+	CallMethodsWithLegacySemantics // marshal or unmarshal
+	FormatBytesWithLegacySemantics // marshal or unmarshal
 	FormatTimeDurationAsNanosecond // marshal or unmarshal
 	IgnoreStructErrors             // marshal or unmarshal
 	MatchCaseSensitiveDelimiter    // marshal or unmarshal
@@ -128,7 +132,6 @@ const (
 	OmitEmptyWithLegacyDefinition  // marshal
 	RejectFloatOverflow            // unmarshal
 	ReportLegacyErrorValues        // marshal or unmarshal
-	SkipUnaddressableMethods       // marshal or unmarshal
 	StringifyWithLegacySemantics   // marshal or unmarshal
 	StringifyBoolsAndStrings       // marshal or unmarshal; for internal use by jsonv2.makeStructArshaler
 	UnmarshalAnyWithRawNumber      // unmarshal; for internal use by jsonv1.Decoder.UseNumber

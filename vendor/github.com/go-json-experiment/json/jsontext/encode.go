@@ -583,6 +583,32 @@ func (e *encoderState) WriteValue(v Value) error {
 	return nil
 }
 
+// CountNextDelimWhitespace counts the number of bytes of delimiter and
+// whitespace bytes assuming the upcoming token is a JSON value.
+// This method is used for error reporting at the semantic layer.
+func (e *encoderState) CountNextDelimWhitespace() (n int) {
+	const next = Kind('"') // arbitrary kind as next JSON value
+	delim := e.Tokens.needDelim(next)
+	if delim > 0 {
+		n += len(",") | len(":")
+	}
+	if delim == ':' {
+		if e.Flags.Get(jsonflags.SpaceAfterColon) {
+			n += len(" ")
+		}
+	} else {
+		if delim == ',' && e.Flags.Get(jsonflags.SpaceAfterComma) {
+			n += len(" ")
+		}
+		if e.Flags.Get(jsonflags.Multiline) {
+			if m := e.Tokens.NeedIndent(next); m > 0 {
+				n += len("\n") + len(e.IndentPrefix) + (m-1)*len(e.Indent)
+			}
+		}
+	}
+	return n
+}
+
 // appendWhitespace appends whitespace that immediately precedes the next token.
 func (e *encoderState) appendWhitespace(b []byte, next Kind) []byte {
 	if delim := e.Tokens.needDelim(next); delim == ':' {

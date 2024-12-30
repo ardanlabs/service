@@ -45,7 +45,7 @@ func makeTimeArshaler(fncs *arshaler, t reflect.Type) *arshaler {
 			var m durationArshaler
 			if mo.Format != "" && mo.FormatDepth == xe.Tokens.Depth() {
 				if !m.initFormat(mo.Format) {
-					return newInvalidFormatError("marshal", t, mo.Format)
+					return newInvalidFormatError(enc, t, mo.Format)
 				}
 			} else if mo.Flags.Get(jsonflags.FormatTimeDurationAsNanosecond) {
 				return marshalNano(enc, va, mo)
@@ -55,7 +55,10 @@ func makeTimeArshaler(fncs *arshaler, t reflect.Type) *arshaler {
 			m.td = *va.Addr().Interface().(*time.Duration)
 			k := stringOrNumberKind(!m.isNumeric() || mo.Flags.Get(jsonflags.StringifyNumbers))
 			if err := xe.AppendRaw(k, true, m.appendMarshal); err != nil {
-				return &SemanticError{action: "marshal", GoType: t, Err: err}
+				if !isSyntacticError(err) && !export.IsIOError(err) {
+					err = newMarshalErrorBefore(enc, t, err)
+				}
+				return err
 			}
 			return nil
 		}
@@ -65,7 +68,7 @@ func makeTimeArshaler(fncs *arshaler, t reflect.Type) *arshaler {
 			var u durationArshaler
 			if uo.Format != "" && uo.FormatDepth == xd.Tokens.Depth() {
 				if !u.initFormat(uo.Format) {
-					return newInvalidFormatError("unmarshal", t, uo.Format)
+					return newInvalidFormatError(dec, t, uo.Format)
 				}
 			} else if uo.Flags.Get(jsonflags.FormatTimeDurationAsNanosecond) {
 				return unmarshalNano(dec, va, uo)
@@ -79,30 +82,31 @@ func makeTimeArshaler(fncs *arshaler, t reflect.Type) *arshaler {
 			}
 			switch k := val.Kind(); k {
 			case 'n':
-				*td = time.Duration(0)
+				if !uo.Flags.Get(jsonflags.MergeWithLegacySemantics) {
+					*td = time.Duration(0)
+				}
 				return nil
 			case '"':
 				if u.isNumeric() && !uo.Flags.Get(jsonflags.StringifyNumbers) {
-					return &SemanticError{action: "unmarshal", JSONKind: k, GoType: t}
+					break
 				}
 				val = jsonwire.UnquoteMayCopy(val, flags.IsVerbatim())
 				if err := u.unmarshal(val); err != nil {
-					return &SemanticError{action: "unmarshal", JSONKind: k, GoType: t, Err: err}
+					return newUnmarshalErrorAfter(dec, t, err)
 				}
 				*td = u.td
 				return nil
 			case '0':
 				if !u.isNumeric() {
-					return &SemanticError{action: "unmarshal", JSONKind: k, GoType: t}
+					break
 				}
 				if err := u.unmarshal(val); err != nil {
-					return &SemanticError{action: "unmarshal", JSONKind: k, GoType: t, Err: err}
+					return newUnmarshalErrorAfter(dec, t, err)
 				}
 				*td = u.td
 				return nil
-			default:
-				return &SemanticError{action: "unmarshal", JSONKind: k, GoType: t}
 			}
+			return newUnmarshalErrorAfter(dec, t, nil)
 		}
 	case timeTimeType:
 		fncs.nonDefault = true
@@ -111,7 +115,7 @@ func makeTimeArshaler(fncs *arshaler, t reflect.Type) *arshaler {
 			var m timeArshaler
 			if mo.Format != "" && mo.FormatDepth == xe.Tokens.Depth() {
 				if !m.initFormat(mo.Format) {
-					return newInvalidFormatError("marshal", t, mo.Format)
+					return newInvalidFormatError(enc, t, mo.Format)
 				}
 			}
 
@@ -119,7 +123,10 @@ func makeTimeArshaler(fncs *arshaler, t reflect.Type) *arshaler {
 			m.tt = *va.Addr().Interface().(*time.Time)
 			k := stringOrNumberKind(!m.isNumeric() || mo.Flags.Get(jsonflags.StringifyNumbers))
 			if err := xe.AppendRaw(k, !m.hasCustomFormat(), m.appendMarshal); err != nil {
-				return &SemanticError{action: "marshal", GoType: t, Err: err}
+				if !isSyntacticError(err) && !export.IsIOError(err) {
+					err = newMarshalErrorBefore(enc, t, err)
+				}
+				return err
 			}
 			return nil
 		}
@@ -128,7 +135,7 @@ func makeTimeArshaler(fncs *arshaler, t reflect.Type) *arshaler {
 			var u timeArshaler
 			if uo.Format != "" && uo.FormatDepth == xd.Tokens.Depth() {
 				if !u.initFormat(uo.Format) {
-					return newInvalidFormatError("unmarshal", t, uo.Format)
+					return newInvalidFormatError(dec, t, uo.Format)
 				}
 			}
 
@@ -140,30 +147,31 @@ func makeTimeArshaler(fncs *arshaler, t reflect.Type) *arshaler {
 			}
 			switch k := val.Kind(); k {
 			case 'n':
-				*tt = time.Time{}
+				if !uo.Flags.Get(jsonflags.MergeWithLegacySemantics) {
+					*tt = time.Time{}
+				}
 				return nil
 			case '"':
 				if u.isNumeric() && !uo.Flags.Get(jsonflags.StringifyNumbers) {
-					return &SemanticError{action: "unmarshal", JSONKind: k, GoType: t}
+					break
 				}
 				val = jsonwire.UnquoteMayCopy(val, flags.IsVerbatim())
 				if err := u.unmarshal(val); err != nil {
-					return &SemanticError{action: "unmarshal", JSONKind: k, GoType: t, Err: err}
+					return newUnmarshalErrorAfter(dec, t, err)
 				}
 				*tt = u.tt
 				return nil
 			case '0':
 				if !u.isNumeric() {
-					return &SemanticError{action: "unmarshal", JSONKind: k, GoType: t}
+					break
 				}
 				if err := u.unmarshal(val); err != nil {
-					return &SemanticError{action: "unmarshal", JSONKind: k, GoType: t, Err: err}
+					return newUnmarshalErrorAfter(dec, t, err)
 				}
 				*tt = u.tt
 				return nil
-			default:
-				return &SemanticError{action: "unmarshal", JSONKind: k, GoType: t}
 			}
+			return newUnmarshalErrorAfter(dec, t, nil)
 		}
 	}
 	return fncs

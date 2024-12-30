@@ -10,6 +10,7 @@ import (
 	"reflect"
 	"sync"
 
+	"github.com/go-json-experiment/json/internal"
 	"github.com/go-json-experiment/json/internal/jsonflags"
 	"github.com/go-json-experiment/json/internal/jsonopts"
 	"github.com/go-json-experiment/json/jsontext"
@@ -23,6 +24,9 @@ import (
 // but not permissible to call [jsontext.Decoder.ReadToken] or
 // [jsontext.Encoder.WriteToken] since such methods mutate the state.
 var SkipFunc = errors.New("json: skip function")
+
+var errSkipMutation = errors.New("must not read or write any tokens when skipping")
+var errNonSingularValue = errors.New("must read or write exactly one value")
 
 // Marshalers is a list of functions that may override the marshal behavior
 // of specific types. Populate [WithMarshalers] to use it with
@@ -174,12 +178,17 @@ func MarshalFuncV1[T any](fn func(T) ([]byte, error)) *Marshalers {
 			val, err := fn(va.castTo(t).Interface().(T))
 			if err != nil {
 				err = wrapSkipFunc(err, "marshal function of type func(T) ([]byte, error)")
-				// TODO: Avoid wrapping semantic errors.
-				return &SemanticError{action: "marshal", GoType: t, Err: err}
+				if mo.Flags.Get(jsonflags.ReportLegacyErrorValues) {
+					return internal.NewMarshalerError(va.Addr().Interface(), err, "MarshalFuncV1") // unlike unmarshal, always wrapped
+				}
+				err = newMarshalErrorBefore(enc, t, err)
+				return collapseSemanticErrors(err)
 			}
 			if err := enc.WriteValue(val); err != nil {
-				// TODO: Avoid wrapping semantic or I/O errors.
-				return &SemanticError{action: "marshal", JSONKind: jsontext.Value(val).Kind(), GoType: t, Err: err}
+				if isSyntacticError(err) {
+					err = newMarshalErrorBefore(enc, t, err)
+				}
+				return err
 			}
 			return nil
 		},
@@ -212,17 +221,22 @@ func MarshalFuncV2[T any](fn func(*jsontext.Encoder, T, Options) error) *Marshal
 			xe.Flags.Set(jsonflags.WithinArshalCall | 0)
 			currDepth, currLength := xe.Tokens.DepthLength()
 			if err == nil && (prevDepth != currDepth || prevLength+1 != currLength) {
-				err = errors.New("must write exactly one JSON value")
+				err = errNonSingularValue
 			}
 			if err != nil {
 				if err == SkipFunc {
 					if prevDepth == currDepth && prevLength == currLength {
 						return SkipFunc
 					}
-					err = errors.New("must not write any JSON tokens when skipping")
+					err = errSkipMutation
 				}
-				// TODO: Avoid wrapping semantic or I/O errors.
-				return &SemanticError{action: "marshal", GoType: t, Err: err}
+				if mo.Flags.Get(jsonflags.ReportLegacyErrorValues) {
+					return internal.NewMarshalerError(va.Addr().Interface(), err, "MarshalFuncV2") // unlike unmarshal, always wrapped
+				}
+				if !export.IsIOError(err) {
+					err = newSemanticErrorWithPosition(enc, t, prevDepth, prevLength, err)
+				}
+				return err
 			}
 			return nil
 		},
@@ -253,8 +267,11 @@ func UnmarshalFuncV1[T any](fn func([]byte, T) error) *Unmarshalers {
 			err = fn(val, va.castTo(t).Interface().(T))
 			if err != nil {
 				err = wrapSkipFunc(err, "unmarshal function of type func([]byte, T) error")
-				// TODO: Avoid wrapping semantic, syntactic, or I/O errors.
-				return &SemanticError{action: "unmarshal", JSONKind: val.Kind(), GoType: t, Err: err}
+				if uo.Flags.Get(jsonflags.ReportLegacyErrorValues) {
+					return err // unlike marshal, never wrapped
+				}
+				err = newUnmarshalErrorAfter(dec, t, err)
+				return collapseSemanticErrors(err)
 			}
 			return nil
 		},
@@ -286,17 +303,22 @@ func UnmarshalFuncV2[T any](fn func(*jsontext.Decoder, T, Options) error) *Unmar
 			xd.Flags.Set(jsonflags.WithinArshalCall | 0)
 			currDepth, currLength := xd.Tokens.DepthLength()
 			if err == nil && (prevDepth != currDepth || prevLength+1 != currLength) {
-				err = errors.New("must read exactly one JSON value")
+				err = errNonSingularValue
 			}
 			if err != nil {
 				if err == SkipFunc {
 					if prevDepth == currDepth && prevLength == currLength {
 						return SkipFunc
 					}
-					err = errors.New("must not read any JSON tokens when skipping")
+					err = errSkipMutation
 				}
-				// TODO: Avoid wrapping semantic, syntactic, or I/O errors.
-				return &SemanticError{action: "unmarshal", GoType: t, Err: err}
+				if uo.Flags.Get(jsonflags.ReportLegacyErrorValues) {
+					return err // unlike marshal, never wrapped
+				}
+				if !isSyntacticError(err) && !export.IsIOError(err) {
+					err = newSemanticErrorWithPosition(dec, t, prevDepth, prevLength, err)
+				}
+				return err
 			}
 			return nil
 		},
