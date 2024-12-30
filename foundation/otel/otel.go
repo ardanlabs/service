@@ -63,7 +63,6 @@ func InitTracing(log *logger.Logger, cfg Config) (trace.TracerProvider, func(ctx
 			sdktrace.WithBatcher(exporter,
 				sdktrace.WithMaxExportBatchSize(sdktrace.DefaultMaxExportBatchSize),
 				sdktrace.WithBatchTimeout(sdktrace.DefaultScheduleDelay*time.Millisecond),
-				sdktrace.WithMaxExportBatchSize(sdktrace.DefaultMaxExportBatchSize),
 			),
 			sdktrace.WithResource(
 				resource.NewWithAttributes(
@@ -117,9 +116,7 @@ func AddSpan(ctx context.Context, spanName string, keyValues ...attribute.KeyVal
 	}
 
 	ctx, span := v.Start(ctx, spanName)
-	for _, kv := range keyValues {
-		span.SetAttributes(kv)
-	}
+	span.SetAttributes(keyValues...)
 
 	return ctx, span
 }
