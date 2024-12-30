@@ -321,7 +321,13 @@ dev-events-warn:
 	kubectl get ev --field-selector type=Warning --sort-by metadata.creationTimestamp
 
 dev-shell:
-	kubectl exec --namespace=$(NAMESPACE) -it $(shell kubectl get pods --namespace=$(NAMESPACE) | grep sales | cut -c1-26) --container sales-api -- /bin/sh
+	kubectl exec --namespace=$(NAMESPACE) -it $(shell kubectl get pods --namespace=$(NAMESPACE) | grep sales | cut -c1-26) --container $(SALES_APP) -- /bin/sh
+
+dev-auth-shell:
+	kubectl exec --namespace=$(NAMESPACE) -it $(shell kubectl get pods --namespace=$(NAMESPACE) | grep auth | cut -c1-26) --container $(AUTH_APP) -- /bin/sh
+
+dev-db-shell:
+	kubectl exec --namespace=$(NAMESPACE) -it $(shell kubectl get pods --namespace=$(NAMESPACE) | grep database | cut -c1-10) -- /bin/sh
 
 dev-database-restart:
 	kubectl rollout restart statefulset database --namespace=$(NAMESPACE)
