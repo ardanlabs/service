@@ -18,6 +18,8 @@ import (
 	"github.com/google/uuid"
 )
 
+// Authenticate is a middleware function that integrates with an authentication client
+// to validate user credentials and attach user data to the request context.
 func Authenticate(client *authclient.Client) web.MidFunc {
 	m := func(next web.HandlerFunc) web.HandlerFunc {
 		h := func(ctx context.Context, r *http.Request) web.Encoder {
