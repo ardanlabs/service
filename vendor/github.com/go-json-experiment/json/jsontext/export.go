@@ -68,3 +68,8 @@ func (export) GetStreamingDecoder(r io.Reader, o ...Options) *Decoder {
 func (export) PutStreamingDecoder(d *Decoder) {
 	putStreamingDecoder(d)
 }
+
+func (export) IsIOError(err error) bool {
+	_, ok := err.(*ioError)
+	return ok
+}

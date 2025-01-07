@@ -162,3 +162,48 @@ func NewInvalidEscapeSequenceError[Bytes ~[]byte | ~string](what Bytes) error {
 		return errors.New("invalid " + label + " `" + string(what) + "` within string")
 	}
 }
+
+// TruncatePointer optionally truncates the JSON pointer,
+// enforcing that the length roughly does not exceed n.
+func TruncatePointer(s string, n int) string {
+	if len(s) <= n {
+		return s
+	}
+	i := n / 2
+	j := len(s) - n/2
+
+	// Avoid truncating a name if there are multiple names present.
+	if k := strings.LastIndexByte(s[:i], '/'); k > 0 {
+		i = k
+	}
+	if k := strings.IndexByte(s[j:], '/'); k >= 0 {
+		j += k + len("/")
+	}
+
+	// Avoid truncation in the middle of a UTF-8 rune.
+	isInvalidUTF8 := func(r rune, rn int) bool { return r == utf8.RuneError && rn == 1 }
+	for i > 0 && isInvalidUTF8(utf8.DecodeLastRuneInString(s[:i])) {
+		i--
+	}
+	for j < len(s) && isInvalidUTF8(utf8.DecodeRuneInString(s[j:])) {
+		j++
+	}
+
+	// Determine the right middle fragment to use.
+	var middle string
+	switch strings.Count(s[i:j], "/") {
+	case 0:
+		middle = "…"
+	case 1:
+		middle = "…/…"
+	default:
+		middle = "…/…/…"
+	}
+	if strings.HasPrefix(s[i:j], "/") && middle != "…" {
+		middle = strings.TrimPrefix(middle, "…")
+	}
+	if strings.HasSuffix(s[i:j], "/") && middle != "…" {
+		middle = strings.TrimSuffix(middle, "…")
+	}
+	return s[:i] + middle + s[j:]
+}

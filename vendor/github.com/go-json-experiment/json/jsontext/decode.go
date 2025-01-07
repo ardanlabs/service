@@ -258,8 +258,31 @@ func (d *decodeBuffer) needMore(pos int) bool {
 func (d *decodeBuffer) offsetAt(pos int) int64     { return d.baseOffset + int64(pos) }
 func (d *decodeBuffer) previousOffsetStart() int64 { return d.baseOffset + int64(d.prevStart) }
 func (d *decodeBuffer) previousOffsetEnd() int64   { return d.baseOffset + int64(d.prevEnd) }
-func (d *decodeBuffer) PreviousBuffer() []byte     { return d.buf[d.prevStart:d.prevEnd] }
+func (d *decodeBuffer) previousBuffer() []byte     { return d.buf[d.prevStart:d.prevEnd] }
 func (d *decodeBuffer) unreadBuffer() []byte       { return d.buf[d.prevEnd:len(d.buf)] }
+
+// PreviousTokenOrValue returns the previously read token or value
+// unless it has been invalidated by a call to PeekKind.
+// If a token is just a delimiter, then this returns a 1-byte buffer.
+// This method is used for error reporting at the semantic layer.
+func (d *decodeBuffer) PreviousTokenOrValue() []byte {
+	b := d.previousBuffer()
+	// If peek was called, then the previous token or buffer is invalidated.
+	if d.peekPos > 0 || len(b) > 0 && b[0] == invalidateBufferByte {
+		return nil
+	}
+	// ReadToken does not preserve the buffer for null, bools, or delimiters.
+	// Manually re-construct that buffer.
+	if len(b) == 0 {
+		b = d.buf[:d.prevEnd] // entirety of the previous buffer
+		for _, tok := range []string{"null", "false", "true", "{", "}", "[", "]"} {
+			if len(b) >= len(tok) && string(b[len(b)-len(tok):]) == tok {
+				return b[len(b)-len(tok):]
+			}
+		}
+	}
+	return b
+}
 
 // PeekKind retrieves the next token kind, but does not advance the read offset.
 // It returns 0 if there are no more tokens.
@@ -329,6 +352,14 @@ func (d *decoderState) checkDelimBeforeIOError(delim byte, err error) error {
 		err = d.checkDelim(delim, next)
 	}
 	return err
+}
+
+// CountNextDelimWhitespace counts the number of upcoming bytes of
+// delimiter or whitespace characters.
+// This method is used for error reporting at the semantic layer.
+func (d *decoderState) CountNextDelimWhitespace() int {
+	d.PeekKind() // populate unreadBuffer
+	return len(d.unreadBuffer()) - len(bytes.TrimLeft(d.unreadBuffer(), ",: \n\r\t"))
 }
 
 // checkDelim checks whether delim is valid for the given next kind.

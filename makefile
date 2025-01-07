@@ -81,7 +81,7 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 # CLASS NOTES
 #
 # Kind
-# 	For full Kind v0.24 release notes: https://github.com/kubernetes-sigs/kind/releases/tag/v0.25.0
+# 	For full Kind v0.26 release notes: https://github.com/kubernetes-sigs/kind/releases/tag/v0.26.0
 #
 # RSA Keys
 # 	To generate a private/public key PEM file.
@@ -110,14 +110,14 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 # Define dependencies
 
 GOLANG          := golang:1.23
-ALPINE          := alpine:3.20
-KIND            := kindest/node:v1.31.2
+ALPINE          := alpine:3.21
+KIND            := kindest/node:v1.32.0
 POSTGRES        := postgres:17.2
-GRAFANA         := grafana/grafana:11.3.0
-PROMETHEUS      := prom/prometheus:v2.55.0
+GRAFANA         := grafana/grafana:11.4.0
+PROMETHEUS      := prom/prometheus:v3.0.0
 TEMPO           := grafana/tempo:2.6.0
-LOKI            := grafana/loki:3.2.0
-PROMTAIL        := grafana/promtail:3.2.0
+LOKI            := grafana/loki:3.3.0
+PROMTAIL        := grafana/promtail:3.3.0
 
 KIND_CLUSTER    := ardan-starter-cluster
 NAMESPACE       := sales-system
@@ -248,6 +248,8 @@ dev-restart:
 	kubectl rollout restart deployment $(AUTH_APP) --namespace=$(NAMESPACE)
 	kubectl rollout restart deployment $(SALES_APP) --namespace=$(NAMESPACE)
 
+dev-run: build dev-up dev-load dev-apply
+
 dev-update: build dev-load dev-restart
 
 dev-update-apply: build dev-load dev-apply
@@ -319,7 +321,13 @@ dev-events-warn:
 	kubectl get ev --field-selector type=Warning --sort-by metadata.creationTimestamp
 
 dev-shell:
-	kubectl exec --namespace=$(NAMESPACE) -it $(shell kubectl get pods --namespace=$(NAMESPACE) | grep sales | cut -c1-26) --container sales-api -- /bin/sh
+	kubectl exec --namespace=$(NAMESPACE) -it $(shell kubectl get pods --namespace=$(NAMESPACE) | grep sales | cut -c1-26) --container $(SALES_APP) -- /bin/sh
+
+dev-auth-shell:
+	kubectl exec --namespace=$(NAMESPACE) -it $(shell kubectl get pods --namespace=$(NAMESPACE) | grep auth | cut -c1-26) --container $(AUTH_APP) -- /bin/sh
+
+dev-db-shell:
+	kubectl exec --namespace=$(NAMESPACE) -it $(shell kubectl get pods --namespace=$(NAMESPACE) | grep database | cut -c1-10) -- /bin/sh
 
 dev-database-restart:
 	kubectl rollout restart statefulset database --namespace=$(NAMESPACE)
@@ -568,6 +576,7 @@ help:
 	@echo "  dev-load                Load the containers into KIND"
 	@echo "  dev-apply               Apply the manifests to KIND"
 	@echo "  dev-restart             Restart the deployments"
+	@echo "  dev-run              	 Build, up, load, and apply the deployments"
 	@echo "  dev-update              Build, load, and restart the deployments"
 	@echo "  dev-update-apply        Build, load, and apply the deployments"
 	@echo "  dev-logs                Show the logs for the sales service"

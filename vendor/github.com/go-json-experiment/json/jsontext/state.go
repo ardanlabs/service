@@ -17,7 +17,7 @@ import (
 var (
 	// ErrDuplicateName indicates that a JSON token could not be
 	// encoded or decoded because it results in a duplicate JSON object name.
-	// This error is wrapped within a [SyntacticError] when produced.
+	// This error is directly wrapped within a [SyntacticError] when produced.
 	//
 	// The name of a duplicate JSON object member can be extracted as:
 	//
@@ -30,13 +30,13 @@ var (
 	//	}
 	//
 	// This error is only returned if [AllowDuplicateNames] is false.
-	ErrDuplicateName = errors.New("duplicate object name")
+	ErrDuplicateName = errors.New("duplicate object member name")
 
 	// ErrNonStringName indicates that a JSON token could not be
 	// encoded or decoded because it is not a string,
 	// as required for JSON object names according to RFC 8259, section 4.
-	// This error is wrapped within a [SyntacticError] when produced.
-	ErrNonStringName = errors.New("object name must be a string")
+	// This error is directly wrapped within a [SyntacticError] when produced.
+	ErrNonStringName = errors.New("object member name must be a string")
 
 	errMissingColon  = errors.New("missing character ':' after object name")
 	errMissingValue  = errors.New("missing value after object name")
@@ -86,6 +86,14 @@ func (s *state) reset() {
 // so comparability of Pointer values is equivalent to checking whether
 // they both point to the exact same value.
 type Pointer string
+
+// Contains reports whether the JSON value that p1 points to
+// is equal to or contains the JSON value that p2 points to.
+func (p1 Pointer) Contains(p2 Pointer) bool {
+	// Invariant: len(p1) <= len(p2) if p1.Contains(p2)
+	suffix, ok := strings.CutPrefix(string(p2), string(p1))
+	return ok && (suffix == "" || suffix[0] == '/')
+}
 
 // Parent strips off the last token and returns the remaining pointer.
 // The parent of an empty p is an empty string.
@@ -137,12 +145,19 @@ func unescapePointerToken(token string) string {
 
 // appendStackPointer appends a JSON Pointer (RFC 6901) to the current value.
 //
-// If where is -1, then it points to the previously processed token.
-// If where is 0, then it points to the parent JSON object or array.
-// If where is +1, then it points to the next expected token,
-// assuming that it continues the current JSON object or array.
-// As a special case, if the next token is a JSON object name,
-// then it points to the parent JSON object.
+//   - If where is -1, then it points to the previously processed token.
+//
+//   - If where is 0, then it points to the parent JSON object or array,
+//     or an object member if in-between an object member key and value.
+//     This is useful when the position is ambiguous whether
+//     we are interested in the previous or next token, or
+//     when we are uncertain whether the next token
+//     continues or terminates the current object or array.
+//
+//   - If where is +1, then it points to the next expected value,
+//     assuming that it continues the current JSON object or array.
+//     As a special case, if the next token is a JSON object name,
+//     then it points to the parent JSON object.
 //
 // Invariant: Must call s.names.copyQuotedBuffer beforehand.
 func (s state) appendStackPointer(b []byte, where int) []byte {
@@ -152,7 +167,7 @@ func (s state) appendStackPointer(b []byte, where int) []byte {
 		arrayDelta := -1 // by default point to previous array element
 		if isLast := i == s.Tokens.Depth()-1; isLast {
 			switch {
-			case where < 0 && e.Length() == 0 || where == 0 || where > 0 && e.NeedObjectName():
+			case where < 0 && e.Length() == 0 || where == 0 && !e.needObjectValue() || where > 0 && e.NeedObjectName():
 				return b
 			case where > 0 && e.isArray():
 				arrayDelta = 0 // point to next array element
