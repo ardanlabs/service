@@ -6,50 +6,38 @@ jobs:
     resource_class: medium
     steps:
       - checkout
-
-      # Define environment variables for reuse
       - run:
-          name: Set environment variables
+          name: Install Go 1.23
           command: |
-            export GO_VERSION=1.23.4
-            export TEST_DB_NAME=servicetest
-            export POSTGRES_IMAGE=postgres:17.2
-
-      # Install Go
-      - run:
-          name: Install Go
-          command: |
-            sudo rm -rf /usr/local/go
-            wget -O go.tgz https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz
-            sudo tar -C /usr/local -xzf go.tgz
-            which go
-            go version
-
-      # Start Test Database
+              sudo rm -rf /usr/local/go
+              wget -O go.tgz https://go.dev/dl/go1.23.1.linux-amd64.tar.gz
+              sudo tar -C /usr/local -xzf go.tgz
+              which go
+              go version
       - run:
           name: Start Test Database
           command: |
-            docker run -P -d --name ${TEST_DB_NAME} -e POSTGRES_PASSWORD=postgres ${POSTGRES_IMAGE}
-
-      # Run Tests
+              docker run -P -d --name servicetest -e POSTGRES_PASSWORD=postgres postgres:17.2
       - run:
           name: Run tests
           command: |
-            CGO_ENABLED=0 go test ./...
-
-      # Stop and Clean Test Database
+              CGO_ENABLED=0 go test ./...
       - run:
           name: Stop Test Database
           command: |
-            docker stop ${TEST_DB_NAME}
-            docker rm ${TEST_DB_NAME} -v
-
-      # Run Code Analysis (vet, staticcheck, govulncheck)
+              docker stop servicetest
+              docker rm servicetest -v
       - run:
-          name: Run Code Analysis
+          name: Run vet
           command: |
-            CGO_ENABLED=0 go vet ./...
-            go install honnef.co/go/tools/cmd/staticcheck@latest
-            staticcheck -checks=all ./...
-            go install golang.org/x/vuln/cmd/govulncheck@latest
-            govulncheck ./...
+              CGO_ENABLED=0 go vet ./...
+      - run:
+          name: Run staticheck
+          command: |
+              go install honnef.co/go/tools/cmd/staticcheck@latest
+              staticcheck -checks=all ./...
+      - run:
+          name: Run govulncheck
+          command: |
+              go install golang.org/x/vuln/cmd/govulncheck@latest
+              govulncheck ./...
