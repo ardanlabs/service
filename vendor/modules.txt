@@ -31,7 +31,6 @@ github.com/cenkalti/backoff/v4
 github.com/cespare/xxhash/v2
 # github.com/creativecreature/sturdyc v1.0.7
 ## explicit; go 1.22
-github.com/creativecreature/sturdyc
 # github.com/felixge/httpsnoop v1.0.4
 ## explicit; go 1.13
 github.com/felixge/httpsnoop
@@ -267,6 +266,9 @@ github.com/sirupsen/logrus
 # github.com/tchap/go-patricia/v2 v2.3.1
 ## explicit; go 1.16
 github.com/tchap/go-patricia/v2/patricia
+# github.com/viccon/sturdyc v1.1.0
+## explicit; go 1.22
+github.com/viccon/sturdyc
 # github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb
 ## explicit
 github.com/xeipuuv/gojsonpointer

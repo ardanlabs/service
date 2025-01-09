@@ -11,7 +11,7 @@ guidelines to help you get started.
 2. **Clone the Repository**: Use the following command to clone the repository
    to your local machine:
     ```sh
-    git clone https://github.com/creativecreature/sturdyc.git
+    git clone https://github.com/viccon/sturdyc.git
     ```
 
 3. **Create a Branch**: Create a new branch for your changes. Use a descriptive
@@ -42,7 +42,7 @@ guidelines to help you get started.
 ## Reporting Issues
 
 If you find a bug or have a feature request, please create an issue on the
-[Issues](https://github.com/creativecreature/sturdyc/issues) page. Provide as
+[Issues](https://github.com/viccon/sturdyc/issues) page. Provide as
 much detail as possible to help us address the issue effectively.
 
 Thank you for contributing!

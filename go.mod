@@ -6,7 +6,6 @@ require (
 	github.com/ardanlabs/conf/v3 v3.2.0
 	github.com/ardanlabs/darwin/v3 v3.3.1
 	github.com/arl/statsviz v0.6.0
-	github.com/creativecreature/sturdyc v1.0.7
 	github.com/go-json-experiment/json v0.0.0-20241230001524-0240acd0e023
 	github.com/go-playground/locales v0.14.1
 	github.com/go-playground/universal-translator v0.18.1
@@ -18,6 +17,7 @@ require (
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/markbates/goth v1.80.0
 	github.com/open-policy-agent/opa v1.0.0
+	github.com/viccon/sturdyc v1.1.0
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.58.0
 	go.opentelemetry.io/otel v1.33.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.33.0

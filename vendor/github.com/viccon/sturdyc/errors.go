@@ -20,10 +20,14 @@ var (
 	// ErrMissingRecord is returned by client.GetOrFetch and client.Passthrough when a record has been marked
 	// as missing. The cache will still try to refresh the record in the background if it's being requested.
 	ErrMissingRecord = errors.New("sturdyc: the record has been marked as missing in the cache")
-	// ErrOnlyCachedRecords is returned by client.GetOrFetchBatch and client.PassthroughBatch
-	// when some of the requested records are available in the cache, but the attempt to
-	// fetch the remaining records failed. As the consumer, you can then decide whether to
-	// proceed with the cached records or if the entire batch is necessary.
+	// ErrOnlyCachedRecords is returned by client.GetOrFetchBatch and
+	// client.PassthroughBatch when some of the requested records are available
+	// in the cache, but the attempt to fetch the remaining records failed. It
+	// may also be returned when you're using the WithEarlyRefreshes
+	// functionality, and the call to synchronously refresh a record failed. The
+	// cache will then give you the latest data it has cached, and you as the
+	// consumer can then decide whether to proceed with the cached records or if
+	// the newest data is necessary.
 	ErrOnlyCachedRecords = errors.New("sturdyc: failed to fetch the records that were not in the cache")
 	// ErrInvalidType is returned when you try to use one of the generic
 	// package level functions but the type assertion fails.
