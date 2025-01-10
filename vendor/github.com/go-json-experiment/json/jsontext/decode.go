@@ -125,8 +125,8 @@ func NewDecoder(r io.Reader, opts ...Options) *Decoder {
 
 // Reset resets a decoder such that it is reading afresh from r and
 // configured with the provided options. Reset must not be called on an
-// a Decoder passed to the [encoding/json/v2.UnmarshalerV2.UnmarshalJSONV2] method
-// or the [encoding/json/v2.UnmarshalFuncV2] function.
+// a Decoder passed to the [encoding/json/v2.UnmarshalerFrom.UnmarshalJSONFrom] method
+// or the [encoding/json/v2.UnmarshalFromFunc] function.
 func (d *Decoder) Reset(r io.Reader, opts ...Options) {
 	switch {
 	case d == nil:
@@ -134,7 +134,7 @@ func (d *Decoder) Reset(r io.Reader, opts ...Options) {
 	case r == nil:
 		panic("jsontext: invalid nil io.Reader")
 	case d.s.Flags.Get(jsonflags.WithinArshalCall):
-		panic("jsontext: cannot reset Decoder passed to json.UnmarshalerV2")
+		panic("jsontext: cannot reset Decoder passed to json.UnmarshalerFrom")
 	}
 	d.s.reset(nil, r, opts...)
 }
@@ -398,6 +398,30 @@ func (d *decoderState) SkipValue() error {
 		}
 		return nil
 	}
+}
+
+// SkipValueRemainder skips the remainder of a value
+// after reading a '{' or '[' token.
+func (d *decoderState) SkipValueRemainder() error {
+	if d.Tokens.Depth()-1 > 0 && d.Tokens.Last.Length() == 0 {
+		for n := d.Tokens.Depth(); d.Tokens.Depth() >= n; {
+			if _, err := d.ReadToken(); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+// SkipUntil skips all tokens until the state machine
+// is at or past the specified depth and length.
+func (d *decoderState) SkipUntil(depth int, length int64) error {
+	for d.Tokens.Depth() > depth || (d.Tokens.Depth() == depth && d.Tokens.Last.Length() < length) {
+		if _, err := d.ReadToken(); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // ReadToken reads the next [Token], advancing the read offset.
@@ -710,6 +734,23 @@ func (d *decoderState) ReadValue(flags *jsonwire.ValueFlags) (Value, error) {
 	d.prevEnd = pos
 	d.prevStart = pos - n
 	return d.buf[pos-n : pos : pos], nil
+}
+
+// CheckNextValue checks whether the next value is syntactically valid,
+// but does not advance the read offset.
+func (d *decoderState) CheckNextValue() error {
+	d.PeekKind() // populates d.peekPos and d.peekErr
+	pos, err := d.peekPos, d.peekErr
+	d.peekPos, d.peekErr = 0, nil
+	if err != nil {
+		return err
+	}
+
+	var flags jsonwire.ValueFlags
+	if pos, err := d.consumeValue(&flags, pos, d.Tokens.Depth()); err != nil {
+		return wrapSyntacticError(d, err, pos, +1)
+	}
+	return nil
 }
 
 // CheckEOF verifies that the input has no more data.

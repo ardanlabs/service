@@ -94,8 +94,8 @@ func NewEncoder(w io.Writer, opts ...Options) *Encoder {
 
 // Reset resets an encoder such that it is writing afresh to w and
 // configured with the provided options. Reset must not be called on
-// a Encoder passed to the [encoding/json/v2.MarshalerV2.MarshalJSONV2] method
-// or the [encoding/json/v2.MarshalFuncV2] function.
+// a Encoder passed to the [encoding/json/v2.MarshalerTo.MarshalJSONTo] method
+// or the [encoding/json/v2.MarshalToFunc] function.
 func (e *Encoder) Reset(w io.Writer, opts ...Options) {
 	switch {
 	case e == nil:
@@ -103,7 +103,7 @@ func (e *Encoder) Reset(w io.Writer, opts ...Options) {
 	case w == nil:
 		panic("jsontext: invalid nil io.Writer")
 	case e.s.Flags.Get(jsonflags.WithinArshalCall):
-		panic("jsontext: cannot reset Encoder passed to json.MarshalerV2")
+		panic("jsontext: cannot reset Encoder passed to json.MarshalerTo")
 	}
 	e.s.reset(nil, w, opts...)
 }

@@ -88,8 +88,8 @@ func JoinOptions(srcs ...Options) Options {
 //	v, ok := json.GetOption(opts, json.Deterministic)
 //
 // Options are most commonly introspected to alter the JSON representation of
-// [MarshalerV2.MarshalJSONV2] and [MarshalerV2.MarshalJSONV2] methods, and
-// [MarshalFuncV2] and [UnmarshalFuncV2] functions.
+// [MarshalerTo.MarshalJSONTo] and [UnmarshalerFrom.UnmarshalJSONFrom] methods, and
+// [MarshalToFunc] and [UnmarshalFromFunc] functions.
 // In such cases, the presence bit should generally be ignored.
 func GetOption[T any](opts Options, setter func(T) Options) (T, bool) {
 	return jsonopts.GetOption(opts, setter)

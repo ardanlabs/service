@@ -9,12 +9,12 @@ import (
 	"io"
 	"reflect"
 	"slices"
+	"strings"
 	"sync"
 
 	"github.com/go-json-experiment/json/internal"
 	"github.com/go-json-experiment/json/internal/jsonflags"
 	"github.com/go-json-experiment/json/internal/jsonopts"
-	"github.com/go-json-experiment/json/internal/jsonwire"
 	"github.com/go-json-experiment/json/jsontext"
 )
 
@@ -51,10 +51,10 @@ func putStructOptions(o *jsonopts.Struct) {
 //     If all applicable functions return [SkipFunc],
 //     then the value is encoded according to subsequent rules.
 //
-//   - If the value type implements [MarshalerV2],
-//     then the MarshalJSONV2 method is called to encode the value.
+//   - If the value type implements [MarshalerTo],
+//     then the MarshalJSONTo method is called to encode the value.
 //
-//   - If the value type implements [MarshalerV1],
+//   - If the value type implements [Marshaler],
 //     then the MarshalJSON method is called to encode the value.
 //
 //   - If the value type implements [encoding.TextMarshaler],
@@ -164,7 +164,7 @@ func Marshal(in any, opts ...Options) (out []byte, err error) {
 	xe := export.Encoder(enc)
 	xe.Flags.Set(jsonflags.OmitTopLevelNewline | 1)
 	err = marshalEncode(enc, in, &xe.Struct)
-	if err != nil && xe.Flags.Get(jsonflags.ReportLegacyErrorValues) {
+	if err != nil && xe.Flags.Get(jsonflags.ReportErrorsWithLegacySemantics) {
 		return nil, internal.TransformMarshalError(in, err)
 	}
 	return bytes.Clone(xe.Buf), err
@@ -180,7 +180,7 @@ func MarshalWrite(out io.Writer, in any, opts ...Options) (err error) {
 	xe := export.Encoder(enc)
 	xe.Flags.Set(jsonflags.OmitTopLevelNewline | 1)
 	err = marshalEncode(enc, in, &xe.Struct)
-	if err != nil && xe.Flags.Get(jsonflags.ReportLegacyErrorValues) {
+	if err != nil && xe.Flags.Get(jsonflags.ReportErrorsWithLegacySemantics) {
 		return internal.TransformMarshalError(in, err)
 	}
 	return err
@@ -198,7 +198,7 @@ func MarshalEncode(out *jsontext.Encoder, in any, opts ...Options) (err error) {
 	xe := export.Encoder(out)
 	mo.CopyCoderOptions(&xe.Struct)
 	err = marshalEncode(out, in, mo)
-	if err != nil && xe.Flags.Get(jsonflags.ReportLegacyErrorValues) {
+	if err != nil && xe.Flags.Get(jsonflags.ReportErrorsWithLegacySemantics) {
 		return internal.TransformMarshalError(in, err)
 	}
 	return err
@@ -254,10 +254,10 @@ func marshalEncode(out *jsontext.Encoder, in any, mo *jsonopts.Struct) (err erro
 //     value. If all applicable functions return [SkipFunc],
 //     then the input is decoded according to subsequent rules.
 //
-//   - If the value type implements [UnmarshalerV2],
-//     then the UnmarshalJSONV2 method is called to decode the JSON value.
+//   - If the value type implements [UnmarshalerFrom],
+//     then the UnmarshalJSONFrom method is called to decode the JSON value.
 //
-//   - If the value type implements [UnmarshalerV1],
+//   - If the value type implements [Unmarshaler],
 //     then the UnmarshalJSON method is called to decode the JSON value.
 //
 //   - If the value type implements [encoding.TextUnmarshaler],
@@ -392,7 +392,7 @@ func Unmarshal(in []byte, out any, opts ...Options) (err error) {
 	defer export.PutBufferedDecoder(dec)
 	xd := export.Decoder(dec)
 	err = unmarshalFull(dec, out, &xd.Struct)
-	if err != nil && xd.Flags.Get(jsonflags.ReportLegacyErrorValues) {
+	if err != nil && xd.Flags.Get(jsonflags.ReportErrorsWithLegacySemantics) {
 		return internal.TransformUnmarshalError(out, err)
 	}
 	return err
@@ -409,7 +409,7 @@ func UnmarshalRead(in io.Reader, out any, opts ...Options) (err error) {
 	defer export.PutStreamingDecoder(dec)
 	xd := export.Decoder(dec)
 	err = unmarshalFull(dec, out, &xd.Struct)
-	if err != nil && xd.Flags.Get(jsonflags.ReportLegacyErrorValues) {
+	if err != nil && xd.Flags.Get(jsonflags.ReportErrorsWithLegacySemantics) {
 		return internal.TransformUnmarshalError(out, err)
 	}
 	return err
@@ -441,7 +441,7 @@ func UnmarshalDecode(in *jsontext.Decoder, out any, opts ...Options) (err error)
 	xd := export.Decoder(in)
 	uo.CopyCoderOptions(&xd.Struct)
 	err = unmarshalDecode(in, out, uo)
-	if err != nil && uo.Flags.Get(jsonflags.ReportLegacyErrorValues) {
+	if err != nil && uo.Flags.Get(jsonflags.ReportErrorsWithLegacySemantics) {
 		return internal.TransformUnmarshalError(out, err)
 	}
 	return err
@@ -454,6 +454,14 @@ func unmarshalDecode(in *jsontext.Decoder, out any, uo *jsonopts.Struct) (err er
 	}
 	va := addressableValue{v.Elem(), false} // dereferenced pointer is always addressable
 	t := va.Type()
+
+	// In legacy semantics, the entirety of the next JSON value
+	// was validated before attempting to unmarshal it.
+	if uo.Flags.Get(jsonflags.ReportErrorsWithLegacySemantics) {
+		if err := export.Decoder(in).CheckNextValue(); err != nil {
+			return err
+		}
+	}
 
 	// Lookup and call the unmarshal function for this type.
 	unmarshal := lookupArshaler(t).unmarshal
@@ -542,7 +550,6 @@ func putStrings(s *stringSlice) {
 	stringsPools.Put(s)
 }
 
-// Sort sorts the string slice according to RFC 8785, section 3.2.3.
 func (ss *stringSlice) Sort() {
-	slices.SortFunc(*ss, func(x, y string) int { return jsonwire.CompareUTF16(x, y) })
+	slices.SortFunc(*ss, func(x, y string) int { return strings.Compare(x, y) })
 }

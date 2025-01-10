@@ -30,10 +30,10 @@
 // of how the JSON and Go type systems correspond.
 //
 // Arbitrary Go types can customize their JSON representation by implementing
-// [MarshalerV1], [MarshalerV2], [UnmarshalerV1], or [UnmarshalerV2].
+// [Marshaler], [MarshalerTo], [Unmarshaler], or [UnmarshalerFrom].
 // This provides authors of Go types with control over how their types are
 // serialized as JSON. Alternatively, users can implement functions that match
-// [MarshalFuncV1], [MarshalFuncV2], [UnmarshalFuncV1], or [UnmarshalFuncV2]
+// [MarshalFunc], [MarshalToFunc], [UnmarshalFunc], or [UnmarshalFromFunc]
 // to specify the JSON representation for arbitrary types.
 // This provides callers of JSON functionality with control over
 // how any arbitrary type is serialized as JSON.

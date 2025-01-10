@@ -85,7 +85,7 @@ func AppendQuote[Bytes ~[]byte | ~string](dst []byte, src Bytes, flags *jsonflag
 		case r == utf8.RuneError && rn == 1:
 			hasInvalidUTF8 = true
 			dst = append(dst, src[i:n]...)
-			if flags.Get(jsonflags.EscapeInvalidUTF8) {
+			if flags.Get(jsonflags.EscapeWithLegacySemantics) {
 				dst = append(dst, `\ufffd`...)
 			} else {
 				dst = append(dst, "\ufffd"...)
@@ -158,17 +158,16 @@ func ReformatString(dst, src []byte, flags *jsonflags.Flags) ([]byte, int, error
 	// If the output requires no special escapes, and the input
 	// is already in canonical form or should be preserved verbatim,
 	// then directly copy the input to the output.
-	if !flags.Get(jsonflags.EscapeForHTML|jsonflags.EscapeForJS) &&
+	if !flags.Get(jsonflags.AnyEscape) &&
 		(valFlags.IsCanonical() || flags.Get(jsonflags.PreserveRawStrings)) {
 		dst = append(dst, src[:n]...) // copy the string verbatim
 		return dst, n, nil
 	}
 
-	// If the input should be preserved verbatim, we still need to
-	// respect the EscapeForHTML and EscapeForJS options.
-	// Note that EscapeInvalidUTF8 is not respected.
-	// This logic ensures that pre-escaped sequences remained escaped.
-	if flags.Get(jsonflags.PreserveRawStrings) {
+	// Under [jsonflags.EscapeWithLegacySemantics], any pre-escaped sequences
+	// remain escaped, however we still need to respect the
+	// [jsonflags.EscapeForHTML] and [jsonflags.EscapeForJS] options.
+	if flags.Get(jsonflags.EscapeWithLegacySemantics) {
 		var i, lastAppendIndex int
 		for i < n {
 			if c := src[i]; c < utf8.RuneSelf {
