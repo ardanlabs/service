@@ -28,7 +28,7 @@ func (c *Client[T]) refreshBatch(ids []string, keyFn KeyFn, fetchFn BatchFetchFn
 
 	// Check if any of the records have been deleted at the data source.
 	for _, id := range ids {
-		_, okCache, _, _ := c.getWithState(keyFn(id))
+		_, okCache, _, _, _ := c.getWithState(keyFn(id))
 		_, okResponse := response[id]
 
 		if okResponse {

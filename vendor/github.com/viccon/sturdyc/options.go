@@ -52,15 +52,20 @@ func WithMissingRecordStorage() Option {
 // WithEarlyRefreshes instructs the cache to refresh the keys that are in
 // active rotation, thereby preventing them from ever expiring. This can have a
 // significant impact on your application's latency as you're able to
-// continuously serve frequently used keys from memory. The background refresh
-// gets scheduled when the key is requested again after a random time between
-// minRefreshTime and maxRefreshTime. This is an important distinction because
-// it means that the cache won't just naively refresh every key it's ever seen.
-func WithEarlyRefreshes(minRefreshTime, maxRefreshTime, retryBaseDelay time.Duration) Option {
+// continuously serve frequently used keys from memory. An asynchronous
+// background refresh gets scheduled when a key is requested again after a
+// random time between minRefreshTime and maxRefreshTime has passed. This is an
+// important distinction because it means that the cache won't just naively
+// refresh every key it's ever seen. The third argument to this function will
+// also allow you to provide a duration for when a refresh should become
+// synchronous. If any of the refreshes were to fail, you'll get the latest
+// data from the cache for the duration of the TTL.
+func WithEarlyRefreshes(minAsyncRefreshTime, maxAsyncRefreshTime, syncRefreshTime, retryBaseDelay time.Duration) Option {
 	return func(c *Config) {
-		c.refreshInBackground = true
-		c.minRefreshTime = minRefreshTime
-		c.maxRefreshTime = maxRefreshTime
+		c.earlyRefreshes = true
+		c.minAsyncRefreshTime = minAsyncRefreshTime
+		c.maxAsyncRefreshTime = maxAsyncRefreshTime
+		c.syncRefreshTime = syncRefreshTime
 		c.retryBaseDelay = retryBaseDelay
 	}
 }
@@ -161,8 +166,8 @@ func validateConfig(capacity, numShards int, ttl time.Duration, evictionPercenta
 		panic("evictionPercentage must be between 0 and 100")
 	}
 
-	if !cfg.refreshInBackground && cfg.bufferRefreshes {
-		panic("refresh buffering requires background refreshes to be enabled")
+	if !cfg.earlyRefreshes && cfg.bufferRefreshes {
+		panic("refresh buffering requires early refreshes to be enabled")
 	}
 
 	if cfg.bufferRefreshes && cfg.bufferSize < 1 {
@@ -177,8 +182,12 @@ func validateConfig(capacity, numShards int, ttl time.Duration, evictionPercenta
 		panic("evictionInterval must be greater than 0")
 	}
 
-	if cfg.minRefreshTime > cfg.maxRefreshTime {
+	if cfg.minAsyncRefreshTime > cfg.maxAsyncRefreshTime {
 		panic("minRefreshTime must be less than or equal to maxRefreshTime")
+	}
+
+	if cfg.maxAsyncRefreshTime > cfg.syncRefreshTime {
+		panic("maxRefreshTime must be less than or equal to synchronousRefreshTime")
 	}
 
 	if cfg.retryBaseDelay < 0 {

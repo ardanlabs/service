@@ -92,6 +92,15 @@ func (c *Client[T]) handleTime(v reflect.Value) string {
 // Returns:
 //
 //	A string to be used as the cache key.
+//
+// Example usage:
+//
+//	type queryParams struct {
+//		City               string
+//		Country            string
+//	}
+//	params := queryParams{"Stockholm", "Sweden"}
+//	key := c.PermutatedKey("prefix",, params) // prefix-Stockholm-Sweden-1
 func (c *Client[T]) PermutatedKey(prefix string, permutationStruct interface{}) string {
 	var sb strings.Builder
 	sb.WriteString(prefix)
@@ -158,8 +167,9 @@ func (c *Client[T]) PermutatedKey(prefix string, permutationStruct interface{}) 
 }
 
 // BatchKeyFn provides a function that can be used in conjunction with
-// "GetOrFetchBatch". It takes in a prefix and returns a function that will
-// append the ID as a suffix for each item.
+// "GetOrFetchBatch". It takes in a prefix and returns a function that will use
+// the prefix, add a -ID- separator, and then append the ID as a suffix for
+// each item.
 //
 // Parameters:
 //
@@ -168,6 +178,11 @@ func (c *Client[T]) PermutatedKey(prefix string, permutationStruct interface{}) 
 // Returns:
 //
 //	A function that takes an ID and returns a cache key string with the given prefix and ID.
+//
+// Example usage:
+//
+//	fn := c.BatchKeyFn("some-prefix")
+//	key := fn("1234") // some-prefix-ID-1234
 func (c *Client[T]) BatchKeyFn(prefix string) KeyFn {
 	return func(id string) string {
 		return fmt.Sprintf("%s-ID-%s", prefix, id)
@@ -190,6 +205,16 @@ func (c *Client[T]) BatchKeyFn(prefix string) KeyFn {
 // Returns:
 //
 //	A function that takes an ID and returns a cache key string with the given prefix, permutation struct fields, and ID.
+//
+// Example usage:
+//
+//	type queryParams struct {
+//		City               string
+//		Country            string
+//	}
+//	params := queryParams{"Stockholm", "Sweden"}
+//	cacheKeyFunc := c.PermutatedBatchKeyFn("prefix", params)
+//	key := cacheKeyFunc("1") // prefix-Stockholm-Sweden-ID-1
 func (c *Client[T]) PermutatedBatchKeyFn(prefix string, permutationStruct interface{}) KeyFn {
 	return func(id string) string {
 		key := c.PermutatedKey(prefix, permutationStruct)

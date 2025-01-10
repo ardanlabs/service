@@ -29,9 +29,10 @@ type Config struct {
 	metricsRecorder            DistributedMetricsRecorder
 	log                        Logger
 
-	refreshInBackground bool
-	minRefreshTime      time.Duration
-	maxRefreshTime      time.Duration
+	earlyRefreshes      bool
+	minAsyncRefreshTime time.Duration
+	maxAsyncRefreshTime time.Duration
+	syncRefreshTime     time.Duration
 	retryBaseDelay      time.Duration
 	storeMissingRecords bool
 
@@ -127,11 +128,11 @@ func (c *Client[T]) getShard(key string) *shard[T] {
 // getWithState retrieves a single value from the cache and returns additional
 // information about the state of the record. The state includes whether the record
 // exists, if it has been marked as missing, and if it is due for a refresh.
-func (c *Client[T]) getWithState(key string) (value T, exists, markedAsMissing, refresh bool) {
+func (c *Client[T]) getWithState(key string) (value T, exists, markedAsMissing, backgroundRefresh, synchronousRefresh bool) {
 	shard := c.getShard(key)
-	val, exists, markedAsMissing, refresh := shard.get(key)
-	c.reportCacheHits(exists, markedAsMissing, refresh)
-	return val, exists, markedAsMissing, refresh
+	val, exists, markedAsMissing, backgroundRefresh, synchronousRefresh := shard.get(key)
+	c.reportCacheHits(exists, markedAsMissing, backgroundRefresh, synchronousRefresh)
+	return val, exists, markedAsMissing, backgroundRefresh, synchronousRefresh
 }
 
 // Get retrieves a single value from the cache.
@@ -145,8 +146,8 @@ func (c *Client[T]) getWithState(key string) (value T, exists, markedAsMissing, 
 //	The value corresponding to the key and a boolean indicating if the value was found.
 func (c *Client[T]) Get(key string) (T, bool) {
 	shard := c.getShard(key)
-	val, ok, markedAsMissing, refresh := shard.get(key)
-	c.reportCacheHits(ok, markedAsMissing, refresh)
+	val, ok, markedAsMissing, backgroundRefresh, synchronousRefresh := shard.get(key)
+	c.reportCacheHits(ok, markedAsMissing, backgroundRefresh, synchronousRefresh)
 	return val, ok && !markedAsMissing
 }
 

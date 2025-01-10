@@ -11,8 +11,8 @@ import (
 	"github.com/ardanlabs/service/business/sdk/page"
 	"github.com/ardanlabs/service/business/sdk/sqldb"
 	"github.com/ardanlabs/service/foundation/logger"
-	"github.com/creativecreature/sturdyc"
 	"github.com/google/uuid"
+	"github.com/viccon/sturdyc"
 )
 
 // Store manages the set of APIs for user data and caching.
