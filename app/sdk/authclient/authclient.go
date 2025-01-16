@@ -22,13 +22,13 @@ import (
 // This provides a default client configuration, but it's recommended
 // this is replaced by the user with application specific settings using
 // the WithClient function at the time a AuthAPI is constructed.
+// DualStack Deprecated: Fast Fallback is enabled by default. To disable, set FallbackDelay to a negative value.
 var defaultClient = http.Client{
 	Transport: &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
 		DialContext: (&net.Dialer{
 			Timeout:   10 * time.Second,
 			KeepAlive: 15 * time.Second,
-			DualStack: true,
 		}).DialContext,
 		ForceAttemptHTTP2:     true,
 		MaxIdleConns:          100,
