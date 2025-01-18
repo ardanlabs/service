@@ -67,6 +67,20 @@ func wrapSyntacticError(state interface {
 		ptr = serr.appendPointer(ptr)
 		err = serr.error
 	}
+	if d, ok := state.(*decoderState); ok && err == errMismatchDelim {
+		where := "at start of value"
+		if len(d.Tokens.Stack) > 0 && d.Tokens.Last.Length() > 0 {
+			switch {
+			case d.Tokens.Last.isArray():
+				where = "after array element (expecting ',' or ']')"
+				ptr = []byte(Pointer(ptr).Parent()) // problem is with parent array
+			case d.Tokens.Last.isObject():
+				where = "after object value (expecting ',' or '}')"
+				ptr = []byte(Pointer(ptr).Parent()) // problem is with parent object
+			}
+		}
+		err = jsonwire.NewInvalidCharacterError(d.buf[pos:], where)
+	}
 	return &SyntacticError{ByteOffset: offset, JSONPointer: Pointer(ptr), Err: err}
 }
 

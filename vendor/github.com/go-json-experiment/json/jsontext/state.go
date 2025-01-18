@@ -38,9 +38,7 @@ var (
 	// This error is directly wrapped within a [SyntacticError] when produced.
 	ErrNonStringName = errors.New("object member name must be a string")
 
-	errMissingColon  = errors.New("missing character ':' after object name")
 	errMissingValue  = errors.New("missing value after object name")
-	errMissingComma  = errors.New("missing character ',' after object or array value")
 	errMismatchDelim = errors.New("mismatching structural token for object or array")
 	errMaxDepth      = errors.New("exceeded max depth")
 
@@ -390,21 +388,6 @@ func (m stateMachine) needDelim(next Kind) (delim byte) {
 		return ','
 	default:
 		return 0
-	}
-}
-
-// checkDelim reports whether the specified delimiter should be there given
-// the kind of the next token that appears immediately afterwards.
-func (m stateMachine) checkDelim(delim byte, next Kind) error {
-	switch m.needDelim(next) {
-	case delim:
-		return nil
-	case ':':
-		return errMissingColon
-	case ',':
-		return errMissingComma
-	default:
-		return jsonwire.NewInvalidCharacterError([]byte{delim}, "before next token")
 	}
 }
 

@@ -927,13 +927,18 @@ func makeMapArshaler(t reflect.Type) *arshaler {
 
 			var errUnmarshal error
 			for dec.PeekKind() != '}' {
+				// Unmarshal the map entry key.
 				k.SetZero()
 				err := unmarshalKey(dec, k, uo)
 				if err != nil {
 					if isFatalError(err, uo.Flags) {
 						return err
 					}
+					if err := dec.SkipValue(); err != nil {
+						return err
+					}
 					errUnmarshal = cmp.Or(errUnmarshal, err)
+					continue
 				}
 				if k.Kind() == reflect.Interface && !k.IsNil() && !k.Elem().Type().Comparable() {
 					err := newUnmarshalErrorAfter(dec, t, fmt.Errorf("invalid incomparable key type %v", k.Elem().Type()))
@@ -947,6 +952,7 @@ func makeMapArshaler(t reflect.Type) *arshaler {
 					continue
 				}
 
+				// Check if a pre-existing map entry value exists for this key.
 				if v2 := va.MapIndex(k.Value); v2.IsValid() {
 					if !uo.Flags.Get(jsonflags.AllowDuplicateNames) && (!seen.IsValid() || seen.MapIndex(k.Value).IsValid()) {
 						// TODO: Unread the object name.
@@ -961,6 +967,8 @@ func makeMapArshaler(t reflect.Type) *arshaler {
 				} else {
 					v.SetZero()
 				}
+
+				// Unmarshal the map entry value.
 				err = unmarshalVal(dec, v, uo)
 				va.SetMapIndex(k.Value, v.Value)
 				if seen.IsValid() {

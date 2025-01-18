@@ -64,17 +64,36 @@ func (s *shard[T]) evictExpired() {
 // based on the expiration time. Should be called with a lock.
 func (s *shard[T]) forceEvict() {
 	s.reportForcedEviction()
+
+	// Check if we should evict all entries.
+	if s.evictionPercentage == 100 {
+		s.entries = make(map[string]*entry[T])
+		s.reportEntriesEvicted(len(s.entries))
+		return
+	}
+
 	expirationTimes := make([]time.Time, 0, len(s.entries))
 	for _, e := range s.entries {
 		expirationTimes = append(expirationTimes, e.expiresAt)
 	}
 
-	cutoff := FindCutoff(expirationTimes, float64(s.evictionPercentage)/100)
+	// We could have a lumpy distribution of expiration times. As an example, we
+	// might have 100 entries in the cache but only 2 unique expiration times. In
+	// order to not over-evict when trying to remove 10%, we'll have to keep
+	// track of the number of entries that we've evicted.
+	percentage := float64(s.evictionPercentage) / 100
+	cutoff := FindCutoff(expirationTimes, percentage)
+	entriesToEvict := int(float64(len(expirationTimes)) * percentage)
 	entriesEvicted := 0
 	for key, e := range s.entries {
-		if e.expiresAt.Before(cutoff) {
+		// Here we're essentially saying: if e.expiresAt <= cutoff.
+		if !e.expiresAt.After(cutoff) {
 			delete(s.entries, key)
 			entriesEvicted++
+
+			if entriesEvicted == entriesToEvict {
+				break
+			}
 		}
 	}
 	s.reportEntriesEvicted(entriesEvicted)

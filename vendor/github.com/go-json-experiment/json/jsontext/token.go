@@ -22,7 +22,7 @@ const (
 	maxUint64 = math.MaxUint64
 	minUint64 = 0 // for consistency and readability purposes
 
-	invalidTokenPanic = "invalid json.Token; it has been voided by a subsequent json.Decoder call"
+	invalidTokenPanic = "invalid jsontext.Token; it has been voided by a subsequent json.Decoder call"
 )
 
 var errInvalidToken = errors.New("invalid jsontext.Token")
@@ -271,7 +271,7 @@ func (t Token) string() (string, []byte) {
 			return strconv.FormatUint(uint64(t.num), 10), nil
 		}
 	}
-	return "<invalid json.Token>", nil
+	return "<invalid jsontext.Token>", nil
 }
 
 // appendNumber appends a JSON number to dst and returns it.
@@ -515,7 +515,7 @@ func (k Kind) String() string {
 	case ']':
 		return "]"
 	default:
-		return "<invalid json.Kind: " + jsonwire.QuoteRune(string(k)) + ">"
+		return "<invalid jsontext.Kind: " + jsonwire.QuoteRune(string(k)) + ">"
 	}
 }
 

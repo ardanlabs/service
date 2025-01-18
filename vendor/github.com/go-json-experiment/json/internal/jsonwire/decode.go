@@ -74,7 +74,7 @@ func ConsumeTrue(b []byte) int {
 func ConsumeLiteral(b []byte, lit string) (n int, err error) {
 	for i := 0; i < len(b) && i < len(lit); i++ {
 		if b[i] != lit[i] {
-			return i, NewInvalidCharacterError(b[i:], "within literal "+lit+" (expecting "+strconv.QuoteRune(rune(lit[i]))+")")
+			return i, NewInvalidCharacterError(b[i:], "in literal "+lit+" (expecting "+strconv.QuoteRune(rune(lit[i]))+")")
 		}
 	}
 	if len(b) < len(lit) {
@@ -240,7 +240,7 @@ func ConsumeStringResumable(flags *ValueFlags, b []byte, resumeOffset int, valid
 		// Handle invalid control characters.
 		case r < ' ':
 			flags.Join(stringNonVerbatim | stringNonCanonical)
-			return n, NewInvalidCharacterError(b[n:], "within string (expecting non-control character)")
+			return n, NewInvalidCharacterError(b[n:], "in string (expecting non-control character)")
 		default:
 			panic("BUG: unhandled character " + QuoteRune(b[n:]))
 		}
@@ -374,7 +374,7 @@ func AppendUnquote[Bytes ~[]byte | ~string](dst []byte, src Bytes) (v []byte, er
 		// Handle invalid control characters.
 		case r < ' ':
 			dst = append(dst, src[i:n]...)
-			return dst, NewInvalidCharacterError(src[n:], "within string (expecting non-control character)")
+			return dst, NewInvalidCharacterError(src[n:], "in string (expecting non-control character)")
 		default:
 			panic("BUG: unhandled character " + QuoteRune(src[n:]))
 		}
@@ -513,7 +513,7 @@ beforeInteger:
 		}
 		state = withinIntegerDigits
 	default:
-		return n, state, NewInvalidCharacterError(b[n:], "within number (expecting digit)")
+		return n, state, NewInvalidCharacterError(b[n:], "in number (expecting digit)")
 	}
 
 	// Consume optional fractional component.
@@ -527,7 +527,7 @@ beforeFractional:
 		case '0' <= b[n] && b[n] <= '9':
 			n++
 		default:
-			return n, state, NewInvalidCharacterError(b[n:], "within number (expecting digit)")
+			return n, state, NewInvalidCharacterError(b[n:], "in number (expecting digit)")
 		}
 		for uint(len(b)) > uint(n) && ('0' <= b[n] && b[n] <= '9') {
 			n++
@@ -549,7 +549,7 @@ beforeExponent:
 		case '0' <= b[n] && b[n] <= '9':
 			n++
 		default:
-			return n, state, NewInvalidCharacterError(b[n:], "within number (expecting digit)")
+			return n, state, NewInvalidCharacterError(b[n:], "in number (expecting digit)")
 		}
 		for uint(len(b)) > uint(n) && ('0' <= b[n] && b[n] <= '9') {
 			n++

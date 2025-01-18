@@ -31,11 +31,6 @@ sed -i 's/json\.struct/v2.struct/g' $GOROOT/src/encoding/json/v2/errors_test.go
 sed -i 's|"encoding/json"|"encoding/json", "encoding/json/v2"|g' $GOROOT/src/cmd/vendor/golang.org/x/tools/go/analysis/passes/structtag/structtag.go
 
 # Adjust tests that hardcode formatted error strings.
-sed -i 's/looking for beginning of value/at start of value/g' $GOROOT/src/cmd/go/testdata/script/mod_list_update_nolatest.txt
-sed -i 's/looking for beginning of value/at start of value/g' $GOROOT/src/cmd/go/testdata/script/mod_proxy_invalid.txt
-sed -i 's/looking for beginning of value/at start of value/g' $GOROOT/src/cmd/go/testdata/script/test_fuzz_io_error.txt
-sed -i 's/: invalid character/: jsontext: invalid character/g' $GOROOT/src/html/template/escape_test.go
-sed -i 's/looking for beginning of object key string/at start of string (expecting \&#39;\&#34;\&#39;) after offset 2/g' $GOROOT/src/html/template/escape_test.go
 sed -i 's/}`, "Time.UnmarshalJSON: input is not a JSON string/}`, "json: cannot unmarshal JSON object into Go type time.Time/g' $GOROOT/src/time/time_test.go
 sed -i 's/]`, "Time.UnmarshalJSON: input is not a JSON string/]`, "json: cannot unmarshal JSON array into Go type time.Time/g' $GOROOT/src/time/time_test.go
 
@@ -183,8 +178,8 @@ echo "pkg encoding/json/v2, func MarshalFunc[\$0 interface{}](func(\$0) ([]uint8
 echo "pkg encoding/json/v2, func MarshalToFunc[\$0 interface{}](func(*jsontext.Encoder, \$0, jsonopts.Options) error) *typedArshalers[jsontext.Encoder] #$ISSUE" >> $GOROOT/api/$FILE
 echo "pkg encoding/json/v2, func MarshalWrite(io.Writer, interface{}, ...jsonopts.Options) error #$ISSUE" >> $GOROOT/api/$FILE
 echo "pkg encoding/json/v2, func MatchCaseInsensitiveNames(bool) jsonopts.Options #$ISSUE" >> $GOROOT/api/$FILE
-echo "pkg encoding/json/v2, func NewMarshalers(...*typedArshalers[jsontext.Encoder]) *typedArshalers[jsontext.Encoder] #$ISSUE" >> $GOROOT/api/$FILE
-echo "pkg encoding/json/v2, func NewUnmarshalers(...*typedArshalers[jsontext.Decoder]) *typedArshalers[jsontext.Decoder] #$ISSUE" >> $GOROOT/api/$FILE
+echo "pkg encoding/json/v2, func JoinMarshalers(...*typedArshalers[jsontext.Encoder]) *typedArshalers[jsontext.Encoder] #$ISSUE" >> $GOROOT/api/$FILE
+echo "pkg encoding/json/v2, func JoinUnmarshalers(...*typedArshalers[jsontext.Decoder]) *typedArshalers[jsontext.Decoder] #$ISSUE" >> $GOROOT/api/$FILE
 echo "pkg encoding/json/v2, func OmitZeroStructFields(bool) jsonopts.Options #$ISSUE" >> $GOROOT/api/$FILE
 echo "pkg encoding/json/v2, func RejectUnknownMembers(bool) jsonopts.Options #$ISSUE" >> $GOROOT/api/$FILE
 echo "pkg encoding/json/v2, func StringifyNumbers(bool) jsonopts.Options #$ISSUE" >> $GOROOT/api/$FILE

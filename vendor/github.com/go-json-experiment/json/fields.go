@@ -131,7 +131,6 @@ func makeStructFields(root reflect.Type) (sf structFields, serr *SemanticError) 
 				tf := indirectType(f.typ)
 				if implementsAny(tf, allMethodTypes...) && tf != jsontextValueType {
 					serr = orErrorf(serr, t, "inlined Go struct field %s of type %s must not implement marshal or unmarshal methods", sf.Name, tf)
-					continue // invalid inlined field; treat as ignored
 				}
 
 				// Handle an inlined field that serializes to/from

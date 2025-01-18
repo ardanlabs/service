@@ -123,7 +123,7 @@ func (v Value) MarshalJSON() ([]byte, error) {
 func (v *Value) UnmarshalJSON(b []byte) error {
 	// NOTE: This matches the behavior of v1 json.RawMessage.UnmarshalJSON.
 	if v == nil {
-		return errors.New("json.Value: UnmarshalJSON on nil pointer")
+		return errors.New("jsontext.Value: UnmarshalJSON on nil pointer")
 	}
 	*v = append((*v)[:0], b...)
 	return nil
@@ -153,10 +153,10 @@ func (v *Value) reformat(canonical, multiline bool, prefix, indent string) error
 		eo.Flags.Set(jsonflags.Multiline | 0)           // per RFC 8785, section 3.2.1
 	} else {
 		if s := strings.TrimLeft(prefix, " \t"); len(s) > 0 {
-			panic("json: invalid character " + jsonwire.QuoteRune(s) + " in indent prefix")
+			panic("jsontext: invalid character " + jsonwire.QuoteRune(s) + " in indent prefix")
 		}
 		if s := strings.TrimLeft(indent, " \t"); len(s) > 0 {
-			panic("json: invalid character " + jsonwire.QuoteRune(s) + " in indent")
+			panic("jsontext: invalid character " + jsonwire.QuoteRune(s) + " in indent")
 		}
 		eo.Flags.Set(jsonflags.AllowInvalidUTF8 | 1)
 		eo.Flags.Set(jsonflags.AllowDuplicateNames | 1)

@@ -35,7 +35,7 @@ var errNonSingularValue = errors.New("must read or write exactly one value")
 // There are no exported fields or methods on Marshalers.
 type Marshalers = typedMarshalers
 
-// NewMarshalers constructs a flattened list of marshal functions.
+// JoinMarshalers constructs a flattened list of marshal functions.
 // If multiple functions in the list are applicable for a value of a given type,
 // then those earlier in the list take precedence over those that come later.
 // If a function returns [SkipFunc], then the next applicable function is called,
@@ -43,10 +43,10 @@ type Marshalers = typedMarshalers
 //
 // For example:
 //
-//	m1 := NewMarshalers(f1, f2)
-//	m2 := NewMarshalers(f0, m1, f3)     // equivalent to m3
-//	m3 := NewMarshalers(f0, f1, f2, f3) // equivalent to m2
-func NewMarshalers(ms ...*Marshalers) *Marshalers {
+//	m1 := JoinMarshalers(f1, f2)
+//	m2 := JoinMarshalers(f0, m1, f3)     // equivalent to m3
+//	m3 := JoinMarshalers(f0, f1, f2, f3) // equivalent to m2
+func JoinMarshalers(ms ...*Marshalers) *Marshalers {
 	return newMarshalers(ms...)
 }
 
@@ -57,7 +57,7 @@ func NewMarshalers(ms ...*Marshalers) *Marshalers {
 // There are no exported fields or methods on Unmarshalers.
 type Unmarshalers = typedUnmarshalers
 
-// NewUnmarshalers constructs a flattened list of unmarshal functions.
+// JoinUnmarshalers constructs a flattened list of unmarshal functions.
 // If multiple functions in the list are applicable for a value of a given type,
 // then those earlier in the list take precedence over those that come later.
 // If a function returns [SkipFunc], then the next applicable function is called,
@@ -65,10 +65,10 @@ type Unmarshalers = typedUnmarshalers
 //
 // For example:
 //
-//	u1 := NewUnmarshalers(f1, f2)
-//	u2 := NewUnmarshalers(f0, u1, f3)     // equivalent to u3
-//	u3 := NewUnmarshalers(f0, f1, f2, f3) // equivalent to u2
-func NewUnmarshalers(us ...*Unmarshalers) *Unmarshalers {
+//	u1 := JoinUnmarshalers(f1, f2)
+//	u2 := JoinUnmarshalers(f0, u1, f3)     // equivalent to u3
+//	u3 := JoinUnmarshalers(f0, f1, f2, f3) // equivalent to u2
+func JoinUnmarshalers(us ...*Unmarshalers) *Unmarshalers {
 	return newUnmarshalers(us...)
 }
 

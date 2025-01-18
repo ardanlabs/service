@@ -157,9 +157,9 @@ func NewInvalidEscapeSequenceError[Bytes ~[]byte | ~string](what Bytes) error {
 		return r == '`' || r == utf8.RuneError || unicode.IsSpace(r) || !unicode.IsPrint(r)
 	}) >= 0
 	if needEscape {
-		return errors.New("invalid " + label + " " + strconv.Quote(string(what)) + " within string")
+		return errors.New("invalid " + label + " " + strconv.Quote(string(what)) + " in string")
 	} else {
-		return errors.New("invalid " + label + " `" + string(what) + "` within string")
+		return errors.New("invalid " + label + " `" + string(what) + "` in string")
 	}
 }
 

@@ -364,9 +364,22 @@ func (d *decoderState) CountNextDelimWhitespace() int {
 
 // checkDelim checks whether delim is valid for the given next kind.
 func (d *decoderState) checkDelim(delim byte, next Kind) error {
+	where := "at start of value"
+	switch d.Tokens.needDelim(next) {
+	case delim:
+		return nil
+	case ':':
+		where = "after object name (expecting ':')"
+	case ',':
+		if d.Tokens.Last.isObject() {
+			where = "after object value (expecting ',' or '}')"
+		} else {
+			where = "after array element (expecting ',' or ']')"
+		}
+	}
 	pos := d.prevEnd // restore position to right after leading whitespace
 	pos += jsonwire.ConsumeWhitespace(d.buf[pos:])
-	err := d.Tokens.checkDelim(delim, next)
+	err := jsonwire.NewInvalidCharacterError(d.buf[pos:], where)
 	return wrapSyntacticError(d, err, pos, 0)
 }
 
@@ -618,7 +631,7 @@ func (d *decoderState) ReadToken() (Token, error) {
 		return ArrayEnd, nil
 
 	default:
-		err = jsonwire.NewInvalidCharacterError(d.buf[pos:], "at start of token")
+		err = jsonwire.NewInvalidCharacterError(d.buf[pos:], "at start of value")
 		return Token{}, wrapSyntacticError(d, err, pos, +1)
 	}
 }
@@ -833,6 +846,9 @@ func (d *decoderState) consumeValue(flags *jsonwire.ValueFlags, pos, depth int) 
 		case '[':
 			return d.consumeArray(flags, pos, depth)
 		default:
+			if (d.Tokens.Last.isObject() && next == ']') || (d.Tokens.Last.isArray() && next == '}') {
+				return pos, errMismatchDelim
+			}
 			return pos, jsonwire.NewInvalidCharacterError(d.buf[pos:], "at start of value")
 		}
 		if err == io.ErrUnexpectedEOF {
@@ -1068,7 +1084,7 @@ func (d *decoderState) consumeArray(flags *jsonwire.ValueFlags, pos, depth int) 
 			pos++
 			return pos, nil
 		default:
-			return pos, jsonwire.NewInvalidCharacterError(d.buf[pos:], "after array value (expecting ',' or ']')")
+			return pos, jsonwire.NewInvalidCharacterError(d.buf[pos:], "after array element (expecting ',' or ']')")
 		}
 	}
 }
