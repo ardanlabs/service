@@ -7,6 +7,7 @@ import (
 
 	"github.com/ardanlabs/service/app/domain/userapp"
 	"github.com/ardanlabs/service/app/sdk/apitest"
+	"github.com/ardanlabs/service/app/sdk/errs"
 	"github.com/ardanlabs/service/app/sdk/query"
 	"github.com/ardanlabs/service/business/domain/userbus"
 	"github.com/google/go-cmp/cmp"
@@ -41,6 +42,37 @@ func query200(sd apitest.SeedData) []apitest.Table {
 				Total:       len(usrs),
 				Items:       toAppUsers(usrs),
 			},
+			CmpFunc: func(got any, exp any) string {
+				return cmp.Diff(got, exp)
+			},
+		},
+	}
+
+	return table
+}
+
+func query400(sd apitest.SeedData) []apitest.Table {
+	table := []apitest.Table{
+		{
+			Name:       "bad-query-filter",
+			URL:        "/v1/users?page=1&rows=10&email=a.com",
+			Token:      sd.Admins[0].Token,
+			StatusCode: http.StatusBadRequest,
+			Method:     http.MethodGet,
+			GotResp:    &errs.Error{},
+			ExpResp:    errs.Newf(errs.InvalidArgument, "[{\"field\":\"email\",\"error\":\"mail: missing '@' or angle-addr\"}]"),
+			CmpFunc: func(got any, exp any) string {
+				return cmp.Diff(got, exp)
+			},
+		},
+		{
+			Name:       "bad-orderby-value",
+			URL:        "/v1/users?page=1&rows=10&orderBy=ser_id,ASC",
+			Token:      sd.Admins[0].Token,
+			StatusCode: http.StatusBadRequest,
+			Method:     http.MethodGet,
+			GotResp:    &errs.Error{},
+			ExpResp:    errs.Newf(errs.InvalidArgument, "[{\"field\":\"order\",\"error\":\"unknown order: ser_id\"}]"),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
