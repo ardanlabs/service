@@ -25,7 +25,7 @@ func query200(sd apitest.SeedData) []apitest.Table {
 	table := []apitest.Table{
 		{
 			Name:       "basic",
-			URL:        "/v1/products?page=1&row=10&orderBy=product_id,ASC",
+			URL:        "/v1/products?page=1&rows=10&orderBy=product_id,ASC",
 			Token:      sd.Admins[0].Token,
 			StatusCode: http.StatusOK,
 			Method:     http.MethodGet,

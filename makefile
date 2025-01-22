@@ -417,16 +417,16 @@ token:
 
 users:
 	curl -il \
-	-H "Authorization: Bearer ${TOKEN}" "http://localhost:3000/v1/users?page=1&row=2"
+	-H "Authorization: Bearer ${TOKEN}" "http://localhost:3000/v1/users?page=1&rows=2"
 
 users-timeout:
 	curl -il \
 	--max-time 1 \
-	-H "Authorization: Bearer ${TOKEN}" "http://localhost:3000/v1/users?page=1&row=2"
+	-H "Authorization: Bearer ${TOKEN}" "http://localhost:3000/v1/users?page=1&rows=2"
 
 load:
 	hey -m GET -c 100 -n 1000 \
-	-H "Authorization: Bearer ${TOKEN}" "http://localhost:3000/v1/users?page=1&row=2"
+	-H "Authorization: Bearer ${TOKEN}" "http://localhost:3000/v1/users?page=1&rows=2"
 
 otel-test:
 	curl -il \
@@ -516,7 +516,7 @@ talk-apply:
 talk-build: all dev-load talk-apply
 
 talk-load:
-	hey -m GET -c 10 -n 1000 -H "Authorization: Bearer ${TOKEN}" "http://localhost:3000/v1/users?page=1&row=2"
+	hey -m GET -c 10 -n 1000 -H "Authorization: Bearer ${TOKEN}" "http://localhost:3000/v1/users?page=1&rows=2"
 
 talk-logs:
 	kubectl logs --namespace=$(NAMESPACE) -l app=$(SALES_APP) --all-containers=true -f --tail=100 --max-log-requests=6
