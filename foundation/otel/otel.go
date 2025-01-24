@@ -59,7 +59,7 @@ func InitTracing(log *logger.Logger, cfg Config) (trace.TracerProvider, func(ctx
 		log.Info(context.Background(), "OTEL", "tracer", cfg.Host)
 
 		tp := sdktrace.NewTracerProvider(
-			sdktrace.WithSampler(newEndpointExcluder(cfg.ExcludedRoutes, cfg.Probability)),
+			sdktrace.WithSampler(sdktrace.ParentBased(newEndpointExcluder(cfg.ExcludedRoutes, cfg.Probability))),
 			sdktrace.WithBatcher(exporter,
 				sdktrace.WithMaxExportBatchSize(sdktrace.DefaultMaxExportBatchSize),
 				sdktrace.WithBatchTimeout(sdktrace.DefaultScheduleDelay*time.Millisecond),
