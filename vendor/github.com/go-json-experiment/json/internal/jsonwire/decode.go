@@ -610,19 +610,6 @@ func ParseUint(b []byte) (v uint64, ok bool) {
 // then we return MaxFloat since any finite value will always be infinitely
 // more accurate at representing another finite value than an infinite value.
 func ParseFloat(b []byte, bits int) (v float64, ok bool) {
-	// Fast path for exact integer numbers which fit in the
-	// 24-bit or 53-bit significand of a float32 or float64.
-	var negLen int // either 0 or 1
-	if len(b) > 0 && b[0] == '-' {
-		negLen = 1
-	}
-	u, ok := ParseUint(b[negLen:])
-	if ok && ((bits == 32 && u <= 1<<24) || (bits == 64 && u <= 1<<53)) {
-		return math.Copysign(float64(u), float64(-1*negLen)), true
-	}
-
-	// Note that the []byte->string conversion unfortunately allocates.
-	// See https://go.dev/issue/42429 for more information.
 	fv, err := strconv.ParseFloat(string(b), bits)
 	if math.IsInf(fv, 0) {
 		switch {

@@ -276,15 +276,12 @@ func (t Token) string() (string, []byte) {
 
 // appendNumber appends a JSON number to dst and returns it.
 // It panics if t is not a JSON number.
-func (t Token) appendNumber(dst []byte, canonicalize bool) ([]byte, error) {
+func (t Token) appendNumber(dst []byte, flags *jsonflags.Flags) ([]byte, error) {
 	if raw := t.raw; raw != nil {
 		// Handle raw number value.
 		buf := raw.previousBuffer()
 		if Kind(buf[0]).normalize() == '0' {
-			if !canonicalize {
-				return append(dst, buf...), nil
-			}
-			dst, _, err := jsonwire.ReformatNumber(dst, buf, canonicalize)
+			dst, _, err := jsonwire.ReformatNumber(dst, buf, flags)
 			return dst, err
 		}
 	} else if t.num != 0 {

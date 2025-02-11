@@ -14,6 +14,7 @@ import (
 // It uses the minimal string representation per RFC 8785, section 3.2.2.2.
 // Invalid UTF-8 bytes are replaced with the Unicode replacement character
 // and an error is returned at the end indicating the presence of invalid UTF-8.
+// The dst must not overlap with the src.
 func AppendQuote[Bytes ~[]byte | ~string](dst []byte, src Bytes) ([]byte, error) {
 	dst, err := jsonwire.AppendQuote(dst, src, &jsonflags.Flags{})
 	if err != nil {
@@ -28,6 +29,7 @@ func AppendQuote[Bytes ~[]byte | ~string](dst []byte, src Bytes) ([]byte, error)
 // Invalid UTF-8 bytes are replaced with the Unicode replacement character
 // and an error is returned at the end indicating the presence of invalid UTF-8.
 // Any trailing bytes after the JSON string literal results in an error.
+// The dst must not overlap with the src.
 func AppendUnquote[Bytes ~[]byte | ~string](dst []byte, src Bytes) ([]byte, error) {
 	dst, err := jsonwire.AppendUnquote(dst, src)
 	if err != nil {

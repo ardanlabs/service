@@ -201,20 +201,22 @@ func makeStringArshaler(t reflect.Type) *arshaler {
 			return newInvalidFormatError(enc, t, mo)
 		}
 
-		// Optimize for marshaling without preceding whitespace or string escaping.
+		// Optimize for marshaling without preceding whitespace.
 		s := va.String()
-		if optimizeCommon && !mo.Flags.Get(jsonflags.AnyWhitespace|jsonflags.StringifyBoolsAndStrings) && !xe.Tokens.Last.NeedObjectName() && !jsonwire.NeedEscape(s) {
+		if optimizeCommon && !mo.Flags.Get(jsonflags.AnyWhitespace|jsonflags.StringifyBoolsAndStrings) && !xe.Tokens.Last.NeedObjectName() {
 			b := xe.Buf
 			b = xe.Tokens.MayAppendDelim(b, '"')
-			b = append(b, '"')
-			b = append(b, s...)
-			b = append(b, '"')
-			xe.Buf = b
-			xe.Tokens.Last.Increment()
-			if xe.NeedFlush() {
-				return xe.Flush()
+			b, err := jsonwire.AppendQuote(b, s, &mo.Flags)
+			if err == nil {
+				xe.Buf = b
+				xe.Tokens.Last.Increment()
+				if xe.NeedFlush() {
+					return xe.Flush()
+				}
+				return nil
 			}
-			return nil
+			// Otherwise, the string contains invalid UTF-8,
+			// so let the logic below construct the proper error.
 		}
 
 		if mo.Flags.Get(jsonflags.StringifyBoolsAndStrings) {
@@ -1045,9 +1047,9 @@ func makeStructArshaler(t reflect.Type) *arshaler {
 		xe.Tokens.Last.DisableNamespace() // we manually ensure unique names below
 		for i := range fields.flattened {
 			f := &fields.flattened[i]
-			v := addressableValue{va.Field(f.index[0]), va.forcedAddr} // addressable if struct value is addressable
-			if len(f.index) > 1 {
-				v = v.fieldByIndex(f.index[1:], false)
+			v := addressableValue{va.Field(f.index0), va.forcedAddr} // addressable if struct value is addressable
+			if len(f.index) > 0 {
+				v = v.fieldByIndex(f.index, false)
 				if !v.IsValid() {
 					continue // implies a nil inlined field
 				}
@@ -1106,7 +1108,7 @@ func makeStructArshaler(t reflect.Type) *arshaler {
 
 				// Append the token to the output and to the state machine.
 				n0 := len(b) // offset before calling AppendQuote
-				if !mo.Flags.Get(jsonflags.AnyEscape) {
+				if !f.nameNeedEscape {
 					b = append(b, f.quotedName...)
 				} else {
 					b, _ = jsonwire.AppendQuote(b, f.name, &mo.Flags)
@@ -1282,9 +1284,9 @@ func makeStructArshaler(t reflect.Type) *arshaler {
 					uo.FormatDepth = xd.Tokens.Depth()
 					uo.Format = f.format
 				}
-				v := addressableValue{va.Field(f.index[0]), va.forcedAddr} // addressable if struct value is addressable
-				if len(f.index) > 1 {
-					v = v.fieldByIndex(f.index[1:], true)
+				v := addressableValue{va.Field(f.index0), va.forcedAddr} // addressable if struct value is addressable
+				if len(f.index) > 0 {
+					v = v.fieldByIndex(f.index, true)
 					if !v.IsValid() {
 						err := newUnmarshalErrorBefore(dec, t, errNilField)
 						if !uo.Flags.Get(jsonflags.ReportErrorsWithLegacySemantics) {

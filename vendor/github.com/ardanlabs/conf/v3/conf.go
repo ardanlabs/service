@@ -198,6 +198,12 @@ func parse(args []string, namespace string, cfgStruct interface{}) error {
 			}
 		}
 
+		// If this is an immutable field then don't let it
+		// be overridden.
+		if field.Options.Immutable {
+			continue
+		}
+
 		// Flag to check if an override value is provided.
 		foundOverride := false
 

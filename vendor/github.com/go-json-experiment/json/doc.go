@@ -54,6 +54,8 @@
 // "json" struct field tag, where the tag is a comma separated list of options.
 // As a special case, if the entire tag is `json:"-"`,
 // then the field is ignored with regard to its JSON representation.
+// Some options also have equivalent behavior controlled by a caller-specified [Options].
+// Field-specified options take precedence over caller-specified options.
 //
 // The first option is the JSON object name override for the Go struct field.
 // If the name is not specified, then the Go struct field name
@@ -81,24 +83,20 @@
 //   - string: The "string" option specifies that [StringifyNumbers]
 //     be set when marshaling or unmarshaling a struct field value.
 //     This causes numeric types to be encoded as a JSON number
-//     within a JSON string, and to be decoded from either a JSON number or
-//     a JSON string containing a JSON number.
+//     within a JSON string, and to be decoded from a JSON string
+//     containing the JSON number without any surrounding whitespace.
 //     This extra level of encoding is often necessary since
 //     many JSON parsers cannot precisely represent 64-bit integers.
 //
-//   - nocase: When unmarshaling, the "nocase" option specifies that
-//     if the JSON object name does not exactly match the JSON name
-//     for any of the struct fields, then it attempts to match the struct field
-//     using a case-insensitive match that also ignores dashes and underscores.
-//     If multiple fields match,
+//   - case: When unmarshaling, the "case" option specifies how
+//     JSON object names are matched with the JSON name for Go struct fields.
+//     The option is a key-value pair specified as "case:value" where
+//     the value must either be 'ignore' or 'strict'.
+//     The 'ignore' value specifies that matching is case-insensitive
+//     where dashes and underscores are also ignored. If multiple fields match,
 //     the first declared field in breadth-first order takes precedence.
-//     This takes precedence even if [MatchCaseInsensitiveNames] is set to false.
-//     This cannot be specified together with the "strictcase" option.
-//
-//   - strictcase: When unmarshaling, the "strictcase" option specifies that the
-//     JSON object name must exactly match the JSON name for the struct field.
-//     This takes precedence even if [MatchCaseInsensitiveNames] is set to true.
-//     This cannot be specified together with the "nocase" option.
+//     The 'strict' value specifies that matching is case-sensitive.
+//     This takes precedence over the [MatchCaseInsensitiveNames] option.
 //
 //   - inline: The "inline" option specifies that
 //     the JSON representable content of this field type is to be promoted

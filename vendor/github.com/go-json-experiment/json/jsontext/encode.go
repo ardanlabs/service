@@ -372,7 +372,7 @@ func (e *encoderState) WriteToken(t Token) error {
 		}
 		err = e.Tokens.appendString()
 	case '0':
-		if b, err = t.appendNumber(b, e.Flags.Get(jsonflags.CanonicalizeNumbers)); err != nil {
+		if b, err = t.appendNumber(b, &e.Flags); err != nil {
 			break
 		}
 		err = e.Tokens.appendNumber()
@@ -563,12 +563,18 @@ func (e *encoderState) WriteValue(v Value) error {
 		if err = e.Tokens.popObject(); err != nil {
 			panic("BUG: popObject should never fail immediately after pushObject: " + err.Error())
 		}
+		if e.Flags.Get(jsonflags.ReorderRawObjects) {
+			mustReorderObjects(b[pos:])
+		}
 	case '[':
 		if err = e.Tokens.pushArray(); err != nil {
 			break
 		}
 		if err = e.Tokens.popArray(); err != nil {
 			panic("BUG: popArray should never fail immediately after pushArray: " + err.Error())
+		}
+		if e.Flags.Get(jsonflags.ReorderRawObjects) {
+			mustReorderObjects(b[pos:])
 		}
 	}
 	if err != nil {
@@ -678,7 +684,7 @@ func (e *encoderState) reformatValue(dst []byte, src Value, depth int) ([]byte, 
 			dst = append(dst, src[:n]...) // copy simple numbers verbatim
 			return dst, n, nil
 		}
-		return jsonwire.ReformatNumber(dst, src, e.Flags.Get(jsonflags.CanonicalizeNumbers))
+		return jsonwire.ReformatNumber(dst, src, &e.Flags)
 	case '{':
 		return e.reformatObject(dst, src, depth)
 	case '[':
@@ -941,8 +947,6 @@ func (e *Encoder) StackIndex(i int) (Kind, int64) {
 }
 
 // StackPointer returns a JSON Pointer (RFC 6901) to the most recently written value.
-// Object names are only present if [AllowDuplicateNames] is false, otherwise
-// object members are represented using their index within the object.
 func (e *Encoder) StackPointer() Pointer {
 	return Pointer(e.s.AppendStackPointer(nil, -1))
 }

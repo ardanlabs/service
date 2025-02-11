@@ -285,7 +285,10 @@ func (d *decodeBuffer) PreviousTokenOrValue() []byte {
 }
 
 // PeekKind retrieves the next token kind, but does not advance the read offset.
-// It returns 0 if there are no more tokens.
+//
+// It returns 0 if an error occurs. Any such error is cached until
+// the next read call and it is the caller's responsibility to eventually
+// follow up a PeekKind call with a read call.
 func (d *Decoder) PeekKind() Kind {
 	return d.s.PeekKind()
 }
@@ -1140,8 +1143,6 @@ func (d *Decoder) StackIndex(i int) (Kind, int64) {
 }
 
 // StackPointer returns a JSON Pointer (RFC 6901) to the most recently read value.
-// Object names are only present if [AllowDuplicateNames] is false, otherwise
-// object members are represented using their index within the object.
 func (d *Decoder) StackPointer() Pointer {
 	return Pointer(d.s.AppendStackPointer(nil, -1))
 }

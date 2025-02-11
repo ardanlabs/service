@@ -226,7 +226,6 @@ func distributedBatchFetch[V, T any](c *Client[T], keyFn KeyFn, fetchFn BatchFet
 			for i := 0; i < len(stale); i++ {
 				c.reportDistributedStaleFallback()
 			}
-			c.log.Error(fmt.Sprintf("sturdyc: error fetching records from the underlying data source. %v", err))
 			maps.Copy(stale, fresh)
 			return stale, errOnlyDistributedRecords
 		}

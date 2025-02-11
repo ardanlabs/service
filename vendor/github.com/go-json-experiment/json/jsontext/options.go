@@ -17,6 +17,25 @@ import (
 // Each function takes in a variadic list of options, where properties
 // set in latter options override the value of previously set properties.
 //
+// There is a single Options type, which is used with both encoding and decoding.
+// Some options affect both operations, while others only affect one operation:
+//
+//   - [AllowDuplicateNames] affects encoding and decoding
+//   - [AllowInvalidUTF8] affects encoding and decoding
+//   - [EscapeForHTML] affects encoding only
+//   - [EscapeForJS] affects encoding only
+//   - [PreserveRawStrings] affects encoding only
+//   - [CanonicalizeRawInts] affects encoding only
+//   - [CanonicalizeRawFloats] affects encoding only
+//   - [ReorderRawObjects] affects encoding only
+//   - [SpaceAfterColon] affects encoding only
+//   - [SpaceAfterComma] affects encoding only
+//   - [Multiline] affects encoding only
+//   - [WithIndent] affects encoding only
+//   - [WithIndentPrefix] affects encoding only
+//
+// Options that do not affect a particular operation are ignored.
+//
 // The Options type is identical to [encoding/json.Options] and
 // [encoding/json/v2.Options]. Options from the other packages may
 // be passed to functionality in this package, but are ignored.
@@ -75,6 +94,78 @@ func EscapeForJS(v bool) Options {
 		return jsonflags.EscapeForJS | 1
 	} else {
 		return jsonflags.EscapeForJS | 0
+	}
+}
+
+// PreserveRawStrings specifies that when encoding a raw JSON string in a
+// [Token] or [Value], pre-escaped sequences
+// in a JSON string are preserved to the output.
+// However, raw strings still respect [EscapeForHTML] and [EscapeForJS]
+// such that the relevant characters are escaped.
+// If [AllowInvalidUTF8] is enabled, bytes of invalid UTF-8
+// are preserved to the output.
+//
+// This only affects encoding and is ignored when decoding.
+func PreserveRawStrings(v bool) Options {
+	if v {
+		return jsonflags.PreserveRawStrings | 1
+	} else {
+		return jsonflags.PreserveRawStrings | 0
+	}
+}
+
+// CanonicalizeRawInts specifies that when encoding a raw JSON
+// integer number (i.e., a number without a fraction and exponent) in a
+// [Token] or [Value], the number is canonicalized
+// according to RFC 8785, section 3.2.2.3. As a special case,
+// the number -0 is canonicalized as 0.
+//
+// JSON numbers are treated as IEEE 754 double precision numbers.
+// Any numbers with precision beyond what is representable by that form
+// will lose their precision when canonicalized. For example,
+// integer values beyond ±2⁵³ will lose their precision.
+// For example, 1234567890123456789 is formatted as 1234567890123456800.
+//
+// This only affects encoding and is ignored when decoding.
+func CanonicalizeRawInts(v bool) Options {
+	if v {
+		return jsonflags.CanonicalizeRawInts | 1
+	} else {
+		return jsonflags.CanonicalizeRawInts | 0
+	}
+}
+
+// CanonicalizeRawFloats specifies that when encoding a raw JSON
+// floating-point number (i.e., a number with a fraction or exponent) in a
+// [Token] or [Value], the number is canonicalized
+// according to RFC 8785, section 3.2.2.3. As a special case,
+// the number -0 is canonicalized as 0.
+//
+// JSON numbers are treated as IEEE 754 double precision numbers.
+// It is safe to canonicalize a serialized single precision number and
+// parse it back as a single precision number and expect the same value.
+// If a number exceeds ±1.7976931348623157e+308, which is the maximum
+// finite number, then it saturated at that value and formatted as such.
+//
+// This only affects encoding and is ignored when decoding.
+func CanonicalizeRawFloats(v bool) Options {
+	if v {
+		return jsonflags.CanonicalizeRawFloats | 1
+	} else {
+		return jsonflags.CanonicalizeRawFloats | 0
+	}
+}
+
+// ReorderRawObjects specifies that when encoding a raw JSON object in a
+// [Value], the object members are reordered according to
+// RFC 8785, section 3.2.3.
+//
+// This only affects encoding and is ignored when decoding.
+func ReorderRawObjects(v bool) Options {
+	if v {
+		return jsonflags.ReorderRawObjects | 1
+	} else {
+		return jsonflags.ReorderRawObjects | 0
 	}
 }
 
@@ -190,6 +281,7 @@ func WithIndentPrefix(prefix string) Options {
 //
 // A non-positive limit is equivalent to no limit at all.
 // If unspecified, the default limit is no limit at all.
+// This affects either encoding or decoding.
 func WithByteLimit(n int64) Options {
 	return jsonopts.ByteLimit(max(n, 0))
 }
@@ -202,6 +294,7 @@ func WithByteLimit(n int64) Options {
 //
 // A non-positive limit is equivalent to no limit at all.
 // If unspecified, the default limit is 10000.
+// This affects either encoding or decoding.
 func WithDepthLimit(n int) Options {
 	return jsonopts.DepthLimit(max(n, 0))
 }

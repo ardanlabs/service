@@ -49,6 +49,7 @@ type FieldOptions struct {
 	Required      bool
 	Mask          bool
 	NotZero       bool
+	Immutable     bool
 }
 
 // extractFields uses reflection to examine the struct and generate the keys.
@@ -177,6 +178,8 @@ func parseTag(tagStr string) (FieldOptions, error) {
 				f.NotZero = true
 			case "mask":
 				f.Mask = true
+			case "immutable":
+				f.Immutable = true
 			}
 		case 2:
 			tagPropVal := strings.TrimSpace(vals[1])

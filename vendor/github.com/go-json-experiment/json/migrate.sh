@@ -67,7 +67,7 @@ ISSUE=63397 # TODO: Replace with formal proposal issue for encoding/json/v2
 FILE=$(cd $GOROOT/api; ls -v | tail -n 1)
 echo "pkg encoding/json, func CallMethodsWithLegacySemantics(bool) jsonopts.Options #$ISSUE" >> $GOROOT/api/$FILE
 echo "pkg encoding/json, func DefaultOptionsV1() jsonopts.Options #$ISSUE" >> $GOROOT/api/$FILE
-echo "pkg encoding/json, func EscapeWithLegacySemantics(bool) jsonopts.Options #$ISSUE" >> $GOROOT/api/$FILE
+echo "pkg encoding/json, func EscapeInvalidUTF8(bool) jsonopts.Options #$ISSUE" >> $GOROOT/api/$FILE
 echo "pkg encoding/json, func FormatBytesWithLegacySemantics(bool) jsonopts.Options #$ISSUE" >> $GOROOT/api/$FILE
 echo "pkg encoding/json, func FormatTimeWithLegacySemantics(bool) jsonopts.Options #$ISSUE" >> $GOROOT/api/$FILE
 echo "pkg encoding/json, func MatchCaseSensitiveDelimiter(bool) jsonopts.Options #$ISSUE" >> $GOROOT/api/$FILE
@@ -86,9 +86,12 @@ echo "pkg encoding/json, type UnmarshalTypeError struct, Err error #$ISSUE" >> $
 echo "pkg encoding/json, type Unmarshaler = json.Unmarshaler #$ISSUE" >> $GOROOT/api/$FILE
 echo "pkg encoding/json/jsontext, func AllowDuplicateNames(bool) jsonopts.Options #$ISSUE" >> $GOROOT/api/$FILE
 echo "pkg encoding/json/jsontext, func AllowInvalidUTF8(bool) jsonopts.Options #$ISSUE" >> $GOROOT/api/$FILE
+echo "pkg encoding/json/jsontext, func AppendFormat([]uint8, []uint8, ...jsonopts.Options) ([]uint8, error) #$ISSUE" >> $GOROOT/api/$FILE
 echo "pkg encoding/json/jsontext, func AppendQuote[\$0 interface{ ~[]uint8 | ~string }]([]uint8, \$0) ([]uint8, error) #$ISSUE" >> $GOROOT/api/$FILE
 echo "pkg encoding/json/jsontext, func AppendUnquote[\$0 interface{ ~[]uint8 | ~string }]([]uint8, \$0) ([]uint8, error) #$ISSUE" >> $GOROOT/api/$FILE
 echo "pkg encoding/json/jsontext, func Bool(bool) Token #$ISSUE" >> $GOROOT/api/$FILE
+echo "pkg encoding/json/jsontext, func CanonicalizeRawFloats(bool) jsonopts.Options #$ISSUE" >> $GOROOT/api/$FILE
+echo "pkg encoding/json/jsontext, func CanonicalizeRawInts(bool) jsonopts.Options #$ISSUE" >> $GOROOT/api/$FILE
 echo "pkg encoding/json/jsontext, func EscapeForHTML(bool) jsonopts.Options #$ISSUE" >> $GOROOT/api/$FILE
 echo "pkg encoding/json/jsontext, func EscapeForJS(bool) jsonopts.Options #$ISSUE" >> $GOROOT/api/$FILE
 echo "pkg encoding/json/jsontext, func Float(float64) Token #$ISSUE" >> $GOROOT/api/$FILE
@@ -96,6 +99,8 @@ echo "pkg encoding/json/jsontext, func Int(int64) Token #$ISSUE" >> $GOROOT/api/
 echo "pkg encoding/json/jsontext, func Multiline(bool) jsonopts.Options #$ISSUE" >> $GOROOT/api/$FILE
 echo "pkg encoding/json/jsontext, func NewDecoder(io.Reader, ...jsonopts.Options) *Decoder #$ISSUE" >> $GOROOT/api/$FILE
 echo "pkg encoding/json/jsontext, func NewEncoder(io.Writer, ...jsonopts.Options) *Encoder #$ISSUE" >> $GOROOT/api/$FILE
+echo "pkg encoding/json/jsontext, func PreserveRawStrings(bool) jsonopts.Options #$ISSUE" >> $GOROOT/api/$FILE
+echo "pkg encoding/json/jsontext, func ReorderRawObjects(bool) jsonopts.Options #$ISSUE" >> $GOROOT/api/$FILE
 echo "pkg encoding/json/jsontext, func SpaceAfterColon(bool) jsonopts.Options #$ISSUE" >> $GOROOT/api/$FILE
 echo "pkg encoding/json/jsontext, func SpaceAfterComma(bool) jsonopts.Options #$ISSUE" >> $GOROOT/api/$FILE
 echo "pkg encoding/json/jsontext, func String(string) Token #$ISSUE" >> $GOROOT/api/$FILE
@@ -122,9 +127,10 @@ echo "pkg encoding/json/jsontext, method (*Encoder) WriteToken(Token) error #$IS
 echo "pkg encoding/json/jsontext, method (*Encoder) WriteValue(Value) error #$ISSUE" >> $GOROOT/api/$FILE
 echo "pkg encoding/json/jsontext, method (*SyntacticError) Error() string #$ISSUE" >> $GOROOT/api/$FILE
 echo "pkg encoding/json/jsontext, method (*SyntacticError) Unwrap() error #$ISSUE" >> $GOROOT/api/$FILE
-echo "pkg encoding/json/jsontext, method (*Value) Canonicalize() error #$ISSUE" >> $GOROOT/api/$FILE
-echo "pkg encoding/json/jsontext, method (*Value) Compact() error #$ISSUE" >> $GOROOT/api/$FILE
-echo "pkg encoding/json/jsontext, method (*Value) Indent(string, string) error #$ISSUE" >> $GOROOT/api/$FILE
+echo "pkg encoding/json/jsontext, method (*Value) Canonicalize(...jsonopts.Options) error #$ISSUE" >> $GOROOT/api/$FILE
+echo "pkg encoding/json/jsontext, method (*Value) Compact(...jsonopts.Options) error #$ISSUE" >> $GOROOT/api/$FILE
+echo "pkg encoding/json/jsontext, method (*Value) Format(...jsonopts.Options) error #$ISSUE" >> $GOROOT/api/$FILE
+echo "pkg encoding/json/jsontext, method (*Value) Indent(...jsonopts.Options) error #$ISSUE" >> $GOROOT/api/$FILE
 echo "pkg encoding/json/jsontext, method (*Value) UnmarshalJSON([]uint8) error #$ISSUE" >> $GOROOT/api/$FILE
 echo "pkg encoding/json/jsontext, method (Kind) String() string #$ISSUE" >> $GOROOT/api/$FILE
 echo "pkg encoding/json/jsontext, method (Pointer) AppendToken(string) Pointer #$ISSUE" >> $GOROOT/api/$FILE
@@ -140,7 +146,7 @@ echo "pkg encoding/json/jsontext, method (Token) Kind() Kind #$ISSUE" >> $GOROOT
 echo "pkg encoding/json/jsontext, method (Token) String() string #$ISSUE" >> $GOROOT/api/$FILE
 echo "pkg encoding/json/jsontext, method (Token) Uint() uint64 #$ISSUE" >> $GOROOT/api/$FILE
 echo "pkg encoding/json/jsontext, method (Value) Clone() Value #$ISSUE" >> $GOROOT/api/$FILE
-echo "pkg encoding/json/jsontext, method (Value) IsValid() bool #$ISSUE" >> $GOROOT/api/$FILE
+echo "pkg encoding/json/jsontext, method (Value) IsValid(...jsonopts.Options) bool #$ISSUE" >> $GOROOT/api/$FILE
 echo "pkg encoding/json/jsontext, method (Value) Kind() Kind #$ISSUE" >> $GOROOT/api/$FILE
 echo "pkg encoding/json/jsontext, method (Value) MarshalJSON() ([]uint8, error) #$ISSUE" >> $GOROOT/api/$FILE
 echo "pkg encoding/json/jsontext, method (Value) String() string #$ISSUE" >> $GOROOT/api/$FILE
@@ -171,22 +177,22 @@ echo "pkg encoding/json/v2, func DiscardUnknownMembers(bool) jsonopts.Options #$
 echo "pkg encoding/json/v2, func FormatNilMapAsNull(bool) jsonopts.Options #$ISSUE" >> $GOROOT/api/$FILE
 echo "pkg encoding/json/v2, func FormatNilSliceAsNull(bool) jsonopts.Options #$ISSUE" >> $GOROOT/api/$FILE
 echo "pkg encoding/json/v2, func GetOption[\$0 interface{}](jsonopts.Options, func(\$0) jsonopts.Options) (\$0, bool) #$ISSUE" >> $GOROOT/api/$FILE
+echo "pkg encoding/json/v2, func JoinMarshalers(...*typedArshalers[jsontext.Encoder]) *typedArshalers[jsontext.Encoder] #$ISSUE" >> $GOROOT/api/$FILE
 echo "pkg encoding/json/v2, func JoinOptions(...jsonopts.Options) jsonopts.Options #$ISSUE" >> $GOROOT/api/$FILE
+echo "pkg encoding/json/v2, func JoinUnmarshalers(...*typedArshalers[jsontext.Decoder]) *typedArshalers[jsontext.Decoder] #$ISSUE" >> $GOROOT/api/$FILE
 echo "pkg encoding/json/v2, func Marshal(interface{}, ...jsonopts.Options) ([]uint8, error) #$ISSUE" >> $GOROOT/api/$FILE
 echo "pkg encoding/json/v2, func MarshalEncode(*jsontext.Encoder, interface{}, ...jsonopts.Options) error #$ISSUE" >> $GOROOT/api/$FILE
 echo "pkg encoding/json/v2, func MarshalFunc[\$0 interface{}](func(\$0) ([]uint8, error)) *typedArshalers[jsontext.Encoder] #$ISSUE" >> $GOROOT/api/$FILE
 echo "pkg encoding/json/v2, func MarshalToFunc[\$0 interface{}](func(*jsontext.Encoder, \$0, jsonopts.Options) error) *typedArshalers[jsontext.Encoder] #$ISSUE" >> $GOROOT/api/$FILE
 echo "pkg encoding/json/v2, func MarshalWrite(io.Writer, interface{}, ...jsonopts.Options) error #$ISSUE" >> $GOROOT/api/$FILE
 echo "pkg encoding/json/v2, func MatchCaseInsensitiveNames(bool) jsonopts.Options #$ISSUE" >> $GOROOT/api/$FILE
-echo "pkg encoding/json/v2, func JoinMarshalers(...*typedArshalers[jsontext.Encoder]) *typedArshalers[jsontext.Encoder] #$ISSUE" >> $GOROOT/api/$FILE
-echo "pkg encoding/json/v2, func JoinUnmarshalers(...*typedArshalers[jsontext.Decoder]) *typedArshalers[jsontext.Decoder] #$ISSUE" >> $GOROOT/api/$FILE
 echo "pkg encoding/json/v2, func OmitZeroStructFields(bool) jsonopts.Options #$ISSUE" >> $GOROOT/api/$FILE
 echo "pkg encoding/json/v2, func RejectUnknownMembers(bool) jsonopts.Options #$ISSUE" >> $GOROOT/api/$FILE
 echo "pkg encoding/json/v2, func StringifyNumbers(bool) jsonopts.Options #$ISSUE" >> $GOROOT/api/$FILE
 echo "pkg encoding/json/v2, func Unmarshal([]uint8, interface{}, ...jsonopts.Options) error #$ISSUE" >> $GOROOT/api/$FILE
 echo "pkg encoding/json/v2, func UnmarshalDecode(*jsontext.Decoder, interface{}, ...jsonopts.Options) error #$ISSUE" >> $GOROOT/api/$FILE
-echo "pkg encoding/json/v2, func UnmarshalFunc[\$0 interface{}](func([]uint8, \$0) error) *typedArshalers[jsontext.Decoder] #$ISSUE" >> $GOROOT/api/$FILE
 echo "pkg encoding/json/v2, func UnmarshalFromFunc[\$0 interface{}](func(*jsontext.Decoder, \$0, jsonopts.Options) error) *typedArshalers[jsontext.Decoder] #$ISSUE" >> $GOROOT/api/$FILE
+echo "pkg encoding/json/v2, func UnmarshalFunc[\$0 interface{}](func([]uint8, \$0) error) *typedArshalers[jsontext.Decoder] #$ISSUE" >> $GOROOT/api/$FILE
 echo "pkg encoding/json/v2, func UnmarshalRead(io.Reader, interface{}, ...jsonopts.Options) error #$ISSUE" >> $GOROOT/api/$FILE
 echo "pkg encoding/json/v2, func WithMarshalers(*typedArshalers[jsontext.Encoder]) jsonopts.Options #$ISSUE" >> $GOROOT/api/$FILE
 echo "pkg encoding/json/v2, func WithUnmarshalers(*typedArshalers[jsontext.Decoder]) jsonopts.Options #$ISSUE" >> $GOROOT/api/$FILE

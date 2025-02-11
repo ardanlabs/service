@@ -76,13 +76,8 @@ func CompareUTF16[Bytes ~[]byte | ~string](x, y Bytes) int {
 		return ('\u0000' <= r && r <= '\uD7FF') || ('\uE000' <= r && r <= '\uFFFF')
 	}
 
-	var invalidUTF8 bool
-	x0, y0 := x, y
 	for {
 		if len(x) == 0 || len(y) == 0 {
-			if len(x) == len(y) && invalidUTF8 {
-				return strings.Compare(string(x0), string(y0))
-			}
 			return cmp.Compare(len(x), len(y))
 		}
 
@@ -114,7 +109,14 @@ func CompareUTF16[Bytes ~[]byte | ~string](x, y Bytes) int {
 		if rx != ry {
 			return cmp.Compare(rx, ry)
 		}
-		invalidUTF8 = invalidUTF8 || (rx == utf8.RuneError && nx == 1) || (ry == utf8.RuneError && ny == 1)
+
+		// Check for invalid UTF-8, in which case,
+		// we just perform a byte-for-byte comparison.
+		if isInvalidUTF8(rx, nx) || isInvalidUTF8(ry, ny) {
+			if x[0] != y[0] {
+				return cmp.Compare(x[0], y[0])
+			}
+		}
 		x, y = x[nx:], y[ny:]
 	}
 }
@@ -141,6 +143,7 @@ func truncateMaxUTF8[Bytes ~[]byte | ~string](b Bytes) Bytes {
 	return b
 }
 
+// TODO(https://go.dev/issue/70547): Use utf8.ErrInvalid instead.
 var ErrInvalidUTF8 = errors.New("invalid UTF-8")
 
 func NewInvalidCharacterError[Bytes ~[]byte | ~string](prefix Bytes, where string) error {
@@ -181,7 +184,6 @@ func TruncatePointer(s string, n int) string {
 	}
 
 	// Avoid truncation in the middle of a UTF-8 rune.
-	isInvalidUTF8 := func(r rune, rn int) bool { return r == utf8.RuneError && rn == 1 }
 	for i > 0 && isInvalidUTF8(utf8.DecodeLastRuneInString(s[:i])) {
 		i--
 	}
@@ -206,4 +208,8 @@ func TruncatePointer(s string, n int) string {
 		middle = strings.TrimSuffix(middle, "…")
 	}
 	return s[:i] + middle + s[j:]
+}
+
+func isInvalidUTF8(r rune, rn int) bool {
+	return r == utf8.RuneError && rn == 1
 }

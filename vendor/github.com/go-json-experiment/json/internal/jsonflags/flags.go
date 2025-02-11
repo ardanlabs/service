@@ -50,7 +50,8 @@ const (
 		AllowInvalidUTF8 |
 		EscapeForHTML |
 		EscapeForJS |
-		EscapeWithLegacySemantics |
+		EscapeInvalidUTF8 |
+		PreserveRawStrings |
 		Deterministic |
 		FormatNilMapAsNull |
 		FormatNilSliceAsNull |
@@ -74,29 +75,34 @@ const (
 	WhitespaceFlags = AnyWhitespace | Indent | IndentPrefix
 
 	// AnyEscape is the set of flags related to escaping in a JSON string.
-	AnyEscape = EscapeForHTML | EscapeForJS | EscapeWithLegacySemantics
+	AnyEscape = EscapeForHTML | EscapeForJS | EscapeInvalidUTF8
+
+	// CanonicalizeNumbers is the set of flags related to raw number canonicalization.
+	CanonicalizeNumbers = CanonicalizeRawInts | CanonicalizeRawFloats
 )
 
 // Encoder and decoder flags.
 const (
 	initFlag Bools = 1 << iota // reserved for the boolean value itself
 
-	AllowDuplicateNames       // encode or decode
-	AllowInvalidUTF8          // encode or decode
-	WithinArshalCall          // encode or decode; for internal use by json.Marshal and json.Unmarshal
-	OmitTopLevelNewline       // encode only; for internal use by json.Marshal and json.MarshalWrite
-	PreserveRawStrings        // encode only; for internal use by jsontext.Value.reformat
-	CanonicalizeNumbers       // encode only; for internal use by jsontext.Value.Canonicalize
-	EscapeForHTML             // encode only
-	EscapeForJS               // encode only
-	EscapeWithLegacySemantics // encode only; only exposed in v1
-	Multiline                 // encode only
-	SpaceAfterColon           // encode only
-	SpaceAfterComma           // encode only
-	Indent                    // encode only; non-boolean flag
-	IndentPrefix              // encode only; non-boolean flag
-	ByteLimit                 // encode or decode; non-boolean flag
-	DepthLimit                // encode or decode; non-boolean flag
+	AllowDuplicateNames   // encode or decode
+	AllowInvalidUTF8      // encode or decode
+	WithinArshalCall      // encode or decode; for internal use by json.Marshal and json.Unmarshal
+	OmitTopLevelNewline   // encode only; for internal use by json.Marshal and json.MarshalWrite
+	PreserveRawStrings    // encode only
+	CanonicalizeRawInts   // encode only
+	CanonicalizeRawFloats // encode only
+	ReorderRawObjects     // encode only
+	EscapeForHTML         // encode only
+	EscapeForJS           // encode only
+	EscapeInvalidUTF8     // encode only; only exposed in v1
+	Multiline             // encode only
+	SpaceAfterColon       // encode only
+	SpaceAfterComma       // encode only
+	Indent                // encode only; non-boolean flag
+	IndentPrefix          // encode only; non-boolean flag
+	ByteLimit             // encode or decode; non-boolean flag
+	DepthLimit            // encode or decode; non-boolean flag
 
 	maxCoderFlag
 )
