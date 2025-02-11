@@ -18,9 +18,7 @@ var service string
 func init() {
 	flag.StringVar(&service, "service", "", "filter which service to see")
 
-	shutdown := make(chan os.Signal, 1)
-	signal.Notify(shutdown, syscall.SIGINT)
-	syscall.Kill(os.Getppid(), syscall.SIGINT)
+	signal.Ignore(syscall.SIGINT)
 }
 
 func main() {
