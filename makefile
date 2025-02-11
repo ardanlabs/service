@@ -109,7 +109,7 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 # ==============================================================================
 # Define dependencies
 
-GOLANG          := golang:1.23
+GOLANG          := golang:1.24
 ALPINE          := alpine:3.21
 KIND            := kindest/node:v1.32.0
 POSTGRES        := postgres:17.2
