@@ -30,8 +30,8 @@ type httpStatus interface {
 }
 
 // Respond sends a response to the client.
-func Respond(ctx context.Context, w http.ResponseWriter, dataModel Encoder) error {
-	if _, ok := dataModel.(NoResponse); ok {
+func Respond(ctx context.Context, w http.ResponseWriter, resp Encoder) error {
+	if _, ok := resp.(NoResponse); ok {
 		return nil
 	}
 
@@ -43,9 +43,9 @@ func Respond(ctx context.Context, w http.ResponseWriter, dataModel Encoder) erro
 		}
 	}
 
-	var statusCode = http.StatusOK
+	statusCode := http.StatusOK
 
-	switch v := dataModel.(type) {
+	switch v := resp.(type) {
 	case httpStatus:
 		statusCode = v.HTTPStatus()
 
@@ -53,7 +53,7 @@ func Respond(ctx context.Context, w http.ResponseWriter, dataModel Encoder) erro
 		statusCode = http.StatusInternalServerError
 
 	default:
-		if dataModel == nil {
+		if resp == nil {
 			statusCode = http.StatusNoContent
 		}
 	}
@@ -66,7 +66,7 @@ func Respond(ctx context.Context, w http.ResponseWriter, dataModel Encoder) erro
 		return nil
 	}
 
-	data, contentType, err := dataModel.Encode()
+	data, contentType, err := resp.Encode()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return fmt.Errorf("respond: encode: %w", err)
