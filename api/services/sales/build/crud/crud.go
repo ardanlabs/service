@@ -46,13 +46,11 @@ func (add) Add(app *web.App, cfg mux.Config) {
 	})
 
 	homeapp.Routes(app, homeapp.Config{
-		UserBus:    userBus,
 		HomeBus:    homeBus,
 		AuthClient: cfg.AuthClient,
 	})
 
 	productapp.Routes(app, productapp.Config{
-		UserBus:    userBus,
 		ProductBus: productBus,
 		AuthClient: cfg.AuthClient,
 	})
