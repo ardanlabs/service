@@ -113,6 +113,7 @@ func extractIPPort(name string, port string) (hostIP string, hostPort string, er
 	// When IPv6 is turned on with Docker.
 	// Got  [{"HostIp":"0.0.0.0","HostPort":"49190"}{"HostIp":"::","HostPort":"49190"}]
 	// Need [{"HostIp":"0.0.0.0","HostPort":"49190"},{"HostIp":"::","HostPort":"49190"}]
+	// '[{{range $i,$v := (index .NetworkSettings.Ports "5432/tcp")}}{{if $i}},{{end}}{{json $v}}{{end}}]'
 
 	tmpl := fmt.Sprintf("[{{range $i,$v := (index .NetworkSettings.Ports \"%s/tcp\")}}{{if $i}},{{end}}{{json $v}}{{end}}]", port)
 
