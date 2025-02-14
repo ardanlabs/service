@@ -122,12 +122,12 @@ func (a *Auth) Authenticate(ctx context.Context, bearerToken string) (Claims, er
 
 	kidRaw, exists := token.Header["kid"]
 	if !exists {
-		return Claims{}, fmt.Errorf("kid missing from header: %w", err)
+		return Claims{}, errors.New("kid missing from header")
 	}
 
 	kid, ok := kidRaw.(string)
 	if !ok {
-		return Claims{}, fmt.Errorf("kid malformed: %w", err)
+		return Claims{}, errors.New("kid malformed")
 	}
 
 	pem, err := a.keyLookup.PublicKey(kid)
