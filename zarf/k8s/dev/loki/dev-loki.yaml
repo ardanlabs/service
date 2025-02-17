@@ -92,7 +92,7 @@ spec:
     spec:
       restartPolicy: Always
       containers:
-        - image: grafana/loki:3.3.0
+        - image: grafana/loki:3.4.0
           name: loki
           ports:
             - name: "loki"
