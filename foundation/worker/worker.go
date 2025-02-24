@@ -119,7 +119,7 @@ func (w *Worker) Start(ctx context.Context, jobFn JobFn) (string, error) {
 	w.wg.Add(1)
 	go func() {
 
-		// Do this in a separate defer incase the other defer panics.
+		// Do this in a separate defer in case the other defer panics.
 		// This adds a value back to the semaphore allowing a new message
 		// to be processed.
 		defer func() { w.sem <- true }()
@@ -132,7 +132,7 @@ func (w *Worker) Start(ctx context.Context, jobFn JobFn) (string, error) {
 			w.wg.Done()
 		}()
 
-		// Execute the actually workload.
+		// Execute the actual workload.
 		jobFn(ctx)
 	}()
 

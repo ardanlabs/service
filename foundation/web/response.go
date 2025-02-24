@@ -18,7 +18,7 @@ func NewNoResponse() NoResponse {
 	return NoResponse{}
 }
 
-// Encode implements the Encoder interface
+// Encode implements the Encoder interface.
 func (NoResponse) Encode() ([]byte, string, error) {
 	return nil, "", nil
 }

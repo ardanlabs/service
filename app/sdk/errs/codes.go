@@ -107,7 +107,7 @@ var (
 	// authentication credentials for the operation.
 	Unauthenticated = ErrCode{value: 17}
 
-	// TooManyRequest indicates that the client has made too many requests and
+	// TooManyRequests indicates that the client has made too many requests and
 	// exceeded their rate limit and/or quota and must wait before making
 	// futhur requests.
 	TooManyRequests = ErrCode{value: 18}
