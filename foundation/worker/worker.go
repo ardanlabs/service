@@ -95,9 +95,12 @@ func (w *Worker) Start(ctx context.Context, jobFn JobFn) (string, error) {
 	select {
 	case <-w.isShutdown:
 		return "", errors.New("shutting down")
-	case <-ctx.Done():
-		return "", ctx.Err()
-	case <-w.sem:
+	default:
+		select {
+		case <-ctx.Done():
+			return "", ctx.Err()
+		case <-w.sem:
+		}
 	}
 
 	// Need a unique key for this work.
