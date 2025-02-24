@@ -19,16 +19,18 @@ data:
     distributor:
       receivers: # this configuration will listen on all ports and protocols that tempo is capable of.
         #jaeger: # the receives all come from the OpenTelemetry collector.  more configuration information can
-          #protocols: # be found there: https://github.com/open-telemetry/opentelemetry-collector/tree/main/receiver
-            #thrift_http:                   #
-            #grpc:                          # for a production deployment you should only enable the receivers you need!
-            #thrift_binary:
-            #thrift_compact:
+        #protocols: # be found there: https://github.com/open-telemetry/opentelemetry-collector/tree/main/receiver
+        #thrift_http:                   #
+        #grpc:                          # for a production deployment you should only enable the receivers you need!
+        #thrift_binary:
+        #thrift_compact:
         #zipkin:
         otlp:
           protocols:
             http:
+              endpoint: "tempo:4318"
             grpc:
+              endpoint: "tempo:4317"
         #opencensus:
 
     ingester:
@@ -93,6 +95,7 @@ spec:
       labels:
         app: tempo
     spec:
+      hostname: tempo
       containers:
         - image: grafana/tempo:2.7.0
           name: tempo
