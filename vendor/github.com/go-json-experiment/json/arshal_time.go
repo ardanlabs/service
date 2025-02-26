@@ -198,7 +198,6 @@ type durationArshaler struct {
 	//   - 0 uses time.Duration.String
 	//   - 1e0, 1e3, 1e6, or 1e9 use a decimal encoding of the duration as
 	//     nanoseconds, microseconds, milliseconds, or seconds.
-	//   - 60 uses a "H:MM:SS.SSSSSSSSS" encoding
 	base uint64
 }
 
@@ -214,8 +213,6 @@ func (a *durationArshaler) initFormat(format string) (ok bool) {
 		a.base = 1e3
 	case "nano":
 		a.base = 1e0
-	case "base60": // see https://en.wikipedia.org/wiki/Sexagesimal#Modern_usage
-		a.base = 60
 	default:
 		return false
 	}
@@ -230,8 +227,6 @@ func (a *durationArshaler) appendMarshal(b []byte) ([]byte, error) {
 	switch a.base {
 	case 0:
 		return append(b, a.td.String()...), nil
-	case 60:
-		return appendDurationBase60(b, a.td), nil
 	default:
 		return appendDurationBase10(b, a.td, a.base), nil
 	}
@@ -241,8 +236,6 @@ func (a *durationArshaler) unmarshal(b []byte) (err error) {
 	switch a.base {
 	case 0:
 		a.td, err = time.ParseDuration(string(b))
-	case 60:
-		a.td, err = parseDurationBase60(b)
 	default:
 		a.td, err = parseDurationBase10(b, a.base)
 	}
@@ -427,45 +420,6 @@ func parseDurationBase10(b []byte, pow10 uint64) (time.Duration, error) {
 	case (!okWhole && whole != math.MaxUint64) || !okFrac:
 		return 0, fmt.Errorf("invalid duration %q: %w", b, strconv.ErrSyntax)
 	case !okWhole || hi > 0 || co > 0 || neg != (d < 0):
-		return 0, fmt.Errorf("invalid duration %q: %w", b, strconv.ErrRange)
-	default:
-		return d, nil
-	}
-}
-
-// appendDurationBase60 appends d formatted with H:MM:SS.SSS notation.
-func appendDurationBase60(b []byte, d time.Duration) []byte {
-	b, n := mayAppendDurationSign(b, d)                    // append sign
-	n, nsec := bits.Div64(0, n, 1e9)                       // compute nsec field
-	n, sec := bits.Div64(0, n, 60)                         // compute sec field
-	hour, min := bits.Div64(0, n, 60)                      // compute hour and min fields
-	b = strconv.AppendUint(b, hour, 10)                    // append hour field
-	b = append(b, ':', '0'+byte(min/10), '0'+byte(min%10)) // append min field
-	b = append(b, ':', '0'+byte(sec/10), '0'+byte(sec%10)) // append sec field
-	return appendFracBase10(b, nsec, 1e9)                  // append nsec field
-}
-
-// parseDurationBase60 parses d formatted with H:MM:SS.SSS notation.
-// The exact grammar is `-?(0|[1-9][0-9]*):[0-5][0-9]:[0-5][0-9]([.][0-9]+)?`.
-func parseDurationBase60(b []byte) (time.Duration, error) {
-	checkBase60 := func(b []byte) bool {
-		return len(b) == 2 && ('0' <= b[0] && b[0] <= '5') && '0' <= b[1] && b[1] <= '9'
-	}
-	suffix, neg := consumeSign(b)                            // consume sign
-	hourBytes, suffix := bytesCutByte(suffix, ':', false)    // consume hour field
-	minBytes, suffix := bytesCutByte(suffix, ':', false)     // consume min field
-	secBytes, nsecBytes := bytesCutByte(suffix, '.', true)   // consume sec and nsec fields
-	hour, okHour := jsonwire.ParseUint(hourBytes)            // parse hour field; may overflow
-	min := parseDec2(minBytes)                               // parse min field
-	sec := parseDec2(secBytes)                               // parse sec field
-	nsec, okNsec := parseFracBase10(nsecBytes, 1e9)          // parse nsec field
-	n := uint64(min)*60*1e9 + uint64(sec)*1e9 + uint64(nsec) // cannot overflow
-	hi, lo := bits.Mul64(hour, 60*60*1e9)                    // overflow if hi > 0
-	sum, co := bits.Add64(lo, n, 0)                          // overflow if co > 0
-	switch d := mayApplyDurationSign(sum, neg); {            // overflow if neg != (d < 0)
-	case (!okHour && hour != math.MaxUint64) || !checkBase60(minBytes) || !checkBase60(secBytes) || !okNsec:
-		return 0, fmt.Errorf("invalid duration %q: %w", b, strconv.ErrSyntax)
-	case !okHour || hi > 0 || co > 0 || neg != (d < 0):
 		return 0, fmt.Errorf("invalid duration %q: %w", b, strconv.ErrRange)
 	default:
 		return d, nil

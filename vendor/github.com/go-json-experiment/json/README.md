@@ -12,7 +12,7 @@ with the string "WARNING: " near the top of the commit message.
 It is your responsibility to inspect the list of commit changes
 when upgrading the module. Not all breaking changes will lead to build failures.
 
-A [Discussion about including this package in Go as `encoding/json/v2`](https://github.com/golang/go/discussions/63397) has been started on the Go Github project on 2023-10-05. Please provide your feedback there.
+A [proposal to include this module in Go as `encoding/json/v2` and `encoding/json/jsontext`](https://github.com/golang/go/issues/71497) has been started on the Go Github project on 2025-01-30. Please provide your feedback there.
 
 ## Goals and objectives
 

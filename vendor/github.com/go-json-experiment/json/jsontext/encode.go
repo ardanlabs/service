@@ -25,19 +25,19 @@ import (
 //
 // can be composed with the following calls (ignoring errors for brevity):
 //
-//	e.WriteToken(ObjectStart)        // {
+//	e.WriteToken(BeginObject)        // {
 //	e.WriteToken(String("name"))     // "name"
 //	e.WriteToken(String("value"))    // "value"
 //	e.WriteValue(Value(`"array"`))   // "array"
-//	e.WriteToken(ArrayStart)         // [
+//	e.WriteToken(BeginArray)         // [
 //	e.WriteToken(Null)               // null
 //	e.WriteToken(False)              // false
 //	e.WriteValue(Value("true"))      // true
 //	e.WriteToken(Float(3.14159))     // 3.14159
-//	e.WriteToken(ArrayEnd)           // ]
+//	e.WriteToken(EndArray)           // ]
 //	e.WriteValue(Value(`"object"`))  // "object"
 //	e.WriteValue(Value(`{"k":"v"}`)) // {"k":"v"}
-//	e.WriteToken(ObjectEnd)          // }
+//	e.WriteToken(EndObject)          // }
 //
 // The above is one of many possible sequence of calls and
 // may not represent the most sensible method to call for any given token/value.
@@ -114,8 +114,9 @@ func (e *encoderState) reset(b []byte, w io.Writer, opts ...Options) {
 	if bb, ok := w.(*bytes.Buffer); ok && bb != nil {
 		e.Buf = bb.Bytes()[bb.Len():] // alias the unused buffer of bb
 	}
-	e.Struct = jsonopts.Struct{}
-	e.Struct.Join(opts...)
+	opts2 := jsonopts.Struct{} // avoid mutating e.Struct in case it is part of opts
+	opts2.Join(opts...)
+	e.Struct = opts2
 	if e.Flags.Get(jsonflags.Multiline) {
 		if !e.Flags.Has(jsonflags.SpaceAfterColon) {
 			e.Flags.Set(jsonflags.SpaceAfterColon | 1)
@@ -128,6 +129,18 @@ func (e *encoderState) reset(b []byte, w io.Writer, opts ...Options) {
 			e.Indent = "\t"
 		}
 	}
+}
+
+// Options returns the options used to construct the decoder and
+// may additionally contain semantic options passed to a
+// [encoding/json/v2.MarshalEncode] call.
+//
+// If operating within
+// a [encoding/json/v2.MarshalerTo.MarshalJSONTo] method call or
+// a [encoding/json/v2.MarshalToFunc] function call,
+// then the returned options are only valid within the call.
+func (e *Encoder) Options() Options {
+	return &e.s.Struct
 }
 
 // NeedFlush determines whether to flush at this point.
@@ -218,7 +231,7 @@ func (e *encodeBuffer) unflushedBuffer() []byte  { return e.Buf }
 func (e *encoderState) avoidFlush() bool {
 	switch {
 	case e.Tokens.Last.Length() == 0:
-		// Never flush after ObjectStart or ArrayStart since we don't know yet
+		// Never flush after BeginObject or BeginArray since we don't know yet
 		// if the object or array will end up being empty.
 		return true
 	case e.Tokens.Last.needObjectValue():
@@ -914,8 +927,8 @@ func (e *Encoder) UnusedBuffer() []byte {
 
 // StackDepth returns the depth of the state machine for written JSON data.
 // Each level on the stack represents a nested JSON object or array.
-// It is incremented whenever an [ObjectStart] or [ArrayStart] token is encountered
-// and decremented whenever an [ObjectEnd] or [ArrayEnd] token is encountered.
+// It is incremented whenever an [BeginObject] or [BeginArray] token is encountered
+// and decremented whenever an [EndObject] or [EndArray] token is encountered.
 // The depth is zero-indexed, where zero represents the top-level JSON value.
 func (e *Encoder) StackDepth() int {
 	// NOTE: Keep in sync with Decoder.StackDepth.

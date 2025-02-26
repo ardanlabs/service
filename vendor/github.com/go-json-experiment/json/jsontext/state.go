@@ -15,30 +15,30 @@ import (
 	"github.com/go-json-experiment/json/internal/jsonwire"
 )
 
+// ErrDuplicateName indicates that a JSON token could not be
+// encoded or decoded because it results in a duplicate JSON object name.
+// This error is directly wrapped within a [SyntacticError] when produced.
+//
+// The name of a duplicate JSON object member can be extracted as:
+//
+//	err := ...
+//	var serr jsontext.SyntacticError
+//	if errors.As(err, &serr) && serr.Err == jsontext.ErrDuplicateName {
+//		ptr := serr.JSONPointer // JSON pointer to duplicate name
+//		name := ptr.LastToken() // duplicate name itself
+//		...
+//	}
+//
+// This error is only returned if [AllowDuplicateNames] is false.
+var ErrDuplicateName = errors.New("duplicate object member name")
+
+// ErrNonStringName indicates that a JSON token could not be
+// encoded or decoded because it is not a string,
+// as required for JSON object names according to RFC 8259, section 4.
+// This error is directly wrapped within a [SyntacticError] when produced.
+var ErrNonStringName = errors.New("object member name must be a string")
+
 var (
-	// ErrDuplicateName indicates that a JSON token could not be
-	// encoded or decoded because it results in a duplicate JSON object name.
-	// This error is directly wrapped within a [SyntacticError] when produced.
-	//
-	// The name of a duplicate JSON object member can be extracted as:
-	//
-	//	err := ...
-	//	var serr jsontext.SyntacticError
-	//	if errors.As(err, &serr) && serr.Err == jsontext.ErrDuplicateName {
-	//		ptr := serr.JSONPointer // JSON pointer to duplicate name
-	//		name := ptr.LastToken() // duplicate name itself
-	//		...
-	//	}
-	//
-	// This error is only returned if [AllowDuplicateNames] is false.
-	ErrDuplicateName = errors.New("duplicate object member name")
-
-	// ErrNonStringName indicates that a JSON token could not be
-	// encoded or decoded because it is not a string,
-	// as required for JSON object names according to RFC 8259, section 4.
-	// This error is directly wrapped within a [SyntacticError] when produced.
-	ErrNonStringName = errors.New("object member name must be a string")
-
 	errMissingValue  = errors.New("missing value after object name")
 	errMismatchDelim = errors.New("mismatching structural token for object or array")
 	errMaxDepth      = errors.New("exceeded max depth")

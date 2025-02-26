@@ -30,8 +30,8 @@ offers extensive configuration options. I encourage you to read through this
 README and experiment with the examples in order to understand its full
 capabilities.
 
-Here is a screenshot showing the P95 latency improvements we observed after
-adding this package in front of a distributed key-value store:
+This screenshot shows the P95 latency improvements we observed after adding
+this package in front of a distributed key-value store:
 
 &nbsp;
 <img width="1554" alt="Screenshot 2024-05-10 at 10 15 18" src="https://github.com/viccon/sturdyc/assets/12787673/adad1d4c-e966-4db1-969a-eda4fd75653a">

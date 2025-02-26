@@ -142,8 +142,21 @@ func (d *Decoder) Reset(r io.Reader, opts ...Options) {
 func (d *decoderState) reset(b []byte, r io.Reader, opts ...Options) {
 	d.state.reset()
 	d.decodeBuffer = decodeBuffer{buf: b, rd: r}
-	d.Struct = jsonopts.Struct{}
-	d.Struct.Join(opts...)
+	opts2 := jsonopts.Struct{} // avoid mutating d.Struct in case it is part of opts
+	opts2.Join(opts...)
+	d.Struct = opts2
+}
+
+// Options returns the options used to construct the encoder and
+// may additionally contain semantic options passed to a
+// [encoding/json/v2.UnmarshalDecode] call.
+//
+// If operating within
+// a [encoding/json/v2.UnmarshalerFrom.UnmarshalJSONFrom] method call or
+// a [encoding/json/v2.UnmarshalFromFunc] function call,
+// then the returned options are only valid within the call.
+func (d *Decoder) Options() Options {
+	return &d.s.Struct
 }
 
 var errBufferWriteAfterNext = errors.New("invalid bytes.Buffer.Write call after calling bytes.Buffer.Next")
@@ -603,7 +616,7 @@ func (d *decoderState) ReadToken() (Token, error) {
 		}
 		pos += 1
 		d.prevStart, d.prevEnd = pos, pos
-		return ObjectStart, nil
+		return BeginObject, nil
 
 	case '}':
 		if err = d.Tokens.popObject(); err != nil {
@@ -615,7 +628,7 @@ func (d *decoderState) ReadToken() (Token, error) {
 		}
 		pos += 1
 		d.prevStart, d.prevEnd = pos, pos
-		return ObjectEnd, nil
+		return EndObject, nil
 
 	case '[':
 		if err = d.Tokens.pushArray(); err != nil {
@@ -623,7 +636,7 @@ func (d *decoderState) ReadToken() (Token, error) {
 		}
 		pos += 1
 		d.prevStart, d.prevEnd = pos, pos
-		return ArrayStart, nil
+		return BeginArray, nil
 
 	case ']':
 		if err = d.Tokens.popArray(); err != nil {
@@ -631,7 +644,7 @@ func (d *decoderState) ReadToken() (Token, error) {
 		}
 		pos += 1
 		d.prevStart, d.prevEnd = pos, pos
-		return ArrayEnd, nil
+		return EndArray, nil
 
 	default:
 		err = jsonwire.NewInvalidCharacterError(d.buf[pos:], "at start of value")
@@ -1110,8 +1123,8 @@ func (d *Decoder) UnreadBuffer() []byte {
 
 // StackDepth returns the depth of the state machine for read JSON data.
 // Each level on the stack represents a nested JSON object or array.
-// It is incremented whenever an [ObjectStart] or [ArrayStart] token is encountered
-// and decremented whenever an [ObjectEnd] or [ArrayEnd] token is encountered.
+// It is incremented whenever an [BeginObject] or [BeginArray] token is encountered
+// and decremented whenever an [EndObject] or [EndArray] token is encountered.
 // The depth is zero-indexed, where zero represents the top-level JSON value.
 func (d *Decoder) StackDepth() int {
 	// NOTE: Keep in sync with Encoder.StackDepth.

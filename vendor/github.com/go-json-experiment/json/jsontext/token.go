@@ -94,10 +94,10 @@ var (
 	False Token = rawToken("false")
 	True  Token = rawToken("true")
 
-	ObjectStart Token = rawToken("{")
-	ObjectEnd   Token = rawToken("}")
-	ArrayStart  Token = rawToken("[")
-	ArrayEnd    Token = rawToken("]")
+	BeginObject Token = rawToken("{")
+	EndObject   Token = rawToken("}")
+	BeginArray  Token = rawToken("[")
+	EndArray    Token = rawToken("]")
 
 	zeroString Token = rawToken(`""`)
 	zeroNumber Token = rawToken(`0`)
@@ -176,14 +176,14 @@ func (t Token) Clone() Token {
 				return False
 			case True.raw:
 				return True
-			case ObjectStart.raw:
-				return ObjectStart
-			case ObjectEnd.raw:
-				return ObjectEnd
-			case ArrayStart.raw:
-				return ArrayStart
-			case ArrayEnd.raw:
-				return ArrayEnd
+			case BeginObject.raw:
+				return BeginObject
+			case EndObject.raw:
+				return EndObject
+			case BeginArray.raw:
+				return BeginArray
+			case EndArray.raw:
+				return EndArray
 			}
 		}
 

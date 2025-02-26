@@ -67,8 +67,9 @@ func (s *shard[T]) forceEvict() {
 
 	// Check if we should evict all entries.
 	if s.evictionPercentage == 100 {
+		evictedCount := len(s.entries)
 		s.entries = make(map[string]*entry[T])
-		s.reportEntriesEvicted(len(s.entries))
+		s.reportEntriesEvicted(evictedCount)
 		return
 	}
 

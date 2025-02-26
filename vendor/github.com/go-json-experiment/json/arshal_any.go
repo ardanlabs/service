@@ -123,7 +123,7 @@ func marshalObjectAny(enc *jsontext.Encoder, obj map[string]any, mo *jsonopts.St
 		}
 	}
 
-	if err := enc.WriteToken(jsontext.ObjectStart); err != nil {
+	if err := enc.WriteToken(jsontext.BeginObject); err != nil {
 		return err
 	}
 	// A Go map guarantees that each entry has a unique key
@@ -158,7 +158,7 @@ func marshalObjectAny(enc *jsontext.Encoder, obj map[string]any, mo *jsonopts.St
 		}
 		putStrings(names)
 	}
-	if err := enc.WriteToken(jsontext.ObjectEnd); err != nil {
+	if err := enc.WriteToken(jsontext.EndObject); err != nil {
 		return err
 	}
 	return nil
@@ -239,7 +239,7 @@ func marshalArrayAny(enc *jsontext.Encoder, arr []any, mo *jsonopts.Struct) erro
 		}
 	}
 
-	if err := enc.WriteToken(jsontext.ArrayStart); err != nil {
+	if err := enc.WriteToken(jsontext.BeginArray); err != nil {
 		return err
 	}
 	for _, val := range arr {
@@ -247,7 +247,7 @@ func marshalArrayAny(enc *jsontext.Encoder, arr []any, mo *jsonopts.Struct) erro
 			return err
 		}
 	}
-	if err := enc.WriteToken(jsontext.ArrayEnd); err != nil {
+	if err := enc.WriteToken(jsontext.EndArray); err != nil {
 		return err
 	}
 	return nil

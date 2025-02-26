@@ -75,9 +75,7 @@ type Options = jsonopts.Options
 // Properties set in later options override the value of previously set properties.
 func JoinOptions(srcs ...Options) Options {
 	var dst jsonopts.Struct
-	for _, src := range srcs {
-		dst.Join(src)
-	}
+	dst.Join(srcs...)
 	return &dst
 }
 
