@@ -220,7 +220,7 @@ func (a *Auth) isUserEnabled(ctx context.Context, claims Claims) error {
 	}
 
 	if !usr.Enabled {
-		return fmt.Errorf("user disabled")
+		return errors.New("user disabled")
 	}
 
 	return nil
