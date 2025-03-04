@@ -167,7 +167,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 	}
 
 	if n1+n2 == 0 {
-		return errors.New("no keys exist")
+		return fmt.Errorf("no keys exist")
 	}
 
 	authCfg := auth.Config{

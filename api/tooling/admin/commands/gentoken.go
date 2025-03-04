@@ -2,7 +2,6 @@ package commands
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"time"
@@ -54,7 +53,7 @@ func GenToken(log *logger.Logger, dbConfig sqldb.Config, keyPath string, userID 
 	}
 
 	if n1+n2 == 0 {
-		return errors.New("no keys exist")
+		return fmt.Errorf("no keys exist")
 	}
 
 	authCfg := auth.Config{
