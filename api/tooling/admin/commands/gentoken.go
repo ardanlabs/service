@@ -53,7 +53,7 @@ func GenToken(log *logger.Logger, dbConfig sqldb.Config, keyPath string, userID 
 	}
 
 	if n1+n2 == 0 {
-		return fmt.Errorf("no keys exist: %w", err)
+		return fmt.Errorf("no keys exist")
 	}
 
 	authCfg := auth.Config{
