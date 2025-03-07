@@ -2,22 +2,12 @@
 package crud
 
 import (
-	"time"
-
 	"github.com/ardanlabs/service/app/domain/checkapp"
 	"github.com/ardanlabs/service/app/domain/homeapp"
 	"github.com/ardanlabs/service/app/domain/productapp"
 	"github.com/ardanlabs/service/app/domain/tranapp"
 	"github.com/ardanlabs/service/app/domain/userapp"
 	"github.com/ardanlabs/service/app/sdk/mux"
-	"github.com/ardanlabs/service/business/domain/homebus"
-	"github.com/ardanlabs/service/business/domain/homebus/stores/homedb"
-	"github.com/ardanlabs/service/business/domain/productbus"
-	"github.com/ardanlabs/service/business/domain/productbus/stores/productdb"
-	"github.com/ardanlabs/service/business/domain/userbus"
-	"github.com/ardanlabs/service/business/domain/userbus/stores/usercache"
-	"github.com/ardanlabs/service/business/domain/userbus/stores/userdb"
-	"github.com/ardanlabs/service/business/sdk/delegate"
 	"github.com/ardanlabs/service/foundation/web"
 )
 
@@ -31,14 +21,6 @@ type add struct{}
 
 // Add implements the RouterAdder interface.
 func (add) Add(app *web.App, cfg mux.Config) {
-
-	// Construct the business domain packages we need here so we are using the
-	// sames instances for the different set of domain apis.
-	delegate := delegate.New(cfg.Log)
-	userBus := userbus.NewBusiness(cfg.Log, delegate, usercache.NewStore(cfg.Log, userdb.NewStore(cfg.Log, cfg.DB), time.Minute))
-	productBus := productbus.NewBusiness(cfg.Log, userBus, delegate, productdb.NewStore(cfg.Log, cfg.DB))
-	homeBus := homebus.NewBusiness(cfg.Log, userBus, delegate, homedb.NewStore(cfg.Log, cfg.DB))
-
 	checkapp.Routes(app, checkapp.Config{
 		Build: cfg.Build,
 		Log:   cfg.Log,
@@ -46,25 +28,25 @@ func (add) Add(app *web.App, cfg mux.Config) {
 	})
 
 	homeapp.Routes(app, homeapp.Config{
-		HomeBus:    homeBus,
-		AuthClient: cfg.AuthClient,
+		HomeBus:    cfg.BusConfig.HomeBus,
+		AuthClient: cfg.SalesConfig.AuthClient,
 	})
 
 	productapp.Routes(app, productapp.Config{
-		ProductBus: productBus,
-		AuthClient: cfg.AuthClient,
+		ProductBus: cfg.BusConfig.ProductBus,
+		AuthClient: cfg.SalesConfig.AuthClient,
 	})
 
 	tranapp.Routes(app, tranapp.Config{
-		UserBus:    userBus,
-		ProductBus: productBus,
+		UserBus:    cfg.BusConfig.UserBus,
+		ProductBus: cfg.BusConfig.ProductBus,
 		Log:        cfg.Log,
-		AuthClient: cfg.AuthClient,
+		AuthClient: cfg.SalesConfig.AuthClient,
 		DB:         cfg.DB,
 	})
 
 	userapp.Routes(app, userapp.Config{
-		UserBus:    userBus,
-		AuthClient: cfg.AuthClient,
+		UserBus:    cfg.BusConfig.UserBus,
+		AuthClient: cfg.SalesConfig.AuthClient,
 	})
 }

@@ -32,6 +32,9 @@ func New(t *testing.T, testName string) *Test {
 	server := httptest.NewServer(mux.WebAPI(mux.Config{
 		Log: db.Log,
 		DB:  db.DB,
+		BusConfig: mux.BusConfig{
+			UserBus: db.BusDomain.User,
+		},
 		AuthConfig: mux.AuthConfig{
 			Auth: auth,
 		},
@@ -44,6 +47,12 @@ func New(t *testing.T, testName string) *Test {
 	mux := mux.WebAPI(mux.Config{
 		Log: db.Log,
 		DB:  db.DB,
+		BusConfig: mux.BusConfig{
+			UserBus:     db.BusDomain.User,
+			ProductBus:  db.BusDomain.Product,
+			HomeBus:     db.BusDomain.Home,
+			VProductBus: db.BusDomain.VProduct,
+		},
 		SalesConfig: mux.SalesConfig{
 			AuthClient: authClient,
 		},

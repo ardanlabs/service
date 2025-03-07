@@ -10,6 +10,10 @@ import (
 	"github.com/ardanlabs/service/app/sdk/auth"
 	"github.com/ardanlabs/service/app/sdk/authclient"
 	"github.com/ardanlabs/service/app/sdk/mid"
+	"github.com/ardanlabs/service/business/domain/homebus"
+	"github.com/ardanlabs/service/business/domain/productbus"
+	"github.com/ardanlabs/service/business/domain/userbus"
+	"github.com/ardanlabs/service/business/domain/vproductbus"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/web"
 	"github.com/jmoiron/sqlx"
@@ -59,14 +63,22 @@ type AuthConfig struct {
 	Auth *auth.Auth
 }
 
+type BusConfig struct {
+	UserBus     *userbus.Business
+	ProductBus  *productbus.Business
+	HomeBus     *homebus.Business
+	VProductBus *vproductbus.Business
+}
+
 // Config contains all the mandatory systems required by handlers.
 type Config struct {
-	Build  string
-	Log    *logger.Logger
-	DB     *sqlx.DB
-	Tracer trace.Tracer
-	SalesConfig
-	AuthConfig
+	Build       string
+	Log         *logger.Logger
+	DB          *sqlx.DB
+	Tracer      trace.Tracer
+	BusConfig   BusConfig
+	SalesConfig SalesConfig
+	AuthConfig  AuthConfig
 }
 
 // RouteAdder defines behavior that sets the routes to bind for an instance

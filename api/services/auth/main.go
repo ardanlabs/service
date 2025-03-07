@@ -17,6 +17,10 @@ import (
 	"github.com/ardanlabs/service/app/sdk/auth"
 	"github.com/ardanlabs/service/app/sdk/debug"
 	"github.com/ardanlabs/service/app/sdk/mux"
+	"github.com/ardanlabs/service/business/domain/userbus"
+	"github.com/ardanlabs/service/business/domain/userbus/stores/usercache"
+	"github.com/ardanlabs/service/business/domain/userbus/stores/userdb"
+	"github.com/ardanlabs/service/business/sdk/delegate"
 	"github.com/ardanlabs/service/business/sdk/sqldb"
 	"github.com/ardanlabs/service/foundation/keystore"
 	"github.com/ardanlabs/service/foundation/logger"
@@ -205,6 +209,12 @@ func run(ctx context.Context, log *logger.Logger) error {
 	tracer := traceProvider.Tracer(cfg.Tempo.ServiceName)
 
 	// -------------------------------------------------------------------------
+	// Create Business Packages
+
+	delegate := delegate.New(log)
+	userBus := userbus.NewBusiness(log, delegate, usercache.NewStore(log, userdb.NewStore(log, db), time.Minute))
+
+	// -------------------------------------------------------------------------
 	// Start Debug Service
 
 	go func() {
@@ -228,6 +238,9 @@ func run(ctx context.Context, log *logger.Logger) error {
 		Log:    log,
 		DB:     db,
 		Tracer: tracer,
+		BusConfig: mux.BusConfig{
+			UserBus: userBus,
+		},
 		AuthConfig: mux.AuthConfig{
 			Auth: ath,
 		},
