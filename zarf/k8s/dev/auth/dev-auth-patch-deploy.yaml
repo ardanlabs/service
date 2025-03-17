@@ -15,10 +15,10 @@ spec:
       dnsPolicy: ClusterFirstWithHostNet
       hostNetwork: true
 
-      containers:
-      - name: auth
-        resources:
-          requests:
-            cpu: "250m"
-          limits:
-            cpu: "250m"
+      # containers:
+      # - name: auth
+      #   resources:
+      #     requests:
+      #       cpu: "250m"
+      #     limits:
+      #       cpu: "250m"
