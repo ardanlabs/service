@@ -27,19 +27,19 @@ the command name unless the name is overridden.
 
 # Example Usage
 
-As an example, using this config struct:
+As an example, using "APP" prefix and this config struct:
 
 	type ip struct {
-		Name string `conf:"default:localhost,env:IP_NAME_VAR"`
-		IP   string `conf:"default:127.0.0.0"`
+		Name string `conf:"default:localhost"`
+		IP   string `conf:"default:127.0.0.0,env:IP_VAR"`
 	}
 	type Embed struct {
 		Name     string        `conf:"default:bill"`
 		Duration time.Duration `conf:"default:1s,flag:e-dur,short:d"`
 	}
 	type config struct {
-		AnInt   int    `conf:"default:9"`
-		AString string `conf:"default:B,short:s"`
+		AnInt   map[string]int `conf:"default:min:0;max:9,help:map example"`
+		AString []string       `conf:"default:A;B;C,short:a,help:slice example"`
 		Bool    bool
 		Skip    string `conf:"-"`
 		IP      ip
@@ -48,21 +48,29 @@ As an example, using this config struct:
 
 The following usage information would be output you can display.
 
-Usage: conf.test [options] [arguments]
+Usage: conf.test [options...] [arguments...]
 
 OPTIONS
 
-	--an-int/$CRUD_AN_INT         <int>       (default: 9)
-	--a-string/-s/$CRUD_A_STRING  <string>    (default: B)
-	--bool/$CRUD_BOOL             <bool>
-	--ip-name/$CRUD_IP_NAME_VAR   <string>    (default: localhost)
-	--ip-ip/$CRUD_IP_IP           <string>    (default: 127.0.0.0)
-	--name/$CRUD_NAME             <string>    (default: bill)
-	--e-dur/-d/$CRUD_DURATION     <duration>  (default: 1s)
-	--help/-h
-	display this help message
-	--version/-v
-	display version information
+	-a, --a-string  <string>,[string...]  (default: A;B;C)        slice example
+	    --an-int    <value>               (default: min:0;max:9)  map example
+	    --bool      <bool>
+	-d, --e-dur     <duration>            (default: 1s)
+	-h, --help                                                    display this help message
+	    --ip-ip     <string>              (default: 127.0.0.0)
+	    --ip-name   <string>              (default: localhost)
+	    --name      <string>              (default: bill)
+	-v, --version                                                 display version
+
+ENVIRONMENT
+
+	APP_A_STRING  <string>,[string...]  (default: A;B;C)        slice example
+	APP_AN_INT    <value>               (default: min:0;max:9)  map example
+	APP_BOOL      <bool>
+	APP_DURATION  <duration>            (default: 1s)
+	APP_IP_VAR    <string>              (default: 127.0.0.0)
+	APP_IP_NAME   <string>              (default: localhost)
+	APP_NAME      <string>              (default: bill)
 
 # Example Parsing
 

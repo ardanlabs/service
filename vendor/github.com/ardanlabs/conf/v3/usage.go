@@ -7,10 +7,33 @@ import (
 	"reflect"
 	"strings"
 	"text/tabwriter"
+
+	"golang.org/x/text/collate"
+	"golang.org/x/text/language"
 )
 
-const buildKey = `Build`
-const descKey = `Desc`
+const (
+	buildKey   = "Build"
+	descKey    = "Desc"
+	helpKey    = "help"
+	versionKey = "version"
+)
+
+type sortedFields struct {
+	fields []Field
+}
+
+func (sf sortedFields) Len() int {
+	return len(sf.fields)
+}
+
+func (sf sortedFields) Swap(i, j int) {
+	sf.fields[i], sf.fields[j] = sf.fields[j], sf.fields[i]
+}
+
+func (sf sortedFields) Bytes(i int) []byte {
+	return []byte(strings.ToLower(strings.Join(sf.fields[i].FlagKey, `-`)))
+}
 
 func containsField(fields []Field, name string) bool {
 	for i := range fields {
@@ -42,17 +65,30 @@ func fmtUsage(namespace string, fields []Field) string {
 			FlagKey:   []string{"version"},
 			Options: FieldOptions{
 				ShortFlagChar: 'v',
-				Help:          "display version information",
+				Help:          "display version",
 			}})
 	}
 
-	_, file := path.Split(os.Args[0])
-	fmt.Fprintf(&sb, "Usage: %s [options] [arguments]\n\n", file)
+	sf := sortedFields{fields: fields}
+	cc := collate.New(language.English)
+	cc.Sort(sf)
 
-	fmt.Fprintln(&sb, "OPTIONS")
+	_, file := path.Split(os.Args[0])
+	fmt.Fprintf(&sb, "Usage: %s [options...] [arguments...]\n\n", file)
+
 	w := new(tabwriter.Writer)
 	w.Init(&sb, 0, 4, 2, ' ', tabwriter.TabIndent)
 
+	fmt.Fprintln(&sb, "OPTIONS")
+	writeOptions(w, sf.fields)
+
+	fmt.Fprintln(&sb, "ENVIRONMENT")
+	writeEnv(w, namespace, sf.fields)
+
+	return sb.String()
+}
+
+func writeOptions(w *tabwriter.Writer, fields []Field) {
 	for _, fld := range fields {
 
 		// Skip printing usage info for fields that just hold arguments.
@@ -67,28 +103,55 @@ func fmtUsage(namespace string, fields []Field) string {
 
 		fmt.Fprintf(w, "  %s", flagUsage(fld))
 
-		// Do not display env vars for help since they aren't respected.
-		if fld.Name != "help" && fld.Name != "version" {
-			fmt.Fprintf(w, "/%s", envUsage(namespace, fld))
-		}
-
 		typeName, help := getTypeAndHelp(&fld)
 
 		// Do not display type info for help because it would show <bool> but our
 		// parsing does not really treat --help as a boolean field. Its presence
 		// always indicates true even if they do --help=false.
-		if fld.Name != "help" && fld.Name != "version" {
+		if fld.Name != helpKey && fld.Name != versionKey {
 			fmt.Fprintf(w, "\t%s", typeName)
+			fmt.Fprintf(w, "\t%s", getOptString(fld))
+		} else {
+			fmt.Fprint(w, "\t\t")
 		}
 
-		fmt.Fprintf(w, "\t%s\n", getOptString(fld))
-		if help != "" {
-			fmt.Fprintf(w, "  %s\n", help)
+		fmt.Fprintf(w, "\t%s", help)
+
+		fmt.Fprint(w, "\n")
+	}
+
+	fmt.Fprint(w, "\n")
+	w.Flush()
+}
+
+func writeEnv(w *tabwriter.Writer, namespace string, fields []Field) {
+	for _, fld := range fields {
+
+		// Skip printing usage info for fields that just hold arguments.
+		if fld.Field.Type() == argsT {
+			continue
 		}
+
+		// Do not display version fields and Description
+		// Do not display env vars for help since they aren't respected.
+		if fld.Name == buildKey || fld.Name == descKey ||
+			fld.Name == helpKey || fld.Name == versionKey {
+			continue
+		}
+
+		fmt.Fprintf(w, "  %s", envUsage(namespace, fld))
+
+		typeName, help := getTypeAndHelp(&fld)
+
+		fmt.Fprintf(w, "\t%s", typeName)
+		fmt.Fprintf(w, "\t%s", getOptString(fld))
+
+		fmt.Fprintf(w, "\t%s", help)
+
+		fmt.Fprint(w, "\n")
 	}
 
 	w.Flush()
-	return sb.String()
 }
 
 // getTypeAndHelp extracts the type and help message for a single field for

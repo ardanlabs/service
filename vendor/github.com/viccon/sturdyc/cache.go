@@ -121,6 +121,7 @@ func (c *Client[T]) performContinuousEvictions() {
 func (c *Client[T]) getShard(key string) *shard[T] {
 	hash := xxhash.Sum64String(key)
 	shardIndex := hash % uint64(len(c.shards))
+	//nolint:gosec // we'll ignore potential integer overflows here.
 	c.reportShardIndex(int(shardIndex))
 	return c.shards[shardIndex]
 }

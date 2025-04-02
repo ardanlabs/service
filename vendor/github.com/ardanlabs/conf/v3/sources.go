@@ -71,7 +71,7 @@ func envUsage(namespace string, fld Field) string {
 	if namespace == "" {
 		uspace = uspace[1:]
 	}
-	return "$" + uspace
+	return uspace
 }
 
 // =============================================================================
@@ -201,6 +201,7 @@ func (f *flag) Source(fld Field) (string, bool) {
 // flagUsage constructs a usage string for the flag argument.
 func flagUsage(fld Field) string {
 	usage := "--" + strings.ToLower(strings.Join(fld.FlagKey, `-`))
+
 	if fld.Options.ShortFlagChar != 0 {
 		flagKey := []string{string(fld.Options.ShortFlagChar)}
 		usage += "/-" + strings.ToLower(strings.Join(flagKey, `-`))

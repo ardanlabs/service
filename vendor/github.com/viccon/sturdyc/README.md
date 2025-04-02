@@ -407,11 +407,17 @@ request, and another from the second or third.
 // [4,11]
 // [14,2]
 // [6,15]
+
+func pickRandomValue(batches [][]string) string {
+	batch := batches[rand.IntN(len(batches))]
+	return batch[rand.IntN(len(batch))]
+}
+
 var wg sync.WaitGroup
 for i := 0; i < 5; i++ {
 	wg.Add(1)
 	go func() {
-		ids := []string{batches[rand.IntN(2)][rand.IntN(4)], batches[rand.IntN(2)][rand.IntN(4)]}
+		ids := []string{pickRandomValue(batches), pickRandomValue(batches)}
 		res, _ := cacheClient.GetOrFetchBatch(context.Background(), ids, keyPrefixFn, fetchFn)
 		log.Printf("got batch: %v\n", res)
 		wg.Done()

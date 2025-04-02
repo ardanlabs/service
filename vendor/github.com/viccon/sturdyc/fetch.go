@@ -63,7 +63,7 @@ func getFetch[V, T any](ctx context.Context, c *Client[T], key string, fetchFn F
 		// then decide whether to proceed with the cached data or to
 		// propagate the error.
 		if err != nil && ok {
-			return value, ErrOnlyCachedRecords
+			return value, errors.Join(ErrOnlyCachedRecords, err)
 		}
 
 		return res, err
@@ -176,7 +176,7 @@ func getFetchBatch[V, T any](ctx context.Context, c *Client[T], ids []string, ke
 
 	if err != nil && !errors.Is(err, ErrOnlyCachedRecords) {
 		if len(cachedRecords) > 0 {
-			return cachedRecords, ErrOnlyCachedRecords
+			return cachedRecords, errors.Join(ErrOnlyCachedRecords, err)
 		}
 		return cachedRecords, err
 	}
