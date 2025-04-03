@@ -38,7 +38,7 @@ importers:
         version: 6.7.2
       '@vitejs/plugin-vue':
         specifier: ^4.6.2
-        version: 4.6.2(vite@4.5.9(sass@1.85.0))(vue@3.5.13)
+        version: 4.6.2(vite@4.5.11(sass@1.85.0))(vue@3.5.13)
       eslint:
         specifier: ^8.57.1
         version: 8.57.1
@@ -49,11 +49,11 @@ importers:
         specifier: ^1.85.0
         version: 1.85.0
       vite:
-        specifier: ^4.5.9
-        version: 4.5.9(sass@1.85.0)
+        specifier: ^4.5.11
+        version: 4.5.11(sass@1.85.0)
       vite-plugin-vuetify:
         specifier: ^1.0.2
-        version: 1.0.2(vite@4.5.9(sass@1.85.0))(vue@3.5.13)(vuetify@3.7.12)
+        version: 1.0.2(vite@4.5.11(sass@1.85.0))(vue@3.5.13)(vuetify@3.7.12)
 
 packages:
 
@@ -701,8 +701,8 @@ packages:
   ms@2.1.3:
     resolution: {integrity: sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==}
 
-  nanoid@3.3.8:
-    resolution: {integrity: sha512-WNLf5Sd8oZxOm+TzppcYk8gVOgP+l58xNy58D0nbUnOxOWRWvlcCV4kUF7ltmI6PsrLl/BgKEyS4mqsGChFN0w==}
+  nanoid@3.3.11:
+    resolution: {integrity: sha512-N8SpfPUnUp1bK+PMYW8qSWdl9U+wwNWI4QKxOYDy9JAro3WMX7p2OeVRF9v+347pnakNevPmiHhNmZ2HbFA76w==}
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
 
@@ -782,8 +782,8 @@ packages:
     resolution: {integrity: sha512-Q8qQfPiZ+THO/3ZrOrO0cJJKfpYCagtMUkXbnEfmgUjwXg6z/WBeOyS9APBBPCTSiDV+s4SwQGu8yFsiMRIudg==}
     engines: {node: '>=4'}
 
-  postcss@8.5.2:
-    resolution: {integrity: sha512-MjOadfU3Ys9KYoX0AdkBlFEF1Vx37uCCeN4ZHnmwm9FfpbsGWMZeBLMmmpY+6Ocqod7mkdZ0DT31OlbsFrLlkA==}
+  postcss@8.5.3:
+    resolution: {integrity: sha512-dle9A3yYxlBSrt8Fu+IpjGT8SY8hN0mlaA6GY8t0P5PjIOZemULz/E2Bnm/2dcUOena75OTNkHI76uZBNUUq3A==}
     engines: {node: ^10 || ^12 || >=14}
 
   prelude-ls@1.2.1:
@@ -896,8 +896,8 @@ packages:
       vue: ^3.0.0
       vuetify: ^3.0.0-beta.4
 
-  vite@4.5.9:
-    resolution: {integrity: sha512-qK9W4xjgD3gXbC0NmdNFFnVFLMWSNiR3swj957yutwzzN16xF/E7nmtAyp1rT9hviDroQANjE4HK3H4WqWdFtw==}
+  vite@4.5.11:
+    resolution: {integrity: sha512-4mVdhLkZ0vpqZLGJhNm+X1n7juqXApEMGlUXcOQawA45UmpxivOYaMBkI/Js3FlBsNA8hCgEnX5X04moFitSGw==}
     engines: {node: ^14.18.0 || >=16.0.0}
     hasBin: true
     peerDependencies:
@@ -1190,9 +1190,9 @@ snapshots:
 
   '@ungap/structured-clone@1.3.0': {}
 
-  '@vitejs/plugin-vue@4.6.2(vite@4.5.9(sass@1.85.0))(vue@3.5.13)':
+  '@vitejs/plugin-vue@4.6.2(vite@4.5.11(sass@1.85.0))(vue@3.5.13)':
     dependencies:
-      vite: 4.5.9(sass@1.85.0)
+      vite: 4.5.11(sass@1.85.0)
       vue: 3.5.13
 
   '@vue/compiler-core@3.5.13':
@@ -1217,7 +1217,7 @@ snapshots:
       '@vue/shared': 3.5.13
       estree-walker: 2.0.2
       magic-string: 0.30.17
-      postcss: 8.5.2
+      postcss: 8.5.3
       source-map-js: 1.2.1
 
   '@vue/compiler-ssr@3.5.13':
@@ -1603,7 +1603,7 @@ snapshots:
 
   ms@2.1.3: {}
 
-  nanoid@3.3.8: {}
+  nanoid@3.3.11: {}
 
   natural-compare@1.4.0: {}
 
@@ -1677,9 +1677,9 @@ snapshots:
       cssesc: 3.0.0
       util-deprecate: 1.0.2
 
-  postcss@8.5.2:
+  postcss@8.5.3:
     dependencies:
-      nanoid: 3.3.8
+      nanoid: 3.3.11
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
@@ -1760,21 +1760,21 @@ snapshots:
 
   util-deprecate@1.0.2: {}
 
-  vite-plugin-vuetify@1.0.2(vite@4.5.9(sass@1.85.0))(vue@3.5.13)(vuetify@3.7.12):
+  vite-plugin-vuetify@1.0.2(vite@4.5.11(sass@1.85.0))(vue@3.5.13)(vuetify@3.7.12):
     dependencies:
       '@vuetify/loader-shared': 1.7.1(vue@3.5.13)(vuetify@3.7.12)
       debug: 4.4.0
       upath: 2.0.1
-      vite: 4.5.9(sass@1.85.0)
+      vite: 4.5.11(sass@1.85.0)
       vue: 3.5.13
       vuetify: 3.7.12(vite-plugin-vuetify@1.0.2)(vue@3.5.13)
     transitivePeerDependencies:
       - supports-color
 
-  vite@4.5.9(sass@1.85.0):
+  vite@4.5.11(sass@1.85.0):
     dependencies:
       esbuild: 0.18.20
-      postcss: 8.5.2
+      postcss: 8.5.3
       rollup: 3.29.5
     optionalDependencies:
       fsevents: 2.3.3
@@ -1814,7 +1814,7 @@ snapshots:
     dependencies:
       vue: 3.5.13
     optionalDependencies:
-      vite-plugin-vuetify: 1.0.2(vite@4.5.9(sass@1.85.0))(vue@3.5.13)(vuetify@3.7.12)
+      vite-plugin-vuetify: 1.0.2(vite@4.5.11(sass@1.85.0))(vue@3.5.13)(vuetify@3.7.12)
 
   webfontloader@1.6.28: {}
 
