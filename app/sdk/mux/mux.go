@@ -3,7 +3,6 @@
 package mux
 
 import (
-	"context"
 	"embed"
 	"net/http"
 
@@ -89,12 +88,8 @@ type RouteAdder interface {
 
 // WebAPI constructs a http.Handler with all application routes bound.
 func WebAPI(cfg Config, routeAdder RouteAdder, options ...func(opts *Options)) http.Handler {
-	logger := func(ctx context.Context, msg string, args ...any) {
-		cfg.Log.Info(ctx, msg, args...)
-	}
-
 	app := web.NewApp(
-		logger,
+		cfg.Log.Info,
 		cfg.Tracer,
 		mid.Otel(cfg.Tracer),
 		mid.Logger(cfg.Log),

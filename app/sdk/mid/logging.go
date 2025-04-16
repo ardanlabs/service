@@ -26,10 +26,9 @@ func Logger(log *logger.Logger) web.MidFunc {
 			log.Info(ctx, "request started", "method", r.Method, "path", path, "remoteaddr", r.RemoteAddr)
 
 			resp := next(ctx, r)
-			err := isError(resp)
 
 			var statusCode = errs.OK
-			if err != nil {
+			if err := isError(resp); err != nil {
 				statusCode = errs.Internal
 
 				var v *errs.Error

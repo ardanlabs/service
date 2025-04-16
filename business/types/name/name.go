@@ -78,6 +78,8 @@ func (n Null) Equal(n2 Null) bool {
 	return n.value == n2.value
 }
 
+// =============================================================================
+
 // ParseNull parses the string value and returns a name if the value complies
 // with the rules for a name.
 func ParseNull(value string) (Null, error) {
