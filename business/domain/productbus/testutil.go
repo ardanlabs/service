@@ -16,7 +16,7 @@ func TestGenerateNewProducts(n int, userID uuid.UUID) []NewProduct {
 	newPrds := make([]NewProduct, n)
 
 	idx := rand.Intn(10000)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		idx++
 
 		np := NewProduct{

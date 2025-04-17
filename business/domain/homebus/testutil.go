@@ -14,7 +14,7 @@ func TestGenerateNewHomes(n int, userID uuid.UUID) []NewHome {
 	newHmes := make([]NewHome, n)
 
 	idx := rand.Intn(10000)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		idx++
 
 		t := hometype.Single
