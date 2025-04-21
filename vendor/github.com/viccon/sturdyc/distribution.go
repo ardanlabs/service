@@ -96,9 +96,10 @@ func distributedFetch[V, T any](c *Client[T], key string, fetchFn FetchFn[V]) Fe
 
 	return func(ctx context.Context) (V, error) {
 		stale, hasStale := *new(V), false
-		bytes, ok := c.distributedStorage.Get(ctx, key)
-		if ok {
-			c.reportDistributedCacheHit(true)
+		bytes, existsInDistributedStorage := c.distributedStorage.Get(ctx, key)
+		c.reportDistributedCacheHit(existsInDistributedStorage)
+
+		if existsInDistributedStorage {
 			record, unmarshalErr := unmarshalRecord[V](bytes, key, c.log)
 			if unmarshalErr != nil {
 				return record.Value, unmarshalErr
@@ -116,8 +117,16 @@ func distributedFetch[V, T any](c *Client[T], key string, fetchFn FetchFn[V]) Fe
 			stale, hasStale = record.Value, true
 		}
 
-		if !ok {
-			c.reportDistributedCacheHit(false)
+		// Before we call the fetchFn, we'll do an unblocking read to see if the
+		// context has been cancelled. If it has, we'll return a stale value if we
+		// have one available.
+		select {
+		case <-ctx.Done():
+			if hasStale {
+				return stale, errors.Join(errOnlyDistributedRecords, ctx.Err())
+			}
+			return *(new(V)), ctx.Err()
+		default:
 		}
 
 		// If it's not fresh enough, we'll retrieve it from the source.
@@ -146,7 +155,7 @@ func distributedFetch[V, T any](c *Client[T], key string, fetchFn FetchFn[V]) Fe
 
 		if hasStale {
 			c.reportDistributedStaleFallback()
-			return stale, nil
+			return stale, errors.Join(errOnlyDistributedRecords, fetchErr)
 		}
 
 		return response, fetchErr
@@ -177,14 +186,14 @@ func distributedBatchFetch[V, T any](c *Client[T], keyFn KeyFn, fetchFn BatchFet
 		idsToRefresh := make([]string, 0, len(ids))
 		for _, id := range ids {
 			key := keyFn(id)
-			bytes, ok := distributedRecords[key]
-			if !ok {
-				c.reportDistributedCacheHit(false)
+			bytes, existsInDistributedStorage := distributedRecords[key]
+			c.reportDistributedCacheHit(existsInDistributedStorage)
+
+			if !existsInDistributedStorage {
 				idsToRefresh = append(idsToRefresh, id)
 				continue
 			}
 
-			c.reportDistributedCacheHit(true)
 			record, unmarshalErr := unmarshalRecord[V](bytes, key, c.log)
 			if unmarshalErr != nil {
 				idsToRefresh = append(idsToRefresh, id)
@@ -194,11 +203,12 @@ func distributedBatchFetch[V, T any](c *Client[T], keyFn KeyFn, fetchFn BatchFet
 			// If early refreshes isn't enabled it means all records are fresh, otherwise we'll check the CreatedAt time.
 			if !c.distributedEarlyRefreshes || c.clock.Since(record.CreatedAt) < c.distributedRefreshAfterDuration {
 				// We never want to return missing records.
-				if !record.IsMissingRecord {
-					fresh[id] = record.Value
-				} else {
+				if record.IsMissingRecord {
 					c.reportDistributedMissingRecord()
+					continue
 				}
+
+				fresh[id] = record.Value
 				continue
 			}
 
@@ -206,15 +216,31 @@ func distributedBatchFetch[V, T any](c *Client[T], keyFn KeyFn, fetchFn BatchFet
 			c.reportDistributedRefresh()
 
 			// We never want to return missing records.
-			if !record.IsMissingRecord {
-				stale[id] = record.Value
-			} else {
+			if record.IsMissingRecord {
 				c.reportDistributedMissingRecord()
+				continue
 			}
+			stale[id] = record.Value
 		}
 
 		if len(idsToRefresh) == 0 {
 			return fresh, nil
+		}
+
+		// Before we call the fetchFn, we'll do an unblocking read to see if the
+		// context has been cancelled. If it has, we'll return any potential
+		// records we got from the distributed storage.
+		select {
+		case <-ctx.Done():
+			maps.Copy(stale, fresh)
+
+			// If we didn't get any records from the distributed storage,
+			// we'll return the error from the fetch function as-is.
+			if len(stale) < 1 {
+				return stale, ctx.Err()
+			}
+			return stale, errors.Join(errOnlyDistributedRecords, ctx.Err())
+		default:
 		}
 
 		dataSourceResponses, err := fetchFn(ctx, idsToRefresh)
@@ -227,7 +253,14 @@ func distributedBatchFetch[V, T any](c *Client[T], keyFn KeyFn, fetchFn BatchFet
 				c.reportDistributedStaleFallback()
 			}
 			maps.Copy(stale, fresh)
-			return stale, errOnlyDistributedRecords
+
+			// If we didn't get any records from the distributed storage,
+			// we'll return the error from the fetch function as-is.
+			if len(stale) < 1 {
+				return dataSourceResponses, err
+			}
+
+			return stale, errors.Join(errOnlyDistributedRecords, err)
 		}
 
 		// Next, we'll want to check if we should change any of the records to be missing or perform deletions.
@@ -235,9 +268,7 @@ func distributedBatchFetch[V, T any](c *Client[T], keyFn KeyFn, fetchFn BatchFet
 		keysToDelete := make([]string, 0, max(len(idsToRefresh)-len(dataSourceResponses), 0))
 		for _, id := range idsToRefresh {
 			key := keyFn(id)
-			response, ok := dataSourceResponses[id]
-
-			if ok {
+			if response, ok := dataSourceResponses[id]; ok {
 				if recordBytes, marshalErr := marshalRecord[V](response, c); marshalErr == nil {
 					recordsToWrite[key] = recordBytes
 				}

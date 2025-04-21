@@ -7,7 +7,7 @@ import (
 
 func (c *Client[T]) refresh(key string, fetchFn FetchFn[T]) {
 	response, err := fetchFn(context.Background())
-	if err != nil {
+	if err != nil && !errors.Is(err, errOnlyDistributedRecords) {
 		if c.storeMissingRecords && errors.Is(err, ErrNotFound) {
 			c.StoreMissingRecord(key)
 		}

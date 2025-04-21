@@ -21,7 +21,7 @@ func (c *Client[T]) newFlight(key string) *inFlightCall[T] {
 	return call
 }
 
-func makeCall[T, V any](ctx context.Context, c *Client[T], key string, fn FetchFn[V], call *inFlightCall[T]) {
+func makeCall[T any](ctx context.Context, c *Client[T], key string, fn FetchFn[T], call *inFlightCall[T]) {
 	defer func() {
 		if err := recover(); err != nil {
 			call.err = fmt.Errorf("sturdyc: panic recovered: %v", err)
@@ -33,40 +33,38 @@ func makeCall[T, V any](ctx context.Context, c *Client[T], key string, fn FetchF
 	}()
 
 	response, err := fn(ctx)
+	call.val = response
+
 	if c.storeMissingRecords && errors.Is(err, ErrNotFound) {
 		c.StoreMissingRecord(key)
 		call.err = ErrMissingRecord
 		return
 	}
 
-	if err != nil {
+	if err != nil && !errors.Is(err, errOnlyDistributedRecords) {
 		call.err = err
 		return
 	}
 
-	res, ok := any(response).(T)
-	if !ok {
-		call.err = ErrInvalidType
-		return
+	if errors.Is(err, errOnlyDistributedRecords) {
+		call.err = onlyCachedRecords(err)
 	}
 
-	call.err = nil
-	call.val = res
-	c.Set(key, res)
+	c.Set(key, response)
 }
 
-func callAndCache[V, T any](ctx context.Context, c *Client[T], key string, fn FetchFn[V]) (V, error) {
+func callAndCache[T any](ctx context.Context, c *Client[T], key string, fn FetchFn[T]) (T, error) {
 	c.inFlightMutex.Lock()
 	if call, ok := c.inFlightMap[key]; ok {
 		c.inFlightMutex.Unlock()
 		call.Wait()
-		return unwrap[V, T](call.val, call.err)
+		return call.val, call.err
 	}
 
 	call := c.newFlight(key)
 	c.inFlightMutex.Unlock()
 	makeCall(ctx, c, key, fn, call)
-	return unwrap[V, T](call.val, call.err)
+	return call.val, call.err
 }
 
 // newBatchFlight should be called with a lock.
@@ -89,22 +87,33 @@ func (c *Client[T]) endBatchFlight(ids []string, keyFn KeyFn, call *inFlightCall
 	c.inFlightBatchMutex.Unlock()
 }
 
-type makeBatchCallOpts[T, V any] struct {
+type makeBatchCallOpts[T any] struct {
 	ids   []string
-	fn    BatchFetchFn[V]
+	fn    BatchFetchFn[T]
 	keyFn KeyFn
 	call  *inFlightCall[map[string]T]
 }
 
-func makeBatchCall[T, V any](ctx context.Context, c *Client[T], opts makeBatchCallOpts[T, V]) {
+func makeBatchCall[T any](ctx context.Context, c *Client[T], opts makeBatchCallOpts[T]) {
 	response, err := opts.fn(ctx, opts.ids)
+	for id, record := range response {
+		// We never want to discard values from the fetch functions, even if they
+		// return an error. Instead, we'll pass them to the user along with any
+		// errors and let them decide what to do.
+		opts.call.val[id] = record
+		// However, we'll only write them to the cache if the fetchFunction returned a non-nil error.
+		if err == nil || errors.Is(err, errOnlyDistributedRecords) {
+			c.Set(opts.keyFn(id), record)
+		}
+	}
+
 	if err != nil && !errors.Is(err, errOnlyDistributedRecords) {
 		opts.call.err = err
 		return
 	}
 
 	if errors.Is(err, errOnlyDistributedRecords) {
-		opts.call.err = ErrOnlyCachedRecords
+		opts.call.err = onlyCachedRecords(err)
 	}
 
 	// Check if we should store any of these IDs as a missing record. However, we
@@ -119,26 +128,15 @@ func makeBatchCall[T, V any](ctx context.Context, c *Client[T], opts makeBatchCa
 			}
 		}
 	}
-
-	// Store the records in the cache.
-	for id, record := range response {
-		v, ok := any(record).(T)
-		if !ok {
-			c.log.Error("sturdyc: invalid type for ID:" + id)
-			continue
-		}
-		c.Set(opts.keyFn(id), v)
-		opts.call.val[id] = v
-	}
 }
 
-type callBatchOpts[T, V any] struct {
+type callBatchOpts[T any] struct {
 	ids   []string
 	keyFn KeyFn
-	fn    BatchFetchFn[V]
+	fn    BatchFetchFn[T]
 }
 
-func callAndCacheBatch[V, T any](ctx context.Context, c *Client[T], opts callBatchOpts[T, V]) (map[string]V, error) {
+func callAndCacheBatch[T any](ctx context.Context, c *Client[T], opts callBatchOpts[T]) (map[string]T, error) {
 	c.inFlightBatchMutex.Lock()
 
 	callIDs := make(map[*inFlightCall[map[string]T]][]string)
@@ -161,40 +159,37 @@ func callAndCacheBatch[V, T any](ctx context.Context, c *Client[T], opts callBat
 				}
 				c.endBatchFlight(uniqueIDs, opts.keyFn, call)
 			}()
-			batchCallOpts := makeBatchCallOpts[T, V]{ids: uniqueIDs, fn: opts.fn, keyFn: opts.keyFn, call: call}
+			batchCallOpts := makeBatchCallOpts[T]{ids: uniqueIDs, fn: opts.fn, keyFn: opts.keyFn, call: call}
 			makeBatchCall(ctx, c, batchCallOpts)
 		}()
 	}
 	c.inFlightBatchMutex.Unlock()
 
 	var err error
-	response := make(map[string]V, len(opts.ids))
+	response := make(map[string]T, len(opts.ids))
 	for call, callIDs := range callIDs {
 		call.Wait()
-		// It could be only cached records here, if we we're able
-		// to get some of the IDs from the distributed storage.
-		if call.err != nil && !errors.Is(call.err, ErrOnlyCachedRecords) {
-			return response, call.err
-		}
 
-		if errors.Is(call.err, ErrOnlyCachedRecords) {
-			err = ErrOnlyCachedRecords
-		}
-
-		// We need to iterate through the values that we want from this call. The
-		// batch could contain a hundred IDs, but we might only want a few of them.
+		// We need to iterate through the values that WE want from this call. The batch
+		// could contain hundreds of IDs, but we might only want a few of them.
 		for _, id := range callIDs {
-			v, ok := call.val[id]
-			if !ok {
-				continue
+			if v, ok := call.val[id]; ok {
+				response[id] = v
 			}
-
-			if val, ok := any(v).(V); ok {
-				response[id] = val
-				continue
-			}
-			return response, ErrInvalidType
 		}
+
+		// This handles the scenario where we either don't get an error, or are
+		// using the distributed storage option and are able to get some records
+		// while the request to the underlying data source fails. In the latter
+		// case, we'll continue to accumulate partial responses as long as the only
+		// issue is cached-only records.
+		if err == nil || errors.Is(call.err, ErrOnlyCachedRecords) {
+			err = call.err
+			continue
+		}
+
+		// For any other kind of error, we'll short‑circuit the function and return.
+		return response, call.err
 	}
 
 	return response, err

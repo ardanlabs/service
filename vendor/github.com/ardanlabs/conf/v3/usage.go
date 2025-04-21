@@ -5,11 +5,9 @@ import (
 	"os"
 	"path"
 	"reflect"
+	"sort"
 	"strings"
 	"text/tabwriter"
-
-	"golang.org/x/text/collate"
-	"golang.org/x/text/language"
 )
 
 const (
@@ -31,8 +29,11 @@ func (sf sortedFields) Swap(i, j int) {
 	sf.fields[i], sf.fields[j] = sf.fields[j], sf.fields[i]
 }
 
-func (sf sortedFields) Bytes(i int) []byte {
-	return []byte(strings.ToLower(strings.Join(sf.fields[i].FlagKey, `-`)))
+func (sf sortedFields) Less(i, j int) bool {
+	s1 := strings.ToLower(strings.Join(sf.fields[i].FlagKey, `-`))
+	s2 := strings.ToLower(strings.Join(sf.fields[j].FlagKey, `-`))
+
+	return s1 < s2
 }
 
 func containsField(fields []Field, name string) bool {
@@ -70,8 +71,7 @@ func fmtUsage(namespace string, fields []Field) string {
 	}
 
 	sf := sortedFields{fields: fields}
-	cc := collate.New(language.English)
-	cc.Sort(sf)
+	sort.Sort(&sf)
 
 	_, file := path.Split(os.Args[0])
 	fmt.Fprintf(&sb, "Usage: %s [options...] [arguments...]\n\n", file)

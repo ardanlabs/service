@@ -151,7 +151,7 @@ func getFetchBatch[V, T any](ctx context.Context, c *Client[T], ids []string, ke
 	cacheMissesAndSyncRefreshes = append(cacheMissesAndSyncRefreshes, cacheMisses...)
 	cacheMissesAndSyncRefreshes = append(cacheMissesAndSyncRefreshes, idsToSynchronouslyRefresh...)
 
-	callBatchOpts := callBatchOpts[T, T]{ids: cacheMissesAndSyncRefreshes, keyFn: keyFn, fn: wrappedFetch}
+	callBatchOpts := callBatchOpts[T]{ids: cacheMissesAndSyncRefreshes, keyFn: keyFn, fn: wrappedFetch}
 	response, err := callAndCacheBatch(ctx, c, callBatchOpts)
 
 	// If we did a call to synchronously refresh some of the records, and it
@@ -175,10 +175,14 @@ func getFetchBatch[V, T any](ctx context.Context, c *Client[T], ids []string, ke
 	}
 
 	if err != nil && !errors.Is(err, ErrOnlyCachedRecords) {
+		// At this point, the call for the IDs that we didn't have in the cache
+		// have failed. However, these ID's could have been picked from multiple
+		// in-flight requests. Hence, we'll check if we're able to add any of these
+		// IDs to the cached records before returning.
 		if len(cachedRecords) > 0 {
+			maps.Copy(cachedRecords, response)
 			return cachedRecords, errors.Join(ErrOnlyCachedRecords, err)
 		}
-		return cachedRecords, err
 	}
 
 	maps.Copy(cachedRecords, response)

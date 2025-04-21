@@ -51,26 +51,24 @@ The following usage information would be output you can display.
 Usage: conf.test [options...] [arguments...]
 
 OPTIONS
-
-	-a, --a-string  <string>,[string...]  (default: A;B;C)        slice example
-	    --an-int    <value>               (default: min:0;max:9)  map example
-	    --bool      <bool>
-	-d, --e-dur     <duration>            (default: 1s)
-	-h, --help                                                    display this help message
-	    --ip-ip     <string>              (default: 127.0.0.0)
-	    --ip-name   <string>              (default: localhost)
-	    --name      <string>              (default: bill)
-	-v, --version                                                 display version
+  -a, --a-string  <string>,[string...]  (default: A;B;C)        slice example
+      --an-int    <value>               (default: min:0;max:9)  map example
+      --bool      <bool>
+  -d, --e-dur     <duration>            (default: 1s)
+  -h, --help                                                    display this help message
+      --ip-ip     <string>              (default: 127.0.0.0)
+      --ip-name   <string>              (default: localhost)
+      --name      <string>              (default: bill)
+  -v, --version                                                 display version
 
 ENVIRONMENT
-
-	APP_A_STRING  <string>,[string...]  (default: A;B;C)        slice example
-	APP_AN_INT    <value>               (default: min:0;max:9)  map example
-	APP_BOOL      <bool>
-	APP_DURATION  <duration>            (default: 1s)
-	APP_IP_VAR    <string>              (default: 127.0.0.0)
-	APP_IP_NAME   <string>              (default: localhost)
-	APP_NAME      <string>              (default: bill)
+  APP_A_STRING  <string>,[string...]  (default: A;B;C)        slice example
+  APP_AN_INT    <value>               (default: min:0;max:9)  map example
+  APP_BOOL      <bool>
+  APP_DURATION  <duration>            (default: 1s)
+  APP_IP_VAR    <string>              (default: 127.0.0.0)
+  APP_IP_NAME   <string>              (default: localhost)
+  APP_NAME      <string>              (default: bill)
 
 # Example Parsing
 
