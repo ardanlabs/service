@@ -1,0 +1,67 @@
+// Package auditbus provides a business logic layer for handling audit events.
+package auditbus
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"time"
+
+	"github.com/ardanlabs/service/foundation/logger"
+	"github.com/google/uuid"
+)
+
+// Storer interface declares the behavior this package needs to persist and
+// retrieve data.
+type Storer interface {
+	Create(ctx context.Context, audit Audit) error
+	Query(ctx context.Context, filter QueryFilter) ([]Audit, error)
+}
+
+// Business manages the set of APIs for audit access.
+type Business struct {
+	log    *logger.Logger
+	storer Storer
+}
+
+// NewBusiness constructs a audit business API for use.
+func NewBusiness(log *logger.Logger, storer Storer) *Business {
+	return &Business{
+		log:    log,
+		storer: storer,
+	}
+}
+
+// Create adds a new audit record to the system.
+func (b *Business) Create(ctx context.Context, primaryID uuid.UUID, userID uuid.UUID, action string, data any, message string) error {
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		return fmt.Errorf("marshal object: %w", err)
+	}
+
+	audit := Audit{
+		ID:        uuid.New(),
+		PrimaryID: primaryID,
+		UserID:    userID,
+		Action:    action,
+		Data:      jsonData,
+		Message:   message,
+		Timestamp: time.Now(),
+	}
+
+	if err := b.storer.Create(ctx, audit); err != nil {
+		return fmt.Errorf("create audit: %w", err)
+	}
+
+	return nil
+}
+
+// Query retrieves a list of existing audit records.
+func (b *Business) Query(ctx context.Context, filter QueryFilter) ([]Audit, error) {
+	audits, err := b.storer.Query(ctx, filter)
+	if err != nil {
+		return nil, fmt.Errorf("query audits: %w", err)
+	}
+
+	return audits, nil
+}

@@ -20,7 +20,7 @@ func New(t *testing.T, testName string) *Test {
 
 	auth, err := auth.New(auth.Config{
 		Log:       db.Log,
-		DB:        db.DB,
+		UserBus:   db.BusDomain.User,
 		KeyLookup: &KeyStore{},
 	})
 	if err != nil {

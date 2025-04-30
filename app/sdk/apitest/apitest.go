@@ -75,7 +75,7 @@ func (at *Test) Run(t *testing.T, table []Table, testName string) {
 // =============================================================================
 
 // Token generates an authenticated token for a user.
-func Token(userBus *userbus.Business, ath *auth.Auth, email string) string {
+func Token(userBus userbus.Business, ath *auth.Auth, email string) string {
 	addr, _ := mail.ParseAddress(email)
 
 	dbUsr, err := userBus.QueryByEmail(context.Background(), *addr)

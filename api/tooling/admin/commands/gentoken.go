@@ -59,7 +59,7 @@ func GenToken(log *logger.Logger, dbConfig sqldb.Config, keyPath string, userID 
 
 	authCfg := auth.Config{
 		Log:       log,
-		DB:        db,
+		UserBus:   userBus,
 		KeyLookup: ks,
 		Issuer:    "service project",
 	}

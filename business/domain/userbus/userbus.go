@@ -38,31 +38,58 @@ type Storer interface {
 	QueryByEmail(ctx context.Context, email mail.Address) (User, error)
 }
 
+// Plugin is a function that wraps different layers of business logic around
+// the core business functionality.
+type Plugin func(Business) Business
+
+// Business interface provides support for plugins that wrap extra functionality
+// around the core busines logic.
+type Business interface {
+	NewWithTx(tx sqldb.CommitRollbacker) (Business, error)
+	Create(ctx context.Context, nu NewUser) (User, error)
+	Update(ctx context.Context, usr User, uu UpdateUser) (User, error)
+	Delete(ctx context.Context, usr User) error
+	Query(ctx context.Context, filter QueryFilter, orderBy order.By, page page.Page) ([]User, error)
+	Count(ctx context.Context, filter QueryFilter) (int, error)
+	QueryByID(ctx context.Context, userID uuid.UUID) (User, error)
+	QueryByEmail(ctx context.Context, email mail.Address) (User, error)
+	Authenticate(ctx context.Context, email mail.Address, password string) (User, error)
+}
+
 // Business manages the set of APIs for user access.
-type Business struct {
+type business struct {
 	log      *logger.Logger
 	storer   Storer
 	delegate *delegate.Delegate
 }
 
 // NewBusiness constructs a user business API for use.
-func NewBusiness(log *logger.Logger, delegate *delegate.Delegate, storer Storer) *Business {
-	return &Business{
+func NewBusiness(log *logger.Logger, delegate *delegate.Delegate, storer Storer, plugins ...Plugin) Business {
+	b := Business(&business{
 		log:      log,
 		delegate: delegate,
 		storer:   storer,
+	})
+
+	for i := len(plugins) - 1; i >= 0; i-- {
+		p := plugins[i]
+		if p != nil {
+			b = p(b)
+		}
 	}
+
+	return b
 }
 
 // NewWithTx constructs a new business value that will use the
 // specified transaction in any store related calls.
-func (b *Business) NewWithTx(tx sqldb.CommitRollbacker) (*Business, error) {
+func (b *business) NewWithTx(tx sqldb.CommitRollbacker) (Business, error) {
 	storer, err := b.storer.NewWithTx(tx)
 	if err != nil {
 		return nil, err
 	}
 
-	bus := Business{
+	bus := business{
 		log:      b.log,
 		delegate: b.delegate,
 		storer:   storer,
@@ -72,7 +99,7 @@ func (b *Business) NewWithTx(tx sqldb.CommitRollbacker) (*Business, error) {
 }
 
 // Create adds a new user to the system.
-func (b *Business) Create(ctx context.Context, nu NewUser) (User, error) {
+func (b *business) Create(ctx context.Context, nu NewUser) (User, error) {
 	ctx, span := otel.AddSpan(ctx, "business.userbus.create")
 	defer span.End()
 
@@ -103,7 +130,7 @@ func (b *Business) Create(ctx context.Context, nu NewUser) (User, error) {
 }
 
 // Update modifies information about a user.
-func (b *Business) Update(ctx context.Context, usr User, uu UpdateUser) (User, error) {
+func (b *business) Update(ctx context.Context, usr User, uu UpdateUser) (User, error) {
 	ctx, span := otel.AddSpan(ctx, "business.userbus.update")
 	defer span.End()
 
@@ -145,7 +172,7 @@ func (b *Business) Update(ctx context.Context, usr User, uu UpdateUser) (User, e
 }
 
 // Delete removes the specified user.
-func (b *Business) Delete(ctx context.Context, usr User) error {
+func (b *business) Delete(ctx context.Context, usr User) error {
 	ctx, span := otel.AddSpan(ctx, "business.userbus.delete")
 	defer span.End()
 
@@ -163,7 +190,7 @@ func (b *Business) Delete(ctx context.Context, usr User) error {
 }
 
 // Query retrieves a list of existing users.
-func (b *Business) Query(ctx context.Context, filter QueryFilter, orderBy order.By, page page.Page) ([]User, error) {
+func (b *business) Query(ctx context.Context, filter QueryFilter, orderBy order.By, page page.Page) ([]User, error) {
 	ctx, span := otel.AddSpan(ctx, "business.userbus.query")
 	defer span.End()
 
@@ -176,7 +203,7 @@ func (b *Business) Query(ctx context.Context, filter QueryFilter, orderBy order.
 }
 
 // Count returns the total number of users.
-func (b *Business) Count(ctx context.Context, filter QueryFilter) (int, error) {
+func (b *business) Count(ctx context.Context, filter QueryFilter) (int, error) {
 	ctx, span := otel.AddSpan(ctx, "business.userbus.count")
 	defer span.End()
 
@@ -184,7 +211,7 @@ func (b *Business) Count(ctx context.Context, filter QueryFilter) (int, error) {
 }
 
 // QueryByID finds the user by the specified ID.
-func (b *Business) QueryByID(ctx context.Context, userID uuid.UUID) (User, error) {
+func (b *business) QueryByID(ctx context.Context, userID uuid.UUID) (User, error) {
 	ctx, span := otel.AddSpan(ctx, "business.userbus.querybyid")
 	defer span.End()
 
@@ -197,7 +224,7 @@ func (b *Business) QueryByID(ctx context.Context, userID uuid.UUID) (User, error
 }
 
 // QueryByEmail finds the user by a specified user email.
-func (b *Business) QueryByEmail(ctx context.Context, email mail.Address) (User, error) {
+func (b *business) QueryByEmail(ctx context.Context, email mail.Address) (User, error) {
 	ctx, span := otel.AddSpan(ctx, "business.userbus.querybyemail")
 	defer span.End()
 
@@ -212,7 +239,7 @@ func (b *Business) QueryByEmail(ctx context.Context, email mail.Address) (User, 
 // Authenticate finds a user by their email and verifies their password. On
 // success it returns a Claims User representing this user. The claims can be
 // used to generate a token for future authentication.
-func (b *Business) Authenticate(ctx context.Context, email mail.Address, password string) (User, error) {
+func (b *business) Authenticate(ctx context.Context, email mail.Address, password string) (User, error) {
 	ctx, span := otel.AddSpan(ctx, "business.userbus.authenticate")
 	defer span.End()
 

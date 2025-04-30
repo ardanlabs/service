@@ -14,11 +14,11 @@ import (
 )
 
 type app struct {
-	userBus    *userbus.Business
+	userBus    userbus.Business
 	productBus *productbus.Business
 }
 
-func newApp(userBus *userbus.Business, productBus *productbus.Business) *app {
+func newApp(userBus userbus.Business, productBus *productbus.Business) *app {
 	return &app{
 		userBus:    userBus,
 		productBus: productBus,

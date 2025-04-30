@@ -149,6 +149,12 @@ func run(ctx context.Context, log *logger.Logger) error {
 	defer db.Close()
 
 	// -------------------------------------------------------------------------
+	// Create Business Packages
+
+	delegate := delegate.New(log)
+	userBus := userbus.NewBusiness(log, delegate, usercache.NewStore(log, userdb.NewStore(log, db), time.Minute))
+
+	// -------------------------------------------------------------------------
 	// Initialize authentication support
 
 	log.Info(ctx, "startup", "status", "initializing authentication support")
@@ -176,7 +182,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 
 	authCfg := auth.Config{
 		Log:       log,
-		DB:        db,
+		UserBus:   userBus,
 		KeyLookup: ks,
 		Issuer:    cfg.Auth.Issuer,
 	}
@@ -207,12 +213,6 @@ func run(ctx context.Context, log *logger.Logger) error {
 	defer teardown(context.Background())
 
 	tracer := traceProvider.Tracer(cfg.Tempo.ServiceName)
-
-	// -------------------------------------------------------------------------
-	// Create Business Packages
-
-	delegate := delegate.New(log)
-	userBus := userbus.NewBusiness(log, delegate, usercache.NewStore(log, userdb.NewStore(log, db), time.Minute))
 
 	// -------------------------------------------------------------------------
 	// Start Debug Service

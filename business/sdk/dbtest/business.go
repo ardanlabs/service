@@ -3,11 +3,14 @@ package dbtest
 import (
 	"time"
 
+	"github.com/ardanlabs/service/business/domain/auditbus"
+	"github.com/ardanlabs/service/business/domain/auditbus/stores/auditdb"
 	"github.com/ardanlabs/service/business/domain/homebus"
 	"github.com/ardanlabs/service/business/domain/homebus/stores/homedb"
 	"github.com/ardanlabs/service/business/domain/productbus"
 	"github.com/ardanlabs/service/business/domain/productbus/stores/productdb"
 	"github.com/ardanlabs/service/business/domain/userbus"
+	"github.com/ardanlabs/service/business/domain/userbus/plugins/useraudit"
 	"github.com/ardanlabs/service/business/domain/userbus/stores/usercache"
 	"github.com/ardanlabs/service/business/domain/userbus/stores/userdb"
 	"github.com/ardanlabs/service/business/domain/vproductbus"
@@ -22,13 +25,16 @@ type BusDomain struct {
 	Delegate *delegate.Delegate
 	Home     *homebus.Business
 	Product  *productbus.Business
-	User     *userbus.Business
+	User     userbus.Business
 	VProduct *vproductbus.Business
 }
 
 func newBusDomains(log *logger.Logger, db *sqlx.DB) BusDomain {
+	userAuditPlugin := useraudit.NewPlugin(log, auditbus.NewBusiness(log, auditdb.NewStore(log, db)))
+	userStorage := usercache.NewStore(log, userdb.NewStore(log, db), time.Hour)
+
 	delegate := delegate.New(log)
-	userBus := userbus.NewBusiness(log, delegate, usercache.NewStore(log, userdb.NewStore(log, db), time.Hour))
+	userBus := userbus.NewBusiness(log, delegate, userStorage, userAuditPlugin)
 	productBus := productbus.NewBusiness(log, userBus, delegate, productdb.NewStore(log, db))
 	homeBus := homebus.NewBusiness(log, userBus, delegate, homedb.NewStore(log, db))
 	vproductBus := vproductbus.NewBusiness(vproductdb.NewStore(log, db))

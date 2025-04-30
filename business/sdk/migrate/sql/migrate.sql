@@ -64,3 +64,17 @@ CREATE TABLE homes (
     PRIMARY KEY (home_id),
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
+
+-- Version: 1.05
+-- Description: Create table audit
+CREATE TABLE audit (
+    id          UUID      NOT NULL,
+    primary_id  UUID      NOT NULL,
+    user_id     TEXT      NOT NULL,
+    action      TEXT      NOT NULL,
+    data        JSONB     NULL,
+    message     TEXT      NULL,
+    timestamp   TIMESTAMP NOT NULL,
+
+    PRIMARY KEY (id)
+);
