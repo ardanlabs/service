@@ -46,12 +46,16 @@ type Business struct {
 
 // NewBusiness constructs a home business API for use.
 func NewBusiness(log *logger.Logger, userBus *userbus.Business, delegate *delegate.Delegate, storer Storer) *Business {
-	return &Business{
+	b := Business{
 		log:      log,
 		userBus:  userBus,
 		delegate: delegate,
 		storer:   storer,
 	}
+
+	b.registerDelegateFunctions()
+
+	return &b
 }
 
 // NewWithTx constructs a new domain value that will use the

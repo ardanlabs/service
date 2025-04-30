@@ -13,32 +13,28 @@ const DomainName = "user"
 
 // Set of delegate actions.
 const (
-	ActionUpdated = "updated"
+	ActionDeleted = "deleted"
 )
 
-// ActionUpdatedParms represents the parameters for the updated action.
-type ActionUpdatedParms struct {
+// ActionDeletedParms represents the parameters for the deleted action.
+type ActionDeletedParms struct {
 	UserID uuid.UUID
-	UpdateUser
 }
 
 // String returns a string representation of the action parameters.
-func (au *ActionUpdatedParms) String() string {
-	return fmt.Sprintf("&EventParamsUpdated{UserID:%v, Enabled:%v}", au.UserID, au.Enabled)
+func (act *ActionDeletedParms) String() string {
+	return fmt.Sprintf("&EventParamsUpdated{UserID:%v}", act.UserID)
 }
 
 // Marshal returns the event parameters encoded as JSON.
-func (au *ActionUpdatedParms) Marshal() ([]byte, error) {
-	return json.Marshal(au)
+func (act *ActionDeletedParms) Marshal() ([]byte, error) {
+	return json.Marshal(act)
 }
 
-// ActionUpdatedData constructs the data for the updated action.
-func ActionUpdatedData(uu UpdateUser, userID uuid.UUID) delegate.Data {
-	params := ActionUpdatedParms{
+// ActionDeletedData constructs the data for the deleted action.
+func ActionDeletedData(userID uuid.UUID) delegate.Data {
+	params := ActionDeletedParms{
 		UserID: userID,
-		UpdateUser: UpdateUser{
-			Enabled: uu.Enabled,
-		},
 	}
 
 	rawParams, err := params.Marshal()
@@ -48,7 +44,7 @@ func ActionUpdatedData(uu UpdateUser, userID uuid.UUID) delegate.Data {
 
 	return delegate.Data{
 		Domain:    DomainName,
-		Action:    ActionUpdated,
+		Action:    ActionDeleted,
 		RawParams: rawParams,
 	}
 }

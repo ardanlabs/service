@@ -141,12 +141,6 @@ func (b *Business) Update(ctx context.Context, usr User, uu UpdateUser) (User, e
 		return User{}, fmt.Errorf("update: %w", err)
 	}
 
-	// Other domains may need to know when a user is updated so business
-	// logic can be applied. This represents a delegate call to other domains.
-	if err := b.delegate.Call(ctx, ActionUpdatedData(uu, usr.ID)); err != nil {
-		return User{}, fmt.Errorf("failed to execute `%s` action: %w", ActionUpdated, err)
-	}
-
 	return usr, nil
 }
 
@@ -157,6 +151,12 @@ func (b *Business) Delete(ctx context.Context, usr User) error {
 
 	if err := b.storer.Delete(ctx, usr); err != nil {
 		return fmt.Errorf("delete: %w", err)
+	}
+
+	// Other domains may need to know when a user is deleted so business
+	// logic can be applied. This represents a delegate call to other domains.
+	if err := b.delegate.Call(ctx, ActionDeletedData(usr.ID)); err != nil {
+		return fmt.Errorf("failed to execute `%s` action: %w", ActionDeleted, err)
 	}
 
 	return nil
