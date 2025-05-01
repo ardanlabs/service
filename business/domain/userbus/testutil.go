@@ -8,6 +8,7 @@ import (
 
 	"github.com/ardanlabs/service/business/types/name"
 	"github.com/ardanlabs/service/business/types/role"
+	"github.com/google/uuid"
 )
 
 // TestNewUsers is a helper method for testing.
@@ -38,7 +39,7 @@ func TestSeedUsers(ctx context.Context, n int, role role.Role, api Business) ([]
 
 	usrs := make([]User, len(newUsrs))
 	for i, nu := range newUsrs {
-		usr, err := api.Create(ctx, nu)
+		usr, err := api.Create(ctx, uuid.UUID{}, nu)
 		if err != nil {
 			return nil, fmt.Errorf("seeding user: idx: %d : %w", i, err)
 		}

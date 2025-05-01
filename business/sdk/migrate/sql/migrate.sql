@@ -69,8 +69,10 @@ CREATE TABLE homes (
 -- Description: Create table audit
 CREATE TABLE audit (
     id          UUID      NOT NULL,
-    primary_id  UUID      NOT NULL,
-    user_id     TEXT      NOT NULL,
+    obj_id      UUID      NOT NULL,
+    obj_domain  TEXT      NOT NULL,
+    obj_name    TEXT      NOT NULL,
+    actor_id    UUID      NOT NULL,
     action      TEXT      NOT NULL,
     data        JSONB     NULL,
     message     TEXT      NULL,

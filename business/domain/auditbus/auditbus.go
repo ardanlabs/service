@@ -33,19 +33,21 @@ func NewBusiness(log *logger.Logger, storer Storer) *Business {
 }
 
 // Create adds a new audit record to the system.
-func (b *Business) Create(ctx context.Context, primaryID uuid.UUID, userID uuid.UUID, action string, data any, message string) error {
-	jsonData, err := json.Marshal(data)
+func (b *Business) Create(ctx context.Context, na NewAudit) error {
+	jsonData, err := json.Marshal(na.Data)
 	if err != nil {
 		return fmt.Errorf("marshal object: %w", err)
 	}
 
 	audit := Audit{
 		ID:        uuid.New(),
-		PrimaryID: primaryID,
-		UserID:    userID,
-		Action:    action,
+		ObjID:     na.ObjID,
+		ObjDomain: na.ObjDomain,
+		ObjName:   na.ObjName,
+		ActorID:   na.ActorID,
+		Action:    na.Action,
 		Data:      jsonData,
-		Message:   message,
+		Message:   na.Message,
 		Timestamp: time.Now(),
 	}
 

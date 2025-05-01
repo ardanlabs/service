@@ -46,9 +46,9 @@ type Plugin func(Business) Business
 // around the core busines logic.
 type Business interface {
 	NewWithTx(tx sqldb.CommitRollbacker) (Business, error)
-	Create(ctx context.Context, nu NewUser) (User, error)
-	Update(ctx context.Context, usr User, uu UpdateUser) (User, error)
-	Delete(ctx context.Context, usr User) error
+	Create(ctx context.Context, actorID uuid.UUID, nu NewUser) (User, error)
+	Update(ctx context.Context, actorID uuid.UUID, usr User, uu UpdateUser) (User, error)
+	Delete(ctx context.Context, actorID uuid.UUID, usr User) error
 	Query(ctx context.Context, filter QueryFilter, orderBy order.By, page page.Page) ([]User, error)
 	Count(ctx context.Context, filter QueryFilter) (int, error)
 	QueryByID(ctx context.Context, userID uuid.UUID) (User, error)
@@ -99,7 +99,7 @@ func (b *business) NewWithTx(tx sqldb.CommitRollbacker) (Business, error) {
 }
 
 // Create adds a new user to the system.
-func (b *business) Create(ctx context.Context, nu NewUser) (User, error) {
+func (b *business) Create(ctx context.Context, actorID uuid.UUID, nu NewUser) (User, error) {
 	ctx, span := otel.AddSpan(ctx, "business.userbus.create")
 	defer span.End()
 
@@ -130,7 +130,7 @@ func (b *business) Create(ctx context.Context, nu NewUser) (User, error) {
 }
 
 // Update modifies information about a user.
-func (b *business) Update(ctx context.Context, usr User, uu UpdateUser) (User, error) {
+func (b *business) Update(ctx context.Context, actorID uuid.UUID, usr User, uu UpdateUser) (User, error) {
 	ctx, span := otel.AddSpan(ctx, "business.userbus.update")
 	defer span.End()
 
@@ -172,7 +172,7 @@ func (b *business) Update(ctx context.Context, usr User, uu UpdateUser) (User, e
 }
 
 // Delete removes the specified user.
-func (b *business) Delete(ctx context.Context, usr User) error {
+func (b *business) Delete(ctx context.Context, actorID uuid.UUID, usr User) error {
 	ctx, span := otel.AddSpan(ctx, "business.userbus.delete")
 	defer span.End()
 

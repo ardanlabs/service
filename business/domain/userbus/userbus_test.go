@@ -15,6 +15,7 @@ import (
 	"github.com/ardanlabs/service/business/types/name"
 	"github.com/ardanlabs/service/business/types/role"
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -190,7 +191,7 @@ func create(busDomain dbtest.BusDomain) []unitest.Table {
 					Password:   "123",
 				}
 
-				resp, err := busDomain.User.Create(ctx, nu)
+				resp, err := busDomain.User.Create(ctx, uuid.UUID{}, nu)
 				if err != nil {
 					return err
 				}
@@ -246,7 +247,7 @@ func update(busDomain dbtest.BusDomain, sd unitest.SeedData) []unitest.Table {
 					Password:   dbtest.StringPointer("1234"),
 				}
 
-				resp, err := busDomain.User.Update(ctx, sd.Users[0].User, uu)
+				resp, err := busDomain.User.Update(ctx, uuid.UUID{}, sd.Users[0].User, uu)
 				if err != nil {
 					return err
 				}
@@ -282,7 +283,7 @@ func delete(busDomain dbtest.BusDomain, sd unitest.SeedData) []unitest.Table {
 			Name:    "user",
 			ExpResp: nil,
 			ExcFunc: func(ctx context.Context) any {
-				if err := busDomain.User.Delete(ctx, sd.Users[1].User); err != nil {
+				if err := busDomain.User.Delete(ctx, uuid.UUID{}, sd.Users[1].User); err != nil {
 					return err
 				}
 
@@ -296,7 +297,7 @@ func delete(busDomain dbtest.BusDomain, sd unitest.SeedData) []unitest.Table {
 			Name:    "admin",
 			ExpResp: nil,
 			ExcFunc: func(ctx context.Context) any {
-				if err := busDomain.User.Delete(ctx, sd.Admins[1].User); err != nil {
+				if err := busDomain.User.Delete(ctx, uuid.UUID{}, sd.Admins[1].User); err != nil {
 					return err
 				}
 

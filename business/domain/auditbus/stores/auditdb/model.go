@@ -2,17 +2,22 @@ package auditdb
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/ardanlabs/service/business/domain/auditbus"
+	"github.com/ardanlabs/service/business/types/domain"
+	"github.com/ardanlabs/service/business/types/name"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx/types"
 )
 
 type audit struct {
 	ID        uuid.UUID          `db:"id"`
-	PrimaryID uuid.UUID          `db:"primary_id"`
-	UserID    uuid.UUID          `db:"user_id"`
+	ObjID     uuid.UUID          `db:"obj_id"`
+	ObjDomain string             `db:"obj_domain"`
+	ObjName   string             `db:"obj_name"`
+	ActorID   uuid.UUID          `db:"actor_id"`
 	Action    string             `db:"action"`
 	Data      types.NullJSONText `db:"data"`
 	Message   string             `db:"message"`
@@ -22,8 +27,10 @@ type audit struct {
 func toDBAudit(bus auditbus.Audit) (audit, error) {
 	db := audit{
 		ID:        bus.ID,
-		PrimaryID: bus.PrimaryID,
-		UserID:    bus.UserID,
+		ObjID:     bus.ObjID,
+		ObjDomain: bus.ObjDomain.String(),
+		ObjName:   bus.ObjName.String(),
+		ActorID:   bus.ActorID,
 		Action:    bus.Action,
 		Data:      types.NullJSONText{JSONText: []byte(bus.Data), Valid: true},
 		Message:   bus.Message,
@@ -34,10 +41,22 @@ func toDBAudit(bus auditbus.Audit) (audit, error) {
 }
 
 func toBusAudit(db audit) (auditbus.Audit, error) {
+	domain, err := domain.Parse(db.ObjDomain)
+	if err != nil {
+		return auditbus.Audit{}, fmt.Errorf("parse domain: %w", err)
+	}
+
+	name, err := name.Parse(db.ObjName)
+	if err != nil {
+		return auditbus.Audit{}, fmt.Errorf("parse name: %w", err)
+	}
+
 	bus := auditbus.Audit{
 		ID:        db.ID,
-		PrimaryID: db.PrimaryID,
-		UserID:    db.UserID,
+		ObjID:     db.ObjID,
+		ObjDomain: domain,
+		ObjName:   name,
+		ActorID:   db.ActorID,
 		Action:    db.Action,
 		Data:      json.RawMessage(db.Data.JSONText),
 		Message:   db.Message,

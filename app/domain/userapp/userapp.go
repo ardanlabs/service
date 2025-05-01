@@ -36,7 +36,7 @@ func (a *app) create(ctx context.Context, r *http.Request) web.Encoder {
 		return errs.New(errs.InvalidArgument, err)
 	}
 
-	usr, err := a.userBus.Create(ctx, nc)
+	usr, err := a.userBus.Create(ctx, mid.GetSubjectID(ctx), nc)
 	if err != nil {
 		if errors.Is(err, userbus.ErrUniqueEmail) {
 			return errs.New(errs.Aborted, userbus.ErrUniqueEmail)
@@ -63,7 +63,7 @@ func (a *app) update(ctx context.Context, r *http.Request) web.Encoder {
 		return errs.Newf(errs.Internal, "user missing in context: %s", err)
 	}
 
-	updUsr, err := a.userBus.Update(ctx, usr, uu)
+	updUsr, err := a.userBus.Update(ctx, mid.GetSubjectID(ctx), usr, uu)
 	if err != nil {
 		return errs.Newf(errs.Internal, "update: userID[%s] uu[%+v]: %s", usr.ID, uu, err)
 	}
@@ -87,7 +87,7 @@ func (a *app) updateRole(ctx context.Context, r *http.Request) web.Encoder {
 		return errs.Newf(errs.Internal, "user missing in context: %s", err)
 	}
 
-	updUsr, err := a.userBus.Update(ctx, usr, uu)
+	updUsr, err := a.userBus.Update(ctx, mid.GetSubjectID(ctx), usr, uu)
 	if err != nil {
 		return errs.Newf(errs.Internal, "updaterole: userID[%s] uu[%+v]: %s", usr.ID, uu, err)
 	}
@@ -101,7 +101,7 @@ func (a *app) delete(ctx context.Context, _ *http.Request) web.Encoder {
 		return errs.Newf(errs.Internal, "userID missing in context: %s", err)
 	}
 
-	if err := a.userBus.Delete(ctx, usr); err != nil {
+	if err := a.userBus.Delete(ctx, mid.GetSubjectID(ctx), usr); err != nil {
 		return errs.Newf(errs.Internal, "delete: userID[%s]: %s", usr.ID, err)
 	}
 

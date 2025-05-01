@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/ardanlabs/service/business/domain/auditbus"
 	"github.com/ardanlabs/service/business/sdk/sqldb"
@@ -31,9 +30,9 @@ func NewStore(log *logger.Logger, db *sqlx.DB) *Store {
 func (s *Store) Create(ctx context.Context, a auditbus.Audit) error {
 	const q = `
 	INSERT INTO audit
-		(id, primary_id, user_id, action, data, message, timestamp)
+		(id, obj_id, obj_domain, obj_name, actor_id, action, data, message, timestamp)
 	VALUES
-		(:id, :primary_id, :user_id, :action, :data, :message, :timestamp)`
+		(:id, :obj_id, :obj_domain, :obj_name, :actor_id, :action, :data, :message, :timestamp)`
 
 	dbAudit, err := toDBAudit(a)
 	if err != nil {
@@ -52,20 +51,12 @@ func (s *Store) Query(ctx context.Context, filter auditbus.QueryFilter) ([]audit
 
 	const q = `
 	SELECT
-		id, primary_id, user_id, action, data, message, timestamp
+		id, obj_id, obj_domain, obj_name, actor_id, action, data, message, timestamp
 	FROM
 		audit`
 
 	buf := bytes.NewBufferString(q)
 	applyFilter(filter, data, buf)
-
-	switch {
-	case !strings.Contains(buf.String(), "WHERE"):
-		buf.WriteString(" WHERE org_id = :org_id")
-
-	default:
-		buf.WriteString(" AND org_id = :org_id")
-	}
 
 	buf.WriteString(" ORDER BY timestamp DESC")
 

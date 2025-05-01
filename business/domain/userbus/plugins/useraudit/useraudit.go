@@ -11,6 +11,7 @@ import (
 	"github.com/ardanlabs/service/business/sdk/order"
 	"github.com/ardanlabs/service/business/sdk/page"
 	"github.com/ardanlabs/service/business/sdk/sqldb"
+	"github.com/ardanlabs/service/business/types/domain"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/google/uuid"
 )
@@ -38,13 +39,23 @@ func (p *Plugin) NewWithTx(tx sqldb.CommitRollbacker) (userbus.Business, error) 
 }
 
 // Create adds a new user to the system.
-func (p *Plugin) Create(ctx context.Context, nu userbus.NewUser) (userbus.User, error) {
-	usr, err := p.bus.Create(ctx, nu)
+func (p *Plugin) Create(ctx context.Context, actorID uuid.UUID, nu userbus.NewUser) (userbus.User, error) {
+	usr, err := p.bus.Create(ctx, actorID, nu)
 	if err != nil {
 		return userbus.User{}, err
 	}
 
-	if err := p.auditBus.Create(ctx, usr.ID, usr.ID, "created", nu, "user created"); err != nil {
+	na := auditbus.NewAudit{
+		ObjID:     usr.ID,
+		ObjDomain: domain.User,
+		ObjName:   usr.Name,
+		ActorID:   actorID,
+		Action:    "created",
+		Data:      nu,
+		Message:   "user created",
+	}
+
+	if err := p.auditBus.Create(ctx, na); err != nil {
 		return userbus.User{}, err
 	}
 
@@ -52,13 +63,23 @@ func (p *Plugin) Create(ctx context.Context, nu userbus.NewUser) (userbus.User, 
 }
 
 // Update modifies information about a user.
-func (p *Plugin) Update(ctx context.Context, usr userbus.User, uu userbus.UpdateUser) (userbus.User, error) {
-	usr, err := p.bus.Update(ctx, usr, uu)
+func (p *Plugin) Update(ctx context.Context, actorID uuid.UUID, usr userbus.User, uu userbus.UpdateUser) (userbus.User, error) {
+	usr, err := p.bus.Update(ctx, actorID, usr, uu)
 	if err != nil {
 		return userbus.User{}, err
 	}
 
-	if err := p.auditBus.Create(ctx, usr.ID, usr.ID, "updated", uu, "user updated"); err != nil {
+	na := auditbus.NewAudit{
+		ObjID:     usr.ID,
+		ObjDomain: domain.User,
+		ObjName:   usr.Name,
+		ActorID:   actorID,
+		Action:    "updated",
+		Data:      uu,
+		Message:   "user updated",
+	}
+
+	if err := p.auditBus.Create(ctx, na); err != nil {
 		return userbus.User{}, err
 	}
 
@@ -66,12 +87,22 @@ func (p *Plugin) Update(ctx context.Context, usr userbus.User, uu userbus.Update
 }
 
 // Delete removes the specified user.
-func (p *Plugin) Delete(ctx context.Context, usr userbus.User) error {
-	if err := p.bus.Delete(ctx, usr); err != nil {
+func (p *Plugin) Delete(ctx context.Context, actorID uuid.UUID, usr userbus.User) error {
+	if err := p.bus.Delete(ctx, actorID, usr); err != nil {
 		return err
 	}
 
-	if err := p.auditBus.Create(ctx, usr.ID, usr.ID, "deleted", nil, "user deleted"); err != nil {
+	na := auditbus.NewAudit{
+		ObjID:     usr.ID,
+		ObjDomain: domain.User,
+		ObjName:   usr.Name,
+		ActorID:   actorID,
+		Action:    "deleted",
+		Data:      nil,
+		Message:   "user deleted",
+	}
+
+	if err := p.auditBus.Create(ctx, na); err != nil {
 		return err
 	}
 

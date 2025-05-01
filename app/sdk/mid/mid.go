@@ -49,6 +49,18 @@ func GetClaims(ctx context.Context) auth.Claims {
 	return v
 }
 
+// GetSubjectID returns the subject id from the claims.
+func GetSubjectID(ctx context.Context) uuid.UUID {
+	v := GetClaims(ctx)
+
+	subjectID, err := uuid.Parse(v.Subject)
+	if err != nil {
+		return uuid.UUID{}
+	}
+
+	return subjectID
+}
+
 func setUserID(ctx context.Context, userID uuid.UUID) context.Context {
 	return context.WithValue(ctx, userIDKey, userID)
 }

@@ -12,6 +12,7 @@ import (
 	"github.com/ardanlabs/service/business/types/name"
 	"github.com/ardanlabs/service/business/types/role"
 	"github.com/ardanlabs/service/foundation/logger"
+	"github.com/google/uuid"
 )
 
 // UserAdd adds new users into the database.
@@ -44,7 +45,7 @@ func UserAdd(log *logger.Logger, cfg sqldb.Config, nme string, email string, pas
 		Roles:    []role.Role{role.Admin, role.User},
 	}
 
-	usr, err := userBus.Create(ctx, nu)
+	usr, err := userBus.Create(ctx, uuid.UUID{}, nu)
 	if err != nil {
 		return fmt.Errorf("create user: %w", err)
 	}
