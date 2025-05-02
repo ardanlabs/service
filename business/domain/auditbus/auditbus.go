@@ -38,6 +38,9 @@ func NewBusiness(log *logger.Logger, storer Storer) *Business {
 
 // Create adds a new audit record to the system.
 func (b *Business) Create(ctx context.Context, na NewAudit) (Audit, error) {
+	ctx, span := otel.AddSpan(ctx, "business.auditbus.create")
+	defer span.End()
+
 	jsonData, err := json.Marshal(na.Data)
 	if err != nil {
 		return Audit{}, fmt.Errorf("marshal object: %w", err)
@@ -64,6 +67,9 @@ func (b *Business) Create(ctx context.Context, na NewAudit) (Audit, error) {
 
 // Query retrieves a list of existing audit records.
 func (b *Business) Query(ctx context.Context, filter QueryFilter, orderBy order.By, page page.Page) ([]Audit, error) {
+	ctx, span := otel.AddSpan(ctx, "business.auditbus.query")
+	defer span.End()
+
 	audits, err := b.storer.Query(ctx, filter, orderBy, page)
 	if err != nil {
 		return nil, fmt.Errorf("query audits: %w", err)
