@@ -2,6 +2,7 @@
 package crud
 
 import (
+	"github.com/ardanlabs/service/app/domain/auditapp"
 	"github.com/ardanlabs/service/app/domain/checkapp"
 	"github.com/ardanlabs/service/app/domain/homeapp"
 	"github.com/ardanlabs/service/app/domain/productapp"
@@ -47,6 +48,12 @@ func (add) Add(app *web.App, cfg mux.Config) {
 
 	userapp.Routes(app, userapp.Config{
 		UserBus:    cfg.BusConfig.UserBus,
+		AuthClient: cfg.SalesConfig.AuthClient,
+	})
+
+	auditapp.Routes(app, auditapp.Config{
+		Log:        cfg.Log,
+		AuditBus:   cfg.BusConfig.AuditBus,
 		AuthClient: cfg.SalesConfig.AuthClient,
 	})
 }

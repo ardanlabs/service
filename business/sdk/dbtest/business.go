@@ -23,6 +23,7 @@ import (
 // BusDomain represents all the business domain apis needed for testing.
 type BusDomain struct {
 	Delegate *delegate.Delegate
+	Audit    *auditbus.Business
 	Home     *homebus.Business
 	Product  *productbus.Business
 	User     userbus.Business
@@ -34,6 +35,7 @@ func newBusDomains(log *logger.Logger, db *sqlx.DB) BusDomain {
 	userStorage := usercache.NewStore(log, userdb.NewStore(log, db), time.Hour)
 
 	delegate := delegate.New(log)
+	auditBus := auditbus.NewBusiness(log, auditdb.NewStore(log, db))
 	userBus := userbus.NewBusiness(log, delegate, userStorage, userAuditPlugin)
 	productBus := productbus.NewBusiness(log, userBus, delegate, productdb.NewStore(log, db))
 	homeBus := homebus.NewBusiness(log, userBus, delegate, homedb.NewStore(log, db))
@@ -41,6 +43,7 @@ func newBusDomains(log *logger.Logger, db *sqlx.DB) BusDomain {
 
 	return BusDomain{
 		Delegate: delegate,
+		Audit:    auditBus,
 		Home:     homeBus,
 		Product:  productBus,
 		User:     userBus,

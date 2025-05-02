@@ -7,6 +7,8 @@ import (
 	"fmt"
 
 	"github.com/ardanlabs/service/business/domain/auditbus"
+	"github.com/ardanlabs/service/business/sdk/order"
+	"github.com/ardanlabs/service/business/sdk/page"
 	"github.com/ardanlabs/service/business/sdk/sqldb"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/jmoiron/sqlx"
@@ -46,19 +48,29 @@ func (s *Store) Create(ctx context.Context, a auditbus.Audit) error {
 	return nil
 }
 
-func (s *Store) Query(ctx context.Context, filter auditbus.QueryFilter) ([]auditbus.Audit, error) {
-	data := map[string]any{}
+func (s *Store) Query(ctx context.Context, filter auditbus.QueryFilter, orderBy order.By, page page.Page) ([]auditbus.Audit, error) {
+	data := map[string]any{
+		"offset":        (page.Number() - 1) * page.RowsPerPage(),
+		"rows_per_page": page.RowsPerPage(),
+	}
 
 	const q = `
 	SELECT
 		id, obj_id, obj_domain, obj_name, actor_id, action, data, message, timestamp
 	FROM
-		audit`
+		audit
+	`
 
 	buf := bytes.NewBufferString(q)
 	applyFilter(filter, data, buf)
 
-	buf.WriteString(" ORDER BY timestamp DESC")
+	orderByClause, err := orderByClause(orderBy)
+	if err != nil {
+		return nil, err
+	}
+
+	buf.WriteString(orderByClause)
+	buf.WriteString(" OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY")
 
 	var dbAudits []audit
 	if err := sqldb.NamedQuerySlice(ctx, s.log, s.db, buf.String(), data, &dbAudits); err != nil {
@@ -66,4 +78,27 @@ func (s *Store) Query(ctx context.Context, filter auditbus.QueryFilter) ([]audit
 	}
 
 	return toBusAudits(dbAudits)
+}
+
+// Count returns the total number of users in the DB.
+func (s *Store) Count(ctx context.Context, filter auditbus.QueryFilter) (int, error) {
+	data := map[string]any{}
+
+	const q = `
+	SELECT
+		count(1)
+	FROM
+		audit`
+
+	buf := bytes.NewBufferString(q)
+	applyFilter(filter, data, buf)
+
+	var count struct {
+		Count int `db:"count"`
+	}
+	if err := sqldb.NamedQueryStruct(ctx, s.log, s.db, buf.String(), data, &count); err != nil {
+		return 0, fmt.Errorf("db: %w", err)
+	}
+
+	return count.Count, nil
 }

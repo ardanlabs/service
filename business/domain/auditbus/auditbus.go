@@ -7,7 +7,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/ardanlabs/service/business/sdk/order"
+	"github.com/ardanlabs/service/business/sdk/page"
 	"github.com/ardanlabs/service/foundation/logger"
+	"github.com/ardanlabs/service/foundation/otel"
 	"github.com/google/uuid"
 )
 
@@ -15,7 +18,8 @@ import (
 // retrieve data.
 type Storer interface {
 	Create(ctx context.Context, audit Audit) error
-	Query(ctx context.Context, filter QueryFilter) ([]Audit, error)
+	Query(ctx context.Context, filter QueryFilter, orderBy order.By, page page.Page) ([]Audit, error)
+	Count(ctx context.Context, filter QueryFilter) (int, error)
 }
 
 // Business manages the set of APIs for audit access.
@@ -33,10 +37,10 @@ func NewBusiness(log *logger.Logger, storer Storer) *Business {
 }
 
 // Create adds a new audit record to the system.
-func (b *Business) Create(ctx context.Context, na NewAudit) error {
+func (b *Business) Create(ctx context.Context, na NewAudit) (Audit, error) {
 	jsonData, err := json.Marshal(na.Data)
 	if err != nil {
-		return fmt.Errorf("marshal object: %w", err)
+		return Audit{}, fmt.Errorf("marshal object: %w", err)
 	}
 
 	audit := Audit{
@@ -52,18 +56,26 @@ func (b *Business) Create(ctx context.Context, na NewAudit) error {
 	}
 
 	if err := b.storer.Create(ctx, audit); err != nil {
-		return fmt.Errorf("create audit: %w", err)
+		return Audit{}, fmt.Errorf("create audit: %w", err)
 	}
 
-	return nil
+	return audit, nil
 }
 
 // Query retrieves a list of existing audit records.
-func (b *Business) Query(ctx context.Context, filter QueryFilter) ([]Audit, error) {
-	audits, err := b.storer.Query(ctx, filter)
+func (b *Business) Query(ctx context.Context, filter QueryFilter, orderBy order.By, page page.Page) ([]Audit, error) {
+	audits, err := b.storer.Query(ctx, filter, orderBy, page)
 	if err != nil {
 		return nil, fmt.Errorf("query audits: %w", err)
 	}
 
 	return audits, nil
+}
+
+// Count returns the total number of users.
+func (b *Business) Count(ctx context.Context, filter QueryFilter) (int, error) {
+	ctx, span := otel.AddSpan(ctx, "business.auditbus.count")
+	defer span.End()
+
+	return b.storer.Count(ctx, filter)
 }

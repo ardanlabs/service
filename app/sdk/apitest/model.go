@@ -1,6 +1,7 @@
 package apitest
 
 import (
+	"github.com/ardanlabs/service/business/domain/auditbus"
 	"github.com/ardanlabs/service/business/domain/homebus"
 	"github.com/ardanlabs/service/business/domain/productbus"
 	"github.com/ardanlabs/service/business/domain/userbus"
@@ -11,6 +12,7 @@ type User struct {
 	userbus.User
 	Products []productbus.Product
 	Homes    []homebus.Home
+	Audits   []auditbus.Audit
 	Token    string
 }
 

@@ -7,9 +7,9 @@ var DefaultOrderBy = order.NewBy(OrderByID, order.ASC)
 
 // Set of fields that the results can be ordered by.
 const (
-	OrderByID      = "user_id"
-	OrderByName    = "name"
-	OrderByEmail   = "email"
-	OrderByRoles   = "roles"
-	OrderByEnabled = "enabled"
+	OrderByID      = "a"
+	OrderByName    = "b"
+	OrderByEmail   = "c"
+	OrderByRoles   = "d"
+	OrderByEnabled = "e"
 )

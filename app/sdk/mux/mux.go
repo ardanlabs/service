@@ -9,6 +9,7 @@ import (
 	"github.com/ardanlabs/service/app/sdk/auth"
 	"github.com/ardanlabs/service/app/sdk/authclient"
 	"github.com/ardanlabs/service/app/sdk/mid"
+	"github.com/ardanlabs/service/business/domain/auditbus"
 	"github.com/ardanlabs/service/business/domain/homebus"
 	"github.com/ardanlabs/service/business/domain/productbus"
 	"github.com/ardanlabs/service/business/domain/userbus"
@@ -63,6 +64,7 @@ type AuthConfig struct {
 }
 
 type BusConfig struct {
+	AuditBus    *auditbus.Business
 	UserBus     userbus.Business
 	ProductBus  *productbus.Business
 	HomeBus     *homebus.Business

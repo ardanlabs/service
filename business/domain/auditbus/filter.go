@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/types/domain"
+	"github.com/ardanlabs/service/business/types/name"
 	"github.com/google/uuid"
 )
 
@@ -12,6 +13,7 @@ import (
 type QueryFilter struct {
 	ObjID     *uuid.UUID
 	ObjDomain *domain.Domain
+	ObjName   *name.Name
 	ActorID   *uuid.UUID
 	Action    *string
 	Since     *time.Time

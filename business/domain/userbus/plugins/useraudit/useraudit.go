@@ -55,7 +55,7 @@ func (p *Plugin) Create(ctx context.Context, actorID uuid.UUID, nu userbus.NewUs
 		Message:   "user created",
 	}
 
-	if err := p.auditBus.Create(ctx, na); err != nil {
+	if _, err := p.auditBus.Create(ctx, na); err != nil {
 		return userbus.User{}, err
 	}
 
@@ -79,7 +79,7 @@ func (p *Plugin) Update(ctx context.Context, actorID uuid.UUID, usr userbus.User
 		Message:   "user updated",
 	}
 
-	if err := p.auditBus.Create(ctx, na); err != nil {
+	if _, err := p.auditBus.Create(ctx, na); err != nil {
 		return userbus.User{}, err
 	}
 
@@ -102,7 +102,7 @@ func (p *Plugin) Delete(ctx context.Context, actorID uuid.UUID, usr userbus.User
 		Message:   "user deleted",
 	}
 
-	if err := p.auditBus.Create(ctx, na); err != nil {
+	if _, err := p.auditBus.Create(ctx, na); err != nil {
 		return err
 	}
 

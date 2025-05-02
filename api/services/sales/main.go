@@ -174,6 +174,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 	userStorage := usercache.NewStore(log, userdb.NewStore(log, db), time.Minute)
 
 	delegate := delegate.New(log)
+	auditBus := auditbus.NewBusiness(log, auditdb.NewStore(log, db))
 	userBus := userbus.NewBusiness(log, delegate, userStorage, userAuditPlugin)
 	productBus := productbus.NewBusiness(log, userBus, delegate, productdb.NewStore(log, db))
 	homeBus := homebus.NewBusiness(log, userBus, delegate, homedb.NewStore(log, db))
@@ -233,6 +234,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 		DB:     db,
 		Tracer: tracer,
 		BusConfig: mux.BusConfig{
+			AuditBus:    auditBus,
 			UserBus:     userBus,
 			ProductBus:  productBus,
 			HomeBus:     homeBus,

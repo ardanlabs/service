@@ -34,7 +34,7 @@ func toDBAudit(bus auditbus.Audit) (audit, error) {
 		Action:    bus.Action,
 		Data:      types.NullJSONText{JSONText: []byte(bus.Data), Valid: true},
 		Message:   bus.Message,
-		Timestamp: bus.Timestamp,
+		Timestamp: bus.Timestamp.UTC(),
 	}
 
 	return db, nil
@@ -60,7 +60,7 @@ func toBusAudit(db audit) (auditbus.Audit, error) {
 		Action:    db.Action,
 		Data:      json.RawMessage(db.Data.JSONText),
 		Message:   db.Message,
-		Timestamp: db.Timestamp,
+		Timestamp: db.Timestamp.Local(),
 	}
 
 	return bus, nil

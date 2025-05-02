@@ -7,9 +7,9 @@ var DefaultOrderBy = order.NewBy(OrderByProductID, order.ASC)
 
 // Set of fields that the results can be ordered by.
 const (
-	OrderByProductID = "product_id"
-	OrderByUserID    = "user_id"
-	OrderByName      = "name"
-	OrderByCost      = "cost"
-	OrderByQuantity  = "quantity"
+	OrderByProductID = "a"
+	OrderByUserID    = "b"
+	OrderByName      = "c"
+	OrderByCost      = "d"
+	OrderByQuantity  = "e"
 )
