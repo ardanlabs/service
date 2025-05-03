@@ -545,6 +545,9 @@ write-token-to-env:
 admin-gui-install:
 	pnpm -C ${ADMIN_FRONTEND_PREFIX} install
 
+admin-gui-update:
+	pnpm -C ${ADMIN_FRONTEND_PREFIX} update
+
 admin-gui-dev: admin-gui-install
 	pnpm -C ${ADMIN_FRONTEND_PREFIX} run dev
 
