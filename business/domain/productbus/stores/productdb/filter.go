@@ -12,22 +12,22 @@ func (s *Store) applyFilter(filter productbus.QueryFilter, data map[string]any, 
 	var wc []string
 
 	if filter.ID != nil {
-		data["product_id"] = *filter.ID
+		data["product_id"] = filter.ID
 		wc = append(wc, "product_id = :product_id")
 	}
 
 	if filter.Name != nil {
-		data["name"] = fmt.Sprintf("%%%s%%", *filter.Name)
+		data["name"] = fmt.Sprintf("%%%s%%", filter.Name)
 		wc = append(wc, "name LIKE :name")
 	}
 
 	if filter.Cost != nil {
-		data["cost"] = *filter.Cost
+		data["cost"] = filter.Cost
 		wc = append(wc, "cost = :cost")
 	}
 
 	if filter.Quantity != nil {
-		data["quantity"] = *filter.Quantity
+		data["quantity"] = filter.Quantity
 		wc = append(wc, "quantity = :quantity")
 	}
 

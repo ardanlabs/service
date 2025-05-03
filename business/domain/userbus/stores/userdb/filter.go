@@ -12,17 +12,17 @@ func applyFilter(filter userbus.QueryFilter, data map[string]any, buf *bytes.Buf
 	var wc []string
 
 	if filter.ID != nil {
-		data["user_id"] = *filter.ID
+		data["user_id"] = filter.ID
 		wc = append(wc, "user_id = :user_id")
 	}
 
 	if filter.Name != nil {
-		data["name"] = fmt.Sprintf("%%%s%%", *filter.Name)
+		data["name"] = fmt.Sprintf("%%%s%%", filter.Name)
 		wc = append(wc, "name LIKE :name")
 	}
 
 	if filter.Email != nil {
-		data["email"] = (*filter.Email).String()
+		data["email"] = filter.Email.String()
 		wc = append(wc, "email = :email")
 	}
 
