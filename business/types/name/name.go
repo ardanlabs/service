@@ -75,7 +75,12 @@ func (n Null) Valid() bool {
 
 // Equal provides support for the go-cmp package and testing.
 func (n Null) Equal(n2 Null) bool {
-	return n.value == n2.value
+	return n.value == n2.value && n.valid == n2.valid
+}
+
+// MarshalText provides support for logging and any marshal needs.
+func (n Null) MarshalText() ([]byte, error) {
+	return []byte(n.value), nil
 }
 
 // =============================================================================
