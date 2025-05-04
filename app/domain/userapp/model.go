@@ -14,15 +14,14 @@ import (
 
 // User represents information about an individual user.
 type User struct {
-	ID           string   `json:"id"`
-	Name         string   `json:"name"`
-	Email        string   `json:"email"`
-	Roles        []string `json:"roles"`
-	PasswordHash []byte   `json:"-"`
-	Department   string   `json:"department"`
-	Enabled      bool     `json:"enabled"`
-	DateCreated  string   `json:"dateCreated"`
-	DateUpdated  string   `json:"dateUpdated"`
+	ID          string   `json:"id"`
+	Name        string   `json:"name"`
+	Email       string   `json:"email"`
+	Roles       []string `json:"roles"`
+	Department  string   `json:"department"`
+	Enabled     bool     `json:"enabled"`
+	DateCreated string   `json:"dateCreated"`
+	DateUpdated string   `json:"dateUpdated"`
 }
 
 // Encode implements the encoder interface.
@@ -33,15 +32,14 @@ func (app User) Encode() ([]byte, string, error) {
 
 func toAppUser(bus userbus.User) User {
 	return User{
-		ID:           bus.ID.String(),
-		Name:         bus.Name.String(),
-		Email:        bus.Email.Address,
-		Roles:        role.ParseToString(bus.Roles),
-		PasswordHash: bus.PasswordHash,
-		Department:   bus.Department.String(),
-		Enabled:      bus.Enabled,
-		DateCreated:  bus.DateCreated.Format(time.RFC3339),
-		DateUpdated:  bus.DateUpdated.Format(time.RFC3339),
+		ID:          bus.ID.String(),
+		Name:        bus.Name.String(),
+		Email:       bus.Email.Address,
+		Roles:       role.ParseToString(bus.Roles),
+		Department:  bus.Department.String(),
+		Enabled:     bus.Enabled,
+		DateCreated: bus.DateCreated.Format(time.RFC3339),
+		DateUpdated: bus.DateUpdated.Format(time.RFC3339),
 	}
 }
 

@@ -10,15 +10,14 @@ import (
 
 func toAppUser(bus userbus.User) userapp.User {
 	return userapp.User{
-		ID:           bus.ID.String(),
-		Name:         bus.Name.String(),
-		Email:        bus.Email.Address,
-		Roles:        role.ParseToString(bus.Roles),
-		PasswordHash: nil, // This field is not marshalled.
-		Department:   bus.Department.String(),
-		Enabled:      bus.Enabled,
-		DateCreated:  bus.DateCreated.Format(time.RFC3339),
-		DateUpdated:  bus.DateUpdated.Format(time.RFC3339),
+		ID:          bus.ID.String(),
+		Name:        bus.Name.String(),
+		Email:       bus.Email.Address,
+		Roles:       role.ParseToString(bus.Roles),
+		Department:  bus.Department.String(),
+		Enabled:     bus.Enabled,
+		DateCreated: bus.DateCreated.Format(time.RFC3339),
+		DateUpdated: bus.DateUpdated.Format(time.RFC3339),
 	}
 }
 
