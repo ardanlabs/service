@@ -19,7 +19,6 @@ metadata:
   name: sales-system
 
 ---
-
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -40,140 +39,139 @@ spec:
       terminationGracePeriodSeconds: 60
 
       initContainers:
-      - name: init-migrate-seed
-        image: sales-image
-        command: ['./admin', 'migrate-seed']
-        env:
-        - name: SALES_DB_USER
-          valueFrom:
-            configMapKeyRef:
-              name: app-config
-              key: db_user
-              optional: true
-        - name: SALES_DB_PASSWORD
-          valueFrom:
-            configMapKeyRef:
-              name: app-config
-              key: db_password
-              optional: true
-        - name: SALES_DB_HOST_PORT
-          valueFrom:
-            configMapKeyRef:
-              name: app-config
-              key: db_hostport
-              optional: true
-        - name: SALES_DB_DISABLE_TLS
-          valueFrom:
-            configMapKeyRef:
-              name: app-config
-              key: db_disabletls
-              optional: true
+        - name: init-migrate-seed
+          image: sales-image
+          command: ["./admin", "migrate-seed"]
+          env:
+            - name: SALES_DB_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: db_user
+                  optional: true
+            - name: SALES_DB_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: db_password
+                  optional: true
+            - name: SALES_DB_HOST_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: db_hostport
+                  optional: true
+            - name: SALES_DB_DISABLE_TLS
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: db_disabletls
+                  optional: true
 
       containers:
-      - name: sales
-        image: sales-image
-
-        ports:
         - name: sales
-          containerPort: 3000
-        - name: sales-debug
-          containerPort: 3010
+          image: sales-image
 
-        readinessProbe: # readiness probes mark the service available to accept traffic.
-          httpGet:
-            path: /v1/readiness
-            port: 3000
-          initialDelaySeconds: 5
-          periodSeconds: 10
-          timeoutSeconds: 5
-          successThreshold: 1
-          failureThreshold: 2
+          ports:
+            - name: sales
+              containerPort: 3000
+            - name: sales-debug
+              containerPort: 3010
 
-        livenessProbe: # liveness probes mark the service alive or dead (to be restarted).
-          httpGet:
-            path: /v1/liveness
-            port: 3000
-          initialDelaySeconds: 2
-          periodSeconds: 5
-          timeoutSeconds: 5
-          successThreshold: 1
-          failureThreshold: 2
+          readinessProbe: # readiness probes mark the service available to accept traffic.
+            httpGet:
+              path: /v1/readiness
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 2
 
-        env:
-        - name: GOMAXPROCS
-          valueFrom:
-            resourceFieldRef:
-              resource: limits.cpu
+          livenessProbe: # liveness probes mark the service alive or dead (to be restarted).
+            httpGet:
+              path: /v1/liveness
+              port: 3000
+            initialDelaySeconds: 2
+            periodSeconds: 5
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 2
 
-        - name: GOGC
-          value: "off"
+          env:
+            - name: GOMAXPROCS
+              valueFrom:
+                resourceFieldRef:
+                  resource: limits.cpu
 
-        - name: GOMEMLIMIT
-          valueFrom:
-            resourceFieldRef:
-              resource: limits.memory
+            - name: GOGC
+              value: "off"
 
-        - name: SALES_DB_USER # here as an example for configuring a hosted db.
-          valueFrom:
-            configMapKeyRef:
-              name: app-config
-              key: db_user
-              optional: true
-        - name: SALES_DB_PASSWORD
-          valueFrom:
-            configMapKeyRef:
-              name: app-config
-              key: db_password
-              optional: true
-        - name: SALES_DB_HOST_PORT
-          valueFrom:
-            configMapKeyRef:
-              name: app-config
-              key: db_hostport
-              optional: true
-        - name: SALES_DB_DISABLE_TLS
-          valueFrom:
-            configMapKeyRef:
-              name: app-config
-              key: db_disabletls
-              optional: true
+            - name: GOMEMLIMIT
+              valueFrom:
+                resourceFieldRef:
+                  resource: limits.memory
 
-        - name: KUBERNETES_NAMESPACE
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.namespace
-        - name: KUBERNETES_NAME
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.name
-        - name: KUBERNETES_POD_IP
-          valueFrom:
-            fieldRef:
-              fieldPath: status.podIP
-        - name: KUBERNETES_NODE_NAME
-          valueFrom:
-            fieldRef:
-              fieldPath: spec.nodeName
+            - name: SALES_DB_USER # here as an example for configuring a hosted db.
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: db_user
+                  optional: true
+            - name: SALES_DB_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: db_password
+                  optional: true
+            - name: SALES_DB_HOST_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: db_hostport
+                  optional: true
+            - name: SALES_DB_DISABLE_TLS
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: db_disabletls
+                  optional: true
 
-      - name: metrics
-        image: metrics-image
+            - name: KUBERNETES_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: KUBERNETES_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: KUBERNETES_POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: KUBERNETES_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
 
-        ports:
         - name: metrics
-          containerPort: 4000
-        - name: metrics-debug
-          containerPort: 4010
-        - name: metrics-prom
-          containerPort: 4020
+          image: metrics-image
 
-        env:
-        - name: GOMAXPROCS
-          valueFrom:
-            resourceFieldRef:
-              resource: limits.cpu
+          ports:
+            - name: metrics
+              containerPort: 4000
+            - name: metrics-debug
+              containerPort: 4010
+            - name: metrics-prom
+              containerPort: 4020
+
+          env:
+            - name: GOMAXPROCS
+              valueFrom:
+                resourceFieldRef:
+                  resource: limits.cpu
 
 ---
-
 apiVersion: v1
 kind: Service
 metadata:

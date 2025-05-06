@@ -4,7 +4,6 @@ metadata:
   name: sales-system
 
 ---
-
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -25,85 +24,84 @@ spec:
       terminationGracePeriodSeconds: 60
 
       containers:
-      - name: auth
-        image: auth-image
-
-        ports:
         - name: auth
-          containerPort: 6000
-        - name: auth-debug
-          containerPort: 6010
+          image: auth-image
 
-        readinessProbe: # readiness probes mark the service available to accept traffic.
-          httpGet:
-            path: /v1/readiness
-            port: 6000
-          initialDelaySeconds: 5
-          periodSeconds: 10
-          timeoutSeconds: 5
-          successThreshold: 1
-          failureThreshold: 2
+          ports:
+            - name: auth
+              containerPort: 6000
+            - name: auth-debug
+              containerPort: 6010
 
-        livenessProbe: # liveness probes mark the service alive or dead (to be restarted).
-          httpGet:
-            path: /v1/liveness
-            port: 6000
-          initialDelaySeconds: 2
-          periodSeconds: 5
-          timeoutSeconds: 5
-          successThreshold: 1
-          failureThreshold: 2
+          readinessProbe: # readiness probes mark the service available to accept traffic.
+            httpGet:
+              path: /v1/readiness
+              port: 6000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 2
 
-        env:
-        # - name: GOMAXPROCS
-        #   valueFrom:
-        #     resourceFieldRef:
-        #       resource: limits.cpu
+          livenessProbe: # liveness probes mark the service alive or dead (to be restarted).
+            httpGet:
+              path: /v1/liveness
+              port: 6000
+            initialDelaySeconds: 2
+            periodSeconds: 5
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 2
 
-        - name: AUTH_DB_USER
-          valueFrom:
-            configMapKeyRef:
-              name: app-config
-              key: db_user
-              optional: true
-        - name: AUTH_DB_PASSWORD
-          valueFrom:
-            configMapKeyRef:
-              name: app-config
-              key: db_password
-              optional: true
-        - name: AUTH_DB_HOST_PORT
-          valueFrom:
-            configMapKeyRef:
-              name: app-config
-              key: db_hostport
-              optional: true
-        - name: AUTH_DB_DISABLE_TLS
-          valueFrom:
-            configMapKeyRef:
-              name: app-config
-              key: db_disabletls
-              optional: true
+          env:
+            - name: GOMAXPROCS
+              valueFrom:
+                resourceFieldRef:
+                  resource: limits.cpu
 
-        - name: KUBERNETES_NAMESPACE
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.namespace
-        - name: KUBERNETES_NAME
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.name
-        - name: KUBERNETES_POD_IP
-          valueFrom:
-            fieldRef:
-              fieldPath: status.podIP
-        - name: KUBERNETES_NODE_NAME
-          valueFrom:
-            fieldRef:
-              fieldPath: spec.nodeName
+            - name: AUTH_DB_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: db_user
+                  optional: true
+            - name: AUTH_DB_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: db_password
+                  optional: true
+            - name: AUTH_DB_HOST_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: db_hostport
+                  optional: true
+            - name: AUTH_DB_DISABLE_TLS
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: db_disabletls
+                  optional: true
+
+            - name: KUBERNETES_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: KUBERNETES_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: KUBERNETES_POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: KUBERNETES_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
 
 ---
-
 apiVersion: v1
 kind: Service
 metadata:
