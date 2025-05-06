@@ -149,8 +149,8 @@ github.com/markbates/goth/providers/google
 # github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822
 ## explicit
 github.com/munnerz/goautoneg
-# github.com/open-policy-agent/opa v1.3.0
-## explicit; go 1.23.6
+# github.com/open-policy-agent/opa v1.4.0
+## explicit; go 1.23.8
 github.com/open-policy-agent/opa/capabilities
 github.com/open-policy-agent/opa/internal/bundle
 github.com/open-policy-agent/opa/internal/cidr/merge
