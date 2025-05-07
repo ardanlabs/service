@@ -42,7 +42,7 @@ type Storer interface {
 // the core business functionality.
 type ExtFunc func(ExtBusiness) ExtBusiness
 
-// ExtBusiness interface provides support for plugins that wrap extra functionality
+// ExtBusiness interface provides support for extensions that wrap extra functionality
 // around the core busines logic.
 type ExtBusiness interface {
 	NewWithTx(tx sqldb.CommitRollbacker) (ExtBusiness, error)
