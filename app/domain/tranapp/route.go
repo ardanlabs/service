@@ -18,7 +18,7 @@ import (
 type Config struct {
 	Log        *logger.Logger
 	DB         *sqlx.DB
-	UserBus    userbus.Business
+	UserBus    userbus.ExtBusiness
 	ProductBus *productbus.Business
 	AuthClient *authclient.Client
 }

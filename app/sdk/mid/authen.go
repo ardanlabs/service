@@ -74,7 +74,7 @@ func Bearer(ath *auth.Auth) web.MidFunc {
 }
 
 // Basic processes basic authentication logic.
-func Basic(ath *auth.Auth, userBus userbus.Business) web.MidFunc {
+func Basic(ath *auth.Auth, userBus userbus.ExtBusiness) web.MidFunc {
 	m := func(next web.HandlerFunc) web.HandlerFunc {
 		h := func(ctx context.Context, r *http.Request) web.Encoder {
 			email, pass, ok := parseBasicAuth(r.Header.Get("authorization"))

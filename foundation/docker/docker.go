@@ -67,6 +67,9 @@ func startContainer(image string, name string, port string, dockerArgs []string,
 		return c, nil
 	}
 
+	// Just in case there is a container with the same name.
+	exec.Command("docker", "rm", name, "-v").Run()
+
 	arg := []string{"run", "-P", "-d", "--name", name}
 	arg = append(arg, dockerArgs...)
 	arg = append(arg, image)
@@ -76,7 +79,7 @@ func startContainer(image string, name string, port string, dockerArgs []string,
 	cmd := exec.Command("docker", arg...)
 	cmd.Stdout = &out
 	if err := cmd.Run(); err != nil {
-		return Container{}, fmt.Errorf("could not start container %s: %w", image, err)
+		return Container{}, fmt.Errorf("could not start container %s: %w: %s", image, err, arg)
 	}
 
 	id := out.String()[:12]

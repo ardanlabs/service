@@ -40,13 +40,13 @@ type Storer interface {
 // Business manages the set of APIs for product access.
 type Business struct {
 	log      *logger.Logger
-	userBus  userbus.Business
+	userBus  userbus.ExtBusiness
 	delegate *delegate.Delegate
 	storer   Storer
 }
 
 // NewBusiness constructs a product business API for use.
-func NewBusiness(log *logger.Logger, userBus userbus.Business, delegate *delegate.Delegate, storer Storer) *Business {
+func NewBusiness(log *logger.Logger, userBus userbus.ExtBusiness, delegate *delegate.Delegate, storer Storer) *Business {
 	b := Business{
 		log:      log,
 		userBus:  userBus,

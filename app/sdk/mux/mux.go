@@ -65,7 +65,7 @@ type AuthConfig struct {
 
 type BusConfig struct {
 	AuditBus    *auditbus.Business
-	UserBus     userbus.Business
+	UserBus     userbus.ExtBusiness
 	ProductBus  *productbus.Business
 	HomeBus     *homebus.Business
 	VProductBus *vproductbus.Business

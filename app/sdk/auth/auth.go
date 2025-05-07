@@ -36,7 +36,7 @@ type KeyLookup interface {
 // Config represents information required to initialize auth.
 type Config struct {
 	Log       *logger.Logger
-	UserBus   userbus.Business
+	UserBus   userbus.ExtBusiness
 	KeyLookup KeyLookup
 	Issuer    string
 }
@@ -46,7 +46,7 @@ type Config struct {
 type Auth struct {
 	log       *logger.Logger
 	keyLookup KeyLookup
-	userBus   userbus.Business
+	userBus   userbus.ExtBusiness
 	method    jwt.SigningMethod
 	parser    *jwt.Parser
 	issuer    string
