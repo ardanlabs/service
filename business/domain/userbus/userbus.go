@@ -37,10 +37,6 @@ type Storer interface {
 	QueryByEmail(ctx context.Context, email mail.Address) (User, error)
 }
 
-// ExtFunc is a function that wraps different layers of business logic around
-// the core business functionality.
-type ExtFunc func(ExtBusiness) ExtBusiness
-
 // ExtBusiness interface provides support for extensions that wrap extra functionality
 // around the core busines logic.
 type ExtBusiness interface {
@@ -55,6 +51,10 @@ type ExtBusiness interface {
 	Authenticate(ctx context.Context, email mail.Address, password string) (User, error)
 }
 
+// Extension is a function that wraps a new layer of business logic
+// around the existing business logic.
+type Extension func(ExtBusiness) ExtBusiness
+
 // Business manages the set of APIs for user access.
 type Business struct {
 	log      *logger.Logger
@@ -63,7 +63,7 @@ type Business struct {
 }
 
 // NewBusiness constructs a user business API for use.
-func NewBusiness(log *logger.Logger, delegate *delegate.Delegate, storer Storer, extensions ...ExtFunc) ExtBusiness {
+func NewBusiness(log *logger.Logger, delegate *delegate.Delegate, storer Storer, extensions ...Extension) ExtBusiness {
 	b := ExtBusiness(&Business{
 		log:      log,
 		delegate: delegate,

@@ -22,7 +22,7 @@ type Extension struct {
 }
 
 // NewExtension constructs a new extension that wraps the userbus with audit.
-func NewExtension(auditBus *auditbus.Business) userbus.ExtFunc {
+func NewExtension(auditBus *auditbus.Business) userbus.Extension {
 	return func(bus userbus.ExtBusiness) userbus.ExtBusiness {
 		return &Extension{
 			bus:      bus,

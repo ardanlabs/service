@@ -20,7 +20,7 @@ type Extension struct {
 }
 
 // NewExtension constructs a new extension that wraps the userbus with otel.
-func NewExtension() userbus.ExtFunc {
+func NewExtension() userbus.Extension {
 	return func(bus userbus.ExtBusiness) userbus.ExtBusiness {
 		return &Extension{
 			bus: bus,
