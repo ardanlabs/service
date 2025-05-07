@@ -28,6 +28,7 @@ import (
 	"github.com/ardanlabs/service/business/domain/productbus/stores/productdb"
 	"github.com/ardanlabs/service/business/domain/userbus"
 	"github.com/ardanlabs/service/business/domain/userbus/extensions/useraudit"
+	"github.com/ardanlabs/service/business/domain/userbus/extensions/userotel"
 	"github.com/ardanlabs/service/business/domain/userbus/stores/usercache"
 	"github.com/ardanlabs/service/business/domain/userbus/stores/userdb"
 	"github.com/ardanlabs/service/business/domain/vproductbus"
@@ -170,12 +171,13 @@ func run(ctx context.Context, log *logger.Logger) error {
 	// -------------------------------------------------------------------------
 	// Create Business Packages
 
-	userAuditExt := useraudit.NewExtension(log, auditbus.NewBusiness(log, auditdb.NewStore(log, db)))
+	userOtelExt := userotel.NewExtension()
+	userAuditExt := useraudit.NewExtension(auditbus.NewBusiness(log, auditdb.NewStore(log, db)))
 	userStorage := usercache.NewStore(log, userdb.NewStore(log, db), time.Minute)
 
 	delegate := delegate.New(log)
 	auditBus := auditbus.NewBusiness(log, auditdb.NewStore(log, db))
-	userBus := userbus.NewBusiness(log, delegate, userStorage, userAuditExt)
+	userBus := userbus.NewBusiness(log, delegate, userStorage, userOtelExt, userAuditExt)
 	productBus := productbus.NewBusiness(log, userBus, delegate, productdb.NewStore(log, db))
 	homeBus := homebus.NewBusiness(log, userBus, delegate, homedb.NewStore(log, db))
 	vproductBus := vproductbus.NewBusiness(vproductdb.NewStore(log, db))

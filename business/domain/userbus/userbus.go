@@ -13,7 +13,6 @@ import (
 	"github.com/ardanlabs/service/business/sdk/page"
 	"github.com/ardanlabs/service/business/sdk/sqldb"
 	"github.com/ardanlabs/service/foundation/logger"
-	"github.com/ardanlabs/service/foundation/otel"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -100,9 +99,6 @@ func (b *Business) NewWithTx(tx sqldb.CommitRollbacker) (ExtBusiness, error) {
 
 // Create adds a new user to the system.
 func (b *Business) Create(ctx context.Context, actorID uuid.UUID, nu NewUser) (User, error) {
-	ctx, span := otel.AddSpan(ctx, "business.userbus.create")
-	defer span.End()
-
 	hash, err := bcrypt.GenerateFromPassword([]byte(nu.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return User{}, fmt.Errorf("generatefrompassword: %w", err)
@@ -131,9 +127,6 @@ func (b *Business) Create(ctx context.Context, actorID uuid.UUID, nu NewUser) (U
 
 // Update modifies information about a user.
 func (b *Business) Update(ctx context.Context, actorID uuid.UUID, usr User, uu UpdateUser) (User, error) {
-	ctx, span := otel.AddSpan(ctx, "business.userbus.update")
-	defer span.End()
-
 	if uu.Name != nil {
 		usr.Name = *uu.Name
 	}
@@ -173,9 +166,6 @@ func (b *Business) Update(ctx context.Context, actorID uuid.UUID, usr User, uu U
 
 // Delete removes the specified user.
 func (b *Business) Delete(ctx context.Context, actorID uuid.UUID, usr User) error {
-	ctx, span := otel.AddSpan(ctx, "business.userbus.delete")
-	defer span.End()
-
 	if err := b.storer.Delete(ctx, usr); err != nil {
 		return fmt.Errorf("delete: %w", err)
 	}
@@ -191,9 +181,6 @@ func (b *Business) Delete(ctx context.Context, actorID uuid.UUID, usr User) erro
 
 // Query retrieves a list of existing users.
 func (b *Business) Query(ctx context.Context, filter QueryFilter, orderBy order.By, page page.Page) ([]User, error) {
-	ctx, span := otel.AddSpan(ctx, "business.userbus.query")
-	defer span.End()
-
 	users, err := b.storer.Query(ctx, filter, orderBy, page)
 	if err != nil {
 		return nil, fmt.Errorf("query: %w", err)
@@ -204,17 +191,11 @@ func (b *Business) Query(ctx context.Context, filter QueryFilter, orderBy order.
 
 // Count returns the total number of users.
 func (b *Business) Count(ctx context.Context, filter QueryFilter) (int, error) {
-	ctx, span := otel.AddSpan(ctx, "business.userbus.count")
-	defer span.End()
-
 	return b.storer.Count(ctx, filter)
 }
 
 // QueryByID finds the user by the specified ID.
 func (b *Business) QueryByID(ctx context.Context, userID uuid.UUID) (User, error) {
-	ctx, span := otel.AddSpan(ctx, "business.userbus.querybyid")
-	defer span.End()
-
 	user, err := b.storer.QueryByID(ctx, userID)
 	if err != nil {
 		return User{}, fmt.Errorf("query: userID[%s]: %w", userID, err)
@@ -225,9 +206,6 @@ func (b *Business) QueryByID(ctx context.Context, userID uuid.UUID) (User, error
 
 // QueryByEmail finds the user by a specified user email.
 func (b *Business) QueryByEmail(ctx context.Context, email mail.Address) (User, error) {
-	ctx, span := otel.AddSpan(ctx, "business.userbus.querybyemail")
-	defer span.End()
-
 	user, err := b.storer.QueryByEmail(ctx, email)
 	if err != nil {
 		return User{}, fmt.Errorf("query: email[%s]: %w", email, err)
@@ -240,9 +218,6 @@ func (b *Business) QueryByEmail(ctx context.Context, email mail.Address) (User, 
 // success it returns a Claims User representing this user. The claims can be
 // used to generate a token for future authentication.
 func (b *Business) Authenticate(ctx context.Context, email mail.Address, password string) (User, error) {
-	ctx, span := otel.AddSpan(ctx, "business.userbus.authenticate")
-	defer span.End()
-
 	usr, err := b.QueryByEmail(ctx, email)
 	if err != nil {
 		return User{}, fmt.Errorf("query: email[%s]: %w", email, err)
