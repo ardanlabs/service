@@ -275,8 +275,6 @@ func update(busDomain dbtest.BusDomain, sd unitest.SeedData) []unitest.Table {
 					return err
 				}
 
-				resp.DateUpdated = resp.DateCreated
-
 				return resp
 			},
 			CmpFunc: func(got any, exp any) string {
