@@ -186,7 +186,11 @@ func parse(args []string, namespace string, cfgStruct interface{}) error {
 
 	// Process all fields found in the config struct provided.
 	for _, field := range fields {
-		field := field
+
+		// Do not change version fields Build and Description
+		if field.Name == buildKey || field.Name == descKey {
+			continue
+		}
 
 		// If the field is supposed to hold the leftover args then hold a reference for later.
 		if field.Field.Type() == argsT {

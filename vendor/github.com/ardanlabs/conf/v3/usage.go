@@ -96,7 +96,7 @@ func writeOptions(w *tabwriter.Writer, fields []Field) {
 			continue
 		}
 
-		// Do not display version fields SVN and Description
+		// Do not display version fields Build and Description
 		if fld.Name == buildKey || fld.Name == descKey {
 			continue
 		}
