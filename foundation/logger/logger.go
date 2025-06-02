@@ -6,11 +6,10 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"log/slog"
 	"path/filepath"
 	"runtime"
 	"time"
-
-	"log/slog"
 )
 
 // TraceIDFn represents a function that can return the trace id from
