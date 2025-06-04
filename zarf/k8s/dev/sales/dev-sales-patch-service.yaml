@@ -8,18 +8,18 @@ spec:
   type: ClusterIP
 
   ports:
-  - name: sales
-    port: 3000
-    targetPort: sales
-  - name: sales-debug
-    port: 3010
-    targetPort: sales-debug
-  - name: metrics
-    port: 4000
-    targetPort: metrics
-  - name: metrics-debug
-    port: 4010
-    targetPort: metrics-debug
-  - name: prometheus
-    port: 4020
-    targetPort: metrics-prom
+    - name: sales
+      port: 3000
+      targetPort: sales
+    - name: sales-debug
+      port: 3010
+      targetPort: sales-debug
+    - name: metrics
+      port: 4000
+      targetPort: metrics
+    - name: metrics-debug
+      port: 4010
+      targetPort: metrics-debug
+    - name: prometheus
+      port: 4020
+      targetPort: metrics-prom

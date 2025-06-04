@@ -8,9 +8,9 @@ spec:
   type: ClusterIP
 
   ports:
-  - name: auth
-    port: 6000
-    targetPort: auth
-  - name: auth-debug
-    port: 6010
-    targetPort: auth-debug
+    - name: auth
+      port: 6000
+      targetPort: auth
+    - name: auth-debug
+      port: 6010
+      targetPort: auth-debug

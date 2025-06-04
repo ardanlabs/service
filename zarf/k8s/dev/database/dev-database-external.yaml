@@ -31,7 +31,7 @@ metadata:
 spec:
   clusterIP: None
   ports:
-  - port: 5432
+    - port: 5432
 ---
 apiVersion: v1
 kind: Endpoints
@@ -40,7 +40,7 @@ metadata:
   namespace: sales-system
 subsets:
   - addresses:
-        - ip: 192.168.86.155 # ifconfig | grep 192
+      - ip: 192.168.86.155 # ifconfig | grep 192
     ports:
       - port: 5432
         name: database-service

@@ -11,11 +11,11 @@ metadata:
 data:
   sources.yaml: |
     apiVersion: 1
-    
+
     deleteDatasources:
       - name: Tempo
         orgId: 1
-    
+
     datasources:
       - name: Tempo
         type: tempo
@@ -72,7 +72,7 @@ metadata:
 data:
   dashboards.yaml: |
     apiVersion: 1
-    
+
     providers:
       - name: dashboards
         type: file
@@ -398,21 +398,21 @@ spec:
           imagePullPolicy: IfNotPresent
           env:
             - name: GF_ANALYTICS_REPORTING_ENABLED
-              value: 'false'
+              value: "false"
             - name: GF_ANALYTICS_CHECK_FOR_UPDATES
-              value: 'false'
+              value: "false"
             - name: GF_ANALYTICS_CHECK_FOR_PLUGIN_UPDATES
-              value: 'false'
+              value: "false"
             - name: GF_FEATURE_TOGGLES_ENABLE
-              value: 'traceqlEditor'
+              value: "traceqlEditor"
             - name: GF_SERVER_HTTP_PORT
-              value: '3100'
+              value: "3100"
             - name: GF_AUTH_DISABLE_LOGIN_FORM
-              value: 'true'
+              value: "true"
             - name: GF_AUTH_ANONYMOUS_ENABLED
-              value: 'true'
+              value: "true"
             - name: GF_AUTH_ANONYMOUS_ORG_ROLE
-              value: 'Admin'
+              value: "Admin"
             - name: GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH
               value: "/etc/dashboards/sales.json"
           ports:

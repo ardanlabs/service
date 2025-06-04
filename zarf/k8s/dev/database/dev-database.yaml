@@ -40,53 +40,54 @@ spec:
             claimName: database-data
         - name: config
           configMap:
-            name: pghbaconf
+            name:
+              pghbaconf
               #defaultMode: 0400
             items:
               - key: "pg_hba.conf"
                 path: "pg_hba.conf"
       containers:
-      - name: postgres
-        image: postgres:17.4
-        volumeMounts:
-          - name: data
-            mountPath: /var/lib/postgresql/data
-          - name: config
-            readOnly: false
-            mountPath: "/etc/pg_hba.conf"
-            subPath: "pg_hba.conf"
-        args: ['-c', 'hba_file=/etc/pg_hba.conf']
-        resources:
-          requests:
-            cpu: 100m
-          limits:
-            cpu: 3400m
-        env:
-        - name: POSTGRES_PASSWORD
-          value: postgres
-        ports:
         - name: postgres
-          containerPort: 5432
-        livenessProbe:
-          exec:
-            command:
-            - pg_isready
-            - -h
-            - localhost
-            - -U
-            - postgres
-          initialDelaySeconds: 30
-          timeoutSeconds: 5
-        readinessProbe:
-          exec:
-            command:
-            - pg_isready
-            - -h
-            - localhost
-            - -U
-            - postgres
-          initialDelaySeconds: 5
-          timeoutSeconds: 1
+          image: postgres:17.4
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+            - name: config
+              readOnly: false
+              mountPath: "/etc/pg_hba.conf"
+              subPath: "pg_hba.conf"
+          args: ["-c", "hba_file=/etc/pg_hba.conf"]
+          resources:
+            requests:
+              cpu: 100m
+            limits:
+              cpu: 3400m
+          env:
+            - name: POSTGRES_PASSWORD
+              value: postgres
+          ports:
+            - name: postgres
+              containerPort: 5432
+          livenessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -h
+                - localhost
+                - -U
+                - postgres
+            initialDelaySeconds: 30
+            timeoutSeconds: 5
+          readinessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -h
+                - localhost
+                - -U
+                - postgres
+            initialDelaySeconds: 5
+            timeoutSeconds: 1
 ---
 apiVersion: v1
 kind: Service
@@ -98,9 +99,9 @@ spec:
   selector:
     app: database
   ports:
-  - name: postgres
-    port: 5432
-    targetPort: postgres
+    - name: postgres
+      port: 5432
+      targetPort: postgres
 ---
 apiVersion: v1
 kind: ConfigMap

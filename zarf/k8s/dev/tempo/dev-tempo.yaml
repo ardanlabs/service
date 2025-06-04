@@ -64,6 +64,7 @@ data:
     overrides:
       metrics_generator_processors: [ service-graphs, span-metrics ]
 
+
 #    metrics_generator:
 #      registry:
 #        external_labels:
