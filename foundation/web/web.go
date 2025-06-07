@@ -141,12 +141,12 @@ func (a *App) HandlerFuncNoMid(method string, group string, path string, handler
 // HandlerFunc sets a handler function for a given HTTP method and path pair
 // to the application server mux.
 func (a *App) HandlerFunc(method string, group string, path string, handlerFunc HandlerFunc, mw ...MidFunc) {
-	handlerFunc = wrapMiddleware(mw, handlerFunc)
-	handlerFunc = wrapMiddleware(a.mw, handlerFunc)
-
 	if a.origins != nil {
 		handlerFunc = wrapMiddleware([]MidFunc{a.corsHandler}, handlerFunc)
 	}
+
+	handlerFunc = wrapMiddleware(mw, handlerFunc)
+	handlerFunc = wrapMiddleware(a.mw, handlerFunc)
 
 	h := func(w http.ResponseWriter, r *http.Request) {
 		ctx := setTracer(r.Context(), a.tracer)
@@ -180,12 +180,12 @@ func (a *App) RawHandlerFunc(method string, group string, path string, rawHandle
 		return nil
 	}
 
-	handlerFunc = wrapMiddleware(mw, handlerFunc)
-	handlerFunc = wrapMiddleware(a.mw, handlerFunc)
-
 	if a.origins != nil {
 		handlerFunc = wrapMiddleware([]MidFunc{a.corsHandler}, handlerFunc)
 	}
+
+	handlerFunc = wrapMiddleware(mw, handlerFunc)
+	handlerFunc = wrapMiddleware(a.mw, handlerFunc)
 
 	h := func(w http.ResponseWriter, r *http.Request) {
 		ctx := setTracer(r.Context(), a.tracer)
@@ -221,10 +221,12 @@ func (a *App) FileServerReact(static embed.FS, dir string, path string) error {
 		if !fileMatcher.MatchString(r.URL.Path) {
 			p, err := static.ReadFile(fmt.Sprintf("%s/index.html", dir))
 			if err != nil {
-				a.log(context.Background(), "FileServerReact", "ERROR", err)
+				a.log(r.Context(), "FileServerReact", "index.html not found", "ERROR", err)
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 				return
 			}
 
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
 			w.Write(p)
 			return
 		}

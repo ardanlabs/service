@@ -14,7 +14,13 @@ import (
 	"io/fs"
 	"path"
 	"strings"
+	"sync"
 )
+
+// ErrKeyNotFound is returned when a key identified by a kid is not found.
+var ErrKeyNotFound = errors.New("key not found")
+
+const maxPEMFileSize = 1024 * 1024 // 1 MiB
 
 // key represents key information.
 type key struct {
@@ -26,6 +32,7 @@ type key struct {
 // KeyLookup interface for use with the auth package.
 type KeyStore struct {
 	store map[string]key
+	mu    sync.RWMutex
 }
 
 // New constructs an empty KeyStore ready for use.
@@ -60,6 +67,8 @@ func (ks *KeyStore) LoadByJSON(document string) (int, error) {
 		publicPEM:  publicPEM,
 	}
 
+	ks.mu.Lock()
+	defer ks.mu.Unlock()
 	ks.store[d.Key] = key
 
 	return len(ks.store), nil
@@ -93,7 +102,7 @@ func (ks *KeyStore) LoadByFileSystem(fsys fs.FS) (int, error) {
 		// limit PEM file size to 1 megabyte. This should be reasonable for
 		// almost any PEM file and prevents shenanigans like linking the file
 		// to /dev/random or something like that.
-		pem, err := io.ReadAll(io.LimitReader(file, 1024*1024))
+		pem, err := io.ReadAll(io.LimitReader(file, maxPEMFileSize))
 		if err != nil {
 			return fmt.Errorf("reading auth private key: %w", err)
 		}
@@ -109,6 +118,8 @@ func (ks *KeyStore) LoadByFileSystem(fsys fs.FS) (int, error) {
 			publicPEM:  publicPEM,
 		}
 
+		ks.mu.Lock()
+		defer ks.mu.Unlock()
 		ks.store[strings.TrimSuffix(dirEntry.Name(), ".pem")] = key
 
 		return nil
@@ -118,14 +129,19 @@ func (ks *KeyStore) LoadByFileSystem(fsys fs.FS) (int, error) {
 		return 0, fmt.Errorf("walking directory: %w", err)
 	}
 
+	ks.mu.RLock()
+	defer ks.mu.RUnlock()
 	return len(ks.store), nil
 }
 
 // PrivateKey searches the key store for a given kid and returns the private key.
 func (ks *KeyStore) PrivateKey(kid string) (string, error) {
+	ks.mu.RLock()
+	defer ks.mu.RUnlock()
+
 	key, found := ks.store[kid]
 	if !found {
-		return "", errors.New("kid lookup failed")
+		return "", ErrKeyNotFound
 	}
 
 	return key.privatePEM, nil
@@ -133,9 +149,12 @@ func (ks *KeyStore) PrivateKey(kid string) (string, error) {
 
 // PublicKey searches the key store for a given kid and returns the public key.
 func (ks *KeyStore) PublicKey(kid string) (string, error) {
+	ks.mu.RLock()
+	defer ks.mu.RUnlock()
+
 	key, found := ks.store[kid]
 	if !found {
-		return "", errors.New("kid lookup failed")
+		return "", ErrKeyNotFound
 	}
 
 	return key.publicPEM, nil
@@ -152,7 +171,7 @@ func toPublicPEM(privatePEM string) (string, error) {
 	if err != nil {
 		parsedKey, err = x509.ParsePKCS8PrivateKey(block.Bytes)
 		if err != nil {
-			return "", err
+			return "", fmt.Errorf("failed to parse private key as PKCS1 or PKCS8: %w", err)
 		}
 	}
 

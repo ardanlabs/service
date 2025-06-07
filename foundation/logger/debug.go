@@ -11,7 +11,11 @@ import (
 func (log *Logger) BuildInfo(ctx context.Context) {
 	var values []any
 
-	info, _ := debug.ReadBuildInfo()
+	info, ok := debug.ReadBuildInfo()
+	if !ok {
+		log.Warn(ctx, "build info not available")
+		return
+	}
 
 	for _, s := range info.Settings {
 		key := s.Key

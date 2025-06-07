@@ -25,7 +25,7 @@ func setTraceID(ctx context.Context, traceID string) context.Context {
 func GetTraceID(ctx context.Context) string {
 	v, ok := ctx.Value(traceIDKey).(string)
 	if !ok {
-		return "00000000000000000000000000000000"
+		return defaultTraceID
 	}
 
 	return v
