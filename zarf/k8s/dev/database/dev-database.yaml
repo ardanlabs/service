@@ -48,7 +48,7 @@ spec:
                 path: "pg_hba.conf"
       containers:
         - name: postgres
-          image: postgres:17.4
+          image: postgres:17.5
           volumeMounts:
             - name: data
               mountPath: /var/lib/postgresql/data

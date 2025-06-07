@@ -9,35 +9,35 @@ jobs:
       - run:
           name: Install Go 1.24
           command: |
-              sudo rm -rf /usr/local/go
-              wget -O go.tgz https://go.dev/dl/go1.24.2.linux-amd64.tar.gz
-              sudo tar -C /usr/local -xzf go.tgz
-              which go
-              go version
+            sudo rm -rf /usr/local/go
+            wget -O go.tgz https://go.dev/dl/go1.24.4.linux-amd64.tar.gz
+            sudo tar -C /usr/local -xzf go.tgz
+            which go
+            go version
       - run:
           name: Start Test Database
           command: |
-              docker run -P -d --name servicetest -e POSTGRES_PASSWORD=postgres postgres:17.4
+            docker run -P -d --name servicetest -e POSTGRES_PASSWORD=postgres postgres:17.5
       - run:
           name: Run tests
           command: |
-              CGO_ENABLED=0 go test ./...
+            CGO_ENABLED=0 go test ./...
       - run:
           name: Stop Test Database
           command: |
-              docker stop servicetest
-              docker rm servicetest -v
+            docker stop servicetest
+            docker rm servicetest -v
       - run:
           name: Run vet
           command: |
-              CGO_ENABLED=0 go vet ./...
+            CGO_ENABLED=0 go vet ./...
       - run:
           name: Run staticheck
           command: |
-              go install honnef.co/go/tools/cmd/staticcheck@latest
-              staticcheck -checks=all ./...
+            go install honnef.co/go/tools/cmd/staticcheck@latest
+            staticcheck -checks=all ./...
       - run:
           name: Run govulncheck
           command: |
-              go install golang.org/x/vuln/cmd/govulncheck@latest
-              govulncheck ./...
+            go install golang.org/x/vuln/cmd/govulncheck@latest
+            govulncheck ./...

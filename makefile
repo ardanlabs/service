@@ -110,14 +110,14 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 # Define dependencies
 
 GOLANG          := golang:1.24
-ALPINE          := alpine:3.21
+ALPINE          := alpine:3.22
 KIND            := kindest/node:v1.33.1
-POSTGRES        := postgres:17.4
+POSTGRES        := postgres:17.5
 GRAFANA         := grafana/grafana:11.6.0
-PROMETHEUS      := prom/prometheus:v3.2.0
+PROMETHEUS      := prom/prometheus:v3.4.0
 TEMPO           := grafana/tempo:2.7.0
-LOKI            := grafana/loki:3.4.0
-PROMTAIL        := grafana/promtail:3.4.0
+LOKI            := grafana/loki:3.5.0
+PROMTAIL        := grafana/promtail:3.5.0
 
 KIND_CLUSTER    := ardan-starter-cluster
 NAMESPACE       := sales-system
