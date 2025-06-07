@@ -1,0 +1,25 @@
+- Create a new business/domain package called salesbus.
+- Use the domain/productbus package as your template.
+- Use the DATA MODELS below for the salesbus/model.go file instead of the data models found in the productbus/model.go file.
+- Make sure all the new code uses the DATA MODELS provided below.
+
+## DATA MODELS
+
+type Sale struct {
+    ID uuid.UUID
+    ProductID uuid.UUID
+    Amount int
+    Taxes int
+    DateCreated time.Time
+}
+
+type NewSale struct {
+    ProductID uuid.UUID
+    Amount int
+    Taxes int
+}
+
+type UpdateSale struct {
+    Amount *int
+    Taxes *int
+}
