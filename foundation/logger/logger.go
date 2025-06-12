@@ -168,14 +168,8 @@ func new(w io.Writer, minLevel Level, serviceName string, traceIDFn TraceIDFn, e
 	// Add those attributes and capture the final handler.
 	handler = handler.WithAttrs(attrs)
 
-	// Mark if we are using the no-op writer to discard logs.
-	var discard bool
-	if _, exists := w.(noopWriter); exists {
-		discard = true
-	}
-
 	return &Logger{
-		discard:   discard,
+		discard:   w == io.Discard,
 		handler:   handler,
 		traceIDFn: traceIDFn,
 	}
