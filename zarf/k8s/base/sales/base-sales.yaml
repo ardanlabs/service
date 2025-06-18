@@ -99,19 +99,6 @@ spec:
             failureThreshold: 2
 
           env:
-            - name: GOMAXPROCS
-              valueFrom:
-                resourceFieldRef:
-                  resource: limits.cpu
-
-            - name: GOGC
-              value: "off"
-
-            - name: GOMEMLIMIT
-              valueFrom:
-                resourceFieldRef:
-                  resource: limits.memory
-
             - name: SALES_DB_USER # here as an example for configuring a hosted db.
               valueFrom:
                 configMapKeyRef:
@@ -164,12 +151,6 @@ spec:
               containerPort: 4010
             - name: metrics-prom
               containerPort: 4020
-
-          env:
-            - name: GOMAXPROCS
-              valueFrom:
-                resourceFieldRef:
-                  resource: limits.cpu
 
 ---
 apiVersion: v1

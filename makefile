@@ -494,9 +494,9 @@ curl-create:
 	http://localhost:3000/v1/users
 
 # ==============================================================================
-# Talk commands
+# Bug commands
 
-talk-up:
+bug-up:
 	kind create cluster \
 		--image $(KIND) \
 		--name $(KIND_CLUSTER) \
@@ -506,13 +506,13 @@ talk-up:
 
 	kind load docker-image $(POSTGRES) --name $(KIND_CLUSTER)
 
-talk-load:
+bug-load:
 	kind load docker-image $(SALES_IMAGE) --name $(KIND_CLUSTER) & \
 	kind load docker-image $(METRICS_IMAGE) --name $(KIND_CLUSTER) & \
 	kind load docker-image $(AUTH_IMAGE) --name $(KIND_CLUSTER) & \
 	wait;
 
-talk-apply:
+bug-apply:
 	kustomize build zarf/k8s/dev/database | kubectl apply -f -
 	kubectl rollout status --namespace=$(NAMESPACE) --watch --timeout=120s sts/database
 
@@ -522,24 +522,24 @@ talk-apply:
 	kustomize build zarf/k8s/dev/sales | kubectl apply -f -
 	kubectl wait pods --namespace=$(NAMESPACE) --selector app=$(SALES_APP) --timeout=120s --for=condition=Ready
 
-talk-run: build talk-up talk-load talk-apply
+bug-run: build bug-up bug-load bug-apply
 
-talk-run-load:
+bug-run-load:
 	hey -m GET -c 10 -n 1000 -H "Authorization: Bearer ${TOKEN}" "http://localhost:3000/v1/users?page=1&rows=2"
 
-talk-logs:
+bug-logs:
 	kubectl logs --namespace=$(NAMESPACE) -l app=$(SALES_APP) --all-containers=true -f --tail=100 --max-log-requests=6
 
-talk-logs-cpu:
+bug-logs-cpu:
 	kubectl logs --namespace=$(NAMESPACE) -l app=$(SALES_APP) --all-containers=true -f --tail=100 --max-log-requests=6 | grep SCHED
 
-talk-logs-mem:
+bug-logs-mem:
 	kubectl logs --namespace=$(NAMESPACE) -l app=$(SALES_APP) --all-containers=true -f --tail=100 --max-log-requests=6 | grep "ms clock"
 
-talk-describe:
+bug-describe:
 	kubectl describe pod --namespace=$(NAMESPACE) -l app=$(SALES_APP)
 
-talk-metrics:
+bug-metrics:
 	expvarmon -ports="localhost:4000" -vars="build,requests,goroutines,errors,panics,mem:memstats.HeapAlloc,mem:memstats.HeapSys,mem:memstats.Sys"
 
 # ==============================================================================

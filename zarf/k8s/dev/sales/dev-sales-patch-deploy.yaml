@@ -133,10 +133,8 @@ spec:
           resources:
             requests:
               cpu: "250m"
-              memory: "100Mi"
             limits:
               cpu: "250m"
-              memory: "100Mi"
 
         - name: metrics
           resources:
