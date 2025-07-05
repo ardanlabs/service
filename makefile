@@ -149,6 +149,9 @@ dev-brew:
 	brew list pgcli || brew install pgcli
 	brew list watch || brew install watch
 
+dev-brew-upgrade:
+	brew upgrade
+
 dev-docker:
 	docker pull $(GOLANG) & \
 	docker pull $(ALPINE) & \
@@ -248,7 +251,7 @@ dev-restart:
 	kubectl rollout restart deployment $(AUTH_APP) --namespace=$(NAMESPACE)
 	kubectl rollout restart deployment $(SALES_APP) --namespace=$(NAMESPACE)
 
-dev-run: build dev-up dev-load dev-apply
+dev-run: dev-brew-upgrade build dev-up dev-load dev-apply
 
 dev-update: build dev-load dev-restart
 
@@ -576,6 +579,7 @@ help:
 	@echo "Commands:"
 	@echo "  dev-gotooling           Install Go tooling"
 	@echo "  dev-brew                Install brew dependencies"
+	@echo "  dev-brew-upgrade        Upgrade brew dependencies"
 	@echo "  dev-docker              Pull Docker images"
 	@echo "  build                   Build all the containers"
 	@echo "  sales                   Build the sales container"
