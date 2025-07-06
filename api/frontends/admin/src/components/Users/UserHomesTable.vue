@@ -16,12 +16,12 @@
     @update:options="loadItems"
   >
     <template v-slot:[`item.address.country`]="{ item }">
-      <div>{{ getCountry(item.columns["address.country"]) }}</div>
+      <div>{{ getCountry(item.address.country) }}</div>
     </template>
     <template #[`item.actions`]="{ item }">
       <users-table-actions
-        @delete="$emit('delete', item.selectable)"
-        @edit="$emit('edit', item.selectable)"
+        @delete="$emit('delete', item)"
+        @edit="$emit('edit', item)"
         :item="item"
       />
     </template>
