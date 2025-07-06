@@ -19,7 +19,7 @@
       <div>{{ getCountry(item.address.country) }}</div>
     </template>
     <template #[`item.actions`]="{ item }">
-      <users-table-actions
+      <users-home-table-actions
         @delete="$emit('delete', item)"
         @edit="$emit('edit', item)"
         :item="item"
@@ -30,7 +30,7 @@
 <script>
 import DataTableServer from "../DataTable/DataTableServer.vue";
 import { UserHomesTableHeaders } from "../Users/Users.js";
-import UsersTableActions from "../Users/UsersTableActions.vue";
+import UsersHomeTableActions from "../Users/UsersHomeTableActions.vue";
 import SortQuery from "../DataTable/SortQuery";
 import Countries from "../Users/Countries.js";
 
@@ -38,7 +38,7 @@ export default {
   name: "UserHomesTable",
   components: {
     DataTableServer,
-    UsersTableActions,
+    UsersHomeTableActions,
   },
   props: {
     userId: {
