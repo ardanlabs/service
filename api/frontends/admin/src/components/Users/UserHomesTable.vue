@@ -65,6 +65,11 @@ export default {
       ],
     };
   },
+  watch: {
+    userId() {
+      this.loadItems();
+    },
+  },
   computed: {
     countries() {
       return Countries;
@@ -92,6 +97,10 @@ export default {
       return SortQuery(s);
     },
     async loadItems() {
+      if (this.userId === "") {
+        return;
+      }
+
       const { page, itemsPerPage, sortBy } = this.tableOptions;
 
       const sort = this.sortQuery(sortBy);
