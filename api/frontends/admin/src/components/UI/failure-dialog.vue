@@ -3,7 +3,6 @@
     v-bind="$attrs"
     content-class="ui-success-dialog white"
     width="410"
-    v-on="$listeners"
     @click:outside="close"
   >
     <v-card>
