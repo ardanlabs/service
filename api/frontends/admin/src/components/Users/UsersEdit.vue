@@ -29,6 +29,7 @@
               multiple
               variant="outlined"
               :items="userRoles"
+              disabled
             />
             <v-text-field
               v-model="form.department"
