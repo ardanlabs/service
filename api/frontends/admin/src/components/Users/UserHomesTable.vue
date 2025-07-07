@@ -56,6 +56,7 @@ export default {
       },
       error: {},
       users: [],
+      loading: false,
       serverItemsLength: 0,
       usersItemsPerPageOptions: [
         { title: "1", value: 1 },
