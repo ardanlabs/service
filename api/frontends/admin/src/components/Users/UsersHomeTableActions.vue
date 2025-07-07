@@ -5,11 +5,11 @@
     background-color="rgba(255, 255, 255)"
   >
     <v-tooltip bottom>
-      <template #activator="{ on }">
+      <template #activator="{ props }">
         <v-btn
           class="text--dark ma-1"
           size="x-small"
-          v-on="on"
+          v-bind="props"
           @click.stop.prevent="action('edit')"
         >
           <v-icon icon="fas fa-pencil"> </v-icon>
@@ -18,11 +18,11 @@
       <span>Edit Home</span>
     </v-tooltip>
     <v-tooltip bottom>
-      <template #activator="{ on }">
+      <template #activator="{ props }">
         <v-btn
           class="ma-1"
           size="x-small"
-          v-on="on"
+          v-bind="props"
           @click.stop.prevent="action('delete')"
         >
           <v-icon icon="fas fa-trash"></v-icon>

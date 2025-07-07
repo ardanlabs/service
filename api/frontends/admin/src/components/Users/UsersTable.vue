@@ -17,22 +17,22 @@
     @update:options="loadItems"
   >
     <template v-slot:[`item.user_id`]="{ item }">
-      <div>{{ item.value }}</div>
+      <div>{{ item.id }}</div>
     </template>
     <template v-slot:[`item.roles`]="{ item }">
-      <div>{{ item.columns.roles.join(", ") }}</div>
+      <div>{{ item.roles.join(", ") }}</div>
     </template>
     <template v-slot:[`item.dateCreated`]="{ item }">
-      <div>{{ item.columns.dateCreated.substring(0, 10) }}</div>
+      <div>{{ item.dateCreated.substring(0, 10) }}</div>
     </template>
     <template v-slot:[`item.dateUpdated`]="{ item }">
-      <div>{{ item.columns.dateUpdated.substring(0, 10) }}</div>
+      <div>{{ item.dateUpdated.substring(0, 10) }}</div>
     </template>
     <template #[`item.actions`]="{ item }">
       <users-table-actions
-        @delete="$emit('delete', item.selectable)"
-        @edit="$emit('edit', item.selectable)"
-        @profile="goToClientsProfile(item.selectable.id)"
+        @delete="$emit('delete', item)"
+        @edit="$emit('edit', item)"
+        @profile="goToClientsProfile(item.id)"
         :item="item"
       />
     </template>
@@ -59,6 +59,7 @@ export default {
       },
       error: {},
       users: [],
+      loading: false,
       serverItemsLength: 0,
       usersItemsPerPageOptions: [
         { title: "5", value: 5 },
@@ -90,7 +91,7 @@ export default {
     goToClientsProfile(id, e) {
       let userId = id;
       if (typeof userId !== "string") {
-        userId = e.item.selectable.id;
+        userId = e.item.id;
       }
       this.$router.push({
         name: "UserProfile",

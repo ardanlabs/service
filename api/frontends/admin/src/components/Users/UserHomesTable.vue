@@ -16,12 +16,12 @@
     @update:options="loadItems"
   >
     <template v-slot:[`item.address.country`]="{ item }">
-      <div>{{ getCountry(item.columns["address.country"]) }}</div>
+      <div>{{ getCountry(item.address.country) }}</div>
     </template>
     <template #[`item.actions`]="{ item }">
-      <users-table-actions
-        @delete="$emit('delete', item.selectable)"
-        @edit="$emit('edit', item.selectable)"
+      <users-home-table-actions
+        @delete="$emit('delete', item)"
+        @edit="$emit('edit', item)"
         :item="item"
       />
     </template>
@@ -30,7 +30,7 @@
 <script>
 import DataTableServer from "../DataTable/DataTableServer.vue";
 import { UserHomesTableHeaders } from "../Users/Users.js";
-import UsersTableActions from "../Users/UsersTableActions.vue";
+import UsersHomeTableActions from "../Users/UsersHomeTableActions.vue";
 import SortQuery from "../DataTable/SortQuery";
 import Countries from "../Users/Countries.js";
 
@@ -38,7 +38,7 @@ export default {
   name: "UserHomesTable",
   components: {
     DataTableServer,
-    UsersTableActions,
+    UsersHomeTableActions,
   },
   props: {
     userId: {
@@ -56,6 +56,7 @@ export default {
       },
       error: {},
       users: [],
+      loading: false,
       serverItemsLength: 0,
       usersItemsPerPageOptions: [
         { title: "1", value: 1 },
@@ -63,6 +64,11 @@ export default {
         { title: "3", value: 3 },
       ],
     };
+  },
+  watch: {
+    userId() {
+      this.loadItems();
+    },
   },
   computed: {
     countries() {
@@ -91,6 +97,10 @@ export default {
       return SortQuery(s);
     },
     async loadItems() {
+      if (this.userId === "") {
+        return;
+      }
+
       const { page, itemsPerPage, sortBy } = this.tableOptions;
 
       const sort = this.sortQuery(sortBy);

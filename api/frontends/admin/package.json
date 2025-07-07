@@ -11,22 +11,22 @@
   "dependencies": {
     "@mdi/font": "7.0.96",
     "core-js": "^3.42.0",
+    "esbuild": ">=0.25.0",
     "pinia": "^2.3.1",
     "roboto-fontface": "^0.10.0",
     "vue": "^3.5.13",
     "vue-router": "^4.5.1",
     "vuetify": "^3.8.3",
-    "webfontloader": "^1.6.28",
-    "esbuild": ">=0.25.0"
+    "webfontloader": "^1.6.28"
   },
   "devDependencies": {
     "@fortawesome/fontawesome-free": "^6.7.2",
-    "@vitejs/plugin-vue": "^4.6.2",
+    "@vitejs/plugin-vue": "^6.0.0",
+    "esbuild": ">=0.25.0",
     "eslint": "^8.57.1",
     "eslint-plugin-vue": "^9.33.0",
     "sass": "^1.87.0",
     "vite": "^6.3.4",
-    "vite-plugin-vuetify": "^1.0.2",
-    "esbuild": ">=0.25.0"
+    "vite-plugin-vuetify": "^2.1.1"
   }
 }
