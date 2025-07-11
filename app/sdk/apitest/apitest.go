@@ -18,6 +18,21 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
+type testOption struct {
+	skip    bool
+	skipMsg string
+}
+
+type OptionFunc func(*testOption)
+
+// WithSkip can be used to skip running a test.
+func WithSkip(skip bool, msg string) OptionFunc {
+	return func(to *testOption) {
+		to.skip = skip
+		to.skipMsg = msg
+	}
+}
+
 // Test contains functions for executing an api test.
 type Test struct {
 	DB   *dbtest.Database
@@ -26,7 +41,16 @@ type Test struct {
 }
 
 // Run performs the actual test logic based on the table data.
-func (at *Test) Run(t *testing.T, table []Table, testName string) {
+func (at *Test) Run(t *testing.T, table []Table, testName string, options ...OptionFunc) {
+	to := new(testOption)
+	for _, f := range options {
+		f(to)
+	}
+
+	if to.skip {
+		t.Skipf("%v: %v", testName, to.skipMsg)
+	}
+
 	for _, tt := range table {
 		f := func(t *testing.T) {
 			r := httptest.NewRequest(tt.Method, tt.URL, nil)
