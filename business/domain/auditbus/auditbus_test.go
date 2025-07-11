@@ -13,7 +13,7 @@ import (
 	"github.com/ardanlabs/service/business/sdk/dbtest"
 	"github.com/ardanlabs/service/business/sdk/order"
 	"github.com/ardanlabs/service/business/sdk/page"
-	"github.com/ardanlabs/service/business/sdk/unitest"
+	"github.com/ardanlabs/service/business/sdk/unittest"
 	"github.com/ardanlabs/service/business/types/domain"
 	"github.com/ardanlabs/service/business/types/role"
 	"github.com/google/go-cmp/cmp"
@@ -31,33 +31,33 @@ func Test_Audit(t *testing.T) {
 
 	// -------------------------------------------------------------------------
 
-	unitest.Run(t, query(db.BusDomain, sd), "query")
+	unittest.Run(t, query(db.BusDomain, sd), "query")
 }
 
 // =============================================================================
 
-func insertSeedData(busDomain dbtest.BusDomain) (unitest.SeedData, error) {
+func insertSeedData(busDomain dbtest.BusDomain) (unittest.SeedData, error) {
 	ctx := context.Background()
 
 	usrs, err := userbus.TestSeedUsers(ctx, 1, role.Admin, busDomain.User)
 	if err != nil {
-		return unitest.SeedData{}, fmt.Errorf("seeding users : %w", err)
+		return unittest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}
 
 	audits, err := auditbus.TestSeedAudits(ctx, 2, usrs[0].ID, domain.User, "create", busDomain.Audit)
 	if err != nil {
-		return unitest.SeedData{}, fmt.Errorf("seeding users : %w", err)
+		return unittest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}
 
-	tu1 := unitest.User{
+	tu1 := unittest.User{
 		User:   usrs[0],
 		Audits: audits,
 	}
 
 	// -------------------------------------------------------------------------
 
-	sd := unitest.SeedData{
-		Admins: []unitest.User{tu1},
+	sd := unittest.SeedData{
+		Admins: []unittest.User{tu1},
 	}
 
 	return sd, nil
@@ -65,12 +65,12 @@ func insertSeedData(busDomain dbtest.BusDomain) (unitest.SeedData, error) {
 
 // =============================================================================
 
-func query(busDomain dbtest.BusDomain, sd unitest.SeedData) []unitest.Table {
+func query(busDomain dbtest.BusDomain, sd unittest.SeedData) []unittest.Table {
 	sort.Slice(sd.Admins[0].Audits, func(i, j int) bool {
 		return sd.Admins[0].Audits[i].ObjName.String() <= sd.Admins[0].Audits[j].ObjName.String()
 	})
 
-	table := []unitest.Table{
+	table := []unittest.Table{
 		{
 			Name:    "all",
 			ExpResp: sd.Admins[0].Audits,

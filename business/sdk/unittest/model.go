@@ -1,4 +1,4 @@
-package unitest
+package unittest
 
 import (
 	"context"
