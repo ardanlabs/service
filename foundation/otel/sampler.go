@@ -16,14 +16,31 @@ func newEndpointExcluder(endpoints map[string]struct{}, probability float64) end
 	}
 }
 
+func endpoint(parameters trace.SamplingParameters) string {
+	var path, query string
+
+	for _, attr := range parameters.Attributes {
+		switch attr.Key {
+		case "url.path":
+			path = attr.Value.AsString()
+		case "url.query":
+			query = attr.Value.AsString()
+		}
+	}
+
+	if path != "" && query != "" {
+		path += "?" + query
+	}
+
+	return path
+}
+
 // ShouldSample implements the sampler interface. It prevents the specified
 // endpoints from being added to the trace.
 func (ee endpointExcluder) ShouldSample(parameters trace.SamplingParameters) trace.SamplingResult {
-	for i := range parameters.Attributes {
-		if parameters.Attributes[i].Key == "http.target" {
-			if _, exists := ee.endpoints[parameters.Attributes[i].Value.AsString()]; exists {
-				return trace.SamplingResult{Decision: trace.Drop}
-			}
+	if ep := endpoint(parameters); ep != "" {
+		if _, exists := ee.endpoints[ep]; exists {
+			return trace.SamplingResult{Decision: trace.Drop}
 		}
 	}
 
