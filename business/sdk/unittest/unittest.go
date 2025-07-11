@@ -1,5 +1,5 @@
-// Package unitest provides support for excuting unit test logic.
-package unitest
+// Package unittest provides support for excuting unit test logic.
+package unittest
 
 import (
 	"context"

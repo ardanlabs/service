@@ -11,7 +11,7 @@ import (
 	"github.com/ardanlabs/service/business/domain/userbus"
 	"github.com/ardanlabs/service/business/sdk/dbtest"
 	"github.com/ardanlabs/service/business/sdk/page"
-	"github.com/ardanlabs/service/business/sdk/unitest"
+	"github.com/ardanlabs/service/business/sdk/unittest"
 	"github.com/ardanlabs/service/business/types/name"
 	"github.com/ardanlabs/service/business/types/role"
 	"github.com/google/go-cmp/cmp"
@@ -31,27 +31,27 @@ func Test_User(t *testing.T) {
 
 	// -------------------------------------------------------------------------
 
-	unitest.Run(t, query(db.BusDomain, sd), "query")
-	unitest.Run(t, create(db.BusDomain), "create")
-	unitest.Run(t, update(db.BusDomain, sd), "update")
-	unitest.Run(t, delete(db.BusDomain, sd), "delete")
+	unittest.Run(t, query(db.BusDomain, sd), "query")
+	unittest.Run(t, create(db.BusDomain), "create")
+	unittest.Run(t, update(db.BusDomain, sd), "update")
+	unittest.Run(t, delete(db.BusDomain, sd), "delete")
 }
 
 // =============================================================================
 
-func insertSeedData(busDomain dbtest.BusDomain) (unitest.SeedData, error) {
+func insertSeedData(busDomain dbtest.BusDomain) (unittest.SeedData, error) {
 	ctx := context.Background()
 
 	usrs, err := userbus.TestSeedUsers(ctx, 2, role.Admin, busDomain.User)
 	if err != nil {
-		return unitest.SeedData{}, fmt.Errorf("seeding users : %w", err)
+		return unittest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}
 
-	tu1 := unitest.User{
+	tu1 := unittest.User{
 		User: usrs[0],
 	}
 
-	tu2 := unitest.User{
+	tu2 := unittest.User{
 		User: usrs[1],
 	}
 
@@ -59,22 +59,22 @@ func insertSeedData(busDomain dbtest.BusDomain) (unitest.SeedData, error) {
 
 	usrs, err = userbus.TestSeedUsers(ctx, 2, role.User, busDomain.User)
 	if err != nil {
-		return unitest.SeedData{}, fmt.Errorf("seeding users : %w", err)
+		return unittest.SeedData{}, fmt.Errorf("seeding users : %w", err)
 	}
 
-	tu3 := unitest.User{
+	tu3 := unittest.User{
 		User: usrs[0],
 	}
 
-	tu4 := unitest.User{
+	tu4 := unittest.User{
 		User: usrs[1],
 	}
 
 	// -------------------------------------------------------------------------
 
-	sd := unitest.SeedData{
-		Users:  []unitest.User{tu3, tu4},
-		Admins: []unitest.User{tu1, tu2},
+	sd := unittest.SeedData{
+		Users:  []unittest.User{tu3, tu4},
+		Admins: []unittest.User{tu1, tu2},
 	}
 
 	return sd, nil
@@ -82,7 +82,7 @@ func insertSeedData(busDomain dbtest.BusDomain) (unitest.SeedData, error) {
 
 // =============================================================================
 
-func query(busDomain dbtest.BusDomain, sd unitest.SeedData) []unitest.Table {
+func query(busDomain dbtest.BusDomain, sd unittest.SeedData) []unittest.Table {
 	usrs := make([]userbus.User, 0, len(sd.Admins)+len(sd.Users))
 
 	for _, adm := range sd.Admins {
@@ -97,7 +97,7 @@ func query(busDomain dbtest.BusDomain, sd unitest.SeedData) []unitest.Table {
 		return usrs[i].ID.String() <= usrs[j].ID.String()
 	})
 
-	table := []unitest.Table{
+	table := []unittest.Table{
 		{
 			Name:    "all",
 			ExpResp: usrs,
@@ -169,10 +169,10 @@ func query(busDomain dbtest.BusDomain, sd unitest.SeedData) []unitest.Table {
 	return table
 }
 
-func create(busDomain dbtest.BusDomain) []unitest.Table {
+func create(busDomain dbtest.BusDomain) []unittest.Table {
 	email, _ := mail.ParseAddress("bill@ardanlabs.com")
 
-	table := []unitest.Table{
+	table := []unittest.Table{
 		{
 			Name: "basic",
 			ExpResp: userbus.User{
@@ -223,10 +223,10 @@ func create(busDomain dbtest.BusDomain) []unitest.Table {
 	return table
 }
 
-func update(busDomain dbtest.BusDomain, sd unitest.SeedData) []unitest.Table {
+func update(busDomain dbtest.BusDomain, sd unittest.SeedData) []unittest.Table {
 	email, _ := mail.ParseAddress("jack@ardanlabs.com")
 
-	table := []unitest.Table{
+	table := []unittest.Table{
 		{
 			Name: "basic",
 			ExpResp: userbus.User{
@@ -277,8 +277,8 @@ func update(busDomain dbtest.BusDomain, sd unitest.SeedData) []unitest.Table {
 	return table
 }
 
-func delete(busDomain dbtest.BusDomain, sd unitest.SeedData) []unitest.Table {
-	table := []unitest.Table{
+func delete(busDomain dbtest.BusDomain, sd unittest.SeedData) []unittest.Table {
+	table := []unittest.Table{
 		{
 			Name:    "user",
 			ExpResp: nil,
