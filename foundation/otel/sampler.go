@@ -31,7 +31,7 @@ func endpoint(parameters trace.SamplingParameters) (string, error) {
 	}
 
 	if path == "" {
-		return "", errors.New("url.path missing in span attribute")
+		return "", errors.New("url.path missing in span attributes")
 	}
 
 	if query == "" {
