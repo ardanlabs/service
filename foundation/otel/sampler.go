@@ -1,7 +1,7 @@
 package otel
 
 import (
-	"errors"
+	"fmt"
 
 	"go.opentelemetry.io/otel/sdk/trace"
 )
@@ -18,7 +18,7 @@ func newEndpointExcluder(endpoints map[string]struct{}, probability float64) end
 	}
 }
 
-func endpoint(parameters trace.SamplingParameters) (string, error) {
+func endpoint(parameters trace.SamplingParameters) string {
 	var path, query string
 
 	for _, attr := range parameters.Attributes {
@@ -30,21 +30,22 @@ func endpoint(parameters trace.SamplingParameters) (string, error) {
 		}
 	}
 
-	if path == "" {
-		return "", errors.New("url.path missing in span attributes")
-	}
+	switch {
+	case path == "":
+		return ""
 
-	if query == "" {
-		return path, nil
-	}
+	case query == "":
+		return path
 
-	return path + "?" + query, nil
+	default:
+		return fmt.Sprintf("%s?%s", path, query)
+	}
 }
 
 // ShouldSample implements the sampler interface. It prevents the specified
 // endpoints from being added to the trace.
 func (ee endpointExcluder) ShouldSample(parameters trace.SamplingParameters) trace.SamplingResult {
-	if ep, err := endpoint(parameters); err == nil {
+	if ep := endpoint(parameters); ep != "" {
 		if _, exists := ee.endpoints[ep]; exists {
 			return trace.SamplingResult{Decision: trace.Drop}
 		}
