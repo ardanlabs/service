@@ -38,7 +38,18 @@ func NewStore(log *logger.Logger, storer userbus.Storer, ttl time.Duration) *Sto
 // NewWithTx constructs a new Store value replacing the sqlx DB
 // value with a sqlx DB value that is currently inside a transaction.
 func (s *Store) NewWithTx(tx sqldb.CommitRollbacker) (userbus.Storer, error) {
-	return s.storer.NewWithTx(tx)
+	txStorer, err := s.storer.NewWithTx(tx)
+	if err != nil {
+		return nil, err
+	}
+
+	store := Store{
+		log:    s.log,
+		storer: txStorer,
+		cache:  s.cache,
+	}
+
+	return &store, nil
 }
 
 // Create inserts a new user into the database.
