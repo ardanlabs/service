@@ -28,8 +28,8 @@ func endpoint(parameters trace.SamplingParameters) string {
 		}
 	}
 
-	if path != "" && query != "" {
-		path += "?" + query
+	if query != "" && path != "" {
+		return path + "?" + query
 	}
 
 	return path
