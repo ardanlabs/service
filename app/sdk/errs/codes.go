@@ -5,8 +5,8 @@ import (
 )
 
 var (
-	// OK indicates the operation was successful.
-	OK = ErrCode{value: 0}
+	// None indicates the operation was successful.
+	None = ErrCode{value: 0}
 
 	// NoContent indicates the operation was successful with no content.
 	NoContent = ErrCode{value: 1}
@@ -119,7 +119,7 @@ var (
 )
 
 var codeNumbers = map[string]ErrCode{
-	"ok":                  OK,
+	"ok":                  None,
 	"no_content":          NoContent,
 	"canceled":            Canceled,
 	"unknown":             Unknown,
@@ -142,7 +142,7 @@ var codeNumbers = map[string]ErrCode{
 }
 
 var codeNames = map[ErrCode]string{
-	OK:                 "ok",
+	None:               "ok",
 	NoContent:          "ok_no_content",
 	Canceled:           "canceled",
 	Unknown:            "unknown",
@@ -165,7 +165,7 @@ var codeNames = map[ErrCode]string{
 }
 
 var httpStatus = map[ErrCode]int{
-	OK:                 http.StatusOK,
+	None:               http.StatusOK,
 	NoContent:          http.StatusNoContent,
 	Canceled:           http.StatusGatewayTimeout,
 	Unknown:            http.StatusInternalServerError,

@@ -27,7 +27,7 @@ func Logger(log *logger.Logger) web.MidFunc {
 
 			resp := next(ctx, r)
 
-			var statusCode = errs.OK
+			var statusCode = errs.None
 			if err := isError(resp); err != nil {
 				statusCode = errs.Internal
 
