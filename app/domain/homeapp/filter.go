@@ -39,7 +39,7 @@ func parseQueryParams(r *http.Request) queryParams {
 }
 
 func parseFilter(qp queryParams) (homebus.QueryFilter, error) {
-	var fieldErrors errs.FieldErrors
+	var fieldErrors = make(errs.FieldErrors, 0)
 	var filter homebus.QueryFilter
 
 	if qp.ID != "" {
@@ -92,7 +92,7 @@ func parseFilter(qp queryParams) (homebus.QueryFilter, error) {
 		}
 	}
 
-	if fieldErrors != nil {
+	if len(fieldErrors) > 0 {
 		return homebus.QueryFilter{}, fieldErrors.ToError()
 	}
 

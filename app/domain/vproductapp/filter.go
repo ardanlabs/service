@@ -39,7 +39,7 @@ func parseQueryParams(r *http.Request) queryParams {
 }
 
 func parseFilter(qp queryParams) (vproductbus.QueryFilter, error) {
-	var fieldErrors errs.FieldErrors
+	var fieldErrors = make(errs.FieldErrors, 0)
 	var filter vproductbus.QueryFilter
 
 	if qp.ID != "" {
@@ -93,7 +93,7 @@ func parseFilter(qp queryParams) (vproductbus.QueryFilter, error) {
 		}
 	}
 
-	if fieldErrors != nil {
+	if len(fieldErrors) > 0 {
 		return vproductbus.QueryFilter{}, fieldErrors.ToError()
 	}
 

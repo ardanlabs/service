@@ -44,7 +44,7 @@ func parseQueryParams(r *http.Request) (queryParams, error) {
 }
 
 func parseFilter(qp queryParams) (auditbus.QueryFilter, error) {
-	var fieldErrors errs.FieldErrors
+	var fieldErrors = make(errs.FieldErrors, 0)
 	var filter auditbus.QueryFilter
 
 	if qp.ObjID != "" {
@@ -111,7 +111,7 @@ func parseFilter(qp queryParams) (auditbus.QueryFilter, error) {
 		}
 	}
 
-	if fieldErrors != nil {
+	if len(fieldErrors) > 0 {
 		return auditbus.QueryFilter{}, fieldErrors.ToError()
 	}
 

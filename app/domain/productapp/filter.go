@@ -37,7 +37,7 @@ func parseQueryParams(r *http.Request) queryParams {
 }
 
 func parseFilter(qp queryParams) (productbus.QueryFilter, error) {
-	var fieldErrors errs.FieldErrors
+	var fieldErrors = make(errs.FieldErrors, 0)
 	var filter productbus.QueryFilter
 
 	if qp.ID != "" {
@@ -81,7 +81,7 @@ func parseFilter(qp queryParams) (productbus.QueryFilter, error) {
 		}
 	}
 
-	if fieldErrors != nil {
+	if len(fieldErrors) > 0 {
 		return productbus.QueryFilter{}, fieldErrors.ToError()
 	}
 

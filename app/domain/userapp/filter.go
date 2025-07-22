@@ -40,7 +40,7 @@ func parseQueryParams(r *http.Request) (queryParams, error) {
 }
 
 func parseFilter(qp queryParams) (userbus.QueryFilter, error) {
-	var fieldErrors errs.FieldErrors
+	var fieldErrors = make(errs.FieldErrors, 0)
 	var filter userbus.QueryFilter
 
 	if qp.ID != "" {
@@ -93,7 +93,7 @@ func parseFilter(qp queryParams) (userbus.QueryFilter, error) {
 		}
 	}
 
-	if fieldErrors != nil {
+	if len(fieldErrors) > 0 {
 		return userbus.QueryFilter{}, fieldErrors.ToError()
 	}
 
