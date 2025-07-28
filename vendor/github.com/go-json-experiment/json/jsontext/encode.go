@@ -72,8 +72,8 @@ type encodeBuffer struct {
 
 	// maxValue is the approximate maximum Value size passed to WriteValue.
 	maxValue int
-	// unusedCache is the buffer returned by the UnusedBuffer method.
-	unusedCache []byte
+	// availBuffer is the buffer returned by the AvailableBuffer method.
+	availBuffer []byte // always has zero length
 	// bufStats is statistics about buffer utilization.
 	// It is only used with pooled encoders in pools.go.
 	bufStats bufferStatistics
@@ -105,14 +105,19 @@ func (e *Encoder) Reset(w io.Writer, opts ...Options) {
 	case e.s.Flags.Get(jsonflags.WithinArshalCall):
 		panic("jsontext: cannot reset Encoder passed to json.MarshalerTo")
 	}
-	e.s.reset(nil, w, opts...)
+	// Reuse the buffer if it does not alias a previous [bytes.Buffer].
+	b := e.s.Buf[:0]
+	if _, ok := e.s.wr.(*bytes.Buffer); ok {
+		b = nil
+	}
+	e.s.reset(b, w, opts...)
 }
 
 func (e *encoderState) reset(b []byte, w io.Writer, opts ...Options) {
 	e.state.reset()
-	e.encodeBuffer = encodeBuffer{Buf: b, wr: w, bufStats: e.bufStats}
+	e.encodeBuffer = encodeBuffer{Buf: b, wr: w, availBuffer: e.availBuffer, bufStats: e.bufStats}
 	if bb, ok := w.(*bytes.Buffer); ok && bb != nil {
-		e.Buf = bb.Bytes()[bb.Len():] // alias the unused buffer of bb
+		e.Buf = bb.AvailableBuffer() // alias the unused buffer of bb
 	}
 	opts2 := jsonopts.Struct{} // avoid mutating e.Struct in case it is part of opts
 	opts2.Join(opts...)
@@ -463,9 +468,9 @@ func (e *encoderState) AppendRaw(k Kind, safeASCII bool, appendFn func([]byte) (
 		isVerbatim := safeASCII || !jsonwire.NeedEscape(b[pos+len(`"`):len(b)-len(`"`)])
 		if !isVerbatim {
 			var err error
-			b2 := append(e.unusedCache, b[pos+len(`"`):len(b)-len(`"`)]...)
+			b2 := append(e.availBuffer, b[pos+len(`"`):len(b)-len(`"`)]...)
 			b, err = jsonwire.AppendQuote(b[:pos], string(b2), &e.Flags)
-			e.unusedCache = b2[:0]
+			e.availBuffer = b2[:0]
 			if err != nil {
 				return wrapSyntacticError(e, err, pos, +1)
 			}
@@ -898,20 +903,20 @@ func (e *Encoder) OutputOffset() int64 {
 	return e.s.previousOffsetEnd()
 }
 
-// UnusedBuffer returns a zero-length buffer with a possible non-zero capacity.
+// AvailableBuffer returns a zero-length buffer with a possible non-zero capacity.
 // This buffer is intended to be used to populate a [Value]
 // being passed to an immediately succeeding [Encoder.WriteValue] call.
 //
 // Example usage:
 //
-//	b := d.UnusedBuffer()
+//	b := d.AvailableBuffer()
 //	b = append(b, '"')
 //	b = appendString(b, v) // append the string formatting of v
 //	b = append(b, '"')
 //	... := d.WriteValue(b)
 //
 // It is the user's responsibility to ensure that the value is valid JSON.
-func (e *Encoder) UnusedBuffer() []byte {
+func (e *Encoder) AvailableBuffer() []byte {
 	// NOTE: We don't return e.buf[len(e.buf):cap(e.buf)] since WriteValue would
 	// need to take special care to avoid mangling the data while reformatting.
 	// WriteValue can't easily identify whether the input Value aliases e.buf
@@ -919,10 +924,10 @@ func (e *Encoder) UnusedBuffer() []byte {
 	// Should this ever alias e.buf, we need to consider how it operates with
 	// the specialized performance optimization for bytes.Buffer.
 	n := 1 << bits.Len(uint(e.s.maxValue|63)) // fast approximation for max length
-	if cap(e.s.unusedCache) < n {
-		e.s.unusedCache = make([]byte, 0, n)
+	if cap(e.s.availBuffer) < n {
+		e.s.availBuffer = make([]byte, 0, n)
 	}
-	return e.s.unusedCache
+	return e.s.availBuffer
 }
 
 // StackDepth returns the depth of the state machine for written JSON data.

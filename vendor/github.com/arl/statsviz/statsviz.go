@@ -40,14 +40,12 @@
 package statsviz
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -65,7 +63,7 @@ const (
 //
 // RegisterDefault should not be used in production.
 func RegisterDefault(opts ...Option) error {
-	return Register(http.DefaultServeMux)
+	return Register(http.DefaultServeMux, opts...)
 }
 
 // Register registers the Statsviz HTTP handlers on the provided mux.
@@ -87,7 +85,7 @@ func Register(mux *http.ServeMux, opts ...Option) error {
 //
 // The zero value is not a valid Server, use NewServer to create a valid one.
 type Server struct {
-	intv      time.Duration // interval between consecutive metrics emission
+	interval  time.Duration // interval between consecutive metrics emission
 	root      string        // HTTP path root
 	plots     *plot.List    // plots shown on the user interface
 	userPlots []plot.UserPlot
@@ -101,8 +99,8 @@ type Server struct {
 // the Index and Ws handlers.
 func NewServer(opts ...Option) (*Server, error) {
 	s := &Server{
-		intv: defaultSendInterval,
-		root: defaultRoot,
+		interval: defaultSendInterval,
+		root:     defaultRoot,
 	}
 
 	for _, opt := range opts {
@@ -129,7 +127,7 @@ func SendFrequency(intv time.Duration) Option {
 		if intv <= 0 {
 			return fmt.Errorf("frequency must be a positive integer")
 		}
-		s.intv = intv
+		s.interval = intv
 		return nil
 	}
 }
@@ -158,113 +156,96 @@ func (s *Server) Register(mux *http.ServeMux) {
 	mux.HandleFunc(s.root+"/ws", s.Ws())
 }
 
-// intercept is a middleware that intercepts requests for plotsdef.js, which is
-// generated dynamically based on the plots configuration. Other requests are
-// forwarded as-is.
-func intercept(h http.Handler, cfg *plot.Config) http.HandlerFunc {
-	buf := bytes.Buffer{}
-	buf.WriteString("export default ")
-	enc := json.NewEncoder(&buf)
-	enc.SetIndent("", "  ")
-	if err := enc.Encode(cfg); err != nil {
-		panic("unexpected failure to encode plot definitions: " + err.Error())
-	}
-	buf.WriteString(";")
-	plotsdefjs := buf.Bytes()
-
-	return func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "js/plotsdef.js" {
-			w.Header().Add("Content-Length", strconv.Itoa(buf.Len()))
-			w.Header().Add("Content-Type", "text/javascript; charset=utf-8")
-			w.Write(plotsdefjs)
-			return
-		}
-
-		// Force Content-Type if needed.
-		if ct, ok := contentTypes[r.URL.Path]; ok {
-			w.Header().Add("Content-Type", ct)
-		}
-
-		h.ServeHTTP(w, r)
-	}
-}
-
-// contentTypes forces the Content-Type HTTP header for certain files of some
-// JavaScript libraries that have no extensions. Otherwise, the HTTP file server
-// would serve them with "Content-Type: text/plain".
-var contentTypes = map[string]string{
-	"libs/js/popperjs-core2": "text/javascript",
-	"libs/js/tippy.js@6":     "text/javascript",
-}
-
-// Returns an FS serving the embedded assets, or the assets directory if
-// STATSVIZ_DEBUG contains the 'asssets' key.
-func assetsFS() http.FileSystem {
-	assets := http.FS(static.Assets)
-
-	vdbg := os.Getenv("STATSVIZ_DEBUG")
-	if vdbg == "" {
-		return assets
-	}
-
-	kvs := strings.Split(vdbg, ";")
-	for _, kv := range kvs {
-		k, v, found := strings.Cut(strings.TrimSpace(kv), "=")
-		if !found {
-			panic("invalid STATSVIZ_DEBUG value: " + kv)
-		}
-		if k == "assets" {
-			dir := filepath.Join(v)
-			return http.Dir(dir)
-		}
-	}
-
-	return assets
-}
-
 // Index returns the index handler, which responds with the Statsviz user
 // interface HTML page. By default, the handler is served at the path specified
 // by the root. Use [WithRoot] to change the path.
 func (s *Server) Index() http.HandlerFunc {
 	prefix := strings.TrimSuffix(s.root, "/") + "/"
-	assets := http.FileServer(assetsFS())
-	handler := intercept(assets, s.plots.Config())
-
-	return http.StripPrefix(prefix, handler).ServeHTTP
+	dist := http.FileServerFS(static.Assets())
+	return http.StripPrefix(prefix, dist).ServeHTTP
 }
+
+func parseBoolEnv(name string) bool {
+	env := os.Getenv(name)
+	val, err := strconv.ParseBool(env)
+	if err != nil {
+		if env != "" {
+			fmt.Fprintf(os.Stderr, "statsviz: malformed %s %v\n", name, err)
+		}
+	}
+	return val
+}
+
+var debug = false
+
+var wsUpgrader = sync.OnceValue(func() websocket.Upgrader {
+	var checkOrigin func(r *http.Request) bool
+
+	// Allow all origins for testing.
+	if debug = parseBoolEnv("STATSVIZ_DEBUG"); debug {
+		// passthrough
+		checkOrigin = func(r *http.Request) bool { return true }
+	}
+
+	return websocket.Upgrader{
+		ReadBufferSize:  1024,
+		WriteBufferSize: 2048,
+		CheckOrigin:     checkOrigin,
+	}
+})
 
 // Ws returns the WebSocket handler used by Statsviz to send application
 // metrics. The underlying net.Conn is used to upgrade the HTTP server
 // connection to the WebSocket protocol.
 func (s *Server) Ws() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var upgrader = websocket.Upgrader{
-			ReadBufferSize:  1024,
-			WriteBufferSize: 1024,
-		}
-
+		upgrader := wsUpgrader()
 		ws, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
+			if debug {
+				fmt.Fprintf(os.Stderr, "statsviz: failed to upgrade connection: %v\n", err)
+			}
 			return
 		}
+
 		defer ws.Close()
 
-		// Ignore this error. This happens when the other end connection closes,
-		// for example. We can't handle it in any meaningful way anyways.
-		_ = s.sendStats(ws, s.intv)
+		// Ignore websocket errors here. They mainly happen when the other end
+		// of the connection closes. We can't handle them in any meaningful way
+		// anyways, and since we're a library we don't want to spam the program
+		// output streams. If really necessary, we could export a io.Writer the
+		// user could connect to whatever logging facility they use, that seems
+		// overkill for now.
+
+		if err := s.sendConfig(ws); err != nil {
+			if debug {
+				fmt.Fprintf(os.Stderr, "statsviz: failed to send config: %v\n", err)
+			}
+		}
+		if err := s.sendStats(ws, s.interval); err != nil {
+			if debug {
+				fmt.Fprintf(os.Stderr, "statsviz: failed to send stats: %v\n", err)
+			}
+		}
 	}
+}
+
+type wsmsg struct {
+	Event string `json:"event"`
+	Data  any    `json:"data"`
+}
+
+func (s *Server) sendConfig(conn *websocket.Conn) error {
+	return conn.WriteJSON(wsmsg{
+		Event: "config",
+		Data:  s.plots.Config(),
+	})
 }
 
 // sendStats sends runtime statistics over the WebSocket connection.
 func (s *Server) sendStats(conn *websocket.Conn, frequency time.Duration) error {
 	tick := time.NewTicker(frequency)
 	defer tick.Stop()
-
-	// If the WebSocket connection is initiated by an already open web UI
-	// (started by a previous process, for example), then plotsdef.js won't be
-	// requested. Call plots.Config() manually to ensure that s.plots internals
-	// are correctly initialized.
-	s.plots.Config()
 
 	for range tick.C {
 		w, err := conn.NextWriter(websocket.TextMessage)

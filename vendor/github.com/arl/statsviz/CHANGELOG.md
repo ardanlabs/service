@@ -1,3 +1,16 @@
+Unreleased
+==============
+  * Make all examples use statsviz@latest (#112)
+
+v0.7.0 / 2025-07-26
+==============
+  * New plots showing new go1.22 runtime/metrics:
+    + GC Memory Summary
+    + CPU (Garbage Collector)
+  * Frontend redesign/refactor:
+    + Maximize plot button
+    + plot category selector
+
 v0.6.0 / 2023-10-08
 ==============
   * New plots showing new go1.20/go1.21 runtime/metrics: (#111)

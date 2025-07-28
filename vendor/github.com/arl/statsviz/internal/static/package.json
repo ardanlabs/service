@@ -1,0 +1,20 @@
+{
+  "name": "statsviz",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "preview": "vite preview",
+    "build": "vite build"
+  },
+  "devDependencies": {
+    "vite": "^6.3.1"
+  },
+  "dependencies": {
+    "bootstrap": "^5.3.5",
+    "bootstrap-icons": "^1.12.1",
+    "plotly.js-cartesian-dist": "^3.0.1",
+    "tippy.js": "^6.3.7"
+  }
+}

@@ -1230,6 +1230,11 @@ func RegisterDefaultTranslations(v *validator.Validate, trans ut.Translator) (er
 			override:    false,
 		},
 		{
+			tag:         "urn_rfc2141",
+			translation: "{0} must be a valid RFC 2141 URN",
+			override:    false,
+		},
+		{
 			tag:         "uuid",
 			translation: "{0} must be a valid UUID",
 			override:    false,
@@ -1484,10 +1489,14 @@ func RegisterDefaultTranslations(v *validator.Validate, trans ut.Translator) (er
 			translation: "{0} must be a valid cve identifier",
 			override:    false,
 		},
+		{
+			tag:         "validateFn",
+			translation: "{0} must be a valid object",
+			override:    false,
+		},
 	}
 
 	for _, t := range translations {
-
 		if t.customTransFunc != nil && t.customRegisFunc != nil {
 			err = v.RegisterTranslation(t.tag, trans, t.customRegisFunc, t.customTransFunc)
 		} else if t.customTransFunc != nil && t.customRegisFunc == nil {

@@ -1,0 +1,6 @@
+version: 2
+udpates:
+  - package-ecosystem: "gomod"
+    directory: "/"
+    schedule:
+      interval: "daily"

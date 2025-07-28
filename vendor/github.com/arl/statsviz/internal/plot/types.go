@@ -13,6 +13,7 @@ type (
 
 	Scatter struct {
 		Name       string        `json:"name"`
+		Tags       []string      `json:"tags"`
 		Title      string        `json:"title"`
 		Type       string        `json:"type"`
 		UpdateFreq int           `json:"updateFreq"`
@@ -41,6 +42,7 @@ type (
 
 	Heatmap struct {
 		Name       string          `json:"name"`
+		Tags       []string        `json:"tags"`
 		Title      string          `json:"title"`
 		Type       string          `json:"type"`
 		UpdateFreq int             `json:"updateFreq"`
@@ -52,15 +54,18 @@ type (
 		CustomData []float64       `json:"custom_data"`
 		Hover      HeapmapHover    `json:"hover"`
 	}
+
 	HeatmapLayout struct {
 		YAxis HeatmapYaxis `json:"yaxis"`
 	}
+
 	HeatmapYaxis struct {
 		Title    string    `json:"title"`
 		TickMode string    `json:"tickmode"`
 		TickVals []float64 `json:"tickvals"`
 		TickText []float64 `json:"ticktext"`
 	}
+
 	HeapmapHover struct {
 		YName string `json:"yname"`
 		YUnit string `json:"yunit"` // 'duration', 'bytes' or custom

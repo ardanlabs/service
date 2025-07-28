@@ -1,61 +1,220 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="./favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Statsviz</title>
-    <meta charset="utf-8">
-    <meta name="description" content="Statsviz interface" />
-    <link rel="stylesheet" href="./libs/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="./libs/css/bootstrap-toggle.min.css">
-    <link rel="stylesheet" href="./css/statsviz.css" />
-    <link rel="stylesheet" href="./libs/css/font.awesome-6.1.2-all.min.css">
-    <script src="./libs/js/jquery-3.6.0.min.js"></script>
-    <script src="./libs/js/plotly-basic-2.12.1.min.js"></script>
-    <script src="./libs/js/plotly-cartesian-2.12.1.min.js"></script>
-    <script type="module" src="./libs/js/bootstrap.bundle.min.js"></script>
-    <script src="./libs/js/popperjs-core2"></script>
-    <script src="./libs/js/tippy.js@6"></script>
-    <script src="./libs/js/bootstrap-toggle.min.js"></script>
-    <script src="./libs/js/font.awesome-6.1.2-all.min.js"></script>
-</head>
+  </head>
+  <body>
+    <!-- Top Navbar -->
+    <nav id="top-navbar" class="navbar navbar-expand-lg px-3">
+      <div class="d-flex align-items-center">
+        <span class="navbar-brand mb-0 h1">Statsviz</span>
+      </div>
 
-<body>
-    <nav id="navbar" class="navbar navbar-expand-lg navbar-light bg-light">
-        <div class="container-xxl">
-            <a class="navbar-brand" href="#">Statsviz</a>
-            <button class="navbar-toggler" type="button">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item">
-                        <a class="nav-link" href="https://github.com/arl/statsviz">Github</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="https://pkg.go.dev/runtime/metrics#hdr-Supported_metrics">runtime/metrics</a>
-                    </li>
-                </ul>
+      <!-- Center controls -->
+      <div
+        class="center-controls d-flex flex-column flex-lg-row align-items-center gap-6 gap-lg-1 w-100"
+      >
+        <!-- Plots tags -->
+        <div class="w-100 w-lg-auto d-flex justify-content-center">
+          <div
+            id="navCategories"
+            class="btn-group navCategories nav-radio"
+            role="group"
+          >
+            <div
+              class="btn-group"
+              role="group"
+              aria-label="Basic checkbox toggle button group"
+            >
+              <input
+                type="checkbox"
+                class="btn-check"
+                id="tag-cpu"
+                data-tag="cpu"
+                autocomplete="off"
+              />
+              <label class="btn btn-sm btn-outline-secondary" for="tag-cpu"
+                >CPU</label
+              >
+
+              <input
+                type="checkbox"
+                class="btn-check"
+                id="tag-gc"
+                data-tag="gc"
+                autocomplete="off"
+              />
+              <label class="btn btn-sm btn-outline-secondary" for="tag-gc"
+                >GC</label
+              >
+
+              <input
+                type="checkbox"
+                class="btn-check"
+                id="tag-scheduler"
+                data-tag="scheduler"
+                autocomplete="off"
+                checked
+              />
+              <label
+                class="btn btn-sm btn-outline-secondary"
+                for="tag-scheduler"
+                >Scheduler</label
+              >
+
+              <input
+                type="checkbox"
+                class="btn-check"
+                id="tag-misc"
+                data-tag="misc"
+                autocomplete="off"
+                checked
+              />
+              <label class="btn btn-sm btn-outline-secondary" for="tag-misc"
+                >Misc</label
+              >
             </div>
-            <span title="show/hide GC events">
-                <input id="show_gc" type="checkbox" data-toggle="toggle" data-onstyle="default" data-on="<span style='color:black'><i class='fa-solid fa-broom'></i></span>" data-off="<span style='color:lightgrey'><i class='fa-solid fa-broom'></i></span>"
-            data-size="mini" data-bs-toggle="tooltip">
-            </span>
-            <select data-bs-toggle="tooltip" title="time range" id="select_timerange">
-                <option selected value="60">1 minute</option>
-                <option value="300">5 minute</option>
-                <option value="600">10 minutes</option>
-              </select>
-            <span class="action" title="play/pause">
-                <input id="play_pause" type="checkbox" data-toggle="toggle" data-onstyle="default" data-on="<i class='fa fa-play'></i>" data-off="<i class='fa fa-pause'></i>" data-size="mini" data-bs-toggle="tooltip">
-            </span>
-            <span class="action" title="color theme">
-                <input id="color_theme_sw" type="checkbox" data-toggle="toggle" data-onstyle="default" data-on="<i class='fa fa-circle-half-stroke'></i>" data-off="<i class='fa fa-circle-half-stroke'></i>" data-size="mini" data-bs-toggle="tooltip">
-            </span>
+          </div>
         </div>
+
+        <!-- Time range -->
+        <div class="w-100 w-lg-auto d-flex justify-content-center">
+          <div class="btn-group nav-radio" role="group" aria-label="Time range">
+            <input
+              type="radio"
+              class="btn-check"
+              name="range"
+              id="range1"
+              value="1"
+              autocomplete="off"
+              checked
+            />
+            <label
+              class="btn btn-sm btn-outline-secondary"
+              for="range1"
+              data-bs-toggle="tooltip"
+              title="Last 1 minute"
+              >1m</label
+            >
+            <input
+              type="radio"
+              class="btn-check"
+              name="range"
+              id="range5"
+              value="5"
+              autocomplete="off"
+            />
+            <label
+              class="btn btn-sm btn-outline-secondary"
+              for="range5"
+              data-bs-toggle="tooltip"
+              title="Last 5 minutes"
+              >5m</label
+            >
+            <input
+              type="radio"
+              class="btn-check"
+              name="range"
+              id="range10"
+              value="10"
+              autocomplete="off"
+            />
+            <label
+              class="btn btn-sm btn-outline-secondary"
+              for="range10"
+              data-bs-toggle="tooltip"
+              title="Last 10 minutes"
+              >10m</label
+            >
+          </div>
+        </div>
+
+        <div
+          class="w-100 w-lg-auto d-flex justify-content-center align-items-center gap-2"
+        >
+          <!-- GC events -->
+          <input
+            type="checkbox"
+            class="btn-check"
+            id="btn-gc-events"
+            checked
+            autocomplete="off"
+          />
+          <label
+            class="btn btn-sm btn-outline-secondary"
+            for="btn-gc-events"
+            data-bs-toggle="tooltip"
+            title="Show/hide GC events"
+            ><i class="bi bi-trash3-fill"></i
+          ></label>
+          <br />
+
+          <!-- Play/Pause -->
+          <input
+            type="checkbox"
+            class="btn-check"
+            id="btn-play"
+            checked
+            autocomplete="off"
+          />
+          <label
+            class="btn btn-sm btn-outline-secondary"
+            for="btn-play"
+            data-bs-toggle="tooltip"
+            title="Pause/Resume Live Updates"
+            ><i class="bi bi-play-fill"></i
+          ></label>
+          <br />
+        </div>
+      </div>
+
+      <!-- Links and options -->
+      <div class="d-flex align-items-center gap-3">
+        <a
+          href="https://pkg.go.dev/runtime/metrics"
+          target="_blank"
+          class="text-decoration-none"
+          title="runtime/metrics doc"
+        >
+          <i class="bi bi-book"></i>
+        </a>
+        <a
+          href="https://github.com/arl/statsviz"
+          target="_blank"
+          class="text-decoration-none"
+        >
+          <i class="bi bi-github"></i>
+        </a>
+
+        <div class="w-100 w-lg-auto">
+          <input
+            type="checkbox"
+            class="btn-check"
+            id="btn-darkmode"
+            checked
+            autocomplete="off"
+          />
+          <label
+            class="btn btn-sm btn-outline-secondary"
+            for="btn-darkmode"
+            data-bs-toggle="tooltip"
+            title="Light/Dark mode"
+            ><i class="bi bi-moon-fill"></i
+          ></label>
+          <br />
+        </div>
+      </div>
     </nav>
 
-    <div id="plots" class="plots-wrapper"></div>
-    <script type="module" src="./js/app.js"></script>
-</body>
-
+    <div class="d-flex flex-grow-1">
+      <!-- Main Content -->
+      <main id="main-content" class="w-100">
+        <div class="plots-container" id="plots"></div>
+      </main>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
 </html>
