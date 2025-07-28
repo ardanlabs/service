@@ -113,9 +113,9 @@ GOLANG          := golang:1.24
 ALPINE          := alpine:3.22
 KIND            := kindest/node:v1.33.1
 POSTGRES        := postgres:17.5
-GRAFANA         := grafana/grafana:11.6.0
-PROMETHEUS      := prom/prometheus:v3.4.0
-TEMPO           := grafana/tempo:2.7.0
+GRAFANA         := grafana/grafana:12.1.0
+PROMETHEUS      := prom/prometheus:v3.5.0
+TEMPO           := grafana/tempo:2.8.1
 LOKI            := grafana/loki:3.5.0
 PROMTAIL        := grafana/promtail:3.5.0
 
