@@ -201,13 +201,9 @@ dev-up:
 
 	kubectl wait --timeout=120s --namespace=local-path-storage --for=condition=Available deployment/local-path-provisioner
 
-	kind load docker-image $(POSTGRES) --name $(KIND_CLUSTER) & \
-	kind load docker-image $(GRAFANA) --name $(KIND_CLUSTER) & \
-	kind load docker-image $(PROMETHEUS) --name $(KIND_CLUSTER) & \
-	kind load docker-image $(TEMPO) --name $(KIND_CLUSTER) & \
-	kind load docker-image $(LOKI) --name $(KIND_CLUSTER) & \
-	kind load docker-image $(PROMTAIL) --name $(KIND_CLUSTER) & \
-	wait;
+	# Note: Images will be pulled directly from Docker Hub when pods are created
+	# This avoids the "content digest not found" error with Docker Desktop 28.3.2 and KIND 0.29.0
+	# If you need to load local images, use 'make dev-load' after building them
 
 dev-down:
 	kind delete cluster --name $(KIND_CLUSTER)
@@ -228,6 +224,10 @@ dev-load:
 	kind load docker-image $(AUTH_IMAGE) --name $(KIND_CLUSTER) & \
 	wait;
 
+dev-load-postgres:
+	@echo "Loading postgres image using docker save/load workaround..."
+	docker save $(POSTGRES) | docker exec -i $(KIND_CLUSTER)-control-plane ctr --namespace=k8s.io images import -
+
 dev-apply:
 	kustomize build zarf/k8s/dev/grafana | kubectl apply -f -
 	kustomize build zarf/k8s/dev/prometheus | kubectl apply -f -
@@ -235,6 +235,7 @@ dev-apply:
 	kustomize build zarf/k8s/dev/loki | kubectl apply -f -
 	kustomize build zarf/k8s/dev/promtail | kubectl apply -f -
 
+	$(MAKE) dev-load-postgres
 	kustomize build zarf/k8s/dev/database | kubectl apply -f -
 	kubectl rollout status --namespace=$(NAMESPACE) --watch --timeout=120s sts/database
 
@@ -504,7 +505,7 @@ talk-up:
 
 	kubectl wait --timeout=120s --namespace=local-path-storage --for=condition=Available deployment/local-path-provisioner
 
-	kind load docker-image $(POSTGRES) --name $(KIND_CLUSTER)
+	# Note: Postgres image will be loaded before database deployment to avoid Docker/KIND issues
 
 talk-load:
 	kind load docker-image $(SALES_IMAGE) --name $(KIND_CLUSTER) & \
@@ -513,6 +514,7 @@ talk-load:
 	wait;
 
 talk-apply:
+	$(MAKE) dev-load-postgres
 	kustomize build zarf/k8s/dev/database | kubectl apply -f -
 	kubectl rollout status --namespace=$(NAMESPACE) --watch --timeout=120s sts/database
 
