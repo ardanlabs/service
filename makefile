@@ -508,7 +508,7 @@ talk-up:
 
 	kubectl wait --timeout=120s --namespace=local-path-storage --for=condition=Available deployment/local-path-provisioner
 
-	kind load docker-image $(POSTGRES) --name $(KIND_CLUSTER)
+	docker save $(POSTGRES) | docker exec -i $(KIND_CLUSTER)-control-plane ctr --namespace=k8s.io images import -
 
 talk-load:
 	kind load docker-image $(SALES_IMAGE) --name $(KIND_CLUSTER) & \
