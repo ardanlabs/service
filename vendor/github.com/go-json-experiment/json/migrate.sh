@@ -3,7 +3,9 @@
 GOROOT=${1:-../go}
 JSONROOT="."
 
-/bin/rm -r $JSONROOT/*.go $JSONROOT/internal $JSONROOT/jsontext $JSONROOT/v1
+cp $JSONROOT/alias_gen.go $JSONROOT/alias_gen.go.bak
+rm -r $JSONROOT/*.go $JSONROOT/internal $JSONROOT/jsontext $JSONROOT/v1
+mv $JSONROOT/alias_gen.go.bak $JSONROOT/alias_gen.go
 cp -r $GOROOT/src/encoding/json/v2/*.go $JSONROOT/
 cp -r $GOROOT/src/encoding/json/internal/ $JSONROOT/internal/
 cp -r $GOROOT/src/encoding/json/jsontext/ $JSONROOT/jsontext/
@@ -16,7 +18,7 @@ for X in $(git ls-files --cached --others --exclude-standard | grep ".*[.]go$");
     if [ ! -e "$X" ]; then
         continue
     fi
-    sed -i '/go:build goexperiment.jsonv2/d' $X
+    sed -i 's/go:build goexperiment.jsonv2$/go:build !goexperiment.jsonv2 || !go1.25/' $X
     sed -i 's|"encoding/json/v2"|"github.com/go-json-experiment/json"|' $X
     sed -i 's|"encoding/json/internal"|"github.com/go-json-experiment/json/internal"|' $X
     sed -i 's|"encoding/json/internal/jsonflags"|"github.com/go-json-experiment/json/internal/jsonflags"|' $X
@@ -40,3 +42,7 @@ sed -i  '/This package .* is experimental/,+4d' $JSONROOT/doc.go
 sed -i  '/This package .* is experimental/,+4d' $JSONROOT/jsontext/doc.go
 
 git checkout internal/zstd # we still need local copy of zstd for testing
+
+go run alias_gen.go "encoding/json"          $JSONROOT/v1
+go run alias_gen.go "encoding/json/v2"       $JSONROOT
+go run alias_gen.go "encoding/json/jsontext" $JSONROOT/jsontext

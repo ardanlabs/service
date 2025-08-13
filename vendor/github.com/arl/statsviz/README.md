@@ -90,16 +90,15 @@ If you check any of the boxes below:
   - [ ] you want Statsviz under `https://` rather than `http://`
   - [ ] you want Statsviz behind some middleware
 
-Then you should use `statsviz.NewServer` to obtain a `Server` instance.
-Both the `Index()` and `Ws()` methods return standard `http.HandlerFunc`.
+Then you should call `statsviz.NewServer()` (with or without options depending on your use case) in order to access the `Index()` and `Ws()` methods.
 
 ```go
 srv, err := statsviz.NewServer(); // Create server or handle error
 if err != nil { /* handle error */ }
 
 // Do something with the handlers.
-srv.Index()                       // UI (dashboard) http.HandlerFunc
-srv.Ws()                          // Websocket http.HandlerFunc
+srv.Index()     // UI (dashboard) handler func
+srv.Ws()        // Websocket handler func
 ```
 
 Examples for the following cases, and more, are found in the [\_example](./_example/README.md) directory:
@@ -171,7 +170,9 @@ Pause or resume the plot updates.
 
 ### Plots
 
-The visible set of plots depend on your Go version since some plots are only available in newer versions.
+Which plots are visible depends on:
+ - your Go version,since some plots are only available in newer versions.
+ - what plot categories are currently selected. By default all plots are shown.
 
 #### Allocation and Free Rate
 
