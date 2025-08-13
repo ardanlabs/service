@@ -1,6 +1,6 @@
 module github.com/ardanlabs/service
 
-go 1.25
+go 1.24
 
 require (
 	github.com/ardanlabs/conf/v3 v3.8.0
