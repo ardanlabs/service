@@ -44,5 +44,6 @@ _testmain.go
 
 *.exe
 //*.test
-.vscode/tasks.json
+.vscode
 zarf/compose/database-data/data
+.markdownlint.json
