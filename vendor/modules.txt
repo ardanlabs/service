@@ -41,14 +41,6 @@ github.com/go-chi/chi/v5
 # github.com/go-ini/ini v1.67.0
 ## explicit
 github.com/go-ini/ini
-# github.com/go-json-experiment/json v0.0.0-20250813024750-ebf49471dced
-## explicit; go 1.24
-github.com/go-json-experiment/json
-github.com/go-json-experiment/json/internal
-github.com/go-json-experiment/json/internal/jsonflags
-github.com/go-json-experiment/json/internal/jsonopts
-github.com/go-json-experiment/json/internal/jsonwire
-github.com/go-json-experiment/json/jsontext
 # github.com/go-logr/logr v1.4.3
 ## explicit; go 1.18
 github.com/go-logr/logr
