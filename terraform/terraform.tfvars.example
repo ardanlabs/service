@@ -1,0 +1,16 @@
+# AWS Configuration
+aws_region = "us-west-2"
+
+# Project Configuration
+project_name = "ardanlabs-service"
+environment  = "dev"
+
+# VPC Configuration
+vpc_cidr = "10.0.0.0/16"
+
+# Database Configuration
+create_rds = false  # Set to true if you want RDS instead of containerized PostgreSQL
+
+# Domain Configuration
+staging_domain    = "staging.yourdomain.com"
+production_domain = "app.yourdomain.com"
