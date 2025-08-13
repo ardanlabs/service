@@ -1,0 +1,147 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+name: Slash Commands
+
+on:
+  issue_comment:
+    types: [created, edited]
+
+jobs:
+  slash-command:
+    name: Process Slash Commands
+    runs-on: ubuntu-latest
+    if: github.event.issue.pull_request && contains(github.event.comment.body, '/deploy')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Process slash command
+        id: slash-command
+        run: |
+          COMMENT_BODY="${{ github.event.comment.body }}"
+
+          # Extract command and target
+          if [[ "$COMMENT_BODY" =~ /deploy\s+(staging|production) ]]; then
+            TARGET="${BASH_REMATCH[1]}"
+            echo "target=$TARGET" >> $GITHUB_OUTPUT
+            echo "command=deploy" >> $GITHUB_OUTPUT
+          elif [[ "$COMMENT_BODY" =~ /rollback\s+(staging|production) ]]; then
+            TARGET="${BASH_REMATCH[1]}"
+            echo "target=$TARGET" >> $GITHUB_OUTPUT
+            echo "command=rollback" >> $GITHUB_OUTPUT
+          else
+            echo "Invalid command format. Use: /deploy staging|production or /rollback staging|production"
+            exit 1
+          fi
+
+          # Check if user has permission (you can customize this logic)
+          AUTHOR="${{ github.event.comment.user.login }}"
+          echo "author=$AUTHOR" >> $GITHUB_OUTPUT
+
+          # List of authorized users (customize this list)
+          AUTHORIZED_USERS="domhallan,admin1,admin2"
+          if [[ " $AUTHORIZED_USERS " =~ " $AUTHOR " ]]; then
+            echo "authorized=true" >> $GITHUB_OUTPUT
+          else
+            echo "authorized=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check authorization
+        if: steps.slash-command.outputs.authorized != 'true'
+        run: |
+          echo "❌ User ${{ github.event.comment.user.login }} is not authorized to deploy."
+          exit 1
+
+      - name: Comment on PR
+        if: steps.slash-command.outputs.authorized == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const command = '${{ steps.slash-command.outputs.command }}';
+            const target = '${{ steps.slash-command.outputs.target }}';
+            const author = '${{ github.event.comment.user.login }}';
+
+            let message = `🚀 **Deployment Requested**\n\n`;
+            message += `**Command:** ${command}\n`;
+            message += `**Target:** ${target}\n`;
+            message += `**Requested by:** @${author}\n`;
+            message += `**Status:** Processing...\n\n`;
+            message += `This deployment will be triggered automatically.`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: message
+            });
+
+      - name: Trigger deployment workflow
+        if: steps.slash-command.outputs.authorized == 'true' && steps.slash-command.outputs.command == 'deploy'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const target = '${{ steps.slash-command.outputs.target }}';
+            const workflow_id = target === 'production' ? 'deploy-production' : 'deploy-staging';
+
+            // Trigger the appropriate workflow
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: workflow_id,
+              ref: '${{ github.head_ref }}',
+              inputs: {
+                environment: target,
+                image_tag: '${{ github.sha }}',
+                rollback: 'false'
+              }
+            });
+
+      - name: Trigger rollback workflow
+        if: steps.slash-command.outputs.authorized == 'true' && steps.slash-command.outputs.command == 'rollback'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const target = '${{ steps.slash-command.outputs.target }}';
+            const workflow_id = target === 'production' ? 'deploy-production' : 'deploy-staging';
+
+            // Trigger the appropriate workflow with rollback
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: workflow_id,
+              ref: '${{ github.head_ref }}',
+              inputs: {
+                environment: target,
+                image_tag: 'latest',
+                rollback: 'true'
+              }
+            });
+
+      - name: Update PR comment with status
+        if: steps.slash-command.outputs.authorized == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const command = '${{ steps.slash-command.outputs.command }}';
+            const target = '${{ steps.slash-command.outputs.target }}';
+            const author = '${{ github.event.comment.user.login }}';
+
+            let message = `✅ **Deployment Requested Successfully**\n\n`;
+            message += `**Command:** ${command}\n`;
+            message += `**Target:** ${target}\n`;
+            message += `**Requested by:** @${author}\n`;
+            message += `**Status:** ✅ Workflow triggered\n\n`;
+
+            if (command === 'deploy') {
+              message += `The deployment workflow has been triggered. You can monitor progress in the [Actions tab](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions).`;
+            } else if (command === 'rollback') {
+              message += `The rollback workflow has been triggered. You can monitor progress in the [Actions tab](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions).`;
+            }
+
+            // Update the original comment
+            github.rest.issues.updateComment({
+              comment_id: context.event.comment.id,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: message
+            });

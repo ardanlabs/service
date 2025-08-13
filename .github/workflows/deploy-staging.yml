@@ -1,0 +1,114 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+name: Deploy to Staging
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: false
+        default: 'staging'
+        type: string
+      image_tag:
+        description: 'Image tag to deploy (leave empty for latest)'
+        required: false
+        type: string
+      rollback:
+        description: 'Rollback to previous deployment'
+        required: false
+        type: boolean
+        default: false
+  workflow_call:
+    inputs:
+      environment:
+        required: false
+        default: 'staging'
+        type: string
+      image_tag:
+        required: false
+        default: ''
+        type: string
+      rollback:
+        required: false
+        default: 'false'
+        type: string
+
+env:
+  REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+  IMAGE_NAME: ardanlabs/service
+
+jobs:
+  deploy:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Update kubeconfig
+        run: aws eks update-kubeconfig --region ${{ secrets.AWS_REGION }} --name ${{ secrets.EKS_STAGING_CLUSTER }}
+
+      - name: Deploy to staging
+        run: |
+          # Set image tag
+          if [ -n "${{ inputs.image_tag }}" ]; then
+            export IMAGE_TAG=${{ inputs.image_tag }}
+          else
+            export IMAGE_TAG=latest
+          fi
+
+          export ECR_REGISTRY=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+
+          # Rollback if requested
+          if [ "${{ inputs.rollback }}" = "true" ]; then
+            echo "Rolling back deployments..."
+            kubectl rollout undo deployment/auth -n staging
+            kubectl rollout undo deployment/sales -n staging
+          else
+            echo "Deploying with image tag: $IMAGE_TAG"
+            
+            # Deploy database
+            kustomize build zarf/k8s/staging/database | kubectl apply -f -
+            
+            # Deploy auth service
+            kustomize build zarf/k8s/staging/auth | kubectl apply -f -
+            
+            # Deploy sales service
+            kustomize build zarf/k8s/staging/sales | kubectl apply -f -
+          fi
+
+          # Wait for deployments to be ready
+          kubectl wait --for=condition=available --timeout=300s deployment/auth -n staging
+          kubectl wait --for=condition=available --timeout=300s deployment/sales -n staging
+
+      - name: Verify deployment
+        run: |
+          # Check deployment status
+          kubectl get pods -n staging
+          kubectl get services -n staging
+
+          # Run health checks
+          if [ "${{ inputs.rollback }}" != "true" ]; then
+            echo "Running health checks..."
+            sleep 30
+            curl -f http://${{ secrets.STAGING_URL }}/health || exit 1
+            curl -f http://${{ secrets.STAGING_URL }}/ready || exit 1
+          fi
+
+      - name: Notify deployment status
+        if: always()
+        run: |
+          echo "Deployment to staging completed"
+          if [ "${{ inputs.rollback }}" = "true" ]; then
+            echo "Rollback completed successfully"
+          else
+            echo "Deployment completed successfully with tag: $IMAGE_TAG"
+          fi

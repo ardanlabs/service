@@ -1,0 +1,119 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+name: Manual Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      image_tag:
+        description: 'Image tag to deploy (leave empty for latest)'
+        required: false
+        type: string
+      rollback:
+        description: 'Rollback to previous deployment'
+        required: false
+        type: boolean
+        default: false
+
+env:
+  REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+  IMAGE_NAME: ardanlabs/service
+
+jobs:
+  deploy:
+    name: Deploy to ${{ github.event.inputs.environment }}
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Set cluster context
+        run: |
+          if [ "${{ github.event.inputs.environment }}" = "production" ]; then
+            aws eks update-kubeconfig --region ${{ secrets.AWS_REGION }} --name ${{ secrets.EKS_PRODUCTION_CLUSTER }}
+            export NAMESPACE=production
+          else
+            aws eks update-kubeconfig --region ${{ secrets.AWS_REGION }} --name ${{ secrets.EKS_STAGING_CLUSTER }}
+            export NAMESPACE=staging
+          fi
+
+      - name: Deploy application
+        run: |
+          # Set image tag
+          if [ -n "${{ github.event.inputs.image_tag }}" ]; then
+            export IMAGE_TAG=${{ github.event.inputs.image_tag }}
+          else
+            export IMAGE_TAG=latest
+          fi
+
+          export ECR_REGISTRY=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+
+          # Rollback if requested
+          if [ "${{ github.event.inputs.rollback }}" = "true" ]; then
+            echo "Rolling back deployments..."
+            kubectl rollout undo deployment/auth -n $NAMESPACE
+            kubectl rollout undo deployment/sales -n $NAMESPACE
+          else
+            echo "Deploying with image tag: $IMAGE_TAG"
+            
+            # Deploy database
+            kustomize build zarf/k8s/${{ github.event.inputs.environment }}/database | kubectl apply -f -
+            
+            # Deploy auth service
+            kustomize build zarf/k8s/${{ github.event.inputs.environment }}/auth | kubectl apply -f -
+            
+            # Deploy sales service
+            kustomize build zarf/k8s/${{ github.event.inputs.environment }}/sales | kubectl apply -f -
+          fi
+
+          # Wait for deployments to be ready
+          kubectl wait --for=condition=available --timeout=300s deployment/auth -n $NAMESPACE
+          kubectl wait --for=condition=available --timeout=300s deployment/sales -n $NAMESPACE
+
+      - name: Verify deployment
+        run: |
+          if [ "${{ github.event.inputs.environment }}" = "production" ]; then
+            export NAMESPACE=production
+            export SERVICE_URL=${{ secrets.PRODUCTION_URL }}
+          else
+            export NAMESPACE=staging
+            export SERVICE_URL=${{ secrets.STAGING_URL }}
+          fi
+
+          # Check deployment status
+          kubectl get pods -n $NAMESPACE
+          kubectl get services -n $NAMESPACE
+
+          # Run health checks
+          if [ "${{ github.event.inputs.rollback }}" != "true" ]; then
+            echo "Running health checks..."
+            sleep 30
+            curl -f http://$SERVICE_URL/health || exit 1
+            curl -f http://$SERVICE_URL/ready || exit 1
+          fi
+
+      - name: Notify deployment status
+        if: always()
+        run: |
+          echo "Deployment to ${{ github.event.inputs.environment }} completed"
+          if [ "${{ github.event.inputs.rollback }}" = "true" ]; then
+            echo "Rollback completed successfully"
+          else
+            echo "Deployment completed successfully with tag: $IMAGE_TAG"
+          fi
