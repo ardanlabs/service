@@ -2,7 +2,7 @@ module github.com/ardanlabs/service
 
 go 1.24
 
-toolchain go1.24.0
+toolchain go1.24.6
 
 require (
 	github.com/ardanlabs/conf/v3 v3.8.0
