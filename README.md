@@ -4,7 +4,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/ardanlabs/service)](https://goreportcard.com/report/github.com/ardanlabs/service)
 [![go.mod Go version](https://img.shields.io/github/go-mod/go-version/ardanlabs/service)](https://github.com/ardanlabs/service)
 
-[![InsightsSnapshot](https://dl.circleci.com/insights-snapshot/gh/ardanlabs/service/master/workflow/badge.svg)](https://app.circleci.com/insights/github/ardanlabs/service/workflows/workflow/overview?branch=master)
+[![InsightsSnapshot](https://dl.circleci.com/insights-snapshot/gh/ardanlabs/service/main/workflow/badge.svg)](https://app.circleci.com/insights/github/ardanlabs/service/workflows/workflow/overview?branch=main)
 
 Copyright 2018, 2019, 2020, 2021, 2022, 2023, 2024 Ardan Labs  
 hello@ardanlabs.com
@@ -12,16 +12,16 @@ hello@ardanlabs.com
 ## My Information
 
 ```
-Name:    Bill Kennedy  
-Company: Ardan Labs  
-Title:   Managing Partner  
-Email:   bill@ardanlabs.com  
-Twitter: goinggodotnet  
+Name:    Bill Kennedy
+Company: Ardan Labs
+Title:   Managing Partner
+Email:   bill@ardanlabs.com
+Twitter: goinggodotnet
 ```
 
 ## Description
 
-_"As a program evolves and acquires more features, it becomes complicated, with subtle dependencies between components. Over time, complexity accumulates, and it becomes harder and harder for programmers to keep all the relevant factors in their minds as they modify the system. This slows down development and leads to bugs, which slow development even more and add to its cost. Complexity increases inevitably over the life of any program. The larger the program, and the more people that work on it, the more difficult it is to manage complexity."_ - John Ousterhout  
+_"As a program evolves and acquires more features, it becomes complicated, with subtle dependencies between components. Over time, complexity accumulates, and it becomes harder and harder for programmers to keep all the relevant factors in their minds as they modify the system. This slows down development and leads to bugs, which slow development even more and add to its cost. Complexity increases inevitably over the life of any program. The larger the program, and the more people that work on it, the more difficult it is to manage complexity."_ - John Ousterhout
 
 The service starter kit is a starting point for building production grade scalable web service applications that leverage the power of a Domain Driven, Data Oriented Architecture that can run in Kubernetes. The goal of this project is to provide a proven starting point that reduces the repetitive tasks required for a new project to be launched into production. It uses minimal dependencies, implements idiomatic code and follows Go best practices. Collectively, the project lays out everything logically to minimize guess work and enable engineers to quickly maintain a mental model for the project.
 
@@ -56,15 +56,15 @@ hello@ardanlabs.com
 
 ## Index
 
-* [Installation](https://github.com/ardanlabs/service?tab=readme-ov-file#installation)
-* [Create Your Own Version](https://github.com/ardanlabs/service?tab=readme-ov-file#create-your-own-version)
-* [Running The Project](https://github.com/ardanlabs/service?tab=readme-ov-file#running-the-project)
-* [Purchase Video](https://github.com/ardanlabs/service?tab=readme-ov-file#purchase-video)
-* [Experience](https://github.com/ardanlabs/service?tab=readme-ov-file#our-experience)
-* [Teacher](https://github.com/ardanlabs/service?tab=readme-ov-file#our-teacher)
-* [More About Go](https://github.com/ardanlabs/service?tab=readme-ov-file#more-about-go)
-* [Minimal Qualified Student](https://github.com/ardanlabs/service?tab=readme-ov-file#minimal-qualified-student)
-* [Joining the Go Slack Community](https://github.com/ardanlabs/service?tab=readme-ov-file#joining-the-go-slack-community)
+- [Installation](https://github.com/ardanlabs/service?tab=readme-ov-file#installation)
+- [Create Your Own Version](https://github.com/ardanlabs/service?tab=readme-ov-file#create-your-own-version)
+- [Running The Project](https://github.com/ardanlabs/service?tab=readme-ov-file#running-the-project)
+- [Purchase Video](https://github.com/ardanlabs/service?tab=readme-ov-file#purchase-video)
+- [Experience](https://github.com/ardanlabs/service?tab=readme-ov-file#our-experience)
+- [Teacher](https://github.com/ardanlabs/service?tab=readme-ov-file#our-teacher)
+- [More About Go](https://github.com/ardanlabs/service?tab=readme-ov-file#more-about-go)
+- [Minimal Qualified Student](https://github.com/ardanlabs/service?tab=readme-ov-file#minimal-qualified-student)
+- [Joining the Go Slack Community](https://github.com/ardanlabs/service?tab=readme-ov-file#joining-the-go-slack-community)
 
 ## Installation
 
@@ -143,7 +143,8 @@ Our classes are perfect for intermediate-level developers who have at least a fe
 
 ## Our Teacher
 
-### William Kennedy ([@goinggodotnet](https://twitter.com/goinggodotnet))  
+### William Kennedy ([@goinggodotnet](https://twitter.com/goinggodotnet))
+
 _William Kennedy is a managing partner at Ardan Labs in Miami, Florida. Ardan Labs is a high-performance development and training firm working with startups and fortune 500 companies. He is also a co-author of the book Go in Action, the author of the blog GoingGo.Net, and a founding member of GoBridge which is working to increase Go adoption through diversity._
 
 _**Video Training**_  
@@ -151,11 +152,11 @@ _**Video Training**_
 [Ardan Labs YouTube Channel](http://youtube.ardanlabs.com/)
 
 _**Blog**_  
-[Going Go](https://www.ardanlabs.com/blog/)    
+[Going Go](https://www.ardanlabs.com/blog/)
 
 _**Writing**_  
-[Running MongoDB Queries Concurrently With Go](http://blog.mongodb.org/post/80579086742/running-mongodb-queries-concurrently-with-go)    
-[Go In Action](https://www.manning.com/books/go-in-action)  
+[Running MongoDB Queries Concurrently With Go](http://blog.mongodb.org/post/80579086742/running-mongodb-queries-concurrently-with-go)  
+[Go In Action](https://www.manning.com/books/go-in-action)
 
 _**Articles**_  
 [IT World Canada](http://www.itworldcanada.com/article/nascent-google-development-language-shows-promise-for-more-productive-coding/387449)
@@ -184,7 +185,7 @@ _**Video**_
 [GopherCon India (2015) - Go In Action](https://www.youtube.com/watch?v=QkPw8-Pf0SM)  
 [GolangUK (2016) - Dependency Management](https://youtu.be/CdhucJShJU8)  
 [GothamGo (2015) - Error Handling in Go](https://vimeo.com/115782573)  
-[GopherCon (2014) - Building an analytics engine](https://www.youtube.com/watch?v=EfJRQ1lGkUk)  
+[GopherCon (2014) - Building an analytics engine](https://www.youtube.com/watch?v=EfJRQ1lGkUk)
 
 [Golang Charlotte (2023) - Domain Driven, Data Oriented Architecture with Bill Kennedy](https://www.youtube.com/watch?v=bQgNYK1Z5ho)  
 [Prague Meetup (2021) - Go Module Engineering Decisions](https://youtu.be/m8lgcXv2lhI)  
@@ -195,9 +196,9 @@ _**Video**_
 [Vancouver Meetup (2016) - Go Talk & Ask Me Anything With William Kennedy](https://www.youtube.com/watch?v=7YcLIbG1ekM&t=91s)  
 [Vancouver Meetup (2015) - Compiler Optimizations in Go](https://www.youtube.com/watch?v=AQipeq39Aek)  
 [Bangalore Meetup (2015) - OOP in Go](https://youtu.be/gRpUfjTwSOo)  
-[GoSF Meetup - The Nature of Constants in Go](https://www.youtube.com/watch?v=ZUCHMAoOgUQ)    
-[London Meetup - Mechanical Sympathy](https://skillsmatter.com/skillscasts/8353-london-go-usergroup)    
-[Vancouver Meetup - Decoupling From Change](https://www.youtube.com/watch?v=7YcLIbG1ekM&feature=youtu.be)  
+[GoSF Meetup - The Nature of Constants in Go](https://www.youtube.com/watch?v=ZUCHMAoOgUQ)  
+[London Meetup - Mechanical Sympathy](https://skillsmatter.com/skillscasts/8353-london-go-usergroup)  
+[Vancouver Meetup - Decoupling From Change](https://www.youtube.com/watch?v=7YcLIbG1ekM&feature=youtu.be)
 
 _**Podcasts**_  
 [Ardan Labs Podcast: On Going Series](https://ardanlabs.buzzsprout.com/)  
@@ -209,8 +210,8 @@ _**Podcasts**_
 [GoTime: Learning and Teaching Go](https://changelog.com/gotime/72)  
 [GoTime: Bill Kennedy on Mechanical Sympathy](https://changelog.com/gotime/6)  
 [GoTime: Discussing Imposter Syndrome](https://changelog.com/gotime/30)  
-[HelloTechPros: Your Tech Interviews are Scaring Away Brilliant People](http://hellotechpros.com/william-kennedy-people)    
-[HelloTechPros: The 4 Cornerstones of Writing Software](http://hellotechpros.com/bill-kennedy-productivity)  
+[HelloTechPros: Your Tech Interviews are Scaring Away Brilliant People](http://hellotechpros.com/william-kennedy-people)  
+[HelloTechPros: The 4 Cornerstones of Writing Software](http://hellotechpros.com/bill-kennedy-productivity)
 
 ## More About Go
 
@@ -224,28 +225,30 @@ Go is the fusion of performance and productivity wrapped in a language that soft
 [The eigenvector of "Why we moved from language X to language Y"](https://erikbern.com/2017/03/15/the-eigenvector-of-why-we-moved-from-language-x-to-language-y.html) - Erik Bernhardsson  
 [Learn More](https://talks.golang.org/2012/splash.article) - Go Team  
 [Simplicity is Complicated](https://www.youtube.com/watch?v=rFejpH_tAHM) - Rob Pike  
-[Getting Started In Go](http://aarti.github.io/2016/08/13/getting-started-in-go) - Aarti Parikh  
+[Getting Started In Go](http://aarti.github.io/2016/08/13/getting-started-in-go) - Aarti Parikh
 
 ## Minimal Qualified Student
 
 The material has been designed to be taught in a classroom environment. The code is well commented but missing some contextual concepts and ideas that will be covered in class. Students with the following minimal background will get the most out of the class.
 
-* Studied CS in school or has a minimum of two years of experience programming full time professionally.
-* Familiar with structural and object oriented programming styles.
-* Has worked with arrays, lists, queues and stacks.
-* Understands processes, threads and synchronization at a high level.
-* Operating Systems
-	* Has worked with a command shell.
-	* Knows how to maneuver around the file system.
-	* Understands what environment variables are.
+- Studied CS in school or has a minimum of two years of experience programming full time professionally.
+- Familiar with structural and object oriented programming styles.
+- Has worked with arrays, lists, queues and stacks.
+- Understands processes, threads and synchronization at a high level.
+- Operating Systems
+  - Has worked with a command shell.
+  - Knows how to maneuver around the file system.
+  - Understands what environment variables are.
 
 ## Joining the Go Slack Community
 
-We use a Slack channel to share links, code, and examples during the training.  This is free.  This is also the same Slack community you will use after training to ask for help and interact with may Go experts around the world in the community.
+We use a Slack channel to share links, code, and examples during the training. This is free. This is also the same Slack community you will use after training to ask for help and interact with may Go experts around the world in the community.
 
 1. Using the following link, fill out your name and email address: https://invite.slack.gobridge.org
 1. Check your email, and follow the link to the slack application.
 1. Join the training channel by clicking on this link: https://gophers.slack.com/messages/training/
 1. Click the “Join Channel” button at the bottom of the screen.
-___
+
+---
+
 All material is licensed under the [Apache License Version 2.0, January 2004](http://www.apache.org/licenses/LICENSE-2.0).
