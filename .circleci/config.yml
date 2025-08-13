@@ -1,4 +1,4 @@
-version: 2
+version: 2.1
 jobs:
   build:
     machine:
@@ -7,7 +7,7 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Install Go 1.24
+          name: Install Go 1.24.6
           command: |
             sudo rm -rf /usr/local/go
             wget -O go.tgz https://go.dev/dl/go1.24.6.linux-amd64.tar.gz
