@@ -543,6 +543,9 @@ talk-logs-mem:
 talk-describe:
 	kubectl describe pod --namespace=$(NAMESPACE) -l app=$(SALES_APP)
 
+talk-describe-min:
+	kubectl get pod -l app=$(SALES_APP) -n $(NAMESPACE) -o=json | jq '.items[].spec.containers[] | select(.name == "sales") | {name, resources}'
+
 talk-metrics:
 	expvarmon -ports="localhost:4000" -vars="build,requests,goroutines,errors,panics,mem:memstats.HeapAlloc,mem:memstats.HeapSys,mem:memstats.Sys"
 
