@@ -42,6 +42,12 @@ spec:
 #   Help workloads to have predictable CPU usage by assigning the same core to
 #   them rather than it jumping.
 #   https://kubernetes.io/docs/tasks/administer-cluster/cpu-management-policies/
+#
+#   This post is teaching the CPU K8s semantics in more detail.
+#   https://www.ardanlabs.com/blog/2024/02/kubernetes-cpu-limits-go.html
+#
+#   This post is teaching the Memory semantics in more detail.
+#   https://www.ardanlabs.com/blog/2024/02/kubernetes-memory-limits-go.html
 
 # ==============================================================================
 # CPU Limits
