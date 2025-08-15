@@ -15,119 +15,6 @@ spec:
       dnsPolicy: ClusterFirstWithHostNet
       hostNetwork: true
 
-      # CPU Limits
-      #
-      # The request value helps K8s determine what node a POD can be run on by making
-      # sure the number of requesting cores for the sum of all PODs are never greater
-      # than the number of cores on a given node. If you have 8 PODs each requesting 1
-      # core (1000m), then a node of 8 cores can run those 8 PODs. If you have 16 PODs
-      # each requesting 1/2 core (500m), then a node of 8 cores can run those 16 PODs.
-      #
-      # The limit value helps the container runtime to determine which containers
-      # (configured in a POD running on the node) can use a CPU and for how long. This
-      # is measured in time where 100ms represents a unit of execution time. If a limit
-      # of 1000m is requested, that means the container wants the full 100ms of time
-      # all the time. There is no CPU affinity, but you can imagine the container is
-      # given a full CPU to use on their own. A limit of 500m means the container wants
-      # 50ms of the 100ms per cycle. You can imagine it gets to share a CPU half the
-      # time with some other container.
-      #
-      # There are two points of view on these CPU quotas.
-      #
-      # Set the request to match the limit. The idea is if the container is requesting
-      # 1/2 a CPU, then limit the execution time to 1/2 a CPU as well. This balances
-      # the amount of CPU on the node with the amount of execution time. The drawback
-      # is the container can't handle a burst of traffic because it might have used
-      # it's allotted time and now it has to wait for the next 100ms cycle.
-      #
-      # Don't set any limit. The idea is allow all the containers to use the full
-      # capacity of CPU's on the node it's running on. So if there are 8 CPUs on the
-      # node, allow every program to use all 8 CPUs at the same time. This won't limit
-      # a container from getting the CPU it needs, outside of competing with the other
-      # containers.
-      #
-      # Determining the strategy depends on how you are measuring the performance of
-      # the containers to determine when a new POD needs to be created on a different
-      # node to handle the perceived load. Clusters have multiple dimensions of
-      # autoscaling: Horizontal Pod Autoscaling, Vertical Pod Autoscaling, Autoscaling
-      # of Nodes within a Node Group, Autoscaling of Node Groups themselves.
-
-      # Nutty Swiss
-      #
-      # I’ve naively put jobs into roughly two buckets. The ones where access to CPU
-      # cycles matter (CPU bound) and the ones where throttling is ok (IO Bound). For
-      # CPU bound work, toss the Go program a decent number of cores, but not too much.
-      # Allow for mobility of tasks within the cluster. For the IO bound work, toss
-      # the Go program about a core, maybe less.
-      #
-      # In both cases, give the Go runtime a core and set your limit to (limit += 1)
-      # since your Go program is CPU bound. Then let auto scaling take effect.
-      #
-      # Ideally you’d give tasks a reservation and no limit. However, I’ve never seen
-      # anyone actually write software that deals with the situation where the job all
-      # of a sudden does not get the “usual” over reservation cycles anymore. A
-      # situation that usually happens during load spikes. Or outages, etc. Leave the
-      # burst capable options to batch jobs.
-      #
-      # In the end, your tasks are a small player in a bigger game. Lifting the whole,
-      # enabling the whole, is usually more important than optimizing just your workload.
-      # Hence the 1/3 to 1/4 max core counts.
-
-      # Nick Stogner
-      #
-      # Requests are separate from Limits b/c setting requests lower than limits allows
-      # for more efficient resource utilization when you start packing multiple PODs
-      # onto a given Node. Limits are there to prevent noisy neighbor conditions with
-      # colocated PODs.
-
-      # For CPU resource units, the quantity expression 0.1 is equivalent to the
-      # expression 100m, which can be read as "one hundred millicpu".
-
-      # Memory Limits
-      #
-      # This service will OOM when the K8s limit is at 17 MiB or below. However, I can
-      # keep it alive at 13 MiB when setting GOMAXLIMIT to match. This is with the
-      # GC off (GOGC=off).
-      #
-      # Memory Limits restrict the amount of memory the service can use. I have not
-      # found any good rules to use, but here is some performance testing when
-      # experimenting with memory limits using `make load`.
-      #
-      # Unrestricted:
-      #   Total:        35.5745 secs
-      #   Slowest:       1.1948 secs
-      #   Fastest:       0.0048 secs
-      #   Average:       0.3447 secs
-      #   Requests/sec: 28.1100
-      #
-      # Limit: 18 MiB                  With GOMAXLIMIT: 18 MiB
-      #   Total:        35.1985 secs     Total:        34.2020 secs
-      #   Slowest:       1.1907 secs     Slowest:       1.1017 secs
-      #   Fastest:       0.0054 secs     Fastest:       0.0042 secs
-      #   Average:       0.3350 secs     Average:       0.3328 secs
-      #   Requests/sec: 28.4103          Requests/sec: 29.2380
-      #
-      # Limit 23 MiB (Go Value)         With GOMAXLIMIT: 23 MiB
-      #   Total:        33.5513 secs      Total:        29.9747 secs
-      #   Slowest:       1.0979 secs      Slowest:       0.9976 secs
-      #   Fastest:       0.0029 secs      Fastest:       0.0047 secs
-      #   Average:       0.3285 secs      Average:       0.2891 secs
-      #   Requests/sec: 29.8051           Requests/sec: 33.3615
-      #
-      # Limit 36 MiB                   With GOMAXLIMIT: 36 MiB
-      #   Total:        35.3504 secs     Total:        28.2876 secs
-      #   Slowest:       1.2809 secs     Slowest:       0.9867 secs
-      #   Fastest:       0.0056 secs     Fastest:       0.0036 secs
-      #   Average:       0.3393 secs     Average:       0.2763 secs
-      #   Requests/sec: 28.2883          Requests/sec: 35.3512
-      #
-      # Limit 72 MiB                   With GOMAXLIMIT 72 MiB
-      #   Total:        34.1320 secs     Total:        27.8793 secs
-      #   Slowest:       1.2031 secs     Slowest:       0.9876 secs
-      #   Fastest:       0.0033 secs     Fastest:       0.0046 secs
-      #   Average:       0.3369 secs     Average:       0.2690 secs
-      #   Requests/sec: 29.2980          Requests/sec: 35.8689
-
       containers:
         - name: sales
           resources:
@@ -144,3 +31,165 @@ spec:
               cpu: "250m"
             limits:
               cpu: "250m"
+#
+#
+# ==============================================================================
+# LINKS
+#   Kubernetes uses QoS classes to make decisions about evicting Pods when Node
+#   resources are exceeded.
+#   https://kubernetes.io/docs/tasks/configure-pod-container/quality-service-pod/
+#
+#   Help workloads to have predictable CPU usage by assigning the same core to
+#   them rather than it jumping.
+#   https://kubernetes.io/docs/tasks/administer-cluster/cpu-management-policies/
+
+# ==============================================================================
+# CPU Limits
+#
+#   When you set both the CPU limit and CPU request to the same value in Kubernetes
+#   (e.g., 2000m or 2 CPUs), it means that your container will be guaranteed access
+#   to those resources and won't be able to use more than that amount. Here's a
+#   detailed explanation of what happens:
+#
+#   1. Resource Request: The CPU request specifies the minimum amount of CPU
+#   resources that must always be available to your container. In this case,
+#   Kubernetes will reserve 2 CPUs for your container so it can always get those
+#   resources.
+#
+#   2. Resource Limit: The CPU limit sets an upper bound on how much CPU a
+#   container can use. If you set both request and limit to 2000m (or 2 CPUs), the
+#   container won't be able to exceed this amount of CPU usage.
+#
+#   3. Scheduling: When scheduling your pod, Kubernetes will consider these
+#   requests during placement decisions. The node where your pod is scheduled must
+#   have at least 2 CPUs available to satisfy the request.
+#
+#   4. Resource Isolation and Quality of Service (QoS)**: Setting both request and
+#   limit values equally contributes to a "Guaranteed" QoS class for the container,
+#   which means it's guaranteed to get its requested resources without any other
+#   containers competing for those resources.
+#
+#   5. CPU Throttling: If your application tries to use more CPU than the specified
+#   limit (2000m in this case), Kubernetes will throttle it, ensuring that it doesn't
+#   exceed the defined limit. This provides a level of resource isolation among
+#   different pods running on the same node.
+#
+#   In summary, setting the CPU request and limit to 2000m ensures your container
+#   gets exactly 2 CPUs worth of capacity consistently, without any risk of
+#   exceeding that amount, which can help with performance predictability for your
+#   applications.
+
+# ==============================================================================
+# Research Notes On CPU Limits
+#
+#   The request value helps K8s determine what node a POD can be run on by making
+#   sure the number of requesting cores for the sum of all PODs are never greater
+#   than the number of cores on a given node. If you have 8 PODs each requesting 1
+#   core (1000m), then a node of 8 cores can run those 8 PODs. If you have 16 PODs
+#   each requesting 1/2 core (500m), then a node of 8 cores can run those 16 PODs.
+#
+#   The limit value helps the container runtime to determine which containers
+#   (configured in a POD running on the node) can use a CPU and for how long. This
+#   is measured in time where 100ms represents a unit of execution time. If a limit
+#   of 1000m is requested, that means the container wants the full 100ms of time
+#   all the time. There is no CPU affinity, but you can imagine the container is
+#   given a full CPU to use on their own. A limit of 500m means the container wants
+#   50ms of the 100ms per cycle. You can imagine it gets to share a CPU half the
+#   time with some other container.
+#
+#   There are two points of view on these CPU quotas.
+#
+#   Set the request to match the limit. The idea is if the container is requesting
+#   1/2 a CPU, then limit the execution time to 1/2 a CPU as well. This balances
+#   the amount of CPU on the node with the amount of execution time. The drawback
+#   is the container can't handle a burst of traffic because it might have used
+#   it's allotted time and now it has to wait for the next 100ms cycle.
+#
+#   Don't set any limit. The idea is allow all the containers to use the full
+#   capacity of CPU's on the node it's running on. So if there are 8 CPUs on the
+#   node, allow every program to use all 8 CPUs at the same time. This won't limit
+#   a container from getting the CPU it needs, outside of competing with the other
+#   containers.
+#
+#   Determining the strategy depends on how you are measuring the performance of
+#   the containers to determine when a new POD needs to be created on a different
+#   node to handle the perceived load. Clusters have multiple dimensions of
+#   autoscaling: Horizontal Pod Autoscaling, Vertical Pod Autoscaling, Autoscaling
+#   of Nodes within a Node Group, Autoscaling of Node Groups themselves.
+#
+#   Nutty Swiss
+#
+#   I’ve naively put jobs into roughly two buckets. The ones where access to CPU
+#   cycles matter (CPU bound) and the ones where throttling is ok (IO Bound). For
+#   CPU bound work, toss the Go program a decent number of cores, but not too much.
+#   Allow for mobility of tasks within the cluster. For the IO bound work, toss
+#   the Go program about a core, maybe less.
+#
+#   In both cases, give the Go runtime a core and set your limit to (limit += 1)
+#   since your Go program is CPU bound. Then let auto scaling take effect.
+#
+#   Ideally you’d give tasks a reservation and no limit. However, I’ve never seen
+#   anyone actually write software that deals with the situation where the job all
+#   of a sudden does not get the “usual” over reservation cycles anymore. A
+#   situation that usually happens during load spikes. Or outages, etc. Leave the
+#   burst capable options to batch jobs.
+#
+#   In the end, your tasks are a small player in a bigger game. Lifting the whole,
+#   enabling the whole, is usually more important than optimizing just your workload.
+#   Hence the 1/3 to 1/4 max core counts.
+#
+#   Nick Stogner
+#
+#   Requests are separate from Limits b/c setting requests lower than limits allows
+#   for more efficient resource utilization when you start packing multiple PODs
+#   onto a given Node. Limits are there to prevent noisy neighbor conditions with
+#   colocated PODs.
+#
+#   For CPU resource units, the quantity expression 0.1 is equivalent to the
+#   expression 100m, which can be read as "one hundred millicpu".
+
+# ==============================================================================
+# Memory Limits
+#
+#   This service will OOM when the K8s limit is at 17 MiB or below. However, I can
+#   keep it alive at 13 MiB when setting GOMAXLIMIT to match. This is with the
+#   GC off (GOGC=off).
+#
+#   Memory Limits restrict the amount of memory the service can use. I have not
+#   found any good rules to use, but here is some performance testing when
+#   experimenting with memory limits using `make load`.
+#
+#   Unrestricted:
+#     Total:        35.5745 secs
+#     Slowest:       1.1948 secs
+#     Fastest:       0.0048 secs
+#     Average:       0.3447 secs
+#     Requests/sec: 28.1100
+#
+#   Limit: 18 MiB                  With GOMAXLIMIT: 18 MiB
+#     Total:        35.1985 secs     Total:        34.2020 secs
+#     Slowest:       1.1907 secs     Slowest:       1.1017 secs
+#     Fastest:       0.0054 secs     Fastest:       0.0042 secs
+#     Average:       0.3350 secs     Average:       0.3328 secs
+#     Requests/sec: 28.4103          Requests/sec: 29.2380
+#
+#   Limit 23 MiB (Go Value)         With GOMAXLIMIT: 23 MiB
+#     Total:        33.5513 secs      Total:        29.9747 secs
+#     Slowest:       1.0979 secs      Slowest:       0.9976 secs
+#     Fastest:       0.0029 secs      Fastest:       0.0047 secs
+#     Average:       0.3285 secs      Average:       0.2891 secs
+#     Requests/sec: 29.8051           Requests/sec: 33.3615
+#
+#   Limit 36 MiB                   With GOMAXLIMIT: 36 MiB
+#     Total:        35.3504 secs     Total:        28.2876 secs
+#     Slowest:       1.2809 secs     Slowest:       0.9867 secs
+#     Fastest:       0.0056 secs     Fastest:       0.0036 secs
+#     Average:       0.3393 secs     Average:       0.2763 secs
+#     Requests/sec: 28.2883          Requests/sec: 35.3512
+#
+#   Limit 72 MiB                   With GOMAXLIMIT 72 MiB
+#     Total:        34.1320 secs     Total:        27.8793 secs
+#     Slowest:       1.2031 secs     Slowest:       0.9876 secs
+#     Fastest:       0.0033 secs     Fastest:       0.0046 secs
+#     Average:       0.3369 secs     Average:       0.2690 secs
+#     Requests/sec: 29.2980          Requests/sec: 35.8689
