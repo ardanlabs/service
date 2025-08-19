@@ -43,7 +43,7 @@ func GenToken(log *logger.Logger, dbConfig sqldb.Config, keyPath string, userID 
 
 	ks := keystore.New()
 
-	n1, err := ks.LoadByJSON("SALAES_PEM")
+	n1, err := ks.LoadByJSON(os.Getenv("SALES_PEM"))
 	if err != nil {
 		return fmt.Errorf("loading keys by env: %w", err)
 	}
