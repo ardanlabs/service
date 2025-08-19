@@ -72,7 +72,7 @@ func AuthorizeUser(client *authclient.Client, userBus userbus.ExtBusiness, rule 
 				if err != nil {
 					switch {
 					case errors.Is(err, userbus.ErrNotFound):
-						return errs.New(errs.Unauthenticated, err)
+						return errs.New(errs.NotFound, err)
 					default:
 						return errs.Newf(errs.Unauthenticated, "querybyid: userID[%s]: %s", userID, err)
 					}
@@ -125,7 +125,7 @@ func AuthorizeProduct(client *authclient.Client, productBus *productbus.Business
 				if err != nil {
 					switch {
 					case errors.Is(err, productbus.ErrNotFound):
-						return errs.New(errs.Unauthenticated, err)
+						return errs.New(errs.NotFound, err)
 					default:
 						return errs.Newf(errs.Internal, "querybyid: productID[%s]: %s", productID, err)
 					}
@@ -179,7 +179,7 @@ func AuthorizeHome(client *authclient.Client, homeBus *homebus.Business) web.Mid
 				if err != nil {
 					switch {
 					case errors.Is(err, homebus.ErrNotFound):
-						return errs.New(errs.Unauthenticated, err)
+						return errs.New(errs.NotFound, err)
 					default:
 						return errs.Newf(errs.Unauthenticated, "querybyid: homeID[%s]: %s", homeID, err)
 					}
