@@ -127,7 +127,7 @@ func AuthorizeProduct(client *authclient.Client, productBus *productbus.Business
 					case errors.Is(err, productbus.ErrNotFound):
 						return errs.New(errs.Unauthenticated, err)
 					default:
-						return errs.Newf(errs.Internal, "querybyid: productID[%s]: %s", productID, err)
+						return errs.Newf(errs.Unauthenticated, "querybyid: productID[%s]: %s", productID, err)
 					}
 				}
 
