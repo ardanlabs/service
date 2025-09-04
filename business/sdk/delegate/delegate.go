@@ -4,6 +4,7 @@ package delegate
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/ardanlabs/service/foundation/logger"
 )
@@ -56,6 +57,7 @@ func (d *Delegate) Call(ctx context.Context, data Data) error {
 
 				if err := fn(ctx, data); err != nil {
 					d.log.Error(ctx, "delegate call", "err", err)
+					return fmt.Errorf("delegate: %w", err)
 				}
 			}
 		}
