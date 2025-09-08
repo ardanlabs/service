@@ -66,26 +66,7 @@ func NewApp(log Logger, tracer trace.Tracer, mw ...MidFunc) *App {
 // tracing. The opentelemetry mux then calls the application mux to handle
 // application traffic. This was set up in the NewApp function.
 func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	a.otmux.ServeHTTP(w, r)
-}
-
-// EnableCORS enables CORS preflight requests to work in the middleware. It
-// prevents the MethodNotAllowedHandler from being called. This must be enabled
-// for the CORS middleware to work.
-func (a *App) EnableCORS(origins []string) {
-	a.origins = origins
-
-	handler := func(ctx context.Context, r *http.Request) Encoder {
-		return nil
-	}
-	handler = wrapMiddleware([]MidFunc{a.corsHandler}, handler)
-
-	a.HandlerFuncNoMid(http.MethodOptions, "", "/", handler)
-}
-
-func (a *App) corsHandler(webHandler HandlerFunc) HandlerFunc {
-	h := func(ctx context.Context, r *http.Request) Encoder {
-		w := GetWriter(ctx)
+	if a.origins != nil {
 
 		// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin
 		// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Origin
@@ -107,11 +88,15 @@ func (a *App) corsHandler(webHandler HandlerFunc) HandlerFunc {
 		w.Header().Set("Access-Control-Allow-Methods", "POST, PATCH, GET, OPTIONS, PUT, DELETE")
 		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 		w.Header().Set("Access-Control-Max-Age", "86400")
-
-		return webHandler(ctx, r)
 	}
 
-	return h
+	a.otmux.ServeHTTP(w, r)
+}
+
+// EnableCORS enables CORS preflight requests to work. It prevents the
+// MethodNotAllowedHandler from being called.
+func (a *App) EnableCORS(origins []string) {
+	a.origins = origins
 }
 
 // HandlerFuncNoMid sets a handler function for a given HTTP method and path
@@ -141,10 +126,6 @@ func (a *App) HandlerFuncNoMid(method string, group string, path string, handler
 // HandlerFunc sets a handler function for a given HTTP method and path pair
 // to the application server mux.
 func (a *App) HandlerFunc(method string, group string, path string, handlerFunc HandlerFunc, mw ...MidFunc) {
-	if a.origins != nil {
-		handlerFunc = wrapMiddleware([]MidFunc{a.corsHandler}, handlerFunc)
-	}
-
 	handlerFunc = wrapMiddleware(mw, handlerFunc)
 	handlerFunc = wrapMiddleware(a.mw, handlerFunc)
 
@@ -178,10 +159,6 @@ func (a *App) RawHandlerFunc(method string, group string, path string, rawHandle
 		r = r.WithContext(ctx)
 		rawHandlerFunc(GetWriter(ctx), r)
 		return nil
-	}
-
-	if a.origins != nil {
-		handlerFunc = wrapMiddleware([]MidFunc{a.corsHandler}, handlerFunc)
 	}
 
 	handlerFunc = wrapMiddleware(mw, handlerFunc)
