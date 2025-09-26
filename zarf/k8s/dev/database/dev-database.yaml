@@ -51,7 +51,7 @@ spec:
           image: postgres:18.0
           volumeMounts:
             - name: data
-              mountPath: /var/lib/postgresql/18/data
+              mountPath: /var/lib/postgresql/18/docker
             - name: config
               readOnly: false
               mountPath: "/etc/pg_hba.conf"
