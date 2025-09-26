@@ -116,8 +116,8 @@ this module.
 		return fmt.Errorf("parsing config: %w", err)
 	}
 
-There is a WithParse function that takes a slice of bytes containing the YAML
-or WithParseReader that takes any concrete value that knows how to Read.
+There is a WithReader function that takes any concrete value that knows how to
+Read (io.Reader).
 
 # Command Line Args
 

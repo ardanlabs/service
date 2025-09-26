@@ -95,11 +95,7 @@ func newSourceFlag(args []string) (*flag, error) {
 	m := make(map[string]flagValue)
 
 	if len(args) != 0 {
-		for {
-			if len(args) == 0 {
-				break
-			}
-
+		for len(args) != 0 {
 			// Look at the next arg.
 			s := args[0]
 
@@ -151,6 +147,12 @@ func newSourceFlag(args []string) (*flag, error) {
 				if len(args) > 0 && len(args[0]) > 0 && args[0][0] != '-' {
 					// Doesn't look like a flag. Must be a value.
 					value, args = args[0], args[1:]
+
+					// Found a bug with the single bool where a value may or may
+					// not be provided.
+					if value == strings.ToLower("true") || value == strings.ToLower("false") {
+						hasValue = true
+					}
 				}
 			}
 
