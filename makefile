@@ -81,7 +81,7 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 # CLASS NOTES
 #
 # Kind
-# 	For full Kind v0.29 release notes: https://github.com/kubernetes-sigs/kind/releases/tag/v0.29.0
+# 	For full Kind v0.30 release notes: https://github.com/kubernetes-sigs/kind/releases/tag/v0.30.0
 #
 # RSA Keys
 # 	To generate a private/public key PEM file.
@@ -111,10 +111,10 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 
 GOLANG          := golang:1.25
 ALPINE          := alpine:3.22
-KIND            := kindest/node:v1.33.1
-POSTGRES        := postgres:17.5
-GRAFANA         := grafana/grafana:12.1.0
-PROMETHEUS      := prom/prometheus:v3.5.0
+KIND            := kindest/node:v1.34.0
+POSTGRES        := postgres:18.0
+GRAFANA         := grafana/grafana:12.2.0
+PROMETHEUS      := prom/prometheus:v3.6.0
 TEMPO           := grafana/tempo:2.8.1
 LOKI            := grafana/loki:3.5.0
 PROMTAIL        := grafana/promtail:3.5.0

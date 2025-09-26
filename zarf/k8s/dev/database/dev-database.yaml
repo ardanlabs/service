@@ -48,10 +48,10 @@ spec:
                 path: "pg_hba.conf"
       containers:
         - name: postgres
-          image: postgres:17.5
+          image: postgres:18.0
           volumeMounts:
             - name: data
-              mountPath: /var/lib/postgresql/data
+              mountPath: /var/lib/postgresql/18/data
             - name: config
               readOnly: false
               mountPath: "/etc/pg_hba.conf"
