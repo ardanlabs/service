@@ -90,6 +90,11 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Max-Age", "86400")
 	}
 
+	// In the following example, max-age is set to 2 years, and is suffixed with
+	// preload, which is necessary for inclusion in all major web browsers' HSTS
+	// preload lists, like Chromium, Edge, and Firefox.
+	w.Header().Set("Strict-Transport-Security", "max-age=63072000; includeSubDomains; preload")
+
 	a.otmux.ServeHTTP(w, r)
 }
 
