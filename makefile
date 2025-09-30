@@ -7,17 +7,17 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 # ==============================================================================
 # Go Installation
 #
-#	You need to have Go version 1.24 to run this code.
+#	You need to have Go version 1.25 to run this code.
 #
 #	https://go.dev/dl/
 #
 #	If you are not allowed to update your Go frontend, you can install
-#	and use a 1.24 frontend.
+#	and use a 1.25 frontend.
 #
-#	$ go install golang.org/dl/go1.24@latest
-#	$ go1.24 download
+#	$ go install golang.org/dl/go1.25@latest
+#	$ go1.25 download
 #
-#	This means you need to use `go1.24` instead of `go` for any command
+#	This means you need to use `go1.25` instead of `go` for any command
 #	using the Go frontend tooling from the makefile.
 
 # ==============================================================================
