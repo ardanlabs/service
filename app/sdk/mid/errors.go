@@ -40,7 +40,7 @@ func Errors(log *logger.Logger) web.MidFunc {
 				appErr = errs.Newf(errs.Internal, "Internal Server Error")
 			}
 
-			// Send the error to the transport package so the error can be
+			// Send the error to the web package so the error can be
 			// used as the response.
 
 			return appErr
