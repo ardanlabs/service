@@ -150,15 +150,15 @@ dev-brew:
 	brew list watch || brew install watch
 
 dev-docker:
-	docker pull $(GOLANG) & \
-	docker pull $(ALPINE) & \
-	docker pull $(KIND) & \
-	docker pull $(POSTGRES) & \
-	docker pull $(GRAFANA) & \
-	docker pull $(PROMETHEUS) & \
-	docker pull $(TEMPO) & \
-	docker pull $(LOKI) & \
-	docker pull $(PROMTAIL) & \
+	docker pull docker.io/$(GOLANG) & \
+	docker pull docker.io/$(ALPINE) & \
+	docker pull docker.io/$(KIND) & \
+	docker pull docker.io/$(POSTGRES) & \
+	docker pull docker.io/$(GRAFANA) & \
+	docker pull docker.io/$(PROMETHEUS) & \
+	docker pull docker.io/$(TEMPO) & \
+	docker pull docker.io/$(LOKI) & \
+	docker pull docker.io/$(PROMTAIL) & \
 	wait;
 
 # ==============================================================================
@@ -381,10 +381,10 @@ metrics-view:
 	expvarmon -ports="localhost:4020" -endpoint="/metrics" -vars="build,requests,goroutines,errors,panics,mem:memstats.HeapAlloc,mem:memstats.HeapSys,mem:memstats.Sys"
 
 grafana:
-	open http://localhost:3100/
+	xdg-open  http://localhost:3100/
 
 statsviz:
-	open http://localhost:3010/debug/statsviz
+	xdg-open  http://localhost:3010/debug/statsviz
 
 # ==============================================================================
 # Running tests within the local computer
