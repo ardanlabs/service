@@ -16,11 +16,9 @@ import (
 	"github.com/open-policy-agent/opa/v1/rego"
 )
 
-// ErrForbidden is returned when a auth issue is identified.
-var ErrForbidden = errors.New("attempted action is not allowed")
-
 // Specific error variables for auth failures.
 var (
+	ErrForbidden       = errors.New("attempted action is not allowed")
 	ErrKIDMissing      = errors.New("kid missing from token header")
 	ErrKIDMalformed    = errors.New("kid in token header is malformed")
 	ErrUserDisabled    = errors.New("user is disabled")
@@ -62,8 +60,8 @@ type Auth struct {
 }
 
 // New creates an Auth to support authentication/authorization.
-func New(cfg Config) (*Auth, error) {
-	a := Auth{
+func New(cfg Config) *Auth {
+	return &Auth{
 		log:       cfg.Log,
 		keyLookup: cfg.KeyLookup,
 		userBus:   cfg.UserBus,
@@ -71,8 +69,6 @@ func New(cfg Config) (*Auth, error) {
 		parser:    jwt.NewParser(jwt.WithValidMethods([]string{jwt.SigningMethodRS256.Name})),
 		issuer:    cfg.Issuer,
 	}
-
-	return &a, nil
 }
 
 // Issuer provides the configured issuer used to authenticate tokens.
