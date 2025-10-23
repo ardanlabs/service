@@ -2,6 +2,14 @@
 SHELL_PATH = /bin/ash
 SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 
+# Detect operating system and set the appropriate open command
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Darwin)
+	OPEN_CMD := open
+else
+	OPEN_CMD := xdg-open
+endif
+
 # Deploy First Mentality
 
 # ==============================================================================
@@ -381,10 +389,10 @@ metrics-view:
 	expvarmon -ports="localhost:4020" -endpoint="/metrics" -vars="build,requests,goroutines,errors,panics,mem:memstats.HeapAlloc,mem:memstats.HeapSys,mem:memstats.Sys"
 
 grafana:
-	xdg-open  http://localhost:3100/
+	$(OPEN_CMD) http://localhost:3100/
 
 statsviz:
-	xdg-open  http://localhost:3010/debug/statsviz
+	$(OPEN_CMD) http://localhost:3010/debug/statsviz
 
 # ==============================================================================
 # Running tests within the local computer
