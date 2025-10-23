@@ -18,14 +18,11 @@ func New(t *testing.T, testName string) *Test {
 
 	// -------------------------------------------------------------------------
 
-	auth, err := auth.New(auth.Config{
+	auth := auth.New(auth.Config{
 		Log:       db.Log,
 		UserBus:   db.BusDomain.User,
 		KeyLookup: &KeyStore{},
 	})
-	if err != nil {
-		t.Fatal(err)
-	}
 
 	// -------------------------------------------------------------------------
 

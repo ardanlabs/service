@@ -17,15 +17,12 @@ import (
 func Test_Auth(t *testing.T) {
 	log := newUnit(t)
 
-	ath, err := auth.New(auth.Config{
+	ath := auth.New(auth.Config{
 		Log:       log,
 		UserBus:   nil,
 		KeyLookup: &keyStore{},
 		Issuer:    "service project",
 	})
-	if err != nil {
-		t.Fatalf("Should be able to create an authenticator: %s", err)
-	}
 
 	t.Run("test1", test1(ath))
 	t.Run("test2", test2(ath))
