@@ -1,0 +1,10 @@
+cp $STATSVIZ_ROOT/_example/default/main.go .
+cp $STATSVIZ_ROOT/_example/default/go.mod .
+
+go mod edit -replace=github.com/arl/statsviz=$STATSVIZ_ROOT
+go mod edit -replace=github.com/arl/statsviz/_example=$STATSVIZ_ROOT/_example
+go mod tidy
+
+go build main.go
+! exec ./main &
+checkui http://localhost:8079/debug/statsviz/

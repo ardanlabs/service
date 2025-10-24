@@ -9,8 +9,8 @@
 //
 // Alternatively, you can register with [http.DefaultServeMux]:
 //
-//	ss := statsviz.Server{}
-//	s.Register(http.DefaultServeMux)
+//	ss := statsviz.NewServer()
+//	ss.Register(http.DefaultServeMux)
 //
 // By default, Statsviz is served at http://host:port/debug/statsviz/. This, and
 // other settings, can be changed by passing some [Option] to [NewServer].
@@ -83,7 +83,7 @@ func Register(mux *http.ServeMux, opts ...Option) error {
 //   - The Ws handler establishes a WebSocket connection allowing the connected
 //     browser to receive metrics updates from the server.
 //
-// The zero value is not a valid Server, use NewServer to create a valid one.
+// The zero value is a valid Server, with default options.
 type Server struct {
 	interval  time.Duration // interval between consecutive metrics emission
 	root      string        // HTTP path root
@@ -98,23 +98,41 @@ type Server struct {
 // with some HTTP server. You can either use the Register method or register yourself
 // the Index and Ws handlers.
 func NewServer(opts ...Option) (*Server, error) {
-	s := &Server{
+	var s Server
+	if err := s.init(opts...); err != nil {
+		return nil, err
+	}
+	return &s, nil
+}
+
+func (s *Server) init(opts ...Option) error {
+	*s = Server{
 		interval: defaultSendInterval,
 		root:     defaultRoot,
 	}
 
 	for _, opt := range opts {
 		if err := opt(s); err != nil {
-			return nil, err
+			return err
 		}
 	}
 
 	pl, err := plot.NewList(s.userPlots)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	s.plots = pl
-	return s, nil
+
+	return nil
+}
+
+// Register registers the Statsviz HTTP handlers on the provided mux.
+func (s *Server) Register(mux *http.ServeMux) {
+	if s.plots == nil {
+		s.init()
+	}
+	mux.Handle(s.root+"/", s.Index())
+	mux.HandleFunc(s.root+"/ws", s.Ws())
 }
 
 // Option is a configuration option for the Server.
@@ -148,12 +166,6 @@ func TimeseriesPlot(tsp TimeSeriesPlot) Option {
 		s.userPlots = append(s.userPlots, plot.UserPlot{Scatter: tsp.timeseries})
 		return nil
 	}
-}
-
-// Register registers the Statsviz HTTP handlers on the provided mux.
-func (s *Server) Register(mux *http.ServeMux) {
-	mux.Handle(s.root+"/", s.Index())
-	mux.HandleFunc(s.root+"/ws", s.Ws())
 }
 
 // Index returns the index handler, which responds with the Statsviz user

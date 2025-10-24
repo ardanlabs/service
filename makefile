@@ -114,8 +114,8 @@ ALPINE          := alpine:3.22
 KIND            := kindest/node:v1.34.0
 POSTGRES        := postgres:18.0
 GRAFANA         := grafana/grafana:12.2.0
-PROMETHEUS      := prom/prometheus:v3.6.0
-TEMPO           := grafana/tempo:2.8.1
+PROMETHEUS      := prom/prometheus:v3.7.0
+TEMPO           := grafana/tempo:2.9.0
 LOKI            := grafana/loki:3.5.0
 PROMTAIL        := grafana/promtail:3.5.0
 

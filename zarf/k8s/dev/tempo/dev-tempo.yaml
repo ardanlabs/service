@@ -98,7 +98,7 @@ spec:
     spec:
       hostname: tempo
       containers:
-        - image: grafana/tempo:2.8.1
+        - image: grafana/tempo:2.9.0
           name: tempo
           ports:
             - containerPort: 14268

@@ -44,7 +44,7 @@ spec:
     spec:
       containers:
         - name: prometheus
-          image: prom/prometheus:v3.6.0
+          image: prom/prometheus:v3.7.0
           args:
             - "--storage.tsdb.retention.time=1m"
             - "--config.file=/prom-conf/prometheus.yaml"

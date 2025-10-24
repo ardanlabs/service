@@ -1,6 +1,16 @@
 version: 2
-udpates:
+updates:
   - package-ecosystem: "gomod"
     directory: "/"
     schedule:
       interval: "daily"
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          ["version-update:semver-patch", "version-update:semver-minor"]
+    open-pull-requests-limit: 5
+  - package-ecosystem: "npm"
+    directory: "/internal/static"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 5

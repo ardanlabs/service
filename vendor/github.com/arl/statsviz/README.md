@@ -196,7 +196,7 @@ Which plots are visible depends on:
 
 #### Garbage Collection
 
-<img width="50%" alt="garbage-collection" src="https://github.com/arl/statsviz/raw/readme-docs/plots/garbage collection.png">
+<img width="50%" alt="garbage-collection" src="https://github.com/arl/statsviz/raw/readme-docs/plots/garbage-collection.png">
 
 #### GC Cycles
 
@@ -220,7 +220,7 @@ Which plots are visible depends on:
 
 #### Heap (Details)
 
-<img width="50%" alt="heap-details" src="https://github.com/arl/statsviz/raw/readme-docs/plots/heap (details).png">
+<img width="50%" alt="heap-details" src="https://github.com/arl/statsviz/raw/readme-docs/plots/heap-details.png">
 
 #### Live Bytes
 
