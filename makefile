@@ -2,14 +2,6 @@
 SHELL_PATH = /bin/ash
 SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 
-# Detect operating system and set the appropriate open command
-UNAME_S := $(shell uname -s)
-ifeq ($(UNAME_S),Darwin)
-	OPEN_CMD := open
-else
-	OPEN_CMD := xdg-open
-endif
-
 # Deploy First Mentality
 
 # ==============================================================================
@@ -138,6 +130,16 @@ METRICS_IMAGE   := $(BASE_IMAGE_NAME)/metrics:$(VERSION)
 AUTH_IMAGE      := $(BASE_IMAGE_NAME)/$(AUTH_APP):$(VERSION)
 
 # VERSION       := "0.0.1-$(shell git rev-parse --short HEAD)"
+
+# ==============================================================================
+# Detect operating system and set the appropriate open command
+
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Darwin)
+	OPEN_CMD := open
+else
+	OPEN_CMD := xdg-open
+endif
 
 # ==============================================================================
 # Install dependencies
