@@ -13,6 +13,7 @@ import (
 	"github.com/ardanlabs/service/business/sdk/page"
 	"github.com/ardanlabs/service/business/sdk/unittest"
 	"github.com/ardanlabs/service/business/types/name"
+	"github.com/ardanlabs/service/business/types/password"
 	"github.com/ardanlabs/service/business/types/role"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/uuid"
@@ -188,7 +189,7 @@ func create(busDomain dbtest.BusDomain) []unittest.Table {
 					Email:      *email,
 					Roles:      []role.Role{role.Admin},
 					Department: name.MustParseNull("ITO"),
-					Password:   "123",
+					Password:   password.MustParse("123"),
 				}
 
 				resp, err := busDomain.User.Create(ctx, uuid.UUID{}, nu)
@@ -244,7 +245,7 @@ func update(busDomain dbtest.BusDomain, sd unittest.SeedData) []unittest.Table {
 					Email:      email,
 					Roles:      []role.Role{role.Admin},
 					Department: dbtest.NameNullPointer("ITO"),
-					Password:   dbtest.StringPointer("1234"),
+					Password:   dbtest.PasswordPointer("1234"),
 				}
 
 				resp, err := busDomain.User.Update(ctx, uuid.UUID{}, sd.Users[0].User, uu)

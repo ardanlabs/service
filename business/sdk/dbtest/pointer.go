@@ -3,6 +3,7 @@ package dbtest
 import (
 	"github.com/ardanlabs/service/business/types/money"
 	"github.com/ardanlabs/service/business/types/name"
+	"github.com/ardanlabs/service/business/types/password"
 	"github.com/ardanlabs/service/business/types/quantity"
 )
 
@@ -64,4 +65,12 @@ func MoneyPointer(value float64) *money.Money {
 func QuantityPointer(value int) *quantity.Quantity {
 	quantity := quantity.MustParse(value)
 	return &quantity
+}
+
+// PasswordPointer is a helper to get a *Password from a string. It's in the tests
+// package because we normally don't want to deal with pointers to basic types
+// but it's useful in some tests.
+func PasswordPointer(value string) *password.Password {
+	pass := password.MustParse(value)
+	return &pass
 }

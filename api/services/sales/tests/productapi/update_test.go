@@ -65,7 +65,7 @@ func update400(sd apitest.SeedData) []apitest.Table {
 				Quantity: dbtest.IntPointer(0),
 			},
 			GotResp: &errs.Error{},
-			ExpResp: errs.Newf(errs.InvalidArgument, "validate: [{\"field\":\"cost\",\"error\":\"cost must be 0 or greater\"},{\"field\":\"quantity\",\"error\":\"quantity must be 1 or greater\"}]"),
+			ExpResp: errs.Newf(errs.InvalidArgument, "validate: [{\"field\":\"cost\",\"error\":\"invalid money -1.00\"},{\"field\":\"quantity\",\"error\":\"invalid quantity 0\"}]"),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},

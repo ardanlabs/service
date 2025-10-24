@@ -35,7 +35,7 @@ func (q Quantity) MarshalText() ([]byte, error) {
 // Parse parses the float value and returns a quantity if the value complies
 // with the rules for quantity.
 func Parse(value int) (Quantity, error) {
-	if value < 0 || value > 1_000_000 {
+	if value <= 0 || value > 1_000_000 {
 		return Quantity{}, fmt.Errorf("invalid quantity %d", value)
 	}
 

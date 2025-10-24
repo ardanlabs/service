@@ -11,6 +11,7 @@ import (
 	"github.com/ardanlabs/service/business/domain/userbus"
 	"github.com/ardanlabs/service/business/types/money"
 	"github.com/ardanlabs/service/business/types/name"
+	"github.com/ardanlabs/service/business/types/password"
 	"github.com/ardanlabs/service/business/types/quantity"
 	"github.com/ardanlabs/service/business/types/role"
 )
@@ -53,15 +54,6 @@ type NewTran struct {
 	User    NewUser    `json:"user"`
 }
 
-// Validate checks the data in the model is considered clean.
-func (app NewTran) Validate() error {
-	if err := errs.Check(app); err != nil {
-		return fmt.Errorf("validate: %w", err)
-	}
-
-	return nil
-}
-
 // Decode implements the decoder interface.
 func (app *NewTran) Decode(data []byte) error {
 	return json.Unmarshal(data, app)
@@ -71,42 +63,44 @@ func (app *NewTran) Decode(data []byte) error {
 
 // NewUser contains information needed to create a new user.
 type NewUser struct {
-	Name            string   `json:"name" validate:"required"`
-	Email           string   `json:"email" validate:"required,email"`
-	Roles           []string `json:"roles" validate:"required"`
+	Name            string   `json:"name"`
+	Email           string   `json:"email"`
+	Roles           []string `json:"roles"`
 	Department      string   `json:"department"`
-	Password        string   `json:"password" validate:"required"`
-	PasswordConfirm string   `json:"passwordConfirm" validate:"eqfield=Password"`
-}
-
-// Validate checks the data in the model is considered clean.
-func (app NewUser) Validate() error {
-	if err := errs.Check(app); err != nil {
-		return fmt.Errorf("validate: %w", err)
-	}
-
-	return nil
+	Password        string   `json:"password"`
+	PasswordConfirm string   `json:"passwordConfirm"`
 }
 
 func toBusNewUser(app NewUser) (userbus.NewUser, error) {
+	var errors errs.FieldErrors
+
 	roles, err := role.ParseMany(app.Roles)
 	if err != nil {
-		return userbus.NewUser{}, fmt.Errorf("parse: %w", err)
+		errors.Add("roles", err)
 	}
 
 	addr, err := mail.ParseAddress(app.Email)
 	if err != nil {
-		return userbus.NewUser{}, fmt.Errorf("parse: %w", err)
+		errors.Add("email", err)
 	}
 
 	nme, err := name.Parse(app.Name)
 	if err != nil {
-		return userbus.NewUser{}, fmt.Errorf("parse: %w", err)
+		errors.Add("name", err)
 	}
 
 	department, err := name.ParseNull(app.Department)
 	if err != nil {
-		return userbus.NewUser{}, fmt.Errorf("parse: %w", err)
+		errors.Add("department", err)
+	}
+
+	pass, err := password.ParseConfirm(app.Password, app.PasswordConfirm)
+	if err != nil {
+		errors.Add("password", err)
+	}
+
+	if len(errors) > 0 {
+		return userbus.NewUser{}, fmt.Errorf("validate: %w", errors.ToError())
 	}
 
 	bus := userbus.NewUser{
@@ -114,7 +108,7 @@ func toBusNewUser(app NewUser) (userbus.NewUser, error) {
 		Email:      *addr,
 		Roles:      roles,
 		Department: department,
-		Password:   app.Password,
+		Password:   pass,
 	}
 
 	return bus, nil
@@ -124,34 +118,31 @@ func toBusNewUser(app NewUser) (userbus.NewUser, error) {
 
 // NewProduct is what we require from clients when adding a Product.
 type NewProduct struct {
-	Name     string  `json:"name" validate:"required"`
-	Cost     float64 `json:"cost" validate:"required,gte=0"`
-	Quantity int     `json:"quantity" validate:"required,gte=1"`
-}
-
-// Validate checks the data in the model is considered clean.
-func (app NewProduct) Validate() error {
-	if err := errs.Check(app); err != nil {
-		return fmt.Errorf("validate: %w", err)
-	}
-
-	return nil
+	Name     string  `json:"name"`
+	Cost     float64 `json:"cost"`
+	Quantity int     `json:"quantity"`
 }
 
 func toBusNewProduct(app NewProduct) (productbus.NewProduct, error) {
+	var errors errs.FieldErrors
+
 	name, err := name.Parse(app.Name)
 	if err != nil {
-		return productbus.NewProduct{}, fmt.Errorf("parse: %w", err)
+		errors.Add("name", err)
 	}
 
 	cost, err := money.Parse(app.Cost)
 	if err != nil {
-		return productbus.NewProduct{}, fmt.Errorf("parse cost: %w", err)
+		errors.Add("cost", err)
 	}
 
 	quantity, err := quantity.Parse(app.Quantity)
 	if err != nil {
-		return productbus.NewProduct{}, fmt.Errorf("parse quantity: %w", err)
+		errors.Add("quantity", err)
+	}
+
+	if len(errors) > 0 {
+		return productbus.NewProduct{}, fmt.Errorf("validate: %w", errors.ToError())
 	}
 
 	bus := productbus.NewProduct{

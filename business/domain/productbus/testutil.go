@@ -21,8 +21,8 @@ func TestGenerateNewProducts(n int, userID uuid.UUID) []NewProduct {
 
 		np := NewProduct{
 			Name:     name.MustParse(fmt.Sprintf("Name%d", idx)),
-			Cost:     money.MustParse(float64(rand.Intn(500))),
-			Quantity: quantity.MustParse(rand.Intn(50)),
+			Cost:     money.MustParse(float64(rand.Intn(500) + 1)),
+			Quantity: quantity.MustParse(rand.Intn(50) + 1),
 			UserID:   userID,
 		}
 

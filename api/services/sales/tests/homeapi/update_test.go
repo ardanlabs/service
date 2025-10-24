@@ -67,28 +67,6 @@ func update200(sd apitest.SeedData) []apitest.Table {
 func update400(sd apitest.SeedData) []apitest.Table {
 	table := []apitest.Table{
 		{
-			Name:       "bad-input",
-			URL:        fmt.Sprintf("/v1/homes/%s", sd.Users[0].Homes[0].ID),
-			Token:      sd.Users[0].Token,
-			Method:     http.MethodPut,
-			StatusCode: http.StatusBadRequest,
-			Input: &homeapp.UpdateHome{
-				Address: &homeapp.UpdateAddress{
-					Address1: dbtest.StringPointer(""),
-					Address2: dbtest.StringPointer(""),
-					ZipCode:  dbtest.StringPointer(""),
-					City:     dbtest.StringPointer(""),
-					State:    dbtest.StringPointer(""),
-					Country:  dbtest.StringPointer(""),
-				},
-			},
-			GotResp: &errs.Error{},
-			ExpResp: errs.Newf(errs.InvalidArgument, "validate: [{\"field\":\"address1\",\"error\":\"address1 must be at least 1 character in length\"},{\"field\":\"zipCode\",\"error\":\"zipCode must be a valid numeric value\"},{\"field\":\"state\",\"error\":\"state must be at least 1 character in length\"},{\"field\":\"country\",\"error\":\"Key: 'UpdateHome.address.country' Error:Field validation for 'country' failed on the 'iso3166_1_alpha2' tag\"}]"),
-			CmpFunc: func(got any, exp any) string {
-				return cmp.Diff(got, exp)
-			},
-		},
-		{
 			Name:       "bad-type",
 			URL:        fmt.Sprintf("/v1/homes/%s", sd.Users[0].Homes[0].ID),
 			Token:      sd.Users[0].Token,
@@ -99,7 +77,7 @@ func update400(sd apitest.SeedData) []apitest.Table {
 				Address: &homeapp.UpdateAddress{},
 			},
 			GotResp: &errs.Error{},
-			ExpResp: errs.Newf(errs.InvalidArgument, "parse: invalid home type \"BAD TYPE\""),
+			ExpResp: errs.Newf(errs.InvalidArgument, "validate: [{\"field\":\"type\",\"error\":\"invalid home type \\\"BAD TYPE\\\"\"}]"),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},

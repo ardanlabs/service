@@ -69,17 +69,17 @@ func toAppHomes(homes []homebus.Home) []Home {
 
 // NewAddress defines the data needed to add a new address.
 type NewAddress struct {
-	Address1 string `json:"address1" validate:"required,min=1,max=70"`
-	Address2 string `json:"address2" validate:"omitempty,max=70"`
-	ZipCode  string `json:"zipCode" validate:"required,numeric"`
-	City     string `json:"city" validate:"required"`
-	State    string `json:"state" validate:"required,min=1,max=48"`
-	Country  string `json:"country" validate:"required,iso3166_1_alpha2"`
+	Address1 string `json:"address1"`
+	Address2 string `json:"address2"`
+	ZipCode  string `json:"zipCode"`
+	City     string `json:"city"`
+	State    string `json:"state"`
+	Country  string `json:"country"`
 }
 
 // NewHome defines the data needed to add a new home.
 type NewHome struct {
-	Type    string     `json:"type" validate:"required"`
+	Type    string     `json:"type"`
 	Address NewAddress `json:"address"`
 }
 
@@ -88,24 +88,21 @@ func (app *NewHome) Decode(data []byte) error {
 	return json.Unmarshal(data, app)
 }
 
-// Validate checks if the data in the model is considered clean.
-func (app NewHome) Validate() error {
-	if err := errs.Check(app); err != nil {
-		return fmt.Errorf("validate: %w", err)
-	}
-
-	return nil
-}
-
 func toBusNewHome(ctx context.Context, app NewHome) (homebus.NewHome, error) {
 	userID, err := mid.GetUserID(ctx)
 	if err != nil {
 		return homebus.NewHome{}, fmt.Errorf("getuserid: %w", err)
 	}
 
+	var errors errs.FieldErrors
+
 	typ, err := hometype.Parse(app.Type)
 	if err != nil {
-		return homebus.NewHome{}, fmt.Errorf("parse: %w", err)
+		errors.Add("type", err)
+	}
+
+	if len(errors) > 0 {
+		return homebus.NewHome{}, fmt.Errorf("validate: %w", errors.ToError())
 	}
 
 	bus := homebus.NewHome{
@@ -128,12 +125,12 @@ func toBusNewHome(ctx context.Context, app NewHome) (homebus.NewHome, error) {
 
 // UpdateAddress defines the data needed to update an address.
 type UpdateAddress struct {
-	Address1 *string `json:"address1" validate:"omitempty,min=1,max=70"`
-	Address2 *string `json:"address2" validate:"omitempty,max=70"`
-	ZipCode  *string `json:"zipCode" validate:"omitempty,numeric"`
+	Address1 *string `json:"address1"`
+	Address2 *string `json:"address2"`
+	ZipCode  *string `json:"zipCode"`
 	City     *string `json:"city"`
-	State    *string `json:"state" validate:"omitempty,min=1,max=48"`
-	Country  *string `json:"country" validate:"omitempty,iso3166_1_alpha2"`
+	State    *string `json:"state"`
+	Country  *string `json:"country"`
 }
 
 // UpdateHome defines the data needed to update a home.
@@ -147,23 +144,20 @@ func (app *UpdateHome) Decode(data []byte) error {
 	return json.Unmarshal(data, app)
 }
 
-// Validate checks the data in the model is considered clean.
-func (app UpdateHome) Validate() error {
-	if err := errs.Check(app); err != nil {
-		return fmt.Errorf("validate: %w", err)
-	}
-
-	return nil
-}
-
 func toBusUpdateHome(app UpdateHome) (homebus.UpdateHome, error) {
+	var errors errs.FieldErrors
+
 	var t hometype.HomeType
 	if app.Type != nil {
 		var err error
 		t, err = hometype.Parse(*app.Type)
 		if err != nil {
-			return homebus.UpdateHome{}, fmt.Errorf("parse: %w", err)
+			errors.Add("type", err)
 		}
+	}
+
+	if len(errors) > 0 {
+		return homebus.UpdateHome{}, fmt.Errorf("validate: %w", errors.ToError())
 	}
 
 	bus := homebus.UpdateHome{

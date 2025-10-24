@@ -7,6 +7,7 @@ import (
 	"net/mail"
 
 	"github.com/ardanlabs/service/business/types/name"
+	"github.com/ardanlabs/service/business/types/password"
 	"github.com/ardanlabs/service/business/types/role"
 	"github.com/google/uuid"
 )
@@ -24,7 +25,7 @@ func TestNewUsers(n int, rle role.Role) []NewUser {
 			Email:      mail.Address{Address: fmt.Sprintf("Email%d@gmail.com", idx)},
 			Roles:      []role.Role{rle},
 			Department: name.MustParseNull(fmt.Sprintf("Department%d", idx)),
-			Password:   fmt.Sprintf("Password%d", idx),
+			Password:   password.MustParse(fmt.Sprintf("Password%d", idx)),
 		}
 
 		newUsrs[i] = nu

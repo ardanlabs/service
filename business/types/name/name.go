@@ -28,7 +28,7 @@ func (n Name) MarshalText() ([]byte, error) {
 
 // =============================================================================
 
-var nameRegEx = regexp.MustCompile("^[a-zA-Z0-9][a-zA-Z0-9' -]{2,19}$")
+var nameRegEx = regexp.MustCompile("^[a-zA-Z][a-zA-Z0-9' -]{2,19}$")
 
 // Parse parses the string value and returns a name if the value complies
 // with the rules for a name.

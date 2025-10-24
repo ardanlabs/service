@@ -35,7 +35,7 @@ func (m Money) MarshalText() ([]byte, error) {
 // Parse parses the float value and returns a money if the value complies
 // with the rules for money.
 func Parse(value float64) (Money, error) {
-	if value < 0 || value > 1_000_000 {
+	if value <= 0 || value > 1_000_000 {
 		return Money{}, fmt.Errorf("invalid money %.2f", value)
 	}
 

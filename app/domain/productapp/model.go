@@ -56,9 +56,9 @@ func toAppProducts(prds []productbus.Product) []Product {
 
 // NewProduct defines the data needed to add a new product.
 type NewProduct struct {
-	Name     string  `json:"name" validate:"required"`
-	Cost     float64 `json:"cost" validate:"required,gte=0"`
-	Quantity int     `json:"quantity" validate:"required,gte=1"`
+	Name     string  `json:"name"`
+	Cost     float64 `json:"cost"`
+	Quantity int     `json:"quantity"`
 }
 
 // Decode implements the decoder interface.
@@ -66,34 +66,31 @@ func (app *NewProduct) Decode(data []byte) error {
 	return json.Unmarshal(data, app)
 }
 
-// Validate checks the data in the model is considered clean.
-func (app NewProduct) Validate() error {
-	if err := errs.Check(app); err != nil {
-		return fmt.Errorf("validate: %w", err)
-	}
-
-	return nil
-}
-
 func toBusNewProduct(ctx context.Context, app NewProduct) (productbus.NewProduct, error) {
+	var errors errs.FieldErrors
+
 	userID, err := mid.GetUserID(ctx)
 	if err != nil {
-		return productbus.NewProduct{}, fmt.Errorf("getuserid: %w", err)
+		errors.Add("userID", err)
 	}
 
 	name, err := name.Parse(app.Name)
 	if err != nil {
-		return productbus.NewProduct{}, fmt.Errorf("parse name: %w", err)
+		errors.Add("name", err)
 	}
 
 	cost, err := money.Parse(app.Cost)
 	if err != nil {
-		return productbus.NewProduct{}, fmt.Errorf("parse cost: %w", err)
+		errors.Add("cost", err)
 	}
 
 	quantity, err := quantity.Parse(app.Quantity)
 	if err != nil {
-		return productbus.NewProduct{}, fmt.Errorf("parse quantity: %w", err)
+		errors.Add("quantity", err)
+	}
+
+	if len(errors) > 0 {
+		return productbus.NewProduct{}, fmt.Errorf("validate: %w", errors.ToError())
 	}
 
 	bus := productbus.NewProduct{
@@ -111,8 +108,8 @@ func toBusNewProduct(ctx context.Context, app NewProduct) (productbus.NewProduct
 // UpdateProduct defines the data needed to update a product.
 type UpdateProduct struct {
 	Name     *string  `json:"name"`
-	Cost     *float64 `json:"cost" validate:"omitempty,gte=0"`
-	Quantity *int     `json:"quantity" validate:"omitempty,gte=1"`
+	Cost     *float64 `json:"cost"`
+	Quantity *int     `json:"quantity"`
 }
 
 // Decode implements the decoder interface.
@@ -120,21 +117,14 @@ func (app *UpdateProduct) Decode(data []byte) error {
 	return json.Unmarshal(data, app)
 }
 
-// Validate checks the data in the model is considered clean.
-func (app UpdateProduct) Validate() error {
-	if err := errs.Check(app); err != nil {
-		return fmt.Errorf("validate: %w", err)
-	}
-
-	return nil
-}
-
 func toBusUpdateProduct(app UpdateProduct) (productbus.UpdateProduct, error) {
+	var errors errs.FieldErrors
+
 	var nme *name.Name
 	if app.Name != nil {
 		nm, err := name.Parse(*app.Name)
 		if err != nil {
-			return productbus.UpdateProduct{}, fmt.Errorf("parse: %w", err)
+			errors.Add("name", err)
 		}
 		nme = &nm
 	}
@@ -143,7 +133,7 @@ func toBusUpdateProduct(app UpdateProduct) (productbus.UpdateProduct, error) {
 	if app.Cost != nil {
 		cst, err := money.Parse(*app.Cost)
 		if err != nil {
-			return productbus.UpdateProduct{}, fmt.Errorf("parse: %w", err)
+			errors.Add("cost", err)
 		}
 		cost = &cst
 	}
@@ -152,9 +142,13 @@ func toBusUpdateProduct(app UpdateProduct) (productbus.UpdateProduct, error) {
 	if app.Cost != nil {
 		qn, err := quantity.Parse(*app.Quantity)
 		if err != nil {
-			return productbus.UpdateProduct{}, fmt.Errorf("parse: %w", err)
+			errors.Add("quantity", err)
 		}
 		qnt = &qn
+	}
+
+	if len(errors) > 0 {
+		return productbus.UpdateProduct{}, fmt.Errorf("validate: %w", errors.ToError())
 	}
 
 	bus := productbus.UpdateProduct{

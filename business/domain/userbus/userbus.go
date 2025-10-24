@@ -99,7 +99,7 @@ func (b *Business) NewWithTx(tx sqldb.CommitRollbacker) (ExtBusiness, error) {
 
 // Create adds a new user to the system.
 func (b *Business) Create(ctx context.Context, actorID uuid.UUID, nu NewUser) (User, error) {
-	hash, err := bcrypt.GenerateFromPassword([]byte(nu.Password), bcrypt.DefaultCost)
+	hash, err := bcrypt.GenerateFromPassword([]byte(nu.Password.String()), bcrypt.DefaultCost)
 	if err != nil {
 		return User{}, fmt.Errorf("generatefrompassword: %w", err)
 	}
@@ -140,7 +140,7 @@ func (b *Business) Update(ctx context.Context, actorID uuid.UUID, usr User, uu U
 	}
 
 	if uu.Password != nil {
-		pw, err := bcrypt.GenerateFromPassword([]byte(*uu.Password), bcrypt.DefaultCost)
+		pw, err := bcrypt.GenerateFromPassword([]byte(uu.Password.String()), bcrypt.DefaultCost)
 		if err != nil {
 			return User{}, fmt.Errorf("generatefrompassword: %w", err)
 		}

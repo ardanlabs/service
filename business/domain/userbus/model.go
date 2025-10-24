@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/types/name"
+	"github.com/ardanlabs/service/business/types/password"
 	"github.com/ardanlabs/service/business/types/role"
 	"github.com/google/uuid"
 )
@@ -28,7 +29,7 @@ type NewUser struct {
 	Email      mail.Address
 	Roles      []role.Role
 	Department name.Null
-	Password   string
+	Password   password.Password
 }
 
 // UpdateUser contains information needed to update a user.
@@ -37,6 +38,6 @@ type UpdateUser struct {
 	Email      *mail.Address
 	Roles      []role.Role
 	Department *name.Null
-	Password   *string
+	Password   *password.Password
 	Enabled    *bool
 }

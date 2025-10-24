@@ -9,15 +9,15 @@ import (
 
 // Audit represents information about an individual audit record.
 type Audit struct {
-	ID        string
-	ObjID     string
-	ObjDomain string
-	ObjName   string
-	ActorID   string
-	Action    string
-	Data      string
-	Message   string
-	Timestamp string
+	ID        string `json:"id"`
+	ObjID     string `json:"obj_id"`
+	ObjDomain string `json:"obj_domain"`
+	ObjName   string `json:"obj_name"`
+	ActorID   string `json:"actor_id"`
+	Action    string `json:"action"`
+	Data      string `json:"data"`
+	Message   string `json:"message"`
+	Timestamp string `json:"timestamp"`
 }
 
 // Encode implements the encoder interface.
