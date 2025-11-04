@@ -10,7 +10,7 @@ jobs:
           name: Install Go 1.25
           command: |
             sudo rm -rf /usr/local/go
-            wget -O go.tgz https://go.dev/dl/go1.25.0.linux-amd64.tar.gz
+            wget -O go.tgz https://go.dev/dl/go1.25.3.linux-amd64.tar.gz
             sudo tar -C /usr/local -xzf go.tgz
             which go
             go version
