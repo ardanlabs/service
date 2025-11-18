@@ -6,7 +6,7 @@
 
 [![InsightsSnapshot](https://dl.circleci.com/insights-snapshot/gh/ardanlabs/service/master/workflow/badge.svg)](https://app.circleci.com/insights/github/ardanlabs/service/workflows/workflow/overview?branch=master)
 
-Copyright 2018, 2019, 2020, 2021, 2022, 2023, 2024 Ardan Labs  
+Copyright 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025 Ardan Labs  
 hello@ardanlabs.com
 
 ## My Information
