@@ -41,7 +41,7 @@ func BeginCommitRollback(log *logger.Logger, bgn sqldb.Beginner) web.MidFunc {
 
 			resp := next(ctx, r)
 
-			if isError(resp) != nil {
+			if checkIsError(resp) != nil {
 				return resp
 			}
 

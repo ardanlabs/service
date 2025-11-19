@@ -28,12 +28,12 @@ func Logger(log *logger.Logger) web.MidFunc {
 			resp := next(ctx, r)
 
 			var statusCode = errs.None
-			if err := isError(resp); err != nil {
+			if err := checkIsError(resp); err != nil {
 				statusCode = errs.Internal
 
-				var v *errs.Error
-				if errors.As(err, &v) {
-					statusCode = v.Code
+				var appErr *errs.Error
+				if errors.As(err, &appErr) {
+					statusCode = appErr.Code
 				}
 			}
 

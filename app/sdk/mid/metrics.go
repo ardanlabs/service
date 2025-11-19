@@ -22,7 +22,7 @@ func Metrics() web.MidFunc {
 				metrics.AddGoroutines(ctx)
 			}
 
-			if isError(resp) != nil {
+			if checkIsError(resp) != nil {
 				metrics.AddErrors(ctx)
 			}
 

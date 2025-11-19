@@ -17,7 +17,8 @@ func Errors(log *logger.Logger) web.MidFunc {
 	m := func(next web.HandlerFunc) web.HandlerFunc {
 		h := func(ctx context.Context, r *http.Request) web.Encoder {
 			resp := next(ctx, r)
-			err := isError(resp)
+
+			err := checkIsError(resp)
 			if err == nil {
 				return resp
 			}
@@ -35,10 +36,6 @@ func Errors(log *logger.Logger) web.MidFunc {
 				"err", err,
 				"source_err_file", path.Base(appErr.FileName),
 				"source_err_func", path.Base(appErr.FuncName))
-
-			if appErr.Code == errs.InternalOnlyLog {
-				appErr = errs.Newf(errs.Internal, "Internal Server Error")
-			}
 
 			// Send the error to the web package so the error can be
 			// used as the response.

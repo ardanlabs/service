@@ -6,7 +6,6 @@ import (
 	"errors"
 
 	"github.com/ardanlabs/service/app/sdk/auth"
-	"github.com/ardanlabs/service/app/sdk/errs"
 	"github.com/ardanlabs/service/business/domain/homebus"
 	"github.com/ardanlabs/service/business/domain/productbus"
 	"github.com/ardanlabs/service/business/domain/userbus"
@@ -15,16 +14,12 @@ import (
 	"github.com/google/uuid"
 )
 
-// isError tests if the Encoder has an error inside of it.
-func isError(e web.Encoder) error {
-	err, isError := e.(error)
-	if isError {
-		var appErr *errs.Error
-		if errors.As(err, &appErr) && appErr.Code == errs.None {
-			return nil
-		}
+func checkIsError(e web.Encoder) error {
+	err, hasError := e.(error)
+	if hasError {
 		return err
 	}
+
 	return nil
 }
 
