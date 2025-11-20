@@ -9,7 +9,7 @@ import (
 	"github.com/ardanlabs/service/app/sdk/errs"
 	"github.com/ardanlabs/service/app/sdk/mid"
 	"github.com/ardanlabs/service/business/domain/homebus"
-	"github.com/ardanlabs/service/business/types/hometype"
+	"github.com/ardanlabs/service/business/types/home"
 )
 
 // Address represents information about an individual address.
@@ -96,7 +96,7 @@ func toBusNewHome(ctx context.Context, app NewHome) (homebus.NewHome, error) {
 
 	var errors errs.FieldErrors
 
-	typ, err := hometype.Parse(app.Type)
+	typ, err := home.Parse(app.Type)
 	if err != nil {
 		errors.Add("type", err)
 	}
@@ -147,10 +147,10 @@ func (app *UpdateHome) Decode(data []byte) error {
 func toBusUpdateHome(app UpdateHome) (homebus.UpdateHome, error) {
 	var errors errs.FieldErrors
 
-	var t hometype.HomeType
+	var t home.Home
 	if app.Type != nil {
 		var err error
-		t, err = hometype.Parse(*app.Type)
+		t, err = home.Parse(*app.Type)
 		if err != nil {
 			errors.Add("type", err)
 		}

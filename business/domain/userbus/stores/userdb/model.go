@@ -13,7 +13,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type user struct {
+type userDB struct {
 	ID           uuid.UUID      `db:"user_id"`
 	Name         string         `db:"name"`
 	Email        string         `db:"email"`
@@ -25,24 +25,21 @@ type user struct {
 	DateUpdated  time.Time      `db:"date_updated"`
 }
 
-func toDBUser(bus userbus.User) user {
-	return user{
+func toDBUser(bus userbus.User) userDB {
+	return userDB{
 		ID:           bus.ID,
 		Name:         bus.Name.String(),
 		Email:        bus.Email.Address,
 		Roles:        role.ParseToString(bus.Roles),
 		PasswordHash: bus.PasswordHash,
-		Department: sql.NullString{
-			String: bus.Department.String(),
-			Valid:  bus.Department.Valid(),
-		},
-		Enabled:     bus.Enabled,
-		DateCreated: bus.DateCreated.UTC(),
-		DateUpdated: bus.DateUpdated.UTC(),
+		Department:   name.ToSQLNullString(bus.Department),
+		Enabled:      bus.Enabled,
+		DateCreated:  bus.DateCreated.UTC(),
+		DateUpdated:  bus.DateUpdated.UTC(),
 	}
 }
 
-func toBusUser(db user) (userbus.User, error) {
+func toBusUser(db userDB) (userbus.User, error) {
 	addr := mail.Address{
 		Address: db.Email,
 	}
@@ -77,7 +74,7 @@ func toBusUser(db user) (userbus.User, error) {
 	return bus, nil
 }
 
-func toBusUsers(dbs []user) ([]userbus.User, error) {
+func toBusUsers(dbs []userDB) ([]userbus.User, error) {
 	bus := make([]userbus.User, len(dbs))
 
 	for i, db := range dbs {

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/ardanlabs/service/business/types/hometype"
+	"github.com/ardanlabs/service/business/types/home"
 	"github.com/google/uuid"
 )
 
@@ -17,9 +17,9 @@ func TestGenerateNewHomes(n int, userID uuid.UUID) []NewHome {
 	for i := range n {
 		idx++
 
-		t := hometype.Single
+		t := home.Single
 		if v := (idx + i) % 2; v == 0 {
-			t = hometype.Condo
+			t = home.Condo
 		}
 
 		nh := NewHome{

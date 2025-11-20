@@ -128,7 +128,7 @@ func (s *Store) Query(ctx context.Context, filter productbus.QueryFilter, orderB
 	buf.WriteString(orderByClause)
 	buf.WriteString(" OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY")
 
-	var dbPrds []product
+	var dbPrds []productDB
 	if err := sqldb.NamedQuerySlice(ctx, s.log, s.db, buf.String(), data, &dbPrds); err != nil {
 		return nil, fmt.Errorf("namedqueryslice: %w", err)
 	}
@@ -177,7 +177,7 @@ func (s *Store) QueryByID(ctx context.Context, productID uuid.UUID) (productbus.
 	WHERE
 		product_id = :product_id`
 
-	var dbPrd product
+	var dbPrd productDB
 	if err := sqldb.NamedQueryStruct(ctx, s.log, s.db, q, data, &dbPrd); err != nil {
 		if errors.Is(err, sqldb.ErrDBNotFound) {
 			return productbus.Product{}, fmt.Errorf("db: %w", productbus.ErrNotFound)
@@ -204,7 +204,7 @@ func (s *Store) QueryByUserID(ctx context.Context, userID uuid.UUID) ([]productb
 	WHERE
 		user_id = :user_id`
 
-	var dbPrds []product
+	var dbPrds []productDB
 	if err := sqldb.NamedQuerySlice(ctx, s.log, s.db, q, data, &dbPrds); err != nil {
 		return nil, fmt.Errorf("db: %w", err)
 	}

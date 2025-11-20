@@ -1,5 +1,5 @@
-// Package hometype represents the home type in the system.
-package hometype
+// Package home represents the home type in the system.
+package home
 
 import "fmt"
 
@@ -12,49 +12,49 @@ var (
 // =============================================================================
 
 // Set of known housing types.
-var homeTypes = make(map[string]HomeType)
+var homes = make(map[string]Home)
 
-// HomeType represents a type in the system.
-type HomeType struct {
+// Home represents a type in the system.
+type Home struct {
 	value string
 }
 
-func newType(homeType string) HomeType {
-	ht := HomeType{homeType}
-	homeTypes[homeType] = ht
-	return ht
+func newType(homeType string) Home {
+	h := Home{homeType}
+	homes[homeType] = h
+	return h
 }
 
 // String returns the name of the type.
-func (ht HomeType) String() string {
-	return ht.value
+func (h Home) String() string {
+	return h.value
 }
 
 // Equal provides support for the go-cmp package and testing.
-func (ht HomeType) Equal(ht2 HomeType) bool {
-	return ht.value == ht2.value
+func (h Home) Equal(h2 Home) bool {
+	return h.value == h2.value
 }
 
 // MarshalText provides support for logging and any marshal needs.
-func (ht HomeType) MarshalText() ([]byte, error) {
-	return []byte(ht.value), nil
+func (h Home) MarshalText() ([]byte, error) {
+	return []byte(h.value), nil
 }
 
 // =============================================================================
 
 // Parse parses the string value and returns a home type if one exists.
-func Parse(value string) (HomeType, error) {
-	typ, exists := homeTypes[value]
+func Parse(value string) (Home, error) {
+	home, exists := homes[value]
 	if !exists {
-		return HomeType{}, fmt.Errorf("invalid home type %q", value)
+		return Home{}, fmt.Errorf("invalid home type %q", value)
 	}
 
-	return typ, nil
+	return home, nil
 }
 
 // MustParse parses the string value and returns a home type if one exists. If
 // an error occurs the function panics.
-func MustParse(value string) HomeType {
+func MustParse(value string) Home {
 	typ, err := Parse(value)
 	if err != nil {
 		panic(err)

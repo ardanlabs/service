@@ -5,11 +5,11 @@ import (
 	"time"
 
 	"github.com/ardanlabs/service/business/domain/homebus"
-	"github.com/ardanlabs/service/business/types/hometype"
+	"github.com/ardanlabs/service/business/types/home"
 	"github.com/google/uuid"
 )
 
-type home struct {
+type homeDB struct {
 	ID          uuid.UUID `db:"home_id"`
 	UserID      uuid.UUID `db:"user_id"`
 	Type        string    `db:"type"`
@@ -23,8 +23,8 @@ type home struct {
 	DateUpdated time.Time `db:"date_updated"`
 }
 
-func toDBHome(bus homebus.Home) home {
-	db := home{
+func toDBHome(bus homebus.Home) homeDB {
+	db := homeDB{
 		ID:          bus.ID,
 		UserID:      bus.UserID,
 		Type:        bus.Type.String(),
@@ -41,8 +41,8 @@ func toDBHome(bus homebus.Home) home {
 	return db
 }
 
-func toBusHome(db home) (homebus.Home, error) {
-	typ, err := hometype.Parse(db.Type)
+func toBusHome(db homeDB) (homebus.Home, error) {
+	typ, err := home.Parse(db.Type)
 	if err != nil {
 		return homebus.Home{}, fmt.Errorf("parse type: %w", err)
 	}
@@ -66,7 +66,7 @@ func toBusHome(db home) (homebus.Home, error) {
 	return bus, nil
 }
 
-func toBusHomes(dbs []home) ([]homebus.Home, error) {
+func toBusHomes(dbs []homeDB) ([]homebus.Home, error) {
 	bus := make([]homebus.Home, len(dbs))
 
 	for i, db := range dbs {

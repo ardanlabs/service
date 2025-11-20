@@ -12,7 +12,7 @@ import (
 	"github.com/ardanlabs/service/business/sdk/dbtest"
 	"github.com/ardanlabs/service/business/sdk/page"
 	"github.com/ardanlabs/service/business/sdk/unittest"
-	"github.com/ardanlabs/service/business/types/hometype"
+	"github.com/ardanlabs/service/business/types/home"
 	"github.com/ardanlabs/service/business/types/role"
 	"github.com/google/go-cmp/cmp"
 )
@@ -189,7 +189,7 @@ func create(busDomain dbtest.BusDomain, sd unittest.SeedData) []unittest.Table {
 			Name: "basic",
 			ExpResp: homebus.Home{
 				UserID: sd.Users[0].ID,
-				Type:   hometype.Single,
+				Type:   home.Single,
 				Address: homebus.Address{
 					Address1: "123 Mocking Bird Lane",
 					ZipCode:  "35810",
@@ -201,7 +201,7 @@ func create(busDomain dbtest.BusDomain, sd unittest.SeedData) []unittest.Table {
 			ExcFunc: func(ctx context.Context) any {
 				nh := homebus.NewHome{
 					UserID: sd.Users[0].ID,
-					Type:   hometype.Single,
+					Type:   home.Single,
 					Address: homebus.Address{
 						Address1: "123 Mocking Bird Lane",
 						ZipCode:  "35810",
@@ -245,7 +245,7 @@ func update(busDomain dbtest.BusDomain, sd unittest.SeedData) []unittest.Table {
 			ExpResp: homebus.Home{
 				ID:     sd.Users[0].Homes[0].ID,
 				UserID: sd.Users[0].ID,
-				Type:   hometype.Single,
+				Type:   home.Single,
 				Address: homebus.Address{
 					Address1: "123 Mocking Bird Lane",
 					Address2: "apt 105",
@@ -259,7 +259,7 @@ func update(busDomain dbtest.BusDomain, sd unittest.SeedData) []unittest.Table {
 			},
 			ExcFunc: func(ctx context.Context) any {
 				uh := homebus.UpdateHome{
-					Type: &hometype.Single,
+					Type: &home.Single,
 					Address: &homebus.UpdateAddress{
 						Address1: dbtest.StringPointer("123 Mocking Bird Lane"),
 						Address2: dbtest.StringPointer("apt 105"),

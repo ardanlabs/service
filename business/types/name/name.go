@@ -2,6 +2,7 @@
 package name
 
 import (
+	"database/sql"
 	"fmt"
 	"regexp"
 )
@@ -59,6 +60,14 @@ type Null struct {
 	valid bool
 }
 
+// ToSQLNullString converts a Null value to a sql NullString.
+func ToSQLNullString(n Null) sql.NullString {
+	return sql.NullString{
+		String: n.value,
+		Valid:  n.valid,
+	}
+}
+
 // String returns the value of the name.
 func (n Null) String() string {
 	if !n.valid {
@@ -66,11 +75,6 @@ func (n Null) String() string {
 	}
 
 	return n.value
-}
-
-// Valid tests if the value is null.
-func (n Null) Valid() bool {
-	return n.valid
 }
 
 // Equal provides support for the go-cmp package and testing.

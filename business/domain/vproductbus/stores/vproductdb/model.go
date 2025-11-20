@@ -11,7 +11,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type product struct {
+type productDB struct {
 	ID          uuid.UUID `db:"product_id"`
 	UserID      uuid.UUID `db:"user_id"`
 	Name        string    `db:"name"`
@@ -22,7 +22,7 @@ type product struct {
 	UserName    string    `db:"user_name"`
 }
 
-func toBusProduct(db product) (vproductbus.Product, error) {
+func toBusProduct(db productDB) (vproductbus.Product, error) {
 	userName, err := name.Parse(db.UserName)
 	if err != nil {
 		return vproductbus.Product{}, fmt.Errorf("parse user name: %w", err)
@@ -57,7 +57,7 @@ func toBusProduct(db product) (vproductbus.Product, error) {
 	return bus, nil
 }
 
-func toBusProducts(dbPrds []product) ([]vproductbus.Product, error) {
+func toBusProducts(dbPrds []productDB) ([]vproductbus.Product, error) {
 	bus := make([]vproductbus.Product, len(dbPrds))
 
 	for i, dbPrd := range dbPrds {

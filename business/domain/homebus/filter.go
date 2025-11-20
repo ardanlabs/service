@@ -3,7 +3,7 @@ package homebus
 import (
 	"time"
 
-	"github.com/ardanlabs/service/business/types/hometype"
+	"github.com/ardanlabs/service/business/types/home"
 	"github.com/google/uuid"
 )
 
@@ -12,7 +12,7 @@ import (
 type QueryFilter struct {
 	ID               *uuid.UUID
 	UserID           *uuid.UUID
-	Type             *hometype.HomeType
+	Type             *home.Home
 	StartCreatedDate *time.Time
 	EndCreatedDate   *time.Time
 }
