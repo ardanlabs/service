@@ -14,7 +14,7 @@ import (
 // Config contains all the mandatory systems required by handlers.
 type Config struct {
 	Log        *logger.Logger
-	ProductBus *productbus.Business
+	ProductBus productbus.ExtBusiness
 	AuthClient *authclient.Client
 }
 

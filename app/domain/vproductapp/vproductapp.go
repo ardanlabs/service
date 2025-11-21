@@ -14,10 +14,10 @@ import (
 )
 
 type app struct {
-	vproductBus *vproductbus.Business
+	vproductBus vproductbus.ExtBusiness
 }
 
-func newApp(vproductBus *vproductbus.Business) *app {
+func newApp(vproductBus vproductbus.ExtBusiness) *app {
 	return &app{
 		vproductBus: vproductBus,
 	}

@@ -33,7 +33,7 @@ func TestGenerateNewProducts(n int, userID uuid.UUID) []NewProduct {
 }
 
 // TestGenerateSeedProducts is a helper method for testing.
-func TestGenerateSeedProducts(ctx context.Context, n int, api *Business, userID uuid.UUID) ([]Product, error) {
+func TestGenerateSeedProducts(ctx context.Context, n int, api ExtBusiness, userID uuid.UUID) ([]Product, error) {
 	newPrds := TestGenerateNewProducts(n, userID)
 
 	prds := make([]Product, len(newPrds))

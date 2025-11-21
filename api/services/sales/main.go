@@ -21,10 +21,13 @@ import (
 	"github.com/ardanlabs/service/app/sdk/debug"
 	"github.com/ardanlabs/service/app/sdk/mux"
 	"github.com/ardanlabs/service/business/domain/auditbus"
+	"github.com/ardanlabs/service/business/domain/auditbus/extensions/auditotel"
 	"github.com/ardanlabs/service/business/domain/auditbus/stores/auditdb"
 	"github.com/ardanlabs/service/business/domain/homebus"
+	"github.com/ardanlabs/service/business/domain/homebus/extensions/homeotel"
 	"github.com/ardanlabs/service/business/domain/homebus/stores/homedb"
 	"github.com/ardanlabs/service/business/domain/productbus"
+	"github.com/ardanlabs/service/business/domain/productbus/extensions/productotel"
 	"github.com/ardanlabs/service/business/domain/productbus/stores/productdb"
 	"github.com/ardanlabs/service/business/domain/userbus"
 	"github.com/ardanlabs/service/business/domain/userbus/extensions/useraudit"
@@ -32,6 +35,7 @@ import (
 	"github.com/ardanlabs/service/business/domain/userbus/stores/usercache"
 	"github.com/ardanlabs/service/business/domain/userbus/stores/userdb"
 	"github.com/ardanlabs/service/business/domain/vproductbus"
+	"github.com/ardanlabs/service/business/domain/vproductbus/extensions/vproductotel"
 	"github.com/ardanlabs/service/business/domain/vproductbus/stores/vproductdb"
 	"github.com/ardanlabs/service/business/sdk/delegate"
 	"github.com/ardanlabs/service/business/sdk/sqldb"
@@ -171,16 +175,28 @@ func run(ctx context.Context, log *logger.Logger) error {
 	// -------------------------------------------------------------------------
 	// Create Business Packages
 
-	userOtelExt := userotel.NewExtension()
-	userAuditExt := useraudit.NewExtension(auditbus.NewBusiness(log, auditdb.NewStore(log, db)))
-	userStorage := usercache.NewStore(log, userdb.NewStore(log, db), time.Minute)
-
 	delegate := delegate.New(log)
-	auditBus := auditbus.NewBusiness(log, auditdb.NewStore(log, db))
+
+	auditOtelExt := auditotel.NewExtension()
+	auditStorage := auditdb.NewStore(log, db)
+	auditBus := auditbus.NewBusiness(log, auditStorage, auditOtelExt)
+
+	userOtelExt := userotel.NewExtension()
+	userAuditExt := useraudit.NewExtension(auditBus)
+	userStorage := usercache.NewStore(log, userdb.NewStore(log, db), time.Minute)
 	userBus := userbus.NewBusiness(log, delegate, userStorage, userOtelExt, userAuditExt)
-	productBus := productbus.NewBusiness(log, userBus, delegate, productdb.NewStore(log, db))
-	homeBus := homebus.NewBusiness(log, userBus, delegate, homedb.NewStore(log, db))
-	vproductBus := vproductbus.NewBusiness(vproductdb.NewStore(log, db))
+
+	productOtelExt := productotel.NewExtension()
+	productStorage := productdb.NewStore(log, db)
+	productBus := productbus.NewBusiness(log, userBus, delegate, productStorage, productOtelExt)
+
+	homeOtelExt := homeotel.NewExtension()
+	homeStorage := homedb.NewStore(log, db)
+	homeBus := homebus.NewBusiness(log, userBus, delegate, homeStorage, homeOtelExt)
+
+	vproductOtelExt := vproductotel.NewExtension()
+	vproductStorage := vproductdb.NewStore(log, db)
+	vproductBus := vproductbus.NewBusiness(vproductStorage, vproductOtelExt)
 
 	// -------------------------------------------------------------------------
 	// Initialize authentication support

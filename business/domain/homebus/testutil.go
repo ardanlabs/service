@@ -42,7 +42,7 @@ func TestGenerateNewHomes(n int, userID uuid.UUID) []NewHome {
 }
 
 // TestGenerateSeedHomes is a helper method for testing.
-func TestGenerateSeedHomes(ctx context.Context, n int, api *Business, userID uuid.UUID) ([]Home, error) {
+func TestGenerateSeedHomes(ctx context.Context, n int, api ExtBusiness, userID uuid.UUID) ([]Home, error) {
 	newHmes := TestGenerateNewHomes(n, userID)
 
 	hmes := make([]Home, len(newHmes))

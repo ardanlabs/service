@@ -64,11 +64,11 @@ type AuthConfig struct {
 }
 
 type BusConfig struct {
-	AuditBus    *auditbus.Business
+	AuditBus    auditbus.ExtBusiness
 	UserBus     userbus.ExtBusiness
-	ProductBus  *productbus.Business
-	HomeBus     *homebus.Business
-	VProductBus *vproductbus.Business
+	ProductBus  productbus.ExtBusiness
+	HomeBus     homebus.ExtBusiness
+	VProductBus vproductbus.ExtBusiness
 }
 
 // Config contains all the mandatory systems required by handlers.

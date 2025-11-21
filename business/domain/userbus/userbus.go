@@ -57,17 +57,19 @@ type Extension func(ExtBusiness) ExtBusiness
 
 // Business manages the set of APIs for user access.
 type Business struct {
-	log      *logger.Logger
-	storer   Storer
-	delegate *delegate.Delegate
+	log        *logger.Logger
+	storer     Storer
+	delegate   *delegate.Delegate
+	extensions []Extension
 }
 
 // NewBusiness constructs a user business API for use.
 func NewBusiness(log *logger.Logger, delegate *delegate.Delegate, storer Storer, extensions ...Extension) ExtBusiness {
 	b := ExtBusiness(&Business{
-		log:      log,
-		delegate: delegate,
-		storer:   storer,
+		log:        log,
+		delegate:   delegate,
+		storer:     storer,
+		extensions: extensions,
 	})
 
 	for i := len(extensions) - 1; i >= 0; i-- {
@@ -88,13 +90,9 @@ func (b *Business) NewWithTx(tx sqldb.CommitRollbacker) (ExtBusiness, error) {
 		return nil, err
 	}
 
-	bus := Business{
-		log:      b.log,
-		delegate: b.delegate,
-		storer:   storer,
-	}
+	nb := NewBusiness(b.log, b.delegate, storer, b.extensions...)
 
-	return &bus, nil
+	return nb, nil
 }
 
 // Create adds a new user to the system.

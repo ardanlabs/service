@@ -35,7 +35,7 @@ func TestNewAudits(n int, actorID uuid.UUID, objDomain domain.Domain, action str
 }
 
 // TestSeedAudits is a helper method for testing.
-func TestSeedAudits(ctx context.Context, n int, actorID uuid.UUID, objDomain domain.Domain, action string, api *Business) ([]Audit, error) {
+func TestSeedAudits(ctx context.Context, n int, actorID uuid.UUID, objDomain domain.Domain, action string, api ExtBusiness) ([]Audit, error) {
 	newAudits := TestNewAudits(n, actorID, objDomain, action)
 
 	audits := make([]Audit, len(newAudits))

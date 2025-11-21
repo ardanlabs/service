@@ -15,10 +15,10 @@ import (
 )
 
 type app struct {
-	homeBus *homebus.Business
+	homeBus homebus.ExtBusiness
 }
 
-func newApp(homeBus *homebus.Business) *app {
+func newApp(homeBus homebus.ExtBusiness) *app {
 	return &app{
 		homeBus: homeBus,
 	}

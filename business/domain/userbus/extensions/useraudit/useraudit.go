@@ -18,11 +18,11 @@ import (
 // Extension provides a wrapper for audit functionality around the userbus.
 type Extension struct {
 	bus      userbus.ExtBusiness
-	auditBus *auditbus.Business
+	auditBus auditbus.ExtBusiness
 }
 
 // NewExtension constructs a new extension that wraps the userbus with audit.
-func NewExtension(auditBus *auditbus.Business) userbus.Extension {
+func NewExtension(auditBus auditbus.ExtBusiness) userbus.Extension {
 	return func(bus userbus.ExtBusiness) userbus.ExtBusiness {
 		return &Extension{
 			bus:      bus,

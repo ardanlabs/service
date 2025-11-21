@@ -10,7 +10,6 @@ import (
 	"github.com/ardanlabs/service/business/sdk/order"
 	"github.com/ardanlabs/service/business/sdk/page"
 	"github.com/ardanlabs/service/foundation/logger"
-	"github.com/ardanlabs/service/foundation/otel"
 	"github.com/google/uuid"
 )
 
@@ -22,6 +21,18 @@ type Storer interface {
 	Count(ctx context.Context, filter QueryFilter) (int, error)
 }
 
+// ExtBusiness interface provides support for extensions that wrap extra functionality
+// around the core busines logic.
+type ExtBusiness interface {
+	Create(ctx context.Context, na NewAudit) (Audit, error)
+	Query(ctx context.Context, filter QueryFilter, orderBy order.By, page page.Page) ([]Audit, error)
+	Count(ctx context.Context, filter QueryFilter) (int, error)
+}
+
+// Extension is a function that wraps a new layer of business logic
+// around the existing business logic.
+type Extension func(ExtBusiness) ExtBusiness
+
 // Business manages the set of APIs for audit access.
 type Business struct {
 	log    *logger.Logger
@@ -29,18 +40,24 @@ type Business struct {
 }
 
 // NewBusiness constructs a audit business API for use.
-func NewBusiness(log *logger.Logger, storer Storer) *Business {
-	return &Business{
+func NewBusiness(log *logger.Logger, storer Storer, extensions ...Extension) ExtBusiness {
+	b := ExtBusiness(&Business{
 		log:    log,
 		storer: storer,
+	})
+
+	for i := len(extensions) - 1; i >= 0; i-- {
+		ext := extensions[i]
+		if ext != nil {
+			b = ext(b)
+		}
 	}
+
+	return b
 }
 
 // Create adds a new audit record to the system.
 func (b *Business) Create(ctx context.Context, na NewAudit) (Audit, error) {
-	ctx, span := otel.AddSpan(ctx, "business.auditbus.create")
-	defer span.End()
-
 	jsonData, err := json.Marshal(na.Data)
 	if err != nil {
 		return Audit{}, fmt.Errorf("marshal object: %w", err)
@@ -67,9 +84,6 @@ func (b *Business) Create(ctx context.Context, na NewAudit) (Audit, error) {
 
 // Query retrieves a list of existing audit records.
 func (b *Business) Query(ctx context.Context, filter QueryFilter, orderBy order.By, page page.Page) ([]Audit, error) {
-	ctx, span := otel.AddSpan(ctx, "business.auditbus.query")
-	defer span.End()
-
 	audits, err := b.storer.Query(ctx, filter, orderBy, page)
 	if err != nil {
 		return nil, fmt.Errorf("query audits: %w", err)
@@ -80,8 +94,5 @@ func (b *Business) Query(ctx context.Context, filter QueryFilter, orderBy order.
 
 // Count returns the total number of users.
 func (b *Business) Count(ctx context.Context, filter QueryFilter) (int, error) {
-	ctx, span := otel.AddSpan(ctx, "business.auditbus.count")
-	defer span.End()
-
 	return b.storer.Count(ctx, filter)
 }

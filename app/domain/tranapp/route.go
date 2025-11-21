@@ -19,7 +19,7 @@ type Config struct {
 	Log        *logger.Logger
 	DB         *sqlx.DB
 	UserBus    userbus.ExtBusiness
-	ProductBus *productbus.Business
+	ProductBus productbus.ExtBusiness
 	AuthClient *authclient.Client
 }
 

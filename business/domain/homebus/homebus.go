@@ -13,7 +13,6 @@ import (
 	"github.com/ardanlabs/service/business/sdk/page"
 	"github.com/ardanlabs/service/business/sdk/sqldb"
 	"github.com/ardanlabs/service/foundation/logger"
-	"github.com/ardanlabs/service/foundation/otel"
 	"github.com/google/uuid"
 )
 
@@ -36,31 +35,59 @@ type Storer interface {
 	QueryByUserID(ctx context.Context, userID uuid.UUID) ([]Home, error)
 }
 
+// ExtBusiness interface provides support for extensions that wrap extra functionality
+// around the core business logic.
+type ExtBusiness interface {
+	NewWithTx(tx sqldb.CommitRollbacker) (ExtBusiness, error)
+	Create(ctx context.Context, nh NewHome) (Home, error)
+	Update(ctx context.Context, hme Home, uh UpdateHome) (Home, error)
+	Delete(ctx context.Context, hme Home) error
+	Query(ctx context.Context, filter QueryFilter, orderBy order.By, page page.Page) ([]Home, error)
+	Count(ctx context.Context, filter QueryFilter) (int, error)
+	QueryByID(ctx context.Context, homeID uuid.UUID) (Home, error)
+	QueryByUserID(ctx context.Context, userID uuid.UUID) ([]Home, error)
+}
+
+// Extension is a function that wraps a new layer of business logic
+// around the existing business logic.
+type Extension func(ExtBusiness) ExtBusiness
+
 // Business manages the set of APIs for home api access.
 type Business struct {
-	log      *logger.Logger
-	userBus  userbus.ExtBusiness
-	delegate *delegate.Delegate
-	storer   Storer
+	log        *logger.Logger
+	userBus    userbus.ExtBusiness
+	delegate   *delegate.Delegate
+	storer     Storer
+	extensions []Extension
 }
 
 // NewBusiness constructs a home business API for use.
-func NewBusiness(log *logger.Logger, userBus userbus.ExtBusiness, delegate *delegate.Delegate, storer Storer) *Business {
+func NewBusiness(log *logger.Logger, userBus userbus.ExtBusiness, delegate *delegate.Delegate, storer Storer, extensions ...Extension) ExtBusiness {
 	b := Business{
-		log:      log,
-		userBus:  userBus,
-		delegate: delegate,
-		storer:   storer,
+		log:        log,
+		userBus:    userBus,
+		delegate:   delegate,
+		storer:     storer,
+		extensions: extensions,
 	}
 
 	b.registerDelegateFunctions()
 
-	return &b
+	extBus := ExtBusiness(&b)
+
+	for i := len(extensions) - 1; i >= 0; i-- {
+		ext := extensions[i]
+		if ext != nil {
+			extBus = ext(extBus)
+		}
+	}
+
+	return extBus
 }
 
 // NewWithTx constructs a new domain value that will use the
 // specified transaction in any store related calls.
-func (b *Business) NewWithTx(tx sqldb.CommitRollbacker) (*Business, error) {
+func (b *Business) NewWithTx(tx sqldb.CommitRollbacker) (ExtBusiness, error) {
 	storer, err := b.storer.NewWithTx(tx)
 	if err != nil {
 		return nil, err
@@ -71,21 +98,13 @@ func (b *Business) NewWithTx(tx sqldb.CommitRollbacker) (*Business, error) {
 		return nil, err
 	}
 
-	bus := Business{
-		log:      b.log,
-		userBus:  userBus,
-		delegate: b.delegate,
-		storer:   storer,
-	}
+	nb := NewBusiness(b.log, userBus, b.delegate, storer, b.extensions...)
 
-	return &bus, nil
+	return nb, nil
 }
 
 // Create adds a new home to the system.
 func (b *Business) Create(ctx context.Context, nh NewHome) (Home, error) {
-	ctx, span := otel.AddSpan(ctx, "business.homebus.create")
-	defer span.End()
-
 	usr, err := b.userBus.QueryByID(ctx, nh.UserID)
 	if err != nil {
 		return Home{}, fmt.Errorf("user.querybyid: %s: %w", nh.UserID, err)
@@ -122,9 +141,6 @@ func (b *Business) Create(ctx context.Context, nh NewHome) (Home, error) {
 
 // Update modifies information about a home.
 func (b *Business) Update(ctx context.Context, hme Home, uh UpdateHome) (Home, error) {
-	ctx, span := otel.AddSpan(ctx, "business.homebus.update")
-	defer span.End()
-
 	if uh.Type != nil {
 		hme.Type = *uh.Type
 	}
@@ -166,9 +182,6 @@ func (b *Business) Update(ctx context.Context, hme Home, uh UpdateHome) (Home, e
 
 // Delete removes the specified home.
 func (b *Business) Delete(ctx context.Context, hme Home) error {
-	ctx, span := otel.AddSpan(ctx, "business.homebus.delete")
-	defer span.End()
-
 	if err := b.storer.Delete(ctx, hme); err != nil {
 		return fmt.Errorf("delete: %w", err)
 	}
@@ -178,9 +191,6 @@ func (b *Business) Delete(ctx context.Context, hme Home) error {
 
 // Query retrieves a list of existing homes.
 func (b *Business) Query(ctx context.Context, filter QueryFilter, orderBy order.By, page page.Page) ([]Home, error) {
-	ctx, span := otel.AddSpan(ctx, "business.homebus.query")
-	defer span.End()
-
 	hmes, err := b.storer.Query(ctx, filter, orderBy, page)
 	if err != nil {
 		return nil, fmt.Errorf("query: %w", err)
@@ -191,17 +201,11 @@ func (b *Business) Query(ctx context.Context, filter QueryFilter, orderBy order.
 
 // Count returns the total number of homes.
 func (b *Business) Count(ctx context.Context, filter QueryFilter) (int, error) {
-	ctx, span := otel.AddSpan(ctx, "business.homebus.count")
-	defer span.End()
-
 	return b.storer.Count(ctx, filter)
 }
 
 // QueryByID finds the home by the specified ID.
 func (b *Business) QueryByID(ctx context.Context, homeID uuid.UUID) (Home, error) {
-	ctx, span := otel.AddSpan(ctx, "business.homebus.querybyid")
-	defer span.End()
-
 	hme, err := b.storer.QueryByID(ctx, homeID)
 	if err != nil {
 		return Home{}, fmt.Errorf("query: homeID[%s]: %w", homeID, err)
@@ -212,9 +216,6 @@ func (b *Business) QueryByID(ctx context.Context, homeID uuid.UUID) (Home, error
 
 // QueryByUserID finds the homes by a specified User ID.
 func (b *Business) QueryByUserID(ctx context.Context, userID uuid.UUID) ([]Home, error) {
-	ctx, span := otel.AddSpan(ctx, "business.homebus.querybyuserid")
-	defer span.End()
-
 	hmes, err := b.storer.QueryByUserID(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("query: %w", err)

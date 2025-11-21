@@ -107,7 +107,7 @@ func AuthorizeUser(client *authclient.Client, userBus userbus.ExtBusiness, rule 
 // product from the DB if a product id is specified in the call. Depending on
 // the rule specified, the userid from the claims may be compared with the
 // specified user id from the product.
-func AuthorizeProduct(client *authclient.Client, productBus *productbus.Business) web.MidFunc {
+func AuthorizeProduct(client *authclient.Client, productBus productbus.ExtBusiness) web.MidFunc {
 	m := func(next web.HandlerFunc) web.HandlerFunc {
 		h := func(ctx context.Context, r *http.Request) web.Encoder {
 			id := web.Param(r, "product_id")
@@ -161,7 +161,7 @@ func AuthorizeProduct(client *authclient.Client, productBus *productbus.Business
 // home from the DB if a home id is specified in the call. Depending on
 // the rule specified, the userid from the claims may be compared with the
 // specified user id from the home.
-func AuthorizeHome(client *authclient.Client, homeBus *homebus.Business) web.MidFunc {
+func AuthorizeHome(client *authclient.Client, homeBus homebus.ExtBusiness) web.MidFunc {
 	m := func(next web.HandlerFunc) web.HandlerFunc {
 		h := func(ctx context.Context, r *http.Request) web.Encoder {
 			id := web.Param(r, "home_id")

@@ -16,7 +16,7 @@ import (
 type Config struct {
 	Log         *logger.Logger
 	UserBus     userbus.ExtBusiness
-	VProductBus *vproductbus.Business
+	VProductBus vproductbus.ExtBusiness
 	AuthClient  *authclient.Client
 }
 
