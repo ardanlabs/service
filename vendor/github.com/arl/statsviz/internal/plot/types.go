@@ -21,6 +21,7 @@ type (
 		Events     string        `json:"events"`
 		Layout     ScatterLayout `json:"layout"`
 		Subplots   []Subplot     `json:"subplots"`
+		Metrics    []string      `json:"metrics"`
 	}
 	ScatterLayout struct {
 		Yaxis   ScatterYAxis `json:"yaxis"`
@@ -53,6 +54,7 @@ type (
 		Buckets    []float64       `json:"buckets"`
 		CustomData []float64       `json:"custom_data"`
 		Hover      HeapmapHover    `json:"hover"`
+		Metrics    []string        `json:"metrics"`
 	}
 
 	HeatmapLayout struct {

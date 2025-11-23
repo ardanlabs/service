@@ -1,13 +1,14 @@
 // Package statsviz allows visualizing Go runtime metrics data in real time in
 // your browser.
 //
-// Register a Statsviz HTTP handlers with your server's [http.ServeMux]
+// Register Statsviz HTTP handlers with your server's [http.ServeMux]
 // (preferred method):
 //
 //	mux := http.NewServeMux()
 //	statsviz.Register(mux)
 //
-// Alternatively, you can register with [http.DefaultServeMux]:
+// Alternatively, you can register with [http.DefaultServeMux]
+// though you shouldn't do that in production:
 //
 //	ss := statsviz.NewServer()
 //	ss.Register(http.DefaultServeMux)
@@ -27,7 +28,7 @@
 //
 // # Advanced usage:
 //
-// If you want more control over Statsviz HTTP handlers, examples are:
+// If you want more control over Statsviz HTTP handlers, for examples if:
 //   - you're using some HTTP framework
 //   - you want to place Statsviz handler behind some middleware
 //
@@ -40,6 +41,8 @@
 package statsviz
 
 import (
+	"bytes"
+	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -67,6 +70,8 @@ func RegisterDefault(opts ...Option) error {
 }
 
 // Register registers the Statsviz HTTP handlers on the provided mux.
+//
+// Register must be called once per application.
 func Register(mux *http.ServeMux, opts ...Option) error {
 	srv, err := NewServer(opts...)
 	if err != nil {
@@ -84,7 +89,13 @@ func Register(mux *http.ServeMux, opts ...Option) error {
 //     browser to receive metrics updates from the server.
 //
 // The zero value is a valid Server, with default options.
+//
+// NOTE: Having more than one Server in the same program is not supported (and
+// is not useful anyway).
 type Server struct {
+	cancel  context.CancelFunc // terminate goroutines
+	clients *clients           // connected websocket clients
+
 	interval  time.Duration // interval between consecutive metrics emission
 	root      string        // HTTP path root
 	plots     *plot.List    // plots shown on the user interface
@@ -123,16 +134,50 @@ func (s *Server) init(opts ...Option) error {
 	}
 	s.plots = pl
 
+	ctx, cancel := context.WithCancel(context.Background())
+	s.cancel = cancel
+	s.clients = newClients(ctx, s.plots.Config())
+
+	// Collect metrics.
+	go func() {
+		tick := time.NewTicker(s.interval)
+		defer tick.Stop()
+		defer cancel()
+
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-tick.C:
+				buf := bytes.Buffer{}
+				if _, err := s.plots.WriteTo(&buf); err != nil {
+					dbglog("failed to collect metrics: %v", err)
+					return
+				}
+				s.clients.broadcast(buf.Bytes())
+			}
+		}
+	}()
+
 	return nil
 }
 
 // Register registers the Statsviz HTTP handlers on the provided mux.
+//
+// Register must be called once per application.
 func (s *Server) Register(mux *http.ServeMux) {
 	if s.plots == nil {
 		s.init()
 	}
+
 	mux.Handle(s.root+"/", s.Index())
 	mux.HandleFunc(s.root+"/ws", s.Ws())
+}
+
+// Close releases all resources used by the Server.
+func (s *Server) Close() error {
+	s.cancel()
+	return nil
 }
 
 // Option is a configuration option for the Server.
@@ -154,7 +199,7 @@ func SendFrequency(intv time.Duration) Option {
 // The default is "/debug/statsviz".
 func Root(path string) Option {
 	return func(s *Server) error {
-		s.root = path
+		s.root = strings.TrimSuffix(path, "/")
 		return nil
 	}
 }
@@ -172,7 +217,7 @@ func TimeseriesPlot(tsp TimeSeriesPlot) Option {
 // interface HTML page. By default, the handler is served at the path specified
 // by the root. Use [WithRoot] to change the path.
 func (s *Server) Index() http.HandlerFunc {
-	prefix := strings.TrimSuffix(s.root, "/") + "/"
+	prefix := s.root + "/"
 	dist := http.FileServerFS(static.Assets())
 	return http.StripPrefix(prefix, dist).ServeHTTP
 }
@@ -189,6 +234,12 @@ func parseBoolEnv(name string) bool {
 }
 
 var debug = false
+
+func dbglog(format string, args ...any) {
+	if debug {
+		fmt.Fprintf(os.Stderr, "statsviz: "+format+"\n", args...)
+	}
+}
 
 var wsUpgrader = sync.OnceValue(func() websocket.Upgrader {
 	var checkOrigin func(r *http.Request) bool
@@ -214,63 +265,10 @@ func (s *Server) Ws() http.HandlerFunc {
 		upgrader := wsUpgrader()
 		ws, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
-			if debug {
-				fmt.Fprintf(os.Stderr, "statsviz: failed to upgrade connection: %v\n", err)
-			}
+			dbglog("failed to upgrade connection: %v", err)
 			return
 		}
 
-		defer ws.Close()
-
-		// Ignore websocket errors here. They mainly happen when the other end
-		// of the connection closes. We can't handle them in any meaningful way
-		// anyways, and since we're a library we don't want to spam the program
-		// output streams. If really necessary, we could export a io.Writer the
-		// user could connect to whatever logging facility they use, that seems
-		// overkill for now.
-
-		if err := s.sendConfig(ws); err != nil {
-			if debug {
-				fmt.Fprintf(os.Stderr, "statsviz: failed to send config: %v\n", err)
-			}
-		}
-		if err := s.sendStats(ws, s.interval); err != nil {
-			if debug {
-				fmt.Fprintf(os.Stderr, "statsviz: failed to send stats: %v\n", err)
-			}
-		}
+		s.clients.add(ws)
 	}
-}
-
-type wsmsg struct {
-	Event string `json:"event"`
-	Data  any    `json:"data"`
-}
-
-func (s *Server) sendConfig(conn *websocket.Conn) error {
-	return conn.WriteJSON(wsmsg{
-		Event: "config",
-		Data:  s.plots.Config(),
-	})
-}
-
-// sendStats sends runtime statistics over the WebSocket connection.
-func (s *Server) sendStats(conn *websocket.Conn, frequency time.Duration) error {
-	tick := time.NewTicker(frequency)
-	defer tick.Stop()
-
-	for range tick.C {
-		w, err := conn.NextWriter(websocket.TextMessage)
-		if err != nil {
-			return err
-		}
-		if err := s.plots.WriteValues(w); err != nil {
-			return err
-		}
-		if err := w.Close(); err != nil {
-			return err
-		}
-	}
-
-	panic("unreachable")
 }

@@ -85,3 +85,11 @@ func downsampleCounts(h *metrics.Float64Histogram, factor int, slice []uint64) [
 	// Whatever sum remains, it goes to the last bucket.
 	return append(slice, sum)
 }
+
+func floatseq(n int) []float64 {
+	seq := make([]float64, n)
+	for i := range n {
+		seq[i] = float64(i)
+	}
+	return seq
+}

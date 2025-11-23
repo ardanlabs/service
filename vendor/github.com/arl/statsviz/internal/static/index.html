@@ -36,7 +36,12 @@
                 data-tag="cpu"
                 autocomplete="off"
               />
-              <label class="btn btn-sm btn-outline-secondary" for="tag-cpu"
+              <label
+                class="btn btn-sm btn-outline-secondary"
+                for="tag-cpu"
+                title="Alt+Click to show only this category"
+                data-bs-toggle="tooltip"
+                data-bs-delay='{"show":100,"hide":100}'
                 >CPU</label
               >
 
@@ -47,7 +52,12 @@
                 data-tag="gc"
                 autocomplete="off"
               />
-              <label class="btn btn-sm btn-outline-secondary" for="tag-gc"
+              <label
+                class="btn btn-sm btn-outline-secondary"
+                for="tag-gc"
+                title="Alt+Click to show only this category"
+                data-bs-toggle="tooltip"
+                data-bs-delay='{"show":100,"hide":100}'
                 >GC</label
               >
 
@@ -62,6 +72,9 @@
               <label
                 class="btn btn-sm btn-outline-secondary"
                 for="tag-scheduler"
+                title="Alt+Click to show only this category"
+                data-bs-toggle="tooltip"
+                data-bs-delay='{"show":100,"hide":100}'
                 >Scheduler</label
               >
 
@@ -73,11 +86,30 @@
                 autocomplete="off"
                 checked
               />
-              <label class="btn btn-sm btn-outline-secondary" for="tag-misc"
+              <label
+                class="btn btn-sm btn-outline-secondary"
+                for="tag-misc"
+                title="Alt+Click to show only this category"
+                data-bs-toggle="tooltip"
+                data-bs-delay='{"show":100,"hide":100}'
                 >Misc</label
               >
             </div>
           </div>
+        </div>
+
+        <!-- Search by metric name -->
+        <div
+          class="d-flex ms-lg-2 me-lg-2 w-100 w-lg-auto justify-content-center"
+        >
+          <input
+            type="text"
+            id="plot-search"
+            class="form-control form-control-sm"
+            placeholder="Type a metric or plot name..."
+            aria-label="Search by metric or plot name"
+            style="width: 400px; max-width: 100%"
+          />
         </div>
 
         <!-- Time range -->
