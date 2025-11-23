@@ -10,22 +10,22 @@
   },
   "dependencies": {
     "@mdi/font": "7.0.96",
-    "core-js": "^3.45.0",
-    "esbuild": "^0.25.9",
+    "core-js": "^3.47.0",
+    "esbuild": "^0.25.12",
     "pinia": "^2.3.1",
     "roboto-fontface": "^0.10.0",
-    "vue": "^3.5.18",
-    "vue-router": "^4.5.1",
-    "vuetify": "^3.9.5",
+    "vue": "^3.5.24",
+    "vue-router": "^4.6.3",
+    "vuetify": "^3.10.11",
     "webfontloader": "^1.6.28"
   },
   "devDependencies": {
     "@fortawesome/fontawesome-free": "^6.7.2",
-    "@vitejs/plugin-vue": "^6.0.1",
+    "@vitejs/plugin-vue": "^6.0.2",
     "esbuild": ">=0.25.0",
     "eslint": "^8.57.1",
     "eslint-plugin-vue": "^9.33.0",
-    "sass": "^1.90.0",
+    "sass": "^1.94.2",
     "vite": "^6.4.1",
     "vite-plugin-vuetify": "^2.1.2"
   }
