@@ -1,13 +1,13 @@
 services:
   database:
-    image: postgres:18.0
+    image: postgres:18.1-alpine3.22
     container_name: database
     ports:
       - "5432:5432"
     environment:
       - POSTGRES_PASSWORD=postgres
     volumes:
-      - ./database-data:/var/lib/postgresql/data
+      - ./database-data:/var/lib/postgresql/18/docker
       - ./pg_hba.conf:/etc/pg_hba.conf
     command: ["-c", "hba_file=/etc/pg_hba.conf"]
     healthcheck:
@@ -48,6 +48,7 @@ services:
     restart: unless-stopped
     ports:
       - "6000:6000"
+      - "6001:6001"
       - "6010:6010"
     healthcheck:
       test:
@@ -67,9 +68,6 @@ services:
       - KUBERNETES_NAME=sales-system
       - KUBERNETES_POD_IP=10.5.0.5
       - KUBERNETES_NODE_NAME=auth
-    expose:
-      - "6000:6000"
-      - "6010:6010"
     networks:
       sales-system-network:
         ipv4_address: 10.5.0.5

@@ -1,5 +1,5 @@
-// Package authclient provides support to access the auth service.
-package authclient
+// Package http provides support to access the auth service.
+package http
 
 import (
 	"bytes"
@@ -13,6 +13,7 @@ import (
 	"path"
 	"time"
 
+	"github.com/ardanlabs/service/app/sdk/authclient"
 	"github.com/ardanlabs/service/app/sdk/errs"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/otel"
@@ -46,7 +47,7 @@ type Client struct {
 }
 
 // New constructs an Auth that can be used to talk with the auth service.
-func New(log *logger.Logger, url string, options ...func(cln *Client)) *Client {
+func New(log *logger.Logger, url string, options ...func(cln *Client)) (*Client, error) {
 	cln := Client{
 		log:  log,
 		url:  url,
@@ -57,7 +58,7 @@ func New(log *logger.Logger, url string, options ...func(cln *Client)) *Client {
 		option(&cln)
 	}
 
-	return &cln
+	return &cln, nil
 }
 
 // WithClient adds a custom client for processing requests. It's recommend
@@ -69,23 +70,23 @@ func WithClient(http *http.Client) func(cln *Client) {
 }
 
 // Authenticate calls the auth service to authenticate the user.
-func (cln *Client) Authenticate(ctx context.Context, authorization string) (AuthenticateResp, error) {
+func (cln *Client) Authenticate(ctx context.Context, authorization string) (authclient.AuthenticateResp, error) {
 	endpoint := fmt.Sprintf("%s/v1/auth/authenticate", cln.url)
 
 	headers := map[string]string{
 		"authorization": authorization,
 	}
 
-	var resp AuthenticateResp
+	var resp authclient.AuthenticateResp
 	if err := cln.do(ctx, http.MethodGet, endpoint, headers, nil, &resp); err != nil {
-		return AuthenticateResp{}, err
+		return authclient.AuthenticateResp{}, err
 	}
 
 	return resp, nil
 }
 
 // Authorize calls the auth service to authorize the user.
-func (cln *Client) Authorize(ctx context.Context, auth Authorize) error {
+func (cln *Client) Authorize(ctx context.Context, auth authclient.Authorize) error {
 	endpoint := fmt.Sprintf("%s/v1/auth/authorize", cln.url)
 
 	if err := cln.do(ctx, http.MethodPost, endpoint, nil, auth, nil); err != nil {
@@ -172,4 +173,8 @@ func (cln *Client) do(ctx context.Context, method string, endpoint string, heade
 	default:
 		return fmt.Errorf("failed: response: %s", string(data))
 	}
+}
+
+func (cln *Client) Close() error {
+	return nil
 }

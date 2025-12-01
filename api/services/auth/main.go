@@ -14,6 +14,7 @@ import (
 
 	"github.com/ardanlabs/conf/v3"
 	"github.com/ardanlabs/service/api/services/auth/build/all"
+	"github.com/ardanlabs/service/app/domain/grpcauthapp"
 	"github.com/ardanlabs/service/app/sdk/auth"
 	"github.com/ardanlabs/service/app/sdk/debug"
 	"github.com/ardanlabs/service/app/sdk/mux"
@@ -261,6 +262,28 @@ func run(ctx context.Context, log *logger.Logger) error {
 	}()
 
 	// -------------------------------------------------------------------------
+	// Start gRPC Service
+
+	log.Info(ctx, "startup", "status", "initializing gRPC support")
+
+	grpcService, err := grpcauthapp.New(grpcauthapp.Config{
+		Log:     log,
+		Auth:    ath,
+		UserBus: userBus,
+		Host:    "0.0.0.0:6001",
+		APIHost: cfg.Web.APIHost,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to create gRPC service: %w", err)
+	}
+
+	go func() {
+		if err := grpcService.Start(); err != nil {
+			log.Error(ctx, "startup", "status", "gRPC server error", "err", err)
+		}
+	}()
+
+	// -------------------------------------------------------------------------
 	// Shutdown
 
 	select {
@@ -270,6 +293,8 @@ func run(ctx context.Context, log *logger.Logger) error {
 	case sig := <-shutdown:
 		log.Info(ctx, "shutdown", "status", "shutdown started", "signal", sig)
 		defer log.Info(ctx, "shutdown", "status", "shutdown complete", "signal", sig)
+
+		grpcService.Stop()
 
 		ctx, cancel := context.WithTimeout(ctx, cfg.Web.ShutdownTimeout)
 		defer cancel()

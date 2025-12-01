@@ -20,7 +20,7 @@ import (
 
 // Authenticate is a middleware function that integrates with an authentication client
 // to validate user credentials and attach user data to the request context.
-func Authenticate(client *authclient.Client) web.MidFunc {
+func Authenticate(client authclient.Authenticator) web.MidFunc {
 	m := func(next web.HandlerFunc) web.HandlerFunc {
 		h := func(ctx context.Context, r *http.Request) web.Encoder {
 			ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
@@ -47,22 +47,10 @@ func Authenticate(client *authclient.Client) web.MidFunc {
 func Bearer(ath *auth.Auth) web.MidFunc {
 	m := func(next web.HandlerFunc) web.HandlerFunc {
 		h := func(ctx context.Context, r *http.Request) web.Encoder {
-			claims, err := ath.Authenticate(ctx, r.Header.Get("authorization"))
-			if err != nil {
-				return errs.New(errs.Unauthenticated, err)
+			authorizationHeader := r.Header.Get("authorization")
+			if err := HandleAuthentication(ctx, ath, authorizationHeader); err != nil {
+				return err
 			}
-
-			if claims.Subject == "" {
-				return errs.Newf(errs.Unauthenticated, "authorize: you are not authorized for that action, no claims")
-			}
-
-			subjectID, err := uuid.Parse(claims.Subject)
-			if err != nil {
-				return errs.Newf(errs.Unauthenticated, "parsing subject: %s", err)
-			}
-
-			ctx = setUserID(ctx, subjectID)
-			ctx = setClaims(ctx, claims)
 
 			return next(ctx, r)
 		}
@@ -73,42 +61,35 @@ func Bearer(ath *auth.Auth) web.MidFunc {
 	return m
 }
 
+func HandleAuthentication(ctx context.Context, ath *auth.Auth, authorizationHeader string) *errs.Error {
+	claims, err := ath.Authenticate(ctx, authorizationHeader)
+	if err != nil {
+		return errs.New(errs.Unauthenticated, err)
+	}
+
+	if claims.Subject == "" {
+		return errs.Newf(errs.Unauthenticated, "authorize: you are not authorized for that action, no claims")
+	}
+
+	subjectID, err := uuid.Parse(claims.Subject)
+	if err != nil {
+		return errs.Newf(errs.Unauthenticated, "parsing subject: %s", err)
+	}
+
+	ctx = setUserID(ctx, subjectID)
+	ctx = setClaims(ctx, claims)
+
+	return nil
+}
+
 // Basic processes basic authentication logic.
 func Basic(ath *auth.Auth, userBus userbus.ExtBusiness) web.MidFunc {
 	m := func(next web.HandlerFunc) web.HandlerFunc {
 		h := func(ctx context.Context, r *http.Request) web.Encoder {
-			email, pass, ok := parseBasicAuth(r.Header.Get("authorization"))
-			if !ok {
-				return errs.Newf(errs.Unauthenticated, "invalid Basic auth")
+			authorizationHeader := r.Header.Get("authorization")
+			if err := HandleAuthorization(ctx, authorizationHeader, userBus, ath); err != nil {
+				return err
 			}
-
-			addr, err := mail.ParseAddress(email)
-			if err != nil {
-				return errs.New(errs.Unauthenticated, err)
-			}
-
-			usr, err := userBus.Authenticate(ctx, *addr, pass)
-			if err != nil {
-				return errs.New(errs.Unauthenticated, err)
-			}
-
-			claims := auth.Claims{
-				RegisteredClaims: jwt.RegisteredClaims{
-					Subject:   usr.ID.String(),
-					Issuer:    ath.Issuer(),
-					ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(8760 * time.Hour)),
-					IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
-				},
-				Roles: role.ParseToString(usr.Roles),
-			}
-
-			subjectID, err := uuid.Parse(claims.Subject)
-			if err != nil {
-				return errs.Newf(errs.Unauthenticated, "parsing subject: %s", err)
-			}
-
-			ctx = setUserID(ctx, subjectID)
-			ctx = setClaims(ctx, claims)
 
 			return next(ctx, r)
 		}
@@ -117,6 +98,43 @@ func Basic(ath *auth.Auth, userBus userbus.ExtBusiness) web.MidFunc {
 	}
 
 	return m
+}
+
+func HandleAuthorization(ctx context.Context, authorizationHeader string, userBus userbus.ExtBusiness, ath *auth.Auth) *errs.Error {
+	email, pass, ok := parseBasicAuth(authorizationHeader)
+	if !ok {
+		return errs.Newf(errs.Unauthenticated, "invalid Basic auth")
+	}
+
+	addr, err := mail.ParseAddress(email)
+	if err != nil {
+		return errs.New(errs.Unauthenticated, err)
+	}
+
+	usr, err := userBus.Authenticate(ctx, *addr, pass)
+	if err != nil {
+		return errs.New(errs.Unauthenticated, err)
+	}
+
+	claims := auth.Claims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject:   usr.ID.String(),
+			Issuer:    ath.Issuer(),
+			ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(8760 * time.Hour)),
+			IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
+		},
+		Roles: role.ParseToString(usr.Roles),
+	}
+
+	subjectID, err := uuid.Parse(claims.Subject)
+	if err != nil {
+		return errs.Newf(errs.Unauthenticated, "parsing subject: %s", err)
+	}
+
+	ctx = setUserID(ctx, subjectID)
+	ctx = setClaims(ctx, claims)
+
+	return nil
 }
 
 func parseBasicAuth(auth string) (string, string, bool) {

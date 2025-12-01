@@ -1,11 +1,18 @@
 package authclient
 
 import (
+	"context"
 	"encoding/json"
 
 	"github.com/ardanlabs/service/app/sdk/auth"
 	"github.com/google/uuid"
 )
+
+type Authenticator interface {
+	Authenticate(ctx context.Context, authorization string) (AuthenticateResp, error)
+	Authorize(ctx context.Context, auth Authorize) error
+	Close() error
+}
 
 // Authorize defines the information required to perform an authorization.
 type Authorize struct {
