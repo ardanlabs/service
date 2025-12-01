@@ -103,7 +103,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 		}
 		Auth struct {
 			Host      string `conf:"default:http://auth-service:6000"`
-			Mechanism string `conf:"default:grpc"`
+			Mechanism string `conf:"default:http"`
 			GRPC      struct {
 				Host string `conf:"default:auth-service:6001"`
 			}
