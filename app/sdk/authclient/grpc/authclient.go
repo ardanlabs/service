@@ -43,8 +43,10 @@ func New(log *logger.Logger, url string, options ...func(cln *Client)) (*Client,
 	return &cln, nil
 }
 
+// WithGRPCConn allows you to provide a pre-existing gRPC connection for the auth client.
 func WithGRPCConn(grpcConn *grpc.ClientConn) func(cln *Client) {
 	return func(cln *Client) {
+		cln.grpcConn = grpcConn
 		cln.grpc = grpcauthapp.NewAuthClient(grpcConn)
 	}
 }
