@@ -105,7 +105,7 @@ func (s *Service) authorize(ctx context.Context, req any, info *grpc.UnaryServer
 		return nil, fmt.Errorf("unauthorized: no authorization header")
 	}
 
-	err := mid.HandleAuthorization(ctx, authHeaders[0], s.userBus, s.auth)
+	ctx, err := mid.HandleAuthorization(ctx, authHeaders[0], s.userBus, s.auth)
 	if err != nil {
 		return nil, fmt.Errorf("unauthorized: %w", err)
 	}
@@ -124,7 +124,7 @@ func (s *Service) authenticate(ctx context.Context, req any, info *grpc.UnarySer
 		return nil, fmt.Errorf("unauthorized: no authorization header")
 	}
 
-	err := mid.HandleAuthentication(ctx, s.auth, authHeaders[0])
+	ctx, err := mid.HandleAuthentication(ctx, s.auth, authHeaders[0])
 	if err != nil {
 		return nil, fmt.Errorf("unauthorized: %w", err)
 	}

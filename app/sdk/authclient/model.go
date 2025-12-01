@@ -1,3 +1,4 @@
+// Package authclient holds the authentication client relevant models and interfaces
 package authclient
 
 import (

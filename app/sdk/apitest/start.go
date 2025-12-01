@@ -37,7 +37,10 @@ func New(t *testing.T, testName string) *Test {
 		},
 	}, authbuild.Routes()))
 
-	authClient := http.New(db.Log, server.URL)
+	authClient, err := http.New(db.Log, server.URL)
+	if err != nil {
+		t.Fatal("could not create authentication client")
+	}
 
 	// -------------------------------------------------------------------------
 

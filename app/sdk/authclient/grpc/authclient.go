@@ -1,4 +1,4 @@
-// Package grpcauthclient provides support to access the auth service.
+// Package grpc provides support to access the auth service.
 package grpc
 
 import (
