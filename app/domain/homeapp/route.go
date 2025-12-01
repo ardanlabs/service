@@ -15,7 +15,7 @@ import (
 type Config struct {
 	Log        *logger.Logger
 	HomeBus    homebus.ExtBusiness
-	AuthClient *authclient.Client
+	AuthClient authclient.Authenticator
 }
 
 // Routes adds specific routes for this group.

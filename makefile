@@ -158,6 +158,7 @@ dev-brew:
 	brew list kustomize || brew install kustomize
 	brew list pgcli || brew install pgcli
 	brew list watch || brew install watch
+	brew list grpcurl || brew install grpcurl
 
 dev-docker:
 	docker pull docker.io/$(GOLANG) & \
@@ -424,10 +425,23 @@ test-race: test-r lint vuln-check
 # Hitting endpoints
 
 token:
-	curl -i \
+	curl -s \
 	--user "admin@example.com:gophers" http://localhost:6000/v1/auth/token/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
 
 # export TOKEN="COPY TOKEN STRING FROM LAST CALL"
+
+###
+# Use this command to export the TOKEN variable directly into your shell
+# To do so, you have to run: `eval $(make export-token)`
+###
+export-token:
+	@$(MAKE) token \
+	| sed -n 's/.*"token":"\([^"]*\)".*/export TOKEN="\1"/p'
+
+token-grpc:
+	grpcurl -plaintext -d '{"kid":"54bb2165-71e1-41a6-af3e-7da4a0e1e2c1"}' \
+      -H "Authorization: Basic YWRtaW5AZXhhbXBsZS5jb206Z29waGVycw==" \
+      localhost:6001 auth.Auth/Token
 
 users:
 	curl -i \
@@ -446,6 +460,15 @@ otel-test:
 	curl -i \
 	-H "Traceparent: 00-918dd5ecf264712262b68cf2ef8b5239-896d90f23f69f006-01" \
 	--user "admin@example.com:gophers" http://localhost:6000/v1/auth/token/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
+
+# ==============================================================================
+# Protobuf support
+
+proto-gen:
+	protoc --go_out=app/domain/grpcauthapp --go_opt=paths=source_relative \
+		--go-grpc_out=app/domain/grpcauthapp --go-grpc_opt=paths=source_relative \
+		--proto_path=zarf/proto \
+		zarf/proto/auth.proto
 
 # ==============================================================================
 # Modules support
@@ -475,6 +498,9 @@ list:
 
 # ==============================================================================
 # Class Stuff
+
+run-auth:
+	go run api/services/auth/main.go | go run api/tooling/logfmt/main.go
 
 run:
 	go run api/services/sales/main.go | go run api/tooling/logfmt/main.go

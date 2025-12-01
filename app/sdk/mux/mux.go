@@ -55,7 +55,7 @@ func WithFileServer(react bool, static embed.FS, dir string, path string) func(o
 
 // SalesConfig contains sales service specific config.
 type SalesConfig struct {
-	AuthClient *authclient.Client
+	AuthClient authclient.Authenticator
 }
 
 // AuthConfig contains auth service specific config.

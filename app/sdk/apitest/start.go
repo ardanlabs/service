@@ -7,7 +7,7 @@ import (
 	authbuild "github.com/ardanlabs/service/api/services/auth/build/all"
 	salesbuild "github.com/ardanlabs/service/api/services/sales/build/all"
 	"github.com/ardanlabs/service/app/sdk/auth"
-	"github.com/ardanlabs/service/app/sdk/authclient"
+	"github.com/ardanlabs/service/app/sdk/authclient/http"
 	"github.com/ardanlabs/service/app/sdk/mux"
 	"github.com/ardanlabs/service/business/sdk/dbtest"
 )
@@ -37,7 +37,10 @@ func New(t *testing.T, testName string) *Test {
 		},
 	}, authbuild.Routes()))
 
-	authClient := authclient.New(db.Log, server.URL)
+	authClient, err := http.New(db.Log, server.URL)
+	if err != nil {
+		t.Fatal("could not create authentication client")
+	}
 
 	// -------------------------------------------------------------------------
 

@@ -18,6 +18,8 @@ import (
 	"github.com/ardanlabs/service/api/services/sales/build/crud"
 	"github.com/ardanlabs/service/api/services/sales/build/reporting"
 	"github.com/ardanlabs/service/app/sdk/authclient"
+	"github.com/ardanlabs/service/app/sdk/authclient/grpc"
+	http2 "github.com/ardanlabs/service/app/sdk/authclient/http"
 	"github.com/ardanlabs/service/app/sdk/debug"
 	"github.com/ardanlabs/service/app/sdk/mux"
 	"github.com/ardanlabs/service/business/domain/auditbus"
@@ -100,7 +102,11 @@ func run(ctx context.Context, log *logger.Logger) error {
 			CORSAllowedOrigins []string      `conf:"default:*"`
 		}
 		Auth struct {
-			Host string `conf:"default:http://auth-service:6000"`
+			Host      string `conf:"default:http://auth-service:6000"`
+			Mechanism string `conf:"default:http"`
+			GRPC      struct {
+				Host string `conf:"default:auth-service:6001"`
+			}
 		}
 		DB struct {
 			User         string `conf:"default:postgres"`
@@ -203,7 +209,20 @@ func run(ctx context.Context, log *logger.Logger) error {
 
 	log.Info(ctx, "startup", "status", "initializing authentication support")
 
-	authClient := authclient.New(log, cfg.Auth.Host)
+	var authClient authclient.Authenticator
+	switch cfg.Auth.Mechanism {
+	case "grpc":
+		authClient, err = grpc.New(log, cfg.Auth.GRPC.Host)
+	default:
+		authClient, err = http2.New(log, cfg.Auth.Host)
+	}
+
+	if err != nil {
+		log.Error(ctx, "failed to initialize authentication client", "error", err)
+		return fmt.Errorf("failed to initialize authentication client: %w", err)
+	}
+
+	defer authClient.Close()
 
 	// -------------------------------------------------------------------------
 	// Start Tracing Support

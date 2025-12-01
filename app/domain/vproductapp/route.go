@@ -17,7 +17,7 @@ type Config struct {
 	Log         *logger.Logger
 	UserBus     userbus.ExtBusiness
 	VProductBus vproductbus.ExtBusiness
-	AuthClient  *authclient.Client
+	AuthClient  authclient.Authenticator
 }
 
 // Routes adds specific routes for this group.
