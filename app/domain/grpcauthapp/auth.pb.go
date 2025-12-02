@@ -10,7 +10,6 @@ import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
-	sync "sync"
 	unsafe "unsafe"
 )
 
@@ -23,10 +22,12 @@ const (
 
 // Request message for generating a token.
 type TokenRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Kid           string                 `protobuf:"bytes,1,opt,name=kid,proto3" json:"kid,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state                  protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_Kid         *string                `protobuf:"bytes,1,opt,name=kid"`
+	XXX_raceDetectHookData protoimpl.RaceDetectHookData
+	XXX_presence           [1]uint32
+	unknownFields          protoimpl.UnknownFields
+	sizeCache              protoimpl.SizeCache
 }
 
 func (x *TokenRequest) Reset() {
@@ -54,24 +55,58 @@ func (x *TokenRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use TokenRequest.ProtoReflect.Descriptor instead.
-func (*TokenRequest) Descriptor() ([]byte, []int) {
-	return file_auth_proto_rawDescGZIP(), []int{0}
-}
-
 func (x *TokenRequest) GetKid() string {
 	if x != nil {
-		return x.Kid
+		if x.xxx_hidden_Kid != nil {
+			return *x.xxx_hidden_Kid
+		}
+		return ""
 	}
 	return ""
 }
 
+func (x *TokenRequest) SetKid(v string) {
+	x.xxx_hidden_Kid = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 1)
+}
+
+func (x *TokenRequest) HasKid() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 0)
+}
+
+func (x *TokenRequest) ClearKid() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
+	x.xxx_hidden_Kid = nil
+}
+
+type TokenRequest_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	Kid *string
+}
+
+func (b0 TokenRequest_builder) Build() *TokenRequest {
+	m0 := &TokenRequest{}
+	b, x := &b0, m0
+	_, _ = b, x
+	if b.Kid != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 1)
+		x.xxx_hidden_Kid = b.Kid
+	}
+	return m0
+}
+
 // Response message for token generation.
 type TokenResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Token         string                 `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state                  protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_Token       *string                `protobuf:"bytes,1,opt,name=token"`
+	XXX_raceDetectHookData protoimpl.RaceDetectHookData
+	XXX_presence           [1]uint32
+	unknownFields          protoimpl.UnknownFields
+	sizeCache              protoimpl.SizeCache
 }
 
 func (x *TokenResponse) Reset() {
@@ -99,33 +134,65 @@ func (x *TokenResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use TokenResponse.ProtoReflect.Descriptor instead.
-func (*TokenResponse) Descriptor() ([]byte, []int) {
-	return file_auth_proto_rawDescGZIP(), []int{1}
-}
-
 func (x *TokenResponse) GetToken() string {
 	if x != nil {
-		return x.Token
+		if x.xxx_hidden_Token != nil {
+			return *x.xxx_hidden_Token
+		}
+		return ""
 	}
 	return ""
 }
 
+func (x *TokenResponse) SetToken(v string) {
+	x.xxx_hidden_Token = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 1)
+}
+
+func (x *TokenResponse) HasToken() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 0)
+}
+
+func (x *TokenResponse) ClearToken() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
+	x.xxx_hidden_Token = nil
+}
+
+type TokenResponse_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	Token *string
+}
+
+func (b0 TokenResponse_builder) Build() *TokenResponse {
+	m0 := &TokenResponse{}
+	b, x := &b0, m0
+	_, _ = b, x
+	if b.Token != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 1)
+		x.xxx_hidden_Token = b.Token
+	}
+	return m0
+}
+
 // Claims represents the authorization claims transmitted via a JWT.
 type Claims struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// Registered claims
-	Issuer    string   `protobuf:"bytes,1,opt,name=issuer,proto3" json:"issuer,omitempty"`
-	Subject   string   `protobuf:"bytes,2,opt,name=subject,proto3" json:"subject,omitempty"`
-	Audience  []string `protobuf:"bytes,3,rep,name=audience,proto3" json:"audience,omitempty"`
-	ExpiresAt int64    `protobuf:"varint,4,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
-	NotBefore int64    `protobuf:"varint,5,opt,name=not_before,json=notBefore,proto3" json:"not_before,omitempty"`
-	IssuedAt  int64    `protobuf:"varint,6,opt,name=issued_at,json=issuedAt,proto3" json:"issued_at,omitempty"`
-	Id        string   `protobuf:"bytes,7,opt,name=id,proto3" json:"id,omitempty"`
-	// Custom claims
-	Roles         []string `protobuf:"bytes,8,rep,name=roles,proto3" json:"roles,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state                  protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_Issuer      *string                `protobuf:"bytes,1,opt,name=issuer"`
+	xxx_hidden_Subject     *string                `protobuf:"bytes,2,opt,name=subject"`
+	xxx_hidden_Audience    []string               `protobuf:"bytes,3,rep,name=audience"`
+	xxx_hidden_ExpiresAt   int64                  `protobuf:"varint,4,opt,name=expires_at,json=expiresAt"`
+	xxx_hidden_NotBefore   int64                  `protobuf:"varint,5,opt,name=not_before,json=notBefore"`
+	xxx_hidden_IssuedAt    int64                  `protobuf:"varint,6,opt,name=issued_at,json=issuedAt"`
+	xxx_hidden_Id          *string                `protobuf:"bytes,7,opt,name=id"`
+	xxx_hidden_Roles       []string               `protobuf:"bytes,8,rep,name=roles"`
+	XXX_raceDetectHookData protoimpl.RaceDetectHookData
+	XXX_presence           [1]uint32
+	unknownFields          protoimpl.UnknownFields
+	sizeCache              protoimpl.SizeCache
 }
 
 func (x *Claims) Reset() {
@@ -153,73 +220,237 @@ func (x *Claims) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Claims.ProtoReflect.Descriptor instead.
-func (*Claims) Descriptor() ([]byte, []int) {
-	return file_auth_proto_rawDescGZIP(), []int{2}
-}
-
 func (x *Claims) GetIssuer() string {
 	if x != nil {
-		return x.Issuer
+		if x.xxx_hidden_Issuer != nil {
+			return *x.xxx_hidden_Issuer
+		}
+		return ""
 	}
 	return ""
 }
 
 func (x *Claims) GetSubject() string {
 	if x != nil {
-		return x.Subject
+		if x.xxx_hidden_Subject != nil {
+			return *x.xxx_hidden_Subject
+		}
+		return ""
 	}
 	return ""
 }
 
 func (x *Claims) GetAudience() []string {
 	if x != nil {
-		return x.Audience
+		return x.xxx_hidden_Audience
 	}
 	return nil
 }
 
 func (x *Claims) GetExpiresAt() int64 {
 	if x != nil {
-		return x.ExpiresAt
+		return x.xxx_hidden_ExpiresAt
 	}
 	return 0
 }
 
 func (x *Claims) GetNotBefore() int64 {
 	if x != nil {
-		return x.NotBefore
+		return x.xxx_hidden_NotBefore
 	}
 	return 0
 }
 
 func (x *Claims) GetIssuedAt() int64 {
 	if x != nil {
-		return x.IssuedAt
+		return x.xxx_hidden_IssuedAt
 	}
 	return 0
 }
 
 func (x *Claims) GetId() string {
 	if x != nil {
-		return x.Id
+		if x.xxx_hidden_Id != nil {
+			return *x.xxx_hidden_Id
+		}
+		return ""
 	}
 	return ""
 }
 
 func (x *Claims) GetRoles() []string {
 	if x != nil {
-		return x.Roles
+		return x.xxx_hidden_Roles
 	}
 	return nil
 }
 
+func (x *Claims) SetIssuer(v string) {
+	x.xxx_hidden_Issuer = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 8)
+}
+
+func (x *Claims) SetSubject(v string) {
+	x.xxx_hidden_Subject = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 8)
+}
+
+func (x *Claims) SetAudience(v []string) {
+	x.xxx_hidden_Audience = v
+}
+
+func (x *Claims) SetExpiresAt(v int64) {
+	x.xxx_hidden_ExpiresAt = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 8)
+}
+
+func (x *Claims) SetNotBefore(v int64) {
+	x.xxx_hidden_NotBefore = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 8)
+}
+
+func (x *Claims) SetIssuedAt(v int64) {
+	x.xxx_hidden_IssuedAt = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 8)
+}
+
+func (x *Claims) SetId(v string) {
+	x.xxx_hidden_Id = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 6, 8)
+}
+
+func (x *Claims) SetRoles(v []string) {
+	x.xxx_hidden_Roles = v
+}
+
+func (x *Claims) HasIssuer() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 0)
+}
+
+func (x *Claims) HasSubject() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 1)
+}
+
+func (x *Claims) HasExpiresAt() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 3)
+}
+
+func (x *Claims) HasNotBefore() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 4)
+}
+
+func (x *Claims) HasIssuedAt() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 5)
+}
+
+func (x *Claims) HasId() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 6)
+}
+
+func (x *Claims) ClearIssuer() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
+	x.xxx_hidden_Issuer = nil
+}
+
+func (x *Claims) ClearSubject() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 1)
+	x.xxx_hidden_Subject = nil
+}
+
+func (x *Claims) ClearExpiresAt() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 3)
+	x.xxx_hidden_ExpiresAt = 0
+}
+
+func (x *Claims) ClearNotBefore() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 4)
+	x.xxx_hidden_NotBefore = 0
+}
+
+func (x *Claims) ClearIssuedAt() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 5)
+	x.xxx_hidden_IssuedAt = 0
+}
+
+func (x *Claims) ClearId() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 6)
+	x.xxx_hidden_Id = nil
+}
+
+type Claims_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	// Registered claims
+	Issuer    *string
+	Subject   *string
+	Audience  []string
+	ExpiresAt *int64
+	NotBefore *int64
+	IssuedAt  *int64
+	Id        *string
+	// Custom claims
+	Roles []string
+}
+
+func (b0 Claims_builder) Build() *Claims {
+	m0 := &Claims{}
+	b, x := &b0, m0
+	_, _ = b, x
+	if b.Issuer != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 8)
+		x.xxx_hidden_Issuer = b.Issuer
+	}
+	if b.Subject != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 8)
+		x.xxx_hidden_Subject = b.Subject
+	}
+	x.xxx_hidden_Audience = b.Audience
+	if b.ExpiresAt != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 8)
+		x.xxx_hidden_ExpiresAt = *b.ExpiresAt
+	}
+	if b.NotBefore != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 8)
+		x.xxx_hidden_NotBefore = *b.NotBefore
+	}
+	if b.IssuedAt != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 8)
+		x.xxx_hidden_IssuedAt = *b.IssuedAt
+	}
+	if b.Id != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 6, 8)
+		x.xxx_hidden_Id = b.Id
+	}
+	x.xxx_hidden_Roles = b.Roles
+	return m0
+}
+
 // Request message for authentication.
 type AuthenticateRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Token         string                 `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state                  protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_Token       *string                `protobuf:"bytes,1,opt,name=token"`
+	XXX_raceDetectHookData protoimpl.RaceDetectHookData
+	XXX_presence           [1]uint32
+	unknownFields          protoimpl.UnknownFields
+	sizeCache              protoimpl.SizeCache
 }
 
 func (x *AuthenticateRequest) Reset() {
@@ -247,28 +478,61 @@ func (x *AuthenticateRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use AuthenticateRequest.ProtoReflect.Descriptor instead.
-func (*AuthenticateRequest) Descriptor() ([]byte, []int) {
-	return file_auth_proto_rawDescGZIP(), []int{3}
-}
-
 func (x *AuthenticateRequest) GetToken() string {
 	if x != nil {
-		return x.Token
+		if x.xxx_hidden_Token != nil {
+			return *x.xxx_hidden_Token
+		}
+		return ""
 	}
 	return ""
 }
 
+func (x *AuthenticateRequest) SetToken(v string) {
+	x.xxx_hidden_Token = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 1)
+}
+
+func (x *AuthenticateRequest) HasToken() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 0)
+}
+
+func (x *AuthenticateRequest) ClearToken() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
+	x.xxx_hidden_Token = nil
+}
+
+type AuthenticateRequest_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	Token *string
+}
+
+func (b0 AuthenticateRequest_builder) Build() *AuthenticateRequest {
+	m0 := &AuthenticateRequest{}
+	b, x := &b0, m0
+	_, _ = b, x
+	if b.Token != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 1)
+		x.xxx_hidden_Token = b.Token
+	}
+	return m0
+}
+
 // Response message for authentication.
 type AuthenticateResponse struct {
-	state   protoimpl.MessageState `protogen:"open.v1"`
-	UserId  string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	Roles   []string               `protobuf:"bytes,2,rep,name=roles,proto3" json:"roles,omitempty"`
-	Subject string                 `protobuf:"bytes,3,opt,name=subject,proto3" json:"subject,omitempty"`
-	// Claims contains the JWT claims.
-	Claims        *Claims `protobuf:"bytes,4,opt,name=claims,proto3" json:"claims,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state                  protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_UserId      *string                `protobuf:"bytes,1,opt,name=user_id,json=userId"`
+	xxx_hidden_Roles       []string               `protobuf:"bytes,2,rep,name=roles"`
+	xxx_hidden_Subject     *string                `protobuf:"bytes,3,opt,name=subject"`
+	xxx_hidden_Claims      *Claims                `protobuf:"bytes,4,opt,name=claims"`
+	XXX_raceDetectHookData protoimpl.RaceDetectHookData
+	XXX_presence           [1]uint32
+	unknownFields          protoimpl.UnknownFields
+	sizeCache              protoimpl.SizeCache
 }
 
 func (x *AuthenticateResponse) Reset() {
@@ -296,47 +560,130 @@ func (x *AuthenticateResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use AuthenticateResponse.ProtoReflect.Descriptor instead.
-func (*AuthenticateResponse) Descriptor() ([]byte, []int) {
-	return file_auth_proto_rawDescGZIP(), []int{4}
-}
-
 func (x *AuthenticateResponse) GetUserId() string {
 	if x != nil {
-		return x.UserId
+		if x.xxx_hidden_UserId != nil {
+			return *x.xxx_hidden_UserId
+		}
+		return ""
 	}
 	return ""
 }
 
 func (x *AuthenticateResponse) GetRoles() []string {
 	if x != nil {
-		return x.Roles
+		return x.xxx_hidden_Roles
 	}
 	return nil
 }
 
 func (x *AuthenticateResponse) GetSubject() string {
 	if x != nil {
-		return x.Subject
+		if x.xxx_hidden_Subject != nil {
+			return *x.xxx_hidden_Subject
+		}
+		return ""
 	}
 	return ""
 }
 
 func (x *AuthenticateResponse) GetClaims() *Claims {
 	if x != nil {
-		return x.Claims
+		return x.xxx_hidden_Claims
 	}
 	return nil
 }
 
+func (x *AuthenticateResponse) SetUserId(v string) {
+	x.xxx_hidden_UserId = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 4)
+}
+
+func (x *AuthenticateResponse) SetRoles(v []string) {
+	x.xxx_hidden_Roles = v
+}
+
+func (x *AuthenticateResponse) SetSubject(v string) {
+	x.xxx_hidden_Subject = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 4)
+}
+
+func (x *AuthenticateResponse) SetClaims(v *Claims) {
+	x.xxx_hidden_Claims = v
+}
+
+func (x *AuthenticateResponse) HasUserId() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 0)
+}
+
+func (x *AuthenticateResponse) HasSubject() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 2)
+}
+
+func (x *AuthenticateResponse) HasClaims() bool {
+	if x == nil {
+		return false
+	}
+	return x.xxx_hidden_Claims != nil
+}
+
+func (x *AuthenticateResponse) ClearUserId() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
+	x.xxx_hidden_UserId = nil
+}
+
+func (x *AuthenticateResponse) ClearSubject() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 2)
+	x.xxx_hidden_Subject = nil
+}
+
+func (x *AuthenticateResponse) ClearClaims() {
+	x.xxx_hidden_Claims = nil
+}
+
+type AuthenticateResponse_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	UserId  *string
+	Roles   []string
+	Subject *string
+	// Claims contains the JWT claims.
+	Claims *Claims
+}
+
+func (b0 AuthenticateResponse_builder) Build() *AuthenticateResponse {
+	m0 := &AuthenticateResponse{}
+	b, x := &b0, m0
+	_, _ = b, x
+	if b.UserId != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 4)
+		x.xxx_hidden_UserId = b.UserId
+	}
+	x.xxx_hidden_Roles = b.Roles
+	if b.Subject != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 4)
+		x.xxx_hidden_Subject = b.Subject
+	}
+	x.xxx_hidden_Claims = b.Claims
+	return m0
+}
+
 // Request message for authorization.
 type AuthorizeRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	Claims        *Claims                `protobuf:"bytes,2,opt,name=claims,proto3" json:"claims,omitempty"`
-	Rule          string                 `protobuf:"bytes,3,opt,name=rule,proto3" json:"rule,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state                  protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_UserId      *string                `protobuf:"bytes,1,opt,name=user_id,json=userId"`
+	xxx_hidden_Claims      *Claims                `protobuf:"bytes,2,opt,name=claims"`
+	xxx_hidden_Rule        *string                `protobuf:"bytes,3,opt,name=rule"`
+	XXX_raceDetectHookData protoimpl.RaceDetectHookData
+	XXX_presence           [1]uint32
+	unknownFields          protoimpl.UnknownFields
+	sizeCache              protoimpl.SizeCache
 }
 
 func (x *AuthorizeRequest) Reset() {
@@ -364,35 +711,109 @@ func (x *AuthorizeRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use AuthorizeRequest.ProtoReflect.Descriptor instead.
-func (*AuthorizeRequest) Descriptor() ([]byte, []int) {
-	return file_auth_proto_rawDescGZIP(), []int{5}
-}
-
 func (x *AuthorizeRequest) GetUserId() string {
 	if x != nil {
-		return x.UserId
+		if x.xxx_hidden_UserId != nil {
+			return *x.xxx_hidden_UserId
+		}
+		return ""
 	}
 	return ""
 }
 
 func (x *AuthorizeRequest) GetClaims() *Claims {
 	if x != nil {
-		return x.Claims
+		return x.xxx_hidden_Claims
 	}
 	return nil
 }
 
 func (x *AuthorizeRequest) GetRule() string {
 	if x != nil {
-		return x.Rule
+		if x.xxx_hidden_Rule != nil {
+			return *x.xxx_hidden_Rule
+		}
+		return ""
 	}
 	return ""
 }
 
+func (x *AuthorizeRequest) SetUserId(v string) {
+	x.xxx_hidden_UserId = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 3)
+}
+
+func (x *AuthorizeRequest) SetClaims(v *Claims) {
+	x.xxx_hidden_Claims = v
+}
+
+func (x *AuthorizeRequest) SetRule(v string) {
+	x.xxx_hidden_Rule = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 3)
+}
+
+func (x *AuthorizeRequest) HasUserId() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 0)
+}
+
+func (x *AuthorizeRequest) HasClaims() bool {
+	if x == nil {
+		return false
+	}
+	return x.xxx_hidden_Claims != nil
+}
+
+func (x *AuthorizeRequest) HasRule() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 2)
+}
+
+func (x *AuthorizeRequest) ClearUserId() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
+	x.xxx_hidden_UserId = nil
+}
+
+func (x *AuthorizeRequest) ClearClaims() {
+	x.xxx_hidden_Claims = nil
+}
+
+func (x *AuthorizeRequest) ClearRule() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 2)
+	x.xxx_hidden_Rule = nil
+}
+
+type AuthorizeRequest_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	UserId *string
+	Claims *Claims
+	Rule   *string
+}
+
+func (b0 AuthorizeRequest_builder) Build() *AuthorizeRequest {
+	m0 := &AuthorizeRequest{}
+	b, x := &b0, m0
+	_, _ = b, x
+	if b.UserId != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 3)
+		x.xxx_hidden_UserId = b.UserId
+	}
+	x.xxx_hidden_Claims = b.Claims
+	if b.Rule != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 3)
+		x.xxx_hidden_Rule = b.Rule
+	}
+	return m0
+}
+
 // Response message for authorization.
 type AuthorizeResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
+	state         protoimpl.MessageState `protogen:"opaque.v1"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -422,9 +843,16 @@ func (x *AuthorizeResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use AuthorizeResponse.ProtoReflect.Descriptor instead.
-func (*AuthorizeResponse) Descriptor() ([]byte, []int) {
-	return file_auth_proto_rawDescGZIP(), []int{6}
+type AuthorizeResponse_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+}
+
+func (b0 AuthorizeResponse_builder) Build() *AuthorizeResponse {
+	m0 := &AuthorizeResponse{}
+	b, x := &b0, m0
+	_, _ = b, x
+	return m0
 }
 
 var File_auth_proto protoreflect.FileDescriptor
@@ -463,19 +891,7 @@ const file_auth_proto_rawDesc = "" +
 	"\x04Auth\x120\n" +
 	"\x05Token\x12\x12.auth.TokenRequest\x1a\x13.auth.TokenResponse\x12E\n" +
 	"\fAuthenticate\x12\x19.auth.AuthenticateRequest\x1a\x1a.auth.AuthenticateResponse\x12<\n" +
-	"\tAuthorize\x12\x16.auth.AuthorizeRequest\x1a\x17.auth.AuthorizeResponseB5Z3github.com/ardanlabs/service/app/domain/grpcauthappb\x06proto3"
-
-var (
-	file_auth_proto_rawDescOnce sync.Once
-	file_auth_proto_rawDescData []byte
-)
-
-func file_auth_proto_rawDescGZIP() []byte {
-	file_auth_proto_rawDescOnce.Do(func() {
-		file_auth_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_auth_proto_rawDesc), len(file_auth_proto_rawDesc)))
-	})
-	return file_auth_proto_rawDescData
-}
+	"\tAuthorize\x12\x16.auth.AuthorizeRequest\x1a\x17.auth.AuthorizeResponseB5Z3github.com/ardanlabs/service/app/domain/grpcauthappb\beditionsp\xe9\a"
 
 var file_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_auth_proto_goTypes = []any{

@@ -9,27 +9,30 @@ import (
 	"github.com/ardanlabs/service/app/sdk/authclient"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
+	"google.golang.org/protobuf/proto"
 )
 
 func authorizeRequestToGRPC(auth authclient.Authorize) *grpcauthapp.AuthorizeRequest {
-	claims := grpcauthapp.Claims{
-		Id:        auth.Claims.ID,
-		Issuer:    auth.Claims.Issuer,
-		Subject:   auth.Claims.Subject,
+	cb := grpcauthapp.Claims_builder{
+		Id:        proto.String(auth.Claims.ID),
+		Issuer:    proto.String(auth.Claims.Issuer),
+		Subject:   proto.String(auth.Claims.Subject),
 		Audience:  auth.Claims.Audience,
-		ExpiresAt: auth.Claims.ExpiresAt.Unix(),
-		NotBefore: auth.Claims.NotBefore.Unix(),
-		IssuedAt:  auth.Claims.IssuedAt.Unix(),
+		ExpiresAt: proto.Int64(auth.Claims.ExpiresAt.Unix()),
+		NotBefore: proto.Int64(auth.Claims.NotBefore.Unix()),
+		IssuedAt:  proto.Int64(auth.Claims.IssuedAt.Unix()),
 		Roles:     auth.Claims.Roles,
 	}
+	claims := cb.Build()
 
-	req := grpcauthapp.AuthorizeRequest{
-		UserId: auth.UserID.String(),
-		Claims: &claims,
-		Rule:   auth.Rule,
+	arb := grpcauthapp.AuthorizeRequest_builder{
+		UserId: proto.String(auth.UserID.String()),
+		Rule:   proto.String(auth.Rule),
+		Claims: claims,
 	}
 
-	return &req
+	req := arb.Build()
+	return req
 }
 
 func authenticateRespFromGRPC(a *grpcauthapp.AuthenticateResponse) (authclient.AuthenticateResp, error) {

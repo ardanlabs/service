@@ -1,4 +1,4 @@
-syntax = "proto3";
+edition = "2024";
 
 package auth;
 

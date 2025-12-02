@@ -20,6 +20,7 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
 )
 
 // Config holds the dependencies for the gRPC service.
@@ -151,36 +152,45 @@ func (s *Service) Token(ctx context.Context, req *TokenRequest) (*TokenResponse,
 		return nil, status.Error(codes.Internal, "failed to generate token")
 	}
 
-	return &TokenResponse{Token: token}, nil
+	trb := TokenResponse_builder{
+		Token: proto.String(token),
+	}
+	return trb.Build(), nil
 }
 
 // Authenticate validates a bearer token.
 func (s *Service) Authenticate(ctx context.Context, req *AuthenticateRequest) (*AuthenticateResponse, error) {
-	if req.Token == "" {
+	reqToken := req.GetToken()
+	if reqToken == "" {
 		return nil, status.Error(codes.InvalidArgument, "token is required")
 	}
 
 	s.log.Info(ctx, "authenticate", "method", "grpc")
 
-	claims, err := s.auth.Authenticate(ctx, req.Token)
+	claims, err := s.auth.Authenticate(ctx, reqToken)
 	if err != nil {
 		s.log.Error(ctx, "authenticate", "err", err)
 		return nil, status.Error(codes.Unauthenticated, "invalid token")
 	}
 
-	return &AuthenticateResponse{
-		UserId:  claims.Subject,
+	arb := &AuthenticateResponse_builder{
+		UserId:  proto.String(claims.Subject),
+		Subject: proto.String(claims.Subject),
 		Roles:   claims.Roles,
-		Subject: claims.Subject,
-	}, nil
+	}
+
+	return arb.Build(), nil
 }
 
 // Authorize checks if a user is authorized for a specific rule.
 func (s *Service) Authorize(ctx context.Context, req *AuthorizeRequest) (*AuthorizeResponse, error) {
-	if req.UserId == "" {
+	reqUserID := req.GetUserId()
+	if reqUserID == "" {
 		return nil, status.Error(codes.InvalidArgument, "user ID is required")
 	}
-	if req.Rule == "" {
+
+	reqRule := req.GetRule()
+	if reqRule == "" {
 		return nil, status.Error(codes.InvalidArgument, "rule is required")
 	}
 
@@ -200,12 +210,12 @@ func (s *Service) Authorize(ctx context.Context, req *AuthorizeRequest) (*Author
 		Roles: reqClaims.GetRoles(),
 	}
 
-	userID, err := uuid.Parse(req.UserId)
+	userID, err := uuid.Parse(reqUserID)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid user ID")
 	}
 
-	err = s.auth.Authorize(ctx, claims, userID, req.Rule)
+	err = s.auth.Authorize(ctx, claims, userID, reqRule)
 	if err != nil {
 		if errors.Is(err, auth.ErrForbidden) {
 			return nil, status.Error(codes.PermissionDenied, "not authorized")
