@@ -10,6 +10,7 @@ import (
 	"github.com/ardanlabs/service/foundation/logger"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/protobuf/proto"
 )
 
 // Client represents a client that can talk to the auth service.
@@ -53,11 +54,12 @@ func WithGRPCConn(grpcConn *grpc.ClientConn) func(cln *Client) {
 
 // Authenticate calls the auth service to authenticate the user.
 func (cln *Client) Authenticate(ctx context.Context, authorization string) (authclient.AuthenticateResp, error) {
-	req := grpcauthapp.AuthenticateRequest{
-		Token: authorization,
+	arb := grpcauthapp.AuthenticateRequest_builder{
+		Token: proto.String(authorization),
 	}
 
-	r, err := cln.grpc.Authenticate(ctx, &req)
+	req := arb.Build()
+	r, err := cln.grpc.Authenticate(ctx, req)
 	if err != nil {
 		return authclient.AuthenticateResp{}, err
 	}
