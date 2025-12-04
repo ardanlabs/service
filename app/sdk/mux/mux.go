@@ -112,9 +112,11 @@ func WebAPI(cfg Config, routeAdder RouteAdder, options ...func(opts *Options)) h
 	routeAdder.Add(app, cfg)
 
 	for _, site := range opts.sites {
-		if site.react {
+		switch site.react {
+		case true:
 			app.FileServerReact(site.static, site.staticDir, site.staticPath)
-		} else {
+
+		default:
 			app.FileServer(site.static, site.staticDir, site.staticPath)
 		}
 	}
