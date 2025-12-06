@@ -37,7 +37,7 @@ func (a *app) create(ctx context.Context, r *http.Request) web.Encoder {
 
 	prd, err := a.productBus.Create(ctx, np)
 	if err != nil {
-		return errs.Newf(errs.Internal, "create: prd[%+v]: %s", prd, err)
+		return errs.Errorf(errs.Internal, "create: prd[%+v]: %s", prd, err)
 	}
 
 	return toAppProduct(prd)
@@ -56,12 +56,12 @@ func (a *app) update(ctx context.Context, r *http.Request) web.Encoder {
 
 	prd, err := mid.GetProduct(ctx)
 	if err != nil {
-		return errs.Newf(errs.Internal, "product missing in context: %s", err)
+		return errs.Errorf(errs.Internal, "product missing in context: %s", err)
 	}
 
 	updPrd, err := a.productBus.Update(ctx, prd, up)
 	if err != nil {
-		return errs.Newf(errs.Internal, "update: productID[%s] up[%+v]: %s", prd.ID, app, err)
+		return errs.Errorf(errs.Internal, "update: productID[%s] up[%+v]: %s", prd.ID, app, err)
 	}
 
 	return toAppProduct(updPrd)
@@ -70,11 +70,11 @@ func (a *app) update(ctx context.Context, r *http.Request) web.Encoder {
 func (a *app) delete(ctx context.Context, _ *http.Request) web.Encoder {
 	prd, err := mid.GetProduct(ctx)
 	if err != nil {
-		return errs.Newf(errs.Internal, "productID missing in context: %s", err)
+		return errs.Errorf(errs.Internal, "productID missing in context: %s", err)
 	}
 
 	if err := a.productBus.Delete(ctx, prd); err != nil {
-		return errs.Newf(errs.Internal, "delete: productID[%s]: %s", prd.ID, err)
+		return errs.Errorf(errs.Internal, "delete: productID[%s]: %s", prd.ID, err)
 	}
 
 	return nil
@@ -100,12 +100,12 @@ func (a *app) query(ctx context.Context, r *http.Request) web.Encoder {
 
 	prds, err := a.productBus.Query(ctx, filter, orderBy, page)
 	if err != nil {
-		return errs.Newf(errs.Internal, "query: %s", err)
+		return errs.Errorf(errs.Internal, "query: %s", err)
 	}
 
 	total, err := a.productBus.Count(ctx, filter)
 	if err != nil {
-		return errs.Newf(errs.Internal, "count: %s", err)
+		return errs.Errorf(errs.Internal, "count: %s", err)
 	}
 
 	return query.NewResult(toAppProducts(prds), total, page)
@@ -114,7 +114,7 @@ func (a *app) query(ctx context.Context, r *http.Request) web.Encoder {
 func (a *app) queryByID(ctx context.Context, r *http.Request) web.Encoder {
 	prd, err := mid.GetProduct(ctx)
 	if err != nil {
-		return errs.Newf(errs.Internal, "querybyid: %s", err)
+		return errs.Errorf(errs.Internal, "querybyid: %s", err)
 	}
 
 	return toAppProduct(prd)

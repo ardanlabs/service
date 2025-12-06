@@ -74,7 +74,7 @@ func AuthorizeUser(client authclient.Authenticator, userBus userbus.ExtBusiness,
 					case errors.Is(err, userbus.ErrNotFound):
 						return errs.New(errs.Unauthenticated, err)
 					default:
-						return errs.Newf(errs.Unauthenticated, "querybyid: userID[%s]: %s", userID, err)
+						return errs.Errorf(errs.Unauthenticated, "querybyid: userID[%s]: %s", userID, err)
 					}
 				}
 
@@ -127,7 +127,7 @@ func AuthorizeProduct(client authclient.Authenticator, productBus productbus.Ext
 					case errors.Is(err, productbus.ErrNotFound):
 						return errs.New(errs.Unauthenticated, err)
 					default:
-						return errs.Newf(errs.Unauthenticated, "querybyid: productID[%s]: %s", productID, err)
+						return errs.Errorf(errs.Unauthenticated, "querybyid: productID[%s]: %s", productID, err)
 					}
 				}
 
@@ -181,7 +181,7 @@ func AuthorizeHome(client authclient.Authenticator, homeBus homebus.ExtBusiness)
 					case errors.Is(err, homebus.ErrNotFound):
 						return errs.New(errs.Unauthenticated, err)
 					default:
-						return errs.Newf(errs.Unauthenticated, "querybyid: homeID[%s]: %s", homeID, err)
+						return errs.Errorf(errs.Unauthenticated, "querybyid: homeID[%s]: %s", homeID, err)
 					}
 				}
 

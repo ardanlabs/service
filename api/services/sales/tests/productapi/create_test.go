@@ -59,7 +59,7 @@ func create400(sd apitest.SeedData) []apitest.Table {
 			StatusCode: http.StatusBadRequest,
 			Input:      &productapp.NewProduct{},
 			GotResp:    &errs.Error{},
-			ExpResp:    errs.Newf(errs.InvalidArgument, "validate: [{\"field\":\"name\",\"error\":\"invalid name \\\"\\\"\"},{\"field\":\"cost\",\"error\":\"invalid money 0.00\"},{\"field\":\"quantity\",\"error\":\"invalid quantity 0\"}]"),
+			ExpResp:    errs.Errorf(errs.InvalidArgument, "validate: [{\"field\":\"name\",\"error\":\"invalid name \\\"\\\"\"},{\"field\":\"cost\",\"error\":\"invalid money 0.00\"},{\"field\":\"quantity\",\"error\":\"invalid quantity 0\"}]"),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -78,7 +78,7 @@ func create401(sd apitest.SeedData) []apitest.Table {
 			Method:     http.MethodPost,
 			StatusCode: http.StatusUnauthorized,
 			GotResp:    &errs.Error{},
-			ExpResp:    errs.Newf(errs.Unauthenticated, "error parsing token: token contains an invalid number of segments"),
+			ExpResp:    errs.Errorf(errs.Unauthenticated, "error parsing token: token contains an invalid number of segments"),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -90,7 +90,7 @@ func create401(sd apitest.SeedData) []apitest.Table {
 			Method:     http.MethodPost,
 			StatusCode: http.StatusUnauthorized,
 			GotResp:    &errs.Error{},
-			ExpResp:    errs.Newf(errs.Unauthenticated, "error parsing token: token contains an invalid number of segments"),
+			ExpResp:    errs.Errorf(errs.Unauthenticated, "error parsing token: token contains an invalid number of segments"),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -102,7 +102,7 @@ func create401(sd apitest.SeedData) []apitest.Table {
 			Method:     http.MethodPost,
 			StatusCode: http.StatusUnauthorized,
 			GotResp:    &errs.Error{},
-			ExpResp:    errs.Newf(errs.Unauthenticated, "authentication failed: OPA policy evaluation failed for authentication: OPA policy rule \"auth\" not satisfied"),
+			ExpResp:    errs.Errorf(errs.Unauthenticated, "authentication failed: OPA policy evaluation failed for authentication: OPA policy rule \"auth\" not satisfied"),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -114,7 +114,7 @@ func create401(sd apitest.SeedData) []apitest.Table {
 			Method:     http.MethodPost,
 			StatusCode: http.StatusUnauthorized,
 			GotResp:    &errs.Error{},
-			ExpResp:    errs.Newf(errs.Unauthenticated, "authorize: you are not authorized for that action, claims[[ADMIN]] rule[rule_user_only]"),
+			ExpResp:    errs.Errorf(errs.Unauthenticated, "authorize: you are not authorized for that action, claims[[ADMIN]] rule[rule_user_only]"),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},

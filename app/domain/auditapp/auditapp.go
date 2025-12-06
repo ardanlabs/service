@@ -47,12 +47,12 @@ func (a *app) query(ctx context.Context, r *http.Request) web.Encoder {
 
 	adts, err := a.auditBus.Query(ctx, filter, orderBy, page)
 	if err != nil {
-		return errs.Newf(errs.Internal, "query: %s", err)
+		return errs.Errorf(errs.Internal, "query: %s", err)
 	}
 
 	total, err := a.auditBus.Count(ctx, filter)
 	if err != nil {
-		return errs.Newf(errs.Internal, "count: %s", err)
+		return errs.Errorf(errs.Internal, "count: %s", err)
 	}
 
 	return query.NewResult(toAppAudits(adts), total, page)

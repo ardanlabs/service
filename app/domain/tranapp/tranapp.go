@@ -77,14 +77,14 @@ func (a *app) create(ctx context.Context, r *http.Request) web.Encoder {
 		if errors.Is(err, userbus.ErrUniqueEmail) {
 			return errs.New(errs.Aborted, userbus.ErrUniqueEmail)
 		}
-		return errs.Newf(errs.Internal, "create: usr[%+v]: %s", usr, err)
+		return errs.Errorf(errs.Internal, "create: usr[%+v]: %s", usr, err)
 	}
 
 	np.UserID = usr.ID
 
 	prd, err := a.productBus.Create(ctx, np)
 	if err != nil {
-		return errs.Newf(errs.Internal, "create: prd[%+v]: %s", prd, err)
+		return errs.Errorf(errs.Internal, "create: prd[%+v]: %s", prd, err)
 	}
 
 	return toAppProduct(prd)

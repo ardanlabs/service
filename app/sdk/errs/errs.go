@@ -68,8 +68,8 @@ func New(code ErrCode, err error) *Error {
 	}
 }
 
-// Newf constructs an error based on a error message.
-func Newf(code ErrCode, format string, v ...any) *Error {
+// Errorf constructs an error based on a error message.
+func Errorf(code ErrCode, format string, v ...any) *Error {
 	pc, filename, line, _ := runtime.Caller(1)
 
 	return &Error{

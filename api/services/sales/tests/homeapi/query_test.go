@@ -54,7 +54,7 @@ func query400(sd apitest.SeedData) []apitest.Table {
 			StatusCode: http.StatusBadRequest,
 			Method:     http.MethodGet,
 			GotResp:    &errs.Error{},
-			ExpResp:    errs.Newf(errs.InvalidArgument, "[{\"field\":\"type\",\"error\":\"invalid home type \\\"bungalow\\\"\"}]"),
+			ExpResp:    errs.Errorf(errs.InvalidArgument, "[{\"field\":\"type\",\"error\":\"invalid home type \\\"bungalow\\\"\"}]"),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -66,7 +66,7 @@ func query400(sd apitest.SeedData) []apitest.Table {
 			StatusCode: http.StatusBadRequest,
 			Method:     http.MethodGet,
 			GotResp:    &errs.Error{},
-			ExpResp:    errs.Newf(errs.InvalidArgument, "[{\"field\":\"order\",\"error\":\"unknown order: ome_id\"}]"),
+			ExpResp:    errs.Errorf(errs.InvalidArgument, "[{\"field\":\"order\",\"error\":\"unknown order: ome_id\"}]"),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},

@@ -69,12 +69,12 @@ func HandleAuthentication(ctx context.Context, ath *auth.Auth, authorizationHead
 	}
 
 	if claims.Subject == "" {
-		return ctx, errs.Newf(errs.Unauthenticated, "authorize: you are not authorized for that action, no claims")
+		return ctx, errs.Errorf(errs.Unauthenticated, "authorize: you are not authorized for that action, no claims")
 	}
 
 	subjectID, err := uuid.Parse(claims.Subject)
 	if err != nil {
-		return ctx, errs.Newf(errs.Unauthenticated, "parsing subject: %s", err)
+		return ctx, errs.Errorf(errs.Unauthenticated, "parsing subject: %s", err)
 	}
 
 	ctx = setUserID(ctx, subjectID)
@@ -105,7 +105,7 @@ func Basic(ath *auth.Auth, userBus userbus.ExtBusiness) web.MidFunc {
 func HandleAuthorization(ctx context.Context, authorizationHeader string, userBus userbus.ExtBusiness, ath *auth.Auth) (context.Context, *errs.Error) {
 	email, pass, ok := parseBasicAuth(authorizationHeader)
 	if !ok {
-		return ctx, errs.Newf(errs.Unauthenticated, "invalid Basic auth")
+		return ctx, errs.Errorf(errs.Unauthenticated, "invalid Basic auth")
 	}
 
 	addr, err := mail.ParseAddress(email)
@@ -130,7 +130,7 @@ func HandleAuthorization(ctx context.Context, authorizationHeader string, userBu
 
 	subjectID, err := uuid.Parse(claims.Subject)
 	if err != nil {
-		return ctx, errs.Newf(errs.Unauthenticated, "parsing subject: %s", err)
+		return ctx, errs.Errorf(errs.Unauthenticated, "parsing subject: %s", err)
 	}
 
 	ctx = setUserID(ctx, subjectID)

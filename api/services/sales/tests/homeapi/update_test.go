@@ -77,7 +77,7 @@ func update400(sd apitest.SeedData) []apitest.Table {
 				Address: &homeapp.UpdateAddress{},
 			},
 			GotResp: &errs.Error{},
-			ExpResp: errs.Newf(errs.InvalidArgument, "validate: [{\"field\":\"type\",\"error\":\"invalid home type \\\"BAD TYPE\\\"\"}]"),
+			ExpResp: errs.Errorf(errs.InvalidArgument, "validate: [{\"field\":\"type\",\"error\":\"invalid home type \\\"BAD TYPE\\\"\"}]"),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -96,7 +96,7 @@ func update401(sd apitest.SeedData) []apitest.Table {
 			Method:     http.MethodPut,
 			StatusCode: http.StatusUnauthorized,
 			GotResp:    &errs.Error{},
-			ExpResp:    errs.Newf(errs.Unauthenticated, "error parsing token: token contains an invalid number of segments"),
+			ExpResp:    errs.Errorf(errs.Unauthenticated, "error parsing token: token contains an invalid number of segments"),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -108,7 +108,7 @@ func update401(sd apitest.SeedData) []apitest.Table {
 			Method:     http.MethodPut,
 			StatusCode: http.StatusUnauthorized,
 			GotResp:    &errs.Error{},
-			ExpResp:    errs.Newf(errs.Unauthenticated, "authentication failed: OPA policy evaluation failed for authentication: OPA policy rule \"auth\" not satisfied"),
+			ExpResp:    errs.Errorf(errs.Unauthenticated, "authentication failed: OPA policy evaluation failed for authentication: OPA policy rule \"auth\" not satisfied"),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -131,7 +131,7 @@ func update401(sd apitest.SeedData) []apitest.Table {
 				},
 			},
 			GotResp: &errs.Error{},
-			ExpResp: errs.Newf(errs.Unauthenticated, "authorize: you are not authorized for that action, claims[[USER]] rule[rule_admin_or_subject]"),
+			ExpResp: errs.Errorf(errs.Unauthenticated, "authorize: you are not authorized for that action, claims[[USER]] rule[rule_admin_or_subject]"),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},

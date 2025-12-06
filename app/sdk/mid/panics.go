@@ -21,7 +21,7 @@ func Panics() web.MidFunc {
 			defer func() {
 				if rec := recover(); rec != nil {
 					trace := debug.Stack()
-					resp = errs.Newf(errs.InternalOnlyLog, "PANIC [%v] TRACE[%s]", rec, string(trace))
+					resp = errs.Errorf(errs.InternalOnlyLog, "PANIC [%v] TRACE[%s]", rec, string(trace))
 
 					metrics.AddPanics(ctx)
 				}

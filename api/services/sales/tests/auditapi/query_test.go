@@ -65,7 +65,7 @@ func query400(sd apitest.SeedData) []apitest.Table {
 			StatusCode: http.StatusBadRequest,
 			Method:     http.MethodGet,
 			GotResp:    &errs.Error{},
-			ExpResp:    errs.Newf(errs.InvalidArgument, "[{\"field\":\"obj_id\",\"error\":\"invalid UUID length: 3\"}]"),
+			ExpResp:    errs.Errorf(errs.InvalidArgument, "[{\"field\":\"obj_id\",\"error\":\"invalid UUID length: 3\"}]"),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
@@ -77,7 +77,7 @@ func query400(sd apitest.SeedData) []apitest.Table {
 			StatusCode: http.StatusBadRequest,
 			Method:     http.MethodGet,
 			GotResp:    &errs.Error{},
-			ExpResp:    errs.Newf(errs.InvalidArgument, "[{\"field\":\"order\",\"error\":\"unknown order: ser_id\"}]"),
+			ExpResp:    errs.Errorf(errs.InvalidArgument, "[{\"field\":\"order\",\"error\":\"unknown order: ser_id\"}]"),
 			CmpFunc: func(got any, exp any) string {
 				return cmp.Diff(got, exp)
 			},
