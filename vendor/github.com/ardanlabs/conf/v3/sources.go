@@ -11,8 +11,8 @@ var (
 	// ErrHelpWanted provides an indication help was requested.
 	ErrHelpWanted = errors.New("help wanted")
 
-	// errVersionWanted provides an indication version was requested.
-	errVersionWanted = errors.New("version wanted")
+	// ErrVersionWanted provides an indication version was requested.
+	ErrVersionWanted = errors.New("version wanted")
 )
 
 // sourcer provides the ability to source data from a configuration source.
@@ -84,8 +84,9 @@ type flagValue struct {
 
 // flag is a source for command line arguments.
 type flag struct {
-	m    map[string]flagValue
-	args []string
+	m        map[string]flagValue
+	consumed map[string]bool // tracks which flags have been consumed
+	args     []string
 }
 
 // newSourceFlag parsing a string of command line arguments. NewFlag will return
@@ -137,7 +138,7 @@ func newSourceFlag(args []string) (*flag, error) {
 			}
 
 			if name == "version" || name == "v" {
-				return nil, errVersionWanted
+				return nil, ErrVersionWanted
 			}
 
 			// If we don't have a value yet, it's possible the flag was not in the
@@ -164,7 +165,7 @@ func newSourceFlag(args []string) (*flag, error) {
 		}
 	}
 
-	return &flag{m: m, args: args}, nil
+	return &flag{m: m, consumed: make(map[string]bool), args: args}, nil
 }
 
 // source returns the stringified value stored at the specified key with special handling for bool flags.
@@ -173,10 +174,16 @@ func (f *flag) source(key string, isBool bool) (string, bool) {
 
 	val, found := f.m[k]
 	if !found || !isBool {
+		if found {
+			// Mark this flag as consumed
+			f.consumed[k] = true
+		}
 		return val.Value, found
 	}
 
 	if val.HasValue {
+		// Mark this flag as consumed
+		f.consumed[k] = true
 		return val.Value, found
 	}
 
@@ -185,6 +192,8 @@ func (f *flag) source(key string, isBool bool) (string, bool) {
 		f.args = append([]string{val.Value}, f.args...)
 	}
 
+	// Mark this flag as consumed
+	f.consumed[k] = true
 	return "true", found
 }
 
@@ -198,6 +207,17 @@ func (f *flag) Source(fld Field) (string, bool) {
 	}
 
 	return f.source(strings.Join(fld.FlagKey, `-`), fld.BoolField)
+}
+
+// unconsumedFlags returns a list of flags that were parsed but never consumed by any field.
+func (f *flag) unconsumedFlags() []string {
+	var unconsumed []string
+	for flagName := range f.m {
+		if !f.consumed[flagName] {
+			unconsumed = append(unconsumed, flagName)
+		}
+	}
+	return unconsumed
 }
 
 // flagUsage constructs a usage string for the flag argument.

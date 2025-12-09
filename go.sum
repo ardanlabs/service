@@ -10,8 +10,8 @@ github.com/andreyvit/diff v0.0.0-20170406064948-c7f18ee00883 h1:bvNMNQO63//z+xNg
 github.com/andreyvit/diff v0.0.0-20170406064948-c7f18ee00883/go.mod h1:rCTlJbsFo29Kk6CurOXKm700vrz8f0KW0JNfpkRJY/8=
 github.com/arbovm/levenshtein v0.0.0-20160628152529-48b4e1c0c4d0 h1:jfIu9sQUG6Ig+0+Ap1h4unLjW6YQJpKZVmUzxsD4E/Q=
 github.com/arbovm/levenshtein v0.0.0-20160628152529-48b4e1c0c4d0/go.mod h1:t2tdKJDJF9BV14lnkjHmOQgcvEKgtqs5a1N3LNdJhGE=
-github.com/ardanlabs/conf/v3 v3.9.0 h1:aRBYHeD39/OkuaEXYIEoi4wvF3OnS7jUAPxXyLfEu20=
-github.com/ardanlabs/conf/v3 v3.9.0/go.mod h1:XlL9P0quWP4m1weOVFmlezabinbZLI05niDof/+Ochk=
+github.com/ardanlabs/conf/v3 v3.10.0 h1:qIrJ/WBmH/hFQ/IX4xH9LX9LzwK44T9aEOy78M+4S+0=
+github.com/ardanlabs/conf/v3 v3.10.0/go.mod h1:XlL9P0quWP4m1weOVFmlezabinbZLI05niDof/+Ochk=
 github.com/ardanlabs/darwin/v3 v3.3.1 h1:tU4nutFgKNH7fFJ98wSj0Zyrsh9a2XltlPz/1AGkIRE=
 github.com/ardanlabs/darwin/v3 v3.3.1/go.mod h1:dnfiwJYj15gfm/2XltdAmLxhK/7h1eFs7rc4yaaXC0A=
 github.com/arl/statsviz v0.8.0 h1:O6GjjVxEDxcByAucOSl29HaGYLXsuwA3ujJw8H9E7/U=

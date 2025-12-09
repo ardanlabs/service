@@ -25,43 +25,101 @@ type Parsers interface {
 	Process(prefix string, cfg interface{}) error
 }
 
+// parseOptions configures the behavior of the Parse function.
+type parseOptions struct {
+	strictFlags bool
+	parsers     []Parsers
+}
+
+// ParseOption defines a functional option for configuring Parse behavior.
+type ParseOption func(*parseOptions)
+
+// WithStrictFlags returns a ParseOption that enables strict flag validation.
+// When enabled, Parse will return an error if any command-line flags are
+// provided that don't correspond to fields in the configuration struct.
+func WithStrictFlags() ParseOption {
+	return func(opts *parseOptions) {
+		opts.strictFlags = true
+	}
+}
+
+// WithParser returns a ParseOption that adds a custom parser to the parsing pipeline.
+// Parsers are executed in the order they are added, before environment variables
+// and command-line flags are processed.
+func WithParser(parser Parsers) ParseOption {
+	return func(opts *parseOptions) {
+		opts.parsers = append(opts.parsers, parser)
+	}
+}
+
 // =============================================================================
 
 // Parse parses the specified config struct. This function will
 // apply the defaults first and then apply environment variables and
 // command line argument overrides to the struct. ErrHelpWanted is
 // returned when the --help or --version are detected.
+//
+// For backward compatibility, parsers can be passed directly. However,
+// the preferred approach is to use ParseWithOptions with WithParser().
 func Parse(prefix string, cfg interface{}, parsers ...Parsers) (string, error) {
+	// Convert variadic parsers to options for backward compatibility
+	options := make([]ParseOption, len(parsers))
+	for i, parser := range parsers {
+		options[i] = WithParser(parser)
+	}
+	return ParseWithOptions(prefix, cfg, options...)
+}
+
+// ParseWithOptions parses the specified config struct with additional parsing options.
+// This function will apply the defaults first and then apply environment variables and
+// command line argument overrides to the struct. ErrHelpWanted is returned when the
+// --help or --version are detected.
+//
+// Options can be provided to customize parsing behavior:
+//   - conf.WithStrictFlags(): Return an error for unrecognized command-line flags
+//   - conf.WithParser(parser): Add a custom parser to the parsing pipeline
+//
+// Example:
+//
+//	info, err := conf.ParseWithOptions("", &cfg, conf.WithStrictFlags(), conf.WithParser(myCustomParser))
+func ParseWithOptions(prefix string, cfg interface{}, options ...ParseOption) (string, error) {
 	var args []string
 	if len(os.Args) > 1 {
 		args = os.Args[1:]
 	}
 
-	for _, parser := range parsers {
+	// Apply options to build configuration
+	opts := &parseOptions{}
+	for _, option := range options {
+		option(opts)
+	}
+
+	// Process parsers from options
+	for _, parser := range opts.parsers {
 		if err := parser.Process(prefix, cfg); err != nil {
 			return "", fmt.Errorf("external parser: %w", err)
 		}
 	}
 
-	err := parse(args, prefix, cfg)
+	err := parse(args, prefix, cfg, opts)
 	if err == nil {
 		return "", nil
 	}
 
-	switch err {
-	case ErrHelpWanted:
+	switch {
+	case errors.Is(err, ErrHelpWanted):
 		usage, err := UsageInfo(prefix, cfg)
 		if err != nil {
 			return "", fmt.Errorf("generating config usage: %w", err)
 		}
 		return usage, ErrHelpWanted
 
-	case errVersionWanted:
+	case errors.Is(err, ErrVersionWanted):
 		version, err := VersionInfo(prefix, cfg)
 		if err != nil {
 			return "", fmt.Errorf("generating config version: %w", err)
 		}
-		return version, ErrHelpWanted
+		return version, ErrVersionWanted
 	}
 
 	return "", fmt.Errorf("parsing config: %w", err)
@@ -162,7 +220,7 @@ func VersionInfo(namespace string, v interface{}) (string, error) {
 // =============================================================================
 
 // parse parses configuration into the provided struct.
-func parse(args []string, namespace string, cfgStruct interface{}) error {
+func parse(args []string, namespace string, cfgStruct interface{}, opts *parseOptions) error {
 
 	// Create the flag and env sources.
 	flag, err := newSourceFlag(args)
@@ -258,6 +316,18 @@ func parse(args []string, namespace string, cfgStruct interface{}) error {
 	if argsF != nil {
 		args := reflect.ValueOf(Args(flag.args))
 		argsF.Field.Set(args)
+	}
+
+	// If strict flag mode is enabled, check for unconsumed flags.
+	if opts != nil && opts.strictFlags {
+		if unconsumed := flag.unconsumedFlags(); len(unconsumed) > 0 {
+			// Sort for consistent error messages
+			sort.Strings(unconsumed)
+			if len(unconsumed) == 1 {
+				return fmt.Errorf("unrecognized flag: --%s", unconsumed[0])
+			}
+			return fmt.Errorf("unrecognized flags: --%s", strings.Join(unconsumed, ", --"))
+		}
 	}
 
 	return nil
