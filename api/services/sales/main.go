@@ -51,7 +51,6 @@ import (
 var static embed.FS
 
 var tag = "develop"
-var routes = "all" // go build -ldflags "-X main.routes=crud"
 
 func main() {
 	var log *logger.Logger
@@ -281,7 +280,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 	}
 
 	webAPI := mux.WebAPI(cfgMux,
-		buildRoutes(),
+		build.Routes(),
 		mux.WithCORS(cfg.Web.CORSAllowedOrigins),
 		mux.WithFileServer(false, static, "static", "/"),
 	)
@@ -324,28 +323,4 @@ func run(ctx context.Context, log *logger.Logger) error {
 	}
 
 	return nil
-}
-
-func buildRoutes() mux.RouteAdder {
-
-	// The idea here is that we can build different versions of the binary
-	// with different sets of exposed web APIs. By default we build a single
-	// instance with all the web APIs.
-	//
-	// Here is the scenario. It would be nice to build two binaries, one for the
-	// transactional APIs (CRUD) and one for the reporting APIs. This would allow
-	// the system to run two instances of the database. One instance tuned for the
-	// transactional database calls and the other tuned for the reporting calls.
-	// Tuning meaning indexing and memory requirements. The two databases can be
-	// kept in sync with replication.
-
-	switch routes {
-	case "crud":
-		return build.Crud()
-
-	case "reporting":
-		return build.Reporting()
-	}
-
-	return build.All()
 }

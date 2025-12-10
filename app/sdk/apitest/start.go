@@ -35,7 +35,7 @@ func New(t *testing.T, testName string) *Test {
 		AuthConfig: mux.AuthConfig{
 			Auth: auth,
 		},
-	}, authbuild.All()))
+	}, authbuild.Routes()))
 
 	authClient, err := http.New(db.Log, server.URL)
 	if err != nil {
@@ -57,7 +57,7 @@ func New(t *testing.T, testName string) *Test {
 		SalesConfig: mux.SalesConfig{
 			AuthClient: authClient,
 		},
-	}, salesbuild.All())
+	}, salesbuild.Routes())
 
 	return &Test{
 		DB:   db,

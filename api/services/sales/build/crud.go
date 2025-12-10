@@ -1,3 +1,5 @@
+//go:build crud
+
 package build
 
 import (
@@ -11,8 +13,8 @@ import (
 	"github.com/ardanlabs/service/foundation/web"
 )
 
-// Crud binds the crud routes for the sales service.
-func Crud() crud {
+// Routes binds the crud routes for the sales service.
+func Routes() crud {
 	return crud{}
 }
 

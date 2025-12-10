@@ -1,3 +1,4 @@
+// Package build manages different build options.
 package build
 
 import (
@@ -7,8 +8,8 @@ import (
 	"github.com/ardanlabs/service/foundation/web"
 )
 
-// All binds all the routes for the auth service.
-func All() all {
+// Routes binds all the routes for the auth service.
+func Routes() all {
 	return all{}
 }
 

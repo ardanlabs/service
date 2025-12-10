@@ -1,3 +1,5 @@
+//go:build reporting
+
 package build
 
 import (
@@ -7,8 +9,8 @@ import (
 	"github.com/ardanlabs/service/foundation/web"
 )
 
-// Reporting binds the reporting routes for the sales service.
-func Reporting() rpt {
+// Routes binds the reporting routes for the sales service.
+func Routes() rpt {
 	return rpt{}
 }
 
