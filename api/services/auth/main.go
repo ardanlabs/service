@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/conf/v3"
-	"github.com/ardanlabs/service/api/services/auth/build/all"
+	"github.com/ardanlabs/service/api/services/auth/build"
 	"github.com/ardanlabs/service/app/domain/grpcauthapp"
 	"github.com/ardanlabs/service/app/sdk/auth"
 	"github.com/ardanlabs/service/app/sdk/debug"
@@ -28,7 +28,7 @@ import (
 	"github.com/ardanlabs/service/foundation/otel"
 )
 
-var build = "develop"
+var tag = "develop"
 
 func main() {
 	var log *logger.Logger
@@ -98,7 +98,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 		}
 	}{
 		Version: conf.Version{
-			Build: build,
+			Build: tag,
 			Desc:  "Auth",
 		},
 	}
@@ -232,7 +232,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
 
 	cfgMux := mux.Config{
-		Build:  build,
+		Build:  tag,
 		Log:    log,
 		DB:     db,
 		Tracer: tracer,
@@ -246,7 +246,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 
 	api := http.Server{
 		Addr:         cfg.Web.APIHost,
-		Handler:      mux.WebAPI(cfgMux, all.Routes(), mux.WithCORS(cfg.Web.CORSAllowedOrigins)),
+		Handler:      mux.WebAPI(cfgMux, build.All(), mux.WithCORS(cfg.Web.CORSAllowedOrigins)),
 		ReadTimeout:  cfg.Web.ReadTimeout,
 		WriteTimeout: cfg.Web.WriteTimeout,
 		IdleTimeout:  cfg.Web.IdleTimeout,

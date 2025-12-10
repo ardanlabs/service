@@ -1,5 +1,4 @@
-// Package reporting binds the reporting domain set of routes into the specified app.
-package reporting
+package build
 
 import (
 	"github.com/ardanlabs/service/app/domain/checkapp"
@@ -8,16 +7,15 @@ import (
 	"github.com/ardanlabs/service/foundation/web"
 )
 
-// Routes constructs the add value which provides the implementation of
-// of RouteAdder for specifying what routes to bind to this instance.
-func Routes() add {
-	return add{}
+// Reporting binds the reporting routes for the sales service.
+func Reporting() rpt {
+	return rpt{}
 }
 
-type add struct{}
+type rpt struct{}
 
 // Add implements the RouterAdder interface.
-func (add) Add(app *web.App, cfg mux.Config) {
+func (rpt) Add(app *web.App, cfg mux.Config) {
 	checkapp.Routes(app, checkapp.Config{
 		Build: cfg.Build,
 		Log:   cfg.Log,

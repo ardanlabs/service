@@ -20,7 +20,7 @@ import (
 	"github.com/ardanlabs/service/foundation/logger"
 )
 
-var build = "develop"
+var routes = "develop"
 
 func main() {
 	var log *logger.Logger
@@ -85,7 +85,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 		}
 	}{
 		Version: conf.Version{
-			Build: build,
+			Build: routes,
 			Desc:  "copyright information here",
 		},
 	}
@@ -103,7 +103,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 	// -------------------------------------------------------------------------
 	// App Starting
 
-	log.Info(ctx, "starting service", "version", build)
+	log.Info(ctx, "starting service", "version", routes)
 	defer log.Info(ctx, "shutdown complete")
 
 	out, err := conf.String(&cfg)

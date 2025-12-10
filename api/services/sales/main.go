@@ -14,9 +14,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/conf/v3"
-	"github.com/ardanlabs/service/api/services/sales/build/all"
-	"github.com/ardanlabs/service/api/services/sales/build/crud"
-	"github.com/ardanlabs/service/api/services/sales/build/reporting"
+	"github.com/ardanlabs/service/api/services/sales/build"
 	"github.com/ardanlabs/service/app/sdk/authclient"
 	"github.com/ardanlabs/service/app/sdk/authclient/grpc"
 	http2 "github.com/ardanlabs/service/app/sdk/authclient/http"
@@ -52,7 +50,7 @@ import (
 //go:embed static
 var static embed.FS
 
-var build = "develop"
+var tag = "develop"
 var routes = "all" // go build -ldflags "-X main.routes=crud"
 
 func main() {
@@ -127,7 +125,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 		}
 	}{
 		Version: conf.Version{
-			Build: build,
+			Build: tag,
 			Desc:  "Sales",
 		},
 	}
@@ -266,7 +264,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
 
 	cfgMux := mux.Config{
-		Build:  build,
+		Build:  tag,
 		Log:    log,
 		DB:     db,
 		Tracer: tracer,
@@ -343,11 +341,11 @@ func buildRoutes() mux.RouteAdder {
 
 	switch routes {
 	case "crud":
-		return crud.Routes()
+		return build.Crud()
 
 	case "reporting":
-		return reporting.Routes()
+		return build.Reporting()
 	}
 
-	return all.Routes()
+	return build.All()
 }

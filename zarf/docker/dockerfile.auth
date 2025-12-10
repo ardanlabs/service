@@ -1,7 +1,7 @@
 # Build the Go Binary.
 FROM golang:1.25 AS build_auth
 ENV CGO_ENABLED=0
-ARG BUILD_REF
+ARG BUILD_TAG
 
 # Copy the source code into the container.
 COPY . /service
@@ -9,13 +9,13 @@ COPY . /service
 # Build the service binary. We are doing this last since this will be different
 # every time we run through this process.
 WORKDIR /service/api/services/auth
-RUN go build -ldflags "-X main.build=${BUILD_REF}"
+RUN go build -ldflags "-X main.tag=${BUILD_TAG}"
 
 
 # Run the Go Binary in Alpine.
 FROM alpine:3.23
 ARG BUILD_DATE
-ARG BUILD_REF
+ARG BUILD_TAG
 RUN addgroup -g 1000 -S auth && \
     adduser -u 1000 -h /service -G auth -S auth
 COPY --from=build_auth --chown=auth:auth /service/zarf/keys/. /service/zarf/keys/.
@@ -28,5 +28,5 @@ LABEL org.opencontainers.image.created="${BUILD_DATE}" \
       org.opencontainers.image.title="auth" \
       org.opencontainers.image.authors="William Kennedy <bill@ardanlabs.com>" \
       org.opencontainers.image.source="https://github.com/ardanlabs/service/tree/master/a/services/auth" \
-      org.opencontainers.image.revision="${BUILD_REF}" \
+      org.opencontainers.image.revision="${BUILD_TAG}" \
       org.opencontainers.image.vendor="Ardan Labs"

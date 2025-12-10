@@ -1,5 +1,4 @@
-// Package all binds all the routes into the specified app.
-package all
+package build
 
 import (
 	"github.com/ardanlabs/service/app/domain/authapp"
@@ -8,16 +7,15 @@ import (
 	"github.com/ardanlabs/service/foundation/web"
 )
 
-// Routes constructs the add value which provides the implementation of
-// of RouteAdder for specifying what routes to bind to this instance.
-func Routes() add {
-	return add{}
+// All binds all the routes for the auth service.
+func All() all {
+	return all{}
 }
 
-type add struct{}
+type all struct{}
 
 // Add implements the RouterAdder interface.
-func (add) Add(app *web.App, cfg mux.Config) {
+func (all) Add(app *web.App, cfg mux.Config) {
 	checkapp.Routes(app, checkapp.Config{
 		Build: cfg.Build,
 		Log:   cfg.Log,

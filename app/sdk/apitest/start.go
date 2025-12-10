@@ -4,8 +4,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	authbuild "github.com/ardanlabs/service/api/services/auth/build/all"
-	salesbuild "github.com/ardanlabs/service/api/services/sales/build/all"
+	authbuild "github.com/ardanlabs/service/api/services/auth/build"
+	salesbuild "github.com/ardanlabs/service/api/services/sales/build"
 	"github.com/ardanlabs/service/app/sdk/auth"
 	"github.com/ardanlabs/service/app/sdk/authclient/http"
 	"github.com/ardanlabs/service/app/sdk/mux"
@@ -35,7 +35,7 @@ func New(t *testing.T, testName string) *Test {
 		AuthConfig: mux.AuthConfig{
 			Auth: auth,
 		},
-	}, authbuild.Routes()))
+	}, authbuild.All()))
 
 	authClient, err := http.New(db.Log, server.URL)
 	if err != nil {
@@ -57,7 +57,7 @@ func New(t *testing.T, testName string) *Test {
 		SalesConfig: mux.SalesConfig{
 			AuthClient: authClient,
 		},
-	}, salesbuild.Routes())
+	}, salesbuild.All())
 
 	return &Test{
 		DB:   db,
