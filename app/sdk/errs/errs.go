@@ -12,11 +12,6 @@ type ErrCode struct {
 	value int
 }
 
-// Value returns the integer value of the error code.
-func (ec ErrCode) Value() int {
-	return ec.value
-}
-
 // String returns the string representation of the error code.
 func (ec ErrCode) String() string {
 	return codeNames[ec]

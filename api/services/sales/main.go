@@ -61,11 +61,7 @@ func main() {
 		},
 	}
 
-	traceIDFn := func(ctx context.Context) string {
-		return otel.GetTraceID(ctx)
-	}
-
-	log = logger.NewWithEvents(os.Stdout, logger.LevelInfo, "SALES", traceIDFn, events)
+	log = logger.NewWithEvents(os.Stdout, logger.LevelInfo, "SALES", otel.GetTraceID, events)
 
 	// -------------------------------------------------------------------------
 
