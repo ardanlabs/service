@@ -24,13 +24,13 @@ func Test_Worker(t *testing.T) {
 		t.Fatalf("Should be able to create a worker with max 4 : %s", err)
 	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 	for i := 0; i < 4; i++ {
-		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
-		defer cancel()
 		if _, err := w.Start(ctx, work); err != nil {
 			t.Fatalf("Should be able to execute work : %s", err)
 		}
 	}
+	defer cancel()
 
 	// Wait for all the jobs to finish.
 	for i := 0; i < 4; i++ {
@@ -72,21 +72,21 @@ func Test_CancelWorker(t *testing.T) {
 		t.Fatalf("Should be able to create a worker with max 4 : %s", err)
 	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	for i := 0; i < 4; i++ {
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
 		if _, err := w.Start(ctx, work); err != nil {
 			t.Fatalf("Should be able to execute work : %s", err)
 		}
 	}
+	defer cancel()
 
 	// Wait for all 4 jobs to report they are running.
 	wg.Wait()
 
 	// Give all the jobs 1 second to shut down cleanly.
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-	if err := w.Shutdown(ctx); err != nil {
+	ctx1, cancel1 := context.WithTimeout(context.Background(), time.Second)
+	defer cancel1()
+	if err := w.Shutdown(ctx1); err != nil {
 		t.Fatalf("Should be able to shutdown work cleanly : %s", err)
 	}
 }
@@ -112,15 +112,15 @@ func Test_StopWorker(t *testing.T) {
 		t.Fatalf("Should be able to create a worker with max 4 : %s", err)
 	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	for i := 0; i < 4; i++ {
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
 		work, err := w.Start(ctx, work)
 		if err != nil {
 			t.Fatalf("Should be able to execute work : %s", err)
 		}
 		works = append(works, work)
 	}
+	defer cancel()
 
 	// Wait for all 4 jobs to report they are running.
 	wg.Wait()
