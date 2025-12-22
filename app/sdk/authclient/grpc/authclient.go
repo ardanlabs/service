@@ -71,15 +71,14 @@ func (cln *Client) Authenticate(ctx context.Context, authorization string) (auth
 func (cln *Client) Authorize(ctx context.Context, auth authclient.Authorize) error {
 	req := authorizeRequestToGRPC(auth)
 
-	r, err := cln.grpc.Authorize(ctx, req)
-	if err != nil {
+	if _, err := cln.grpc.Authorize(ctx, req); err != nil {
 		return err
 	}
 
-	_ = r
 	return nil
 }
 
+// Close closes the connection to the server.
 func (cln *Client) Close() error {
 	if cln.grpcConn != nil {
 		return cln.grpcConn.Close()

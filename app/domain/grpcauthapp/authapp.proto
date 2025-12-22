@@ -1,6 +1,6 @@
 edition = "2024";
 
-package auth;
+package grpcauthapp;
 
 option go_package = "github.com/ardanlabs/service/app/domain/grpcauthapp";
 

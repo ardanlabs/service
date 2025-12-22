@@ -5,6 +5,7 @@ import (
 	"errors"
 	"expvar"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -70,6 +71,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 			ShutdownTimeout    time.Duration `conf:"default:20s"`
 			APIHost            string        `conf:"default:0.0.0.0:6000"`
 			DebugHost          string        `conf:"default:0.0.0.0:6010"`
+			GRPCHost           string        `conf:"default:0.0.0.0:6001"`
 			CORSAllowedOrigins []string      `conf:"default:*"`
 		}
 		Auth struct {
@@ -262,22 +264,19 @@ func run(ctx context.Context, log *logger.Logger) error {
 
 	log.Info(ctx, "startup", "status", "initializing gRPC support")
 
-	grpcService, err := grpcauthapp.New(grpcauthapp.Config{
-		Log:     log,
-		Auth:    ath,
-		UserBus: userBus,
-		Host:    "0.0.0.0:6001",
-		APIHost: cfg.Web.APIHost,
-	})
+	lis, err := net.Listen("tcp", cfg.Web.GRPCHost)
 	if err != nil {
-		return fmt.Errorf("failed to create gRPC service: %w", err)
+		return fmt.Errorf("failed to listen on host %s : %w", cfg.Web.GRPCHost, err)
 	}
 
-	go func() {
-		if err := grpcService.Start(); err != nil {
-			log.Error(ctx, "startup", "status", "gRPC server error", "err", err)
-		}
-	}()
+	grpcService := grpcauthapp.Start(ctx, grpcauthapp.Config{
+		Log:      log,
+		Auth:     ath,
+		Listener: lis,
+		UserBus:  userBus,
+	})
+
+	defer grpcService.Shutdown()
 
 	// -------------------------------------------------------------------------
 	// Shutdown
@@ -289,8 +288,6 @@ func run(ctx context.Context, log *logger.Logger) error {
 	case sig := <-shutdown:
 		log.Info(ctx, "shutdown", "status", "shutdown started", "signal", sig)
 		defer log.Info(ctx, "shutdown", "status", "shutdown complete", "signal", sig)
-
-		grpcService.Stop()
 
 		ctx, cancel := context.WithTimeout(ctx, cfg.Web.ShutdownTimeout)
 		defer cancel()

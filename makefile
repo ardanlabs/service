@@ -150,6 +150,8 @@ dev-gotooling:
 	go install honnef.co/go/tools/cmd/staticcheck@latest
 	go install golang.org/x/vuln/cmd/govulncheck@latest
 	go install golang.org/x/tools/cmd/goimports@latest
+	go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 
 dev-brew:
 	brew update
@@ -158,6 +160,7 @@ dev-brew:
 	brew list kustomize || brew install kustomize
 	brew list pgcli || brew install pgcli
 	brew list watch || brew install watch
+	brew list protobuf || brew install protobuf
 	brew list grpcurl || brew install grpcurl
 
 dev-docker:
@@ -464,11 +467,11 @@ otel-test:
 # ==============================================================================
 # Protobuf support
 
-proto-gen:
+authapp-proto-gen:
 	protoc --go_out=app/domain/grpcauthapp --go_opt=paths=source_relative \
 		--go-grpc_out=app/domain/grpcauthapp --go-grpc_opt=paths=source_relative \
-		--proto_path=zarf/proto \
-		zarf/proto/auth.proto
+		--proto_path=app/domain/grpcauthapp \
+		app/domain/grpcauthapp/authapp.proto
 
 # ==============================================================================
 # Modules support
