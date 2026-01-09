@@ -2,6 +2,7 @@ package mid
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/ardanlabs/service/foundation/otel"
@@ -13,6 +14,10 @@ import (
 func Otel(tracer trace.Tracer) web.MidFunc {
 	m := func(next web.HandlerFunc) web.HandlerFunc {
 		h := func(ctx context.Context, r *http.Request) web.Encoder {
+			spanName := fmt.Sprintf("%s %s", r.Method, r.URL.Path)
+			ctx, span := tracer.Start(ctx, spanName)
+			defer span.End()
+
 			ctx = otel.InjectTracing(ctx, tracer)
 
 			return next(ctx, r)
