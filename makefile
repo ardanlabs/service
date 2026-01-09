@@ -116,7 +116,7 @@ POSTGRES        := postgres:18.1
 GRAFANA         := grafana/grafana:12.3.0
 PROMETHEUS      := prom/prometheus:v3.8.0
 TEMPO           := grafana/tempo:2.9.0
-LOKI            := grafana/loki:3.5.0
+LOKI            := grafana/loki:3.6.0
 PROMTAIL        := grafana/promtail:3.6.0
 
 KIND_CLUSTER    := ardan-starter-cluster
