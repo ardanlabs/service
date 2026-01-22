@@ -24,11 +24,15 @@ api/cmd/frontends/admin/.env
 # Folders
 _obj
 _test
+zarf/build/
 
 # Editor files
 .idea/
 *.iml
 *.swp
+.vscode
+CLAUDE.md
+.claude/
 
 # Architecture specific extensions/prefixes
 *.[568vq]

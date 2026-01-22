@@ -1,0 +1,27 @@
+# Development environment overrides
+# Use with: helm install -f values.yaml -f values-dev.yaml
+
+image:
+  repository: localhost:5001/ardanlabs/auth
+  tag: "0.0.1"
+
+replicaCount: 1
+
+strategy:
+  type: Recreate  # Faster for local dev with Tilt
+
+resources:
+  requests:
+    cpu: "100m"
+  limits:
+    cpu: "1000m"
+
+hostNetwork: true  # Required for Kind cluster to access services
+
+database:
+  disableTls: "true"
+
+# Dev: Chart creates secret with hardcoded password
+secret:
+  create: true
+  password: "postgres"

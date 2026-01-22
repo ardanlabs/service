@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: auth-config
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "auth.labels" . | nindent 4 }}
+data:
+  db_hostport: {{ .Values.database.host | quote }}
+  db_user: {{ .Values.database.user | quote }}
+  db_disabletls: {{ .Values.database.disableTls | quote }}

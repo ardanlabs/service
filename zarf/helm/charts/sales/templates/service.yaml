@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: sales-service
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "sales.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  selector:
+    {{- include "sales.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: sales
+      port: {{ .Values.service.ports.http }}
+      targetPort: sales
+    - name: sales-debug
+      port: {{ .Values.service.ports.debug }}
+      targetPort: sales-debug
+    - name: metrics
+      port: {{ .Values.service.ports.metricsHttp }}
+      targetPort: metrics
+    - name: metrics-debug
+      port: {{ .Values.service.ports.metricsDebug }}
+      targetPort: metrics-debug
+    - name: prometheus
+      port: {{ .Values.service.ports.metricsPrometheus }}
+      targetPort: metrics-prom

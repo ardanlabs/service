@@ -1,0 +1,87 @@
+# Production-ready defaults for Auth service
+# Override these with environment-specific values files
+
+image:
+  repository: registry.example.com/ardanlabs/auth
+  tag: "1.0.0"
+  pullPolicy: IfNotPresent
+
+replicaCount: 2
+
+service:
+  type: ClusterIP
+  ports:
+    http: 6000
+    debug: 6010
+
+strategy:
+  type: RollingUpdate
+
+resources:
+  requests:
+    cpu: "500m"
+    memory: "256Mi"
+  limits:
+    cpu: "1000m"
+    memory: "512Mi"
+
+hostNetwork: false
+terminationGracePeriodSeconds: 60
+
+readinessProbe:
+  httpGet:
+    path: /v1/readiness
+    port: auth
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  timeoutSeconds: 5
+  successThreshold: 1
+  failureThreshold: 2
+
+livenessProbe:
+  httpGet:
+    path: /v1/liveness
+    port: auth
+  initialDelaySeconds: 2
+  periodSeconds: 5
+  timeoutSeconds: 5
+  successThreshold: 1
+  failureThreshold: 2
+
+namespace: sales-system
+
+database:
+  # For production with managed databases (RDS, Cloud SQL, etc.), configure:
+  # host: "your-db-instance.region.rds.amazonaws.com:5432"
+  # user: "auth_user"
+  # disableTls: "false"
+  host: "database-service:5432"
+  user: "postgres"
+  disableTls: "false"
+
+# Secret management strategy
+# Dev: Chart creates secret with password (see values-dev.yaml)
+# Production: Chart expects secret "auth-secret" to already exist
+#
+# Production example using External Secrets Operator:
+#   apiVersion: external-secrets.io/v1beta1
+#   kind: ExternalSecret
+#   metadata:
+#     name: auth-secret
+#   spec:
+#     refreshInterval: 1h
+#     secretStoreRef:
+#       name: aws-secrets-manager
+#       kind: SecretStore
+#     target:
+#       name: auth-secret
+#     data:
+#       - secretKey: db_password
+#         remoteRef:
+#           key: prod/auth/database
+#           property: password
+#
+# Or manually: kubectl create secret generic auth-secret --from-literal=db_password=xxx
+secret:
+  create: false  # Don't create secret in production
+  password: ""   # Only used if create: true (dev mode)
