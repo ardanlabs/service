@@ -1,0 +1,43 @@
+# Development environment overrides
+# Use with: helm install -f values.yaml -f values-dev.yaml
+
+image:
+  repository: localhost:5001/ardanlabs/sales
+  tag: "0.0.1"
+
+replicaCount: 1
+
+strategy:
+  type: Recreate  # Faster for local dev with Tilt
+
+resources:
+  requests:
+    cpu: "250m"
+    memory: "100Mi"
+  limits:
+    cpu: "250m"
+    memory: "100Mi"
+
+metrics:
+  image:
+    repository: localhost:5001/ardanlabs/metrics
+    tag: "0.0.1"
+  resources:
+    requests:
+      cpu: "250m"
+    limits:
+      cpu: "250m"
+
+hostNetwork: true  # Required for Kind cluster to access services
+
+# Disable initContainer in dev - Tilt handles migrations via sales-migrate resource
+initContainer:
+  enabled: false
+
+database:
+  disableTls: "true"
+
+# Dev: Chart creates secret with hardcoded password
+secret:
+  create: true
+  password: "postgres"

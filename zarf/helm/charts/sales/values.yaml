@@ -1,0 +1,103 @@
+# Production-ready defaults for Sales service
+# Override these with environment-specific values files
+
+# Namespace
+namespace: sales-system
+
+# Image configuration
+image:
+  repository: registry.example.com/ardanlabs/sales
+  tag: "1.0.0"
+  pullPolicy: IfNotPresent
+
+# Replica count
+replicaCount: 2
+
+# Service configuration
+service:
+  type: ClusterIP
+  ports:
+    http: 3000
+    debug: 3010
+    metricsHttp: 4000
+    metricsDebug: 4010
+    metricsPrometheus: 4020
+
+# Deployment strategy
+strategy:
+  type: RollingUpdate
+
+# Resource limits
+resources:
+  requests:
+    cpu: "500m"
+    memory: "256Mi"
+  limits:
+    cpu: "1000m"
+    memory: "512Mi"
+
+# Metrics sidecar
+metrics:
+  enabled: true
+  image:
+    repository: registry.example.com/ardanlabs/metrics
+    tag: "1.0.0"
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "128Mi"
+    limits:
+      cpu: "500m"
+      memory: "256Mi"
+
+# Network configuration
+hostNetwork: false
+terminationGracePeriodSeconds: 60
+
+# InitContainer for database migrations
+initContainer:
+  enabled: true
+  command: ["./admin", "migrate-seed"]
+
+# Health checks
+readinessProbe:
+  httpGet:
+    path: /v1/readiness
+    port: sales
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  timeoutSeconds: 5
+  successThreshold: 1
+  failureThreshold: 2
+
+livenessProbe:
+  httpGet:
+    path: /v1/liveness
+    port: sales
+  initialDelaySeconds: 2
+  periodSeconds: 5
+  timeoutSeconds: 5
+  successThreshold: 1
+  failureThreshold: 2
+
+# Environment variables
+env:
+  GOGC: "off"  # Disable GC, use GOMEMLIMIT instead
+
+# Database configuration
+database:
+  # For production with managed databases (RDS, Cloud SQL, etc.), configure:
+  # host: "your-db-instance.region.rds.amazonaws.com:5432"
+  # user: "sales_user"
+  # disableTls: "false"
+  host: "database-service:5432"
+  user: "postgres"
+  disableTls: "false"
+
+# Secret management strategy
+# Dev: Chart creates secret with password (see values-dev.yaml)
+# Production: Chart expects secret "sales-secret" to already exist
+secret:
+  create: false  # Don't create secret in production
+  password: ""   # Only used if create: true (dev mode)

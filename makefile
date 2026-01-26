@@ -230,6 +230,14 @@ dev-up:
 dev-down:
 	kind delete cluster --name $(KIND_CLUSTER)
 
+dev-up-registry:
+	KIND_CLUSTER_NAME=$(KIND_CLUSTER) ./zarf/k8s/dev/kind-with-registry.sh
+
+dev-down-registry:
+	kind delete cluster --name $(KIND_CLUSTER)
+	docker stop kind-registry 2>/dev/null || true
+	docker rm kind-registry 2>/dev/null || true
+
 dev-status-all:
 	kubectl get nodes -o wide
 	kubectl get svc -o wide
@@ -652,3 +660,107 @@ help:
 	@echo "  dev-logs-loki           Show the logs for the loki service"
 	@echo "  dev-logs-promtail       Show the logs for the promtail service"
 	@echo "  dev-services-delete     Delete all"
+	@echo "  dev-up-registry         Start KIND with local registry"
+	@echo "  dev-down-registry       Stop KIND and local registry"
+	@echo "  tilt-up                 Start Tilt"
+	@echo "  tilt-up-hud             Start Tilt with HUD"
+	@echo "  tilt-down               Stop Tilt"
+	@echo "  tilt-clean              Stop Tilt and delete namespaces"
+	@echo "  tilt-logs               Show logs for a Tilt service"
+	@echo "  chart-install           Install a Helm chart"
+	@echo "  chart-upgrade           Upgrade a Helm chart"
+	@echo "  chart-uninstall         Uninstall a Helm chart"
+	@echo "  chart-template          Render a Helm chart"
+	@echo "  chart-lint              Lint a Helm chart"
+
+# ==============================================================================
+# ==============================================================================
+# Development Workflow (Tilt)
+# ==============================================================================
+
+# Start local development with hot reload
+tilt-up:
+	tilt up
+
+# Start Tilt with HUD
+tilt-up-hud:
+	tilt up --hud=true
+
+# Stop Tilt
+tilt-down:
+	tilt down
+
+# Clean up everything
+tilt-clean:
+	tilt down --delete-namespaces
+
+# View Tilt logs for a specific service
+tilt-logs:
+	@echo "Usage: make tilt-logs SERVICE=sales"
+	@if [ -z "$(SERVICE)" ]; then \
+		echo "Error: SERVICE required"; \
+		echo "Example: make tilt-logs SERVICE=sales"; \
+		exit 1; \
+	fi
+	tilt logs $(SERVICE)
+
+# ==============================================================================
+# Individual Chart Deployment (Production)
+# ==============================================================================
+
+# Deploy individual chart
+# Usage: make chart-install CHART=sales ENV=prod
+chart-install:
+	@if [ -z "$(CHART)" ]; then \
+		echo "Error: CHART required"; \
+		echo "Example: make chart-install CHART=sales ENV=prod"; \
+		exit 1; \
+	fi
+	helm install $(CHART) ./zarf/helm/charts/$(CHART) \
+		--namespace $(NAMESPACE) \
+		--create-namespace \
+		--values ./zarf/helm/charts/$(CHART)/values-$(ENV).yaml \
+		--wait \
+		--timeout 10m
+
+# Upgrade individual chart
+chart-upgrade:
+	@if [ -z "$(CHART)" ]; then \
+		echo "Error: CHART required"; \
+		echo "Example: make chart-upgrade CHART=sales ENV=prod"; \
+		exit 1; \
+	fi
+	helm upgrade $(CHART) ./zarf/helm/charts/$(CHART) \
+		--namespace $(NAMESPACE) \
+		--values ./zarf/helm/charts/$(CHART)/values-$(ENV).yaml \
+		--wait \
+		--timeout 10m
+
+# Uninstall individual chart
+chart-uninstall:
+	@if [ -z "$(CHART)" ]; then \
+		echo "Error: CHART required"; \
+		echo "Example: make chart-uninstall CHART=sales"; \
+		exit 1; \
+	fi
+	helm uninstall $(CHART) --namespace $(NAMESPACE) --ignore-not-found
+
+# Template individual chart (debug)
+chart-template:
+	@if [ -z "$(CHART)" ]; then \
+		echo "Error: CHART required"; \
+		echo "Example: make chart-template CHART=sales ENV=dev"; \
+		exit 1; \
+	fi
+	helm template $(CHART) ./zarf/helm/charts/$(CHART) \
+		--values ./zarf/helm/charts/$(CHART)/values-$(ENV).yaml \
+		--debug
+
+# Lint individual chart
+chart-lint:
+	@if [ -z "$(CHART)" ]; then \
+		echo "Error: CHART required"; \
+		echo "Example: make chart-lint CHART=sales"; \
+		exit 1; \
+	fi
+	helm lint ./zarf/helm/charts/$(CHART)

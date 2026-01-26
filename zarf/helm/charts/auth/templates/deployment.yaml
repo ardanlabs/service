@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "auth.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "auth.selectorLabels" . | nindent 6 }}
+  replicas: {{ .Values.replicaCount }}
+  strategy:
+    type: {{ .Values.strategy.type }}
+  template:
+    metadata:
+      labels:
+        {{- include "auth.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- if .Values.hostNetwork }}
+      dnsPolicy: ClusterFirstWithHostNet
+      hostNetwork: true
+      {{- end }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+      {{- if not .Values.hostNetwork }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      {{- end }}
+      containers:
+        - name: auth
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- if not .Values.hostNetwork }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop:
+                - ALL
+          {{- end }}
+          ports:
+            - name: auth
+              containerPort: {{ .Values.service.ports.http }}
+            - name: auth-debug
+              containerPort: {{ .Values.service.ports.debug }}
+          readinessProbe:
+            {{- toYaml .Values.readinessProbe | nindent 12 }}
+          livenessProbe:
+            {{- toYaml .Values.livenessProbe | nindent 12 }}
+          {{- if .Values.resources }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          {{- end }}
+          env:
+            - name: GOMAXPROCS
+              valueFrom:
+                resourceFieldRef:
+                  resource: limits.cpu
+            {{- include "auth.dbEnvVars" . | nindent 12 }}
+            {{- include "auth.k8sEnvVars" . | nindent 12 }}
