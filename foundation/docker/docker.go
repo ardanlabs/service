@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net"
 	"os/exec"
+	"strings"
 	"time"
 )
 
@@ -24,17 +25,30 @@ func StartContainer(image string, name string, port string, dockerArgs []string,
 	// When this code is used in tests, each test could be running in it's own
 	// process, so there is no way to serialize the call. The idea is to wait
 	// for the container to exist if the code fails to start it.
-	for i := range 2 {
-		c, err := startContainer(image, name, port, dockerArgs, appArgs)
-		if err != nil {
-			time.Sleep(time.Duration(i+1) * 100 * time.Millisecond)
-			continue
-		}
 
+	// Check if the container is already running.
+	if c, err := exists(name, port); err == nil {
 		return c, nil
 	}
 
-	return startContainer(image, name, port, dockerArgs, appArgs)
+	// Try to start the container.
+	c, err := dockerRun(image, name, port, dockerArgs, appArgs)
+	if err == nil {
+		return c, nil
+	}
+
+	// The docker run failed. Another test process likely has the container
+	// name reserved. Wait for the container to become available.
+	for i := range 10 {
+		time.Sleep(time.Duration(i+1) * 500 * time.Millisecond)
+
+		c, err := exists(name, port)
+		if err == nil {
+			return c, nil
+		}
+	}
+
+	return Container{}, fmt.Errorf("could not start or find container %s", name)
 }
 
 // StopContainer stops and removes the specified container.
@@ -62,14 +76,7 @@ func DumpContainerLogs(id string) []byte {
 
 // =============================================================================
 
-func startContainer(image string, name string, port string, dockerArgs []string, appArgs []string) (Container, error) {
-	if c, err := exists(name, port); err == nil {
-		return c, nil
-	}
-
-	// Just in case there is a container with the same name.
-	exec.Command("docker", "rm", name, "-v").Run()
-
+func dockerRun(image string, name string, port string, dockerArgs []string, appArgs []string) (Container, error) {
 	arg := []string{"run", "-P", "-d", "--name", name}
 	arg = append(arg, dockerArgs...)
 	arg = append(arg, image)
@@ -79,7 +86,7 @@ func startContainer(image string, name string, port string, dockerArgs []string,
 	cmd := exec.Command("docker", arg...)
 	cmd.Stdout = &out
 	if err := cmd.Run(); err != nil {
-		return Container{}, fmt.Errorf("could not start container %s: %w: %s", image, err, arg)
+		return Container{}, fmt.Errorf("could not start container %s: %w", image, err)
 	}
 
 	id := out.String()[:12]
@@ -112,13 +119,7 @@ func exists(name string, port string) (Container, error) {
 }
 
 func extractIPPort(name string, port string) (hostIP string, hostPort string, err error) {
-
-	// When IPv6 is turned on with Docker.
-	// Got  [{"HostIp":"0.0.0.0","HostPort":"49190"}{"HostIp":"::","HostPort":"49190"}]
-	// Need [{"HostIp":"0.0.0.0","HostPort":"49190"},{"HostIp":"::","HostPort":"49190"}]
-	// '[{{range $i,$v := (index .NetworkSettings.Ports "5432/tcp")}}{{if $i}},{{end}}{{json $v}}{{end}}]'
-
-	tmpl := fmt.Sprintf("[{{range $i,$v := (index .NetworkSettings.Ports \"%s/tcp\")}}{{if $i}},{{end}}{{json $v}}{{end}}]", port)
+	tmpl := fmt.Sprintf("[{{range $k,$v := (index .NetworkSettings.Ports \"%s/tcp\")}}{{json $v}}{{end}}]", port)
 
 	var out bytes.Buffer
 	cmd := exec.Command("docker", "inspect", "-f", tmpl, name)
@@ -127,11 +128,16 @@ func extractIPPort(name string, port string) (hostIP string, hostPort string, er
 		return "", "", fmt.Errorf("could not inspect container %s: %w", name, err)
 	}
 
+	// When IPv6 is turned on with Docker.
+	// Got  [{"HostIp":"0.0.0.0","HostPort":"49190"}{"HostIp":"::","HostPort":"49190"}]
+	// Need [{"HostIp":"0.0.0.0","HostPort":"49190"},{"HostIp":"::","HostPort":"49190"}]
+	data := strings.ReplaceAll(out.String(), "}{", "},{")
+
 	var docs []struct {
 		HostIP   string `json:"HostIp"`
 		HostPort string `json:"HostPort"`
 	}
-	if err := json.Unmarshal(out.Bytes(), &docs); err != nil {
+	if err := json.Unmarshal([]byte(data), &docs); err != nil {
 		return "", "", fmt.Errorf("could not decode json: %w", err)
 	}
 
