@@ -1,6 +1,12 @@
 Changes
 =======
 
+v3.0.4 08 Feb 2026
+  * Fix worker goroutine dying on sync refresh failure, which could cause
+    deadlocks after repeated failures (lestrrat-go/jwx#1551)
+  * Move ErrNotReady example functions out of client_example_test.go into
+    separate files to avoid triggering autodoc workflow
+
 v3.0.3 23 Dec 2025
   * Add ErrNotReady error state to avoid waiting for unstable URLs
 

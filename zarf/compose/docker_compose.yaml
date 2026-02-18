@@ -1,6 +1,6 @@
 services:
   database:
-    image: postgres:18.1-alpine3.22
+    image: postgres:18.2-alpine3.22
     container_name: database
     ports:
       - "5432:5432"
