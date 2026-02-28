@@ -20,7 +20,7 @@ func (b *Business) registerDelegateFunctions() {
 
 // actionUserDeleted is executed by the user domain indirectly when a user is deleted.
 func (b *Business) actionUserDeleted(ctx context.Context, data delegate.Data) error {
-	var params userbus.ActionDeletedParms
+	var params userbus.ActionDeletedParams
 	err := json.Unmarshal(data.RawParams, &params)
 	if err != nil {
 		return fmt.Errorf("expected an encoded %T: %w", params, err)
