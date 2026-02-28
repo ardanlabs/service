@@ -266,6 +266,9 @@ func parse(args []string, namespace string, cfgStruct interface{}, opts *parseOp
 					err:       err,
 				}
 			}
+			if field.mapParent.IsValid() {
+				field.mapParent.SetMapIndex(field.mapKey, field.Field)
+			}
 		}
 
 		// If this is an immutable field then don't let it
@@ -296,6 +299,9 @@ func parse(args []string, namespace string, cfgStruct interface{}, opts *parseOp
 					value:     value,
 					err:       err,
 				}
+			}
+			if field.mapParent.IsValid() {
+				field.mapParent.SetMapIndex(field.mapKey, field.Field)
 			}
 
 			foundOverride = true

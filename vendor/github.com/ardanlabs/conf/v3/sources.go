@@ -60,14 +60,14 @@ func newSourceEnv(namespace string) *env {
 // Source implements the conf.sourcer interface. It returns the stringified value
 // stored at the specified key from the environment.
 func (e *env) Source(fld Field) (string, bool) {
-	k := strings.ToUpper(strings.Join(fld.EnvKey, `_`))
+	k := strings.ToUpper(strings.ReplaceAll(strings.Join(fld.EnvKey, `_`), `-`, `_`))
 	v, ok := e.m[k]
 	return v, ok
 }
 
 // envUsage constructs a usage string for the environment variable.
 func envUsage(namespace string, fld Field) string {
-	uspace := strings.ToUpper(namespace) + "_" + strings.ToUpper(strings.Join(fld.EnvKey, `_`))
+	uspace := strings.ToUpper(namespace) + "_" + strings.ToUpper(strings.ReplaceAll(strings.Join(fld.EnvKey, `_`), `-`, `_`))
 	if namespace == "" {
 		uspace = uspace[1:]
 	}
