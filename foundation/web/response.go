@@ -13,7 +13,7 @@ import (
 // cases the app layer code has already done so.
 type NoResponse struct{}
 
-// NewNoResponse constructs a no reponse value.
+// NewNoResponse constructs a no response value.
 func NewNoResponse() NoResponse {
 	return NoResponse{}
 }

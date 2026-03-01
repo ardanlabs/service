@@ -158,7 +158,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 
 	log.Info(ctx, "startup", "status", "initializing authentication support")
 
-	// Check the enviornment first to see if a key is being provided. Then
+	// Check the environment first to see if a key is being provided. Then
 	// load any private keys files from disk. We can assume some system like
 	// Vault has created these files already. How that happens is not our
 	// concern.
