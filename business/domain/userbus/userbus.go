@@ -38,7 +38,7 @@ type Storer interface {
 }
 
 // ExtBusiness interface provides support for extensions that wrap extra functionality
-// around the core busines logic.
+// around the core business logic.
 type ExtBusiness interface {
 	NewWithTx(tx sqldb.CommitRollbacker) (ExtBusiness, error)
 	Create(ctx context.Context, actorID uuid.UUID, nu NewUser) (User, error)

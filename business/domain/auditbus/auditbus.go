@@ -22,7 +22,7 @@ type Storer interface {
 }
 
 // ExtBusiness interface provides support for extensions that wrap extra functionality
-// around the core busines logic.
+// around the core business logic.
 type ExtBusiness interface {
 	Create(ctx context.Context, na NewAudit) (Audit, error)
 	Query(ctx context.Context, filter QueryFilter, orderBy order.By, page page.Page) ([]Audit, error)
