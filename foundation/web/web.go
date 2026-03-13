@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/fs"
 	"net/http"
+	"path"
 	"regexp"
 
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
@@ -101,6 +102,11 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// preload lists, like Chromium, Edge, and Firefox.
 	w.Header().Set("Strict-Transport-Security", "max-age=63072000; includeSubDomains; preload")
 
+	// Clean the request path to prevent http.ServeMux from issuing 301 redirects
+    // for unclean paths (e.g. //v1/auth/register). Without this, clients following
+    // the redirect switch to GET, causing 405 on POST/PUT/DELETE routes.
+	r.URL.Path = path.Clean(r.URL.Path)
+	
 	a.otmux.ServeHTTP(w, r)
 }
 
