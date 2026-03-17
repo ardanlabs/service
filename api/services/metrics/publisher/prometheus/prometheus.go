@@ -121,13 +121,18 @@ func deepCopyMap(source map[string]any) map[string]any {
 }
 
 // sanitize replaces invalid Prometheus metric name characters with underscores.
+// A leading digit is prefixed with '_' to satisfy [a-zA-Z_:][a-zA-Z0-9_:]*.
 func sanitize(s string) string {
-	return strings.Map(func(r rune) rune {
+	result := strings.Map(func(r rune) rune {
 		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '_' {
 			return r
 		}
 		return '_'
 	}, s)
+	if len(result) > 0 && result[0] >= '0' && result[0] <= '9' {
+		return "_" + result
+	}
+	return result
 }
 
 func out(w io.Writer, prefix string, data map[string]any) {
