@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"sync"
+	"strings"
 	"time"
 
 	"github.com/ardanlabs/service/foundation/logger"
@@ -119,13 +120,28 @@ func deepCopyMap(source map[string]any) map[string]any {
 	return result
 }
 
+// sanitize replaces invalid Prometheus metric name characters with underscores.
+// A leading digit is prefixed with '_' to satisfy [a-zA-Z_:][a-zA-Z0-9_:]*.
+func sanitize(s string) string {
+	result := strings.Map(func(r rune) rune {
+		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '_' {
+			return r
+		}
+		return '_'
+	}, s)
+	if len(result) > 0 && result[0] >= '0' && result[0] <= '9' {
+		return "_" + result
+	}
+	return result
+}
+
 func out(w io.Writer, prefix string, data map[string]any) {
 	if prefix != "" {
 		prefix += "_"
 	}
 
 	for k, v := range data {
-		writeKey := fmt.Sprintf("%s%s", prefix, k)
+		writeKey := fmt.Sprintf("%s%s", prefix, sanitize(k))
 
 		switch vm := v.(type) {
 		case float64:
