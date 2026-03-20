@@ -48,7 +48,7 @@ spec:
                 path: "pg_hba.conf"
       containers:
         - name: postgres
-          image: postgres:18.2
+          image: postgres:18.3
           volumeMounts:
             - name: data
               mountPath: /var/lib/postgresql/18/docker

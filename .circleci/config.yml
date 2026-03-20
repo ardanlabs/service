@@ -17,7 +17,7 @@ jobs:
       - run:
           name: Start Test Database
           command: |
-            docker run -P -d --name servicetest -e POSTGRES_PASSWORD=postgres postgres:18.2
+            docker run -P -d --name servicetest -e POSTGRES_PASSWORD=postgres postgres:18.3
       - run:
           name: Run tests
           command: |
