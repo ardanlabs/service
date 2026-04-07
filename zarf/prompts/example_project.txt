@@ -1,0 +1,18 @@
+I need to create a new Go project and it will be based on the Ardan Labs Service.
+
+There is project structure information in this file
+`/Users/bill/code/go/src/github.com/ardanlabs/service/zarf/prompts/project-structure.md`
+
+This new project will be a http api service with one domain that needs endpoints
+for proxying calls to a model server. We want to capture the request/response
+between the client and model server. This model server implements the chat completions API.
+
+Do not include any of the observability components to the new project.
+
+We need to handle the request/response in a generic way. I just want to log these
+raw request/response data. I need to see the raw request/response as human
+readable as possible in the logs.
+
+Include the logfmt program as well in the new project.
+
+Create this project in the local directory you are in `/Users/bill/code/bill`.
