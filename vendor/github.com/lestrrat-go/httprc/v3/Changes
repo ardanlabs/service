@@ -1,6 +1,13 @@
 Changes
 =======
 
+v3.0.5 30 Mar 2026
+  * Fix periodic check deadlock when number of ready resources exceeds
+    outgoing channel buffer, which caused circular wait between controller
+    and worker goroutines (#113, #116)
+  * Fix proxysink self-deadlock caused by missing mutex unlock on context
+    cancellation path
+
 v3.0.4 08 Feb 2026
   * Fix worker goroutine dying on sync refresh failure, which could cause
     deadlocks after repeated failures (lestrrat-go/jwx#1551)
