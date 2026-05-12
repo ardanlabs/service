@@ -5,15 +5,7 @@ package jwa
 import (
 	"encoding/json"
 	"fmt"
-	"sort"
-	"sync"
 )
-
-var muAllSignatureAlgorithm sync.RWMutex
-var allSignatureAlgorithm = map[string]SignatureAlgorithm{}
-var muListSignatureAlgorithm sync.RWMutex
-var listSignatureAlgorithm []SignatureAlgorithm
-var builtinSignatureAlgorithm = map[string]struct{}{}
 
 func init() {
 	// builtin values for SignatureAlgorithm
@@ -37,7 +29,7 @@ func init() {
 
 	RegisterSignatureAlgorithm(algorithms...)
 	for _, alg := range algorithms {
-		builtinSignatureAlgorithm[alg.String()] = struct{}{}
+		markBuiltin(alg.String())
 	}
 }
 
@@ -122,13 +114,11 @@ func RS512() SignatureAlgorithm {
 }
 
 func lookupBuiltinSignatureAlgorithm(name string) SignatureAlgorithm {
-	muAllSignatureAlgorithm.RLock()
-	v, ok := allSignatureAlgorithm[name]
-	muAllSignatureAlgorithm.RUnlock()
+	v, ok := lookupAlgorithm(algKindSignature, name)
 	if !ok {
 		panic(fmt.Sprintf(`jwa: SignatureAlgorithm %q not registered`, name))
 	}
-	return v
+	return v.(SignatureAlgorithm)
 }
 
 // SignatureAlgorithm represents the various signature algorithms as described in https://tools.ietf.org/html/rfc7518#section-3.1
@@ -178,10 +168,11 @@ func NewSignatureAlgorithm(name string, options ...NewSignatureAlgorithmOption) 
 
 // LookupSignatureAlgorithm returns the SignatureAlgorithm object for the given name.
 func LookupSignatureAlgorithm(name string) (SignatureAlgorithm, bool) {
-	muAllSignatureAlgorithm.RLock()
-	v, ok := allSignatureAlgorithm[name]
-	muAllSignatureAlgorithm.RUnlock()
-	return v, ok
+	if v, ok := lookupAlgorithm(algKindSignature, name); ok {
+		return v.(SignatureAlgorithm), true
+	}
+	var zero SignatureAlgorithm
+	return zero, false
 }
 
 // RegisterSignatureAlgorithm registers a new SignatureAlgorithm. The signature value must be immutable
@@ -190,53 +181,33 @@ func LookupSignatureAlgorithm(name string) (SignatureAlgorithm, bool) {
 // Registration is process-global. Built-in identifiers such as RS256 are
 // reserved and cannot be replaced by callers after init has completed; use a
 // distinct name for third-party algorithms.
+//
+// SignatureAlgorithm, KeyEncryptionAlgorithm, and ContentEncryptionAlgorithm
+// share a single algorithm-name namespace so that KeyAlgorithmFrom can
+// resolve unambiguously. Registering a name that is already registered as a
+// different kind is a silent no-op (the first Register* call wins).
 func RegisterSignatureAlgorithm(algorithms ...SignatureAlgorithm) {
-	muAllSignatureAlgorithm.Lock()
-	defer muAllSignatureAlgorithm.Unlock()
 	for _, alg := range algorithms {
-		if _, ok := builtinSignatureAlgorithm[alg.String()]; ok {
-			if existing, ok := allSignatureAlgorithm[alg.String()]; ok && existing != alg {
-				continue
-			}
-			continue
-		}
-		allSignatureAlgorithm[alg.String()] = alg
+		registerAlgorithm(algKindSignature, alg)
 	}
-	rebuildSignatureAlgorithmLocked()
 }
 
 // UnregisterSignatureAlgorithm unregisters a SignatureAlgorithm from its known database.
 // Non-existent entries, as well as built-in algorithms will silently be ignored.
 func UnregisterSignatureAlgorithm(algorithms ...SignatureAlgorithm) {
-	muAllSignatureAlgorithm.Lock()
-	defer muAllSignatureAlgorithm.Unlock()
 	for _, alg := range algorithms {
-		if _, ok := builtinSignatureAlgorithm[alg.String()]; ok {
-			continue
-		}
-		delete(allSignatureAlgorithm, alg.String())
+		unregisterAlgorithm(algKindSignature, alg.String())
 	}
-	rebuildSignatureAlgorithmLocked()
-}
-
-func rebuildSignatureAlgorithmLocked() {
-	list := make([]SignatureAlgorithm, 0, len(allSignatureAlgorithm))
-	for _, v := range allSignatureAlgorithm {
-		list = append(list, v)
-	}
-	sort.Slice(list, func(i, j int) bool {
-		return list[i].String() < list[j].String()
-	})
-	muListSignatureAlgorithm.Lock()
-	listSignatureAlgorithm = list
-	muListSignatureAlgorithm.Unlock()
 }
 
 // SignatureAlgorithms returns a list of all available values for SignatureAlgorithm.
 func SignatureAlgorithms() []SignatureAlgorithm {
-	muListSignatureAlgorithm.RLock()
-	defer muListSignatureAlgorithm.RUnlock()
-	return listSignatureAlgorithm
+	raw := listAlgorithmsByKind(algKindSignature)
+	out := make([]SignatureAlgorithm, len(raw))
+	for i, alg := range raw {
+		out[i] = alg.(SignatureAlgorithm)
+	}
+	return out
 }
 
 // MarshalJSON serializes the SignatureAlgorithm object to a JSON string.

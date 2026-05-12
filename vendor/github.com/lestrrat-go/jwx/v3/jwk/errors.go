@@ -72,6 +72,10 @@ func sparseerr(f string, args ...any) error {
 	return bparseerr(`jwk.ParseString`, f, args...)
 }
 
+func kparseerr(f string, args ...any) error {
+	return bparseerr(`jwk.ParseKey`, f, args...)
+}
+
 type whitelistError struct {
 	error
 }

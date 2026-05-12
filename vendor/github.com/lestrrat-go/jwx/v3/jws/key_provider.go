@@ -329,6 +329,12 @@ func (kp jkuProvider) FetchKeys(ctx context.Context, sink KeySink, sig *Signatur
 		return fmt.Errorf(`jku: key with "kid" %q not found in JWKS fetched from %q`, kid, u)
 	}
 
+	if usage, ok := key.KeyUsage(); ok {
+		if usage != "" && usage != jwk.ForSignature.String() {
+			return fmt.Errorf(`key with kid %q is marked use=%q, not usable for signature verification (expected %q)`, kid, usage, jwk.ForSignature.String())
+		}
+	}
+
 	algs, err := AlgorithmsForKey(key)
 	if err != nil {
 		return fmt.Errorf(`failed to get a list of signature methods for key type %s: %w`, key.KeyType(), err)

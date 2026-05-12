@@ -19,6 +19,7 @@ import (
 	"github.com/lestrrat-go/jwx/v3/internal/base64"
 	"github.com/lestrrat-go/jwx/v3/internal/json"
 	"github.com/lestrrat-go/jwx/v3/jwa"
+	"github.com/lestrrat-go/jwx/v3/jwk/jwkbb"
 )
 
 var fieldRegistry = json.NewRegistry()
@@ -248,6 +249,14 @@ func (ctx *setDecodeCtx) IgnoreParseError() bool {
 // are performed for certificate expiration, no checks against missing
 // parameters are performed, etc.
 func ParseKey(data []byte, options ...ParseOption) (Key, error) {
+	key, err := doParseKey(data, options...)
+	if err != nil {
+		return nil, kparseerr(`%w`, err)
+	}
+	return key, nil
+}
+
+func doParseKey(data []byte, options ...ParseOption) (Key, error) {
 	var parsePEM bool
 	var localReg *json.Registry
 	var pemDecoder PEMDecoder
@@ -313,6 +322,13 @@ func ParseKey(data []byte, options ...ParseOption) (Key, error) {
 		parser := parsers[i]
 		key, err := parser.ParseKey(probe, &unmarshaler, data)
 		if err == nil {
+			// A buggy custom parser may return (nil, nil); treat
+			// that as if it had returned ContinueError so the next
+			// parser runs instead of handing the caller a nil Key
+			// they will dereference.
+			if key == nil {
+				continue
+			}
 			return key, nil
 		}
 
@@ -448,8 +464,26 @@ func Parse(src []byte, options ...ParseOption) (Set, error) {
 		defer setter.setRejectDuplicateKID(false)
 	}
 
-	if err := json.Unmarshal(src, s); err != nil {
-		return nil, parseerr(`failed to unmarshal JWK set: %w`, err)
+	// Dispatch JWK-vs-JWKS up front. Set.UnmarshalJSON requires JWKS
+	// shape; the bare-JWK convenience lives here.
+	if jwkbb.HeaderHas(jwkbb.HeaderParse(src), "keys") {
+		if err := json.Unmarshal(src, s); err != nil {
+			return nil, parseerr(`failed to unmarshal JWK set: %w`, err)
+		}
+	} else {
+		key, err := ParseKey(src, options...)
+		if err != nil {
+			return nil, parseerr(`failed to parse sole key: %w`, err)
+		}
+		if err := s.AddKey(key); err != nil {
+			return nil, parseerr(`failed to add jwk.Key to set: %w`, err)
+		}
+	}
+
+	if rejectDupKid {
+		if kid, dup := firstDuplicateKID(s); dup {
+			return nil, parseerr(`duplicate "kid" %q`, kid)
+		}
 	}
 
 	return s, nil

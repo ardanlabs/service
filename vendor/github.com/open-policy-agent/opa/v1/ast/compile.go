@@ -1366,6 +1366,21 @@ func (c *Compiler) checkRuleConflicts() {
 			}
 		}
 
+		// Functions cannot exist within a rule's dynamic extent, as there is no valid
+		// evaluation scenario for this right now: it will return an error or panic.
+		// NB(sr): This is something we may overcome later -- but for now, it's better
+		// to return an error than to fail in hard-to-understand ways.
+		if conflicts == nil && len(node.Children) > 0 {
+			for _, rule := range node.Values {
+				if !rule.Ref().IsGround() {
+					if funcConflicts := node.flattenChildFunctions(); len(funcConflicts) > 0 {
+						conflicts = funcConflicts
+					}
+					break
+				}
+			}
+		}
+
 		switch {
 		case conflicts != nil:
 			return !c.err(NewError(TypeErr, node.Values[0].Loc(), "rule %v conflicts with %v", name, conflicts))
@@ -1516,6 +1531,7 @@ func (c *Compiler) checkBodySafety(safe VarSet, b Body) Body {
 // SafetyCheckVisitorParams defines the AST visitor parameters to use for collecting
 // variables during the safety check. This has to be exported because it's relied on
 // by the copy propagation implementation in topdown.
+// TODO: deprecate?
 var SafetyCheckVisitorParams = VarVisitorParams{
 	SkipRefCallHead: true,
 	SkipClosures:    true,
@@ -1623,7 +1639,9 @@ type schemaParser struct {
 }
 
 type cachedDef struct {
-	properties []*types.StaticProperty
+	typ        types.Type
+	rec        *types.Recursive
+	processing bool
 }
 
 func newSchemaParser() *schemaParser {
@@ -1636,7 +1654,7 @@ func (parser *schemaParser) parseSchema(schema any) (types.Type, error) {
 	return parser.parseSchemaWithPropertyKey(schema, "")
 }
 
-func (parser *schemaParser) parseSchemaWithPropertyKey(schema any, propertyKey string) (types.Type, error) {
+func (parser *schemaParser) parseSchemaWithPropertyKey(schema any, propertyKey string) (result types.Type, err error) {
 	subSchema, ok := schema.(*gojsonschema.SubSchema)
 	if !ok {
 		return nil, fmt.Errorf("unexpected schema type %v", subSchema)
@@ -1645,9 +1663,33 @@ func (parser *schemaParser) parseSchemaWithPropertyKey(schema any, propertyKey s
 	// Handle referenced schemas, returns directly when a $ref is found
 	if subSchema.RefSchema != nil {
 		if existing, ok := parser.definitionCache[subSchema.Ref.String()]; ok {
-			return types.NewObject(existing.properties, nil), nil
+			if existing.processing {
+				if existing.rec == nil {
+					existing.rec = types.NewRecursive(subSchema.Ref.String(), nil)
+				}
+				return existing.rec, nil
+			}
+			return existing.typ, nil
 		}
 		return parser.parseSchemaWithPropertyKey(subSchema.RefSchema, subSchema.Ref.String())
+	}
+
+	// Cache this $ref definition and finalize it via defer when parsing
+	// completes. This allows recursive $refs to be detected: if a nested
+	// $ref hits a definition that is still processing, we know it's a cycle.
+	var def *cachedDef
+	if propertyKey != "" {
+		def = &cachedDef{processing: true}
+		parser.definitionCache[propertyKey] = def
+		defer func() {
+			def.processing = false
+			if result != nil && err == nil {
+				def.typ = result
+				if def.rec != nil {
+					def.rec.SetType(result)
+				}
+			}
+		}()
 	}
 
 	// Handle anyOf
@@ -1717,28 +1759,15 @@ func (parser *schemaParser) parseSchemaWithPropertyKey(schema any, propertyKey s
 
 		} else if subSchema.Types.Contains("object") {
 			if len(subSchema.PropertiesChildren) > 0 {
-				def := &cachedDef{
-					properties: make([]*types.StaticProperty, 0, len(subSchema.PropertiesChildren)),
-				}
-				for _, pSchema := range subSchema.PropertiesChildren {
-					def.properties = append(def.properties, types.NewStaticProperty(pSchema.Property, nil))
-				}
-				if propertyKey != "" {
-					parser.definitionCache[propertyKey] = def
-				}
+				properties := make([]*types.StaticProperty, 0, len(subSchema.PropertiesChildren))
 				for _, pSchema := range subSchema.PropertiesChildren {
 					newtype, err := parser.parseSchema(pSchema)
 					if err != nil {
 						return nil, fmt.Errorf("unexpected schema type %v: %w", pSchema, err)
 					}
-					for i, prop := range def.properties {
-						if prop.Key == pSchema.Property {
-							def.properties[i].Value = newtype
-							break
-						}
-					}
+					properties = append(properties, types.NewStaticProperty(pSchema.Property, newtype))
 				}
-				return types.NewObject(def.properties, nil), nil
+				return types.NewObject(properties, nil), nil
 			}
 			return types.NewObject(nil, types.NewDynamicProperty(types.A, types.A)), nil
 
@@ -2480,6 +2509,7 @@ func rewriteTemplateString(tsr *templateStringRewriter, safe VarSet, loc *Locati
 	if len(ts.Parts) == 0 {
 		terms = append(terms, NewTerm(InternedEmptyStringValue).SetLocation(loc))
 	} else {
+		// Note: we don't care about not exprs here
 		vis := ClearOrNewVarVisitor(nil).WithParams(SafetyCheckVisitorParams)
 		for _, p := range ts.Parts {
 			switch p := p.(type) {
@@ -2518,6 +2548,7 @@ func rewriteTemplateString(tsr *templateStringRewriter, safe VarSet, loc *Locati
 					continue
 				}
 
+				// Note: we don't care about not exprs here
 				vis = ClearOrNewVarVisitor(vis).WithParams(SafetyCheckVisitorParams)
 				vis.Walk(t)
 				vars := vis.Vars()
@@ -2647,6 +2678,8 @@ func rewritePrintCalls(gen *localVarGenerator, getArity func(Ref) int, globals V
 				case *Every:
 					safe.Update(x.KeyValueVars())
 					modrec, errsrec = rewritePrintCalls(gen, getArity, safe, x.Body)
+				case *Not:
+					modrec, errsrec = rewritePrintCalls(gen, getArity, safe, x.Body)
 				}
 				if modrec {
 					modified = true
@@ -2689,6 +2722,7 @@ func rewritePrintCalls(gen *localVarGenerator, getArity func(Ref) int, globals V
 		}
 
 		for j := range args {
+			// Note: we don't care about not exprs here
 			vis = vis.Clear().WithParams(SafetyCheckVisitorParams)
 			vis.Walk(args[j])
 			vars := vis.Vars()
@@ -2735,6 +2769,8 @@ func erasePrintCalls(node any) bool {
 		case *ObjectComprehension:
 			modrec, x.Body = erasePrintCallsInBody(x.Body)
 		case *Every:
+			modrec, x.Body = erasePrintCallsInBody(x.Body)
+		case *Not:
 			modrec, x.Body = erasePrintCallsInBody(x.Body)
 		}
 		if modrec {
@@ -3025,6 +3061,8 @@ func rewriteRegoMetadataCalls(metadataChainVar *Var, metadataRuleVar *Var, body 
 		case *ObjectComprehension:
 			errs = rewriteRegoMetadataCalls(metadataChainVar, metadataRuleVar, x.Body, rewrittenVars)
 		case *Every:
+			errs = rewriteRegoMetadataCalls(metadataChainVar, metadataRuleVar, x.Body, rewrittenVars)
+		case *Not:
 			errs = rewriteRegoMetadataCalls(metadataChainVar, metadataRuleVar, x.Body, rewrittenVars)
 		}
 		return true
@@ -4226,12 +4264,22 @@ func treeNodeFromRef(ref Ref, rule *Rule) *TreeNode {
 
 // flattenChildren flattens all children's rule refs into a sorted array.
 func (n *TreeNode) flattenChildren() []Ref {
+	return n.flattenMatchingChildren(func(_ *Rule) bool { return true })
+}
+
+// flattenChildFunctions is like flattenChildren but only collects functions (rules with args).
+func (n *TreeNode) flattenChildFunctions() []Ref {
+	return n.flattenMatchingChildren(func(r *Rule) bool { return r.isFunction() })
+}
+
+func (n *TreeNode) flattenMatchingChildren(f func(*Rule) bool) []Ref {
 	ret := newRefSet()
 	for _, sub := range n.Children { // we only want the children, so don't use n.DepthFirst() right away
 		sub.DepthFirst(func(x *TreeNode) bool {
-			for _, r := range x.Values {
-				rule := r
-				ret.AddPrefix(rule.Ref())
+			for _, rule := range x.Values {
+				if f(rule) {
+					ret.AddPrefix(rule.Ref())
+				}
 			}
 			return false
 		})
@@ -4492,7 +4540,7 @@ func (vs unsafeVars) Slice() (result []unsafePair) {
 // If the body cannot be reordered to ensure safety, the second return value
 // contains a mapping of expressions to unsafe variables in those expressions.
 func reorderBodyForSafety(builtins map[string]*Builtin, arity func(Ref) int, globals VarSet, body Body) (Body, unsafeVars) {
-	vis := varVisitorPool.Get().WithParams(SafetyCheckVisitorParams)
+	vis := varVisitorPool.Get().WithParams(safetyCheckVisitorParams(arity))
 	vis.WalkBody(body)
 
 	defer varVisitorPool.Put(vis)
@@ -4502,7 +4550,7 @@ func reorderBodyForSafety(builtins map[string]*Builtin, arity func(Ref) int, glo
 	unsafe := make(unsafeVars, len(bodyVars)-len(safe))
 
 	for _, e := range body {
-		vis = vis.Clear().WithParams(SafetyCheckVisitorParams)
+		vis = vis.Clear().WithParams(safetyCheckVisitorParams(arity))
 		vis.Walk(e)
 		for v := range vis.Vars() {
 			if _, ok := safe[v]; !ok {
@@ -4538,6 +4586,7 @@ func reorderBodyForSafety(builtins map[string]*Builtin, arity func(Ref) int, glo
 				if uv.Equal(ovs) { // special case "closure-self"
 					continue
 				}
+				// The expression is closing over variables not yet present in reordered body
 				unsafe.Set(e, uv)
 			}
 
@@ -4570,7 +4619,7 @@ func reorderBodyForSafety(builtins map[string]*Builtin, arity func(Ref) int, glo
 
 	for i, e := range reordered {
 		if i > 0 {
-			vis = vis.Clear().WithParams(SafetyCheckVisitorParams)
+			vis = vis.Clear().WithParams(safetyCheckVisitorParams(arity))
 			vis.Walk(reordered[i-1])
 			g.Update(vis.Vars())
 		}
@@ -4581,6 +4630,121 @@ func reorderBodyForSafety(builtins map[string]*Builtin, arity func(Ref) int, glo
 	}
 
 	return reordered, unsafe
+}
+
+func safetyCheckVisitorParams(arity func(Ref) int) VarVisitorParams {
+	params := SafetyCheckVisitorParams
+	params.customVisit = func(vis *VarVisitor, v any) bool {
+		return unsafeNotVars(arity, vis, v)
+	}
+	return params
+}
+
+type ExprByVar map[Var][]*Expr
+
+func (m ExprByVar) add(v Var, e *Expr) {
+	if u, ok := m[v]; ok {
+		m[v] = append(u, e)
+	} else {
+		m[v] = []*Expr{e}
+	}
+}
+
+// unsafeNotVars finds unsafe var candidates within a not body's expressions.
+// all vars in a not-body that aren't also assigned in that body are considered unsafe.
+// Assigned var must also be used in som other body expr. (Note: maybe not necessary for one-expr bodies, as we then can just report all vars)
+func unsafeNotVars(arity func(Ref) int, vis *VarVisitor, v any) bool {
+	// FIXME: Can we do less walking here?
+
+	n, ok := v.(*Not)
+	if !ok {
+		return false
+	}
+
+	if n.ExplicitBody {
+		return true
+	}
+
+	internalVis := varVisitorPool.Get()
+	defer varVisitorPool.Put(internalVis)
+
+	// 1. Find all visible vars in body and record associated expression(s)
+	exprByVar := ExprByVar{}
+
+	for _, e := range n.Body {
+		internalVis.Clear().WithParams(safetyCheckVisitorParams(arity))
+		internalVis.Walk(e)
+
+		for v := range internalVis.Vars() {
+			exprByVar.add(v, e)
+		}
+	}
+
+	// If there's only one expression in the not-body, simply report all vars found
+	if len(n.Body) == 1 {
+		for v := range exprByVar {
+			vis.Add(v)
+		}
+		return true
+	}
+
+	// 2. Find all variable assignments (unification, call output)
+	assignedVars := ExprByVar{}
+
+	WalkExprs(n.Body, func(expr *Expr) bool {
+		if terms, ok := expr.Terms.([]*Term); ok {
+			if expr.IsEquality() {
+				vs := outputVarsForExprEq(expr, VarSet{}, VarSet{})
+				for v := range vs {
+					assignedVars.add(v, expr)
+				}
+				return false
+			}
+
+			operator, ok := terms[0].Value.(Ref)
+			if !ok {
+				return false
+			}
+
+			ar := arity(operator)
+			if ar < 0 {
+				return false
+			}
+
+			numInputTerms := ar + 1
+			if numInputTerms >= len(terms) {
+				return false
+			}
+
+			internalVis.Clear().WithParams(VarVisitorParams{
+				SkipClosures:   true,
+				SkipSets:       true,
+				SkipObjectKeys: true,
+				SkipRefHead:    true,
+			})
+			internalVis.WalkArgs(terms[numInputTerms:])
+			for v := range internalVis.Vars() {
+				assignedVars.add(v, expr)
+			}
+		}
+		return false
+	})
+
+	// 3. Record all vars in the not-body that aren't also assigned
+
+	internalVis.Clear().WithParams(safetyCheckVisitorParams(arity))
+	internalVis.Walk(n.Body)
+
+	for v := range internalVis.Vars() {
+		if _, ok := assignedVars[v]; !ok {
+			vis.Add(v)
+		} else if exprs, ok := exprByVar[v]; ok && len(exprs) == 1 {
+			// Assigned vars must be used by another expression to be considered safe.
+			vis.Add(v)
+		}
+	}
+
+	return true
 }
 
 type bodySafetyTransformer struct {
@@ -4635,9 +4799,13 @@ func (xform *bodySafetyTransformer) Visit(x any) bool {
 			return true
 		}
 	case *Expr:
-		if ev, ok := term.Terms.(*Every); ok {
-			xform.globals.Update(ev.KeyValueVars())
-			ev.Body = xform.reorderComprehensionSafety(NewVarSet(), ev.Body)
+		switch x := term.Terms.(type) {
+		case *Every:
+			xform.globals.Update(x.KeyValueVars())
+			x.Body = xform.reorderComprehensionSafety(NewVarSet(), x.Body)
+			return true
+		case *Not:
+			x.Body = xform.reorderComprehensionSafety(NewVarSet(), x.Body)
 			return true
 		}
 	}
@@ -4645,7 +4813,7 @@ func (xform *bodySafetyTransformer) Visit(x any) bool {
 }
 
 func (xform *bodySafetyTransformer) reorderComprehensionSafety(tv VarSet, body Body) Body {
-	bv := body.Vars(SafetyCheckVisitorParams)
+	bv := body.Vars(safetyCheckVisitorParams(xform.arity))
 	bv.Update(xform.globals)
 
 	if tv.DiffCount(bv) > 0 {
@@ -4719,16 +4887,18 @@ func OutputVarsFromExpr(c *Compiler, expr *Expr, safe VarSet) VarSet {
 
 func outputVarsForExpr(expr *Expr, arity func(Ref) int, safe VarSet, output VarSet, vis *VarVisitor) VarSet {
 	// Negated expressions must be safe.
-	if expr.Negated {
+	if expr.IsNegated() {
 		return VarSet{}
 	}
 
 	if len(expr.With) > 0 {
+		// Note: we don't care about not exprs here
 		vis = ClearOrNewVarVisitor(vis).WithParams(SafetyCheckVisitorParams)
 	}
 
 	// With modifier inputs must be safe.
 	for _, with := range expr.With {
+		// Note: we don't care about not exprs here
 		vis = vis.Clear().WithParams(SafetyCheckVisitorParams)
 		vis.Walk(with)
 		if vis.Vars().DiffCount(safe) > 0 {
@@ -4922,7 +5092,7 @@ func resolveRef(globals map[Var]*usedRef, ignore *declaredVarStack, ref Ref) Ref
 		switch v := x.Value.(type) {
 		case Var:
 			if g, ok := globals[v]; ok && !ignore.Contains(v) {
-				cpy := g.ref.Copy()
+				cpy := g.ref.CopyNonGround()
 				for i := range cpy {
 					cpy[i].SetLocation(x.Location)
 				}
@@ -5059,6 +5229,11 @@ func resolveRefsInExpr(globals map[Var]*usedRef, ignore *declaredVarStack, expr 
 			Body:   resolveRefsInBody(globals, ignore, ts.Body),
 		}
 		ignore.Pop()
+	case *Not:
+		cpy.Terms = &Not{
+			Body:         resolveRefsInBody(globals, ignore, ts.Body),
+			ExplicitBody: ts.ExplicitBody,
+		}
 	}
 	for _, w := range cpy.With {
 		w.Target = resolveRefsInTerm(globals, ignore, w.Target)
@@ -5071,7 +5246,7 @@ func resolveRefsInTerm(globals map[Var]*usedRef, ignore *declaredVarStack, term 
 	switch v := term.Value.(type) {
 	case Var:
 		if g, ok := globals[v]; ok && !ignore.Contains(v) {
-			cpy := g.ref.Copy()
+			cpy := g.ref.CopyNonGround()
 			for i := range cpy {
 				cpy[i].SetLocation(term.Location)
 			}
@@ -5365,6 +5540,8 @@ func rewriteDynamics(f *equalityFactory, body Body) Body {
 			result = rewriteDynamicsCallExpr(f, expr, result)
 		case expr.IsEvery():
 			result = rewriteDynamicsEveryExpr(f, expr, result)
+		case expr.IsNot():
+			result = rewriteDynamicsNotExpr(f, expr, result)
 		default:
 			result = rewriteDynamicsTermExpr(f, expr, result)
 		}
@@ -5400,6 +5577,13 @@ func rewriteDynamicsEveryExpr(f *equalityFactory, expr *Expr, result Body) Body 
 	return result
 }
 
+func rewriteDynamicsNotExpr(f *equalityFactory, expr *Expr, result Body) Body {
+	n := expr.Terms.(*Not)
+	n.Body = rewriteDynamics(f, n.Body)
+	result.Append(expr)
+	return result
+}
+
 func rewriteDynamicsTermExpr(f *equalityFactory, expr *Expr, result Body) Body {
 	term := expr.Terms.(*Term)
 	result, expr.Terms = rewriteDynamicsInTerm(expr, f, term, result)
@@ -5418,6 +5602,8 @@ func rewriteDynamicsInTerm(original *Expr, f *equalityFactory, term *Term, resul
 	case *SetComprehension:
 		v.Body = rewriteDynamics(f, v.Body)
 	case *ObjectComprehension:
+		v.Body = rewriteDynamics(f, v.Body)
+	case *Not:
 		v.Body = rewriteDynamics(f, v.Body)
 	default:
 		result, term = rewriteDynamicsOne(original, f, term, result)
@@ -5606,6 +5792,9 @@ func expandExpr(gen *localVarGenerator, expr *Expr) (result []*Expr) {
 		terms.Body = rewriteExprTermsInBody(gen, terms.Body)
 		result = append(result, extras...)
 		result = append(result, expr)
+	case *Not:
+		terms.Body = rewriteExprTermsInBody(gen, terms.Body)
+		result = append(result, expr)
 	}
 	return
 }
@@ -5665,6 +5854,9 @@ func expandExprTerm(gen *localVarGenerator, term *Term) (support []*Expr, output
 		v.Key = key
 		support, value := expandExprTerm(gen, v.Value)
 		v.Value = value
+		v.Body = rewriteExprTermsInBody(gen, appendToBody(v.Body, support...))
+	case *Not:
+		// Note: not strictly needed as long as 'not' can only be a term node, and not a term value
 		v.Body = rewriteExprTermsInBody(gen, appendToBody(v.Body, support...))
 	}
 	return
@@ -5913,6 +6105,9 @@ func rewriteDeclaredVarsInBody(g *localVarGenerator, stack *localDeclaredVars, u
 			expr, errs = rewriteSomeDeclStatement(g, stack, body[i], errs, strict)
 		case body[i].IsEvery():
 			expr, errs = rewriteEveryStatement(g, stack, body[i], errs, strict)
+		case body[i].IsNot() && body[i].Terms.(*Not).ExplicitBody:
+			// Only explicit not bodies are allowed to declare vars
+			expr, errs = rewriteNotStatement(g, stack, body[i], errs, strict)
 		default:
 			expr, errs = rewriteDeclaredVarsInExpr(g, stack, body[i], errs, strict)
 		}
@@ -6152,9 +6347,23 @@ func rewriteSomeDeclStatement(g *localVarGenerator, stack *localDeclaredVars, ex
 	return nil, errs
 }
 
+func rewriteNotStatement(g *localVarGenerator, stack *localDeclaredVars, expr *Expr, errs Errors, strict bool) (*Expr, Errors) {
+	e := expr.Copy()
+	not := e.Terms.(*Not)
+
+	stack.Push()
+	defer stack.Pop()
+
+	used := NewVarSet()
+	not.Body, errs = rewriteDeclaredVarsInBody(g, stack, used, not.Body, errs, strict)
+
+	return rewriteDeclaredVarsInExpr(g, stack, e, errs, strict)
+}
+
 func rewriteDeclaredVarsInExpr(g *localVarGenerator, stack *localDeclaredVars, expr *Expr, errs Errors, strict bool) (*Expr, Errors) {
 	vis := NewGenericVisitor(func(x any) bool {
 		var stop bool
+		// Note: we don't include *Not nodes here, as such bodies are allowed to contain assignments; e.g. 'not {x := input.x; f(x)}'
 		switch x := x.(type) {
 		case *Term:
 			stop, errs = rewriteDeclaredVarsInTerm(g, stack, x, errs, strict)

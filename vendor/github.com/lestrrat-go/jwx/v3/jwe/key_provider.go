@@ -2,6 +2,7 @@ package jwe
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 
@@ -109,7 +110,8 @@ type keySetProvider struct {
 func (kp *keySetProvider) selectKey(sink KeySink, key jwk.Key, r Recipient, msg *Message) error {
 	if usage, ok := key.KeyUsage(); ok {
 		if usage != "" && usage != jwk.ForEncryption.String() {
-			return nil
+			kid, _ := key.KeyID()
+			return fmt.Errorf(`key %q has key_use=%q (expected %q for encryption)`, kid, usage, jwk.ForEncryption.String())
 		}
 	}
 
@@ -167,11 +169,22 @@ func (kp *keySetProvider) FetchKeys(_ context.Context, sink KeySink, r Recipient
 		return kp.selectKey(sink, key, r, msg)
 	}
 
+	// Collect per-key errors and surface them via errors.Join when
+	// nothing produced a usable (alg, key) pair. Without this, a
+	// caller debugging "why didn't my keyset match" got no signal.
+	var perKeyErrs []error
+	var emitted bool
 	for i := range kp.set.Len() {
 		key, _ := kp.set.Key(i)
-		if err := kp.selectKey(sink, key, r, msg); err != nil {
+		err := kp.selectKey(sink, key, r, msg)
+		if err != nil {
+			perKeyErrs = append(perKeyErrs, err)
 			continue
 		}
+		emitted = true
+	}
+	if !emitted && len(perKeyErrs) > 0 {
+		return fmt.Errorf(`failed to select any usable key from set of %d (no key produced a usable (alg, key) pair): %w`, kp.set.Len(), errors.Join(perKeyErrs...))
 	}
 	return nil
 }

@@ -172,6 +172,20 @@ func validateECDSAPoint(crv elliptic.Curve, x, y *big.Int) error {
 		return fmt.Errorf(`invalid ECDSA public key: identity point is not a valid public key`)
 	}
 
+	// Coordinates must fit in the curve's field. The NIST P-curve
+	// branch below pads x and y into a fixed-size SEC1 buffer via
+	// big.Int.FillBytes, which panics on oversized input. Bounding
+	// here makes the function safe by construction for every caller,
+	// including jwk.Import handed a hand-built *ecdsa.PublicKey from
+	// raw bytes.
+	bits := crv.Params().BitSize
+	if x.BitLen() > bits {
+		return fmt.Errorf(`invalid ECDSA public key: x coordinate is %d bits, exceeds curve %q field size of %d bits`, x.BitLen(), crv.Params().Name, bits)
+	}
+	if y.BitLen() > bits {
+		return fmt.Errorf(`invalid ECDSA public key: y coordinate is %d bits, exceeds curve %q field size of %d bits`, y.BitLen(), crv.Params().Name, bits)
+	}
+
 	if ecdhCrv, ok := stdlibECDHCurve(crv); ok {
 		size := (crv.Params().BitSize + 7) / 8
 		buf := make([]byte, 1+2*size)

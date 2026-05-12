@@ -244,6 +244,9 @@ func (vc *verifyContext) verifyStreaming(buf []byte) ([]byte, error) {
 	}
 
 	if vc.critValidation {
+		if err := validateB64InCritIfFalse(sig.protected); err != nil {
+			return nil, makeVerifyError(`%w`, err)
+		}
 		if err := validateCritical(sig.protected, vc.criticalExtensions); err != nil {
 			return nil, makeVerifyError(`invalid "crit" header: %w`, err)
 		}

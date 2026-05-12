@@ -174,6 +174,8 @@ var DefaultBuiltins = [...]*Builtin{
 	URLQueryEncode,
 	URLQueryEncodeObject,
 	URLQueryDecodeObject,
+	URIParse,
+	URIIsValid,
 	YAMLMarshal,
 	YAMLUnmarshal,
 	YAMLIsValid,
@@ -2043,6 +2045,33 @@ var URLQueryDecodeObject = &Builtin{
 	CanSkipBctx: true,
 }
 
+var URIParse = &Builtin{
+	Name: "uri.parse",
+	Description: "Parses a URI and returns an object containing its components according to RFC 3986. " +
+		"Empty components are omitted. " +
+		"In addition to the standard components, `raw_query` is returned for use with `urlquery` builtins, " +
+		"and `raw_path` is returned to allow detection of path-based exploits using percent-encoded characters.",
+	Decl: types.NewFunction(
+		types.Args(
+			types.Named("uri", types.S).Description("the URI string to parse"),
+		),
+		types.Named("output", types.NewObject(nil, types.NewDynamicProperty(types.S, types.S))).Description("object containing URI components"),
+	),
+	CanSkipBctx: true,
+}
+
+var URIIsValid = &Builtin{
+	Name:        "uri.is_valid",
+	Description: "Returns true if the input can be parsed as a URI.",
+	Decl: types.NewFunction(
+		types.Args(
+			types.Named("uri", types.S).Description("the URI string to validate"),
+		),
+		types.Named("result", types.B).Description("true if `uri` is a valid URI, false otherwise"),
+	),
+	CanSkipBctx: true,
+}
+
 var YAMLMarshal = &Builtin{
 	Name:        "yaml.marshal",
 	Description: "Serializes the input term to YAML.",
@@ -2416,7 +2445,7 @@ var ParseDurationNanos = &Builtin{
 	Description: "Returns the duration in nanoseconds represented by a string.",
 	Decl: types.NewFunction(
 		types.Args(
-			types.Named("duration", types.S).Description("a duration like \"3m\"; see the [Go `time` package documentation](https://golang.org/pkg/time/#ParseDuration) for more details"),
+			types.Named("duration", types.S).Description("a duration like \"3m\"; see the [OPA `Duration Parsing` documentation](https://www.openpolicyagent.org/docs/latest/policy-reference/builtins/time#duration-parsing) for more details"),
 		),
 		types.Named("ns", types.N).Description("the `duration` in nanoseconds"),
 	),

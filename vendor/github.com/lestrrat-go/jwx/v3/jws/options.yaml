@@ -295,6 +295,22 @@ options:
   - ident: Context
     interface: VerifyOption
     argument_type: context.Context
+    comment: |
+      WithContext attaches a context.Context to the verify call. The
+      context is observed at three layers:
+
+        - jws.Verify (slow path) checks ctx.Err() between each signature,
+          each key provider, and each (alg, key) attempt — a deadline
+          fired between iterations short-circuits the loop with the
+          context error.
+        - jkuProvider.FetchKeys passes ctx to jwk.Fetcher.Fetch.
+        - The streaming detached-payload path checks ctx between Reads
+          of the caller's payload reader.
+
+      staticKeyProvider and keySetProvider do not themselves consult
+      ctx inside FetchKeys (the backing data is already in memory);
+      cancellation observation between key candidates is handled by
+      Verify's loop checks above.
   - ident: ProtectedHeaders
     interface: WithKeySuboption
     argument_type: Headers

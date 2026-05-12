@@ -637,11 +637,11 @@ func (p *Planner) planQuery(q ast.Body, index int, iter planiter) error {
 func (p *Planner) planExpr(e *ast.Expr, iter planiter) error {
 
 	switch {
-	case e.Negated:
-		return p.planNot(e, iter)
-
 	case len(e.With) > 0:
 		return p.planWith(e, iter)
+
+	case e.IsNegated():
+		return p.planNot(e, iter)
 
 	case e.IsCall():
 		return p.planExprCall(e, iter)
@@ -661,8 +661,27 @@ func (p *Planner) planNot(e *ast.Expr, iter planiter) error {
 	prev := p.curr
 	p.curr = not.Block
 
-	if err := p.planExpr(e.Complement(), func() error { return nil }); err != nil {
-		return err
+	if n, ok := e.Terms.(*ast.Not); ok {
+		cond := p.newLocal() // success condition
+
+		err := p.planQuery(n.Body, 0, func() error {
+			p.appendStmt(&ir.AssignVarStmt{
+				Source: op(ir.Bool(true)),
+				Target: cond,
+			})
+			return nil
+		})
+		if err != nil {
+			return err
+		}
+
+		p.appendStmt(&ir.IsDefinedStmt{
+			Source: cond,
+		})
+	} else {
+		if err := p.planExpr(e.Complement(), func() error { return nil }); err != nil {
+			return err
+		}
 	}
 
 	p.curr = prev

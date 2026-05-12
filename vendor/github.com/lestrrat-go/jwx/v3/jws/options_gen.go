@@ -321,6 +321,21 @@ func WithBase64Encoder(v Base64Encoder) SignVerifyCompactOption {
 	return &signVerifyCompactOption{option.New(identBase64Encoder{}, v)}
 }
 
+// WithContext attaches a context.Context to the verify call. The
+// context is observed at three layers:
+//
+//   - jws.Verify (slow path) checks ctx.Err() between each signature,
+//     each key provider, and each (alg, key) attempt — a deadline
+//     fired between iterations short-circuits the loop with the
+//     context error.
+//   - jkuProvider.FetchKeys passes ctx to jwk.Fetcher.Fetch.
+//   - The streaming detached-payload path checks ctx between Reads
+//     of the caller's payload reader.
+//
+// staticKeyProvider and keySetProvider do not themselves consult
+// ctx inside FetchKeys (the backing data is already in memory);
+// cancellation observation between key candidates is handled by
+// Verify's loop checks above.
 func WithContext(v context.Context) VerifyOption {
 	return &verifyOption{option.New(identContext{}, v)}
 }

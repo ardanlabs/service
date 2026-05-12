@@ -177,9 +177,9 @@
 //	     var hint string
 //	     if err := probe.Get("MyHint", &hint); err != nil {
 //	        // if it doesn't have the `my_hint` field, it probably means
-//	        // it's not for us, so we return ContinueParseError so that
+//	        // it's not for us, so we return ContinueError so that
 //	        // the next parser can pick it up
-//	        return nil, jwk.ContinueParseError()
+//	        return nil, jwk.ContinueError()
 //	     }
 //
 //	     // Use hint to determine concrete key type
@@ -190,7 +190,7 @@
 //			  ...
 //	     }
 //
-//	     return unmarshaler.Unmarshal(data, key)
+//	     return unmarshaler.UnmarshalKey(data, key)
 //	   }
 //
 // ## Registering KeyImporter/KeyExporter

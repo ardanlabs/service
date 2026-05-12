@@ -10,6 +10,7 @@ import (
 	"github.com/lestrrat-go/jwx/v3/jwa"
 	"github.com/lestrrat-go/jwx/v3/jwe/internal/keygen"
 	"github.com/lestrrat-go/jwx/v3/jwe/jwebb"
+	"github.com/lestrrat-go/jwx/v3/jwk"
 )
 
 // encrypter is responsible for taking various components to encrypt a key.
@@ -187,4 +188,64 @@ func (e *encrypter) EncryptKey(cek []byte) (keygen.ByteSource, error) {
 	}
 
 	return nil, fmt.Errorf(`unsupported algorithm for key encryption (%s)`, keyalgStr)
+}
+
+// validateAlgorithmForKey checks that alg is family-compatible with
+// key at the WithKey option boundary, surfacing wrong-shape mismatches
+// as crisp `jwe.WithKey: ...` errors instead of nested errors deep in
+// the dispatcher (e.g. `[]byte is required as the key to encrypt ...`
+// from inside the AESKW path).
+//
+// Permissive carve-outs (return nil, deferring validation):
+//
+//   - jwk.Key wrappers: kty-vs-alg check happens at jwk.Export time.
+//   - Caller-supplied KeyEncrypter / KeyDecrypter implementations:
+//     the caller takes responsibility for the key-shape contract.
+//   - Nil key: legitimate for `dir` (caller provides CEK separately).
+//
+// All other built-in algorithm families enforce a concrete key-shape
+// expectation here. The error is wrapped by the WithKey site so the
+// caller sees `jwe.WithKey: ...` consistently.
+func validateAlgorithmForKey(alg jwa.KeyEncryptionAlgorithm, key any) error {
+	if key == nil {
+		return nil
+	}
+	if _, ok := key.(jwk.Key); ok {
+		return nil
+	}
+	if _, ok := key.(KeyEncrypter); ok {
+		return nil
+	}
+	if _, ok := key.(KeyDecrypter); ok {
+		return nil
+	}
+
+	algStr := alg.String()
+	switch {
+	case jwebb.IsDirect(algStr):
+		if _, ok := key.([]byte); !ok {
+			return fmt.Errorf(`algorithm %q requires a []byte key (got %T)`, algStr, key)
+		}
+	case jwebb.IsAESKW(algStr) || jwebb.IsAESGCMKW(algStr) || jwebb.IsPBES2(algStr):
+		if _, ok := key.([]byte); !ok {
+			return fmt.Errorf(`algorithm %q requires a []byte key (got %T)`, algStr, key)
+		}
+	case jwebb.IsRSA15(algStr) || jwebb.IsRSAOAEP(algStr):
+		switch key.(type) {
+		case *rsa.PublicKey, rsa.PublicKey, *rsa.PrivateKey, rsa.PrivateKey:
+		default:
+			return fmt.Errorf(`algorithm %q requires an RSA key (got %T)`, algStr, key)
+		}
+	case jwebb.IsECDHES(algStr):
+		switch key.(type) {
+		case *ecdsa.PublicKey, ecdsa.PublicKey, *ecdsa.PrivateKey, ecdsa.PrivateKey,
+			*ecdh.PublicKey, ecdh.PublicKey, *ecdh.PrivateKey, ecdh.PrivateKey:
+		default:
+			return fmt.Errorf(`algorithm %q requires an ECDSA or ECDH key (got %T)`, algStr, key)
+		}
+	default:
+		// Unknown algorithm family: defer to dispatch.
+		return nil
+	}
+	return nil
 }

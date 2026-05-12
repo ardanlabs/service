@@ -7,6 +7,28 @@ import (
 )
 
 type identCritExtension struct{}
+type identDisabledKeyAlgorithms struct{}
+
+// WithDisabledKeyAlgorithms returns a process-global option for jwe.Settings()
+// that refuses the named key encryption algorithms in both directions. After
+// the call returns, jwe.Encrypt() will not produce a recipient using any
+// listed algorithm, and jwe.Decrypt() will reject any recipient whose "alg"
+// is in the list, before any cryptographic work runs. The check fires per
+// recipient: a multi-recipient JWE is rejected as soon as a disabled "alg"
+// is seen on any recipient.
+//
+// The list is replaced (not unioned) on each Settings() call. To clear the
+// disabled set, call jwe.Settings(jwe.WithDisabledKeyAlgorithms()) with no
+// arguments.
+//
+// This is a deployment-time policy hook for the canonical "disable RSA1_5"
+// case (RFC 8725 §3.1) and similar legacy-algorithm bans. The jwa package
+// does not unregister these algorithms — keeping them registered preserves
+// header parsing for diagnostic logs, while this option blocks any actual
+// crypto use.
+func WithDisabledKeyAlgorithms(algorithms ...jwa.KeyEncryptionAlgorithm) GlobalOption {
+	return &globalOption{option.New(identDisabledKeyAlgorithms{}, algorithms)}
+}
 
 // WithCritExtension declares that the caller understands and will process
 // the named "crit" (Critical) header parameter extension(s) per RFC 7516
@@ -140,6 +162,24 @@ func WithKey(alg jwa.KeyAlgorithm, key any, options ...WithKeySuboption) Encrypt
 	})}
 }
 
+// WithKeySet specifies a JWKS (jwk.Set) to use for decryption. The
+// recipient's `kid` header selects a key from the set, and the key's
+// `alg` (or, when the JWK lacks `alg`, the recipient's declared `alg`)
+// drives the decrypt-time dispatch.
+//
+// By default WithKeySet requires the JWE to carry a `kid` header that
+// matches a key in the set. Pass `WithRequireKid(false)` to fall back
+// to trying every key in the set (slower, looser; intended for legacy
+// peers that don't emit `kid`). Per-key errors from the set are
+// surfaced via `errors.Join` when nothing matched, so a caller
+// debugging "why didn't my keyset match" sees the per-key reasons.
+//
+// Security note: the recipient's per-recipient header is unprotected.
+// When the selected JWK has no `alg`, the keyset provider falls back
+// to the per-recipient `alg`, then the protected header's `alg`.
+// `jwe.Decrypt` re-checks `alg` against the integrity-protected
+// protected header before any cryptographic call (RFC 7516 §7.2.1
+// disjointness).
 func WithKeySet(set jwk.Set, options ...WithKeySetSuboption) DecryptOption {
 	requireKid := true
 	for _, option := range options {

@@ -325,7 +325,7 @@ func verifyJWS(ctx *parseCtx, payload []byte) ([]byte, int, error) {
 		if ok && len(wk.options) == 0 {
 			verified, err := jws.VerifyCompactFast(wk.key, payload, alg)
 			if err == nil {
-				return verified, _JwsVerifyDone, nil
+				return verified, peekJWSNestedState(ctx, payload), nil
 			}
 			// VerifyCompactFast refuses crit-bearing messages. In v3
 			// jws.Verify defaults critValidation=false, so the generic
@@ -335,7 +335,10 @@ func verifyJWS(ctx *parseCtx, payload []byte) ([]byte, int, error) {
 			if errors.Is(err, jws.ErrCritPresent()) {
 				verifyOpts := append(ctx.verifyOpts, jws.WithCompact(), jws.WithCritValidation(true))
 				verified, err := jws.Verify(payload, verifyOpts...)
-				return verified, _JwsVerifyDone, err
+				if err != nil {
+					return nil, _JwsVerifyDone, err
+				}
+				return verified, peekJWSNestedState(ctx, payload), nil
 			}
 			return nil, _JwsVerifyDone, err
 		}
@@ -343,7 +346,39 @@ func verifyJWS(ctx *parseCtx, payload []byte) ([]byte, int, error) {
 
 	verifyOpts := append(ctx.verifyOpts, jws.WithCompact())
 	verified, err := jws.Verify(payload, verifyOpts...)
-	return verified, _JwsVerifyDone, err
+	if err != nil {
+		return nil, _JwsVerifyDone, err
+	}
+	return verified, peekJWSNestedState(ctx, payload), nil
+}
+
+// peekJWSNestedState returns _JwsVerifyExpectNested when pedantic mode is on
+// and the verified JWS protected header carries cty=JWT (RFC 7519 §5.2 — the
+// payload is itself a Nested JWT; the outer envelope expects another signed/
+// encrypted layer wrapping the JWT, not a raw JWT). Otherwise returns
+// _JwsVerifyDone. The signature has already been verified at this point, so
+// re-parsing the protected header is safe — it operates on bytes the producer
+// signed.
+func peekJWSNestedState(ctx *parseCtx, payload []byte) int {
+	if !ctx.pedantic {
+		return _JwsVerifyDone
+	}
+	msg, err := jws.Parse(payload, jws.WithCompact())
+	if err != nil || len(msg.Signatures()) == 0 {
+		return _JwsVerifyDone
+	}
+	hdr := msg.Signatures()[0].ProtectedHeaders()
+	if hdr == nil {
+		return _JwsVerifyDone
+	}
+	cty, ok := hdr.ContentType()
+	if !ok {
+		return _JwsVerifyDone
+	}
+	if cty == "JWT" {
+		return _JwsVerifyExpectNested
+	}
+	return _JwsVerifyDone
 }
 
 // verify parameter exists to make sure that we don't accidentally skip
@@ -427,8 +462,11 @@ OUTER:
 				}
 			}
 
-			// No verification.
-			m, err := jws.Parse(data, jws.WithCompact())
+			// No verification. Parse the LOOP-LOCAL `payload` (not the
+			// original `data`); for a 2-layer nested JWS, iter 2 must
+			// see the inner JWS bytes that iter 1 produced, not re-
+			// parse the outer envelope.
+			m, err := jws.Parse(payload, jws.WithCompact())
 			if err != nil {
 				return nil, fmt.Errorf(`invalid jws message: %w`, err)
 			}

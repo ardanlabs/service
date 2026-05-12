@@ -4,6 +4,136 @@ Changes
 v3 has many incompatibilities with v2. To see the full list of differences between
 v2 and v3, please read the Changes-v3.md file (https://github.com/lestrrat-go/jwx/blob/develop/v3/Changes-v3.md)
 
+v3.1.1 7 May 2026
+  * [jws] Coordinated RFC 7797 `b64=false` handling pass: `jws.Verify`
+    rejects payloads with `b64=false` unless `b64` is also listed in
+    `crit`; `jws.Sign` auto-declares `b64` in `crit` when emitting
+    `b64=false`; `Message.MarshalJSON` honors `b64=false` instead of
+    silently re-encoding; `jws.VerifyCompactFast` refuses any compact
+    JWS carrying `b64` (the fast path doesn't process extension
+    headers); and `b64` is now declared as a typed boolean header
+    field rather than handled ad-hoc.
+    (#2081, #2087, #2102, #2104, #2106)
+
+  * [jws] Reject malformed general-form JSON-serialized JWS: inputs
+    with a top-level `header` member as a sibling of `signatures` are
+    rejected (the spec only permits `header` inside per-signature
+    objects), as are inputs whose `protected` member is a literal
+    JSON object instead of a base64url-encoded string.
+    (#2089, #2108)
+
+  * [jws] `jws.AlgorithmsForKey` failures from unclassifiable keys
+    are now wrapped in a typed sentinel so callers can branch on
+    "couldn't categorize this key" without string matching the error
+    message. (#2110)
+
+  * [jws] Verify error-shape consistency: `VerifyCompactFast`
+    refusals now match the `jws.VerifyError()` taxonomy used by the
+    slow path, fan-out verify errors name the loose `WithKeySet`
+    options that were tried, multi-signature `b64` mismatches name
+    the offending signature index and conflicting value, and the
+    compact `b64=false`+payload-contains-`.` error references RFC
+    7797 §5.2 and points at `WithDetachedPayload`.
+    (#2083, #2085, #2114)
+
+  * [jws] Keys fetched via the `jku` header are no longer accepted
+    for signature verification when the JWK declares `use=enc`.
+    (#2060)
+
+  * [jws][jwe] `jws.VerifyMessage` and `jwe.DecryptMessage` observe
+    context cancellation between loop iterations rather than only at
+    boundaries. Long fan-out verify/decrypt loops now respond to a
+    cancelled context promptly. (#2112, #2117)
+
+  * [jwe] Reject PBES2 messages whose `p2c` (iteration count) does
+    not parse cleanly into int64 or violates the configured bound.
+    The error now names the violated bound (min vs max) instead of
+    the generic "out of range". (#2119)
+
+  * [jwe] `jwe.WithKey()` validates the alg-vs-key shape at option
+    construction time rather than during encryption, so misuse
+    surfaces at the call site instead of inside the encrypt loop.
+    (#2121)
+
+  * [jwe] Decrypt error-path cleanup: per-key failures from key-set
+    providers are surfaced via `errors.Join` so each underlying
+    error remains inspectable; the joined error count is bounded to
+    keep diagnostics readable; the redundant outer `Decrypt:` prefix
+    is dropped; and the compression-cap error names the
+    "decompressed" payload, the option, and the size.
+    (#2123, #2125, #2127)
+
+  * [jwe] Add `jwe.WithDisabledKeyAlgorithms(...)` as a global
+    policy hook (`jwe.Configure(...)` or per-call) for refusing
+    specific key-management algorithms across all `jwe.Decrypt`
+    calls. (#2129)
+
+  * [jwe] Reject messages whose protected-header `alg` conflicts
+    with a per-recipient `alg`. The previous behavior silently
+    preferred the protected-header value. (#2052)
+
+  * [jwk] Stop duplicating JWK fields at the JWKS top level on
+    parse. A JWKS whose top-level object carries fields with the
+    same names as JWK members no longer copies those values into
+    every key in `keys`. (#2133)
+
+  * [jwk] A custom `jwk.KeyParser` returning `(nil, nil)` now
+    signals "continue to the next parser" rather than "successfully
+    produced a nil key". Callers no longer end up with a nil
+    `jwk.Key` from a successful parse when an extension returns the
+    empty pair. (#2140)
+
+  * [jwk] Stream the JWKS `keys` array with a cap-before-allocate
+    strategy. Inputs respect `WithMaxKeys` before any unbounded
+    slice growth, and bounded-size JWKS no longer over-allocate
+    based on attacker-controlled length hints. (#2137)
+
+  * [jwk] Wrap `jwk.ParseKey` errors with the `jwk.ParseError`
+    sentinel so callers can branch on parse-vs-other failures with
+    `errors.Is(err, jwk.ParseError())`. (#2135)
+
+  * [jwk] ECDSA public keys whose X / Y coordinates exceed the
+    curve's byte length are rejected with a typed error instead of
+    reaching curve arithmetic with an out-of-range `big.Int`.
+    (#2050)
+
+  * [jwt] `jwt.ParseRequest` no longer skips the request body when
+    the request uses chunked transfer encoding. The
+    Content-Length-based fast path previously bypassed `ParseForm`
+    for chunked requests even when `WithFormKey` was supplied.
+    (#2091)
+
+  * [jwt] Pedantic mode (`jwt.WithPedanticParse(true)`) enforces
+    that nested-envelope JWTs declare `cty=JWT`. Tokens missing
+    `cty` or carrying a different value are rejected. (#2094)
+
+  * [jwt] `jwt.ParseInsecure` parses the loop-local payload split
+    from the input rather than the original input bytes. Fixes a
+    case where `ParseInsecure` could return a token assembled from
+    a different signature segment than the one being inspected.
+    (#2097)
+
+  * [jwt] `jwt.WithMaxDeltaIs(...)` and `jwt.WithMinDeltaIs(...)`
+    reject tokens whose compared claim is missing rather than
+    treating it as zero. Validation no longer silently succeeds
+    when the claim isn't present on the token. (#2099)
+
+  * [jwt] `jwt.Parse` / `jwt.ParseRequest` only call `ParseForm`
+    when `WithFormKey` is supplied. Previously the form body could
+    be consumed even when the caller did not opt in to form-source
+    extraction. (#2058)
+
+  * [jwt] Fix `AddressClaim.MarshalJSON` to handle non-printable
+    bytes correctly. (#2056)
+
+  * [jwa] Unify the signature, key-encryption, and
+    content-encryption algorithm tables behind a single
+    registration entry point. Extension algorithms register once
+    rather than via three parallel APIs. (#2066)
+
+  * [cmd/jwx] Warn before writing a private key to a TTY; reject
+    `keysize <= 0` for `oct` key generation. (#2071)
+
 v3.1.0 19 Apr 2026
   * [jwk] Add `jwk.WithRejectDuplicateKID(bool)` — when enabled, `jwk.Parse` /
     `jwk.ParseReader` / `jwk.ParseString` return an error if the input JWKS

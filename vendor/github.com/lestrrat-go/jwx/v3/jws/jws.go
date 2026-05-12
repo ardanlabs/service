@@ -31,6 +31,7 @@ import (
 	"crypto/ecdsa"
 	"crypto/ed25519"
 	"crypto/rsa"
+	"errors"
 	"fmt"
 	"io"
 	"slices"
@@ -144,6 +145,16 @@ func validateKeyBeforeUse(key any) error {
 // signing process, as you will likely be required to set the `b64` field
 // when using detached payload.
 //
+// RFC 7797 note: producing an in-band compact JWS with `b64=false`
+// (i.e. setting the `b64` protected header to `false` without also
+// passing [WithDetachedPayload]) is "NOT RECOMMENDED" per §5.2; strict
+// peers commonly reject such messages. The canonical pairing for
+// `b64=false` is [WithDetachedPayload] (or [WithDetachedPayloadReader]
+// for streaming), which keeps the unencoded payload out of the wire
+// format. Sign auto-declares `"b64"` in `crit` whenever `b64=false`
+// is set, so the produced JWS is at least RFC 7797 §3 conformant on
+// the producer side.
+//
 // Look for options that return `jws.SignOption` or `jws.SignVerifyOption`
 // for a complete list of options that can be passed to this function.
 //
@@ -242,6 +253,14 @@ var allowNoneWhitelist = jwk.WhitelistFunc(func(string) bool {
 // success; the verified bytes are whatever the caller read from the Reader.
 // Do not treat the returned slice as "the payload is empty" — callers that
 // need the payload bytes must retain their own copy.
+//
+// Context cancellation is governed by [WithContext]. The slow-path verify
+// loop checks ctx.Err() between each signature, each key provider, and
+// each (alg, key) attempt; jkuProvider passes ctx to its underlying
+// jwk.Fetcher; the streaming path checks ctx between payload Reads.
+// staticKeyProvider and keySetProvider do not consult ctx inside
+// FetchKeys themselves (their backing data is already in memory) — see
+// the [WithContext] godoc for the full per-layer breakdown.
 func Verify(buf []byte, options ...VerifyOption) ([]byte, error) {
 	vc := verifyContextPool.Get()
 	defer verifyContextPool.Put(vc)
@@ -253,16 +272,14 @@ func Verify(buf []byte, options ...VerifyOption) ([]byte, error) {
 	return vc.VerifyMessage(buf)
 }
 
-// get the value of b64 header field.
-// If the field does not exist, returns true (default)
-// Otherwise return the value specified by the header field.
+// getB64Value reads the typed "b64" header field and returns its value,
+// or RFC 7797's default of true when the field is unset.
 func getB64Value(hdr Headers) bool {
-	var b64 bool
-	if err := hdr.Get("b64", &b64); err != nil {
-		return true // default
+	v, ok := hdr.B64()
+	if !ok {
+		return true // RFC 7797 default
 	}
-
-	return b64
+	return v
 }
 
 func detectParseFormat(src []byte) int {
@@ -580,6 +597,31 @@ func RegisterAlgorithmForCurve(crv jwa.EllipticCurveAlgorithm, alg jwa.Signature
 // inferred from the raw Go type), curve-specific algorithms registered via
 // [RegisterAlgorithmForCurve] are combined with key-type-level algorithms
 // to produce a more precise result.
+//
+// Accepted key shapes (resolved in order):
+//
+//  1. [jwk.Key] — kty is read directly; if the implementation also exposes
+//     Crv(), the curve refines the result.
+//  2. Stdlib crypto types: [rsa.PublicKey] / [rsa.PrivateKey] (and pointer
+//     forms), [ecdsa.PublicKey] / [ecdsa.PrivateKey] (and pointer forms),
+//     [ed25519.PublicKey], [ed25519.PrivateKey], and [byte] slices for
+//     symmetric keys.
+//  3. [crypto/ecdh.PublicKey] / [crypto/ecdh.PrivateKey] (and pointer
+//     forms) — explicitly rejected; ECDH keys are key-agreement only.
+//     Returns an error wrapping [ErrUnclassifiableKey].
+//  4. [crypto.Signer] (e.g. KMS-backed adapters) — resolved once via
+//     .Public(); the public key is then re-classified through tiers 1–2
+//     or the [jwk.Import] fallback below. To prevent infinite recursion,
+//     a Signer whose .Public() is itself a Signer is left for the
+//     downstream dispatcher to handle.
+//  5. [jwk.Import] fallback — anything else is offered to the import
+//     registry, allowing extension modules to register their own raw key
+//     types.
+//
+// All "we cannot classify this key" failures wrap [ErrUnclassifiableKey],
+// so callers can branch with errors.Is rather than pattern-matching error
+// strings. The wrapping error keeps the concrete %T or %q diagnostic in
+// its message for human readers.
 func AlgorithmsForKey(key any) ([]jwa.SignatureAlgorithm, error) {
 	var kty jwa.KeyType
 	var crv jwa.EllipticCurveAlgorithm
@@ -603,7 +645,7 @@ func AlgorithmsForKey(key any) ([]jwa.SignatureAlgorithm, error) {
 		// ecdh keys are for key agreement (X25519/X448), not signing.
 		// Reject at the API boundary instead of returning a misleading
 		// algorithm list that would fail deeper in the signing stack.
-		return nil, fmt.Errorf(`key type %T cannot be used for signing (ecdh keys are key-agreement only)`, key)
+		return nil, fmt.Errorf(`%w: key type %T cannot be used for signing (ecdh keys are key-agreement only)`, errUnclassifiableKey, key)
 	case []byte:
 		kty = jwa.OctetSeq()
 	default:
@@ -611,19 +653,31 @@ func AlgorithmsForKey(key any) ([]jwa.SignatureAlgorithm, error) {
 		// extract the underlying public key type via .Public().
 		// Standard library types (*rsa.PrivateKey, etc.) are already handled
 		// by the concrete cases above.
+		var signerPubErr error
 		if signer, ok := key.(crypto.Signer); ok {
 			pub := signer.Public()
 			// Guard: only recurse if the public key is not itself a crypto.Signer,
 			// to prevent infinite recursion from pathological implementations.
 			if _, isSigner := pub.(crypto.Signer); !isSigner {
-				if algs, err := AlgorithmsForKey(pub); err == nil {
+				algs, err := AlgorithmsForKey(pub)
+				if err == nil {
 					return algs, nil
 				}
+				// Save the inner classification error so a
+				// downstream Import-fallback failure can surface
+				// both diagnostics. A successful Import discards
+				// signerPubErr — only the eventual failure path
+				// joins them.
+				signerPubErr = err
 			}
 		}
 		imported, err := jwk.Import(key)
 		if err != nil {
-			return nil, fmt.Errorf(`unknown key type %T`, key)
+			outer := fmt.Errorf(`%w: unknown key type %T`, errUnclassifiableKey, key)
+			if signerPubErr != nil {
+				return nil, errors.Join(outer, signerPubErr)
+			}
+			return nil, outer
 		}
 		kty = imported.KeyType()
 		if ck, ok := imported.(curver); ok {
@@ -636,7 +690,7 @@ func AlgorithmsForKey(key any) ([]jwa.SignatureAlgorithm, error) {
 
 	ktyAlgs, ok := keyTypeToAlgorithms[kty]
 	if !ok {
-		return nil, fmt.Errorf(`unregistered key type %q`, kty)
+		return nil, fmt.Errorf(`%w: unregistered key type %q`, errUnclassifiableKey, kty)
 	}
 
 	// If we know the curve and there are curve-specific registrations,
@@ -701,13 +755,13 @@ func validateAlgorithmForKey(alg jwa.SignatureAlgorithm, key any) error {
 				return nil
 			}
 		}
-		return err
+		return fmt.Errorf(`jws.WithKey: %w`, err)
 	}
 	if !slices.Contains(algs, alg) {
 		if hasCustomSigVerifier(alg) {
 			return nil
 		}
-		return fmt.Errorf(`algorithm %q is not compatible with key type %T`, alg, key)
+		return fmt.Errorf(`jws.WithKey: algorithm %q is not compatible with key type %T`, alg, key)
 	}
 	return nil
 }
@@ -794,12 +848,17 @@ func Settings(options ...GlobalOption) {
 // set. Applications that may legitimately receive "crit" headers should
 // call jws.Verify directly.
 //
-// VerifyCompactFast also assumes the JWS uses the default "b64":true
-// (base64url-encoded) payload encoding. A conforming RFC 7797 b64:false
-// JWS is required to list "b64" in "crit", so it is automatically routed
-// away from the fast path by the crit refusal above. Detached-payload
-// callers must use jws.Verify with jws.WithDetachedPayload regardless,
-// since VerifyCompactFast has no way to accept a detached payload.
+// VerifyCompactFast assumes the JWS uses the default "b64":true
+// (base64url-encoded) payload encoding. Any protected header carrying
+// a "b64" entry is refused with jws.ErrB64Present(), regardless of
+// whether "crit" also lists it: the fast path's signing-input
+// reconstruction and post-verify base64 decode both depend on the
+// default encoding, and a non-conformant b64=false producer (one that
+// omits "b64" from "crit") would otherwise verify cryptographically
+// while returning bytes that differ from the producer's intent.
+// Detached-payload callers must use jws.Verify with jws.WithDetachedPayload
+// regardless, since VerifyCompactFast has no way to accept a detached
+// payload.
 func VerifyCompactFast(key any, compact []byte, alg jwa.SignatureAlgorithm) ([]byte, error) {
 	if err := validateAlgorithmForKey(alg, key); err != nil {
 		return nil, makeVerifyError(`%w`, err)
@@ -819,8 +878,25 @@ func VerifyCompactFast(key any, compact []byte, alg jwa.SignatureAlgorithm) ([]b
 	// allowlist, so accepting them would silently violate RFC 7515 §4.1.11.
 	// Callers that wrap VerifyCompactFast can detect this via
 	// errors.Is(err, jws.ErrCritPresent()) and fall through to jws.Verify.
+	// The sentinel is wrapped in verifyError so the same error also matches
+	// errors.Is(err, jws.VerifyError()) — fast-path refusals are a verify
+	// error, just one with a more specific classification available.
 	if jwsbb.HeaderHas(parsedHdr, CriticalKey) {
-		return nil, errCritPresent
+		return nil, verifyError{errCritPresent}
+	}
+
+	// Refuse "b64"-bearing messages, regardless of whether "crit" also
+	// lists it. The signing-input reconstruction and the post-verify
+	// base64 decode both assume the default b64=true encoding; a
+	// b64=false JWS that the fast path "verified" would either fail the
+	// post-verify base64 decode with a misleading error, or — worse —
+	// return base64-decoded garbage as the payload while the producer's
+	// raw bytes silently disagree. jws.Verify has the WithDetachedPayload
+	// / WithCritExtension machinery to handle b64=false correctly. As with
+	// the crit refusal above, the sentinel is wrapped in verifyError so the
+	// same error matches both jws.ErrB64Present() and jws.VerifyError().
+	if jwsbb.HeaderHas(parsedHdr, "b64") {
+		return nil, verifyError{errB64Present}
 	}
 
 	// Cross-check the protected header "alg" against the caller-supplied

@@ -100,6 +100,13 @@ func ParseForm(values url.Values, name string, options ...ParseOption) (Token, e
 // cookies with the same name, and you want to search for a specific one that
 // (http.Request).Cookie() would not return, you will need to implement your
 // own logic to extract the cookie and use jwt.ParseString().
+//
+// When (and only when) at least one WithFormKey() option is supplied,
+// ParseRequest will call (*http.Request).ParseForm() to read form fields
+// from the request body. Callers that accept untrusted requests should
+// wrap req.Body with http.MaxBytesReader before calling ParseRequest so
+// that an oversized body does not exhaust memory during form parsing.
+// Without WithFormKey() the request body is left untouched.
 func ParseRequest(req *http.Request, options ...ParseOption) (Token, error) {
 	var hdrkeys []string
 	var formkeys []string
@@ -168,7 +175,15 @@ func ParseRequest(req *http.Request, options ...ParseOption) (Token, error) {
 		return tok, nil
 	}
 
-	if cl := req.ContentLength; cl > 0 {
+	// Only touch the request body when the caller actually asked us
+	// to look at form fields. Without this guard ParseRequest would
+	// call req.ParseForm() on every request — for form-encoded bodies
+	// that drains the body, leaving downstream handlers with an empty
+	// io.Reader; for other Content-Types it is still wasted work on
+	// the URL query. We DO NOT gate on ContentLength: chunked-transfer
+	// requests have ContentLength == -1, and RFC 6750 §2.2 allows
+	// form-borne bearer tokens including under chunked encoding.
+	if len(formkeys) > 0 {
 		if err := req.ParseForm(); err != nil {
 			return nil, fmt.Errorf(`failed to parse form: %w`, err)
 		}

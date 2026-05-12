@@ -21,7 +21,7 @@ type KeyParser interface {
 	// If your KeyParser decides that the payload is not something
 	// you can parse, and you would like to continue parsing with
 	// the remaining KeyParser instances that are registered,
-	// return a `jwk.ContinueParseError`. Any other errors will immediately
+	// return a `jwk.ContinueError()`. Any other errors will immediately
 	// halt the parsing process.
 	//
 	// When unmarshaling JSON, use the unmarshaler object supplied as

@@ -65,14 +65,18 @@ func (s *Signature) UnmarshalJSON(data []byte) error {
 
 	s.headers = sup.Header
 	if buf := sup.Protected; buf != nil {
-		src := []byte(*buf)
-		if !bytes.HasPrefix(src, []byte{tokens.OpenCurlyBracket}) {
-			decoded, err := base64.Decode(src)
-			if err != nil {
-				return fmt.Errorf(`failed to base64 decode protected headers: %w`, err)
-			}
-			src = decoded
+		// RFC 7515 §3 mandates that "protected" be base64url-encoded.
+		// Earlier code carried a relaxed probe that accepted a literal-
+		// JSON form (a JSON string whose content begins with "{") and
+		// skipped base64 decoding — that was asymmetric with the
+		// flattened branch (which only base64-decodes) and gave callers
+		// a non-conforming wire form useful for evading byte-exact JWS
+		// dedup / replay caches.
+		decoded, err := base64.Decode([]byte(*buf))
+		if err != nil {
+			return fmt.Errorf(`failed to base64 decode protected headers: %w`, err)
 		}
+		src := decoded
 
 		prt := NewHeaders()
 		//nolint:forcetypeassert
@@ -178,7 +182,7 @@ func (s *Signature) sign2(payload []byte, signer interface{ Algorithm() jwa.Sign
 	} else {
 		if !s.detached {
 			if bytes.Contains(payload, []byte{tokens.Period}) {
-				return nil, nil, fmt.Errorf(`payload must not contain a "."`)
+				return nil, nil, fmt.Errorf(`compact serialization with b64=false requires payload to contain no "." characters per RFC 7797 §5.2; use jws.WithDetachedPayload to keep the payload out of the wire format`)
 			}
 		}
 		plen = len(payload)
@@ -275,7 +279,7 @@ func (m Message) LookupSignature(kid string) []*Signature {
 type messageUnmarshalProbe struct {
 	Payload    *string           `json:"payload"`
 	Signatures []json.RawMessage `json:"signatures,omitempty"`
-	Header     Headers           `json:"header,omitempty"`
+	Header     json.RawMessage   `json:"header,omitempty"`
 	Protected  *string           `json:"protected,omitempty"`
 	Signature  *string           `json:"signature,omitempty"`
 }
@@ -287,7 +291,6 @@ func (m *Message) UnmarshalJSON(buf []byte) error {
 	m.detached = false
 
 	var mup messageUnmarshalProbe
-	mup.Header = NewHeaders()
 	if err := json.Unmarshal(buf, &mup); err != nil {
 		return fmt.Errorf(`failed to unmarshal into temporary structure: %w`, err)
 	}
@@ -311,6 +314,16 @@ func (m *Message) UnmarshalJSON(buf []byte) error {
 			return fmt.Errorf(`required field "signatures" not present`)
 		}
 
+		// RFC 7515 §7.2.1 places the unprotected JOSE header inside each
+		// signature entry for the general (multi-signature) form; a
+		// top-level "header" sibling of "signatures" is not defined.
+		// Reject rather than silently drop — silent drop hid both typos
+		// and an attacker-controlled trigger surface for any
+		// RegisterCustomDecoder side effects on the dropped contents.
+		if len(mup.Header) > 0 && !bytes.Equal(mup.Header, []byte("null")) {
+			return fmt.Errorf(`general-form JWS must not contain top-level "header" sibling of "signatures" (RFC 7515 §7.2.1 places the unprotected header inside each signature entry)`)
+		}
+
 		m.signatures = make([]*Signature, 0, len(mup.Signatures))
 		for i, rawsig := range mup.Signatures {
 			var sig Signature
@@ -330,8 +343,8 @@ func (m *Message) UnmarshalJSON(buf []byte) error {
 					b64 = false
 				}
 			} else {
-				if b64 != getB64Value(sig.protected) {
-					return fmt.Errorf(`b64 value must be the same for all signatures`)
+				if got := getB64Value(sig.protected); b64 != got {
+					return fmt.Errorf(`b64 value must be the same for all signatures; signature #%d declared b64=%t but earlier signature(s) declared b64=%t`, i+1, got, b64)
 				}
 			}
 
@@ -343,7 +356,13 @@ func (m *Message) UnmarshalJSON(buf []byte) error {
 		}
 
 		var sig Signature
-		sig.headers = mup.Header
+		if len(mup.Header) > 0 && !bytes.Equal(mup.Header, []byte("null")) {
+			hdrs := NewHeaders()
+			if err := json.Unmarshal(mup.Header, hdrs); err != nil {
+				return fmt.Errorf(`failed to unmarshal flattened unprotected header: %w`, err)
+			}
+			sig.headers = hdrs
+		}
 		if src := mup.Protected; src != nil {
 			decoded, err := base64.DecodeString(*src)
 			if err != nil {
@@ -426,9 +445,22 @@ func (m Message) marshalFlattened() ([]byte, error) {
 		if wrote {
 			buf.WriteRune(tokens.Comma)
 		}
-		buf.WriteString(`"payload":"`)
-		buf.Write(base64.Encode(m.payload))
-		buf.WriteRune('"')
+		if !getB64Value(sig.protected) {
+			// RFC 7797 b64=false: emit the raw payload as a JSON string
+			// rather than re-base64-encoding it. json.Marshal handles
+			// any necessary escaping for byte sequences that aren't
+			// JSON-safe as-is.
+			payloadbuf, err := json.Marshal(string(m.payload))
+			if err != nil {
+				return nil, fmt.Errorf(`failed to marshal "payload" (flattened, b64=false): %w`, err)
+			}
+			buf.WriteString(`"payload":`)
+			buf.Write(payloadbuf)
+		} else {
+			buf.WriteString(`"payload":"`)
+			buf.Write(base64.Encode(m.payload))
+			buf.WriteRune('"')
+		}
 		wrote = true
 	}
 
@@ -467,9 +499,28 @@ func (m Message) marshalFull() ([]byte, error) {
 	if m.detached {
 		buf.WriteString(`{"signatures":[`)
 	} else {
-		buf.WriteString(`{"payload":"`)
-		buf.Write(base64.Encode(m.payload))
-		buf.WriteString(`","signatures":[`)
+		// RFC 7797 b64=false: emit the raw payload as a JSON string
+		// rather than re-base64-encoding it. The general JWS form has
+		// one shared payload across signatures; per RFC 7797, all
+		// signers must agree on the b64 flag, so we consult the first
+		// signature's protected header.
+		var b64 = true
+		if len(m.signatures) > 0 {
+			b64 = getB64Value(m.signatures[0].protected)
+		}
+		if !b64 {
+			payloadbuf, err := json.Marshal(string(m.payload))
+			if err != nil {
+				return nil, fmt.Errorf(`failed to marshal "payload" (full, b64=false): %w`, err)
+			}
+			buf.WriteString(`{"payload":`)
+			buf.Write(payloadbuf)
+			buf.WriteString(`,"signatures":[`)
+		} else {
+			buf.WriteString(`{"payload":"`)
+			buf.Write(base64.Encode(m.payload))
+			buf.WriteString(`","signatures":[`)
+		}
 	}
 	for i, sig := range m.signatures {
 		if i > 0 {
@@ -567,7 +618,7 @@ func Compact(msg *Message, options ...CompactOption) ([]byte, error) {
 			buf.WriteString(encoded)
 		} else {
 			if bytes.Contains(msg.payload, []byte{tokens.Period}) {
-				return nil, makeSignError(prefixJwsCompact, `payload must not contain a "."`)
+				return nil, makeSignError(prefixJwsCompact, `compact serialization with b64=false requires payload to contain no "." characters per RFC 7797 §5.2; use jws.WithDetachedPayload to keep the payload out of the wire format`)
 			}
 			buf.Write(msg.payload)
 		}

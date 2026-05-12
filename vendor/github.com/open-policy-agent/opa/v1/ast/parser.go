@@ -148,6 +148,7 @@ type Parser struct {
 	cache             parsedTermCache
 	recursionDepth    int
 	maxRecursionDepth int
+	notBodies         bool
 }
 
 type parsedTermCacheItem struct {
@@ -434,9 +435,25 @@ func (p *Parser) Parse() ([]Statement, []*Comment, Errors) {
 	}
 
 	selected := map[string]tokens.Token{}
-	if p.po.AllFutureKeywords || p.po.EffectiveRegoVersion() == RegoV1 {
+	if p.po.AllFutureKeywords {
 		maps.Copy(selected, allowedFutureKeywords)
 	} else {
+		if p.po.EffectiveRegoVersion() == RegoV1 {
+			for kw := range futureKeywordsV0 {
+				tok, ok := allowedFutureKeywords[kw]
+				if !ok {
+					return nil, nil, Errors{
+						&Error{
+							Code:     ParseErr,
+							Message:  fmt.Sprintf("unknown future keyword: %v", kw),
+							Location: nil,
+						},
+					}
+				}
+				selected[kw] = tok
+			}
+		}
+
 		for _, kw := range p.po.FutureKeywords {
 			tok, ok := allowedFutureKeywords[kw]
 			if !ok {
@@ -451,10 +468,15 @@ func (p *Parser) Parse() ([]Statement, []*Comment, Errors) {
 			selected[kw] = tok
 		}
 	}
+
+	if _, ok := selected["not"]; ok {
+		p.notBodies = true
+	}
+
 	p.s.s = p.s.s.WithKeywords(selected)
 
 	if p.po.EffectiveRegoVersion() == RegoV1 {
-		for kw, tok := range allowedFutureKeywords {
+		for kw, tok := range futureKeywordsV0 {
 			p.s.s.AddKeyword(kw, tok)
 		}
 	}
@@ -545,7 +567,7 @@ func (p *Parser) parseAnnotations(stmts []Statement) []Statement {
 }
 
 func parseAnnotations(comments []*Comment) (stmts []*Annotations, errs Errors) {
-	numBlocks := CountFunc(comments, isMetadataComment)
+	numBlocks := CountFunc(comments, IsMetadataComment)
 	if numBlocks == 0 {
 		return nil, nil
 	}
@@ -557,7 +579,7 @@ func parseAnnotations(comments []*Comment) (stmts []*Annotations, errs Errors) {
 	}
 
 	for i := range comments {
-		if isMetadataComment(comments[i]) { // scan until end of block
+		if IsMetadataComment(comments[i]) { // scan until end of block
 			mdp.Reset(comments[i].Location)
 			for i++; i < len(comments) && !blockBuster(comments[i], comments[i-1]); i++ {
 				mdp.Append(comments[i])
@@ -576,12 +598,12 @@ func parseAnnotations(comments []*Comment) (stmts []*Annotations, errs Errors) {
 	return stmts, errs
 }
 
-func isMetadataComment(c *Comment) bool {
+func IsMetadataComment(c *Comment) bool {
 	return c.Location.Col == 1 && bytes.HasPrefix(bytes.TrimSpace(c.Text), metadataBytes)
 }
 
 func blockBuster(curr, prev *Comment) bool { // or endOfBlock, but the name was too good to pass up
-	return curr.Location.Col != 1 || curr.Location.Row-1 != prev.Location.Row
+	return curr.Location.Col != 1 || curr.Location.Row-1 != prev.Location.Row || IsMetadataComment(curr)
 }
 
 func (p *Parser) parsePackage() *Package {
@@ -1238,6 +1260,10 @@ func (p *Parser) parseLiteral() (expr *Expr) {
 		}
 	}
 
+	if negated && p.notBodies && p.s.tok == tokens.LBrace {
+		return p.parseNotBody()
+	}
+
 	switch p.s.tok {
 	case tokens.Some:
 		if negated {
@@ -1272,7 +1298,6 @@ func (p *Parser) parseLiteralExpr(negated bool) *Expr {
 	s := p.save()
 	expr := p.parseExpr()
 	if expr != nil {
-		expr.Negated = negated
 		if p.s.tok == tokens.With {
 			if expr.With = p.parseWith(); expr.With == nil {
 				return nil
@@ -1294,6 +1319,16 @@ func (p *Parser) parseLiteralExpr(negated bool) *Expr {
 					p.hint("`import future.keywords.every` for `every x in xs { ... }` expressions")
 				}
 			}
+		}
+
+		if negated && p.notBodies {
+			// Move 'with' statement to outer not expr
+			w := expr.With
+			expr.With = nil
+			expr = NewExpr(&Not{Body: NewBody(expr), Location: p.s.Loc()})
+			expr.With = w
+		} else {
+			expr.Negated = negated
 		}
 	}
 	return expr
@@ -1425,6 +1460,28 @@ func (p *Parser) parseSome() *Expr {
 	}
 
 	return NewExpr(decl).SetLocation(decl.Location)
+}
+
+func (p *Parser) parseNotBody() *Expr {
+	loc := p.s.Loc()
+	p.scan()
+
+	body := p.parseBody(tokens.RBrace)
+	if body == nil {
+		return nil
+	}
+	p.scan()
+
+	not := &Not{Body: body, ExplicitBody: true, Location: loc}
+	expr := NewExpr(not).SetLocation(loc)
+
+	if p.s.tok == tokens.With {
+		if expr.With = p.parseWith(); expr.With == nil {
+			return nil
+		}
+	}
+
+	return expr
 }
 
 func (p *Parser) parseEvery() *Expr {
@@ -1731,6 +1788,7 @@ func (p *Parser) parseTerm() *Term {
 	s0 := p.save()
 
 	var term *Term
+	var unaryMinusLoc *Location
 	switch p.s.tok {
 	case tokens.Null:
 		term = NullTerm().SetLocation(p.s.Loc())
@@ -1738,7 +1796,21 @@ func (p *Parser) parseTerm() *Term {
 		term = BooleanTerm(true).SetLocation(p.s.Loc())
 	case tokens.False:
 		term = BooleanTerm(false).SetLocation(p.s.Loc())
-	case tokens.Sub, tokens.Dot, tokens.Number:
+	case tokens.Sub:
+		loc := p.s.Loc()
+		s := p.save()
+		p.scan()
+		if p.s.tok == tokens.Ident || p.s.tok == tokens.Contains {
+			// Unary minus on a reference: -ref → minus(0, ref).
+			// parseTermFinish below will resolve the full ref (e.g. input.number),
+			// after which we wrap the result in a minus call.
+			unaryMinusLoc = loc
+			term = p.parseVar()
+		} else {
+			p.restore(s)
+			term = p.parseNumber()
+		}
+	case tokens.Dot, tokens.Number:
 		term = p.parseNumber()
 	case tokens.String:
 		term = p.parseString()
@@ -1768,6 +1840,10 @@ func (p *Parser) parseTerm() *Term {
 	}
 
 	term = p.parseTermFinish(term, false)
+	if unaryMinusLoc != nil && term != nil {
+		zero := IntNumberTerm(0).SetLocation(unaryMinusLoc)
+		term = p.setLoc(Minus.Call(zero, term), unaryMinusLoc, unaryMinusLoc.Offset, p.s.lastEnd)
+	}
 	p.parsedTermCachePush(term, s0)
 	return term
 }
@@ -3101,7 +3177,9 @@ func convertYAMLMapKeyTypes(x any, path []string) (any, error) {
 
 // futureKeywords is the source of truth for future keywords that will
 // eventually become standard keywords inside of Rego.
-var futureKeywords = map[string]tokens.Token{}
+var futureKeywords = map[string]tokens.Token{
+	"not": tokens.Not,
+}
 
 // futureKeywordsV0 is the source of truth for future keywords that were
 // not yet a standard part of Rego in v0, and required importing.
@@ -3167,8 +3245,13 @@ func (p *Parser) futureImport(imp *Import, allowedFutureKeywords map[string]toke
 			return
 		}
 
-		kwds = []string{keyword} // overwrite
+		if keyword == "not" {
+			p.notBodies = true
+		} else {
+			kwds = []string{keyword} // overwrite
+		}
 	}
+
 	for _, kw := range kwds {
 		p.s.s.AddKeyword(kw, allowedFutureKeywords[kw])
 	}

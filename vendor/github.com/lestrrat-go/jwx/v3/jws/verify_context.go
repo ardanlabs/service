@@ -196,6 +196,15 @@ func (vc *verifyContext) VerifyMessage(buf []byte) ([]byte, error) {
 		pool.ErrorSlice().Put(errs)
 	}()
 	for idx, sig := range msg.signatures {
+		// Honor caller's deadline between signatures. Without this
+		// check, a hostile JWS with many signatures keeps the loop
+		// running long after the deadline; only kp.FetchKeys had
+		// visibility into vc.ctx, and not every key provider observes
+		// it. Cheap (~1ns) on the success path.
+		if err := vc.ctx.Err(); err != nil {
+			return nil, makeVerifyError(`%w`, err)
+		}
+
 		var rawHeaders []byte
 		if rbp, ok := sig.protected.(interface{ rawBuffer() []byte }); ok {
 			if raw := rbp.rawBuffer(); raw != nil {
@@ -212,6 +221,10 @@ func (vc *verifyContext) VerifyMessage(buf []byte) ([]byte, error) {
 		}
 
 		if vc.critValidation {
+			if err := validateB64InCritIfFalse(sig.protected); err != nil {
+				errs = append(errs, makeVerifyError(`signature #%d: %w`, idx+1, err))
+				continue
+			}
 			if err := validateCritical(sig.protected, vc.criticalExtensions); err != nil {
 				errs = append(errs, makeVerifyError(`signature #%d has invalid "crit" header: %w`, idx+1, err))
 				continue
@@ -222,6 +235,11 @@ func (vc *verifyContext) VerifyMessage(buf []byte) ([]byte, error) {
 		verifyBuf = jwsbb.SignBuffer(verifyBuf, rawHeaders, msg.payload, vc.encoder, msg.b64)
 		keysAttempted := 0
 		for i, kp := range vc.keyProviders {
+			// Honor caller's deadline between key providers.
+			if err := vc.ctx.Err(); err != nil {
+				return nil, makeVerifyError(`%w`, err)
+			}
+
 			var sink algKeySink
 			if err := kp.FetchKeys(vc.ctx, &sink, sig, msg); err != nil {
 				errs = append(errs, makeVerifyError(`signature #%d: key provider %d failed: %w`, idx+1, i, err))
@@ -229,6 +247,15 @@ func (vc *verifyContext) VerifyMessage(buf []byte) ([]byte, error) {
 			}
 
 			for _, pair := range sink.list {
+				// Honor caller's deadline between (alg,key) pairs.
+				// Under WithRequireKid(false) + WithInferAlgorithmFromKey(true)
+				// + a large JWKS, this inner loop is the dominant
+				// cost — checking ctx between attempts caps the
+				// post-deadline crypto work at one operation.
+				if err := vc.ctx.Err(); err != nil {
+					return nil, makeVerifyError(`%w`, err)
+				}
+
 				alg := pair.alg
 				key := pair.key
 				keysAttempted++
@@ -243,6 +270,15 @@ func (vc *verifyContext) VerifyMessage(buf []byte) ([]byte, error) {
 		}
 		if keysAttempted == 0 {
 			errs = append(errs, makeVerifyError(`signature #%d: no matching keys were provided by any key provider`, idx+1))
+		} else if looseOpts := vc.namedLooseKeySetOptions(); len(looseOpts) > 0 && keysAttempted > 1 {
+			// When a loose keySet config widened the candidate set, name
+			// the option(s) so the operator can see why a single Verify
+			// call paid N× the cost — the un-attributed message gets
+			// mis-diagnosed by adding more keys instead of fixing the
+			// JWS or tightening the config.
+			errs = append(errs, makeVerifyError(
+				`signature #%d: tried %d (alg,key) pair(s) but none verified successfully; %s widened the candidate set`,
+				idx+1, keysAttempted, strings.Join(looseOpts, " and ")))
 		} else {
 			errs = append(errs, makeVerifyError(`signature #%d: tried %d key(s) but none verified successfully`, idx+1, keysAttempted))
 		}
@@ -277,6 +313,32 @@ func (vc *verifyContext) tryKey(verifyBuf []byte, alg jwa.SignatureAlgorithm, ke
 		*(vc.dst) = *msg
 	}
 
+	return nil
+}
+
+// validateB64InCritIfFalse enforces RFC 7797 §3: producers that set
+// b64=false in the protected header MUST also list "b64" in the protected
+// header's "crit" array. The check runs alongside (and before)
+// validateCritical so a non-conformant b64=false JWS is rejected up front
+// regardless of whether the caller has supplied a crit allowlist via
+// jws.WithCritExtension. Without this check, jws.Verify silently honors
+// b64=false on the wire and computes its signing input differently from a
+// strictly conformant verifier — exactly the cross-implementation
+// disagreement RFC 7797 §6 was designed to prevent. VerifyCompactFast
+// rejects any b64-bearing message outright via jws.ErrB64Present(); this
+// helper is the slow-path mirror that targets only the non-conformant
+// shape rather than blanket-refusing b64=false.
+func validateB64InCritIfFalse(protected Headers) error {
+	if getB64Value(protected) {
+		return nil
+	}
+	if !protected.Has(CriticalKey) {
+		return makeVerifyError(`protected header has "b64":false but no "crit"; RFC 7797 §3 requires producers that set "b64":false to list "b64" in "crit"`)
+	}
+	crit, _ := protected.Critical()
+	if !slices.Contains(crit, "b64") {
+		return makeVerifyError(`protected header has "b64":false but "crit" does not list "b64"; RFC 7797 §3 requires producers that set "b64":false to list "b64" in "crit"`)
+	}
 	return nil
 }
 
@@ -320,8 +382,11 @@ func validateCritical(protected Headers, allowedExtensions []string) error {
 		seen[name] = struct{}{}
 
 		// RFC 7515 Section 4.1.11: "crit" MUST NOT include names defined
-		// by the JOSE Header specification itself.
-		if slices.Contains(stdHeaderNames, name) {
+		// by the JOSE Header specification itself. The "b64" parameter
+		// is RFC 7797, not RFC 7515 — listing it in "crit" is the
+		// canonical use of the field per RFC 7797 §3 — so exclude it
+		// from this check even though it is a typed field on stdHeaders.
+		if name != B64Key && slices.Contains(stdHeaderNames, name) {
 			return makeVerifyError(`"crit" header must not contain standard header parameter %q`, name)
 		}
 
@@ -332,9 +397,48 @@ func validateCritical(protected Headers, allowedExtensions []string) error {
 
 		// The recipient must have declared support for the extension.
 		if !slices.Contains(allowedExtensions, name) {
+			if name == B64Key {
+				// b64=false is the canonical RFC 7797 case. The
+				// auto-declare only fires for WithDetachedPayload /
+				// WithDetachedPayloadReader; in-band b64=false still
+				// requires the caller to opt in explicitly.
+				return makeVerifyError(`"crit" header references extension "b64", but the recipient has not declared support for it; pass jws.WithCritExtension("b64") to accept in-band b64=false (auto-declare only fires for jws.WithDetachedPayload / jws.WithDetachedPayloadReader)`)
+			}
 			return makeVerifyError(`"crit" header references extension %q, but the recipient has not declared support for it (use jws.WithCritExtension(%q))`, name, name)
 		}
 	}
 
 	return nil
+}
+
+// namedLooseKeySetOptions inspects the registered key providers and
+// returns the human-readable names of the loose-config keySet options
+// in effect for this verify call: jws.WithRequireKid(false) and/or
+// jws.WithInferAlgorithmFromKey(true). These are the options whose
+// presence widens the per-signature (alg,key) candidate set beyond
+// the default "kid + alg pin" of one. The names are used in the final
+// "could not verify" error so an operator sees which options produced
+// the fan-out without grep'ing the source.
+func (vc *verifyContext) namedLooseKeySetOptions() []string {
+	var requireKidFalse, inferAlgorithm bool
+	for _, kp := range vc.keyProviders {
+		ksp, ok := kp.(*keySetProvider)
+		if !ok {
+			continue
+		}
+		if !ksp.requireKid {
+			requireKidFalse = true
+		}
+		if ksp.inferAlgorithm {
+			inferAlgorithm = true
+		}
+	}
+	var names []string
+	if requireKidFalse {
+		names = append(names, "jws.WithRequireKid(false)")
+	}
+	if inferAlgorithm {
+		names = append(names, "jws.WithInferAlgorithmFromKey(true)")
+	}
+	return names
 }
