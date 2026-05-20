@@ -11,7 +11,7 @@ import (
 	"github.com/ardanlabs/service/business/domain/homebus/stores/homedb"
 	"github.com/ardanlabs/service/business/domain/productbus"
 	"github.com/ardanlabs/service/business/domain/productbus/extensions/productotel"
-	"github.com/ardanlabs/service/business/domain/productbus/stores/productdb"
+	"github.com/ardanlabs/service/business/domain/productbus/stores/productpg"
 	"github.com/ardanlabs/service/business/domain/userbus"
 	"github.com/ardanlabs/service/business/domain/userbus/extensions/useraudit"
 	"github.com/ardanlabs/service/business/domain/userbus/extensions/userotel"
@@ -48,7 +48,7 @@ func newBusDomains(log *logger.Logger, db *sqlx.DB) BusDomain {
 	userBus := userbus.NewBusiness(log, delegate, userStorage, userOtelExt, userAuditExt)
 
 	productOtelExt := productotel.NewExtension()
-	productStorage := productdb.NewStore(log, db)
+	productStorage := productpg.NewStore(log, db)
 	productBus := productbus.NewBusiness(log, userBus, delegate, productStorage, productOtelExt)
 
 	homeOtelExt := homeotel.NewExtension()

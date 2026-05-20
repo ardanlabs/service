@@ -1,4 +1,4 @@
-package productdb
+package commondb
 
 import (
 	"fmt"
@@ -7,7 +7,9 @@ import (
 	"github.com/ardanlabs/service/business/sdk/order"
 )
 
-var orderByFields = map[string]string{
+// OrderByFields maps a productbus ordering key to its database column name.
+// The mapping is shared because every engine uses the same column names.
+var OrderByFields = map[string]string{
 	productbus.OrderByProductID: "product_id",
 	productbus.OrderByUserID:    "user_id",
 	productbus.OrderByName:      "name",
@@ -15,8 +17,10 @@ var orderByFields = map[string]string{
 	productbus.OrderByQuantity:  "quantity",
 }
 
-func orderByClause(orderBy order.By) (string, error) {
-	by, exists := orderByFields[orderBy.Field]
+// OrderByClause builds an ORDER BY clause for the given ordering. It
+// returns an error if the field is not in OrderByFields.
+func OrderByClause(orderBy order.By) (string, error) {
+	by, exists := OrderByFields[orderBy.Field]
 	if !exists {
 		return "", fmt.Errorf("field %q does not exist", orderBy.Field)
 	}

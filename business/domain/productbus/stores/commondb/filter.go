@@ -1,4 +1,4 @@
-package productdb
+package commondb
 
 import (
 	"bytes"
@@ -8,7 +8,10 @@ import (
 	"github.com/ardanlabs/service/business/domain/productbus"
 )
 
-func (s *Store) applyFilter(filter productbus.QueryFilter, data map[string]any, buf *bytes.Buffer) {
+// ApplyFilter appends a WHERE clause to buf based on the fields set in
+// filter and adds the matching named bind values to data. The clause uses
+// only portable SQL so it works for every supported engine.
+func ApplyFilter(filter productbus.QueryFilter, data map[string]any, buf *bytes.Buffer) {
 	var wc []string
 
 	if filter.ID != nil {

@@ -1,4 +1,10 @@
-package productdb
+// Package commondb provides the engine-agnostic pieces every product SQL
+// store needs: the database row struct, the conversions between the row
+// struct and the business model, the WHERE clause builder, and the
+// order-by field map. Engine-specific store packages (productpg,
+// productsqlite, ...) own the SQL statements themselves and delegate to
+// the helpers in this package for the parts that do not vary.
+package commondb
 
 import (
 	"fmt"
@@ -11,7 +17,10 @@ import (
 	"github.com/google/uuid"
 )
 
-type productDB struct {
+// ProductDB is the database representation of a product row. It is shared
+// by every SQL engine implementation because all of them use the same
+// column set and types.
+type ProductDB struct {
 	ID          uuid.UUID `db:"product_id"`
 	UserID      uuid.UUID `db:"user_id"`
 	Name        string    `db:"name"`
@@ -21,8 +30,9 @@ type productDB struct {
 	DateUpdated time.Time `db:"date_updated"`
 }
 
-func toDBProduct(bus productbus.Product) productDB {
-	db := productDB{
+// ToDBProduct converts a business product into its database representation.
+func ToDBProduct(bus productbus.Product) ProductDB {
+	db := ProductDB{
 		ID:          bus.ID,
 		UserID:      bus.UserID,
 		Name:        bus.Name.String(),
@@ -35,7 +45,9 @@ func toDBProduct(bus productbus.Product) productDB {
 	return db
 }
 
-func toBusProduct(db productDB) (productbus.Product, error) {
+// ToBusProduct converts a database row into a business product, parsing
+// and validating the typed fields.
+func ToBusProduct(db ProductDB) (productbus.Product, error) {
 	name, err := name.Parse(db.Name)
 	if err != nil {
 		return productbus.Product{}, fmt.Errorf("parse name: %w", err)
@@ -64,12 +76,13 @@ func toBusProduct(db productDB) (productbus.Product, error) {
 	return bus, nil
 }
 
-func toBusProducts(dbs []productDB) ([]productbus.Product, error) {
+// ToBusProducts converts a slice of database rows into business products.
+func ToBusProducts(dbs []ProductDB) ([]productbus.Product, error) {
 	bus := make([]productbus.Product, len(dbs))
 
 	for i, db := range dbs {
 		var err error
-		bus[i], err = toBusProduct(db)
+		bus[i], err = ToBusProduct(db)
 		if err != nil {
 			return nil, err
 		}
