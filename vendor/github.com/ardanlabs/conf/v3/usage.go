@@ -185,7 +185,7 @@ func getTypeAndHelp(fld *Field) (name string, usage string) {
 		t := fld.Field.Type()
 
 		// If it's a pointer, we want to deref.
-		if t.Kind() == reflect.Ptr {
+		if t.Kind() == reflect.Pointer {
 			t = t.Elem()
 		}
 

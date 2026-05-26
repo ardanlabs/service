@@ -22,7 +22,7 @@ type Version struct {
 // Parsers declare behavior to extend the different parsers that
 // can be used to unmarshal config.
 type Parsers interface {
-	Process(prefix string, cfg interface{}) error
+	Process(prefix string, cfg any) error
 }
 
 // parseOptions configures the behavior of the Parse function.
@@ -61,7 +61,7 @@ func WithParser(parser Parsers) ParseOption {
 //
 // For backward compatibility, parsers can be passed directly. However,
 // the preferred approach is to use ParseWithOptions with WithParser().
-func Parse(prefix string, cfg interface{}, parsers ...Parsers) (string, error) {
+func Parse(prefix string, cfg any, parsers ...Parsers) (string, error) {
 	// Convert variadic parsers to options for backward compatibility
 	options := make([]ParseOption, len(parsers))
 	for i, parser := range parsers {
@@ -82,7 +82,7 @@ func Parse(prefix string, cfg interface{}, parsers ...Parsers) (string, error) {
 // Example:
 //
 //	info, err := conf.ParseWithOptions("", &cfg, conf.WithStrictFlags(), conf.WithParser(myCustomParser))
-func ParseWithOptions(prefix string, cfg interface{}, options ...ParseOption) (string, error) {
+func ParseWithOptions(prefix string, cfg any, options ...ParseOption) (string, error) {
 	var args []string
 	if len(os.Args) > 1 {
 		args = os.Args[1:]
@@ -181,7 +181,7 @@ func maskVal(v string) string {
 }
 
 // UsageInfo provides output to display the config usage on the command line.
-func UsageInfo(namespace string, v interface{}) (string, error) {
+func UsageInfo(namespace string, v any) (string, error) {
 	fields, err := extractFields(nil, v)
 	if err != nil {
 		return "", err
@@ -191,7 +191,7 @@ func UsageInfo(namespace string, v interface{}) (string, error) {
 }
 
 // VersionInfo provides output to display the application version and description on the command line.
-func VersionInfo(namespace string, v interface{}) (string, error) {
+func VersionInfo(namespace string, v any) (string, error) {
 	fields, err := extractFields(nil, v)
 	if err != nil {
 		return "", err
@@ -220,7 +220,7 @@ func VersionInfo(namespace string, v interface{}) (string, error) {
 // =============================================================================
 
 // parse parses configuration into the provided struct.
-func parse(args []string, namespace string, cfgStruct interface{}, opts *parseOptions) error {
+func parse(args []string, namespace string, cfgStruct any, opts *parseOptions) error {
 
 	// Create the flag and env sources.
 	flag, err := newSourceFlag(args)
@@ -308,12 +308,20 @@ func parse(args []string, namespace string, cfgStruct interface{}, opts *parseOp
 		}
 
 		if field.Options.NotZero && field.Field.IsZero() {
-			return fmt.Errorf("field %s is set to zero value", field.Name)
+			envSuffix := ""
+			if field.Options.EnvName != "" {
+				envSuffix = fmt.Sprintf(" (env: %s)", field.Options.EnvName)
+			}
+			return fmt.Errorf("field %s%s is set to zero value", field.Name, envSuffix)
 		}
 
 		// If the field is marked 'required', check if no value was provided.
 		if field.Options.Required && !foundOverride {
-			return fmt.Errorf("required field %s is missing value", field.Name)
+			envSuffix := ""
+			if field.Options.EnvName != "" {
+				envSuffix = fmt.Sprintf(" (env: %s)", field.Options.EnvName)
+			}
+			return fmt.Errorf("required field %s%s is missing value", field.Name, envSuffix)
 		}
 	}
 
@@ -345,7 +353,7 @@ func parse(args []string, namespace string, cfgStruct interface{}, opts *parseOp
 type Args []string
 
 // argsT is used by Parse and Usage to detect struct fields of the Args type.
-var argsT = reflect.TypeOf(Args{})
+var argsT = reflect.TypeFor[Args]()
 
 // Num returns the i'th argument in the Args slice. It returns an empty string
 // the request element is not present.

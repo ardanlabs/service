@@ -58,13 +58,13 @@ type FieldOptions struct {
 }
 
 // extractFields uses reflection to examine the struct and generate the keys.
-func extractFields(prefix []string, target interface{}) ([]Field, error) {
+func extractFields(prefix []string, target any) ([]Field, error) {
 	if prefix == nil {
 		prefix = []string{}
 	}
 	s := reflect.ValueOf(target)
 
-	if s.Kind() != reflect.Ptr {
+	if s.Kind() != reflect.Pointer {
 		return nil, ErrInvalidStruct
 	}
 	s = s.Elem()
@@ -406,7 +406,7 @@ func processField(settingDefault bool, value string, field reflect.Value) error 
 	return nil
 }
 
-func interfaceFrom(field reflect.Value, fn func(interface{}, *bool)) {
+func interfaceFrom(field reflect.Value, fn func(any, *bool)) {
 
 	// It may be impossible for a struct field to fail this check.
 	if !field.CanInterface() {
@@ -427,17 +427,17 @@ type Setter interface {
 }
 
 func setterFrom(field reflect.Value) (s Setter) {
-	interfaceFrom(field, func(v interface{}, ok *bool) { s, *ok = v.(Setter) })
+	interfaceFrom(field, func(v any, ok *bool) { s, *ok = v.(Setter) })
 	return s
 }
 
 func textUnmarshaler(field reflect.Value) (t encoding.TextUnmarshaler) {
-	interfaceFrom(field, func(v interface{}, ok *bool) { t, *ok = v.(encoding.TextUnmarshaler) })
+	interfaceFrom(field, func(v any, ok *bool) { t, *ok = v.(encoding.TextUnmarshaler) })
 	return t
 }
 
 func binaryUnmarshaler(field reflect.Value) (b encoding.BinaryUnmarshaler) {
-	interfaceFrom(field, func(v interface{}, ok *bool) { b, *ok = v.(encoding.BinaryUnmarshaler) })
+	interfaceFrom(field, func(v any, ok *bool) { b, *ok = v.(encoding.BinaryUnmarshaler) })
 	return b
 }
 
