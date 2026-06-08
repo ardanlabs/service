@@ -100,6 +100,7 @@ type EvalContext struct {
 	parsedInput                 ast.Value
 	metrics                     metrics.Metrics
 	txn                         storage.Transaction
+	generateJSON                func(*ast.Term, *EvalContext) (any, error)
 	instrument                  bool
 	instrumentation             *topdown.Instrumentation
 	partialNamespace            string
@@ -127,6 +128,7 @@ type EvalContext struct {
 	externalCancel              topdown.Cancel // Note(philip): If non-nil, the cancellation is handled outside of this package.
 	requestMetadata             map[string]any
 	responseMetadata            map[string]any
+	evaluated                   *topdown.EvaluatedRuleTracker
 }
 
 func (e *EvalContext) RawInput() *any {
@@ -223,6 +225,15 @@ func EvalMetrics(metric metrics.Metrics) EvalOption {
 func EvalTransaction(txn storage.Transaction) EvalOption {
 	return func(e *EvalContext) {
 		e.txn = txn
+	}
+}
+
+// EvalGenerateJSON sets the AST to JSON converter for an evaluation. When set, this
+// option takes precedence over [GenerateJSON] set on the Rego object from e.g. a prepared
+// query, allowing individual evaluations to customize how the result is transformed.
+func EvalGenerateJSON(f func(*ast.Term, *EvalContext) (any, error)) EvalOption {
+	return func(e *EvalContext) {
+		e.generateJSON = f
 	}
 }
 
@@ -424,6 +435,14 @@ func EvalRequestMetadata(m map[string]any) EvalOption {
 func EvalResponseMetadata(m map[string]any) EvalOption {
 	return func(e *EvalContext) {
 		e.responseMetadata = m
+	}
+}
+
+// EvalEvaluatedRuleTracker sets a tracker to record rule identifiers that
+// were successfully evaluated during query evaluation.
+func EvalEvaluatedRuleTracker(t *topdown.EvaluatedRuleTracker) EvalOption {
+	return func(e *EvalContext) {
+		e.evaluated = t
 	}
 }
 
@@ -673,6 +692,7 @@ type Rego struct {
 	strictBuiltinErrors         bool
 	builtinErrorList            *[]topdown.Error
 	resolvers                   []refResolver
+	externalSources             []ast.ExternalRuleSource
 	schemaSet                   *ast.SchemaSet
 	target                      string // target type (wasm, rego, etc.)
 	opa                         opa.EvalEngine
@@ -686,6 +706,7 @@ type Rego struct {
 	compilerHook                func(*ast.Compiler)
 	evalMode                    *ast.CompilerEvalMode
 	filter                      filter.LoaderFilter
+	evaluated                   *topdown.EvaluatedRuleTracker
 }
 
 func (r *Rego) RegoVersion() ast.RegoVersion {
@@ -1287,6 +1308,15 @@ func Resolver(ref ast.Ref, r resolver.Resolver) func(r *Rego) {
 	}
 }
 
+// ExternalSource adds an external rule source that provides rules dynamically.
+// The source declares which package refs it handles via its Refs() method.
+// A single source can provide rules for multiple packages.
+func ExternalSource(source ast.ExternalRuleSource) func(r *Rego) {
+	return func(rego *Rego) {
+		rego.externalSources = append(rego.externalSources, source)
+	}
+}
+
 // Schemas sets the schemaSet
 func Schemas(x *ast.SchemaSet) func(r *Rego) {
 	return func(r *Rego) {
@@ -1310,7 +1340,10 @@ func Target(t string) func(r *Rego) {
 	}
 }
 
-// GenerateJSON sets the AST to JSON converter for the results.
+// GenerateJSON sets the AST to JSON converter to use for results. This will have any evaluationn on a Rego
+// object use the provided function for conversion. Use [EvalGenerateJSON] if you want to set a converter
+// function for individual evaluations, which will take precedence over GenerateJSON set on the Rego object,
+// (i.e. by this function) for the scope of that evaluation.
 func GenerateJSON(f func(*ast.Term, *EvalContext) (any, error)) func(r *Rego) {
 	return func(r *Rego) {
 		r.generateJSON = f
@@ -1366,6 +1399,14 @@ func CompilerHook(hook func(*ast.Compiler)) func(r *Rego) {
 func EvalMode(mode ast.CompilerEvalMode) func(r *Rego) {
 	return func(r *Rego) {
 		r.evalMode = &mode
+	}
+}
+
+// EvaluatedRuleTracker returns an option that sets a tracker to record rule
+// identifiers that were successfully evaluated during query evaluation.
+func EvaluatedRuleTracker(t *topdown.EvaluatedRuleTracker) func(r *Rego) {
+	return func(r *Rego) {
+		r.evaluated = t
 	}
 }
 
@@ -2142,6 +2183,18 @@ func parserOptionsFromRegoVersionImport(imports []*ast.Import, popts ast.ParserO
 }
 
 func (r *Rego) compileModules(ctx context.Context, txn storage.Transaction, m metrics.Metrics) error {
+	if len(r.externalSources) > 0 && r.target != "" && r.target != targetRego {
+		return fmt.Errorf("external rule sources are not supported with target %q: only the default (rego) target is supported", r.target)
+	}
+
+	// Apply external sources to the compiler before compilation
+	for i := range r.externalSources {
+		source := r.externalSources[i]
+		for _, ref := range source.Refs() {
+			r.compiler.WithExternalSource(ref, source)
+		}
+	}
+
 	// Only compile again if there are new modules.
 	if len(r.bundles) > 0 || len(r.parsedModules) > 0 {
 
@@ -2294,6 +2347,12 @@ func (r *Rego) eval(ctx context.Context, ectx *EvalContext) (ResultSet, error) {
 		WithRequestMetadata(ectx.requestMetadata).
 		WithResponseMetadata(ectx.responseMetadata)
 
+	if ectx.evaluated != nil {
+		q = q.WithEvaluatedRuleTracker(ectx.evaluated)
+	} else {
+		q = q.WithEvaluatedRuleTracker(r.evaluated)
+	}
+
 	if !ectx.time.IsZero() {
 		q = q.WithTime(ectx.time)
 	}
@@ -2416,6 +2475,11 @@ func (r *Rego) valueToQueryResult(res ast.Value, ectx *EvalContext) (ResultSet, 
 func (r *Rego) generateResult(qr topdown.QueryResult, ectx *EvalContext) (Result, error) {
 	rewritten := ectx.compiledQuery.compiler.RewrittenVars()
 
+	generateJSON := r.generateJSON
+	if ectx.generateJSON != nil {
+		generateJSON = ectx.generateJSON
+	}
+
 	result := newResult()
 	for k, term := range qr {
 		if rw, ok := rewritten[k]; ok {
@@ -2425,7 +2489,7 @@ func (r *Rego) generateResult(qr topdown.QueryResult, ectx *EvalContext) (Result
 			continue
 		}
 
-		v, err := r.generateJSON(term, ectx)
+		v, err := generateJSON(term, ectx)
 		if err != nil {
 			return result, err
 		}
@@ -2439,7 +2503,7 @@ func (r *Rego) generateResult(qr topdown.QueryResult, ectx *EvalContext) (Result
 		}
 
 		if k, ok := r.capture[expr]; ok {
-			v, err := r.generateJSON(qr[k], ectx)
+			v, err := generateJSON(qr[k], ectx)
 			if err != nil {
 				return result, err
 			}

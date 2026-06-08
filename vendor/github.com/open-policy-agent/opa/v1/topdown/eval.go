@@ -92,8 +92,9 @@ type eval struct {
 	input                       *ast.Term
 	data                        *ast.Term
 	external                    *resolverTrie
+	externalTreeStack           *externalTreeStack
 	targetStack                 *refStack
-	traceLastLocation           *ast.Location // Last location of a trace event.
+	traceLastLocation           *ast.Location
 	instr                       *Instrumentation
 	builtins                    map[string]*Builtin
 	builtinCache                builtins.Cache
@@ -108,6 +109,7 @@ type eval struct {
 	runtime                     *ast.Term
 	builtinErrors               *builtinErrors
 	roundTripper                CustomizeRoundTripper
+	evaluated                   *EvaluatedRuleTracker
 	genvarprefix                string
 	query                       ast.Body
 	tracers                     []QueryTracer
@@ -233,7 +235,6 @@ func (e *eval) closure(query ast.Body, cpy *eval) {
 }
 
 // childWithBindingSizeHint creates a child evaluator with bindings pre-sized for the expected number of variables.
-// This reduces memory waste when evaluating functions or rules with known argument counts.
 func (e *eval) childWithBindingSizeHint(query ast.Body, cpy *eval, sizeHint int) {
 	*cpy = *e
 	cpy.index = 0
@@ -267,12 +268,15 @@ func (e *eval) unknown(x any, b *bindings) bool {
 		x = ast.NewTerm(v)
 	}
 
-	return saveRequired(e.compiler, e.inliningControl, true, e.saveSet, b, x, false)
+	return saveRequired(e.compiler.RuleTree, e.externalTreeStack, e.inliningControl, true, e.saveSet, b, x, false)
 }
 
 // exactly like `unknown` above` but without the cost of `any` boxing when arg is known to be a ref
 func (e *eval) unknownRef(ref ast.Ref, b *bindings) bool {
-	return e.partial() && saveRequired(e.compiler, e.inliningControl, true, e.saveSet, b, ast.NewTerm(ref), false)
+	if !e.partial() {
+		return false
+	}
+	return saveRequired(e.compiler.RuleTree, e.externalTreeStack, e.inliningControl, true, e.saveSet, b, ast.NewTerm(ref), false)
 }
 
 func (e *eval) traceEnter(x ast.Node) {
@@ -531,12 +535,12 @@ func (e *eval) evalStep(iter evalIterator) error {
 			})
 
 		case *ast.Not:
-			eval := evalNot{
+			en := evalNot{
 				e:    e,
 				not:  terms,
 				expr: expr,
 			}
-			err = eval.eval(func() error {
+			err = en.eval(func(e *eval) error {
 				defined = true
 				err := iter(e)
 				e.traceRedo(expr)
@@ -595,12 +599,12 @@ func (e *eval) evalStep(iter evalIterator) error {
 		})
 
 	case *ast.Not:
-		eval := evalNot{
+		en := evalNot{
 			e:    e,
 			not:  terms,
 			expr: expr,
 		}
-		err = eval.eval(func() error {
+		err = en.eval(func(e *eval) error {
 			return iter(e)
 		})
 
@@ -629,7 +633,7 @@ func (e *eval) evalNot(iter evalIterator) error {
 	expr := e.query[e.index]
 
 	if e.unknown(expr, e.bindings) {
-		return e.evalNotPartial(iter)
+		return e.setupAndEvalNotPartial(iter)
 	}
 
 	negation := ast.NewBody(expr.ComplementNoWith())
@@ -755,26 +759,33 @@ func (e *eval) evalWith(iter evalIterator) error {
 		}
 	}
 
-	oldInput, oldData := e.evalWithPush(input, data, functionMocks, targets, disable)
+	oldInput, oldData, pushedFrame := e.evalWithPush(input, data, functionMocks, targets, disable)
 
 	err = e.evalStep(func(e *eval) error {
-		e.evalWithPop(oldInput, oldData)
+		e.evalWithPop(oldInput, oldData, pushedFrame)
 		err := e.next(iter)
-		oldInput, oldData = e.evalWithPush(input, data, functionMocks, targets, disable)
+		oldInput, oldData, pushedFrame = e.evalWithPush(input, data, functionMocks, targets, disable)
 		return err
 	})
 
-	e.evalWithPop(oldInput, oldData)
+	e.evalWithPop(oldInput, oldData, pushedFrame)
 
 	return err
 }
 
-func (e *eval) evalWithPush(input, data *ast.Term, functionMocks [][2]*ast.Term, targets, disable []ast.Ref) (*ast.Term, *ast.Term) {
+func (e *eval) evalWithPush(input, data *ast.Term, functionMocks [][2]*ast.Term, targets, disable []ast.Ref) (*ast.Term, *ast.Term, bool) {
 	var oldInput *ast.Term
+	var pushedFrame bool
 
 	if input != nil {
 		oldInput = e.input
 		e.input = input
+
+		// When input changes, push a new frame for external tree caching
+		if e.externalTreeStack != nil {
+			e.externalTreeStack.PushFrame()
+			pushedFrame = true
+		}
 	}
 
 	var oldData *ast.Term
@@ -804,29 +815,62 @@ func (e *eval) evalWithPush(input, data *ast.Term, functionMocks [][2]*ast.Term,
 
 	e.functionMocks.PutPairs(functionMocks)
 
-	return oldInput, oldData
+	return oldInput, oldData, pushedFrame
 }
 
-func (e *eval) evalWithPop(input, data *ast.Term) {
+func (e *eval) evalWithPop(input, data *ast.Term, popFrame bool) {
 	// NOTE(ae) no nil checks here as we assume evalWithPush always called first
 	e.inliningControl.PopDisable()
 	e.targetStack.Pop()
 	e.virtualCache.Pop()
 	e.comprehensionCache.Pop()
 	e.functionMocks.PopPairs()
+
+	// When input is restored, pop the external tree frame
+	if popFrame {
+		e.externalTreeStack.PopFrame()
+	}
+
 	e.data = data
 	e.input = input
 }
 
-func (e *eval) evalNotPartial(iter evalIterator) error {
+func (e *eval) setupAndEvalNotPartial(iter evalIterator) error {
 	// Prepare query normally.
 	expr := e.query[e.index]
-	negation := expr.ComplementNoWith()
 
+	unNegate := func(expr *ast.Expr) ast.Body {
+		return ast.NewBody(expr.ComplementNoWith())
+	}
+
+	complement := func(expr *ast.Expr) []*ast.Expr {
+		if expr.IsNot() {
+			return ast.Complement(expr)
+		}
+		return []*ast.Expr{expr.Complement()}
+	}
+
+	supportTerms := func(terms any) any {
+		return terms
+	}
+
+	return e.evalNotPartial(expr, unNegate, complement, supportTerms, iter)
+}
+
+// unNegateFn returns the "unwrapped" non-negated expressions (1..*) of a negated expressions
+type unNegateFn func(expr *ast.Expr) ast.Body
+
+// complementFn returns the set of expressions (1..*) that is the complement of an expression
+type complementFn func(*ast.Expr) []*ast.Expr
+
+// supportTermsFn transforms the given terms to a support reference/call to the form required by the negated expression's ast.Expr.Terms field.
+type supportTermsFn func(terms any) any
+
+func (e *eval) evalNotPartial(expr *ast.Expr, unNegateFn unNegateFn, complementFn complementFn, supportTermsFn supportTermsFn, iter evalIterator) error {
 	child := evalPool.Get()
 	defer evalPool.Put(child)
 
-	e.closure(ast.NewBody(negation), child)
+	e.closure(unNegateFn(expr), child)
 
 	// Unknowns is the set of variables that are marked as unknown. The variables
 	// are namespaced with the query ID that they originate in. This ensures that
@@ -878,7 +922,7 @@ func (e *eval) evalNotPartial(iter evalIterator) error {
 	// the unknowns as safe because vars in the save set will either be known to
 	// the caller or made safe by an expression on the save stack.
 	if !canInlineNegation(unknowns, savedQueries) {
-		return e.evalNotPartialSupport(child.queryID, expr, unknowns, savedQueries, iter)
+		return e.evalNotPartialSupport(child.queryID, expr, supportTermsFn, unknowns, savedQueries, iter)
 	}
 
 	// If we can inline the result, we have to generate the cross product of the
@@ -889,14 +933,14 @@ func (e *eval) evalNotPartial(iter evalIterator) error {
 	// Becomes:
 	//
 	//	(!A && !C) || (!A && !D) || (!B && !C) || (!B && !D)
-	return complementedCartesianProduct(savedQueries, 0, nil, func(q ast.Body) error {
+	return complementedCartesianProduct(savedQueries, 0, nil, complementFn, func(q ast.Body) error {
 		return e.saveInlinedNegatedExprs(q, func() error {
 			return iter(e)
 		})
 	})
 }
 
-func (e *eval) evalNotPartialSupport(negationID uint64, expr *ast.Expr, unknowns ast.VarSet, queries []ast.Body, iter evalIterator) error {
+func (e *eval) evalNotPartialSupport(negationID uint64, expr *ast.Expr, supportTermsFn supportTermsFn, unknowns ast.VarSet, queries []ast.Body, iter evalIterator) error {
 
 	// Prepare support rule head.
 	supportName := fmt.Sprintf("__not%d_%d_%d__", e.queryID, e.index, negationID)
@@ -940,9 +984,9 @@ func (e *eval) evalNotPartialSupport(negationID uint64, expr *ast.Expr, unknowns
 		terms := make([]*ast.Term, len(args)+1)
 		terms[0] = term
 		copy(terms[1:], args)
-		cpy.Terms = terms
+		cpy.Terms = supportTermsFn(terms)
 	} else {
-		cpy.Terms = term
+		cpy.Terms = supportTermsFn(term)
 	}
 
 	return e.saveInlinedNegatedExprs([]*ast.Expr{cpy}, func() error {
@@ -980,14 +1024,18 @@ func (e *eval) evalCall(terms []*ast.Term, iter unifyIterator) error {
 
 		var ir *ast.IndexResult
 		var err error
+		index := e.ruleIndex(ref)
 		if e.partial() {
-			ir, err = e.getRules(ref, nil)
+			ir, err = e.getRules(ref, nil, index)
 		} else {
-			ir, err = e.getRules(ref, terms[1:])
+			ir, err = e.getRules(ref, terms[1:], index)
 		}
 		defer ast.IndexResultPool.Put(ir)
 		if err != nil {
 			return err
+		}
+		if ir == nil {
+			return nil
 		}
 
 		eval := evalFuncPool.Get()
@@ -1724,11 +1772,10 @@ func (e *eval) saveInlinedNegatedExprs(exprs []*ast.Expr, iter unifyIterator) er
 	return err
 }
 
-func (e *eval) getRules(ref ast.Ref, args []*ast.Term) (*ast.IndexResult, error) {
+func (e *eval) getRules(ref ast.Ref, args []*ast.Term, index ast.RuleIndex) (*ast.IndexResult, error) {
 	e.instr.startTimer(evalOpRuleIndex)
 	defer e.instr.stopTimer(evalOpRuleIndex)
 
-	index := e.ruleIndex(ref)
 	if index == nil {
 		return nil, nil
 	}
@@ -1742,6 +1789,7 @@ func (e *eval) getRules(ref ast.Ref, args []*ast.Term) (*ast.IndexResult, error)
 
 	var result *ast.IndexResult
 	var err error
+
 	resolver.e = e
 	if e.indexing {
 		resolver.args = args
@@ -1777,11 +1825,6 @@ func (e *eval) getRules(ref ast.Ref, args []*ast.Term) (*ast.IndexResult, error)
 	}
 
 	return result, err
-}
-
-// ruleIndex performs a lookup for a RuleIndex in the compiler's RuleTree.
-func (e *eval) ruleIndex(ref ast.Ref) ast.RuleIndex {
-	return e.compiler.RuleIndex(ref)
 }
 
 func (e *eval) Resolve(ref ast.Ref) (ast.Value, error) {
@@ -1996,7 +2039,7 @@ func (e *eval) getDeclArgsLen(x *ast.Expr) (int, error) {
 		return bi.Decl.Arity(), nil
 	}
 
-	ir, err := e.getRules(operator, nil)
+	ir, err := e.getRules(operator, nil, e.ruleIndex(operator))
 	defer ast.IndexResultPool.Put(ir)
 	if err != nil {
 		return -1, err
@@ -2330,6 +2373,7 @@ func (e *evalFunc) evalOneRule(iter unifyIterator, rule *ast.Rule, args []*ast.T
 	err := child.biunifyTerms(e.terms[1:], args, e.e.bindings, child.bindings, func() error {
 		return child.eval(func(child *eval) error {
 			child.traceExit(rule)
+			e.e.evaluated.Record(rule)
 
 			// Partial evaluation must save an expression that tests the output value if the output value
 			// was not captured to handle the case where the output value may be `false`.
@@ -2536,10 +2580,48 @@ func (e evalTree) next(iter unifyIterator, plugged *ast.Term) error {
 	cpy.plugged[e.pos] = plugged
 	cpy.pos++
 
+	// Track whether we pushed an external tree that needs cleanup
+	pushedExternalTree := false
 	if !e.e.targetStack.Prefixed(cpy.plugged[:cpy.pos]) {
 		if e.node != nil {
 			node = e.node.Child(plugged.Value)
-			if node != nil && len(node.Values) > 0 {
+
+			// Handle external sources transparently
+			if node != nil && node.External != nil {
+				externalRef := node.External.Ref
+				externalIndex := node.External.Index
+
+				// Initialize externalTreeStack if needed
+				if e.e.externalTreeStack == nil {
+					e.e.externalTreeStack = newExternalTreeStack(e.e)
+				}
+
+				// Check cache first
+				cachedNode, _, found := e.e.externalTreeStack.findCached(externalRef)
+				if found {
+					node = cachedNode
+				} else {
+					// Call Tree() and cache the result
+					e.e.instr.startTimer(evalOpExternalRuleSource)
+					tree, updatedIndex, err := node.External.Tree(e.e.ctx, e.e.compiler.RuleTree, externalRef, e.e.input, e.e.metrics, e.e.requestMetadata, e.e.responseMetadata)
+					e.e.instr.stopTimer(evalOpExternalRuleSource)
+					if err != nil {
+						return err
+					}
+					if tree != nil {
+						if updatedIndex != nil {
+							externalIndex = updatedIndex
+						}
+						e.e.externalTreeStack.Push(externalRef, tree, externalIndex, e.e.input)
+						node = tree
+						pushedExternalTree = true
+					}
+				}
+			}
+
+			hasRules := node != nil && len(node.Values) > 0
+
+			if hasRules {
 				r := evalVirtual{
 					e:         e.e,
 					ref:       e.ref,
@@ -2550,13 +2632,21 @@ func (e evalTree) next(iter unifyIterator, plugged *ast.Term) error {
 					rbindings: e.rbindings,
 				}
 				r.plugged[e.pos] = plugged
-				return r.eval(iter)
+				err := r.eval(iter)
+				if pushedExternalTree {
+					e.e.externalTreeStack.Pop()
+				}
+				return err
 			}
 		}
 	}
 
 	cpy.node = node
-	return cpy.eval(iter)
+	err := cpy.eval(iter)
+	if pushedExternalTree {
+		e.e.externalTreeStack.Pop()
+	}
+	return err
 }
 
 // enumerateNext is a helper to avoid closure allocation in enumerate loops.
@@ -2732,10 +2822,14 @@ type evalVirtual struct {
 
 func (e evalVirtual) eval(iter unifyIterator) error {
 
-	ir, err := e.e.getRules(e.plugged[:e.pos+1], nil)
+	ir, err := e.e.getRules(e.plugged[:e.pos+1], nil, e.e.ruleIndex(e.plugged[:e.pos+1]))
 	defer ast.IndexResultPool.Put(ir)
 	if err != nil {
 		return err
+	}
+
+	if ir == nil {
+		return nil
 	}
 
 	// Partial evaluation of ordered rules is not supported currently. Save the
@@ -2952,6 +3046,7 @@ func (e evalVirtualPartial) evalAllRulesNoCache(rules []*ast.Rule) (*ast.Term, e
 		child.traceEnter(rule)
 		err := child.eval(func(*eval) error {
 			child.traceExit(rule)
+			e.e.evaluated.Record(rule)
 			var err error
 			result, _, err = e.reduce(rule, child.bindings, result, &visitedRefs)
 			if err != nil {
@@ -3674,6 +3769,7 @@ func (e evalVirtualComplete) evalValueRule(iter unifyIterator, rule *ast.Rule, p
 	var result *ast.Term
 	err := child.eval(func(child *eval) error {
 		child.traceExit(rule)
+		e.e.evaluated.Record(rule)
 
 		result = child.bindings.Plug(rule.Head.Value)
 
@@ -4138,14 +4234,17 @@ func (e *evalEvery) plug(expr *ast.Expr) *ast.Expr {
 	return cpy
 }
 
-// TODO: Add PE support
 type evalNot struct {
 	e    *eval
 	not  *ast.Not
 	expr *ast.Expr
 }
 
-func (e evalNot) eval(iter unifyIterator) error {
+func (e evalNot) eval(iter evalIterator) error {
+	if e.e.partial() && e.e.unknown(e.not.Body, e.e.bindings) {
+		return e.evalPartial(iter)
+	}
+
 	child := evalPool.Get()
 	defer evalPool.Put(child)
 
@@ -4168,10 +4267,72 @@ func (e evalNot) eval(iter unifyIterator) error {
 	}
 
 	if !child.defined {
-		return iter()
+		return iter(e.e)
 	}
 
 	return nil
+}
+
+func (e evalNot) evalPartial(iter evalIterator) error {
+	if e.not.ExplicitBody && !e.e.inliningControl.shallow {
+		// we don't need to calculate a cartesian product for explicit not-bodies, as each 'not' acts as a closure for PE:d child expressions.
+
+		child := evalPool.Get()
+		defer evalPool.Put(child)
+
+		e.e.closure(e.not.Body, child)
+
+		var savedQueries []ast.Body
+		e.e.saveStack.PushQuery(nil)
+
+		_ = child.eval(func(*eval) error {
+			query := e.e.saveStack.Peek()
+			plugged := query.Plug(e.e.caller.bindings)
+
+			// Note: we could possibly apply copy propagation here, but that might fold calls into a nested structure that would require a type-checker update.
+
+			// Skip this rule body if it fails to type-check.
+			// Type-checking failure means the rule body will never succeed.
+			if !e.e.compiler.PassesTypeCheck(plugged) {
+				return nil
+			}
+
+			savedQueries = append(savedQueries, plugged)
+			return nil
+		}) // cannot return error
+
+		e.e.saveStack.PopQuery()
+
+		// If partial evaluation produced no results, the expression is always undefined
+		// so it does not have to be saved.
+		if len(savedQueries) == 0 {
+			return iter(e.e)
+		}
+
+		q := make([]*ast.Expr, 0, len(savedQueries))
+		for i := range savedQueries {
+			q = append(q, ast.NewExpr(&ast.Not{
+				Body:         savedQueries[i].Copy(),
+				ExplicitBody: true,
+			}))
+		}
+
+		return e.e.saveInlinedNegatedExprs(q, func() error {
+			return iter(e.e)
+		})
+	}
+
+	expr := e.e.query[e.e.index]
+
+	unNegate := func(expr *ast.Expr) ast.Body {
+		return e.not.Body
+	}
+
+	supportTerms := func(terms any) any {
+		return ast.NewNot(ast.NewExpr(terms))
+	}
+
+	return e.e.evalNotPartial(expr, unNegate, ast.Complement, supportTerms, iter)
 }
 
 func (e *eval) comprehensionIndex(term *ast.Term) *ast.ComprehensionIndex {
@@ -4265,8 +4426,7 @@ func canInlineNegation(safe ast.VarSet, queries []ast.Body) bool {
 				// in the future, we can handle more cases.
 				return false
 			}
-			// TODO: also check expr.Terms.(*ast.Not)?
-			if !expr.Negated {
+			if !expr.IsNegated() {
 				// Positive expressions containing variables cannot be trivially negated
 				// because they become unsafe (e.g., "x = 1" negated is "not x = 1" making x
 				// unsafe.) We check if the vars in the expr are already safe.
@@ -4328,6 +4488,15 @@ func containsNestedRefOrCall(vis *nestedCheckVisitor, expr *ast.Expr) bool {
 		return false
 	}
 
+	if n, ok := expr.Terms.(*ast.Not); ok {
+		for _, nExpr := range n.Body {
+			if containsNestedRefOrCall(vis, nExpr) {
+				return true
+			}
+		}
+		return false
+	}
+
 	return containsNestedRefOrCallInTerm(vis, expr.Terms.(*ast.Term))
 }
 
@@ -4350,16 +4519,17 @@ func containsNestedRefOrCallInTerm(vis *nestedCheckVisitor, term *ast.Term) bool
 	}
 }
 
-func complementedCartesianProduct(queries []ast.Body, idx int, curr ast.Body, iter func(ast.Body) error) error {
+func complementedCartesianProduct(queries []ast.Body, idx int, curr ast.Body, complement func(expr *ast.Expr) []*ast.Expr, iter func(ast.Body) error) error {
 	if idx == len(queries) {
 		return iter(curr)
 	}
 	for _, expr := range queries[idx] {
-		curr = append(curr, expr.Complement())
-		if err := complementedCartesianProduct(queries, idx+1, curr, iter); err != nil {
+		mark := len(curr)
+		curr = append(curr, complement(expr)...)
+		if err := complementedCartesianProduct(queries, idx+1, curr, complement, iter); err != nil {
 			return err
 		}
-		curr = curr[:len(curr)-1]
+		curr = curr[:mark]
 	}
 	return nil
 }
@@ -4489,4 +4659,181 @@ func (e *eval) updateSavedMocks(withs []*ast.With) []*ast.With {
 		ret = append(ret, w.Copy())
 	}
 	return ret
+}
+
+// simpleTreeNode provides minimal tree structure for navigation
+type simpleTreeNode struct {
+	tree     *ast.TreeNode
+	children map[ast.Value]*simpleTreeNode
+}
+
+func newSimpleTreeNode() *simpleTreeNode {
+	return &simpleTreeNode{
+		children: make(map[ast.Value]*simpleTreeNode),
+	}
+}
+
+// externalTreeStack caches external rule trees and tracks frames for input changes.
+// It maintains both a flat cache for lookups and a tree structure for navigation.
+type externalTreeStack struct {
+	eval    *eval
+	entries []externalTreeEntry // flat list of cached entries
+	frames  []int               // frame markers for input changes (indices into entries)
+	root    *simpleTreeNode     // tree structure for navigation
+}
+
+type externalTreeEntry struct {
+	ref   ast.Ref
+	input *ast.Term
+	tree  *ast.TreeNode
+	index ast.ExternalRuleIndex
+}
+
+func newExternalTreeStack(e *eval) *externalTreeStack {
+	return &externalTreeStack{
+		eval:    e,
+		entries: make([]externalTreeEntry, 0, 4),
+		frames:  make([]int, 0, 4),
+	}
+}
+
+// findCached checks if we already have a cached tree for this ref.
+// Frame tracking ensures any cached entry has the correct input.
+func (s *externalTreeStack) findCached(ref ast.Ref) (*ast.TreeNode, ast.ExternalRuleIndex, bool) {
+	// Determine search boundary: only search within current frame if one exists
+	startIdx := 0
+	if len(s.frames) > 0 {
+		startIdx = s.frames[len(s.frames)-1]
+	}
+
+	// Search from most recent to the frame boundary
+	for i := len(s.entries) - 1; i >= startIdx; i-- {
+		entry := &s.entries[i]
+		if entry.ref.Equal(ref) {
+			return entry.tree, entry.index, true
+		}
+	}
+	return nil, nil, false
+}
+
+func (s *externalTreeStack) Push(ref ast.Ref, tree *ast.TreeNode, index ast.ExternalRuleIndex, input *ast.Term) {
+	// Add entry to cache (we never have duplicates in the same frame)
+	s.entries = append(s.entries, externalTreeEntry{
+		ref:   ref,
+		input: input,
+		tree:  tree,
+		index: index,
+	})
+
+	// Update root tree structure
+	if s.root == nil {
+		s.root = newSimpleTreeNode()
+	}
+	node := s.root
+	for _, term := range ref {
+		key := term.Value
+		if node.children[key] == nil {
+			node.children[key] = newSimpleTreeNode()
+		}
+		node = node.children[key]
+	}
+	node.tree = tree
+}
+
+// Pop removes the most recent entry from the stack and closes its index.
+// If a frame is active and entries are at or below the frame boundary,
+// Pop is a no-op — PopFrame already cleaned up (or will clean up) those entries.
+func (s *externalTreeStack) Pop() {
+	if len(s.entries) == 0 {
+		return
+	}
+
+	// Don't pop at or below the current frame boundary.
+	if len(s.frames) > 0 && len(s.entries) <= s.frames[len(s.frames)-1] {
+		return
+	}
+
+	// Close the external index if it supports closing
+	lastEntry := &s.entries[len(s.entries)-1]
+	if closer, ok := lastEntry.index.(ast.ExternalRuleIndexCloser); ok {
+		_ = closer.Close()
+	}
+
+	// Remove the most recent entry
+	s.entries = s.entries[:len(s.entries)-1]
+
+	// Rebuild tree from remaining entries
+	s.root = newSimpleTreeNode()
+	for i := range s.entries {
+		entry := &s.entries[i]
+		node := s.root
+		for _, term := range entry.ref {
+			key := term.Value
+			if node.children[key] == nil {
+				node.children[key] = newSimpleTreeNode()
+			}
+			node = node.children[key]
+		}
+		node.tree = entry.tree
+	}
+}
+
+// PushFrame marks the current stack position for input changes
+func (s *externalTreeStack) PushFrame() {
+	s.frames = append(s.frames, len(s.entries))
+}
+
+// PopFrame restores the cache to the marked position
+func (s *externalTreeStack) PopFrame() {
+	if len(s.frames) == 0 {
+		return
+	}
+
+	// Get the frame marker and truncate entries
+	targetSize := s.frames[len(s.frames)-1]
+	s.frames = s.frames[:len(s.frames)-1]
+
+	// Close indices of entries being removed
+	for i := len(s.entries) - 1; i >= targetSize; i-- {
+		if closer, ok := s.entries[i].index.(ast.ExternalRuleIndexCloser); ok {
+			_ = closer.Close()
+		}
+	}
+
+	// Rebuild tree from remaining entries
+	s.root = newSimpleTreeNode()
+	for i := range targetSize {
+		entry := &s.entries[i]
+		node := s.root
+		for _, term := range entry.ref {
+			key := term.Value
+			if node.children[key] == nil {
+				node.children[key] = newSimpleTreeNode()
+			}
+			node = node.children[key]
+		}
+		node.tree = entry.tree
+	}
+
+	s.entries = s.entries[:targetSize]
+}
+
+// ruleIndex performs a shadowed lookup for a RuleIndex, checking external trees first.
+// It searches through the pushStack (most recent to oldest), navigating the tree structure
+// to find matching rules, then falls back to the compiler's static RuleTree.
+func (e *eval) ruleIndex(ref ast.Ref) ast.RuleIndex {
+	if e.externalTreeStack != nil && len(e.externalTreeStack.entries) > 0 {
+		// Search from most recent to oldest
+		for i := len(e.externalTreeStack.entries) - 1; i >= 0; i-- {
+			entry := &e.externalTreeStack.entries[i]
+			if ref.HasPrefix(entry.ref) {
+				// Look for the relative ref in the cached tree
+				relativeRef := ref[len(entry.ref):]
+				if found := entry.tree.Find(relativeRef); found != nil {
+					return found.Index
+				}
+			}
+		}
+	}
+	return e.compiler.RuleIndex(ref)
 }

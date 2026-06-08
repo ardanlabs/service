@@ -7,17 +7,17 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 # ==============================================================================
 # Go Installation
 #
-#	You need to have Go version 1.25 to run this code.
+#	You need to have Go version 1.26 to run this code.
 #
 #	https://go.dev/dl/
 #
 #	If you are not allowed to update your Go frontend, you can install
-#	and use a 1.25 frontend.
+#	and use a 1.26 frontend.
 #
-#	$ go install golang.org/dl/go1.25@latest
-#	$ go1.25 download
+#	$ go install golang.org/dl/go1.26@latest
+#	$ go1.26 download
 #
-#	This means you need to use `go1.25` instead of `go` for any command
+#	This means you need to use `go1.26` instead of `go` for any command
 #	using the Go frontend tooling from the makefile.
 
 # ==============================================================================
@@ -112,11 +112,11 @@ SHELL = $(if $(wildcard $(SHELL_PATH)),/bin/ash,/bin/bash)
 GOLANG          := golang:1.26
 ALPINE          := alpine:3.23
 KIND            := kindest/node:v1.35.0
-POSTGRES        := postgres:18.3
+POSTGRES        := postgres:18.4
 GRAFANA         := grafana/grafana:12.4.0
-PROMETHEUS      := prom/prometheus:v3.10.0
+PROMETHEUS      := prom/prometheus:v3.12.0
 TEMPO           := grafana/tempo:2.10.0
-LOKI            := grafana/loki:3.6.0
+LOKI            := grafana/loki:3.7.0
 PROMTAIL        := grafana/promtail:3.6.0
 
 KIND_CLUSTER    := ardan-starter-cluster
