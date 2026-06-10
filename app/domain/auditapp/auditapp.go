@@ -8,7 +8,6 @@ import (
 	"github.com/ardanlabs/service/app/sdk/errs"
 	"github.com/ardanlabs/service/app/sdk/query"
 	"github.com/ardanlabs/service/business/domain/auditbus"
-	"github.com/ardanlabs/service/business/domain/userbus"
 	"github.com/ardanlabs/service/business/sdk/order"
 	"github.com/ardanlabs/service/business/sdk/page"
 	"github.com/ardanlabs/service/foundation/web"
@@ -40,7 +39,7 @@ func (a *app) query(ctx context.Context, r *http.Request) web.Encoder {
 		return err.(*errs.Error)
 	}
 
-	orderBy, err := order.Parse(orderByFields, qp.OrderBy, userbus.DefaultOrderBy)
+	orderBy, err := order.Parse(orderByFields, qp.OrderBy, auditbus.DefaultOrderBy)
 	if err != nil {
 		return errs.NewFieldErrors("order", err)
 	}
