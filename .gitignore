@@ -1,3 +1,7 @@
+.env
+.envrc
+.misc
+
 # Project
 app/services/sales-api/sales-api
 app/services/metrics/metrics
