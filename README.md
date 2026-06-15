@@ -139,6 +139,30 @@ The project ships with a set of [Agent Skills](.agents/skills) that teach AI cod
 - **business-layer-extensions** — Adds cross-cutting concerns (OTEL, logging, metrics, caching, auth) to a business domain via the `ExtBusiness`/`Extension` decorator pattern, without modifying the core `Business`.
 - **review-pr** — Service Diffguard: read-only PR review lenses (correctness, error visibility, comment truthfulness, test coverage, type/contract boundaries, simplification) across every language in the repo.
 
+### How to use
+
+
+First, invoke the agent to load `AGENTS.md` file skills
+```
+Load the skills per @AGENTS.md file
+```
+
+Then, start working on what's needed.
+E.g.
+```
+review pr
+```
+
+This will invoke the PR review skill.
+
+OR
+
+```
+Let's review the current app/business layer for the user specific parts. Specifically, @app/domain/userapp and @business/domain/userbus
+```
+
+This will review the code related to the `user` capability of the service.
+
 ## Purchase Video
 
 The entire training class has been recorded to be made available to those who can't have the class taught at their company or who can't attend a conference. This is the entire class material.
