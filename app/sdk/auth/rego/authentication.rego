@@ -1,7 +1,5 @@
 package ardan.rego
 
-import rego.v1
-
 default auth := false
 
 auth if {
