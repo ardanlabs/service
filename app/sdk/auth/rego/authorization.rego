@@ -1,7 +1,5 @@
 package ardan.rego
 
-import rego.v1
-
 role_user := "USER"
 
 role_admin := "ADMIN"
