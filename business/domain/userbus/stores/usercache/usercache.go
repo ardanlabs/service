@@ -20,6 +20,7 @@ type Store struct {
 	log    *logger.Logger
 	storer userbus.Storer
 	cache  *sturdyc.Client[userbus.User]
+	inTran bool
 }
 
 // NewStore constructs the api for data and caching access.
@@ -47,6 +48,7 @@ func (s *Store) NewWithTx(tx sqldb.CommitRollbacker) (userbus.Storer, error) {
 		log:    s.log,
 		storer: txStorer,
 		cache:  s.cache,
+		inTran: true,
 	}
 
 	return &store, nil
@@ -58,7 +60,7 @@ func (s *Store) Create(ctx context.Context, usr userbus.User) error {
 		return err
 	}
 
-	s.writeCache(usr)
+	s.writeOrInvalidate(usr)
 
 	return nil
 }
@@ -69,7 +71,7 @@ func (s *Store) Update(ctx context.Context, usr userbus.User) error {
 		return err
 	}
 
-	s.writeCache(usr)
+	s.writeOrInvalidate(usr)
 
 	return nil
 }
@@ -97,9 +99,10 @@ func (s *Store) Count(ctx context.Context, filter userbus.QueryFilter) (int, err
 
 // QueryByID gets the specified user from the database.
 func (s *Store) QueryByID(ctx context.Context, userID uuid.UUID) (userbus.User, error) {
-	cachedUsr, ok := s.readCache(userID.String())
-	if ok {
-		return cachedUsr, nil
+	if !s.inTran {
+		if cachedUsr, ok := s.readCache(userID.String()); ok {
+			return cachedUsr, nil
+		}
 	}
 
 	usr, err := s.storer.QueryByID(ctx, userID)
@@ -107,16 +110,17 @@ func (s *Store) QueryByID(ctx context.Context, userID uuid.UUID) (userbus.User, 
 		return userbus.User{}, err
 	}
 
-	s.writeCache(usr)
+	s.writeOrInvalidate(usr)
 
 	return usr, nil
 }
 
 // QueryByEmail gets the specified user from the database by email.
 func (s *Store) QueryByEmail(ctx context.Context, email mail.Address) (userbus.User, error) {
-	cachedUsr, ok := s.readCache(email.Address)
-	if ok {
-		return cachedUsr, nil
+	if !s.inTran {
+		if cachedUsr, ok := s.readCache(email.Address); ok {
+			return cachedUsr, nil
+		}
 	}
 
 	usr, err := s.storer.QueryByEmail(ctx, email)
@@ -124,7 +128,7 @@ func (s *Store) QueryByEmail(ctx context.Context, email mail.Address) (userbus.U
 		return userbus.User{}, err
 	}
 
-	s.writeCache(usr)
+	s.writeOrInvalidate(usr)
 
 	return usr, nil
 }
@@ -137,6 +141,19 @@ func (s *Store) readCache(key string) (userbus.User, bool) {
 	}
 
 	return usr, true
+}
+
+// writeOrInvalidate populates the cache outside a transaction, but only
+// invalidates the entry while inside one. A transactional write is not yet
+// committed and may be rolled back, which would leave the cache holding a row
+// that no longer exists in the database.
+func (s *Store) writeOrInvalidate(bus userbus.User) {
+	if s.inTran {
+		s.deleteCache(bus)
+		return
+	}
+
+	s.writeCache(bus)
 }
 
 // writeCache performs a safe write to the cache for the specified userbus.

@@ -1,32 +1,32 @@
 {
-  "name": "admin",
-  "version": "0.0.0",
-  "private": true,
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "lint": "eslint . --fix --ignore-path .gitignore"
-  },
-  "dependencies": {
-    "@mdi/font": "7.0.96",
-    "core-js": "^3.49.0",
-    "esbuild": "^0.25.12",
-    "pinia": "^2.3.1",
-    "roboto-fontface": "^0.10.0",
-    "vue": "^3.5.34",
-    "vue-router": "^4.6.4",
-    "vuetify": "^3.12.6",
-    "webfontloader": "^1.6.28"
-  },
-  "devDependencies": {
-    "@fortawesome/fontawesome-free": "^6.7.2",
-    "@vitejs/plugin-vue": "^6.0.7",
-    "esbuild": ">=0.25.0",
-    "eslint": "^8.57.1",
-    "eslint-plugin-vue": "^9.33.0",
-    "sass": "^1.100.0",
-    "vite": "^6.4.2",
-    "vite-plugin-vuetify": "^2.1.3"
-  }
+    "name": "admin",
+    "version": "0.0.0",
+    "private": true,
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build",
+        "preview": "vite preview",
+        "lint": "eslint . --fix --ignore-path .gitignore"
+    },
+    "dependencies": {
+        "@mdi/font": "7.0.96",
+        "core-js": "^3.49.0",
+        "esbuild": "^0.28.1",
+        "pinia": "^2.3.1",
+        "roboto-fontface": "^0.10.0",
+        "vue": "^3.5.38",
+        "vue-router": "^4.6.4",
+        "vuetify": "^3.12.8",
+        "webfontloader": "^1.6.28"
+    },
+    "devDependencies": {
+        "@fortawesome/fontawesome-free": "^6.7.2",
+        "@vitejs/plugin-vue": "^6.0.7",
+        "esbuild": ">=0.28.1",
+        "eslint": "^8.57.1",
+        "eslint-plugin-vue": "^9.33.0",
+        "sass": "^1.101.0",
+        "vite": "^6.4.3",
+        "vite-plugin-vuetify": "^2.1.3"
+    }
 }
