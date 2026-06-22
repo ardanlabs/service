@@ -421,6 +421,9 @@ test-r:
 test-only:
 	CGO_ENABLED=0 go test -count=1 ./...
 
+fmt:
+	goimports -w .
+
 lint:
 	CGO_ENABLED=0 go vet ./...
 	staticcheck -checks=all ./...
