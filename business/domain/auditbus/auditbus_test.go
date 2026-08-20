@@ -76,7 +76,7 @@ func query(busDomain dbtest.BusDomain, sd unittest.SeedData) []unittest.Table {
 			ExpResp: sd.Admins[0].Audits,
 			ExcFunc: func(ctx context.Context) any {
 				filter := auditbus.QueryFilter{
-					Action: dbtest.StringPointer("create"),
+					Action: new("create"),
 				}
 
 				orderBy := order.NewBy(auditbus.OrderByObjName, order.ASC)

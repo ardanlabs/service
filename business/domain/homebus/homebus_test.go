@@ -261,12 +261,12 @@ func update(busDomain dbtest.BusDomain, sd unittest.SeedData) []unittest.Table {
 				uh := homebus.UpdateHome{
 					Type: &home.Single,
 					Address: &homebus.UpdateAddress{
-						Address1: dbtest.StringPointer("123 Mocking Bird Lane"),
-						Address2: dbtest.StringPointer("apt 105"),
-						ZipCode:  dbtest.StringPointer("35810"),
-						City:     dbtest.StringPointer("Huntsville"),
-						State:    dbtest.StringPointer("AL"),
-						Country:  dbtest.StringPointer("US"),
+						Address1: new("123 Mocking Bird Lane"),
+						Address2: new("apt 105"),
+						ZipCode:  new("35810"),
+						City:     new("Huntsville"),
+						State:    new("AL"),
+						Country:  new("US"),
 					},
 				}
 

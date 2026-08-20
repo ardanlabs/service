@@ -31,8 +31,7 @@ func Logger(log *logger.Logger) web.MidFunc {
 			if err := checkIsError(resp); err != nil {
 				statusCode = errs.Internal
 
-				var appErr *errs.Error
-				if errors.As(err, &appErr) {
+				if appErr, ok := errors.AsType[*errs.Error](err); ok {
 					statusCode = appErr.Code
 				}
 			}

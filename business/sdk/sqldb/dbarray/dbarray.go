@@ -35,9 +35,9 @@ import (
 	"strings"
 )
 
-var typeByteSlice = reflect.TypeOf([]byte{})
-var typeDriverValuer = reflect.TypeOf((*driver.Valuer)(nil)).Elem()
-var typeSQLScanner = reflect.TypeOf((*sql.Scanner)(nil)).Elem()
+var typeByteSlice = reflect.TypeFor[[]byte]()
+var typeDriverValuer = reflect.TypeFor[driver.Valuer]()
+var typeSQLScanner = reflect.TypeFor[sql.Scanner]()
 
 // Array returns the optimal driver.Valuer and sql.Scanner for an array or
 // slice of any dimension.
@@ -153,7 +153,7 @@ func (a Bool) Value() (driver.Value, error) {
 		// and N-1 bytes of delimiters.
 		b := make([]byte, 1+2*n)
 
-		for i := 0; i < n; i++ {
+		for i := range n {
 			b[2*i] = ','
 			if a[i] {
 				b[1+2*i] = 't'
@@ -411,7 +411,7 @@ FoundType:
 func (a Generic) Scan(src any) error {
 	dpv := reflect.ValueOf(a.A)
 	switch {
-	case dpv.Kind() != reflect.Ptr:
+	case dpv.Kind() != reflect.Pointer:
 		return fmt.Errorf("database: destination %T is not a pointer to array or slice", a.A)
 	case dpv.IsNil():
 		return fmt.Errorf("database: destination %T is nil", a.A)

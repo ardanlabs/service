@@ -4,6 +4,7 @@ package vproductbus
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	"github.com/ardanlabs/service/business/sdk/order"
 	"github.com/ardanlabs/service/business/sdk/page"
@@ -38,8 +39,8 @@ func NewBusiness(storer Storer, extensions ...Extension) ExtBusiness {
 		storer: storer,
 	})
 
-	for i := len(extensions) - 1; i >= 0; i-- {
-		ext := extensions[i]
+	for _, ext := range slices.Backward(extensions) {
+
 		if ext != nil {
 			b = ext(b)
 		}

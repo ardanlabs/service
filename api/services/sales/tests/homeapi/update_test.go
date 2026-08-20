@@ -8,7 +8,6 @@ import (
 	"github.com/ardanlabs/service/app/domain/homeapp"
 	"github.com/ardanlabs/service/app/sdk/apitest"
 	"github.com/ardanlabs/service/app/sdk/errs"
-	"github.com/ardanlabs/service/business/sdk/dbtest"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -21,14 +20,14 @@ func update200(sd apitest.SeedData) []apitest.Table {
 			Method:     http.MethodPut,
 			StatusCode: http.StatusOK,
 			Input: &homeapp.UpdateHome{
-				Type: dbtest.StringPointer("SINGLE FAMILY"),
+				Type: new("SINGLE FAMILY"),
 				Address: &homeapp.UpdateAddress{
-					Address1: dbtest.StringPointer("123 Mocking Bird Lane"),
-					Address2: dbtest.StringPointer("apt 105"),
-					ZipCode:  dbtest.StringPointer("35810"),
-					City:     dbtest.StringPointer("Huntsville"),
-					State:    dbtest.StringPointer("AL"),
-					Country:  dbtest.StringPointer("US"),
+					Address1: new("123 Mocking Bird Lane"),
+					Address2: new("apt 105"),
+					ZipCode:  new("35810"),
+					City:     new("Huntsville"),
+					State:    new("AL"),
+					Country:  new("US"),
 				},
 			},
 			GotResp: &homeapp.Home{},
@@ -73,7 +72,7 @@ func update400(sd apitest.SeedData) []apitest.Table {
 			Method:     http.MethodPut,
 			StatusCode: http.StatusBadRequest,
 			Input: &homeapp.UpdateHome{
-				Type:    dbtest.StringPointer("BAD TYPE"),
+				Type:    new("BAD TYPE"),
 				Address: &homeapp.UpdateAddress{},
 			},
 			GotResp: &errs.Error{},
@@ -120,14 +119,14 @@ func update401(sd apitest.SeedData) []apitest.Table {
 			Method:     http.MethodPut,
 			StatusCode: http.StatusUnauthorized,
 			Input: &homeapp.UpdateHome{
-				Type: dbtest.StringPointer("SINGLE FAMILY"),
+				Type: new("SINGLE FAMILY"),
 				Address: &homeapp.UpdateAddress{
-					Address1: dbtest.StringPointer("123 Mocking Bird Lane"),
-					Address2: dbtest.StringPointer("apt 105"),
-					ZipCode:  dbtest.StringPointer("35810"),
-					City:     dbtest.StringPointer("Huntsville"),
-					State:    dbtest.StringPointer("AL"),
-					Country:  dbtest.StringPointer("US"),
+					Address1: new("123 Mocking Bird Lane"),
+					Address2: new("apt 105"),
+					ZipCode:  new("35810"),
+					City:     new("Huntsville"),
+					State:    new("AL"),
+					Country:  new("US"),
 				},
 			},
 			GotResp: &errs.Error{},

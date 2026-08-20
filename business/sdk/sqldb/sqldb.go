@@ -136,8 +136,7 @@ func NamedExecContext(ctx context.Context, log *logger.Logger, db sqlx.ExtContex
 	defer span.End()
 
 	if _, err := sqlx.NamedExecContext(ctx, db, query, data); err != nil {
-		var pqerr *pgconn.PgError
-		if errors.As(err, &pqerr) {
+		if pqerr, ok := errors.AsType[*pgconn.PgError](err); ok {
 			switch pqerr.Code {
 			case undefinedTable:
 				return ErrUndefinedTable

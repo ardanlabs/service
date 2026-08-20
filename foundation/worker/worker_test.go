@@ -25,7 +25,7 @@ func Test_Worker(t *testing.T) {
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
-	for i := 0; i < 4; i++ {
+	for range 4 {
 		if _, err := w.Start(ctx, work); err != nil {
 			t.Fatalf("Should be able to execute work : %s", err)
 		}
@@ -33,7 +33,7 @@ func Test_Worker(t *testing.T) {
 	defer cancel()
 
 	// Wait for all the jobs to finish.
-	for i := 0; i < 4; i++ {
+	for range 4 {
 		if w.Running() == 0 {
 			break
 		}
@@ -73,7 +73,7 @@ func Test_CancelWorker(t *testing.T) {
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	for i := 0; i < 4; i++ {
+	for range 4 {
 		if _, err := w.Start(ctx, work); err != nil {
 			t.Fatalf("Should be able to execute work : %s", err)
 		}
@@ -113,7 +113,7 @@ func Test_StopWorker(t *testing.T) {
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	for i := 0; i < 4; i++ {
+	for range 4 {
 		work, err := w.Start(ctx, work)
 		if err != nil {
 			t.Fatalf("Should be able to execute work : %s", err)
@@ -131,7 +131,7 @@ func Test_StopWorker(t *testing.T) {
 	}
 
 	// Wait for all the jobs to finish.
-	for i := 0; i < 3; i++ {
+	for range 3 {
 		if w.Running() == 0 {
 			break
 		}

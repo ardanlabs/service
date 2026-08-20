@@ -8,7 +8,6 @@ import (
 	"github.com/ardanlabs/service/app/domain/userapp"
 	"github.com/ardanlabs/service/app/sdk/apitest"
 	"github.com/ardanlabs/service/app/sdk/errs"
-	"github.com/ardanlabs/service/business/sdk/dbtest"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -21,11 +20,11 @@ func update200(sd apitest.SeedData) []apitest.Table {
 			Method:     http.MethodPut,
 			StatusCode: http.StatusOK,
 			Input: &userapp.UpdateUser{
-				Name:            dbtest.StringPointer("Jack Kennedy"),
-				Email:           dbtest.StringPointer("jack@ardanlabs.com"),
-				Department:      dbtest.StringPointer("ITO"),
-				Password:        dbtest.StringPointer("123"),
-				PasswordConfirm: dbtest.StringPointer("123"),
+				Name:            new("Jack Kennedy"),
+				Email:           new("jack@ardanlabs.com"),
+				Department:      new("ITO"),
+				Password:        new("123"),
+				PasswordConfirm: new("123"),
 			},
 			GotResp: &userapp.User{},
 			ExpResp: &userapp.User{
@@ -96,8 +95,8 @@ func update400(sd apitest.SeedData) []apitest.Table {
 			Method:     http.MethodPut,
 			StatusCode: http.StatusBadRequest,
 			Input: &userapp.UpdateUser{
-				Email:           dbtest.StringPointer("bill@"),
-				PasswordConfirm: dbtest.StringPointer("jack"),
+				Email:           new("bill@"),
+				PasswordConfirm: new("jack"),
 			},
 			GotResp: &errs.Error{},
 			ExpResp: errs.Errorf(errs.InvalidArgument, "validate: [{\"field\":\"email\",\"error\":\"mail: missing '@' or angle-addr\"},{\"field\":\"password\",\"error\":\"passwords do not match\"}]"),
@@ -158,11 +157,11 @@ func update401(sd apitest.SeedData) []apitest.Table {
 			Method:     http.MethodPut,
 			StatusCode: http.StatusUnauthorized,
 			Input: &userapp.UpdateUser{
-				Name:            dbtest.StringPointer("Bill Kennedy"),
-				Email:           dbtest.StringPointer("bill@ardanlabs.com"),
-				Department:      dbtest.StringPointer("ITO"),
-				Password:        dbtest.StringPointer("123"),
-				PasswordConfirm: dbtest.StringPointer("123"),
+				Name:            new("Bill Kennedy"),
+				Email:           new("bill@ardanlabs.com"),
+				Department:      new("ITO"),
+				Password:        new("123"),
+				PasswordConfirm: new("123"),
 			},
 			GotResp: &errs.Error{},
 			ExpResp: errs.Errorf(errs.Unauthenticated, "authorize: you are not authorized for that action, claims[[USER]] rule[rule_admin_or_subject]"),

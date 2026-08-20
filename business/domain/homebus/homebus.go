@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/ardanlabs/service/business/domain/userbus"
@@ -75,8 +76,8 @@ func NewBusiness(log *logger.Logger, userBus userbus.ExtBusiness, delegate *dele
 
 	extBus := ExtBusiness(&b)
 
-	for i := len(extensions) - 1; i >= 0; i-- {
-		ext := extensions[i]
+	for _, ext := range slices.Backward(extensions) {
+
 		if ext != nil {
 			extBus = ext(extBus)
 		}

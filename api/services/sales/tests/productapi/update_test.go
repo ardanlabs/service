@@ -8,7 +8,6 @@ import (
 	"github.com/ardanlabs/service/app/domain/productapp"
 	"github.com/ardanlabs/service/app/sdk/apitest"
 	"github.com/ardanlabs/service/app/sdk/errs"
-	"github.com/ardanlabs/service/business/sdk/dbtest"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -21,9 +20,9 @@ func update200(sd apitest.SeedData) []apitest.Table {
 			Method:     http.MethodPut,
 			StatusCode: http.StatusOK,
 			Input: &productapp.UpdateProduct{
-				Name:     dbtest.StringPointer("Guitar"),
-				Cost:     dbtest.FloatPointer(10.34),
-				Quantity: dbtest.IntPointer(10),
+				Name:     new("Guitar"),
+				Cost:     new(10.34),
+				Quantity: new(10),
 			},
 			GotResp: &productapp.Product{},
 			ExpResp: &productapp.Product{
@@ -61,8 +60,8 @@ func update400(sd apitest.SeedData) []apitest.Table {
 			Method:     http.MethodPut,
 			StatusCode: http.StatusBadRequest,
 			Input: &productapp.UpdateProduct{
-				Cost:     dbtest.FloatPointer(-1.0),
-				Quantity: dbtest.IntPointer(0),
+				Cost:     new(-1.0),
+				Quantity: new(0),
 			},
 			GotResp: &errs.Error{},
 			ExpResp: errs.Errorf(errs.InvalidArgument, "validate: [{\"field\":\"cost\",\"error\":\"invalid money -1.00\"},{\"field\":\"quantity\",\"error\":\"invalid quantity 0\"}]"),
@@ -108,9 +107,9 @@ func update401(sd apitest.SeedData) []apitest.Table {
 			Method:     http.MethodPut,
 			StatusCode: http.StatusUnauthorized,
 			Input: &productapp.UpdateProduct{
-				Name:     dbtest.StringPointer("Guitar"),
-				Cost:     dbtest.FloatPointer(10.34),
-				Quantity: dbtest.IntPointer(10),
+				Name:     new("Guitar"),
+				Cost:     new(10.34),
+				Quantity: new(10),
 			},
 			GotResp: &errs.Error{},
 			ExpResp: errs.Errorf(errs.Unauthenticated, "authorize: you are not authorized for that action, claims[[USER]] rule[rule_admin_or_subject]"),

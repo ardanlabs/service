@@ -19,7 +19,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/proto"
 )
 
 // App represents the gRPC service for authentication.
@@ -67,7 +66,7 @@ func (a *App) Token(ctx context.Context, req *TokenRequest) (*TokenResponse, err
 	}
 
 	trb := TokenResponse_builder{
-		Token: proto.String(token),
+		Token: new(token),
 	}
 
 	return trb.Build(), nil
@@ -89,8 +88,8 @@ func (a *App) Authenticate(ctx context.Context, req *AuthenticateRequest) (*Auth
 	}
 
 	arb := AuthenticateResponse_builder{
-		UserId:  proto.String(claims.Subject),
-		Subject: proto.String(claims.Subject),
+		UserId:  new(claims.Subject),
+		Subject: new(claims.Subject),
 		Roles:   claims.Roles,
 	}
 

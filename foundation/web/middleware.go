@@ -1,5 +1,7 @@
 package web
 
+import "slices"
+
 // MidFunc is a handler function designed to run code before and/or after
 // another Handler. It is designed to remove boilerplate or other concerns not
 // direct to any given app Handler.
@@ -13,8 +15,8 @@ func wrapMiddleware(mw []MidFunc, handler HandlerFunc) HandlerFunc {
 	// Loop backwards through the middleware invoking each one. Replace the
 	// handler with the new wrapped handler. Looping backwards ensures that the
 	// first middleware of the slice is the first to be executed by requests.
-	for i := len(mw) - 1; i >= 0; i-- {
-		mwFunc := mw[i]
+	for _, mwFunc := range slices.Backward(mw) {
+
 		if mwFunc != nil {
 			handler = mwFunc(handler)
 		}

@@ -9,25 +9,24 @@ import (
 	"github.com/ardanlabs/service/app/sdk/authclient"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
-	"google.golang.org/protobuf/proto"
 )
 
 func authorizeRequestToGRPC(auth authclient.Authorize) *grpcauthapp.AuthorizeRequest {
 	cb := grpcauthapp.Claims_builder{
-		Id:        proto.String(auth.Claims.ID),
-		Issuer:    proto.String(auth.Claims.Issuer),
-		Subject:   proto.String(auth.Claims.Subject),
+		Id:        new(auth.Claims.ID),
+		Issuer:    new(auth.Claims.Issuer),
+		Subject:   new(auth.Claims.Subject),
 		Audience:  auth.Claims.Audience,
-		ExpiresAt: proto.Int64(auth.Claims.ExpiresAt.Unix()),
-		NotBefore: proto.Int64(auth.Claims.NotBefore.Unix()),
-		IssuedAt:  proto.Int64(auth.Claims.IssuedAt.Unix()),
+		ExpiresAt: new(auth.Claims.ExpiresAt.Unix()),
+		NotBefore: new(auth.Claims.NotBefore.Unix()),
+		IssuedAt:  new(auth.Claims.IssuedAt.Unix()),
 		Roles:     auth.Claims.Roles,
 	}
 	claims := cb.Build()
 
 	arb := grpcauthapp.AuthorizeRequest_builder{
-		UserId: proto.String(auth.UserID.String()),
-		Rule:   proto.String(auth.Rule),
+		UserId: new(auth.UserID.String()),
+		Rule:   new(auth.Rule),
 		Claims: claims,
 	}
 

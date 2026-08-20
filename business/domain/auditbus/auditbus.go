@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/ardanlabs/service/business/sdk/order"
@@ -46,8 +47,8 @@ func NewBusiness(log *logger.Logger, storer Storer, extensions ...Extension) Ext
 		storer: storer,
 	})
 
-	for i := len(extensions) - 1; i >= 0; i-- {
-		ext := extensions[i]
+	for _, ext := range slices.Backward(extensions) {
+
 		if ext != nil {
 			b = ext(b)
 		}

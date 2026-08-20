@@ -47,9 +47,7 @@ func New(log *logger.Logger, collector Collector, interval time.Duration, publis
 		shutdown:  make(chan struct{}),
 	}
 
-	p.wg.Add(1)
-	go func() {
-		defer p.wg.Done()
+	p.wg.Go(func() {
 		for {
 			p.timer.Reset(interval)
 			select {
@@ -59,7 +57,7 @@ func New(log *logger.Logger, collector Collector, interval time.Duration, publis
 				return
 			}
 		}
-	}()
+	})
 
 	return &p, nil
 }

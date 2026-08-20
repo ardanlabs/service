@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/mail"
+	"slices"
 	"time"
 
 	"github.com/ardanlabs/service/business/sdk/delegate"
@@ -72,8 +73,8 @@ func NewBusiness(log *logger.Logger, delegate *delegate.Delegate, storer Storer,
 		extensions: extensions,
 	})
 
-	for i := len(extensions) - 1; i >= 0; i-- {
-		ext := extensions[i]
+	for _, ext := range slices.Backward(extensions) {
+
 		if ext != nil {
 			b = ext(b)
 		}

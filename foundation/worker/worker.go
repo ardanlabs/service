@@ -31,7 +31,7 @@ func New(maxRunningJobs int) (*Worker, error) {
 	}
 
 	sem := make(chan bool, maxRunningJobs)
-	for i := 0; i < maxRunningJobs; i++ {
+	for range maxRunningJobs {
 		sem <- true
 	}
 
