@@ -7,7 +7,7 @@ import (
 	"github.com/ardanlabs/service/app/domain/grpcauthapp"
 	"github.com/ardanlabs/service/app/sdk/auth"
 	"github.com/ardanlabs/service/app/sdk/authclient"
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )
 

@@ -10,7 +10,7 @@ import (
 	"github.com/ardanlabs/service/app/sdk/auth"
 	"github.com/ardanlabs/service/business/types/role"
 	"github.com/ardanlabs/service/foundation/logger"
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )
 
