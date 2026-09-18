@@ -141,14 +141,15 @@ The project ships with a set of [Agent Skills](.agents/skills) that teach AI cod
 
 ### How to use
 
-
 First, invoke the agent to load `AGENTS.md` file skills
+
 ```
 Load the skills per @AGENTS.md file
 ```
 
 Then, start working on what's needed.
 E.g.
+
 ```
 review pr
 ```
@@ -196,6 +197,7 @@ _**Articles**_
 [IT World Canada](http://www.itworldcanada.com/article/nascent-google-development-language-shows-promise-for-more-productive-coding/387449)
 
 _**Video**_  
+[GopherCon UK (2026): Building a coding agent from scratch](https://www.youtube.com/watch?v=ybBVOa572Tw)  
 [GopherCon USA (2025): Understanding Escape Analysis to Speed Up Your Code](https://www.youtube.com/watch?v=FUm0pfgWehI&list=PL2ntRZ1ySWBeBA1lEnmD3vUedkRDvgnmw)  
 [GopherCon USA (2025): Go’s Trace Tooling and Concurrency](https://www.youtube.com/watch?v=Gqo0oCfZSjg&list=PL2ntRZ1ySWBeBA1lEnmD3vUedkRDvgnmw&index=5)  
 [GopherCon UK (2025) - Building a coding agent from scratch](https://www.youtube.com/watch?v=ybBVOa572Tw&list=PLDWZ5uzn69ewrYyHTNrXlrWVDjLiOX0Yb&index=21)  
