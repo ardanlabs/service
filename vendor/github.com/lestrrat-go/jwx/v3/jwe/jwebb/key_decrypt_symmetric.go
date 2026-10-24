@@ -3,12 +3,11 @@ package jwebb
 import (
 	"crypto/aes"
 	cryptocipher "crypto/cipher"
+	"crypto/pbkdf2"
 	"crypto/sha256"
 	"crypto/sha512"
 	"fmt"
 	"hash"
-
-	"golang.org/x/crypto/pbkdf2"
 
 	"github.com/lestrrat-go/jwx/v3/internal/tokens"
 )
@@ -54,7 +53,10 @@ func KeyDecryptPBES2(_, enckey []byte, alg string, password []byte, salt []byte,
 	}
 
 	// Derive key using PBKDF2
-	derivedKey := pbkdf2.Key(password, salt, count, keylen, hashFunc)
+	derivedKey, err := pbkdf2.Key(hashFunc, string(password), salt, count, keylen)
+	if err != nil {
+		return nil, fmt.Errorf(`failed to derive key: %w`, err)
+	}
 
 	// Use the derived key for AES key wrap
 	return KeyDecryptAESKW(nil, enckey, alg, derivedKey)

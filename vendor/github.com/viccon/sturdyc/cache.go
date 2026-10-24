@@ -107,8 +107,11 @@ func New[T any](capacity, numShards int, ttl time.Duration, evictionPercentage i
 
 // performContinuousEvictions is going to be running in a separate goroutine that we're going to prevent from ever exiting.
 func (c *Client[T]) performContinuousEvictions() {
+	// Create the ticker before starting the goroutine so that the eviction
+	// schedule starts when the client is created, and not whenever the
+	// scheduler first gets around to running the goroutine.
+	ticker, stop := c.clock.NewTicker(c.evictionInterval)
 	go func() {
-		ticker, stop := c.clock.NewTicker(c.evictionInterval)
 		defer stop()
 		for range ticker {
 			c.shards[c.nextShard].evictExpired()

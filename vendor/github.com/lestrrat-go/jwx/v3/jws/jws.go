@@ -27,11 +27,6 @@ package jws
 
 import (
 	"crypto"
-	"crypto/ecdh"
-	"crypto/ecdsa"
-	"crypto/ed25519"
-	"crypto/rsa"
-	"errors"
 	"fmt"
 	"io"
 	"slices"
@@ -46,6 +41,7 @@ import (
 	"github.com/lestrrat-go/jwx/v3/internal/tokens"
 	"github.com/lestrrat-go/jwx/v3/jwa"
 	"github.com/lestrrat-go/jwx/v3/jwk"
+	"github.com/lestrrat-go/jwx/v3/jws/internal/keyalg"
 	"github.com/lestrrat-go/jwx/v3/jws/jwsbb"
 )
 
@@ -190,6 +186,14 @@ func Sign(payload []byte, options ...SignOption) ([]byte, error) {
 		return sc.signStreaming()
 	}
 
+	if sc.format == fmtCompact {
+		buf, err := sc.SignCompact()
+		if err != nil {
+			return nil, makeSignError(prefixJwsSign, `failed to populate message: %w`, err)
+		}
+		return buf, nil
+	}
+
 	// Create a Message object with all the bits and bobs, and we'll
 	// serialize it in the end
 	var result Message
@@ -202,19 +206,6 @@ func Sign(payload []byte, options ...SignOption) ([]byte, error) {
 		return json.Marshal(result)
 	case fmtJSONPretty:
 		return json.MarshalIndent(result, "", "  ")
-	case fmtCompact:
-		// Take the only signature object, and convert it into a Compact
-		// serialization format
-		var compactOpts []CompactOption
-		if sc.detached {
-			compactOpts = append(compactOpts, WithDetached(true))
-		}
-		for _, option := range options {
-			if copt, ok := option.(CompactOption); ok {
-				compactOpts = append(compactOpts, copt)
-			}
-		}
-		return Compact(&result, compactOpts...)
 	default:
 		return nil, makeSignError(prefixJwsSign, `invalid serialization format`)
 	}
@@ -240,6 +231,12 @@ var allowNoneWhitelist = jwk.WhitelistFunc(func(string) bool {
 // it _verified_ something when in fact it did no such thing). If you want to
 // accept messages with "none" signature algorithm, use `jws.Parse` to get the
 // raw JWS message.
+//
+// Verify resolves the verification algorithm from the key or provider you
+// supply (jws.WithKey, jws.WithKeySet, jws.WithVerifyAuto, or a custom
+// jws.WithKeyProvider). By default it does not compare that algorithm with
+// the protected header's "alg". Pass jws.WithAlgorithmMatch(true) to reject a
+// JWS whose protected header advertises a different "alg".
 //
 // The error returned by this function is of type can be checked against
 // `jws.VerifyError()` and `jws.VerificationError()`. The latter is returned
@@ -535,57 +532,29 @@ func RegisterCustomField(name string, object any) {
 	registry.Register(name, object)
 }
 
-// curver is implemented by jwk.Key types that carry curve information.
-type curver interface {
-	Crv() (jwa.EllipticCurveAlgorithm, bool)
-}
-
-// Helpers for signature verification
-var muAlgorithmMaps sync.RWMutex
-var keyTypeToAlgorithms = make(map[jwa.KeyType][]jwa.SignatureAlgorithm)
-var algorithmToKeyTypes = make(map[jwa.SignatureAlgorithm][]jwa.KeyType)
-var curveToAlgorithms = make(map[jwa.EllipticCurveAlgorithm][]jwa.SignatureAlgorithm)
-
-func init() {
-	RegisterAlgorithmForKeyType(jwa.OKP(), jwa.EdDSA())
-	RegisterAlgorithmForCurve(jwa.Ed25519(), jwa.EdDSAEd25519())
-	for _, alg := range []jwa.SignatureAlgorithm{jwa.HS256(), jwa.HS384(), jwa.HS512()} {
-		RegisterAlgorithmForKeyType(jwa.OctetSeq(), alg)
-	}
-	for _, alg := range []jwa.SignatureAlgorithm{jwa.RS256(), jwa.RS384(), jwa.RS512(), jwa.PS256(), jwa.PS384(), jwa.PS512()} {
-		RegisterAlgorithmForKeyType(jwa.RSA(), alg)
-	}
-	for _, alg := range []jwa.SignatureAlgorithm{jwa.ES256(), jwa.ES384(), jwa.ES512()} {
-		RegisterAlgorithmForKeyType(jwa.EC(), alg)
-	}
-}
-
 // RegisterAlgorithmForKeyType registers an additional algorithm as valid for
-// the given key type. This is used internally by init() and can also be called
-// from external modules that provide support for additional algorithms (e.g. Ed448).
+// the given key type. This is used internally to register the builtin
+// algorithms, and can also be called from external modules that provide
+// support for additional algorithms (e.g. Ed448).
+//
+// Registering an algorithm here makes [Sign] and [Verify] accept it for keys
+// of that type, and makes it a candidate when a JWKS key carrying no "alg"
+// member is verified under jws.WithInferAlgorithmFromKey(true).
 func RegisterAlgorithmForKeyType(kty jwa.KeyType, alg jwa.SignatureAlgorithm) {
-	muAlgorithmMaps.Lock()
-	defer muAlgorithmMaps.Unlock()
-	keyTypeToAlgorithms[kty] = append(keyTypeToAlgorithms[kty], alg)
-	if !slices.Contains(algorithmToKeyTypes[alg], kty) {
-		algorithmToKeyTypes[alg] = append(algorithmToKeyTypes[alg], kty)
-	}
+	keyalg.RegisterForKeyType(kty, alg)
 }
 
-// RegisterAlgorithmForCurve registers an algorithm as valid for the given
-// elliptic curve. When [AlgorithmsForKey] can determine the curve of a key,
-// it returns the union of key-type-level algorithms and curve-specific
-// algorithms instead of all algorithms for the key type.
+// RegisterAlgorithmForCurve scopes an algorithm to the given elliptic curve.
+// When the curve of a key can be determined, an algorithm registered under
+// some curve is offered only for keys on that curve, instead of for every key
+// of its key type. Pair this with [RegisterAlgorithmForKeyType] so that, for
+// example, an OKP algorithm meant for one curve does not become a candidate
+// for every OKP key.
 //
 // This function is append-only and deduplicates entries, so builtin
 // registrations cannot be overwritten by external modules.
 func RegisterAlgorithmForCurve(crv jwa.EllipticCurveAlgorithm, alg jwa.SignatureAlgorithm) {
-	muAlgorithmMaps.Lock()
-	defer muAlgorithmMaps.Unlock()
-	if slices.Contains(curveToAlgorithms[crv], alg) {
-		return
-	}
-	curveToAlgorithms[crv] = append(curveToAlgorithms[crv], alg)
+	keyalg.RegisterForCurve(crv, alg)
 }
 
 // AlgorithmsForKey returns the possible signature algorithms that can
@@ -593,10 +562,18 @@ func RegisterAlgorithmForCurve(crv jwa.EllipticCurveAlgorithm, alg jwa.Signature
 // for verification purposes, as this is the only usage where one may need
 // dynamically figure out which method to use.
 //
-// When the key's curve can be determined (via [jwk.Key] Crv() method or
-// inferred from the raw Go type), curve-specific algorithms registered via
+// When the key's curve is known, algorithms registered for that curve via
 // [RegisterAlgorithmForCurve] are combined with key-type-level algorithms
-// to produce a more precise result.
+// to produce a more precise result. The curve is known for a [jwk.Key]
+// that has a Crv() method, for raw ed25519 keys, and for any raw key that
+// reaches the [jwk.Import] fallback below.
+//
+// ECDSA is the exception. A raw [ecdsa.PublicKey] or [ecdsa.PrivateKey] is
+// classified by key type alone and its Curve field is never read. No
+// builtin registration binds P-256, P-384, or P-521 to an algorithm
+// either, so every EC key reports the full ES* list no matter which curve
+// it sits on. RFC 7518 Section 3.4 is stricter than that; see
+// [WithStrictECDSA] for enforcing it when signing.
 //
 // Accepted key shapes (resolved in order):
 //
@@ -622,113 +599,33 @@ func RegisterAlgorithmForCurve(crv jwa.EllipticCurveAlgorithm, alg jwa.Signature
 // so callers can branch with errors.Is rather than pattern-matching error
 // strings. The wrapping error keeps the concrete %T or %q diagnostic in
 // its message for human readers.
+//
+// Deprecated: Do not use. This is an internal helper that jwx uses to
+// guess which algorithms to try when a JWKS key has no "alg" field. It is
+// exported only because it always has been, and was never meant for
+// callers outside jwx. It does not tell you whether a key and an
+// algorithm go together, so do not use it as that kind of check. The list
+// it hands back can be wider than RFC 7518 allows for the key you passed.
+//
+// It keeps working for the rest of the v3 series, and is deprecated in v4
+// as well. It will not be fixed in the meantime, and the way it picks
+// algorithms will not change. The list itself can still grow. An
+// extension module that calls [RegisterAlgorithmForKeyType] or
+// [RegisterAlgorithmForCurve] adds to what this reports, the same way it
+// adds to what [Sign] and [Verify] accept.
+//
+// To find out whether a key works with an algorithm, pass both to [Sign]
+// or [Verify] and check the error.
 func AlgorithmsForKey(key any) ([]jwa.SignatureAlgorithm, error) {
-	var kty jwa.KeyType
-	var crv jwa.EllipticCurveAlgorithm
-	var hasCrv bool
-
-	switch key := key.(type) {
-	case jwk.Key:
-		kty = key.KeyType()
-		if ck, ok := key.(curver); ok {
-			crv, hasCrv = ck.Crv()
-		}
-	case rsa.PublicKey, *rsa.PublicKey, rsa.PrivateKey, *rsa.PrivateKey:
-		kty = jwa.RSA()
-	case ecdsa.PublicKey, *ecdsa.PublicKey, ecdsa.PrivateKey, *ecdsa.PrivateKey:
-		kty = jwa.EC()
-	case ed25519.PublicKey, ed25519.PrivateKey:
-		kty = jwa.OKP()
-		crv = jwa.Ed25519()
-		hasCrv = true
-	case *ecdh.PublicKey, ecdh.PublicKey, *ecdh.PrivateKey, ecdh.PrivateKey:
-		// ecdh keys are for key agreement (X25519/X448), not signing.
-		// Reject at the API boundary instead of returning a misleading
-		// algorithm list that would fail deeper in the signing stack.
-		return nil, fmt.Errorf(`%w: key type %T cannot be used for signing (ecdh keys are key-agreement only)`, errUnclassifiableKey, key)
-	case []byte:
-		kty = jwa.OctetSeq()
-	default:
-		// For crypto.Signer from external packages (e.g. KMS-backed signers),
-		// extract the underlying public key type via .Public().
-		// Standard library types (*rsa.PrivateKey, etc.) are already handled
-		// by the concrete cases above.
-		var signerPubErr error
-		if signer, ok := key.(crypto.Signer); ok {
-			pub := signer.Public()
-			// Guard: only recurse if the public key is not itself a crypto.Signer,
-			// to prevent infinite recursion from pathological implementations.
-			if _, isSigner := pub.(crypto.Signer); !isSigner {
-				algs, err := AlgorithmsForKey(pub)
-				if err == nil {
-					return algs, nil
-				}
-				// Save the inner classification error so a
-				// downstream Import-fallback failure can surface
-				// both diagnostics. A successful Import discards
-				// signerPubErr — only the eventual failure path
-				// joins them.
-				signerPubErr = err
-			}
-		}
-		imported, err := jwk.Import(key)
-		if err != nil {
-			outer := fmt.Errorf(`%w: unknown key type %T`, errUnclassifiableKey, key)
-			if signerPubErr != nil {
-				return nil, errors.Join(outer, signerPubErr)
-			}
-			return nil, outer
-		}
-		kty = imported.KeyType()
-		if ck, ok := imported.(curver); ok {
-			crv, hasCrv = ck.Crv()
-		}
-	}
-
-	muAlgorithmMaps.RLock()
-	defer muAlgorithmMaps.RUnlock()
-
-	ktyAlgs, ok := keyTypeToAlgorithms[kty]
-	if !ok {
-		return nil, fmt.Errorf(`%w: unregistered key type %q`, errUnclassifiableKey, kty)
-	}
-
-	// If we know the curve and there are curve-specific registrations,
-	// return only key-type-level algorithms (those not registered under
-	// any curve) plus curve-specific algorithms for this curve.
-	if hasCrv {
-		crvAlgs := curveToAlgorithms[crv]
-		return filterAlgorithmsForCurve(ktyAlgs, crvAlgs), nil
-	}
-
-	return ktyAlgs, nil
-}
-
-// filterAlgorithmsForCurve returns the subset of ktyAlgs that are not
-// registered under any curve (i.e., generic for the key type) plus the
-// curve-specific algorithms from crvAlgs.
-func filterAlgorithmsForCurve(ktyAlgs, crvAlgs []jwa.SignatureAlgorithm) []jwa.SignatureAlgorithm {
-	var result []jwa.SignatureAlgorithm
-
-	// Add key-type-level algorithms that are not claimed by any curve
-	for _, alg := range ktyAlgs {
-		if !isRegisteredUnderAnyCurve(alg) {
-			result = append(result, alg)
-		}
-	}
-
-	// Add curve-specific algorithms
-	result = append(result, crvAlgs...)
-	return result
-}
-
-func isRegisteredUnderAnyCurve(alg jwa.SignatureAlgorithm) bool {
-	for _, algs := range curveToAlgorithms {
-		if slices.Contains(algs, alg) {
-			return true
-		}
-	}
-	return false
+	// The godoc says the way this picks algorithms will not change, so
+	// calling keyalg only works while keyalg picks them the same way this
+	// function did before it was deprecated. It does today. If Candidates
+	// ever changes (narrowing EC keys to the one algorithm their curve
+	// allows is the likely first case), copy the old code back in here
+	// instead of letting the change through. An extension registering a
+	// new algorithm is not that kind of change, because the tables have
+	// always been an input.
+	return keyalg.Candidates(key)
 }
 
 // unsupportedKeyError builds the rejection error for a jwk.UnsupportedKey
@@ -749,9 +646,9 @@ func unsupportedKeyError(uk jwk.UnsupportedKey, op string) error {
 // (a) a nil key, used by keyless algorithms (see GH910);
 // (b) any key handed to an algorithm with a user-registered custom
 // Signer2/Verifier2 — custom implementations may accept arbitrary key
-// types that AlgorithmsForKey cannot classify; and
+// types that keyalg.Candidates cannot classify; and
 // (c) an opaque crypto.Signer whose .Public() is itself a crypto.Signer,
-// the one case AlgorithmsForKey refuses to recurse into.
+// the one case keyalg.Candidates refuses to recurse into.
 // Every other classification failure is surfaced so callers get a crisp
 // option-boundary rejection instead of a deep-stack error.
 func validateAlgorithmForKey(alg jwa.SignatureAlgorithm, key any) error {
@@ -761,7 +658,7 @@ func validateAlgorithmForKey(alg jwa.SignatureAlgorithm, key any) error {
 	if key == nil {
 		return nil
 	}
-	algs, err := AlgorithmsForKey(key)
+	algs, err := keyalg.Candidates(key)
 	if err != nil {
 		if hasCustomSigVerifier(alg) {
 			return nil

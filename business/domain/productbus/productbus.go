@@ -40,6 +40,8 @@ type Storer interface {
 // ExtBusiness interface provides support for extensions that wrap extra functionality
 // around the core business logic.
 type ExtBusiness interface {
+	// NewWithTx returns a transaction-bound copy. Extensions must bind their
+	// dependencies to the transaction and wrap the returned business themselves.
 	NewWithTx(tx sqldb.CommitRollbacker) (ExtBusiness, error)
 	Create(ctx context.Context, np NewProduct) (Product, error)
 	Update(ctx context.Context, prd Product, up UpdateProduct) (Product, error)
@@ -56,37 +58,20 @@ type Extension func(ExtBusiness) ExtBusiness
 
 // Business manages the set of APIs for product access.
 type Business struct {
-	log        *logger.Logger
-	userBus    userbus.ExtBusiness
-	storer     Storer
-	delegate   *delegate.Delegate
-	extensions []Extension
+	log      *logger.Logger
+	userBus  userbus.ExtBusiness
+	storer   Storer
+	delegate *delegate.Delegate
 }
 
 // NewBusiness constructs a product business API for use.
 func NewBusiness(log *logger.Logger, userBus userbus.ExtBusiness, delegate *delegate.Delegate, storer Storer, extensions ...Extension) ExtBusiness {
-	b := newBusiness(log, userBus, delegate, storer, extensions...)
+	b := newBusiness(log, userBus, delegate, storer)
 	b.registerDelegateFunctions()
 
-	return b.withExtensions()
-}
-
-func newBusiness(log *logger.Logger, userBus userbus.ExtBusiness, delegate *delegate.Delegate, storer Storer, extensions ...Extension) *Business {
-	b := Business{
-		log:        log,
-		userBus:    userBus,
-		storer:     storer,
-		delegate:   delegate,
-		extensions: extensions,
-	}
-
-	return &b
-}
-
-func (b *Business) withExtensions() ExtBusiness {
 	extBus := ExtBusiness(b)
 
-	for _, ext := range slices.Backward(b.extensions) {
+	for _, ext := range slices.Backward(extensions) {
 
 		if ext != nil {
 			extBus = ext(extBus)
@@ -94,6 +79,17 @@ func (b *Business) withExtensions() ExtBusiness {
 	}
 
 	return extBus
+}
+
+func newBusiness(log *logger.Logger, userBus userbus.ExtBusiness, delegate *delegate.Delegate, storer Storer) *Business {
+	b := Business{
+		log:      log,
+		userBus:  userBus,
+		storer:   storer,
+		delegate: delegate,
+	}
+
+	return &b
 }
 
 // NewWithTx constructs a new business value that will use the
@@ -109,9 +105,10 @@ func (b *Business) NewWithTx(tx sqldb.CommitRollbacker) (ExtBusiness, error) {
 		return nil, err
 	}
 
-	nb := newBusiness(b.log, userBus, b.delegate, storer, b.extensions...)
+	// Do not register delegates again. Each extension rebuilds its own wrapper.
+	nb := newBusiness(b.log, userBus, b.delegate, storer)
 
-	return nb.withExtensions(), nil
+	return nb, nil
 }
 
 // Create adds a new product to the system.

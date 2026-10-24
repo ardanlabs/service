@@ -5,8 +5,9 @@ import (
 	"image/color"
 )
 
+// RGBString returns a CSS/Plotly-valid color string.
 func RGBString(r, g, b uint8) string {
-	return fmt.Sprintf(`"rgb(%d,%d,%d,0)"`, r, g, b)
+	return fmt.Sprintf("rgb(%d,%d,%d)", r, g, b)
 }
 
 type WeightedColor struct {
@@ -15,8 +16,7 @@ type WeightedColor struct {
 }
 
 func (c WeightedColor) MarshalJSON() ([]byte, error) {
-	str := fmt.Sprintf(`[%f,"rgb(%d,%d,%d,%f)"]`,
-		c.Value, c.Color.R, c.Color.G, c.Color.B, float64(c.Color.A)/255)
+	str := fmt.Sprintf(`[%f,%q]`, c.Value, RGBString(c.Color.R, c.Color.G, c.Color.B))
 	return []byte(str), nil
 }
 

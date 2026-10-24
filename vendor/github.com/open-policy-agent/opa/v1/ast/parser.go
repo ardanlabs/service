@@ -62,7 +62,7 @@ var (
 	// recursion exceeds the maximum allowed depth
 	ErrMaxParsingRecursionDepthExceeded = errors.New("max parsing recursion depth exceeded")
 
-	RegoV1CompatibleRef = Ref{VarTerm("rego"), InternedTerm("v1")}
+	RegoV1CompatibleRef = Ref{RegoRootDocument, InternedTerm("v1")}
 
 	// this is the name to use for instantiating an empty set, e.g., `set()`.
 	setConstructor = RefTerm(VarTerm("set"))
@@ -73,6 +73,7 @@ var (
 	}
 	metadataBytes      = []byte("METADATA")
 	metadataParserPool = util.NewSyncPool[metadataParser]()
+	noScanOptions      []scanner.ScanOption
 )
 
 func (v RegoVersion) Int() int {
@@ -443,6 +444,14 @@ func (p *Parser) Parse() ([]Statement, []*Comment, Errors) {
 	// point trying to parse packages, imports, etc. in the same order.
 	for p.s.tok != tokens.EOF {
 		var s *state
+
+		// Reported here rather than in parseRules: `package := 1` and `import := 1`
+		// are consumed by the statement parsers below, which fail pointing at the
+		// assign token instead of the keyword.
+		if !p.po.SkipRules && p.errKeywordRuleName(false) {
+			break
+		}
+
 		if p.s.tok == tokens.Package {
 			s = p.save()
 			if pkg := p.parsePackage(); pkg != nil {
@@ -459,8 +468,10 @@ func (p *Parser) Parse() ([]Statement, []*Comment, Errors) {
 			if imp := p.parseImport(); imp != nil {
 				if RegoRootDocument.Equal(imp.Path.Value.(Ref)[0]) {
 					p.regoV1Import(imp)
+					p.reclassifyKeyword()
 				} else if FutureRootDocument.Equal(imp.Path.Value.(Ref)[0]) {
 					p.futureImport(imp, allowedFutureKeywords)
+					p.reclassifyKeyword()
 				}
 				stmts = append(stmts, imp)
 				continue
@@ -766,6 +777,74 @@ func scanAheadRef(p *Parser) bool {
 	return false
 }
 
+// keywordRuleNameFollowers maps a keyword token to the tokens that, following it,
+// make the statement unambiguously a rule declaration.
+var (
+	ruleNameFollowers = []tokens.Token{tokens.Assign, tokens.Unify, tokens.If, tokens.Contains, tokens.LParen}
+	// `not`/`and`/`or` drop '(': at the start of a statement, `not (x)` is a negated
+	// group and `or(x, y)` a call to the set union built-in, not rule heads.
+	operatorRuleNameFollowers = []tokens.Token{tokens.Assign, tokens.Unify, tokens.If, tokens.Contains}
+	// `package`/`import` drop `if` and `contains`: both take a path that may itself
+	// be named after a keyword, as in `package contains` or `import if.foo`.
+	pathRuleNameFollowers    = []tokens.Token{tokens.Assign, tokens.Unify, tokens.LParen}
+	keywordRuleNameFollowers = map[tokens.Token][]tokens.Token{
+		tokens.Every:      ruleNameFollowers,
+		tokens.If:         ruleNameFollowers,
+		tokens.In:         ruleNameFollowers,
+		tokens.Some:       ruleNameFollowers,
+		tokens.As:         ruleNameFollowers,
+		tokens.Package:    pathRuleNameFollowers,
+		tokens.Import:     pathRuleNameFollowers,
+		tokens.Not:        operatorRuleNameFollowers,
+		tokens.LogicalAnd: operatorRuleNameFollowers,
+		tokens.LogicalOr:  operatorRuleNameFollowers,
+		// `contains` outside of a rule head parses as a plain var, so `contains := x`
+		// is still a legal query; as a rule it's caught by the rego-v1 check.
+		tokens.Contains: {tokens.If, tokens.Contains},
+	}
+)
+
+// reclassifyKeyword re-tags the lookahead token after an import that registered
+// new keywords with the scanner. The parser reads one token ahead, so the first
+// token of the statement following the import was scanned before the scanner
+// knew about the keyword, and would otherwise be treated as a plain identifier.
+func (p *Parser) reclassifyKeyword() {
+	if p.s.tok != tokens.Ident {
+		return
+	}
+
+	if tok, ok := allFutureKeywords[p.s.lit]; ok && p.s.s.IsKeyword(p.s.lit) {
+		p.s.tok = tok
+	}
+}
+
+// errKeywordRuleName reports an error if the current token is a keyword used as a
+// rule name, e.g. `every := 1`, and returns whether it did. A statement that began
+// with `default` can only be a rule, so no lookahead is needed there.
+func (p *Parser) errKeywordRuleName(isDefault bool) bool {
+	followers, ok := keywordRuleNameFollowers[p.s.tok]
+	if !ok {
+		return false
+	}
+
+	keyword, loc := p.s.tok, p.s.Loc()
+
+	if !isDefault {
+		s := p.save()
+		p.scan()
+		next := p.s.tok
+		p.restore(s)
+
+		if !slices.Contains(followers, next) {
+			return false
+		}
+	}
+
+	p.errorf(loc, "%s keyword cannot be used for rule name", keyword)
+
+	return true
+}
+
 // scanAheadLogicalCall rewrites an `and`/`or` keyword token to tokens.Ident when
 // it's immediately followed by `(`. Only valid where a term is expected: there,
 // the operator reading is impossible, so it must be a function (`&`/`|` set built-ins).
@@ -801,6 +880,9 @@ func (p *Parser) parseRules() []*Rule {
 	}
 
 	if p.s.tok != tokens.Ident {
+		if rule.Default {
+			p.errKeywordRuleName(true)
+		}
 		return nil
 	}
 
@@ -1191,6 +1273,7 @@ func (p *Parser) parseQuery(requireSemi bool, end tokens.Token) Body {
 		if !p.s.skippedNL {
 			// If there was already an error then don't pile this one on
 			if len(p.s.errors) == 0 {
+				p.hintMissingInfixKeyword()
 				p.illegal(`expected \n or %s or %s`, tokens.Semicolon, end)
 			}
 			return nil
@@ -1222,6 +1305,7 @@ func (p *Parser) parseLiteral() (expr *Expr) {
 	// binary. Otherwise, restore and fall through to regular handling.
 	if p.s.tok == tokens.LBrace && p.logicalKeywordsActive() {
 		s := p.save()
+		cache := p.cache.m
 		braceOffset := p.s.loc.Offset
 		bodyLoc := p.s.Loc()
 		p.scan()
@@ -1243,6 +1327,7 @@ func (p *Parser) parseLiteral() (expr *Expr) {
 			}
 		}
 		p.restore(s)
+		p.cache.m = cache
 	}
 
 	// LHS/whole parenthesized group at statement start: `(a or b)`,
@@ -1469,6 +1554,60 @@ func (p *Parser) attachWith(e *Expr) *Expr {
 		}
 	}
 	return e
+}
+
+// infixFutureKeywords are the future keywords usable as infix operators in a
+// rule body, mapped to an example of the expression each enables.
+var infixFutureKeywords = map[string]string{
+	"in":  "x in xs",
+	"and": "x and y",
+	"or":  "x or y",
+}
+
+// hintMissingInfixKeyword hints at the import for a body expression trailed by
+// a plain `in`/`and`/`or` identifier, or by the comma of `k, v in xs`. Only
+// call it when an error is about to be reported: an unconsumed hint would end
+// up attached to a later, unrelated error.
+func (p *Parser) hintMissingInfixKeyword() {
+	// Something more specific, like `some x in xs`, already hinted.
+	if len(p.s.hints) > 0 {
+		return
+	}
+
+	kw := "in"
+
+	switch p.s.tok {
+	case tokens.Ident:
+		// An active keyword scans as its own token, so an Ident means it's
+		// the import that's missing.
+		kw = p.s.lit
+		if _, ok := infixFutureKeywords[kw]; !ok {
+			return
+		}
+	case tokens.Comma:
+		// Only hint on `k, v in xs`, so require a membership expr after the comma.
+		s := p.save()
+		p.scan()
+		term := p.futureParser().parseTermInfixCall()
+		p.restore(s)
+
+		if term == nil {
+			return
+		}
+		call, ok := term.Value.(Call)
+		if !ok || len(call) == 0 {
+			return
+		}
+		switch call[0].String() {
+		case Member.Name, MemberWithKey.Name:
+		default:
+			return
+		}
+	default:
+		return
+	}
+
+	p.hint(fmt.Sprintf("`import future.keywords.%s` for `%s` expressions", kw, infixFutureKeywords[kw]))
 }
 
 func (p *Parser) errWithOnOperand(loc *Location, kw string) {
@@ -3076,12 +3215,14 @@ func (p *Parser) parseObject(k *Term, potentialComprehension bool) *Term {
 		return nil
 	}
 
-	potentialRelation := true
 	if potentialComprehension {
 		switch p.s.tok {
 		case tokens.RBrace, tokens.Comma:
-			potentialRelation = false
-			fallthrough
+			// This is the only parse available, so return its result as-is:
+			// backtracking would drop the errors reported here in favour of a
+			// "non-terminated object" pointing at the value we just parsed
+			// rather than at the offending token.
+			return p.parseObjectFinish(k, v, true)
 		case tokens.Or:
 			if term := p.parseObjectFinish(k, v, true); term != nil {
 				return term
@@ -3091,16 +3232,14 @@ func (p *Parser) parseObject(k *Term, potentialComprehension bool) *Term {
 
 	p.restore(s)
 
-	if potentialRelation {
-		v := p.parseTermInfixCallInList()
-		if v == nil {
-			return nil
-		}
+	v = p.parseTermInfixCallInList()
+	if v == nil {
+		return nil
+	}
 
-		switch p.s.tok {
-		case tokens.RBrace, tokens.Comma:
-			return p.parseObjectFinish(k, v, false)
-		}
+	switch p.s.tok {
+	case tokens.RBrace, tokens.Comma:
+		return p.parseObjectFinish(k, v, false)
 	}
 
 	p.illegal("non-terminated object")
@@ -3321,8 +3460,6 @@ func (p *Parser) illegal(note string, a ...any) {
 func (p *Parser) illegalToken() {
 	p.illegal("")
 }
-
-var noScanOptions []scanner.ScanOption
 
 func (p *Parser) scan() {
 	p.doScan(true, noScanOptions...)

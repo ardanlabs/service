@@ -22,7 +22,19 @@ import (
 //
 // Returns the constructed signing input in the format: base64(header).base64(payload) or base64(header).payload
 func SignBuffer(buf, hdr, payload []byte, encoder base64.Encoder, encodePayload bool) []byte {
-	l := encoder.EncodedLen(len(hdr)+len(payload)) + 1
+	// Header and payload are encoded separately, so each one is padded or
+	// rounded on its own. An unencoded payload is copied as-is.
+	//
+	// The sum below is not checked for overflow. hdr and payload are
+	// already in memory, so the encoded total is at most about 4/3 of
+	// what the caller holds. That cannot overflow on 64-bit, and on
+	// 32-bit it takes over ~1.5GB of input the caller chose to accept.
+	// Bounding input size is the caller's job.
+	payloadLen := len(payload)
+	if encodePayload {
+		payloadLen = encoder.EncodedLen(payloadLen)
+	}
+	l := encoder.EncodedLen(len(hdr)) + 1 + payloadLen
 	if cap(buf) < l {
 		buf = make([]byte, 0, l)
 	}

@@ -17,6 +17,7 @@ import (
 	"github.com/lestrrat-go/jwx/v3/jwa"
 	"github.com/lestrrat-go/jwx/v3/jwk"
 	"github.com/lestrrat-go/jwx/v3/jws"
+	"github.com/lestrrat-go/jwx/v3/jws/jwsbb"
 	jwterrs "github.com/lestrrat-go/jwx/v3/jwt/internal/errors"
 	"github.com/lestrrat-go/jwx/v3/jwt/internal/types"
 )
@@ -340,7 +341,13 @@ func verifyJWS(ctx *parseCtx, payload []byte) ([]byte, int, error) {
 				}
 				return verified, peekJWSNestedState(ctx, payload), nil
 			}
-			return nil, _JwsVerifyDone, err
+			// VerifyCompactFast also rejects a protected header with no
+			// "alg", while jws.Verify verifies it under the WithKey
+			// algorithm. Fall through to jws.Verify so jwt.Parse gives the
+			// same answer as it does with any other option set.
+			if !protectedHeaderLacksAlg(payload) {
+				return nil, _JwsVerifyDone, err
+			}
 		}
 	}
 
@@ -350,6 +357,19 @@ func verifyJWS(ctx *parseCtx, payload []byte) ([]byte, int, error) {
 		return nil, _JwsVerifyDone, err
 	}
 	return verified, peekJWSNestedState(ctx, payload), nil
+}
+
+// protectedHeaderLacksAlg reports whether the compact JWS in buf has a
+// well-formed protected header with no "alg" member. It returns false when
+// the header cannot be split, decoded, or parsed. It is only called after
+// jws.VerifyCompactFast has failed, so it stays off the success path.
+func protectedHeaderLacksAlg(buf []byte) bool {
+	hdr, _, _, err := jwsbb.SplitCompact(buf)
+	if err != nil {
+		return false
+	}
+	_, err = jwsbb.HeaderGetString(jwsbb.HeaderParseCompact(hdr), jws.AlgorithmKey)
+	return errors.Is(err, jwsbb.ErrHeaderNotFound())
 }
 
 // peekJWSNestedState returns _JwsVerifyExpectNested when pedantic mode is on

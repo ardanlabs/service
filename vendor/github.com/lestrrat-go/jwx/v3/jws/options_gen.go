@@ -203,6 +203,7 @@ type withKeySuboption struct {
 
 func (*withKeySuboption) withKeySuboption() {}
 
+type identAlgorithmMatch struct{}
 type identBase64Encoder struct{}
 type identContext struct{}
 type identCritValidation struct{}
@@ -223,8 +224,14 @@ type identProtectedHeaders struct{}
 type identPublicHeaders struct{}
 type identRequireKid struct{}
 type identSerialization struct{}
+type identStrictECDSA struct{}
 type identUseDefault struct{}
 type identValidateKey struct{}
+type identVerifiedSignature struct{}
+
+func (identAlgorithmMatch) String() string {
+	return "WithAlgorithmMatch"
+}
 
 func (identBase64Encoder) String() string {
 	return "WithBase64Encoder"
@@ -306,12 +313,45 @@ func (identSerialization) String() string {
 	return "WithSerialization"
 }
 
+func (identStrictECDSA) String() string {
+	return "WithStrictECDSA"
+}
+
 func (identUseDefault) String() string {
 	return "WithUseDefault"
 }
 
 func (identValidateKey) String() string {
 	return "WithValidateKey"
+}
+
+func (identVerifiedSignature) String() string {
+	return "WithVerifiedSignature"
+}
+
+// WithAlgorithmMatch enables a check that the protected header's "alg"
+// parameter exactly equals the algorithm actually used to verify the
+// signature. The default is false: jws.Verify() verifies under the
+// algorithm resolved from the key or provider you supply (jws.WithKey(),
+// jws.WithKeySet(), jws.WithVerifyAuto(), or a custom
+// jws.WithKeyProvider()) and does not compare it with the header.
+//
+// When enabled, jws.Verify() rejects a JWS whose protected header
+// advertises one algorithm while it is verified under another (for
+// example, a custom jws.WithKeyProvider() that returns an HS256 key for a
+// message whose protected header claims RS256). The match is plain
+// string equality, with no aliasing: the deprecated polymorphic "EdDSA"
+// and the fully-specified "Ed25519"/"Ed448" identifiers are distinct per
+// RFC 9864 and are not interchangeable. The check runs for every key
+// source, including the jws.WithDetachedPayloadReader() streaming path.
+// It only fires when the protected header carries an "alg"; messages
+// that omit it, or place it only in the unprotected header, are verified
+// under the resolved algorithm as before.
+//
+// jws.VerifyCompactFast() always performs an equivalent check against
+// its explicitly supplied algorithm.
+func WithAlgorithmMatch(v bool) VerifyOption {
+	return &verifyOption{option.New(identAlgorithmMatch{}, v)}
 }
 
 // WithBase64Encoder specifies the base64 encoder to be used while signing or
@@ -545,6 +585,12 @@ func WithMaxSignatures(v int) GlobalParseOption {
 
 // WithMessage can be passed to Verify() to obtain the jws.Message upon
 // a successful verification.
+//
+// The message holds every signature that was parsed, including entries
+// that did not verify. A JSON JWS is accepted when any one of its
+// signatures verifies, so do not read per-signature values from the
+// message by position. Use `jws.WithVerifiedSignature` to get the
+// signature that passed.
 func WithMessage(v *Message) VerifyOption {
 	return &verifyOption{option.New(identMessage{}, v)}
 }
@@ -583,8 +629,9 @@ func WithProtectedHeaders(v Headers) WithKeySuboption {
 //
 // It has no effect if used when `jws.WithKey()` is passed to `jws.Verify()`
 //
-// `jws.Sign()` will result in an error if `jws.WithPublic()` is used
-// and the serialization format is compact serialization.
+// In JSON serialization, these headers are transmitted separately from
+// the protected header and are not included in the signing input.
+// In compact serialization, they are merged into the protected header.
 func WithPublicHeaders(v Headers) WithKeySuboption {
 	return &withKeySuboption{option.New(identPublicHeaders{}, v)}
 }
@@ -603,6 +650,28 @@ func WithRequireKid(v bool) WithKeySetSuboption {
 // do not need to specify this option other than to be explicit about it
 func WithCompact() SignVerifyParseOption {
 	return &signVerifyParseOption{option.New(identSerialization{}, fmtCompact)}
+}
+
+// WithStrictECDSA makes `jws.Sign()` reject anything RFC 7518 forbids for
+// an ECDSA signature. Today that is exactly one rule: Section 3.4 binds
+// ES256 to P-256, ES384 to P-384, and ES512 to P-521, so signing with a
+// key on any other curve fails instead of producing a JWS that strict
+// JOSE implementations reject.
+//
+// Future releases may enforce further RFC 7518 ECDSA rules under this
+// same option, so enabling it means "be strict about ECDSA", not "check
+// the curve and nothing else".
+//
+// Extension algorithms on their own curves, such as ES256K, are not
+// affected. Only the three curves the RFC names are checked.
+//
+// This option is sign-side only. `jws.Verify()` is unaffected and keeps
+// inferring algorithms from a key's curve exactly as before, so a JWS
+// produced without this option still verifies.
+//
+// By default, the curve is not checked.
+func WithStrictECDSA(v bool) SignOption {
+	return &signOption{option.New(identStrictECDSA{}, v)}
 }
 
 // WithUseDefault specifies that if and only if a jwk.Key contains
@@ -630,4 +699,22 @@ func WithUseDefault(v bool) WithKeySetSuboption {
 // By default, the key is not validated.
 func WithValidateKey(v bool) SignVerifyOption {
 	return &signVerifyOption{option.New(identValidateKey{}, v)}
+}
+
+// WithVerifiedSignature allows you to specify that `jws.Verify()` should
+// return the signature that passed verification.
+//
+// A JSON JWS may carry several signatures, and `jws.Verify()` succeeds
+// when any one of them verifies. The other entries are unverified input,
+// and their position in the message says nothing about which one passed.
+// When you need a per-signature value, such as a "crit" extension, read it
+// from this signature and not from `Message.Signatures()[0]`.
+//
+// `v` must be a pointer to a `*jws.Signature` variable. After a successful
+// verification, the variable points to the signature that verified. When
+// `jws.WithMessage` is also given, it is one of the entries returned by
+// `Message.Signatures()`. The variable is left untouched when verification
+// fails.
+func WithVerifiedSignature(v **Signature) VerifyOption {
+	return &verifyOption{option.New(identVerifiedSignature{}, v)}
 }

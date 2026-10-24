@@ -41,6 +41,8 @@ type Storer interface {
 // ExtBusiness interface provides support for extensions that wrap extra functionality
 // around the core business logic.
 type ExtBusiness interface {
+	// NewWithTx returns a transaction-bound copy. Extensions must bind their
+	// dependencies to the transaction and wrap the returned business themselves.
 	NewWithTx(tx sqldb.CommitRollbacker) (ExtBusiness, error)
 	Create(ctx context.Context, actorID uuid.UUID, nu NewUser) (User, error)
 	Update(ctx context.Context, actorID uuid.UUID, usr User, uu UpdateUser) (User, error)
@@ -58,23 +60,20 @@ type Extension func(ExtBusiness) ExtBusiness
 
 // Business manages the set of APIs for user access.
 type Business struct {
-	log        *logger.Logger
-	storer     Storer
-	delegate   *delegate.Delegate
-	extensions []Extension
+	log      *logger.Logger
+	storer   Storer
+	delegate *delegate.Delegate
 }
 
 // NewBusiness constructs a user business API for use.
 func NewBusiness(log *logger.Logger, delegate *delegate.Delegate, storer Storer, extensions ...Extension) ExtBusiness {
 	b := ExtBusiness(&Business{
-		log:        log,
-		delegate:   delegate,
-		storer:     storer,
-		extensions: extensions,
+		log:      log,
+		delegate: delegate,
+		storer:   storer,
 	})
 
 	for _, ext := range slices.Backward(extensions) {
-
 		if ext != nil {
 			b = ext(b)
 		}
@@ -91,7 +90,8 @@ func (b *Business) NewWithTx(tx sqldb.CommitRollbacker) (ExtBusiness, error) {
 		return nil, err
 	}
 
-	nb := NewBusiness(b.log, b.delegate, storer, b.extensions...)
+	// Each extension rebuilds its own wrapper in NewWithTx.
+	nb := NewBusiness(b.log, b.delegate, storer)
 
 	return nb, nil
 }

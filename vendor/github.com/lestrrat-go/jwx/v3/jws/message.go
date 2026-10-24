@@ -155,7 +155,7 @@ func (s *Signature) sign2(payload []byte, signer interface{ Algorithm() jwa.Sign
 	sc.encoder = encoder
 
 	// Build the signature using signatureBuilder
-	sig, err := sb.Build(sc, payload)
+	sig, _, err := sb.Build(sc, payload)
 	if err != nil {
 		return nil, nil, fmt.Errorf(`failed to build signature: %w`, err)
 	}

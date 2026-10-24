@@ -154,6 +154,17 @@ func (c AesContentCipher) Decrypt(cek, iv, ciphertxt, tag, aad []byte) (plaintex
 		}
 	}()
 
+	// Enforce the AEAD wire tag and IV lengths before concatenating. Without
+	// this, bytes can be shifted between the wire ciphertext and tag fields to
+	// produce a byte-identical AEAD input, yielding serialized ciphertext<->tag
+	// malleability (exploitable on AES-GCM).
+	if len(tag) != c.TagSize() {
+		return nil, fmt.Errorf(`failed to decrypt: invalid tag size (got %d, expected %d)`, len(tag), c.TagSize())
+	}
+	if len(iv) != aead.NonceSize() {
+		return nil, fmt.Errorf(`failed to decrypt: invalid iv size (got %d, expected %d)`, len(iv), aead.NonceSize())
+	}
+
 	combined := make([]byte, len(ciphertxt)+len(tag))
 	copy(combined, ciphertxt)
 	copy(combined[len(ciphertxt):], tag)

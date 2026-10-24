@@ -178,7 +178,7 @@ func (m *Message) Set(k string, v any) error {
 
 type messageMarshalProxy struct {
 	AuthenticatedData    string            `json:"aad,omitempty"`
-	CipherText           string            `json:"ciphertext"`
+	CipherText           *string           `json:"ciphertext"`
 	InitializationVector string            `json:"iv,omitempty"`
 	ProtectedHeaders     json.RawMessage   `json:"protected"`
 	Recipients           []json.RawMessage `json:"recipients,omitempty"`
@@ -205,16 +205,15 @@ func (m *Message) MarshalJSON() ([]byte, error) {
 
 	var fields []jsonKV
 
-	if cipherText := m.CipherText(); len(cipherText) > 0 {
-		buf.Reset()
-		if err := enc.Encode(base64.EncodeToString(cipherText)); err != nil {
-			return nil, fmt.Errorf(`failed to encode %s field: %w`, CipherTextKey, err)
-		}
-		fields = append(fields, jsonKV{
-			Key:   CipherTextKey,
-			Value: strings.TrimSpace(buf.String()),
-		})
+	// Ciphertext is required even when an AEAD encrypts an empty plaintext.
+	buf.Reset()
+	if err := enc.Encode(base64.EncodeToString(m.CipherText())); err != nil {
+		return nil, fmt.Errorf(`failed to encode %s field: %w`, CipherTextKey, err)
 	}
+	fields = append(fields, jsonKV{
+		Key:   CipherTextKey,
+		Value: strings.TrimSpace(buf.String()),
+	})
 
 	if iv := m.InitializationVector(); len(iv) > 0 {
 		buf.Reset()
@@ -316,7 +315,7 @@ func (m *Message) MarshalJSON() ([]byte, error) {
 		if len(unprotected) > 2 {
 			fields = append(fields, jsonKV{
 				Key:   UnprotectedHeadersKey,
-				Value: fmt.Sprintf("%q", unprotected),
+				Value: string(unprotected),
 			})
 		}
 	}
@@ -411,14 +410,13 @@ func (m *Message) UnmarshalJSON(buf []byte) error {
 		m.authenticatedData = v
 	}
 
-	// RFC 7516 §7.2: "ciphertext", "iv", and "tag" MUST be present and
-	// non-empty for any AEAD-protected JWE. Reject missing/empty values
-	// here so that a zero-length authentication tag cannot reach the
-	// AEAD verification code path.
-	if len(proxy.CipherText) == 0 {
-		return fmt.Errorf(`missing or empty "ciphertext" field`)
+	// RFC 7516 §7.2 requires a ciphertext member, but AES-GCM may produce
+	// empty ciphertext for empty plaintext. Distinguish an empty string
+	// from an absent or null member. IV and tag must remain non-empty.
+	if proxy.CipherText == nil {
+		return fmt.Errorf(`missing or null "ciphertext" field`)
 	}
-	ctbuf, err := base64.DecodeString(proxy.CipherText)
+	ctbuf, err := base64.DecodeString(*proxy.CipherText)
 	if err != nil {
 		return fmt.Errorf(`failed to decode "ciphertext": %w`, err)
 	}

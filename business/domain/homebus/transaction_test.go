@@ -23,9 +23,7 @@ func TestNewWithTxDoesNotRegisterDelegate(t *testing.T) {
 	})
 	d := delegate.New(log)
 
-	var extensionCalls int
 	extension := func(bus ExtBusiness) ExtBusiness {
-		extensionCalls++
 		return &testExtension{ExtBusiness: bus}
 	}
 
@@ -36,10 +34,14 @@ func TestNewWithTxDoesNotRegisterDelegate(t *testing.T) {
 		if err != nil {
 			t.Fatalf("NewWithTx: %s", err)
 		}
-	}
 
-	if extensionCalls != 3 {
-		t.Fatalf("extension calls: got %d, want 3", extensionCalls)
+		count, err := bus.Count(t.Context(), QueryFilter{})
+		if err != nil {
+			t.Fatalf("Count: %s", err)
+		}
+		if count != 11 {
+			t.Fatalf("count with extension: got %d, want 11", count)
+		}
 	}
 
 	if err := d.Call(t.Context(), userbus.ActionDeletedData(uuid.New())); err != nil {
@@ -59,6 +61,10 @@ func (testStorer) NewWithTx(sqldb.CommitRollbacker) (Storer, error) {
 	return testStorer{}, nil
 }
 
+func (testStorer) Count(context.Context, QueryFilter) (int, error) {
+	return 10, nil
+}
+
 type testUserBusiness struct {
 	userbus.ExtBusiness
 }
@@ -72,7 +78,18 @@ type testExtension struct {
 }
 
 func (ext *testExtension) NewWithTx(tx sqldb.CommitRollbacker) (ExtBusiness, error) {
-	return ext.ExtBusiness.NewWithTx(tx)
+	bus, err := ext.ExtBusiness.NewWithTx(tx)
+	if err != nil {
+		return nil, err
+	}
+
+	next := testExtension{ExtBusiness: bus}
+	return &next, nil
+}
+
+func (ext *testExtension) Count(ctx context.Context, filter QueryFilter) (int, error) {
+	count, err := ext.ExtBusiness.Count(ctx, filter)
+	return count + 1, err
 }
 
 type testTransaction struct{}

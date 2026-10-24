@@ -27,9 +27,18 @@ func NewExtension() homebus.Extension {
 	}
 }
 
-// NewWithTx does not apply otel.
+// NewWithTx constructs a new extension around the transaction-bound business.
 func (ext *Extension) NewWithTx(tx sqldb.CommitRollbacker) (homebus.ExtBusiness, error) {
-	return ext.bus.NewWithTx(tx)
+	bus, err := ext.bus.NewWithTx(tx)
+	if err != nil {
+		return nil, err
+	}
+
+	next := Extension{
+		bus: bus,
+	}
+
+	return &next, nil
 }
 
 // Create applies otel to the home creation process.

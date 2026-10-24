@@ -28,6 +28,21 @@ func NewStore(log *logger.Logger, db *sqlx.DB) *Store {
 	}
 }
 
+// NewWithTx constructs a new Store value using the specified transaction.
+func (s *Store) NewWithTx(tx sqldb.CommitRollbacker) (auditbus.Storer, error) {
+	ec, err := sqldb.GetExtContext(tx)
+	if err != nil {
+		return nil, err
+	}
+
+	store := Store{
+		log: s.log,
+		db:  ec,
+	}
+
+	return &store, nil
+}
+
 // Create inserts a new audit record into the database.
 func (s *Store) Create(ctx context.Context, a auditbus.Audit) error {
 	const q = `

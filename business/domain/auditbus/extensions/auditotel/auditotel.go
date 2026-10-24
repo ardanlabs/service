@@ -8,6 +8,7 @@ import (
 	"github.com/ardanlabs/service/business/domain/auditbus"
 	"github.com/ardanlabs/service/business/sdk/order"
 	"github.com/ardanlabs/service/business/sdk/page"
+	"github.com/ardanlabs/service/business/sdk/sqldb"
 	"github.com/ardanlabs/service/foundation/otel"
 )
 
@@ -23,6 +24,20 @@ func NewExtension() auditbus.Extension {
 			bus: bus,
 		}
 	}
+}
+
+// NewWithTx constructs a new extension around the transaction-bound business.
+func (ext *Extension) NewWithTx(tx sqldb.CommitRollbacker) (auditbus.ExtBusiness, error) {
+	bus, err := ext.bus.NewWithTx(tx)
+	if err != nil {
+		return nil, err
+	}
+
+	next := Extension{
+		bus: bus,
+	}
+
+	return &next, nil
 }
 
 // Create adds a new audit record to the system.

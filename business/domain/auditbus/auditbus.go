@@ -10,6 +10,7 @@ import (
 
 	"github.com/ardanlabs/service/business/sdk/order"
 	"github.com/ardanlabs/service/business/sdk/page"
+	"github.com/ardanlabs/service/business/sdk/sqldb"
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/google/uuid"
 )
@@ -17,6 +18,7 @@ import (
 // Storer interface declares the behavior this package needs to persist and
 // retrieve data.
 type Storer interface {
+	NewWithTx(tx sqldb.CommitRollbacker) (Storer, error)
 	Create(ctx context.Context, audit Audit) error
 	Query(ctx context.Context, filter QueryFilter, orderBy order.By, page page.Page) ([]Audit, error)
 	Count(ctx context.Context, filter QueryFilter) (int, error)
@@ -25,6 +27,9 @@ type Storer interface {
 // ExtBusiness interface provides support for extensions that wrap extra functionality
 // around the core business logic.
 type ExtBusiness interface {
+	// NewWithTx returns a transaction-bound copy. Extensions must bind their
+	// dependencies to the transaction and wrap the returned business themselves.
+	NewWithTx(tx sqldb.CommitRollbacker) (ExtBusiness, error)
 	Create(ctx context.Context, na NewAudit) (Audit, error)
 	Query(ctx context.Context, filter QueryFilter, orderBy order.By, page page.Page) ([]Audit, error)
 	Count(ctx context.Context, filter QueryFilter) (int, error)
@@ -55,6 +60,20 @@ func NewBusiness(log *logger.Logger, storer Storer, extensions ...Extension) Ext
 	}
 
 	return b
+}
+
+// NewWithTx constructs a new business value that will use the
+// specified transaction in any store related calls.
+func (b *Business) NewWithTx(tx sqldb.CommitRollbacker) (ExtBusiness, error) {
+	storer, err := b.storer.NewWithTx(tx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Each extension rebuilds its own wrapper in NewWithTx.
+	nb := NewBusiness(b.log, storer)
+
+	return nb, nil
 }
 
 // Create adds a new audit record to the system.

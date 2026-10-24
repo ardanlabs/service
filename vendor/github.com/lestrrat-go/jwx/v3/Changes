@@ -4,6 +4,146 @@ Changes
 v3 has many incompatibilities with v2. To see the full list of differences between
 v2 and v3, please read the Changes-v3.md file (https://github.com/lestrrat-go/jwx/blob/develop/v3/Changes-v3.md)
 
+v3.4.0 23 Oct 2026
+  * [jwe] `jwe.Decrypt` now tries each key provider in turn and moves on to
+    the next one when a provider returns an error, as `jws.Verify` does.
+    For example, `jwe.WithKeySet` with a set that has no usable key,
+    followed by a working `jwe.WithKey`, decrypts with the working key. If
+    no key works, the returned error wraps the last failure, so `errors.Is`
+    can find it. (#2385)
+
+  * [jwe] JSON serialization of a JWE now always includes the `ciphertext`
+    member, `jwe.Parse` now accepts an empty `ciphertext`, and `jwe.Decrypt`
+    now returns an empty payload for it. A JWE that encrypts an empty
+    plaintext with AES-GCM therefore round-trips through
+    `jwe.Encrypt(..., jwe.WithJSON())`, `jwe.Parse`, `json.Marshal`, and
+    `jwe.Decrypt`. A missing, `null`, or non-string `ciphertext` is still
+    rejected, and the `iv` and `tag` members must still be non-empty. (#2387)
+
+  * [jwe] `jwe.Decrypt` now rejects a message whose `tag` or `iv` is not
+    exactly the length the content encryption algorithm uses. Bytes can no
+    longer be moved between `ciphertext` and `tag` to produce a different
+    message that still decrypts. (#2387)
+
+  * [jwe] JSON serialization of a JWE now writes the shared `unprotected`
+    header as a JSON object, as RFC 7516 requires. A JWE with a shared
+    unprotected header therefore round-trips through `jwe.Parse`,
+    `json.Marshal`, `jwe.Parse`, and `jwe.Decrypt`. (#2389)
+
+  * [jwt] `jwt.WithNumericDateFormatPrecision` now applies when a token is
+    serialized. It covers the `exp`, `iat`, and `nbf` claims of `jwt.Token`,
+    and those claims plus `updated_at` in `openid.Token`. Previously the
+    option never had any effect on serialized tokens, which always wrote
+    these claims as whole seconds.
+
+    With a precision above 0, a date that has a fraction is written as a
+    JSON number with up to that many fractional digits. Extra digits are
+    rounded down, toward the earlier time, and trailing zeros are removed.
+    At precision 3, an `iat` of 2000000000.123456789 is written as
+    `2000000000.123`, and 2000000000.1 as `2000000000.1`. A date with no
+    fraction is written as an integer, and output at the default precision
+    of 0 is unchanged. Callers who set a precision above 0 will see
+    fractional dates in their tokens, in the bytes `jwt.Sign` signs, and in
+    what `jwt.Equal` compares. (#2410)
+
+  * [jwt] NumericDate claims such as `exp`, `iat`, and `nbf` now parse
+    negative values, which are dates before 1970, with or without
+    `jwt.WithNumericDateParsePedantic(true)`. The sign covers the fraction
+    too, so `-1.5` is one and a half seconds before the epoch. Fractional
+    digits beyond `jwt.WithNumericDateParsePrecision` are rounded down,
+    toward the earlier time, the same way serialization rounds: at the
+    default precision of 0, `-1.5` parses as `-2`. Positive values parse
+    as before.
+
+    Without pedantic mode, a value is now read as a number first, and is
+    read as an RFC3339 timestamp only when it is not a valid number. A
+    string such as `"1.5.5"` is therefore rejected, where it used to be
+    read as `1.5`. (#2412)
+
+  * [jwt] NumericDate claims such as `exp`, `iat`, and `nbf` now parse a
+    JSON number with a fraction from its decimal digits, so every digit
+    that `jwt.WithNumericDateParsePrecision` asks for is kept. At precision
+    9, `2000000000.123456789` parses with 123456789 nanoseconds, and at
+    precision 1, `2000000000.1` parses with 100000000. A number written
+    with an exponent, such as `2e9`, is still read as a float64. (#2414)
+
+  * [jwt] NumericDate claims such as `exp`, `iat`, `nbf`, and OpenID
+    `updated_at` now reject a value later than the latest time Go's
+    `time.Time` can hold, such as `9223372036854775807`. Parsing a token
+    with such a claim fails, even with `jwt.WithValidate(false)`, and so
+    does setting such a value with `Set`. (#2414)
+
+  * [jws] `jws.Sign` with `jws.WithPublicHeaders` now produces a JWS that
+    verifies. In JSON serialization, the signature now covers only the
+    protected header, and the public headers are sent in the unprotected
+    `"header"` member. In compact serialization, the public headers are
+    merged into the protected header, and the header written to the output
+    is the one that was signed. (#2416)
+
+  * [jws] Added `jws.WithAlgorithmMatch(true)`. With it, `jws.Verify` rejects
+    a JWS whose protected header `"alg"` differs from the algorithm used to
+    verify it, for every key source (`jws.WithKey`, `jws.WithKeySet`,
+    `jws.WithVerifyAuto`, `jws.WithKeyProvider`) and for
+    `jws.WithDetachedPayloadReader`. The match is exact, so `"EdDSA"` and
+    `"Ed25519"` count as different values. A protected header without
+    `"alg"` is not compared. The option is off by default, and `jws.Verify`
+    keeps verifying under the algorithm from the key source without
+    looking at the header. This is the same check v4 runs by default.
+    (#2423)
+
+  * [jwt] `jwt.Parse` now gives the same result for a compact JWS whose
+    protected header has no `"alg"`, whichever options select the
+    verification path. With a single `jwt.WithKey`, the token is now
+    verified under the `jwt.WithKey` algorithm, as it already was with
+    `jwt.WithKeySet` or any other option set. `jws.VerifyCompactFast` still
+    rejects such a header. (#2423)
+
+  * [jws] Added `jws.WithVerifiedSignature`, a `jws.Verify` option that returns
+    the signature that passed verification. A JSON JWS is accepted when any
+    one of its signatures verifies, so `Message.Signatures()[0]` can be an
+    entry that did not verify. Read per-signature values, such as a `crit`
+    extension, from the signature this option returns. The `jws.WithMessage`
+    documentation now says that the message holds every parsed signature,
+    including entries that did not verify. (#2436)
+
+  * [jwe] Added `jwe.WithDecryptedRecipient`, a `jwe.Decrypt` option that
+    returns the recipient whose encrypted key decrypted the message. A JWE in
+    JSON serialization can have several recipients, and `jwe.Decrypt` tries
+    them in order, so this tells you which one worked, which
+    `jwe.WithKeyUsed` does not. The per-recipient `header` member is not
+    covered by the authentication tag of the content, so a value in it, such
+    as `kid`, is not authenticated. (#2440)
+
+v3.3.0 8 Sep 2026
+  * [jwt][jws][jwe][jwk] Custom claim, header, and JWK field names are now
+    JSON-escaped on output. Previously a name was written between the quotes
+    as is, so a name containing `"` could close its own member and add
+    members the application never set. For example, calling `Set` with the
+    name `x":0,"admin` produced a signed token containing `"admin":true`.
+    Every name now yields exactly one member, and names that need no
+    escaping serialize exactly as before.
+
+    If your application accepts custom names from callers, an exact-match
+    allowlist was never affected. A blocklist of reserved names, or an
+    allowlist by namespace prefix, could be bypassed by this defect. Both are
+    reasonable designs; the bug was in the serializer. Prefer an exact-match
+    allowlist, and if you accept a prefix, require the rest of the name to be
+    a plain identifier.
+
+    Fixed in v4.5.0 and v3.3.0. v2, v1, and v0 contain the same code and are
+    unmaintained; see SECURITY.md. (GHSA-4cf7-xm37-g63h)
+
+  * [jws] Added `jws.WithStrictECDSA(bool)`, a `jws.Sign` option that rejects
+    anything RFC 7518 forbids for an ECDSA signature. Today that is Section
+    3.4's binding of ES256 to P-256, ES384 to P-384, and ES512 to P-521, so
+    signing a P-521 key under `jwa.ES256()` fails instead of producing a JWS
+    that other JOSE implementations reject.
+
+    The default is unchanged: without the option, a mismatched curve and
+    algorithm still sign exactly as before. `jws.Verify` is unaffected either
+    way. `jwt.Sign` callers can reach the option through
+    `jwt.WithSignOption(jws.WithStrictECDSA(true))`. (#2323)
+
 v3.2.0 27 Jul 2026
   * [jwe] Correct the JSON `"aad"` member so it contains only
     BASE64URL of the external Additional Authenticated Data, rather than the

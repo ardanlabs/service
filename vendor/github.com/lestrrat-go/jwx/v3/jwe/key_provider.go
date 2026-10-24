@@ -156,11 +156,27 @@ func (kp *keySetProvider) selectKey(sink KeySink, key jwk.Key, r Recipient, msg 
 	return fmt.Errorf(`key %q in set has no "alg" field and the JWE message has no recoverable "alg" header; declare "alg" on the JWK or use jwe.WithKey(alg, key) directly`, kid)
 }
 
+// recipientKeyID returns the "kid" from the recipient header, or from the
+// protected header when the recipient header has none. A flattened JSON
+// message whose producer put "kid" only in the protected header has an empty
+// recipient header.
+func recipientKeyID(r Recipient, msg *Message) (string, bool) {
+	for _, hdr := range []Headers{r.Headers(), msg.ProtectedHeaders()} {
+		if hdr == nil {
+			continue
+		}
+		if v, ok := hdr.KeyID(); ok {
+			return v, true
+		}
+	}
+	return "", false
+}
+
 func (kp *keySetProvider) FetchKeys(_ context.Context, sink KeySink, r Recipient, msg *Message) error {
 	if kp.requireKid {
 		var key jwk.Key
 
-		wantedKid, ok := r.Headers().KeyID()
+		wantedKid, ok := recipientKeyID(r, msg)
 		if !ok || wantedKid == "" {
 			return fmt.Errorf(`failed to find matching key: no key ID ("kid") specified in token but multiple keys available in key set`)
 		}

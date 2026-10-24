@@ -2,15 +2,19 @@ package userbus_test
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 	"net/mail"
 	"sort"
 	"testing"
 	"time"
 
+	"github.com/ardanlabs/service/business/domain/auditbus"
 	"github.com/ardanlabs/service/business/domain/userbus"
 	"github.com/ardanlabs/service/business/sdk/dbtest"
 	"github.com/ardanlabs/service/business/sdk/page"
+	"github.com/ardanlabs/service/business/sdk/sqldb"
 	"github.com/ardanlabs/service/business/sdk/unittest"
 	"github.com/ardanlabs/service/business/types/name"
 	"github.com/ardanlabs/service/business/types/password"
@@ -36,6 +40,83 @@ func Test_User(t *testing.T) {
 	unittest.Run(t, create(db.BusDomain), "create")
 	unittest.Run(t, update(db.BusDomain, sd), "update")
 	unittest.Run(t, delete(db.BusDomain, sd), "delete")
+}
+
+func Test_UserTransactionAudit(t *testing.T) {
+	db := dbtest.New(t, "Test_UserTransactionAudit")
+	newUsers := userbus.TestNewUsers(3, role.User)
+
+	for i, test := range []struct {
+		name  string
+		close func(sqldb.CommitRollbacker) error
+		want  int
+	}{
+		{name: "rollback", close: sqldb.CommitRollbacker.Rollback, want: 0},
+		{name: "commit", close: sqldb.CommitRollbacker.Commit, want: 1},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			ctx := t.Context()
+			tx, err := sqldb.NewBeginner(db.DB).Begin()
+			if err != nil {
+				t.Fatal(err)
+			}
+			t.Cleanup(func() {
+				if err := tx.Rollback(); err != nil && !errors.Is(err, sql.ErrTxDone) {
+					t.Error(err)
+				}
+			})
+
+			bus, err := db.BusDomain.User.NewWithTx(tx)
+			if err != nil {
+				t.Fatal(err)
+			}
+			usr, err := bus.Create(ctx, uuid.New(), newUsers[i])
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			filter := auditbus.QueryFilter{ObjID: &usr.ID}
+			count, err := db.BusDomain.Audit.Count(ctx, filter)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if count != 0 {
+				t.Errorf("audit rows visible before commit: got %d, want 0", count)
+			}
+
+			if err := test.close(tx); err != nil {
+				t.Fatal(err)
+			}
+
+			count, err = db.BusDomain.Audit.Count(ctx, filter)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if count != test.want {
+				t.Errorf("audit rows after %s: got %d, want %d", test.name, count, test.want)
+			}
+			count, err = db.BusDomain.User.Count(ctx, userbus.QueryFilter{ID: &usr.ID})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if count != test.want {
+				t.Errorf("user rows after %s: got %d, want %d", test.name, count, test.want)
+			}
+		})
+	}
+
+	// Binding a transaction must not modify the original business or its extensions.
+	usr, err := db.BusDomain.User.Create(t.Context(), uuid.New(), newUsers[2])
+	if err != nil {
+		t.Fatal(err)
+	}
+	count, err := db.BusDomain.Audit.Count(t.Context(), auditbus.QueryFilter{ObjID: &usr.ID})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if count != 1 {
+		t.Errorf("audit rows from original business: got %d, want 1", count)
+	}
 }
 
 // =============================================================================

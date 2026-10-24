@@ -328,6 +328,7 @@ func EncryptStatic(payload, cek []byte, options ...EncryptOption) ([]byte, error
 type decryptContext struct {
 	keyProviders            []KeyProvider
 	keyUsed                 any
+	decryptedRecipient      *Recipient
 	cek                     *[]byte
 	dst                     *Message
 	maxRecipients           int
@@ -351,6 +352,7 @@ func allocDecryptContext() *decryptContext {
 func freeDecryptContext(dc *decryptContext) *decryptContext {
 	dc.keyProviders = dc.keyProviders[:0]
 	dc.keyUsed = nil
+	dc.decryptedRecipient = nil
 	dc.cek = nil
 	dc.dst = nil
 	dc.maxRecipients = 0
@@ -384,6 +386,10 @@ func (dc *decryptContext) ProcessOptions(options []DecryptOption) error {
 		case identKeyUsed{}:
 			if err := option.Value(&dc.keyUsed); err != nil {
 				return fmt.Errorf("jwe.decrypt: WithKeyUsed must be an any: %w", err)
+			}
+		case identDecryptedRecipient{}:
+			if err := option.Value(&dc.decryptedRecipient); err != nil {
+				return fmt.Errorf("jwe.decrypt: WithDecryptedRecipient must be a *jwe.Recipient: %w", err)
 			}
 		case identKey{}:
 			var pair *withKey
@@ -586,6 +592,9 @@ func (dc *decryptContext) DecryptMessage(buf []byte) ([]byte, error) {
 			errs = append(errs, makeRecipientError(err))
 			continue
 		}
+		if dc.decryptedRecipient != nil {
+			*dc.decryptedRecipient = recipient
+		}
 		if dc.dst != nil {
 			*dc.dst = *msg
 			dc.dst.rawProtectedHeaders = nil
@@ -625,8 +634,14 @@ func (dc *decryptContext) tryRecipient(msg *Message, recipient Recipient, protec
 		}
 
 		var sink algKeySink
-		if err := kp.FetchKeys(dc.ctx, &sink, recipient, msg); err != nil {
-			return nil, fmt.Errorf(`key provider %d failed: %w`, i, err)
+		fetchErr := kp.FetchKeys(dc.ctx, &sink, recipient, msg)
+		if err := dc.ctx.Err(); err != nil {
+			return nil, err
+		}
+		if fetchErr != nil {
+			// A later provider may still have the right key, as in jws.Verify.
+			lastError = fmt.Errorf(`key provider %d failed: %w`, i, fetchErr)
+			continue
 		}
 
 		for _, pair := range sink.list {
@@ -657,7 +672,7 @@ func (dc *decryptContext) tryRecipient(msg *Message, recipient Recipient, protec
 			return decrypted, nil
 		}
 	}
-	return nil, fmt.Errorf(`jwe.Decrypt: tried %d keys, but failed to match any of the keys with recipient (last error = %s)`, tried, lastError)
+	return nil, fmt.Errorf(`jwe.Decrypt: tried %d keys, but failed to match any of the keys with recipient (last error = %w)`, tried, lastError)
 }
 
 func (dc *decryptContext) decryptContent(msg *Message, alg jwa.KeyEncryptionAlgorithm, key any, recipient Recipient, protectedHeaders Headers, aad, computedAad []byte) ([]byte, error) {
@@ -862,10 +877,6 @@ func (dc *decryptContext) decryptContent(msg *Message, alg jwa.KeyEncryptionAlgo
 			return nil, fmt.Errorf(`jwe.Decrypt: failed to uncompress payload: %w`, err)
 		}
 		plaintext = buf
-	}
-
-	if plaintext == nil {
-		return nil, fmt.Errorf(`failed to find matching recipient`)
 	}
 
 	return plaintext, nil

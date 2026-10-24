@@ -31,9 +31,24 @@ func NewExtension(auditBus auditbus.ExtBusiness) userbus.Extension {
 	}
 }
 
-// NewWithTx does not apply auditing.
+// NewWithTx constructs a new extension with both businesses bound to the transaction.
 func (ext *Extension) NewWithTx(tx sqldb.CommitRollbacker) (userbus.ExtBusiness, error) {
-	return ext.bus.NewWithTx(tx)
+	bus, err := ext.bus.NewWithTx(tx)
+	if err != nil {
+		return nil, err
+	}
+
+	auditBus, err := ext.auditBus.NewWithTx(tx)
+	if err != nil {
+		return nil, err
+	}
+
+	next := Extension{
+		bus:      bus,
+		auditBus: auditBus,
+	}
+
+	return &next, nil
 }
 
 // Create applies auditing to the user creation process.

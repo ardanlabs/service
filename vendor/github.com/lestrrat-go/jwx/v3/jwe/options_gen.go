@@ -176,6 +176,7 @@ type identCompress struct{}
 type identContentEncryptionAlgorithm struct{}
 type identContext struct{}
 type identCritValidation struct{}
+type identDecryptedRecipient struct{}
 type identFS struct{}
 type identKey struct{}
 type identKeyProvider struct{}
@@ -220,6 +221,10 @@ func (identContext) String() string {
 
 func (identCritValidation) String() string {
 	return "WithCritValidation"
+}
+
+func (identDecryptedRecipient) String() string {
+	return "WithDecryptedRecipient"
 }
 
 func (identFS) String() string {
@@ -372,6 +377,27 @@ func WithContext(v context.Context) DecryptOption {
 // for details.
 func WithCritValidation(v bool) DecryptOption {
 	return &decryptOption{option.New(identCritValidation{}, v)}
+}
+
+// WithDecryptedRecipient allows you to specify that `jwe.Decrypt()` should
+// return the recipient whose encrypted key was used to decrypt the
+// message. A JWE in JSON serialization can have several recipients, and
+// `jwe.Decrypt()` tries them in order until one decrypts. This option
+// tells you which one that was, which `jwe.WithKeyUsed` does not.
+//
+// `v` must be a pointer to a `jwe.Recipient` variable. After a successful
+// decryption, the variable holds the recipient that decrypted. When
+// `jwe.WithMessage` is also given, it is one of the entries returned by
+// `Message.Recipients()`. When the message has no recipient list, as with
+// a compact JWE, the recipient is built from the protected header. The
+// variable is left untouched when decryption fails.
+//
+// The per-recipient `header` member is not covered by the authentication
+// tag of the content, so a value in `Recipient.Headers()` that the key
+// unwrapping did not use, such as `kid`, is not authenticated. Do not use
+// it for authorization decisions.
+func WithDecryptedRecipient(v *Recipient) DecryptOption {
+	return &decryptOption{option.New(identDecryptedRecipient{}, v)}
 }
 
 // WithFS specifies the source `fs.FS` object to read the file from.
