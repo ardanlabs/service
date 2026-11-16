@@ -19,7 +19,7 @@ import (
 )
 
 // GenToken generates a JWT for the specified user.
-func GenToken(log *logger.Logger, dbConfig sqldb.Config, keyPath string, userID uuid.UUID, kid string) error {
+func GenToken(log *logger.Logger, dbConfig sqldb.Config, keysJSON string, keyPath string, userID uuid.UUID, kid string) error {
 	if kid == "" {
 		fmt.Println("help: gentoken <user_id> <kid>")
 		return ErrHelp
@@ -43,7 +43,7 @@ func GenToken(log *logger.Logger, dbConfig sqldb.Config, keyPath string, userID 
 
 	ks := keystore.New()
 
-	n1, err := ks.LoadByJSON("SALAES_PEM")
+	n1, err := ks.LoadByJSON(keysJSON)
 	if err != nil {
 		return fmt.Errorf("loading keys by env: %w", err)
 	}

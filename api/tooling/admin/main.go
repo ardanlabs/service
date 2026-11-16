@@ -30,6 +30,7 @@ type config struct {
 		DisableTLS   bool   `conf:"default:true"`
 	}
 	Auth struct {
+		KeysJSON   string `conf:"mask"`
 		KeysFolder string `conf:"default:zarf/keys/"`
 		DefaultKID string `conf:"default:54bb2165-71e1-41a6-af3e-7da4a0e1e2c1"`
 	}
@@ -133,7 +134,7 @@ func processCommands(args conf.Args, log *logger.Logger, cfg config) error {
 		if kid == "" {
 			kid = cfg.Auth.DefaultKID
 		}
-		if err := commands.GenToken(log, dbConfig, cfg.Auth.KeysFolder, userID, kid); err != nil {
+		if err := commands.GenToken(log, dbConfig, cfg.Auth.KeysJSON, cfg.Auth.KeysFolder, userID, kid); err != nil {
 			return fmt.Errorf("generating token: %w", err)
 		}
 
